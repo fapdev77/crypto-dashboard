@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
-import { Activity, History, Loader2 } from 'lucide-react';
+import { Activity, History, Loader2, ArrowUpDown, Search, X } from 'lucide-react';
 import { RestClient } from '../services/RestClient';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { format } from 'date-fns';
@@ -24,11 +24,89 @@ export function Positions() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [filterText, setFilterText] = useState('');
+  const [openSortConfig, setOpenSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'unrealizedPnl', direction: 'desc' });
+  const [closedSortConfig, setClosedSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'closeTime', direction: 'desc' });
+
   const positionsList = Object.values(positions);
 
   const activePositions = useMemo(() => {
-    return positionsList.filter(p => Math.abs(p.size) > 0);
-  }, [positionsList]);
+    let filtered = positionsList.filter(p => Math.abs(p.size) > 0);
+
+    if (filterText) {
+      const lowerFilter = filterText.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.symbol.toLowerCase().includes(lowerFilter) || 
+        p.label.toLowerCase().includes(lowerFilter) ||
+        p.exchange.toLowerCase().includes(lowerFilter)
+      );
+    }
+
+    if (openSortConfig !== null) {
+      filtered.sort((a: any, b: any) => {
+        let valA = a[openSortConfig.key];
+        let valB = b[openSortConfig.key];
+        
+        if (openSortConfig.key === 'side') {
+           valA = a.side === 'long' || a.side === 'buy' ? 1 : a.side === 'short' || a.side === 'sell' ? -1 : 0;
+           valB = b.side === 'long' || b.side === 'buy' ? 1 : b.side === 'short' || b.side === 'sell' ? -1 : 0;
+        }
+
+        if (valA < valB) return openSortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return openSortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [positionsList, filterText, openSortConfig]);
+
+  const filteredClosedPositions = useMemo(() => {
+    let filtered = [...closedPositions];
+    
+    if (filterText) {
+      const lowerFilter = filterText.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.symbol.toLowerCase().includes(lowerFilter) || 
+        p.label.toLowerCase().includes(lowerFilter) ||
+        p.exchange.toLowerCase().includes(lowerFilter)
+      );
+    }
+
+    if (closedSortConfig !== null) {
+      filtered.sort((a: any, b: any) => {
+        let valA = a[closedSortConfig.key];
+        let valB = b[closedSortConfig.key];
+        
+        if (closedSortConfig.key === 'side') {
+           valA = a.side === 'long' || a.side === 'buy' ? 1 : a.side === 'short' || a.side === 'sell' ? -1 : 0;
+           valB = b.side === 'long' || b.side === 'buy' ? 1 : b.side === 'short' || b.side === 'sell' ? -1 : 0;
+        }
+
+        if (valA < valB) return closedSortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return closedSortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [closedPositions, filterText, closedSortConfig]);
+
+  const requestOpenSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (openSortConfig && openSortConfig.key === key && openSortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setOpenSortConfig({ key, direction });
+  };
+
+  const requestClosedSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (closedSortConfig && closedSortConfig.key === key && closedSortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setClosedSortConfig({ key, direction });
+  };
 
   const fetchHistory = async () => {
     setIsLoading(true);
@@ -111,26 +189,49 @@ export function Positions() {
   return (
     <div className="space-y-6">
       
-      {/* Tabs */}
-      <div className="flex bg-[#151619] p-1 rounded-lg border border-[#2a2b30] w-max">
-        <button
-          onClick={() => setActiveTab('open')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'open' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'
-          }`}
-        >
-          <Activity className="w-4 h-4" />
-          Abertas
-        </button>
-        <button
-          onClick={() => setActiveTab('closed')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'closed' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'
-          }`}
-        >
-          <History className="w-4 h-4" />
-          Fechadas (Histórico)
-        </button>
+      {/* Tabs and Search */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="flex bg-[#151619] p-1 rounded-lg border border-[#2a2b30] w-max">
+          <button
+            onClick={() => setActiveTab('open')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'open' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'
+            }`}
+          >
+            <Activity className="w-4 h-4" />
+            Abertas
+          </button>
+          <button
+            onClick={() => setActiveTab('closed')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'closed' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'
+            }`}
+          >
+            <History className="w-4 h-4" />
+            Fechadas (Histórico)
+          </button>
+        </div>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-[#8E9299]" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search positions..."
+            className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-64"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+          />
+          {filterText && (
+            <button 
+              onClick={() => setFilterText('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
+              title="Clear filter"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
@@ -139,19 +240,76 @@ export function Positions() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#1a1b1e] border-b border-[#2a2b30]">
-                  <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Symbol</th>
-                  <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Account</th>
-                  <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Side</th>
-                  <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Size</th>
-                  <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Entry Price</th>
-                  <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Mark Price</th>
-                  <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">PnL (Unrealized)</th>
+                  <th 
+                    className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                    onClick={() => requestOpenSort('symbol')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Symbol <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                    onClick={() => requestOpenSort('label')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Account <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                    onClick={() => requestOpenSort('exchange')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Exchange <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                    onClick={() => requestOpenSort('side')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Side <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right cursor-pointer hover:bg-[#2a2b30]/50 group"
+                    onClick={() => requestOpenSort('size')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Size
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right cursor-pointer hover:bg-[#2a2b30]/50 group"
+                    onClick={() => requestOpenSort('entryPrice')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Entry Price
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right cursor-pointer hover:bg-[#2a2b30]/50 group"
+                    onClick={() => requestOpenSort('markPrice')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Mark Price
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right cursor-pointer hover:bg-[#2a2b30]/50 group"
+                    onClick={() => requestOpenSort('unrealizedPnl')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /> PnL (Unrealized)
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2a2b30]">
                 {activePositions.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-[#8E9299] text-sm">
+                    <td colSpan={8} className="px-6 py-8 text-center text-[#8E9299] text-sm">
                       No active positions found.
                     </td>
                   </tr>
@@ -175,7 +333,9 @@ export function Positions() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-white mr-2">{p.label}</span>
+                          <span className="text-sm font-medium text-white">{p.label}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-xs font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-2 py-1 rounded capitalize">
                             {p.exchange}
                           </span>
@@ -218,22 +378,65 @@ export function Positions() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-[#1a1b1e] border-b border-[#2a2b30]">
-                      <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Time</th>
-                      <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Symbol</th>
-                      <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Account</th>
-                      <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Side</th>
-                      <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Realized PnL</th>
+                      <th 
+                        className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                        onClick={() => requestClosedSort('closeTime')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Time <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </th>
+                      <th 
+                        className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                        onClick={() => requestClosedSort('symbol')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Symbol <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </th>
+                      <th 
+                        className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                        onClick={() => requestClosedSort('label')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Account <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </th>
+                      <th 
+                        className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                        onClick={() => requestClosedSort('exchange')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Exchange <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </th>
+                      <th 
+                        className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                        onClick={() => requestClosedSort('side')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Side <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </th>
+                      <th 
+                        className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right cursor-pointer hover:bg-[#2a2b30]/50 group"
+                        onClick={() => requestClosedSort('realizedPnl')}
+                      >
+                        <div className="flex items-center justify-end gap-1">
+                          <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Realized PnL
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#2a2b30]">
-                    {closedPositions.length === 0 ? (
+                    {filteredClosedPositions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-[#8E9299] text-sm">
+                        <td colSpan={6} className="px-6 py-8 text-center text-[#8E9299] text-sm">
                           No history found for active connected APIs in the last 24h.
                         </td>
                       </tr>
                     ) : (
-                      closedPositions.map((p) => {
+                      filteredClosedPositions.map((p) => {
                         const isLong = p.side?.toLowerCase() === 'long' || p.side?.toLowerCase() === 'buy';
                         const isShort = p.side?.toLowerCase() === 'short' || p.side?.toLowerCase() === 'sell';
                         const sideLabel = isLong ? 'Long' : isShort ? 'Short' : p.side || 'Net';
@@ -250,7 +453,9 @@ export function Positions() {
                               <span className="text-sm font-bold text-white">{p.symbol}</span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="text-sm font-medium text-white mr-2">{p.label}</span>
+                              <span className="text-sm font-medium text-white">{p.label}</span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
                               <span className="text-xs font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-2 py-1 rounded capitalize">
                                 {p.exchange}
                               </span>

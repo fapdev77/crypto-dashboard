@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { DollarSign, Wallet, ArrowUpDown, Search } from 'lucide-react';
+import { DollarSign, Wallet, ArrowUpDown, Search, X } from 'lucide-react';
 
 export function Dashboard() {
   const { balances, statuses } = useDashboardStore();
@@ -105,10 +105,19 @@ export function Dashboard() {
             <input
               type="text"
               placeholder="Search..."
-              className="pl-9 pr-4 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-64"
+              className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-64"
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
             />
+            {filterText && (
+              <button 
+                onClick={() => setFilterText('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
+                title="Clear filter"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
         <div className="overflow-x-auto">

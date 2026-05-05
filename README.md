@@ -70,3 +70,13 @@ Caso deseja escalonar o dashboard:
 1. Adicione a assinatura no utilitário de segurança: `src/services/ExchangeAuth.ts`.
 2. Inclua o nome referenciado no Union type `Exchange` de lib `store/apiKeysStore.ts` e propague sua tipagem via React Forms da modal de Configurações `components/ApiConfigModal.tsx`.
 3. Direcione a lógica central de Websockets da nova plataforma ou Endpoints históricos REST nos hooks (`useMultiExchangeWS.ts` & `RestClient.ts`).
+
+## 📚 Documentação para Desenvolvedores e Engenharia de IA
+Este projeto adota o modelo **Spec-Driven Development (SDD)** e está preparado para recriação ou refatoração por IAs Generativas (ex: Antigravity, Claude, ChatGPT). 
+
+Todos os documentos e diagramas arquiteturais estão disponíveis no diretório `/specs`:
+- [PRD (Desenvolvimento de Produto)](./specs/PRD.md): Regras de negócio originais.
+- [Arquitetura e Fluxo de Dados](./specs/ARCHITECTURE.md): Diagrama estático e funcionamento híbrido Proxy-Frontend.
+- [Prompt Engineering](./specs/PROMPT_ENGINEERING.md): O prompt base ideal para alimentar uma IA para recriar ou entender todo o escopo do projeto do zero.
+
+(Para documentação legada de requisitos, consulte também [`requirements.md`](./requirements.md) na raiz do projeto).
