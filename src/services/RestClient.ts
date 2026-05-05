@@ -71,4 +71,58 @@ export class RestClient {
     
     return response.result?.list || [];
   }
+
+  static async getPositionsBybit(apiKey: string, apiSecret: string) {
+    const method = 'GET';
+    const query = 'category=linear&settleCoin=USDT';
+    const requestPath = `/v5/position/list?${query}`;
+    const targetUrl = `https://api.bybit.com${requestPath}`;
+
+    const headers = ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
+    
+    try {
+      const directResponse = await fetch(targetUrl, { method, headers });
+      if (directResponse.ok) {
+        const data = await directResponse.json();
+        return data.result?.list || [];
+      }
+    } catch (err) {
+      console.warn('Direct Bybit fetch failed, falling back to proxy:', err);
+    }
+
+    const response = await proxyFetch({
+      targetUrl,
+      method,
+      headers
+    });
+    
+    return response.result?.list || [];
+  }
+
+  static async getWalletBybit(apiKey: string, apiSecret: string) {
+    const method = 'GET';
+    const query = 'accountType=UNIFIED';
+    const requestPath = `/v5/account/wallet-balance?${query}`;
+    const targetUrl = `https://api.bybit.com${requestPath}`;
+
+    const headers = ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
+    
+    try {
+      const directResponse = await fetch(targetUrl, { method, headers });
+      if (directResponse.ok) {
+        const data = await directResponse.json();
+        return data.result?.list?.[0] || null;
+      }
+    } catch (err) {
+      console.warn('Direct Bybit fetch failed, falling back to proxy:', err);
+    }
+
+    const response = await proxyFetch({
+      targetUrl,
+      method,
+      headers
+    });
+    
+    return response.result?.list?.[0] || null;
+  }
 }

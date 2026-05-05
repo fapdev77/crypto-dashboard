@@ -1,11 +1,14 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { DollarSign, Wallet } from 'lucide-react';
+import { DollarSign, Wallet, ArrowUpDown, Search } from 'lucide-react';
 
 export function Dashboard() {
   const { balances, statuses } = useDashboardStore();
   const keys = useApiKeysStore(state => state.keys);
+
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'usdValue', direction: 'desc' });
+  const [filterText, setFilterText] = useState('');
 
   const balancesList = Object.values(balances);
 
@@ -14,9 +17,40 @@ export function Dashboard() {
   }, [balancesList]);
 
   const filteredBalances = useMemo(() => {
-    // filter sizes < $1
-    return balancesList.filter(b => (b.usdValue || 0) >= 1).sort((a, b) => b.usdValue - a.usdValue);
-  }, [balancesList]);
+    // filter sizes < $1 and apply search
+    let filtered = balancesList.filter(b => (b.usdValue || 0) >= 1);
+    
+    if (filterText) {
+      const lowerFilter = filterText.toLowerCase();
+      filtered = filtered.filter(b => 
+        b.ccy.toLowerCase().includes(lowerFilter) || 
+        b.label.toLowerCase().includes(lowerFilter) ||
+        b.exchange.toLowerCase().includes(lowerFilter)
+      );
+    }
+
+    if (sortConfig !== null) {
+      filtered.sort((a: any, b: any) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [balancesList, sortConfig, filterText]);
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   return (
     <div className="space-y-6">
@@ -59,24 +93,74 @@ export function Dashboard() {
 
       {/* Wallets Table */}
       <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#2a2b30] flex items-center gap-2">
-          <Wallet className="w-5 h-5 text-[#8E9299]" />
-          <h3 className="text-lg font-medium text-white">Balances</h3>
+        <div className="px-6 py-4 border-b border-[#2a2b30] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-[#8E9299]" />
+            <h3 className="text-lg font-medium text-white">Balances</h3>
+          </div>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-[#8E9299]" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search..."
+              className="pl-9 pr-4 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-64"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+            />
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#1a1b1e] border-b border-[#2a2b30]">
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Asset</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Account</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Amount</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Value (USD)</th>
+                <th 
+                  className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                  onClick={() => requestSort('ccy')}
+                >
+                  <div className="flex items-center gap-1">
+                    Asset <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                  onClick={() => requestSort('label')}
+                >
+                  <div className="flex items-center gap-1">
+                    Account <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-pointer hover:bg-[#2a2b30]/50 group"
+                  onClick={() => requestSort('exchange')}
+                >
+                  <div className="flex items-center gap-1">
+                    Exchange <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right cursor-pointer hover:bg-[#2a2b30]/50 group"
+                  onClick={() => requestSort('amount')}
+                >
+                  <div className="flex items-center justify-end gap-1">
+                    <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Amount
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right cursor-pointer hover:bg-[#2a2b30]/50 group"
+                  onClick={() => requestSort('usdValue')}
+                >
+                  <div className="flex items-center justify-end gap-1">
+                    <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /> Value (USD)
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2b30]">
               {filteredBalances.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-[#8E9299] text-sm">
+                  <td colSpan={5} className="px-6 py-8 text-center text-[#8E9299] text-sm">
                     No relevant balances found (or not connected).
                   </td>
                 </tr>
@@ -92,7 +176,9 @@ export function Dashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-white mr-2">{b.label}</span>
+                      <span className="text-sm font-medium text-white">{b.label}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-xs font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-2 py-1 rounded capitalize">
                         {b.exchange}
                       </span>
@@ -113,3 +199,4 @@ export function Dashboard() {
     </div>
   );
 }
+

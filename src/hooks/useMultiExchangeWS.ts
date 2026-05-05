@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Exchange, useApiKeysStore, ApiCredentials } from '../store/apiKeysStore';
 import { useDashboardStore, BalanceItem, PositionItem } from '../store/dashboardStore';
 import { ExchangeAuth } from '../services/ExchangeAuth';
+import { RestClient } from '../services/RestClient';
 
 const getBitgetUrl = () => {
   // If we are in the browser, we construct the proxy URL based on the current location.
@@ -139,7 +140,9 @@ export function useMultiExchangeWS() {
       
       try {
         const data = JSON.parse(msg.toString());
-        // console.log(`[WS-${id}] Mensagem recebida:`, data); // uncomment for verbose logging
+        if (config.exchange === 'bybit') {
+           console.log(`[WS-${id}][DEBUG] Mensagem Bybit recebida:`, data);
+        }
         
         handleSubscriptionAndAuth(config, ws, data);
         parseDataStream(config, data);
@@ -291,7 +294,7 @@ export function useMultiExchangeWS() {
         const positions: PositionItem[] = [];
         data.data.forEach((pos: any) => {
           positions.push({
-            id: `${cid}-${pos.symbol}-${pos.side || 'net'}-${pos.positionIdx || 0}`,
+            id: `${cid}-${pos.symbol}-${pos.positionIdx || 0}`,
             connectionId: cid,
             exchange,
             label,
