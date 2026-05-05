@@ -2,12 +2,29 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import fetch from "node-fetch"; // natively available globally in Node 18+ but let's use standard global fetch
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Local Proxy para WebSockets da Bitget e outras exchanges que possam bloquear navegadores
+  // Como navegadores não podem alterar o Origin header de um WebSocket, usamos esse proxy intermediário.
+  app.use('/ws-proxy/bitget', createProxyMiddleware({ 
+    target: 'wss://ws.bitget.com', 
+    changeOrigin: true, 
+    ws: true,
+    pathRewrite: {
+      '^/ws-proxy/bitget': '', // remove o path de entrada
+    },
+    onProxyReqWs: (proxyReq, req, socket, options, head) => {
+      // Remove a origem do navegador para simular uma conexão server-to-server
+      proxyReq.removeHeader('origin');
+    }
+  }));
+
   // We need express.text or raw to parse arbitrary body formats, but json is also good
+  // ONLY for non-websocket proxy routes
   app.use(express.json());
   app.use(express.text()); // Just in case it's stringified
 

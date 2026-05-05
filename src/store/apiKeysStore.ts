@@ -4,55 +4,47 @@ import { persist } from 'zustand/middleware';
 export type Exchange = 'bitget' | 'okx' | 'bybit';
 
 export interface ApiCredentials {
+  id: string;
+  label: string;
+  exchange: Exchange;
   apiKey: string;
   apiSecret: string;
-  passphrase?: string; // Optional because Bybit doesn't always need it depending on the key generation, but Bitget/OKX do
+  passphrase?: string;
   isActive: boolean;
 }
 
 interface ApiKeysState {
-  keys: Record<Exchange, ApiCredentials | null>;
-  setKey: (exchange: Exchange, credentials: Omit<ApiCredentials, 'isActive'>) => void;
-  toggleKey: (exchange: Exchange) => void;
-  removeKey: (exchange: Exchange) => void;
+  keys: ApiCredentials[];
+  addKey: (credentials: Omit<ApiCredentials, 'id' | 'isActive'>) => void;
+  toggleKey: (id: string) => void;
+  removeKey: (id: string) => void;
 }
 
 export const useApiKeysStore = create<ApiKeysState>()(
   persist(
     (set) => ({
-      keys: {
-        bitget: null,
-        okx: null,
-        bybit: null,
-      },
-      setKey: (exchange, credentials) =>
+      keys: [],
+      addKey: (credentials) =>
         set((state) => ({
-          keys: {
+          keys: [
             ...state.keys,
-            [exchange]: { ...credentials, isActive: true },
-          },
+            { ...credentials, id: crypto.randomUUID(), isActive: true },
+          ],
         })),
-      toggleKey: (exchange) =>
-        set((state) => {
-          const current = state.keys[exchange];
-          if (!current) return state;
-          return {
-            keys: {
-              ...state.keys,
-              [exchange]: { ...current, isActive: !current.isActive },
-            },
-          };
-        }),
-      removeKey: (exchange) =>
+      toggleKey: (id) =>
         set((state) => ({
-          keys: {
-            ...state.keys,
-            [exchange]: null,
-          },
+          keys: state.keys.map((k) => 
+            k.id === id ? { ...k, isActive: !k.isActive } : k
+          ),
+        })),
+      removeKey: (id) =>
+        set((state) => ({
+          keys: state.keys.filter((k) => k.id !== id),
         })),
     }),
     {
-      name: 'crypto-dashboard-api-keys', // unique name in localStorage
+      name: 'crypto-dashboard-api-keys-v2', // v2 to avoid conflicts with previous schema
     }
   )
 );
+

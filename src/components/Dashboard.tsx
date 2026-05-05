@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
+import { useApiKeysStore } from '../store/apiKeysStore';
 import { DollarSign, Wallet } from 'lucide-react';
 
 export function Dashboard() {
   const { balances, statuses } = useDashboardStore();
+  const keys = useApiKeysStore(state => state.keys);
 
   const balancesList = Object.values(balances);
 
@@ -35,18 +37,24 @@ export function Dashboard() {
       </div>
 
       {/* Connection Status */}
-      <div className="flex gap-4">
-        {Object.entries(statuses).map(([exchange, status]) => (
-          <div key={exchange} className="flex items-center gap-2 bg-[#151619] border border-[#2a2b30] px-4 py-2 rounded-lg">
-            <div className={`w-2 h-2 rounded-full ${
-              status === 'connected' ? 'bg-[#00C853]' : 
-              status === 'connecting' ? 'bg-[#F2C94C] animate-pulse' : 
-              status === 'error' ? 'bg-[#FF4444]' : 'bg-[#8E9299]'
-            }`} />
-            <span className="text-sm font-medium text-white capitalize">{exchange}</span>
-            <span className="text-xs text-[#8E9299] capitalize ml-2">{status}</span>
-          </div>
-        ))}
+      <div className="flex flex-wrap gap-4">
+        {keys.filter(k => k.isActive).map(k => {
+           const status = statuses[k.id] || 'disconnected';
+           return (
+             <div key={k.id} className="flex items-center gap-2 bg-[#151619] border border-[#2a2b30] px-4 py-2 rounded-lg">
+               <div className={`w-2 h-2 rounded-full ${
+                  status === 'connected' ? 'bg-[#00C853]' : 
+                  status === 'connecting' ? 'bg-[#F2C94C] animate-pulse' : 
+                  status === 'error' ? 'bg-[#FF4444]' : 'bg-[#8E9299]'
+                }`} />
+                <span className="text-sm font-medium text-white">{k.label}</span>
+                <span className="text-xs text-[#8E9299] uppercase ml-1 opacity-70">({k.exchange})</span>
+             </div>
+           )
+        })}
+        {keys.filter(k => k.isActive).length === 0 && (
+          <div className="text-sm text-[#8E9299] italic">Nenhuma API ativa.</div>
+        )}
       </div>
 
       {/* Wallets Table */}
@@ -60,7 +68,7 @@ export function Dashboard() {
             <thead>
               <tr className="bg-[#1a1b1e] border-b border-[#2a2b30]">
                 <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Asset</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Exchange</th>
+                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Account</th>
                 <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Amount</th>
                 <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Value (USD)</th>
               </tr>
@@ -84,6 +92,7 @@ export function Dashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-medium text-white mr-2">{b.label}</span>
                       <span className="text-xs font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-2 py-1 rounded capitalize">
                         {b.exchange}
                       </span>

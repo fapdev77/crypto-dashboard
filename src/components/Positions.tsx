@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 interface ClosedPosition {
   id: string;
   exchange: string;
+  label: string;
   symbol: string;
   side: string;
   realizedPnl: number;
@@ -35,57 +36,59 @@ export function Positions() {
     let allHistory: ClosedPosition[] = [];
     
     try {
-      // OKX
-      if (keys.okx && keys.okx.isActive) {
-        try {
-          const res = await RestClient.getHistoryOkx(keys.okx.apiKey, keys.okx.apiSecret, keys.okx.passphrase || '');
-          const mapped = res.map((p: any) => ({
-            id: `okx-${p.instId}-${p.cTime}`,
-            exchange: 'okx',
-            symbol: p.instId,
-            side: p.posSide || p.direction,
-            realizedPnl: parseFloat(p.realizedPnl || p.pnl || '0'),
-            closeTime: parseInt(p.uTime || p.cTime),
-          }));
-          allHistory = [...allHistory, ...mapped];
-        } catch (e: any) {
-          console.error("OKX History Error:", e);
-        }
-      }
+      const activeKeys = keys.filter(k => k.isActive);
 
-      // Bitget
-      if (keys.bitget && keys.bitget.isActive) {
-        try {
-          const res = await RestClient.getHistoryBitget(keys.bitget.apiKey, keys.bitget.apiSecret, keys.bitget.passphrase || '');
-          const mapped = res.map((p: any) => ({
-            id: `bitget-${p.posId}-${p.cTime}`,
-            exchange: 'bitget',
-            symbol: p.instId,
-            side: p.holdSide,
-            realizedPnl: parseFloat(p.achievedProfits || p.netProfit || '0'),
-            closeTime: parseInt(p.uTime),
-          }));
-          allHistory = [...allHistory, ...mapped];
-        } catch (e: any) {
-          console.error("Bitget History Error:", e);
+      for (const k of activeKeys) {
+        if (k.exchange === 'okx') {
+          try {
+            const res = await RestClient.getHistoryOkx(k.apiKey, k.apiSecret, k.passphrase || '');
+            const mapped = res.map((p: any) => ({
+              id: `${k.id}-${p.instId}-${p.cTime}`,
+              exchange: k.exchange,
+              label: k.label,
+              symbol: p.instId,
+              side: p.posSide || p.direction,
+              realizedPnl: parseFloat(p.realizedPnl || p.pnl || '0'),
+              closeTime: parseInt(p.uTime || p.cTime),
+            }));
+            allHistory = [...allHistory, ...mapped];
+          } catch (e: any) {
+            console.error(`OKX History Error (${k.label}):`, e);
+          }
         }
-      }
-
-      // Bybit
-      if (keys.bybit && keys.bybit.isActive) {
-        try {
-          const res = await RestClient.getHistoryBybit(keys.bybit.apiKey, keys.bybit.apiSecret);
-          const mapped = res.map((p: any) => ({
-            id: `bybit-${p.orderId}`,
-            exchange: 'bybit',
-            symbol: p.symbol,
-            side: p.side,
-            realizedPnl: parseFloat(p.closedPnl || '0'),
-            closeTime: parseInt(p.updatedTime),
-          }));
-          allHistory = [...allHistory, ...mapped];
-        } catch (e: any) {
-          console.error("Bybit History Error:", e);
+        else if (k.exchange === 'bitget') {
+           try {
+            const res = await RestClient.getHistoryBitget(k.apiKey, k.apiSecret, k.passphrase || '');
+            const mapped = res.map((p: any) => ({
+              id: `${k.id}-${p.posId}-${p.cTime}`,
+              exchange: k.exchange,
+              label: k.label,
+              symbol: p.instId,
+              side: p.holdSide,
+              realizedPnl: parseFloat(p.achievedProfits || p.netProfit || '0'),
+              closeTime: parseInt(p.uTime),
+            }));
+            allHistory = [...allHistory, ...mapped];
+          } catch (e: any) {
+             console.error(`Bitget History Error (${k.label}):`, e);
+          }
+        }
+        else if (k.exchange === 'bybit') {
+           try {
+            const res = await RestClient.getHistoryBybit(k.apiKey, k.apiSecret);
+            const mapped = res.map((p: any) => ({
+              id: `${k.id}-${p.orderId}`,
+              exchange: k.exchange,
+              label: k.label,
+              symbol: p.symbol,
+              side: p.side,
+              realizedPnl: parseFloat(p.closedPnl || '0'),
+              closeTime: parseInt(p.updatedTime),
+            }));
+            allHistory = [...allHistory, ...mapped];
+          } catch (e: any) {
+            console.error(`Bybit History Error (${k.label}):`, e);
+          }
         }
       }
 
@@ -137,7 +140,7 @@ export function Positions() {
               <thead>
                 <tr className="bg-[#1a1b1e] border-b border-[#2a2b30]">
                   <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Symbol</th>
-                  <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Exchange</th>
+                  <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Account</th>
                   <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Side</th>
                   <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Size</th>
                   <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Entry Price</th>
@@ -172,6 +175,7 @@ export function Positions() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-medium text-white mr-2">{p.label}</span>
                           <span className="text-xs font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-2 py-1 rounded capitalize">
                             {p.exchange}
                           </span>
@@ -216,7 +220,7 @@ export function Positions() {
                     <tr className="bg-[#1a1b1e] border-b border-[#2a2b30]">
                       <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Time</th>
                       <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Symbol</th>
-                      <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Exchange</th>
+                      <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Account</th>
                       <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Side</th>
                       <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Realized PnL</th>
                     </tr>
@@ -246,6 +250,7 @@ export function Positions() {
                               <span className="text-sm font-bold text-white">{p.symbol}</span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="text-sm font-medium text-white mr-2">{p.label}</span>
                               <span className="text-xs font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-2 py-1 rounded capitalize">
                                 {p.exchange}
                               </span>
