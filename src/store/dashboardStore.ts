@@ -38,6 +38,9 @@ interface DashboardState {
   // Positions
   positions: Record<string, PositionItem>;
   updatePositions: (connectionId: string, newPositions: PositionItem[]) => void;
+  
+  // Clear all data for a specific connection
+  clearConnectionData: (connectionId: string) => void;
 }
 
 export const useDashboardStore = create<DashboardState>((set) => ({
@@ -74,6 +77,28 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       }
     }
     return { positions: nextPositions };
+  }),
+
+  clearConnectionData: (connectionId) => set((state) => {
+    const nextBalances = { ...state.balances };
+    const nextPositions = { ...state.positions };
+    const nextStatuses = { ...state.statuses };
+    
+    for (const key in nextBalances) {
+      if (nextBalances[key].connectionId === connectionId) {
+        delete nextBalances[key];
+      }
+    }
+    
+    for (const key in nextPositions) {
+      if (nextPositions[key].connectionId === connectionId) {
+        delete nextPositions[key];
+      }
+    }
+    
+    delete nextStatuses[connectionId];
+
+    return { balances: nextBalances, positions: nextPositions, statuses: nextStatuses };
   })
 }));
 

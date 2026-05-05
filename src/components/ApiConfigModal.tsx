@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save, Trash2, Power, Eye, EyeOff, Plus } from 'lucide-react';
 import { useApiKeysStore, Exchange } from '../store/apiKeysStore';
+import { useDashboardStore } from '../store/dashboardStore';
 
 interface ApiConfigModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ const EXCHANGES: { id: Exchange; name: string; requiresPassphrase?: boolean }[] 
 
 export function ApiConfigModal({ isOpen, onClose }: ApiConfigModalProps) {
   const { keys, addKey, removeKey, toggleKey } = useApiKeysStore();
+  const clearConnectionData = useDashboardStore(state => state.clearConnectionData);
   const [selectedKeyId, setSelectedKeyId] = useState<string | 'new'>('new');
   
   // Form State for new key
@@ -24,6 +26,7 @@ export function ApiConfigModal({ isOpen, onClose }: ApiConfigModalProps) {
   const [apiSecret, setApiSecret] = useState('');
   const [passphrase, setPassphrase] = useState('');
   const [showSecret, setShowSecret] = useState(false);
+  const [keyToDelete, setKeyToDelete] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -114,22 +117,49 @@ export function ApiConfigModal({ isOpen, onClose }: ApiConfigModalProps) {
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => toggleKey(existingKey.id)}
+                    onClick={() => {
+                      if (existingKey.isActive) {
+                        clearConnectionData(existingKey.id);
+                      }
+                      toggleKey(existingKey.id);
+                    }}
                     className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-[#2a2b30] hover:bg-[#323339] text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     <Power className={`w-4 h-4 ${existingKey.isActive ? 'text-[#FF4444]' : 'text-[#00C853]'}`} />
                     {existingKey.isActive ? 'Disable' : 'Enable'}
                   </button>
-                  <button
-                    onClick={() => {
-                      removeKey(existingKey.id);
-                      setSelectedKeyId('new');
-                    }}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 px-4 border border-[#FF4444]/50 text-[#FF4444] hover:bg-[#FF4444]/10 text-sm font-medium rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Remove
-                  </button>
+                  {keyToDelete === existingKey.id ? (
+                    <div className="flex-1 flex flex-col items-center justify-center p-2 border border-[#FF4444] rounded-lg bg-[#FF4444]/10">
+                      <span className="text-xs text-[#FF4444] font-medium mb-2">Are you sure?</span>
+                      <div className="flex gap-2 w-full">
+                        <button
+                          onClick={() => setKeyToDelete(null)}
+                          className="flex-1 text-white hover:text-[#8E9299] text-xs font-medium py-1.5 bg-[#2a2b30] hover:bg-[#323339] rounded transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            clearConnectionData(existingKey.id);
+                            removeKey(existingKey.id);
+                            setKeyToDelete(null);
+                            setSelectedKeyId('new');
+                          }}
+                          className="flex-1 text-white text-xs font-medium py-1.5 bg-[#FF4444] hover:bg-[#CC0000] rounded transition-colors"
+                        >
+                          Confirm
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setKeyToDelete(existingKey.id)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2 px-4 border border-[#FF4444]/50 text-[#FF4444] hover:bg-[#FF4444]/10 text-sm font-medium rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
