@@ -80,23 +80,33 @@ export class RestClient {
 
     const headers = ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
     
+    console.log('[REST-Bybit-Positions] Tentando fetch direto:', targetUrl);
     try {
       const directResponse = await fetch(targetUrl, { method, headers });
       if (directResponse.ok) {
         const data = await directResponse.json();
+        console.log('[REST-Bybit-Positions] Fetch direto com sucesso. Result:', typeof data);
         return data.result?.list || [];
+      } else {
+        console.warn(`[REST-Bybit-Positions] Fetch direto falhou com status: ${directResponse.status}`);
       }
     } catch (err) {
-      console.warn('Direct Bybit fetch failed, falling back to proxy:', err);
+      console.warn('[REST-Bybit-Positions] Direct fetch falhou com erro:', err);
     }
 
-    const response = await proxyFetch({
-      targetUrl,
-      method,
-      headers
-    });
-    
-    return response.result?.list || [];
+    console.log('[REST-Bybit-Positions] Usando proxy...');
+    try {
+      const response = await proxyFetch({
+        targetUrl,
+        method,
+        headers
+      });
+      console.log('[REST-Bybit-Positions] Proxy fetch finalizado com sucesso.');
+      return response.result?.list || [];
+    } catch (err) {
+      console.error('[REST-Bybit-Positions] Proxy fetch falhou com erro:', err);
+      throw err;
+    }
   }
 
   static async getWalletBybit(apiKey: string, apiSecret: string) {
@@ -107,22 +117,32 @@ export class RestClient {
 
     const headers = ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
     
+    console.log('[REST-Bybit-Wallet] Tentando fetch direto:', targetUrl);
     try {
       const directResponse = await fetch(targetUrl, { method, headers });
       if (directResponse.ok) {
         const data = await directResponse.json();
+        console.log('[REST-Bybit-Wallet] Fetch direto com sucesso.');
         return data.result?.list?.[0] || null;
+      } else {
+        console.warn(`[REST-Bybit-Wallet] Fetch direto falhou com status: ${directResponse.status}`);
       }
     } catch (err) {
-      console.warn('Direct Bybit fetch failed, falling back to proxy:', err);
+      console.warn('[REST-Bybit-Wallet] Direct fetch falhou com erro:', err);
     }
 
-    const response = await proxyFetch({
-      targetUrl,
-      method,
-      headers
-    });
-    
-    return response.result?.list?.[0] || null;
+    console.log('[REST-Bybit-Wallet] Usando proxy...');
+    try {
+      const response = await proxyFetch({
+        targetUrl,
+        method,
+        headers
+      });
+      console.log('[REST-Bybit-Wallet] Proxy fetch finalizado com sucesso.');
+      return response.result?.list?.[0] || null;
+    } catch (err) {
+       console.error('[REST-Bybit-Wallet] Proxy fetch falhou com erro:', err);
+       throw err;
+    }
   }
 }
