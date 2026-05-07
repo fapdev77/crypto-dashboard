@@ -34,10 +34,12 @@ interface DashboardState {
   // Wallet balances
   balances: Record<string, BalanceItem>;
   updateBalances: (connectionId: string, newBalances: BalanceItem[]) => void;
+  updateBalancesDelta: (connectionId: string, deltaBalances: Partial<BalanceItem>[]) => void;
   
   // Positions
   positions: Record<string, PositionItem>;
   updatePositions: (connectionId: string, newPositions: PositionItem[]) => void;
+  updatePositionsDelta: (connectionId: string, deltaPositions: Partial<PositionItem>[]) => void;
   
   // Clear all data for a specific connection
   clearConnectionData: (connectionId: string) => void;
@@ -64,6 +66,24 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     return { balances: nextBalances };
   }),
 
+  updateBalancesDelta: (connectionId, deltaBalances) => set((state) => {
+    const nextBalances = { ...state.balances };
+    deltaBalances.forEach(b => {
+      if (!b.id) return;
+      if (nextBalances[b.id]) {
+        nextBalances[b.id] = { ...nextBalances[b.id], ...b };
+      } else {
+        nextBalances[b.id] = b as BalanceItem;
+      }
+    });
+    for (const key in nextBalances) {
+      if (nextBalances[key].amount <= 0) {
+        delete nextBalances[key];
+      }
+    }
+    return { balances: nextBalances };
+  }),
+
   positions: {},
   updatePositions: (connectionId, newPositions) => set((state) => {
     const nextPositions = { ...state.positions };
@@ -71,6 +91,24 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       nextPositions[p.id] = p;
     });
     // Remove zero size positions
+    for (const key in nextPositions) {
+      if (Math.abs(nextPositions[key].size) <= 0) {
+        delete nextPositions[key];
+      }
+    }
+    return { positions: nextPositions };
+  }),
+
+  updatePositionsDelta: (connectionId, deltaPositions) => set((state) => {
+    const nextPositions = { ...state.positions };
+    deltaPositions.forEach(p => {
+      if (!p.id) return;
+      if (nextPositions[p.id]) {
+        nextPositions[p.id] = { ...nextPositions[p.id], ...p };
+      } else {
+        nextPositions[p.id] = p as PositionItem;
+      }
+    });
     for (const key in nextPositions) {
       if (Math.abs(nextPositions[key].size) <= 0) {
         delete nextPositions[key];

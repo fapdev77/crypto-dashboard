@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "crypto-dashboard",
+  "description": "Crypto Dashboard",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

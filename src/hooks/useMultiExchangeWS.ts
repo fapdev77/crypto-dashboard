@@ -106,6 +106,61 @@ export function useMultiExchangeWS() {
     const ws = new WebSocket(wsUrl);
     socketsRef.current[id] = ws;
 
+    if (exchange === 'bybit') {
+      (async () => {
+        try {
+          console.log(`[REST-${id}] Buscando dados iniciais para Bybit via REST...`);
+          const [walletData, positionsData] = await Promise.all([
+            RestClient.getWalletBybit(apiKey, apiSecret),
+            RestClient.getPositionsBybit(apiKey, apiSecret)
+          ]);
+          
+          if (walletData && walletData.coin) {
+            const balances: BalanceItem[] = [];
+            walletData.coin.forEach((item: any) => {
+              balances.push({
+                id: `${id}-${item.coin}`,
+                connectionId: id,
+                exchange,
+                label: config.label,
+                ccy: item.coin,
+                amount: parseFloat(item.walletBalance || item.equity),
+                usdValue: parseFloat(item.usdValue)
+              });
+            });
+            if (balances.length > 0) {
+              updateBalances(id, balances);
+            }
+          }
+
+          if (positionsData && Array.isArray(positionsData)) {
+            const positions: PositionItem[] = [];
+            positionsData.forEach((pos: any) => {
+              positions.push({
+                id: `${id}-${pos.symbol}-${pos.positionIdx || 0}`,
+                connectionId: id,
+                exchange,
+                label: config.label,
+                symbol: pos.symbol,
+                side: pos.side ? pos.side.toLowerCase() : 'net', // Bybit uses empty string for no side sometimes
+                size: parseFloat(pos.size || '0'),
+                entryPrice: parseFloat(pos.avgPrice || pos.entryPrice || '0'),
+                markPrice: parseFloat(pos.markPrice || '0'),
+                unrealizedPnl: parseFloat(pos.unrealisedPnl || '0'),
+                leverage: parseFloat(pos.leverage || '0')
+              });
+            });
+            if (positions.length > 0) {
+              updatePositions(id, positions);
+            }
+          }
+          console.log(`[REST-${id}] Dados iniciais carregados para Bybit.`);
+        } catch (error) {
+          console.error(`[REST-${id}] Erro ao buscar dados iniciais para Bybit:`, error);
+        }
+      })();
+    }
+
     ws.onopen = () => {
       console.log(`[WS-${id}] Conexão física estabelecida com sucesso.`);
       setConnectionStatus(id, 'connected');
@@ -237,78 +292,92 @@ export function useMultiExchangeWS() {
     
     if (exchange === 'okx' && data.arg && data.data) {
       if (data.arg.channel === 'account') {
-        const balances: BalanceItem[] = data.data[0].details.map((item: any) => ({
-          id: `${cid}-${item.ccy}`,
-          connectionId: cid,
-          exchange,
-          label,
-          ccy: item.ccy,
-          amount: parseFloat(item.eq),
-          usdValue: parseFloat(item.eqUsd)
-        }));
-        updateBalances(cid, balances);
+        const balances: Partial<BalanceItem>[] = data.data[0].details.map((item: any) => {
+          const bal: Partial<BalanceItem> = {
+            id: `${cid}-${item.ccy}`,
+            connectionId: cid,
+            exchange,
+            label,
+            ccy: item.ccy,
+          };
+          if (item.eq !== undefined) bal.amount = parseFloat(item.eq);
+          if (item.eqUsd !== undefined) bal.usdValue = parseFloat(item.eqUsd);
+          return bal;
+        });
+        useDashboardStore.getState().updateBalancesDelta(cid, balances);
       }
       if (data.arg.channel === 'positions') {
-        const positions: PositionItem[] = data.data.map((pos: any) => ({
-          id: `${cid}-${pos.posId}`,
-          connectionId: cid,
-          exchange,
-          label,
-          symbol: pos.instId,
-          side: pos.posSide,
-          size: parseFloat(pos.pos),
-          entryPrice: parseFloat(pos.avgPx),
-          markPrice: parseFloat(pos.markPx),
-          unrealizedPnl: parseFloat(pos.upl),
-          leverage: parseFloat(pos.lever)
-        }));
-        updatePositions(cid, positions);
+        const positions: Partial<PositionItem>[] = data.data.map((pos: any) => {
+          const update: Partial<PositionItem> = {
+            id: `${cid}-${pos.posId}`,
+            connectionId: cid,
+            exchange,
+            label,
+          };
+          if (pos.instId !== undefined) update.symbol = pos.instId;
+          if (pos.posSide !== undefined) update.side = pos.posSide as any;
+          if (pos.pos !== undefined) update.size = parseFloat(pos.pos);
+          if (pos.avgPx !== undefined) update.entryPrice = parseFloat(pos.avgPx);
+          if (pos.markPx !== undefined) update.markPrice = parseFloat(pos.markPx);
+          if (pos.upl !== undefined) update.unrealizedPnl = parseFloat(pos.upl);
+          if (pos.lever !== undefined) update.leverage = parseFloat(pos.lever);
+          return update;
+        });
+        useDashboardStore.getState().updatePositionsDelta(cid, positions);
       }
     }
 
     if (exchange === 'bybit' && data.topic) {
-      // console.log(`[WS-${cid}][Bybit] Topic:`, data.topic, 'Data:', data.data);
       if (data.topic === 'wallet') {
-        const balances: BalanceItem[] = [];
+        const balances: Partial<BalanceItem>[] = [];
         data.data.forEach((acc: any) => {
           if (acc.coin && Array.isArray(acc.coin)) {
             acc.coin.forEach((item: any) => {
-              const amt = parseFloat(item.equity || item.walletBalance || '0');
-              balances.push({
+              const bal: Partial<BalanceItem> = {
                 id: `${cid}-${acc.accountType || 'UNIFIED'}-${item.coin}`,
                 connectionId: cid,
                 exchange,
                 label: `${label} (${acc.accountType || 'UNIFIED'})`,
                 ccy: item.coin,
-                amount: amt,
-                usdValue: parseFloat(item.usdValue || amt.toString())
-              });
+              };
+              
+              if (item.equity !== undefined) bal.amount = parseFloat(item.equity);
+              else if (item.walletBalance !== undefined) bal.amount = parseFloat(item.walletBalance);
+              
+              if (item.usdValue !== undefined && item.usdValue !== "") bal.usdValue = parseFloat(item.usdValue);
+              else if (bal.amount !== undefined) bal.usdValue = bal.amount;
+
+              balances.push(bal);
             });
           }
         });
         if (balances.length > 0) {
-          updateBalances(cid, balances);
+          useDashboardStore.getState().updateBalancesDelta(cid, balances);
         }
       }
       if (data.topic === 'position') {
-        const positions: PositionItem[] = [];
+        const positions: Partial<PositionItem>[] = [];
         data.data.forEach((pos: any) => {
-          positions.push({
+          const update: Partial<PositionItem> = {
             id: `${cid}-${pos.symbol}-${pos.positionIdx || 0}`,
             connectionId: cid,
             exchange,
             label,
-            symbol: pos.symbol,
-            side: pos.side ? pos.side.toLowerCase() : 'net', // Bybit uses empty string for no side sometimes
-            size: parseFloat(pos.size || '0'),
-            entryPrice: parseFloat(pos.entryPrice || '0'),
-            markPrice: parseFloat(pos.markPrice || '0'),
-            unrealizedPnl: parseFloat(pos.unrealisedPnl || '0'),
-            leverage: parseFloat(pos.leverage || '0')
-          });
+          };
+          
+          if (pos.symbol !== undefined) update.symbol = pos.symbol;
+          if (pos.side !== undefined && pos.side !== '') update.side = pos.side.toLowerCase() as any;
+          if (pos.size !== undefined) update.size = parseFloat(pos.size);
+          if (pos.entryPrice !== undefined && pos.entryPrice !== "") update.entryPrice = parseFloat(pos.entryPrice);
+          else if (pos.avgPrice !== undefined && pos.avgPrice !== "") update.entryPrice = parseFloat(pos.avgPrice);
+          if (pos.markPrice !== undefined && pos.markPrice !== "") update.markPrice = parseFloat(pos.markPrice);
+          if (pos.unrealisedPnl !== undefined && pos.unrealisedPnl !== "") update.unrealizedPnl = parseFloat(pos.unrealisedPnl);
+          if (pos.leverage !== undefined && pos.leverage !== "") update.leverage = parseFloat(pos.leverage);
+
+          positions.push(update);
         });
         if (positions.length > 0) {
-          updatePositions(cid, positions);
+          useDashboardStore.getState().updatePositionsDelta(cid, positions);
         }
       }
     }
@@ -360,20 +429,39 @@ export function useMultiExchangeWS() {
         }
       }
       if (data.arg.channel === 'positions') {
-        const positions: PositionItem[] = data.data.map((pos: any) => ({
-          id: `${cid}-${pos.posId || pos.instId}`,
-          connectionId: cid,
-          exchange,
-          label,
-          symbol: pos.instId,
-          side: pos.holdSide?.toLowerCase() || 'net', 
-          size: parseFloat(pos.total || 0),
-          entryPrice: parseFloat(pos.openPriceAvg || 0),
-          markPrice: parseFloat(pos.markPrice || 0),
-          unrealizedPnl: parseFloat(pos.unrealizedPL || 0),
-          leverage: parseFloat(pos.leverage || 0)
-        }));
-        updatePositions(cid, positions);
+        const positions: Partial<PositionItem>[] = [];
+        data.data.forEach((pos: any) => {
+          const update: Partial<PositionItem> = {
+            id: `${cid}-${pos.posId || pos.instId}`,
+            connectionId: cid,
+            exchange,
+            label,
+          };
+          
+          if (pos.instId !== undefined) update.symbol = pos.instId;
+          if (pos.holdSide !== undefined) update.side = pos.holdSide.toLowerCase() as any;
+          else if (pos.posSide !== undefined) update.side = pos.posSide.toLowerCase() as any;
+          
+          if (pos.total !== undefined) update.size = parseFloat(pos.total);
+          else if (pos.pos !== undefined) update.size = parseFloat(pos.pos);
+
+          if (pos.openPriceAvg !== undefined) update.entryPrice = parseFloat(pos.openPriceAvg);
+          else if (pos.avgPx !== undefined) update.entryPrice = parseFloat(pos.avgPx);
+
+          if (pos.markPrice !== undefined) update.markPrice = parseFloat(pos.markPrice);
+          else if (pos.markPx !== undefined) update.markPrice = parseFloat(pos.markPx);
+
+          if (pos.unrealizedPL !== undefined) update.unrealizedPnl = parseFloat(pos.unrealizedPL);
+          else if (pos.upl !== undefined) update.unrealizedPnl = parseFloat(pos.upl);
+
+          if (pos.leverage !== undefined) update.leverage = parseFloat(pos.leverage);
+          else if (pos.lever !== undefined) update.leverage = parseFloat(pos.lever);
+
+          positions.push(update);
+        });
+        if (positions.length > 0) {
+          useDashboardStore.getState().updatePositionsDelta(cid, positions);
+        }
       }
     }
   };
