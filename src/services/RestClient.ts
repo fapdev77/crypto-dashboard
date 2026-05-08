@@ -69,6 +69,10 @@ export class RestClient {
       headers
     });
     
+    if (response.retCode !== 0) {
+      throw new Error(`Bybit API Proxy Error (${response.retCode}): ${response.retMsg}`);
+    }
+    
     return response.result?.list || [];
   }
 
@@ -85,7 +89,10 @@ export class RestClient {
       const directResponse = await fetch(targetUrl, { method, headers });
       if (directResponse.ok) {
         const data = await directResponse.json();
-        console.log('[REST-Bybit-Positions] Fetch direto com sucesso. Result:', typeof data);
+        if (data.retCode !== 0) {
+          throw new Error(`Bybit API Error (${data.retCode}): ${data.retMsg}`);
+        }
+        console.log('[REST-Bybit-Positions] Fetch direto com sucesso.');
         return data.result?.list || [];
       } else {
         console.warn(`[REST-Bybit-Positions] Fetch direto falhou com status: ${directResponse.status}`);
@@ -101,6 +108,9 @@ export class RestClient {
         method,
         headers
       });
+      if (response.retCode !== 0) {
+        throw new Error(`Bybit API Proxy Error (${response.retCode}): ${response.retMsg}`);
+      }
       console.log('[REST-Bybit-Positions] Proxy fetch finalizado com sucesso.');
       return response.result?.list || [];
     } catch (err) {
@@ -122,6 +132,9 @@ export class RestClient {
       const directResponse = await fetch(targetUrl, { method, headers });
       if (directResponse.ok) {
         const data = await directResponse.json();
+        if (data.retCode !== 0) {
+          throw new Error(`Bybit API Error (${data.retCode}): ${data.retMsg}`);
+        }
         console.log('[REST-Bybit-Wallet] Fetch direto com sucesso.');
         return data.result?.list?.[0] || null;
       } else {
@@ -138,6 +151,9 @@ export class RestClient {
         method,
         headers
       });
+      if (response.retCode !== 0) {
+        throw new Error(`Bybit API Proxy Error (${response.retCode}): ${response.retMsg}`);
+      }
       console.log('[REST-Bybit-Wallet] Proxy fetch finalizado com sucesso.');
       return response.result?.list?.[0] || null;
     } catch (err) {
