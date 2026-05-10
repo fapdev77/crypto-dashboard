@@ -118,11 +118,12 @@ export function useMultiExchangeWS() {
           if (walletData && walletData.coin) {
             const balances: BalanceItem[] = [];
             walletData.coin.forEach((item: any) => {
+              const accountType = walletData.accountType || 'UNIFIED';
               balances.push({
-                id: `${id}-${item.coin}`,
+                id: `${id}-${accountType}-${item.coin}`,
                 connectionId: id,
                 exchange,
-                label: config.label,
+                label: `${config.label} (${accountType})`,
                 ccy: item.coin,
                 amount: parseFloat(item.walletBalance || item.equity),
                 usdValue: parseFloat(item.usdValue)
