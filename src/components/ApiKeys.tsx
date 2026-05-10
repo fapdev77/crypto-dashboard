@@ -45,7 +45,7 @@ export function ApiKeys() {
   return (
     <div className="flex flex-col md:flex-row h-full gap-6">
       {/* Key List */}
-      <div className="w-full md:w-1/3 bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col p-4 overflow-y-auto">
+      <div className="w-full md:w-[320px] lg:w-[360px] shrink-0 bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col p-4 overflow-y-auto">
         <h2 className="text-lg font-medium text-white mb-4">Connections</h2>
         <div className="space-y-2 flex-1">
           {keys.map((k) => (
@@ -83,7 +83,7 @@ export function ApiKeys() {
       {/* Details / Form */}
       <div className="flex-1 bg-[#151619] border border-[#2a2b30] rounded-xl p-6 overflow-y-auto">
         {existingKey ? (
-          <div className="space-y-6 max-w-md">
+          <div className="space-y-6 max-w-3xl w-full">
              <div className="mb-6">
               <h3 className="text-xl font-medium text-white mb-1">{existingKey.label}</h3>
               <p className="text-xs text-[#8E9299] uppercase">{existingKey.exchange}</p>
@@ -150,13 +150,13 @@ export function ApiKeys() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSave} className="space-y-4 max-w-md">
+          <form onSubmit={handleSave} className="space-y-4 max-w-3xl w-full">
             <div className="mb-6">
               <h3 className="text-xl font-medium text-white mb-1">New API Connection</h3>
               <p className="text-xs text-[#8E9299]">Keys are stored securely in your browser's localStorage.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2">Exchange</label>
                 <select
