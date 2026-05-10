@@ -92,6 +92,48 @@ export function Positions() {
     return filtered;
   }, [closedPositions, filterText, closedSortConfig]);
 
+  const closedStats = useMemo(() => {
+    if (!filteredClosedPositions.length) return null;
+    
+    let totalPnl = 0;
+    let wins = 0;
+    let losses = 0;
+    let largestWin = 0;
+    let largestLoss = 0;
+    let sumWin = 0;
+    let sumLoss = 0;
+
+    filteredClosedPositions.forEach(p => {
+      totalPnl += p.realizedPnl;
+      if (p.realizedPnl > 0) {
+        wins++;
+        sumWin += p.realizedPnl;
+        if (p.realizedPnl > largestWin) largestWin = p.realizedPnl;
+      } else if (p.realizedPnl < 0) {
+        losses++;
+        sumLoss += p.realizedPnl;
+        if (p.realizedPnl < largestLoss) largestLoss = p.realizedPnl;
+      }
+    });
+
+    const totalTrades = wins + losses;
+    const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
+    const avgWin = wins > 0 ? sumWin / wins : 0;
+    const avgLoss = losses > 0 ? sumLoss / losses : 0;
+
+    return {
+      totalPnl,
+      totalTrades,
+      winRate,
+      wins,
+      losses,
+      largestWin,
+      largestLoss,
+      avgWin,
+      avgLoss
+    };
+  }, [filteredClosedPositions]);
+
   const requestOpenSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (openSortConfig && openSortConfig.key === key && openSortConfig.direction === 'asc') {
@@ -108,10 +150,30 @@ export function Positions() {
     setClosedSortConfig({ key, direction });
   };
 
+  const [period, setPeriod] = useState<'1w' | '2w' | '1m' | 'custom'>('1w');
+  const [customStartDate, setCustomStartDate] = useState(format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'));
+  const [customEndDate, setCustomEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+
+  const getDateRange = () => {
+    const end = Date.now();
+    if (period === '1w') return { start: end - 7 * 24 * 60 * 60 * 1000, end };
+    if (period === '2w') return { start: end - 14 * 24 * 60 * 60 * 1000, end };
+    if (period === '1m') return { start: end - 30 * 24 * 60 * 60 * 1000, end };
+    
+    if (period === 'custom' && customStartDate && customEndDate) {
+      return { 
+        start: new Date(customStartDate).getTime(), 
+        end: new Date(customEndDate).getTime() + 24 * 60 * 60 * 1000 - 1 // End of day
+      };
+    }
+    return { start: end - 7 * 24 * 60 * 60 * 1000, end };
+  };
+
   const fetchHistory = async () => {
     setIsLoading(true);
     setError(null);
     let allHistory: ClosedPosition[] = [];
+    const { start, end } = getDateRange();
     
     try {
       const activeKeys = keys.filter(k => k.isActive);
@@ -119,7 +181,7 @@ export function Positions() {
       for (const k of activeKeys) {
         if (k.exchange === 'okx') {
           try {
-            const res = await RestClient.getHistoryOkx(k.apiKey, k.apiSecret, k.passphrase || '');
+            const res = await RestClient.getHistoryOkx(k.apiKey, k.apiSecret, k.passphrase || '', start, end);
             const mapped = res.map((p: any) => ({
               id: `${k.id}-${p.instId}-${p.cTime}`,
               exchange: k.exchange,
@@ -136,7 +198,7 @@ export function Positions() {
         }
         else if (k.exchange === 'bitget') {
            try {
-            const res = await RestClient.getHistoryBitget(k.apiKey, k.apiSecret, k.passphrase || '');
+            const res = await RestClient.getHistoryBitget(k.apiKey, k.apiSecret, k.passphrase || '', start, end);
             const mapped = res.map((p: any) => ({
               id: `${k.id}-${p.posId}-${p.cTime}`,
               exchange: k.exchange,
@@ -153,7 +215,7 @@ export function Positions() {
         }
         else if (k.exchange === 'bybit') {
            try {
-            const res = await RestClient.getHistoryBybit(k.apiKey, k.apiSecret);
+            const res = await RestClient.getHistoryBybit(k.apiKey, k.apiSecret, start, end);
             const mapped = res.map((p: any) => ({
               id: `${k.id}-${p.orderId}`,
               exchange: k.exchange,
@@ -184,13 +246,17 @@ export function Positions() {
     if (activeTab === 'closed') {
       fetchHistory();
     }
-  }, [activeTab]);
+  }, [activeTab, period]); // Removed customStartDate and customEndDate from dependency to fetch on button click or period change
+
+  const handleCustomDateSearch = () => {
+    fetchHistory();
+  };
 
   return (
     <div className="space-y-6">
       
       {/* Tabs and Search */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
+      <div className="flex flex-col xl:flex-row justify-between gap-4 xl:items-center">
         <div className="flex bg-[#151619] p-1 rounded-lg border border-[#2a2b30] w-max">
           <button
             onClick={() => setActiveTab('open')}
@@ -211,6 +277,46 @@ export function Positions() {
             Fechadas (Histórico)
           </button>
         </div>
+
+        {activeTab === 'closed' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as any)}
+              className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
+            >
+              <option value="1w">1 Sem</option>
+              <option value="2w">2 Sem</option>
+              <option value="1m">1 Mês</option>
+              <option value="custom">Personalizado</option>
+            </select>
+            
+            {period === 'custom' && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-[#8E9299] focus:outline-none focus:border-[#2F6BFF]"
+                />
+                <span className="text-[#8E9299]">até</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-[#8E9299] focus:outline-none focus:border-[#2F6BFF]"
+                />
+                <button
+                  onClick={handleCustomDateSearch}
+                  className="bg-[#2a2b30] hover:bg-[#323339] text-white p-2 rounded-lg transition-colors border border-[#2a2b30] focus:outline-none focus:border-[#2F6BFF]"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-[#8E9299]" />
@@ -233,6 +339,52 @@ export function Positions() {
           )}
         </div>
       </div>
+
+      {activeTab === 'closed' && closedStats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
+            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Total PnL</span>
+            <div className={`text-xl font-bold mt-1 ${closedStats.totalPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+              {closedStats.totalPnl >= 0 ? '+' : ''}{closedStats.totalPnl.toFixed(2)} USDT
+            </div>
+          </div>
+          
+          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
+            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Win Rate</span>
+            <div className="text-xl font-bold mt-1 text-white">
+              {closedStats.winRate.toFixed(2)}%
+            </div>
+            <div className="text-xs text-[#8E9299] mt-1">
+              {closedStats.wins} W / {closedStats.losses} L
+            </div>
+          </div>
+
+          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
+            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Trades</span>
+            <div className="text-xl font-bold mt-1 text-white">
+              {closedStats.totalTrades}
+            </div>
+          </div>
+
+          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
+            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Avg Win / Loss</span>
+            <div className="text-sm font-medium mt-1">
+              <span className="text-[#00C853]">+{closedStats.avgWin.toFixed(2)}</span>
+              <span className="text-[#8E9299] mx-1">/</span>
+              <span className="text-[#FF4444]">{closedStats.avgLoss.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
+            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Largest W/L</span>
+            <div className="text-sm font-medium mt-1">
+              <span className="text-[#00C853]">+{closedStats.largestWin.toFixed(2)}</span>
+              <span className="text-[#8E9299] mx-1">/</span>
+              <span className="text-[#FF4444]">{closedStats.largestLoss.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
         {activeTab === 'open' ? (

@@ -21,9 +21,9 @@ const proxyFetch = async (req: ProxyRequest) => {
 };
 
 export class RestClient {
-  static async getHistoryOkx(apiKey: string, apiSecret: string, passphrase: string) {
+  static async getHistoryOkx(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number) {
     const method = 'GET';
-    const requestPath = '/api/v5/account/positions-history';
+    const requestPath = '/api/v5/account/positions-history?limit=100';
     const targetUrl = `https://www.okx.com${requestPath}`;
     
     const headers = ExchangeAuth.getOkxHeaders(apiKey, apiSecret, passphrase, method, requestPath);
@@ -34,13 +34,21 @@ export class RestClient {
       headers
     });
     
-    return response.data || [];
+    let list = response.data || [];
+    if (start && end) {
+      list = list.filter((p: any) => p.cTime >= start && p.cTime <= end);
+    }
+    return list;
   }
 
-  static async getHistoryBitget(apiKey: string, apiSecret: string, passphrase: string) {
+  static async getHistoryBitget(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number) {
     // Bitget V2 endpoints: https://api.bitget.com/api/v2/mix/position/history-position
     const method = 'GET';
-    const requestPath = '/api/v2/mix/position/history-position?productType=USDT-FUTURES';
+    let query = 'productType=USDT-FUTURES';
+    if (start) query += `&startTime=${start}`;
+    if (end) query += `&endTime=${end}`;
+    
+    const requestPath = `/api/v2/mix/position/history-position?${query}`;
     const targetUrl = `https://api.bitget.com${requestPath}`;
 
     const headers = ExchangeAuth.getBitgetHeaders(apiKey, apiSecret, passphrase, method, requestPath);
@@ -54,10 +62,13 @@ export class RestClient {
     return response.data?.list || [];
   }
 
-  static async getHistoryBybit(apiKey: string, apiSecret: string) {
+  static async getHistoryBybit(apiKey: string, apiSecret: string, start?: number, end?: number) {
     // Bybit V5 endpoint: /v5/position/closed-pnl
     const method = 'GET';
-    const query = 'category=linear'; // Required for V5 depending on account type. Using linear for USDT perps.
+    let query = 'category=linear&limit=100'; // Required for V5 depending on account type. Using linear for USDT perps.
+    if (start) query += `&startTime=${start}`;
+    if (end) query += `&endTime=${end}`;
+    
     const requestPath = `/v5/position/closed-pnl?${query}`;
     const targetUrl = `https://api.bybit.com${requestPath}`;
 
