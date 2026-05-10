@@ -4,10 +4,9 @@ import { LayoutDashboard, KeyRound, Settings, Activity } from 'lucide-react';
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  onOpenConfig: () => void;
 }
 
-export function Sidebar({ activeTab, setActiveTab, onOpenConfig }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'positions', label: 'Positions', icon: Activity },
@@ -42,8 +41,12 @@ export function Sidebar({ activeTab, setActiveTab, onOpenConfig }: SidebarProps)
 
       <div className="p-4 border-t border-[#2a2b30]">
         <button
-          onClick={onOpenConfig}
-          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50 rounded-lg transition-colors"
+          onClick={() => setActiveTab('api-keys')}
+          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === 'api-keys'
+              ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
+              : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
+          }`}
         >
           <KeyRound className="w-4 h-4" />
           API Keys

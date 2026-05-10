@@ -5,14 +5,16 @@
 
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { ApiConfigModal } from './components/ApiConfigModal';
+import { ApiKeys } from './components/ApiKeys';
 import { WorkSpace } from './components/WorkSpace';
 import { Dashboard } from './components/Dashboard';
 import { Positions } from './components/Positions';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
+
+  let activeTabName = activeTab;
+  if (activeTab === 'api-keys') activeTabName = 'API Keys';
 
   return (
     <WorkSpace>
@@ -20,24 +22,21 @@ export default function App() {
         <Sidebar 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
-          onOpenConfig={() => setIsConfigOpen(true)} 
         />
 
-        <main className="flex-1 overflow-auto bg-[#0b0c10] p-6">
-          <header className="mb-8">
+        <main className="flex-1 overflow-hidden bg-[#0b0c10] p-6 flex flex-col">
+          <header className="mb-6 shrink-0">
             <h2 className="text-2xl font-semibold tracking-tight text-white capitalize">
-              {activeTab}
+              {activeTabName}
             </h2>
           </header>
 
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'positions' && <Positions />}
+          <div className="flex-1 overflow-auto">
+            {activeTab === 'dashboard' && <Dashboard />}
+            {activeTab === 'positions' && <Positions />}
+            {activeTab === 'api-keys' && <ApiKeys />}
+          </div>
         </main>
-
-        <ApiConfigModal 
-          isOpen={isConfigOpen} 
-          onClose={() => setIsConfigOpen(false)} 
-        />
       </div>
     </WorkSpace>
   );
