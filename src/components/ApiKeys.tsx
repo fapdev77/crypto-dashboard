@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Trash2, Power, Eye, EyeOff, Plus } from 'lucide-react';
+import { Save, Trash2, Power, Eye, EyeOff, Plus, Activity, AlertCircle } from 'lucide-react';
 import { useApiKeysStore, Exchange } from '../store/apiKeysStore';
 import { useDashboardStore } from '../store/dashboardStore';
 
@@ -11,7 +11,7 @@ const EXCHANGES: { id: Exchange; name: string; requiresPassphrase?: boolean }[] 
 
 export function ApiKeys() {
   const { keys, addKey, removeKey, toggleKey } = useApiKeysStore();
-  const clearConnectionData = useDashboardStore(state => state.clearConnectionData);
+  const { clearConnectionData, statuses, errors } = useDashboardStore(state => state);
   const [selectedKeyId, setSelectedKeyId] = useState<string | 'new'>('new');
   
   // Form State for new key
@@ -48,23 +48,33 @@ export function ApiKeys() {
       <div className="w-full md:w-[320px] lg:w-[360px] shrink-0 bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col p-4 overflow-y-auto">
         <h2 className="text-lg font-medium text-white mb-4">Connections</h2>
         <div className="space-y-2 flex-1">
-          {keys.map((k) => (
-            <button
-              key={k.id}
-              onClick={() => setSelectedKeyId(k.id)}
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center justify-between transition-colors ${
-                selectedKeyId === k.id
-                  ? 'bg-[#2a2b30] text-white'
-                  : 'text-[#8E9299] hover:bg-[#2a2b30]/50'
-              }`}
-            >
-              <div>
-                <span className="font-medium text-sm block">{k.label}</span>
-                <span className="text-xs opacity-70 uppercase tracking-wider">{k.exchange}</span>
-              </div>
-              <div className={`w-2 h-2 rounded-full ${k.isActive ? 'bg-[#00C853]' : 'bg-[#FF4444]'}`} />
-            </button>
-          ))}
+          {keys.map((k) => {
+            const status = statuses[k.id] || 'disconnected';
+            const isActive = k.isActive;
+            const dotClass = 
+              !isActive ? 'bg-[#8E9299]' :
+              status === 'connected' ? 'bg-[#00C853]' : 
+              status === 'connecting' ? 'bg-[#F2C94C] animate-pulse' : 
+              status === 'error' ? 'bg-[#FF4444]' : 'bg-[#8E9299]';
+
+            return (
+              <button
+                key={k.id}
+                onClick={() => setSelectedKeyId(k.id)}
+                className={`w-full text-left px-4 py-3 rounded-lg flex items-center justify-between transition-colors ${
+                  selectedKeyId === k.id
+                    ? 'bg-[#2a2b30] text-white'
+                    : 'text-[#8E9299] hover:bg-[#2a2b30]/50'
+                }`}
+              >
+                <div>
+                  <span className="font-medium text-sm block">{k.label}</span>
+                  <span className="text-xs opacity-70 uppercase tracking-wider">{k.exchange}</span>
+                </div>
+                <div className={`w-2 h-2 rounded-full ${dotClass}`} />
+              </button>
+            );
+          })}
 
           <button
             onClick={() => setSelectedKeyId('new')}
@@ -89,17 +99,54 @@ export function ApiKeys() {
               <p className="text-xs text-[#8E9299] uppercase">{existingKey.exchange}</p>
             </div>
             
-            <div className="p-4 bg-[#2a2b30]/30 border border-[#2a2b30] rounded-lg">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-[#8E9299]">Status</span>
-                <span className={`text-xs font-mono px-2 py-1 rounded bg-[#1a1b1e] border ${existingKey.isActive ? 'border-[#00C853] text-[#00C853]' : 'border-[#FF4444] text-[#FF4444]'}`}>
-                  {existingKey.isActive ? 'ACTIVE' : 'INACTIVE'}
-                </span>
+            <div className="space-y-4">
+              <div className="p-4 bg-[#2a2b30]/30 border border-[#2a2b30] rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-medium text-white">API Key Configuration</span>
+                  <span className={`text-xs font-mono px-2 py-1 rounded bg-[#1a1b1e] border ${existingKey.isActive ? 'border-[#00C853] text-[#00C853]' : 'border-[#FF4444] text-[#FF4444]'}`}>
+                    {existingKey.isActive ? 'ACTIVE' : 'INACTIVE'}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-[#8E9299] uppercase">API Key Snippet</p>
+                  <p className="font-mono text-sm break-all">{existingKey.apiKey.substring(0, 8)}...{existingKey.apiKey.substring(existingKey.apiKey.length - 4)}</p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <p className="text-xs text-[#8E9299] uppercase">API Key</p>
-                <p className="font-mono text-sm break-all">{existingKey.apiKey.substring(0, 8)}...{existingKey.apiKey.substring(existingKey.apiKey.length - 4)}</p>
-              </div>
+
+              {existingKey.isActive && (
+                <div className="p-4 bg-[#2a2b30]/30 border border-[#2a2b30] rounded-lg space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="w-4 h-4 text-[#8E9299]" />
+                    <span className="text-sm font-medium text-white">Connection Details</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-[#8E9299] uppercase mb-1">Status</p>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          statuses[existingKey.id] === 'connected' ? 'bg-[#00C853]' : 
+                          statuses[existingKey.id] === 'connecting' ? 'bg-[#F2C94C] animate-pulse' : 
+                          statuses[existingKey.id] === 'error' ? 'bg-[#FF4444]' : 'bg-[#8E9299]'
+                        }`} />
+                        <span className="text-sm text-white capitalize break-all">
+                          {statuses[existingKey.id] || 'Disconnected'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {errors[existingKey.id] && (
+                    <div className="mt-4 p-3 bg-[#FF4444]/10 border border-[#FF4444]/20 rounded-lg flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-[#FF4444] shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-medium text-[#FF4444]">Connection Error</p>
+                        <p className="text-xs text-[#FF4444]/80 mt-1 break-words">{errors[existingKey.id]}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3 mt-6">

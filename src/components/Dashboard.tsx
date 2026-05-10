@@ -4,7 +4,7 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { DollarSign, Wallet, ArrowUpDown, Search, X } from 'lucide-react';
 
 export function Dashboard() {
-  const { balances, statuses } = useDashboardStore();
+  const { balances } = useDashboardStore();
   const keys = useApiKeysStore(state => state.keys);
 
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'usdValue', direction: 'desc' });
@@ -68,27 +68,6 @@ export function Dashboard() {
             <DollarSign className="w-6 h-6 text-[#2F6BFF]" />
           </div>
         </div>
-      </div>
-
-      {/* Connection Status */}
-      <div className="flex flex-wrap gap-4">
-        {keys.filter(k => k.isActive).map(k => {
-           const status = statuses[k.id] || 'disconnected';
-           return (
-             <div key={k.id} className="flex items-center gap-2 bg-[#151619] border border-[#2a2b30] px-4 py-2 rounded-lg">
-               <div className={`w-2 h-2 rounded-full ${
-                  status === 'connected' ? 'bg-[#00C853]' : 
-                  status === 'connecting' ? 'bg-[#F2C94C] animate-pulse' : 
-                  status === 'error' ? 'bg-[#FF4444]' : 'bg-[#8E9299]'
-                }`} />
-                <span className="text-sm font-medium text-white">{k.label}</span>
-                <span className="text-xs text-[#8E9299] uppercase ml-1 opacity-70">({k.exchange})</span>
-             </div>
-           )
-        })}
-        {keys.filter(k => k.isActive).length === 0 && (
-          <div className="text-sm text-[#8E9299] italic">Nenhuma API ativa.</div>
-        )}
       </div>
 
       {/* Wallets Table */}

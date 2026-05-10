@@ -29,7 +29,9 @@ export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'er
 interface DashboardState {
   // Connection statuses tracking (keyed by connectionId)
   statuses: Record<string, ConnectionStatus>;
-  setConnectionStatus: (connectionId: string, status: ConnectionStatus) => void;
+  errors: Record<string, string | null>;
+  setConnectionStatus: (connectionId: string, status: ConnectionStatus, error?: string | null) => void;
+  setConnectionError: (connectionId: string, error: string | null) => void;
 
   // Wallet balances
   balances: Record<string, BalanceItem>;
@@ -47,8 +49,13 @@ interface DashboardState {
 
 export const useDashboardStore = create<DashboardState>((set) => ({
   statuses: {},
-  setConnectionStatus: (connectionId, status) => set((state) => ({
-    statuses: { ...state.statuses, [connectionId]: status }
+  errors: {},
+  setConnectionStatus: (connectionId, status, error) => set((state) => ({
+    statuses: { ...state.statuses, [connectionId]: status },
+    errors: error !== undefined ? { ...state.errors, [connectionId]: error } : state.errors
+  })),
+  setConnectionError: (connectionId, error) => set((state) => ({
+    errors: { ...state.errors, [connectionId]: error }
   })),
 
   balances: {},
@@ -121,6 +128,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     const nextBalances = { ...state.balances };
     const nextPositions = { ...state.positions };
     const nextStatuses = { ...state.statuses };
+    const nextErrors = { ...state.errors };
     
     for (const key in nextBalances) {
       if (nextBalances[key].connectionId === connectionId) {
@@ -135,8 +143,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     }
     
     delete nextStatuses[connectionId];
+    delete nextErrors[connectionId];
 
-    return { balances: nextBalances, positions: nextPositions, statuses: nextStatuses };
+    return { balances: nextBalances, positions: nextPositions, statuses: nextStatuses, errors: nextErrors };
   })
 }));
 

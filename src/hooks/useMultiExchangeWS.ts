@@ -23,6 +23,7 @@ const WS_URLS = {
 export function useMultiExchangeWS() {
   const keys = useApiKeysStore((state) => state.keys);
   const setConnectionStatus = useDashboardStore((state) => state.setConnectionStatus);
+  const setConnectionError = useDashboardStore((state) => state.setConnectionError);
   const updateBalances = useDashboardStore((state) => state.updateBalances);
   const updatePositions = useDashboardStore((state) => state.updatePositions);
 
@@ -77,7 +78,8 @@ export function useMultiExchangeWS() {
       delete reconnectTimers.current[id];
     }
 
-    setConnectionStatus(id, 'disconnected');
+    setConnectionStatus(id, 'disconnected', null);
+    setConnectionError(id, null);
   };
 
   const startPing = (config: ApiCredentials, ws: WebSocket) => {
@@ -97,7 +99,8 @@ export function useMultiExchangeWS() {
   const connect = (config: ApiCredentials) => {
     const { id, exchange, apiKey, apiSecret, passphrase } = config;
 
-    setConnectionStatus(id, 'connecting');
+    setConnectionStatus(id, 'connecting', null);
+    setConnectionError(id, null);
     const wsUrl = exchange === 'bitget' ? getBitgetUrl() : WS_URLS[exchange];
     console.log(`[WS-${id}] Iniciando conexão para: ${wsUrl}`);
     
@@ -156,15 +159,17 @@ export function useMultiExchangeWS() {
             }
           }
           console.log(`[REST-${id}] Dados iniciais carregados para Bybit.`);
-        } catch (error) {
+        } catch (error: any) {
           console.error(`[REST-${id}] Erro ao buscar dados iniciais para Bybit:`, error);
+          setConnectionError(id, `REST Error: ${error.message}`);
         }
       })();
     }
 
     ws.onopen = () => {
       console.log(`[WS-${id}] Conexão física estabelecida com sucesso.`);
-      setConnectionStatus(id, 'connected');
+      setConnectionStatus(id, 'connected', null);
+      setConnectionError(id, null);
       startPing(config, ws);
 
       try {
@@ -210,14 +215,15 @@ export function useMultiExchangeWS() {
     ws.onerror = (error) => {
       console.error(`[WS-${id}] EVENTO DE ERRO. Se "isTrusted: true" sem detalhes, possivelmente o navegador bloqueou a conexão (ex: CORS/Origin rejection, WAF, ou problema de rede).`);
       console.error(`[WS-${id}] Detalhes do erro:`, error);
-      setConnectionStatus(id, 'error');
+      setConnectionStatus(id, 'error', 'WebSocket Connection Error');
+      setConnectionError(id, 'WebSocket Connection Error');
     };
 
     ws.onclose = (event) => {
       console.log(`[WS-${id}] Conexão encerrada. Code: ${event.code}, Reason: ${event.reason || "Sem razão especificada"}`);
       const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
       if (currentConfig && currentConfig.isActive) {
-        setConnectionStatus(id, 'error');
+        setConnectionStatus(id, 'error', event.reason || 'Closed');
         console.log(`[WS-${id}] Tentando reconectar em 5 segundos...`);
         reconnectTimers.current[id] = setTimeout(() => {
           connect(currentConfig);
@@ -247,19 +253,25 @@ export function useMultiExchangeWS() {
         }));
       } else if (data.event === 'error') {
         console.error(`[WS-${id}][Error] Bitget erro:`, data.code, data.msg);
+        setConnectionError(id, `Bitget WS Error (${data.code}): ${data.msg}`);
       }
     }
 
-    if (exchange === 'okx' && data.event === 'login' && data.code === '0') {
-      console.log(`[WS-${id}][Auth] OKX login realizado com sucesso!`);
-      ws.send(JSON.stringify({
-        op: 'subscribe',
-        args: [
-          { channel: 'account' },
-          { channel: 'positions', instType: 'SWAP' },
-          { channel: 'positions', instType: 'MARGIN' }
-        ]
-      }));
+    if (exchange === 'okx') {
+      if (data.event === 'login' && data.code === '0') {
+        console.log(`[WS-${id}][Auth] OKX login realizado com sucesso!`);
+        ws.send(JSON.stringify({
+          op: 'subscribe',
+          args: [
+            { channel: 'account' },
+            { channel: 'positions', instType: 'SWAP' },
+            { channel: 'positions', instType: 'MARGIN' }
+          ]
+        }));
+      } else if (data.event === 'error') {
+        console.error(`[WS-${id}][Error] OKX erro:`, data.code, data.msg);
+        setConnectionError(id, `OKX WS Error (${data.code}): ${data.msg}`);
+      }
     }
 
     if (exchange === 'bybit' && data.op === 'auth') {
@@ -272,6 +284,7 @@ export function useMultiExchangeWS() {
         }));
       } else {
         console.error(`[WS-${id}][Error] Bybit erro de login:`, data);
+        setConnectionError(id, `Bybit Auth Error: ${data.ret_msg}`);
       }
     }
     
