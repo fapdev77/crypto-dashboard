@@ -11,7 +11,7 @@ interface OpenPositionsProps {
 export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps) {
   const { positions } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
-  const [viewMode, setViewMode] = useState<'detailed' | 'lite'>('detailed');
+  const [viewMode, setViewMode] = useState<'detailed' | 'lite'>('lite');
   
   const positionsList = Object.values(positions);
 
@@ -53,16 +53,16 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
       {/* Toggle View Mode */}
       <div className="flex bg-[#1a1b1e] rounded-lg p-1 w-max mb-4">
         <button 
-          onClick={() => setViewMode('detailed')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'detailed' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'}`}
-        >
-          Detailed
-        </button>
-        <button 
           onClick={() => setViewMode('lite')}
           className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'lite' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'}`}
         >
           Lite
+        </button>
+        <button 
+          onClick={() => setViewMode('detailed')}
+          className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'detailed' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'}`}
+        >
+          Detailed
         </button>
       </div>
 
