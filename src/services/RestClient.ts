@@ -21,9 +21,9 @@ const proxyFetch = async (req: ProxyRequest) => {
 };
 
 export class RestClient {
-  static async getHistoryOkx(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, after?: string) {
+  static async getHistoryOkx(instType: string, apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, after?: string) {
     const method = 'GET';
-    let query = 'limit=100';
+    let query = `instType=${instType}&limit=100`;
     if (after) query += `&after=${after}`;
     const requestPath = `/api/v5/account/positions-history?${query}`;
     const targetUrl = `https://www.okx.com${requestPath}`;
@@ -53,10 +53,10 @@ export class RestClient {
     }
   }
 
-  static async getHistoryBitget(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, idLessThan?: string) {
+  static async getHistoryBitget(productType: string, apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, idLessThan?: string) {
     // Bitget V2 endpoints: https://api.bitget.com/api/v2/mix/position/history-position
     const method = 'GET';
-    let query = 'productType=USDT-FUTURES';
+    let query = `productType=${productType}&limit=100`;
     if (start) query += `&startTime=${start}`;
     if (end) query += `&endTime=${end}`;
     if (idLessThan) query += `&idLessThan=${idLessThan}`;

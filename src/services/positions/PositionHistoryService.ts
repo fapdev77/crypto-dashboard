@@ -3,7 +3,7 @@ import { OkxPositionMapper } from './OkxPositionMapper';
 import { BitgetPositionMapper } from './BitgetPositionMapper';
 import { BybitPositionMapper } from './BybitPositionMapper';
 import { RestClient } from '../RestClient';
-import { Exchange } from '../../store/apiKeysStore';
+import { ExchangeAuth } from '../ExchangeAuth';
 
 export class PositionHistoryService {
   private okxMapper = new OkxPositionMapper();
@@ -14,14 +14,20 @@ export class PositionHistoryService {
     try {
       console.log(`[PositionHistoryService] Fetching history for ${key.exchange} (${key.label})`);
       if (key.exchange === 'okx') {
-        const raw = await RestClient.getHistoryOkx(key.apiKey, key.apiSecret, key.passphrase || '', start, end);
-        console.log(`[PositionHistoryService] OKX raw records: ${raw.length}`);
-        return this.okxMapper.mapHistory(raw, key.id, key.label);
+        let allRaw: any[] = [];
+        const instTypes = ['SWAP', 'FUTURES', 'MARGIN'];
+        for (const type of instTypes) {
+           const raw = await RestClient.getHistoryOkx(type, key.apiKey, key.apiSecret, key.passphrase || '', start, end);
+           allRaw = [...allRaw, ...raw];
+        }
+        console.log(`[PositionHistoryService] OKX raw records: ${allRaw.length}`);
+        return this.okxMapper.mapHistory(allRaw, key.id, key.label);
       } else if (key.exchange === 'bitget') {
         const raw = await this.fetchBitgetPaginated(key, start, end);
         console.log(`[PositionHistoryService] Bitget raw records: ${raw.length}`);
         return this.bitgetMapper.mapHistory(raw, key.id, key.label);
       } else if (key.exchange === 'bybit') {
+        await ExchangeAuth.syncBybitTime();
         const raw = await RestClient.getHistoryBybit(key.apiKey, key.apiSecret, start, end);
         console.log(`[PositionHistoryService] Bybit raw records: ${raw.length}`);
         return this.bybitMapper.mapHistory(raw, key.id, key.label);
@@ -33,9 +39,13 @@ export class PositionHistoryService {
   }
 
   private async fetchBitgetPaginated(key: any, start?: number, end?: number): Promise<any[]> {
-    // Paginação: Utilizar obrigatoriamente idLessThan (cursor-based)
-    // Here we wrap RestClient assuming RestClient supports idLessThan
-    // For now we use the basic getHistoryBitget but we should upgrade it if we implement true pagination here
-    return await RestClient.getHistoryBitget(key.apiKey, key.apiSecret, key.passphrase || '', start, end, '');
+    const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+    let allRaw: any[] = [];
+    for (const pType of productTypes) {
+       // Paginação simplificada para o teste
+       const raw = await RestClient.getHistoryBitget(pType, key.apiKey, key.apiSecret, key.passphrase || '', start, end, '');
+       allRaw = [...allRaw, ...raw];
+    }
+    return allRaw;
   }
 }

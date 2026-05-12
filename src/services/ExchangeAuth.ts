@@ -49,13 +49,38 @@ export class ExchangeAuth {
     };
   }
 
+  static bybitTimeOffset = 0;
+
+  static async syncBybitTime() {
+    try {
+      const targetUrl = 'https://api.bybit.com/v5/market/time';
+      const response = await fetch('/api/proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetUrl,
+          method: 'GET',
+          headers: {}
+        }),
+      });
+      const data = await response.json();
+      if (data && data.time) {
+        const serverTime = parseInt(data.time, 10);
+        this.bybitTimeOffset = serverTime - Date.now();
+        console.log(`[Time-Sync] Bybit sincronizada. Offset: ${this.bybitTimeOffset}ms`);
+      }
+    } catch (e) {
+      console.error("[Time-Sync] Erro ao sincronizar com Bybit, usando offset 0.");
+    }
+  }
+
   static getBybitHeaders(
     apiKey: string,
     apiSecret: string,
     bodyOrQuery: string = '' // For GET, this is the query string (e.g., 'category=linear&symbol=BTCUSDT'). For POST, JSON string.
   ): SignatureHeaders {
-    const timestamp = Date.now().toString();
-    const recvWindow = '5000';
+    const timestamp = (Date.now() + this.bybitTimeOffset).toString();
+    const recvWindow = '10000';
     const prehash = timestamp + apiKey + recvWindow + bodyOrQuery;
     const signature = CryptoJS.HmacSHA256(prehash, apiSecret).toString(CryptoJS.enc.Hex);
 
