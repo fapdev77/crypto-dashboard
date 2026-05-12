@@ -17,11 +17,13 @@ async function startServer() {
     pathRewrite: {
       '^/ws-proxy/bitget': '', // remove o path de entrada
     },
-    onProxyReqWs: (proxyReq, req, socket, options, head) => {
-      // Remove a origem do navegador para simular uma conexão server-to-server
-      proxyReq.removeHeader('origin');
+    on: {
+      proxyReqWs: (proxyReq, req, socket, options, head) => {
+        // Remove a origem do navegador para simular uma conexão server-to-server
+        proxyReq.removeHeader('origin');
+      }
     }
-  }));
+  }) as any);
 
   // We need express.text or raw to parse arbitrary body formats, but json is also good
   // ONLY for non-websocket proxy routes

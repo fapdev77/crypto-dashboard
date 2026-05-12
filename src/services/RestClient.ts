@@ -21,9 +21,11 @@ const proxyFetch = async (req: ProxyRequest) => {
 };
 
 export class RestClient {
-  static async getHistoryOkx(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number) {
+  static async getHistoryOkx(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, after?: string) {
     const method = 'GET';
-    const requestPath = '/api/v5/account/positions-history?limit=100';
+    let query = 'limit=100';
+    if (after) query += `&after=${after}`;
+    const requestPath = `/api/v5/account/positions-history?${query}`;
     const targetUrl = `https://www.okx.com${requestPath}`;
     
     const headers = ExchangeAuth.getOkxHeaders(apiKey, apiSecret, passphrase, method, requestPath);
@@ -36,17 +38,18 @@ export class RestClient {
     
     let list = response.data || [];
     if (start && end) {
-      list = list.filter((p: any) => p.cTime >= start && p.cTime <= end);
+      list = list.filter((p: any) => parseInt(p.uTime || p.cTime || '0') >= start && parseInt(p.uTime || p.cTime || '0') <= end);
     }
     return list;
   }
 
-  static async getHistoryBitget(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number) {
+  static async getHistoryBitget(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, idLessThan?: string) {
     // Bitget V2 endpoints: https://api.bitget.com/api/v2/mix/position/history-position
     const method = 'GET';
     let query = 'productType=USDT-FUTURES';
     if (start) query += `&startTime=${start}`;
     if (end) query += `&endTime=${end}`;
+    if (idLessThan) query += `&idLessThan=${idLessThan}`;
     
     const requestPath = `/api/v2/mix/position/history-position?${query}`;
     const targetUrl = `https://api.bitget.com${requestPath}`;
@@ -62,12 +65,12 @@ export class RestClient {
     return response.data?.list || [];
   }
 
-  static async getHistoryBybit(apiKey: string, apiSecret: string, start?: number, end?: number) {
-    // Bybit V5 endpoint: /v5/position/closed-pnl
+  static async fetchBybitCategory(category: string, apiKey: string, apiSecret: string, start?: number, end?: number, cursor?: string) {
     const method = 'GET';
-    let query = 'category=linear&limit=100'; // Required for V5 depending on account type. Using linear for USDT perps.
+    let query = `category=${category}&limit=100`;
     if (start) query += `&startTime=${start}`;
     if (end) query += `&endTime=${end}`;
+    if (cursor) query += `&cursor=${cursor}`;
     
     const requestPath = `/v5/position/closed-pnl?${query}`;
     const targetUrl = `https://api.bybit.com${requestPath}`;
@@ -81,10 +84,23 @@ export class RestClient {
     });
     
     if (response.retCode !== 0) {
-      throw new Error(`Bybit API Proxy Error (${response.retCode}): ${response.retMsg}`);
+      if (response.retCode === 10001) return []; // Empty or unsupported for this account type
+      console.warn(`Bybit API Proxy Warning (${response.retCode}): ${response.retMsg}`);
+      return [];
     }
     
     return response.result?.list || [];
+  }
+
+  static async getHistoryBybit(apiKey: string, apiSecret: string, start?: number, end?: number, cursor?: string) {
+    try {
+      const linear = await this.fetchBybitCategory('linear', apiKey, apiSecret, start, end, cursor);
+      const inverse = await this.fetchBybitCategory('inverse', apiKey, apiSecret, start, end, cursor);
+      return [...linear, ...inverse];
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
 
   static async getPositionsBybit(apiKey: string, apiSecret: string) {
