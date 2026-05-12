@@ -58,6 +58,10 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
             side: 'long',
             realizedPnl: 150.25,
             closeTime: Date.now() - 3600000, // 1 hour ago
+            entryPrice: 60100.5,
+            closePrice: 60500.0,
+            size: 0.375,
+            raw: { leverage: 10, marginMode: 'cross' }
           },
           {
             id: 'mock-hist-2',
@@ -68,6 +72,10 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
             side: 'short',
             realizedPnl: -45.50,
             closeTime: Date.now() - 86400000, // 1 day ago
+            entryPrice: 3100.25,
+            closePrice: 3150.75,
+            size: 0.9,
+            raw: { leverage: 5, marginMode: 'isolated' }
           },
           {
             id: 'mock-hist-3',
@@ -78,6 +86,10 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
             side: 'long',
             realizedPnl: 320.75,
             closeTime: Date.now() - 172800000, // 2 days ago
+            entryPrice: 140.5,
+            closePrice: 152.0,
+            size: 27.8,
+            raw: { leverage: 20, marginMode: 'cross' }
           }
         ];
         
@@ -100,6 +112,9 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
               side: p.posSide || p.direction,
               realizedPnl: parseFloat(p.realizedPnl || p.pnl || '0'),
               closeTime: parseInt(p.uTime || p.cTime),
+              entryPrice: parseFloat(p.openAvgPx || '0'),
+              closePrice: parseFloat(p.avgPx || p.closeAvgPx || '0'),
+              size: parseFloat(p.closeVol || p.closeTotalPos || '0'),
               raw: p
             }));
             allHistory = [...allHistory, ...mapped];
@@ -119,6 +134,9 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
               side: p.holdSide || p.posSide,
               realizedPnl: parseFloat(p.achievedProfits || p.netProfit || '0'),
               closeTime: parseInt(p.uTime),
+              entryPrice: parseFloat(p.openPriceAvg || p.openAvgPx || '0'),
+              closePrice: parseFloat(p.closePriceAvg || p.closeAvgPx || '0'),
+              size: parseFloat(p.closeSize || p.closeVol || '0'),
               raw: p
             }));
             allHistory = [...allHistory, ...mapped];
@@ -138,6 +156,9 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
               side: p.side,
               realizedPnl: parseFloat(p.closedPnl || '0'),
               closeTime: parseInt(p.updatedTime),
+              entryPrice: parseFloat(p.avgEntryPrice || '0'),
+              closePrice: parseFloat(p.avgExitPrice || '0'),
+              size: parseFloat(p.closedSize || '0'),
               raw: p
             }));
             allHistory = [...allHistory, ...mapped];
@@ -290,16 +311,23 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
           <p className="text-[#8E9299]">Nenhum histórico encontrado para as APIs ativas no período.</p>
         </div>
       ) : (
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden overflow-x-auto min-h-[300px]">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-x-auto">
+          <table className="w-full text-left whitespace-nowrap min-w-[900px]">
             <thead>
-              <tr className="bg-[#1a1b1e] border-b border-[#2a2b30]">
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Time</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Symbol</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Account</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Exchange</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider">Side</th>
-                <th className="px-6 py-3 text-xs font-medium text-[#8E9299] uppercase tracking-wider text-right">Realized PnL</th>
+              <tr className="border-b border-[#2a2b30] text-xs text-[#8E9299]">
+                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Futures</th>
+                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Open time</th>
+                <th className="px-4 py-3 font-normal">
+                  <div className="w-max border-b border-dashed border-[#8E9299]/50">Avg. entry price</div>
+                  <div className="w-max border-b border-dashed border-[#8E9299]/50 mt-1">Avg. exit price</div>
+                </th>
+                <th className="px-4 py-3 font-normal">
+                  <div className="w-max border-b border-dashed border-[#8E9299]/50">Closed quantity</div>
+                  <div className="w-max border-b border-dashed border-[#8E9299]/50 mt-1">Max position size</div>
+                </th>
+                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Position PnL</th>
+                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Position ROI</th>
+                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Closed time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2b30]">
@@ -307,33 +335,104 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                 const isLong = p.side?.toLowerCase() === 'long' || p.side?.toLowerCase() === 'buy';
                 const isShort = p.side?.toLowerCase() === 'short' || p.side?.toLowerCase() === 'sell';
                 const sideLabel = isLong ? 'Long' : isShort ? 'Short' : p.side || 'Net';
-                const sideClass = isLong ? 'text-[#00C853] bg-[#00C853]/10' : isShort ? 'text-[#FF4444] bg-[#FF4444]/10' : 'text-[#8E9299] bg-[#8E9299]/10';
+                const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
                 
                 const pnlClass = p.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
+                
+                const leverage = p.raw?.leverage || p.raw?.lever || '1';
+                const marginModeLabel = (p.raw?.marginMode || p.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
+                const symbolSuffix = p.symbol.replace(/USDT|USDC|USD|-|SWAP/g, '');
+
+                let roiStr = '--';
+                let roiValue = 0;
+                let hasRoi = false;
+                
+                // Identify the quote currency for the PnL (e.g. USDT)
+                // For USDT/USDC margined, it's usually the part after - or just USDT
+                const isUSDT = p.symbol.includes('USDT');
+                const isUSDC = p.symbol.includes('USDC');
+                const pnlCurrency = isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD');
+                
+                if (p.raw?.roi !== undefined && p.raw?.roi !== null) {
+                   roiValue = parseFloat(p.raw.roi) * 100;
+                   hasRoi = true;
+                } else if (p.entryPrice && p.closePrice && p.size && leverage) {
+                  const numLeverage = parseFloat(leverage);
+                  
+                  let positionValueUsd = 0;
+                  
+                  // For OKX, size is in contracts. We can deduce actual coin size from 'pnl' and price diff
+                  if (p.exchange === 'okx' && p.raw?.pnl) {
+                    const priceDiff = Math.abs(p.closePrice - p.entryPrice);
+                    const purePnl = Math.abs(parseFloat(p.raw.pnl));
+                    if (priceDiff > 0) {
+                      const actualCoinSize = purePnl / priceDiff;
+                      positionValueUsd = actualCoinSize * p.entryPrice;
+                    } else {
+                      // Fallback if price diff is 0 (ROI is 0 anyway)
+                      positionValueUsd = p.entryPrice * p.size;
+                    }
+                  } else if (p.exchange === 'bybit' && p.raw?.cumEntryValue) {
+                    positionValueUsd = parseFloat(p.raw.cumEntryValue);
+                  } else {
+                    // For Bitget and others where size is in base coin
+                    positionValueUsd = p.entryPrice * p.size;
+                  }
+                  
+                  const initialMargin = positionValueUsd / numLeverage;
+                  
+                  if (initialMargin > 0) {
+                     roiValue = (p.realizedPnl / initialMargin) * 100;
+                     hasRoi = true;
+                  }
+                }
+                
+                if (hasRoi && isFinite(roiValue)) {
+                   roiStr = `${roiValue > 0 ? '+' : ''}${formatValue(roiValue, 2)}%`;
+                }
+                
+                const roiClass = hasRoi ? (roiValue >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]') : 'text-[#8E9299]';
 
                 return (
                   <tr key={p.id} className="hover:bg-[#2a2b30]/30 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#8E9299]">
-                      {p.closeTime && !isNaN(p.closeTime) ? format(new Date(p.closeTime), 'MM/dd/yy HH:mm') : '-'}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm">{p.symbol}</span>
+                        <span className="text-[10px] font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-1.5 py-0.5 rounded capitalize">
+                          {p.exchange} ({p.label})
+                        </span>
+                      </div>
+                      <div className={`text-xs mt-1 flex items-center gap-1 ${sideColor}`}>
+                        {sideLabel} · {leverage}x · {marginModeLabel}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-bold text-white">{p.symbol}</span>
+                    <td className="px-4 py-3 text-[#8E9299]">
+                      <div className="text-sm font-mono text-white">--</div>
+                      <div className="text-sm font-mono text-white mt-1">--</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-white">{p.label}</span>
+                    <td className="px-4 py-3">
+                      <div className="font-mono text-white text-sm truncate">{formatValue(p.entryPrice, 4)}</div>
+                      <div className="font-mono text-white text-sm truncate mt-1">{formatValue(p.closePrice, 4)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-2 py-1 rounded capitalize">
-                        {p.exchange}
-                      </span>
+                    <td className="px-4 py-3">
+                      <div className="font-mono text-white text-sm">{p.size ? formatValue(p.size, 4) : '--'} <span className="font-sans text-xs text-[#8E9299]">{p.exchange === 'okx' ? 'Cont.' : symbolSuffix}</span></div>
+                      <div className="font-mono text-[#8E9299] text-xs mt-1">{p.size ? formatValue(p.size, 4) : '--'} <span className="font-sans text-xs text-[#8E9299]">{p.exchange === 'okx' ? 'Cont.' : symbolSuffix}</span></div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-xs font-bold px-2 py-1 rounded ${sideClass}`}>
-                        {sideLabel}
-                      </span>
+                    <td className="px-4 py-3">
+                      <div className={`font-mono text-sm ${pnlClass}`}>
+                        {p.realizedPnl > 0 ? '+' : ''}{formatValue(p.realizedPnl, 4)} <span className="font-sans text-xs text-[#8E9299]">{pnlCurrency}</span>
+                      </div>
                     </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold font-mono text-right ${pnlClass}`}>
-                      {p.realizedPnl >= 0 ? '+' : ''}{p.realizedPnl.toFixed(2)}
+                    <td className="px-4 py-3">
+                      <span className={`font-mono text-sm ${roiClass}`}>{roiStr}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-mono text-white text-sm">
+                        {p.closeTime && !isNaN(p.closeTime) ? format(new Date(p.closeTime), 'yyyy-MM-dd') : '--'}
+                      </div>
+                      <div className="font-mono text-white text-sm mt-1">
+                        {p.closeTime && !isNaN(p.closeTime) ? format(new Date(p.closeTime), 'HH:mm:ss') : '--'}
+                      </div>
                     </td>
                   </tr>
                 );
