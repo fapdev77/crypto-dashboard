@@ -19,7 +19,7 @@ export class BybitPositionMapper implements PositionMapperStrategy {
       // PnL interpretation: Bybit closedPnl handles signs, but for visualization we map it here
       
       return {
-        id: `${connectionId}-${p.orderId || p.id}`,
+        id: `${connectionId}-${p.orderId || p.closedPnlId || Math.random().toString(36)}-${cTime}`,
         connectionId,
         label,
         exchange: 'BYBIT',

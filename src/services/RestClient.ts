@@ -30,17 +30,27 @@ export class RestClient {
     
     const headers = ExchangeAuth.getOkxHeaders(apiKey, apiSecret, passphrase, method, requestPath);
     
-    const response = await proxyFetch({
-      targetUrl,
-      method,
-      headers
-    });
-    
-    let list = response.data || [];
-    if (start && end) {
-      list = list.filter((p: any) => parseInt(p.uTime || p.cTime || '0') >= start && parseInt(p.uTime || p.cTime || '0') <= end);
+    console.log(`[REST-Okx-History] req params: start=${start}, end=${end}, after=${after}`);
+    console.log(`[REST-Okx-History] targetUrl:`, targetUrl);
+
+    try {
+      const response = await proxyFetch({
+        targetUrl,
+        method,
+        headers
+      });
+      console.log(`[REST-Okx-History] response code:`, response.code, `msg:`, response.msg);
+
+      let list = response.data || [];
+      if (start && end) {
+        list = list.filter((p: any) => parseInt(p.uTime || p.cTime || '0') >= start && parseInt(p.uTime || p.cTime || '0') <= end);
+      }
+      console.log(`[REST-Okx-History] found ${list.length} items (after filter)`);
+      return list;
+    } catch (error) {
+      console.error(`[REST-Okx-History] fetch error:`, error);
+      return [];
     }
-    return list;
   }
 
   static async getHistoryBitget(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, idLessThan?: string) {
@@ -56,13 +66,24 @@ export class RestClient {
 
     const headers = ExchangeAuth.getBitgetHeaders(apiKey, apiSecret, passphrase, method, requestPath);
     
-    const response = await proxyFetch({
-      targetUrl,
-      method,
-      headers
-    });
-    
-    return response.data?.list || [];
+    console.log(`[REST-Bitget-History] req params: start=${start}, end=${end}, idLessThan=${idLessThan}`);
+    console.log(`[REST-Bitget-History] targetUrl:`, targetUrl);
+
+    try {
+      const response = await proxyFetch({
+        targetUrl,
+        method,
+        headers
+      });
+      console.log(`[REST-Bitget-History] response code:`, response.code, `msg:`, response.msg);
+      // Bitget response.data might be a list or object containing list
+      const list = response.data?.entList || response.data?.list || [];
+      console.log(`[REST-Bitget-History] found ${list.length} items`);
+      return list;
+    } catch (error) {
+      console.error(`[REST-Bitget-History] fetch error:`, error);
+      return [];
+    }
   }
 
   static async fetchBybitCategory(category: string, apiKey: string, apiSecret: string, start?: number, end?: number, cursor?: string) {
@@ -77,19 +98,31 @@ export class RestClient {
 
     const headers = ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
     
-    const response = await proxyFetch({
-      targetUrl,
-      method,
-      headers
-    });
-    
-    if (response.retCode !== 0) {
-      if (response.retCode === 10001) return []; // Empty or unsupported for this account type
-      console.warn(`Bybit API Proxy Warning (${response.retCode}): ${response.retMsg}`);
+    console.log(`[REST-Bybit-History-${category}] req params: start=${start}, end=${end}`);
+    console.log(`[REST-Bybit-History-${category}] targetUrl:`, targetUrl);
+
+    try {
+      const response = await proxyFetch({
+        targetUrl,
+        method,
+        headers
+      });
+      
+      console.log(`[REST-Bybit-History-${category}] response retCode:`, response.retCode, `retMsg:`, response.retMsg);
+
+      if (response.retCode !== 0) {
+        if (response.retCode === 10001) return []; // Empty or unsupported for this account type
+        console.warn(`Bybit API Proxy Warning (${response.retCode}): ${response.retMsg}`);
+        return [];
+      }
+      
+      const list = response.result?.list || [];
+      console.log(`[REST-Bybit-History-${category}] found ${list.length} items`);
+      return list;
+    } catch (error) {
+      console.error(`[REST-Bybit-History-${category}] fetch error:`, error);
       return [];
     }
-    
-    return response.result?.list || [];
   }
 
   static async getHistoryBybit(apiKey: string, apiSecret: string, start?: number, end?: number, cursor?: string) {

@@ -12,14 +12,18 @@ export class PositionHistoryService {
 
   public async fetchExchangeHistory(key: any, start?: number, end?: number): Promise<UnifiedPosition[]> {
     try {
+      console.log(`[PositionHistoryService] Fetching history for ${key.exchange} (${key.label})`);
       if (key.exchange === 'okx') {
         const raw = await RestClient.getHistoryOkx(key.apiKey, key.apiSecret, key.passphrase || '', start, end);
+        console.log(`[PositionHistoryService] OKX raw records: ${raw.length}`);
         return this.okxMapper.mapHistory(raw, key.id, key.label);
       } else if (key.exchange === 'bitget') {
         const raw = await this.fetchBitgetPaginated(key, start, end);
+        console.log(`[PositionHistoryService] Bitget raw records: ${raw.length}`);
         return this.bitgetMapper.mapHistory(raw, key.id, key.label);
       } else if (key.exchange === 'bybit') {
         const raw = await RestClient.getHistoryBybit(key.apiKey, key.apiSecret, start, end);
+        console.log(`[PositionHistoryService] Bybit raw records: ${raw.length}`);
         return this.bybitMapper.mapHistory(raw, key.id, key.label);
       }
     } catch (error) {

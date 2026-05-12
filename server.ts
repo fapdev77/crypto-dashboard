@@ -38,6 +38,8 @@ async function startServer() {
       if (!targetUrl || !method) {
         return res.status(400).json({ error: "Missing targetUrl or method" });
       }
+      
+      console.log(`[Proxy] ${method} ${targetUrl}`);
 
       // We omit host/origin headers to avoid 403s from strict exchange proxies
       const cleanHeaders = { ...headers };
@@ -61,8 +63,11 @@ async function startServer() {
       try {
         responseData = JSON.parse(responseText);
       } catch (e) {
+        console.warn(`[Proxy] Warning: Failed to parse JSON from ${targetUrl}. Status: ${response.status}`);
         responseData = responseText;
       }
+
+      console.log(`[Proxy] Response status from ${targetUrl}: ${response.status}`);
 
       res.status(response.status).json(responseData);
 
