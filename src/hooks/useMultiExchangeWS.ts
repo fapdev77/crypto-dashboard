@@ -44,7 +44,7 @@ export function useMultiExchangeWS() {
       // Load Mock data directly to the store
       const mappedPositions: UnifiedPosition[] = [];
       let i = 0;
-      for (const [key, pos] of Object.entries(mockPositionsData)) {
+      for (const [key, pos] of Object.entries(mockPositionsData) as [string, any][]) {
         i++;
         const exchange = key.includes('bybit') ? 'bybit' : key.includes('bitget') ? 'bitget' : 'okx';
         mappedPositions.push({
