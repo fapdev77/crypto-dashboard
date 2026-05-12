@@ -60,10 +60,14 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 4. Assim que confirmado o Modal, os algoritmos do sistema efetuarão validações imediatas e pingarão WebSockets seguros. Indicadores (Ponto vermelho/verde) em tempo real serão exibidos confirmando que tudo está síncrono.
 5. Volte para a rota principal "Dashboard", agora deverá ver seus saldos totais atualizando globalmente.
 
-## 🛠 Features e Manutenção Recentes
-- ✅ **Refinamentos na Tablela Balances:** Visualização por colunas incluindo Asset (Moedas), Labels e Accounts e suas designações para a respectiva infraestrutura, Exigência para saldos base em unificados e quantias decimais flexíveis. Além disso, as colunas contam com sorting interativo e barra multi-buscas (Filtros locais via Regex).
-- ✅ Carga REST híbrida introduzida para **Bybit**: Websockets limitavam listagens estáticas ativas, a API resolve com fetchs silenciosos aos Endpoints unificados `v5/account/wallet-balance` e posições pre-cached.
-- ✅ Ocultamento de PNL de Posições Nulas: Só aparecem recursos em execução >0 .
+## 🛠 Features e UI/UX Recentes
+- ✅ **Gestão Avançada de Posições:** 
+  - **Posições Abertas:** Monitoramento em tempo real com informações detalhadas como PnL Não Realizado, ROE, Margem, Preço de Liquidação. Inclui suporte para modos de visualização alternativos (**Detailed** e **Lite**) para adaptar a densidade da interface segundo a preferência do usuário.
+  - **Posições Encerradas (Histórico):** Aba especializada para o histórico de trades via REST APIs para cada corretora (suportando bitget, bybit e okx). Inclui funcionalidade sofisticada de filtragem por alcance de tempo (1 Dia, 1 Semana, 1 Mês, 3 Meses e Datas Customizadas) validando e normalizando retornos e fusos para uma amostragem única de lucros consolidados.
+- ✅ **Modo de Desenvolvimento e Testes (Mock Data):** Por meio do novo menu de `Settings`, desenvolvedores ou usuários testando o produto podem ativar de forma nativa a o preenchimento da UI com Dados Simulados (Mockados). O ativar da opção encerra programaticamente qualquer streaming real e insere PNL, saldos, e tabelas de histórico fictícias para debug de componentes de UI. Ao desabilitar, a recuperação do Real-Time é feita instantaneamente.
+- ✅ **Refinamentos na Tabela de Balances:** Visualização por colunas incluindo Asset (Moedas), Labels e Accounts e suas designações para a respectiva infraestrutura, Exigência para saldos base em unificados e quantias decimais flexíveis. Além disso, as colunas contam com sorting interativo e barra multi-buscas (Filtros locais via Regex).
+- ✅ **Carga REST híbrida introduzida para Bybit:** Websockets limitavam listagens estáticas ativas, a API resolve com fetchs silenciosos aos Endpoints unificados `v5/account/wallet-balance` e posições pre-cached.
+- ✅ **Ocultamento de PNL de Posições Nulas:** Só aparecem recursos em execução com size > 0 .
 
 ### Manutenção - Adicionando Nova Corretora
 Caso deseja escalonar o dashboard: 

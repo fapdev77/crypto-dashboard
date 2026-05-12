@@ -20,9 +20,9 @@ Como o requisito constitucional #2 dita que as credenciais *NUNCA* podem ser env
 - **Design System:** Baseado em "Technical Dashboard", utilizando esquema de cores Dark Mode obrigatório, tipografia monospace para dados numéricos (ex `JetBrains Mono`) e fontes sem serifa legíveis (`Inter`) para a interface, priorizando densidade de dados e clareza.
 - **Sincronia de Tempo:** As assinaturas HMAC exigem precisão de timestamp. Implementaremos um offset de tempo caso a hora local do usuário esteja dessincronizada com os servidores das corretoras.
 
-## 4. Planejamento das Tarefas
+## 4. Estrutura das Demandas Concluídas
 - **Tarefa 1: Setup e UI Base:** Configuração de UI, layouts Dark Mode e persistência de `localStorage` para as chaves (sem expor para rede).
 - **Tarefa 2: Módulo de Assinatura e Criptografia:** Helpers client-side para HMAC-SHA256 e padronização dos conectores REST via Proxy local.
 - **Tarefa 3: Motor de WebSocket Privado:** Gerenciamento dos WebSockets simultâneos (Bitget, OKX, Bybit), subscrições, pings/heartbeats.
-- **Tarefa 4: Componentes da Dashboard:** Integração dos cálculos (Total Equity, Unrealized PnL).
-- **Tarefa 5: Refinamento:** Status de conexão, rate limits e fetch do histórico via REST.
+- **Tarefa 4: Componentes da Dashboard e Mock Data:** Integração dos cálculos (Total Equity, Unrealized PnL), modos de exibição "Lite" e "Detailed", tabelas de saldo interativas e alternância de Dados Simulados (Mocking) para desenvolvimento/testes desassociados.
+- **Tarefa 5: Refinamento e Histórico:** Módulo REST para histórico (Posições Fechadas) com filtros granulares temporais, Status de conexão global contínuo e ocultação de elementos sem saldos/posições.
