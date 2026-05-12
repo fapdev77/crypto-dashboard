@@ -25,6 +25,7 @@ export function Positions() {
   const [error, setError] = useState<string | null>(null);
 
   const [filterText, setFilterText] = useState('');
+  const [exchangeFilter, setExchangeFilter] = useState<string>('all');
   const [openSortConfig, setOpenSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'unrealizedPnl', direction: 'desc' });
   const [closedSortConfig, setClosedSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'closeTime', direction: 'desc' });
 
@@ -64,6 +65,10 @@ export function Positions() {
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
     
+    if (exchangeFilter !== 'all') {
+      filtered = filtered.filter(p => p.exchange.toLowerCase() === exchangeFilter.toLowerCase());
+    }
+
     if (filterText) {
       const lowerFilter = filterText.toLowerCase();
       filtered = filtered.filter(p => 
@@ -90,7 +95,7 @@ export function Positions() {
     }
 
     return filtered;
-  }, [closedPositions, filterText, closedSortConfig]);
+  }, [closedPositions, filterText, closedSortConfig, exchangeFilter]);
 
   const closedStats = useMemo(() => {
     if (!filteredClosedPositions.length) return null;
@@ -280,6 +285,16 @@ export function Positions() {
 
         {activeTab === 'closed' && (
           <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={exchangeFilter}
+              onChange={(e) => setExchangeFilter(e.target.value)}
+              className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
+            >
+              <option value="all">Todas Exchanges</option>
+              {Array.from(new Set(keys.filter(k => k.isActive).map(k => k.exchange))).map(ext => (
+                <option key={ext} value={ext}>{ext.charAt(0).toUpperCase() + ext.slice(1)}</option>
+              ))}
+            </select>
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value as any)}
