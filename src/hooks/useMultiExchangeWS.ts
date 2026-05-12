@@ -18,7 +18,7 @@ const getBitgetUrl = () => {
 
 const WS_URLS = {
   // Utilizamos o proxy local para a Bitget contornar a obrigatoriedade de ausência de Origin (WAF/CORS)
-  bitget: getBitgetUrl(),
+  bitget: getBitgetUrl(), 
   okx: 'wss://ws.okx.com:8443/ws/v5/private',
   bybit: 'wss://stream.bybit.com/v5/private',
 };
@@ -40,11 +40,11 @@ export function useMultiExchangeWS() {
     if (useMockData) {
       Object.keys(socketsRef.current).forEach(id => disconnect(id));
       keys.forEach(k => useDashboardStore.getState().clearConnectionData(k.id));
-
+      
       // Load Mock data directly to the store
       const mappedPositions: UnifiedPosition[] = [];
       let i = 0;
-      for (const [key, pos] of Object.entries(mockPositionsData) as [string, any][]) {
+      for (const [key, pos] of Object.entries(mockPositionsData)) {
         i++;
         const exchange = key.includes('bybit') ? 'bybit' : key.includes('bitget') ? 'bitget' : 'okx';
         mappedPositions.push({
@@ -64,26 +64,26 @@ export function useMultiExchangeWS() {
           margin: parseFloat(pos.positionIM || pos.marginSize || pos.margin || '0'),
           liquidationPrice: parseFloat(pos.liqPrice || pos.liquidationPrice || pos.liqPx || '0'),
           breakEvenPrice: parseFloat(pos.breakEvenPrice || pos.bePx || '0'),
-          roe: pos.uplRatio ? parseFloat(pos.uplRatio) * 100 : undefined,
+          roe: pos.uplRatio ? parseFloat(pos.uplRatio)*100 : undefined,
           raw: pos
         });
       }
-
+      
       // Calculate missing roe dynamically
       mappedPositions.forEach(p => {
         if (p.roe === undefined && p.unrealizedPnl && p.margin && p.margin > 0) {
           p.roe = (p.unrealizedPnl / p.margin) * 100;
         }
       });
-
+      
       updatePositions('mock', mappedPositions);
-
+      
       const mockBalances: BalanceItem[] = [
         { id: 'mock-b1', connectionId: 'mock', exchange: 'bybit', label: 'Mock Account', ccy: 'USDT', amount: 15000, usdValue: 15000 },
         { id: 'mock-b2', connectionId: 'mock', exchange: 'okx', label: 'Mock Account', ccy: 'USDC', amount: 5000, usdValue: 5000 }
       ];
       updateBalances('mock', mockBalances);
-
+      
       return;
     }
 
@@ -115,7 +115,7 @@ export function useMultiExchangeWS() {
       ...Object.values(currentState.balances).map(b => b.connectionId),
       ...Object.values(currentState.positions).map(p => p.connectionId)
     ]);
-
+    
     existingConnectionIds.forEach(id => {
       if (id !== 'mock' && !activeIds.has(id)) {
         currentState.clearConnectionData(id);
@@ -137,13 +137,13 @@ export function useMultiExchangeWS() {
       ws.close();
       delete socketsRef.current[id];
     }
-
+    
     const pingTimer = intervalsRef.current[id];
     if (pingTimer) {
       clearInterval(pingTimer);
       delete intervalsRef.current[id];
     }
-
+    
     const rTimer = reconnectTimers.current[id];
     if (rTimer) {
       clearTimeout(rTimer);
@@ -175,7 +175,7 @@ export function useMultiExchangeWS() {
     setConnectionError(id, null);
     const wsUrl = exchange === 'bitget' ? getBitgetUrl() : WS_URLS[exchange];
     console.log(`[WS-${id}] Iniciando conexão para: ${wsUrl}`);
-
+    
     // Some connections fail due to browser CORS/Origin policies. 
     // We try to connect directly first. Timeouts/errors will be caught here.
     const ws = new WebSocket(wsUrl);
@@ -189,7 +189,7 @@ export function useMultiExchangeWS() {
             RestClient.getWalletBybit(apiKey, apiSecret),
             RestClient.getPositionsBybit(apiKey, apiSecret)
           ]);
-
+          
           if (walletData && walletData.coin) {
             const balances: BalanceItem[] = [];
             walletData.coin.forEach((item: any) => {
@@ -218,7 +218,7 @@ export function useMultiExchangeWS() {
                 exchange: 'bybit',
                 label: config.label,
                 symbol: pos.symbol,
-                side: pos.side ? pos.side.toLowerCase() as any : 'net',
+                side: pos.side ? pos.side.toLowerCase() as any : 'net', 
                 size: parseFloat(pos.size || '0'),
                 entryPrice: parseFloat(pos.avgPrice || pos.entryPrice || '0'),
                 markPrice: parseFloat(pos.markPrice || '0'),
@@ -279,13 +279,13 @@ export function useMultiExchangeWS() {
         console.log(`[WS-${id}] Recebido: pong`);
         return;
       }
-
+      
       try {
         const data = JSON.parse(msg.toString());
         if (config.exchange === 'bybit') {
-          console.log(`[WS-${id}][DEBUG] Mensagem Bybit recebida:`, data);
+           console.log(`[WS-${id}][DEBUG] Mensagem Bybit recebida:`, data);
         }
-
+        
         handleSubscriptionAndAuth(config, ws, data);
         parseDataStream(config, data);
       } catch (err) {
@@ -315,7 +315,7 @@ export function useMultiExchangeWS() {
 
   const handleSubscriptionAndAuth = (config: ApiCredentials, ws: WebSocket, data: any) => {
     const { id, exchange } = config;
-
+    
     // Handle Bitget login
     if (exchange === 'bitget') {
       if (data.event === 'login' && data.code === 0) {
@@ -368,7 +368,7 @@ export function useMultiExchangeWS() {
         setConnectionError(id, `Bybit Auth Error: ${data.ret_msg}`);
       }
     }
-
+    
     if (exchange === 'bybit' && data.op === 'subscribe') {
       if (data.success === true) {
         console.log(`[WS-${id}][Sub] Bybit inscricao realizada com sucesso!`, data);
@@ -380,11 +380,11 @@ export function useMultiExchangeWS() {
 
   const parseDataStream = (config: ApiCredentials, data: any) => {
     const { id: cid, exchange, label } = config;
-
+    
     if (data.action === 'snapshot' || data.action === 'update' || data.data) {
       console.log(`[WS-${cid}] Stream Data (${exchange}):`, data.action || data.topic || data.arg?.channel, data);
     }
-
+    
     if (exchange === 'okx' && data.arg && data.data) {
       if (data.arg.channel === 'account') {
         const balances: Partial<BalanceItem>[] = data.data[0].details.map((item: any) => {
@@ -442,10 +442,10 @@ export function useMultiExchangeWS() {
                 label: `${label} (${acc.accountType || 'UNIFIED'})`,
                 ccy: item.coin,
               };
-
+              
               if (item.equity !== undefined) bal.amount = parseFloat(item.equity);
               else if (item.walletBalance !== undefined) bal.amount = parseFloat(item.walletBalance);
-
+              
               if (item.usdValue !== undefined && item.usdValue !== "") bal.usdValue = parseFloat(item.usdValue);
               else if (bal.amount !== undefined) bal.usdValue = bal.amount;
 
@@ -467,7 +467,7 @@ export function useMultiExchangeWS() {
             label,
             raw: pos
           };
-
+          
           if (pos.symbol !== undefined) update.symbol = pos.symbol;
           if (pos.side !== undefined && pos.side !== '') update.side = pos.side.toLowerCase() as any;
           if (pos.size !== undefined) update.size = parseFloat(pos.size);
@@ -502,40 +502,40 @@ export function useMultiExchangeWS() {
         const instType = data.arg.instType;
 
         if (instType === 'SPOT') {
-          data.data.forEach((item: any) => {
-            const coin = item.coin || item.marginCoin;
-            // Se for SPOT, considera available + frozen
-            if (coin && parseFloat(item.available || '0') + parseFloat(item.frozen || '0') > 0) {
-              const amt = parseFloat(item.available || '0') + parseFloat(item.frozen || '0');
-              balances.push({
-                id: `${cid}-SPOT-${coin}`,
-                connectionId: cid,
-                exchange,
-                label: `${label} (Spot)`,
-                ccy: coin,
-                amount: amt,
-                usdValue: coin === 'USDT' || coin === 'USDC' ? amt : amt // We don't have spot prices here, so we assume USD stablecoins for simplicity or just amt.
-              });
-            }
-          });
+           data.data.forEach((item: any) => {
+             const coin = item.coin || item.marginCoin;
+             // Se for SPOT, considera available + frozen
+             if (coin && parseFloat(item.available || '0') + parseFloat(item.frozen || '0') > 0) {
+               const amt = parseFloat(item.available || '0') + parseFloat(item.frozen || '0');
+               balances.push({
+                 id: `${cid}-SPOT-${coin}`,
+                 connectionId: cid,
+                 exchange,
+                 label: `${label} (Spot)`,
+                 ccy: coin,
+                 amount: amt,
+                 usdValue: coin === 'USDT' || coin === 'USDC' ? amt : amt // We don't have spot prices here, so we assume USD stablecoins for simplicity or just amt.
+               });
+             }
+           });
         } else {
-          // Futures
-          data.data.forEach((item: any) => {
-            const coin = item.marginCoin || 'USDT';
-            const amt = parseFloat(item.usdtEquity || item.equity || '0');
-            if (amt > 0 || (data.action === 'snapshot')) {
-              // we include it to overwrite previous 0 balances if needed
-              balances.push({
-                id: `${cid}-${instType}-${coin}`,
-                connectionId: cid,
-                exchange,
-                label: `${label} (${instType})`,
-                ccy: coin,
-                amount: amt,
-                usdValue: amt // Assuming usdtEquity gives USD value directly
-              });
-            }
-          });
+           // Futures
+           data.data.forEach((item: any) => {
+              const coin = item.marginCoin || 'USDT';
+              const amt = parseFloat(item.usdtEquity || item.equity || '0');
+              if (amt > 0 || (data.action === 'snapshot')) {
+                // we include it to overwrite previous 0 balances if needed
+                 balances.push({
+                   id: `${cid}-${instType}-${coin}`,
+                   connectionId: cid,
+                   exchange,
+                   label: `${label} (${instType})`,
+                   ccy: coin,
+                   amount: amt,
+                   usdValue: amt // Assuming usdtEquity gives USD value directly
+                 });
+              }
+           });
         }
 
         if (balances.length > 0) {
@@ -552,11 +552,11 @@ export function useMultiExchangeWS() {
             label,
             raw: pos
           };
-
+          
           if (pos.instId !== undefined) update.symbol = pos.instId;
           if (pos.holdSide !== undefined) update.side = pos.holdSide.toLowerCase() as any;
           else if (pos.posSide !== undefined) update.side = pos.posSide.toLowerCase() as any;
-
+          
           if (pos.total !== undefined) update.size = parseFloat(pos.total);
           else if (pos.pos !== undefined) update.size = parseFloat(pos.pos);
 
