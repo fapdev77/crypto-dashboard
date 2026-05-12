@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Exchange, useApiKeysStore, ApiCredentials } from '../store/apiKeysStore';
-import { useDashboardStore, BalanceItem, PositionItem } from '../store/dashboardStore';
+import { useDashboardStore, BalanceItem } from '../store/dashboardStore';
+import { UnifiedPosition } from '../types';
 import { ExchangeAuth } from '../services/ExchangeAuth';
 import { RestClient } from '../services/RestClient';
 
@@ -138,20 +139,29 @@ export function useMultiExchangeWS() {
           }
 
           if (positionsData && Array.isArray(positionsData)) {
-            const positions: PositionItem[] = [];
+            const positions: UnifiedPosition[] = [];
             positionsData.forEach((pos: any) => {
               positions.push({
                 id: `${id}-${pos.symbol}-${pos.positionIdx || 0}`,
                 connectionId: id,
-                exchange,
+                exchange: 'bybit',
                 label: config.label,
                 symbol: pos.symbol,
-                side: pos.side ? pos.side.toLowerCase() : 'net', // Bybit uses empty string for no side sometimes
+                side: pos.side ? pos.side.toLowerCase() as any : 'net', 
                 size: parseFloat(pos.size || '0'),
                 entryPrice: parseFloat(pos.avgPrice || pos.entryPrice || '0'),
                 markPrice: parseFloat(pos.markPrice || '0'),
                 unrealizedPnl: parseFloat(pos.unrealisedPnl || '0'),
-                leverage: parseFloat(pos.leverage || '0')
+                realizedPnl: parseFloat(pos.curRealisedPnl || '0'),
+                leverage: parseFloat(pos.leverage || '0'),
+                marginMode: pos.tradeMode === 1 ? 'isolated' : 'cross',
+                margin: parseFloat(pos.positionIM || '0'),
+                liquidationPrice: parseFloat(pos.liqPrice || '0'),
+                breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
+                tp: parseFloat(pos.takeProfit || '0'),
+                sl: parseFloat(pos.stopLoss || '0'),
+                roe: parseFloat(pos.positionIM) > 0 ? (parseFloat(pos.unrealisedPnl) / parseFloat(pos.positionIM)) * 100 : undefined,
+                raw: pos
               });
             });
             if (positions.length > 0) {
@@ -321,12 +331,13 @@ export function useMultiExchangeWS() {
         useDashboardStore.getState().updateBalancesDelta(cid, balances);
       }
       if (data.arg.channel === 'positions') {
-        const positions: Partial<PositionItem>[] = data.data.map((pos: any) => {
-          const update: Partial<PositionItem> = {
+        const positions: Partial<UnifiedPosition>[] = data.data.map((pos: any) => {
+          const update: Partial<UnifiedPosition> = {
             id: `${cid}-${pos.posId}`,
             connectionId: cid,
-            exchange,
+            exchange: 'okx',
             label,
+            raw: pos
           };
           if (pos.instId !== undefined) update.symbol = pos.instId;
           if (pos.posSide !== undefined) update.side = pos.posSide as any;
@@ -334,7 +345,13 @@ export function useMultiExchangeWS() {
           if (pos.avgPx !== undefined) update.entryPrice = parseFloat(pos.avgPx);
           if (pos.markPx !== undefined) update.markPrice = parseFloat(pos.markPx);
           if (pos.upl !== undefined) update.unrealizedPnl = parseFloat(pos.upl);
+          if (pos.realizedPnl !== undefined) update.realizedPnl = parseFloat(pos.realizedPnl);
           if (pos.lever !== undefined) update.leverage = parseFloat(pos.lever);
+          if (pos.mgnMode !== undefined) update.marginMode = pos.mgnMode === 'isolated' ? 'isolated' : 'cross';
+          if (pos.margin !== undefined) update.margin = parseFloat(pos.margin);
+          if (pos.liqPx !== undefined) update.liquidationPrice = parseFloat(pos.liqPx);
+          if (pos.bePx !== undefined) update.breakEvenPrice = parseFloat(pos.bePx);
+          if (pos.uplRatio !== undefined) update.roe = parseFloat(pos.uplRatio) * 100;
           return update;
         });
         useDashboardStore.getState().updatePositionsDelta(cid, positions);
@@ -370,13 +387,14 @@ export function useMultiExchangeWS() {
         }
       }
       if (data.topic === 'position') {
-        const positions: Partial<PositionItem>[] = [];
+        const positions: Partial<UnifiedPosition>[] = [];
         data.data.forEach((pos: any) => {
-          const update: Partial<PositionItem> = {
+          const update: Partial<UnifiedPosition> = {
             id: `${cid}-${pos.symbol}-${pos.positionIdx || 0}`,
             connectionId: cid,
-            exchange,
+            exchange: 'bybit',
             label,
+            raw: pos
           };
           
           if (pos.symbol !== undefined) update.symbol = pos.symbol;
@@ -386,7 +404,18 @@ export function useMultiExchangeWS() {
           else if (pos.avgPrice !== undefined && pos.avgPrice !== "") update.entryPrice = parseFloat(pos.avgPrice);
           if (pos.markPrice !== undefined && pos.markPrice !== "") update.markPrice = parseFloat(pos.markPrice);
           if (pos.unrealisedPnl !== undefined && pos.unrealisedPnl !== "") update.unrealizedPnl = parseFloat(pos.unrealisedPnl);
+          if (pos.curRealisedPnl !== undefined && pos.curRealisedPnl !== "") update.realizedPnl = parseFloat(pos.curRealisedPnl);
           if (pos.leverage !== undefined && pos.leverage !== "") update.leverage = parseFloat(pos.leverage);
+          if (pos.tradeMode !== undefined) update.marginMode = pos.tradeMode === 1 ? 'isolated' : 'cross';
+          if (pos.positionIM !== undefined && pos.positionIM !== "") update.margin = parseFloat(pos.positionIM);
+          if (pos.liqPrice !== undefined && pos.liqPrice !== "") update.liquidationPrice = parseFloat(pos.liqPrice);
+          if (pos.breakEvenPrice !== undefined && pos.breakEvenPrice !== "") update.breakEvenPrice = parseFloat(pos.breakEvenPrice);
+          if (pos.takeProfit !== undefined && pos.takeProfit !== "") update.tp = parseFloat(pos.takeProfit);
+          if (pos.stopLoss !== undefined && pos.stopLoss !== "") update.sl = parseFloat(pos.stopLoss);
+
+          if (update.unrealizedPnl !== undefined && update.margin !== undefined && update.margin > 0) {
+            update.roe = (update.unrealizedPnl / update.margin) * 100;
+          }
 
           positions.push(update);
         });
@@ -443,13 +472,14 @@ export function useMultiExchangeWS() {
         }
       }
       if (data.arg.channel === 'positions') {
-        const positions: Partial<PositionItem>[] = [];
+        const positions: Partial<UnifiedPosition>[] = [];
         data.data.forEach((pos: any) => {
-          const update: Partial<PositionItem> = {
+          const update: Partial<UnifiedPosition> = {
             id: `${cid}-${pos.posId || pos.instId}`,
             connectionId: cid,
-            exchange,
+            exchange: 'bitget',
             label,
+            raw: pos
           };
           
           if (pos.instId !== undefined) update.symbol = pos.instId;
@@ -468,8 +498,19 @@ export function useMultiExchangeWS() {
           if (pos.unrealizedPL !== undefined) update.unrealizedPnl = parseFloat(pos.unrealizedPL);
           else if (pos.upl !== undefined) update.unrealizedPnl = parseFloat(pos.upl);
 
+          if (pos.achievedProfits !== undefined) update.realizedPnl = parseFloat(pos.achievedProfits);
+
           if (pos.leverage !== undefined) update.leverage = parseFloat(pos.leverage);
           else if (pos.lever !== undefined) update.leverage = parseFloat(pos.lever);
+
+          if (pos.marginMode !== undefined) update.marginMode = pos.marginMode === 'isolated' ? 'isolated' : 'cross';
+          if (pos.marginSize !== undefined) update.margin = parseFloat(pos.marginSize);
+          if (pos.liquidationPrice !== undefined) update.liquidationPrice = parseFloat(pos.liquidationPrice);
+          if (pos.breakEvenPrice !== undefined) update.breakEvenPrice = parseFloat(pos.breakEvenPrice);
+
+          if (update.unrealizedPnl !== undefined && update.margin !== undefined && update.margin > 0) {
+            update.roe = (update.unrealizedPnl / update.margin) * 100;
+          }
 
           positions.push(update);
         });

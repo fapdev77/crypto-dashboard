@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { UnifiedPosition } from '../types';
 
 export interface BalanceItem {
   id: string; // e.g., 'connId-USDT'
@@ -8,20 +9,6 @@ export interface BalanceItem {
   ccy: string;
   amount: number;
   usdValue: number;
-}
-
-export interface PositionItem {
-  id: string; // e.g., 'connId-okx-BTC-USDT-long'
-  connectionId: string;
-  exchange: string;
-  label: string;
-  symbol: string;
-  side: 'long' | 'short' | 'net';
-  size: number;
-  entryPrice: number;
-  markPrice: number;
-  unrealizedPnl: number;
-  leverage: number;
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
@@ -39,9 +26,9 @@ interface DashboardState {
   updateBalancesDelta: (connectionId: string, deltaBalances: Partial<BalanceItem>[]) => void;
   
   // Positions
-  positions: Record<string, PositionItem>;
-  updatePositions: (connectionId: string, newPositions: PositionItem[]) => void;
-  updatePositionsDelta: (connectionId: string, deltaPositions: Partial<PositionItem>[]) => void;
+  positions: Record<string, UnifiedPosition>;
+  updatePositions: (connectionId: string, newPositions: UnifiedPosition[]) => void;
+  updatePositionsDelta: (connectionId: string, deltaPositions: Partial<UnifiedPosition>[]) => void;
   
   // Clear all data for a specific connection
   clearConnectionData: (connectionId: string) => void;
@@ -113,7 +100,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       if (nextPositions[p.id]) {
         nextPositions[p.id] = { ...nextPositions[p.id], ...p };
       } else {
-        nextPositions[p.id] = p as PositionItem;
+        nextPositions[p.id] = p as UnifiedPosition;
       }
     });
     for (const key in nextPositions) {

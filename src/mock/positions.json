@@ -1,0 +1,45 @@
+{
+  "bybit_position_mock": {
+    "symbol": "BTCUSDT",
+    "side": "Buy",
+    "size": "0.1",
+    "avgPrice": "60000.00",
+    "positionIM": "600.00",
+    "curRealisedPnl": "-15.50",
+    "unrealisedPnl": "250.00",
+    "markPrice": "62500.00",
+    "liqPrice": "55000.00",
+    "breakEvenPrice": "60015.00",
+    "leverage": "10",
+    "tradeMode": 1
+  },
+  "bitget_position_mock": {
+    "instId": "ETHUSDT",
+    "holdSide": "long",
+    "total": "2.5",
+    "openPriceAvg": "3000.00",
+    "marginSize": "750.00",
+    "achievedProfits": "-50.00",
+    "unrealizedPL": "125.00",
+    "markPrice": "3050.00",
+    "liquidationPrice": "2800.00",
+    "breakEvenPrice": "3005.00",
+    "leverage": "10",
+    "marginMode": "isolated"
+  },
+  "okx_position_mock": {
+    "instId": "SOL-USDT-SWAP",
+    "posSide": "long",
+    "pos": "50",
+    "avgPx": "140.00",
+    "margin": "700.00",
+    "realizedPnl": "-10.00",
+    "upl": "150.00",
+    "markPx": "143.00",
+    "liqPx": "120.00",
+    "bePx": "140.50",
+    "uplRatio": "0.2142",
+    "lever": "10",
+    "mgnMode": "isolated"
+  }
+}
