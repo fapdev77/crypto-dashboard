@@ -1,24 +1,32 @@
 import React, { useMemo, useState } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { DollarSign, Wallet, ArrowUpDown, Search, X } from 'lucide-react';
 
 export function Dashboard() {
   const { balances } = useDashboardStore();
   const keys = useApiKeysStore(state => state.keys);
+  const useMockData = useSettingsStore(state => state.useMockData);
 
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'usdValue', direction: 'desc' });
   const [filterText, setFilterText] = useState('');
 
   const balancesList = Object.values(balances);
 
+  const activeBalances = useMemo(() => {
+    return useMockData 
+      ? balancesList.filter(b => b.connectionId === 'mock')
+      : balancesList.filter(b => b.connectionId !== 'mock');
+  }, [balancesList, useMockData]);
+
   const totalEquity = useMemo(() => {
-    return balancesList.reduce((acc, curr) => acc + (curr.usdValue || 0), 0);
-  }, [balancesList]);
+    return activeBalances.reduce((acc, curr) => acc + (curr.usdValue || 0), 0);
+  }, [activeBalances]);
 
   const filteredBalances = useMemo(() => {
     // filter sizes < $1 and apply search
-    let filtered = balancesList.filter(b => (b.usdValue || 0) >= 1);
+    let filtered = activeBalances.filter(b => (b.usdValue || 0) >= 1);
     
     if (filterText) {
       const lowerFilter = filterText.toLowerCase();
@@ -42,7 +50,7 @@ export function Dashboard() {
     }
 
     return filtered;
-  }, [balancesList, sortConfig, filterText]);
+  }, [activeBalances, sortConfig, filterText]);
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';

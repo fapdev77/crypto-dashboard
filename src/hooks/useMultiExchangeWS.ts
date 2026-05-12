@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { Exchange, useApiKeysStore, ApiCredentials } from '../store/apiKeysStore';
 import { useDashboardStore, BalanceItem } from '../store/dashboardStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { UnifiedPosition } from '../types';
 import { ExchangeAuth } from '../services/ExchangeAuth';
 import { RestClient } from '../services/RestClient';
+import mockPositionsData from '../mock/positions.json';
 
 const getBitgetUrl = () => {
   // If we are in the browser, we construct the proxy URL based on the current location.
@@ -23,6 +25,7 @@ const WS_URLS = {
 
 export function useMultiExchangeWS() {
   const keys = useApiKeysStore((state) => state.keys);
+  const useMockData = useSettingsStore((state) => state.useMockData);
   const setConnectionStatus = useDashboardStore((state) => state.setConnectionStatus);
   const setConnectionError = useDashboardStore((state) => state.setConnectionError);
   const updateBalances = useDashboardStore((state) => state.updateBalances);
@@ -33,7 +36,62 @@ export function useMultiExchangeWS() {
   const reconnectTimers = useRef<Record<string, NodeJS.Timeout | null>>({});
 
   useEffect(() => {
+    // If mock data is enabled, clear all existing connections immediately
+    if (useMockData) {
+      Object.keys(socketsRef.current).forEach(id => disconnect(id));
+      keys.forEach(k => useDashboardStore.getState().clearConnectionData(k.id));
+      
+      // Load Mock data directly to the store
+      const mappedPositions: UnifiedPosition[] = [];
+      let i = 0;
+      for (const [key, pos] of Object.entries(mockPositionsData)) {
+        i++;
+        const exchange = key.includes('bybit') ? 'bybit' : key.includes('bitget') ? 'bitget' : 'okx';
+        mappedPositions.push({
+          id: `mock-${exchange}-${i}`,
+          connectionId: 'mock',
+          exchange: exchange as any,
+          label: 'Mock Account',
+          symbol: pos.symbol || pos.instId || '',
+          side: (pos.side || pos.posSide || pos.holdSide || 'net').toLowerCase() as any,
+          size: parseFloat(pos.size || pos.pos || pos.total || '0'),
+          entryPrice: parseFloat(pos.avgPrice || pos.avgPx || pos.openPriceAvg || '0'),
+          markPrice: parseFloat(pos.markPrice || pos.markPx || '0'),
+          unrealizedPnl: parseFloat(pos.unrealisedPnl || pos.unrealizedPL || pos.upl || '0'),
+          realizedPnl: parseFloat(pos.curRealisedPnl || pos.achievedProfits || pos.realizedPnl || '0'),
+          leverage: parseFloat(pos.leverage || pos.lever || '0'),
+          marginMode: pos.marginMode === 'isolated' || pos.mgnMode === 'isolated' || pos.tradeMode === 1 ? 'isolated' : 'cross',
+          margin: parseFloat(pos.positionIM || pos.marginSize || pos.margin || '0'),
+          liquidationPrice: parseFloat(pos.liqPrice || pos.liquidationPrice || pos.liqPx || '0'),
+          breakEvenPrice: parseFloat(pos.breakEvenPrice || pos.bePx || '0'),
+          roe: pos.uplRatio ? parseFloat(pos.uplRatio)*100 : undefined,
+          raw: pos
+        });
+      }
+      
+      // Calculate missing roe dynamically
+      mappedPositions.forEach(p => {
+        if (p.roe === undefined && p.unrealizedPnl && p.margin && p.margin > 0) {
+          p.roe = (p.unrealizedPnl / p.margin) * 100;
+        }
+      });
+      
+      updatePositions('mock', mappedPositions);
+      
+      const mockBalances: BalanceItem[] = [
+        { id: 'mock-b1', connectionId: 'mock', exchange: 'bybit', label: 'Mock Account', ccy: 'USDT', amount: 15000, usdValue: 15000 },
+        { id: 'mock-b2', connectionId: 'mock', exchange: 'okx', label: 'Mock Account', ccy: 'USDC', amount: 5000, usdValue: 5000 }
+      ];
+      updateBalances('mock', mockBalances);
+      
+      return;
+    }
+
+    // Normal Connection Flow
     const activeIds = new Set<string>();
+
+    // Clear mock connection data when disabled
+    useDashboardStore.getState().clearConnectionData('mock');
 
     keys.forEach((config) => {
       if (config.isActive) {
@@ -50,7 +108,20 @@ export function useMultiExchangeWS() {
         disconnect(id);
       }
     });
-  }, [keys]);
+
+    // Clean up data for keys that are no longer active or have been removed
+    const currentState = useDashboardStore.getState();
+    const existingConnectionIds = new Set([
+      ...Object.values(currentState.balances).map(b => b.connectionId),
+      ...Object.values(currentState.positions).map(p => p.connectionId)
+    ]);
+    
+    existingConnectionIds.forEach(id => {
+      if (id !== 'mock' && !activeIds.has(id)) {
+        currentState.clearConnectionData(id);
+      }
+    });
+  }, [keys, useMockData]);
 
   useEffect(() => {
     return () => {

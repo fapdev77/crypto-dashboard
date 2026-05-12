@@ -9,12 +9,14 @@ import { ApiKeys } from './components/ApiKeys';
 import { WorkSpace } from './components/WorkSpace';
 import { Dashboard } from './components/Dashboard';
 import { Positions } from './components/Positions';
+import { Settings } from './components/Settings';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   let activeTabName = activeTab;
   if (activeTab === 'api-keys') activeTabName = 'API Keys';
+  if (activeTab === 'settings') activeTabName = 'Settings';
 
   return (
     <WorkSpace>
@@ -35,9 +37,11 @@ export default function App() {
             {activeTab === 'dashboard' && <Dashboard />}
             {activeTab === 'positions' && <Positions />}
             {activeTab === 'api-keys' && <ApiKeys />}
+            {activeTab === 'settings' && <Settings />}
           </div>
         </main>
       </div>
     </WorkSpace>
   );
 }
+

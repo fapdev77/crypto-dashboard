@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { RestClient } from '../services/RestClient';
 import { UnifiedHistoryPosition, formatValue } from '../types';
 import { Search, Loader2 } from 'lucide-react';
@@ -17,6 +18,7 @@ interface ClosedPositionsProps {
 
 export function ClosedPositions({ filterText, exchangeFilter, period, customStartDate, customEndDate, triggerSearch }: ClosedPositionsProps) {
   const keys = useApiKeysStore(state => state.keys);
+  const useMockData = useSettingsStore(state => state.useMockData);
   
   const [closedPositions, setClosedPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +46,45 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
     const { start, end } = getDateRange();
     
     try {
+      if (useMockData) {
+        // Generate mock history data
+        allHistory = [
+          {
+            id: 'mock-hist-1',
+            connectionId: 'mock',
+            exchange: 'bybit',
+            label: 'Mock Account',
+            symbol: 'BTCUSDT',
+            side: 'long',
+            realizedPnl: 150.25,
+            closeTime: Date.now() - 3600000, // 1 hour ago
+          },
+          {
+            id: 'mock-hist-2',
+            connectionId: 'mock',
+            exchange: 'okx',
+            label: 'Mock Account',
+            symbol: 'ETH-USDT-SWAP',
+            side: 'short',
+            realizedPnl: -45.50,
+            closeTime: Date.now() - 86400000, // 1 day ago
+          },
+          {
+            id: 'mock-hist-3',
+            connectionId: 'mock',
+            exchange: 'bitget',
+            label: 'Mock Account',
+            symbol: 'SOLUSDT',
+            side: 'long',
+            realizedPnl: 320.75,
+            closeTime: Date.now() - 172800000, // 2 days ago
+          }
+        ];
+        
+        setClosedPositions(allHistory);
+        return;
+      }
+
       const activeKeys = keys.filter(k => k.isActive);
 
       for (const k of activeKeys) {
@@ -117,7 +158,7 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
 
   useEffect(() => {
     fetchHistory();
-  }, [period, triggerSearch]);
+  }, [period, triggerSearch, useMockData]);
 
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];

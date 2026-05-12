@@ -51,7 +51,14 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           <KeyRound className="w-4 h-4" />
           API Keys
         </button>
-        <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50 rounded-lg transition-colors mt-1">
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors mt-1 ${
+            activeTab === 'settings'
+              ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
+              : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
+          }`}
+        >
           <Settings className="w-4 h-4" />
           Settings
         </button>
