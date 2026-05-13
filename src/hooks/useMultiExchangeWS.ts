@@ -227,6 +227,7 @@ export function useMultiExchangeWS() {
                 leverage: parseFloat(pos.leverage || '0'),
                 marginMode: pos.tradeMode === 1 ? 'isolated' : 'cross',
                 margin: parseFloat(pos.positionIM || '0'),
+                notionalUsd: parseFloat(pos.positionValue || '0'),
                 liquidationPrice: parseFloat(pos.liqPrice || '0'),
                 breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
                 tp: parseFloat(pos.takeProfit || '0'),
@@ -420,6 +421,7 @@ export function useMultiExchangeWS() {
           if (pos.lever !== undefined) update.leverage = parseFloat(pos.lever);
           if (pos.mgnMode !== undefined) update.marginMode = pos.mgnMode === 'isolated' ? 'isolated' : 'cross';
           if (pos.margin !== undefined) update.margin = parseFloat(pos.margin);
+          if (pos.notionalUsd !== undefined) update.notionalUsd = parseFloat(pos.notionalUsd);
           if (pos.liqPx !== undefined) update.liquidationPrice = parseFloat(pos.liqPx);
           if (pos.bePx !== undefined) update.breakEvenPrice = parseFloat(pos.bePx);
           if (pos.uplRatio !== undefined) update.roe = parseFloat(pos.uplRatio) * 100;
@@ -479,6 +481,7 @@ export function useMultiExchangeWS() {
           if (pos.leverage !== undefined && pos.leverage !== "") update.leverage = parseFloat(pos.leverage);
           if (pos.tradeMode !== undefined) update.marginMode = pos.tradeMode === 1 ? 'isolated' : 'cross';
           if (pos.positionIM !== undefined && pos.positionIM !== "") update.margin = parseFloat(pos.positionIM);
+          if (pos.positionValue !== undefined && pos.positionValue !== "") update.notionalUsd = parseFloat(pos.positionValue);
           if (pos.liqPrice !== undefined && pos.liqPrice !== "") update.liquidationPrice = parseFloat(pos.liqPrice);
           if (pos.breakEvenPrice !== undefined && pos.breakEvenPrice !== "") update.breakEvenPrice = parseFloat(pos.breakEvenPrice);
           if (pos.takeProfit !== undefined && pos.takeProfit !== "") update.tp = parseFloat(pos.takeProfit);

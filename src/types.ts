@@ -11,6 +11,7 @@ export interface UnifiedPosition {
   side: PositionSide;
   size: number; // For position size
   valueUsd?: number; // approx value
+  notionalUsd?: number; // True notional value from API
   entryPrice: number;
   markPrice: number;
   unrealizedPnl: number;

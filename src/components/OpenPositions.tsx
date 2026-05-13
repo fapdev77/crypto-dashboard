@@ -77,7 +77,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
         const roeColor = (pos.roe || 0) >= 0 ? 'text-green-500' : 'text-red-500';
 
         // Approximations
-        const sizeValUsd = pos.size * pos.markPrice; 
+        const sizeValUsd = pos.notionalUsd || (pos.size * pos.markPrice); 
 
         return (
           <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col p-4 gap-4">
@@ -112,12 +112,12 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Margin</span>
-                <span className="font-mono text-white">{formatValue(pos.margin, 4)}</span>
+                <span className="font-mono text-white">{formatValue(pos.margin, 2)} <span className="font-sans text-[10px] text-[#8E9299]">USDT</span></span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Realized PnL</span>
                 <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                  {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 4)}
+                  {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-[10px]">USDT</span>
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -131,7 +131,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Unrealized PnL</span>
                 <span className={`font-mono ${uplColor}`}>
-                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 4)} <span className="text-[#8E9299] text-xs font-sans ml-1">≈ {formatValue(pos.unrealizedPnl, 2)} USD</span>
+                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">USDT</span>
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -211,7 +211,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                 const uplColor = pos.unrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
                 const realizedPnlColor = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
                 
-                const sizeValUsd = pos.size * pos.markPrice; 
+                const sizeValUsd = pos.notionalUsd || (pos.size * pos.markPrice); 
 
                 return (
                   <tr key={pos.id} className="hover:bg-[#2a2b30]/30 transition-colors">
@@ -241,12 +241,11 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                       <div className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatValue(pos.liquidationPrice, 4)}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-mono text-white text-sm flex items-center gap-1">{formatValue(pos.margin, 4)} <span className="font-sans text-xs text-[#8E9299]">{pos.symbol.replace(/USDT|USDC|USD/, '')}</span></div>
-                      <div className="font-mono text-[#8E9299] text-xs mt-1">≈ {formatValue(pos.margin, 2)} USD</div>
+                      <div className="font-mono text-white text-sm flex items-center gap-1">{formatValue(pos.margin, 2)} <span className="font-sans text-xs text-[#8E9299]">USDT</span></div>
                     </td>
                     <td className="px-4 py-3">
                       <div className={`font-mono text-sm flex items-center gap-1 ${uplColor}`}>
-                        {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 4)} <span className="font-sans text-xs">({pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'})</span>
+                        {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="font-sans text-xs">({pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'})</span>
                       </div>
                       <div className={`font-mono text-xs mt-1 ${uplColor}`}>
                          ≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} USD
@@ -254,7 +253,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                     </td>
                     <td className="px-4 py-3">
                       <div className={`font-mono text-sm flex items-center gap-1 ${realizedPnlColor}`}>
-                        {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 4)} <span className="font-sans text-xs">{pos.symbol.replace(/USDT|USDC|USD/, '')}</span>
+                        {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-xs">USDT</span>
                       </div>
                       <div className={`font-mono text-xs mt-1 ${realizedPnlColor}`}>
                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} USD
