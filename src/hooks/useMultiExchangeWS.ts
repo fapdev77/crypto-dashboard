@@ -525,8 +525,9 @@ export function useMultiExchangeWS() {
            // Futures
            data.data.forEach((item: any) => {
               const coin = item.marginCoin || 'USDT';
-              const amt = parseFloat(item.usdtEquity || item.equity || '0');
-              if (amt > 0 || (data.action === 'snapshot')) {
+              const tokenAmount = parseFloat(item.equity || item.available || '0');
+              const usdAmount = parseFloat(item.usdtEquity || item.equity || '0');
+              if (tokenAmount > 0 || (data.action === 'snapshot')) {
                 // we include it to overwrite previous 0 balances if needed
                  balances.push({
                    id: `${cid}-${instType}-${coin}`,
@@ -534,8 +535,8 @@ export function useMultiExchangeWS() {
                    exchange,
                    label: `${label} (${instType})`,
                    ccy: coin,
-                   amount: amt,
-                   usdValue: amt // Assuming usdtEquity gives USD value directly
+                   amount: tokenAmount,
+                   usdValue: usdAmount
                  });
               }
            });
