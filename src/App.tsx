@@ -10,6 +10,7 @@ import { WorkSpace } from './components/WorkSpace';
 import { Dashboard } from './components/Dashboard';
 import { Positions } from './components/Positions';
 import { Settings } from './components/Settings';
+import { ApiTester } from './components/ApiTester';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -17,6 +18,7 @@ export default function App() {
   let activeTabName = activeTab;
   if (activeTab === 'api-keys') activeTabName = 'API Keys';
   if (activeTab === 'settings') activeTabName = 'Settings';
+  if (activeTab === 'api-tester') activeTabName = 'Execução de Testes';
 
   return (
     <WorkSpace>
@@ -38,6 +40,7 @@ export default function App() {
             {activeTab === 'positions' && <Positions />}
             {activeTab === 'api-keys' && <ApiKeys />}
             {activeTab === 'settings' && <Settings />}
+            {activeTab === 'api-tester' && <ApiTester />}
           </div>
         </main>
       </div>

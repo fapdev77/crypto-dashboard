@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -50,6 +50,17 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         >
           <KeyRound className="w-4 h-4" />
           API Keys
+        </button>
+        <button
+          onClick={() => setActiveTab('api-tester')}
+          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors mt-1 ${
+            activeTab === 'api-tester'
+              ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
+              : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
+          }`}
+        >
+          <Terminal className="w-4 h-4" />
+          Execução de Testes
         </button>
         <button
           onClick={() => setActiveTab('settings')}
