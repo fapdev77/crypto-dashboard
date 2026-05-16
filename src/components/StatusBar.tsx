@@ -27,14 +27,14 @@ export function StatusBar() {
   }
 
   return (
-    <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 overflow-x-auto shrink-0 select-none no-scrollbar">
-      <div className="flex items-center gap-6">
+    <div className="min-h-8 py-1 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 flex-wrap shrink-0 select-none">
+      <div className="flex items-center gap-6 w-full">
         <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
           <Activity className="w-3.5 h-3.5" />
           <span>Status das Conexões</span>
         </div>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5 flex-wrap">
           {Object.entries(exchangeGroups).map(([exchange, xKeysRaw]) => {
             const xKeys = xKeysRaw as typeof keys;
             return (
@@ -76,7 +76,7 @@ export function StatusBar() {
                         <div className="bg-[#1a1b1e] text-white text-xs py-1.5 px-3 rounded shadow-lg border border-[#2a2b30] whitespace-nowrap">
                           <p className="font-semibold">{key.label}</p>
                           <p className="mt-0.5 text-gray-400 text-[10px] capitalize">{status}</p>
-                          {error && <p className="mt-1 text-rose-400 max-w-[200px] truncate text-[10px]">{error}</p>}
+                          {error && <p className="mt-1 text-rose-400 max-w-[200px] text-[10px] whitespace-normal leading-tight">{error}</p>}
                         </div>
                       </div>
                     </div>
