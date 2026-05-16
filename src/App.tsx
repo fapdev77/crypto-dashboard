@@ -37,7 +37,7 @@ export default function App() {
               </h2>
             </header>
 
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto hide-scrollbar">
               {activeTab === 'dashboard' && <Dashboard />}
               {activeTab === 'positions' && <Positions />}
               {activeTab === 'api-keys' && <ApiKeys />}

@@ -24,18 +24,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Esconder a barra de rolagem (Mantendo a rolagem ativa) */
-/* Para navegadores baseados em Chromium (Chrome, Edge, Opera, Safari) */
-.body::-webkit-scrollbar {
+/* Remove a barra visualmente mantendo o funcionamento do scroll */
+.hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
-
-/* Para Firefox */
-.body {
-  scrollbar-width: none; 
-}
-
-/* Para Internet Explorer e Edge antigo */
-.body] {
-  -ms-overflow-style: none; 
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
