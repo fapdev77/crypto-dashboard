@@ -40,6 +40,22 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
     return filtered;
   }, [positionsList, filterText, exchangeFilter, useMockData]);
 
+  const { longs, shorts } = useMemo(() => {
+    let longsCount = 0;
+    let shortsCount = 0;
+    activePositions.forEach(p => {
+      const isLong = p.side === 'long' || p.side === 'buy';
+      const isShort = p.side === 'short' || p.side === 'sell';
+      if (isLong) longsCount++;
+      if (isShort) shortsCount++;
+      if (p.side === 'net') {
+         if (p.size > 0) longsCount++;
+         else if (p.size < 0) shortsCount++;
+      }
+    });
+    return { longs: longsCount, shorts: shortsCount };
+  }, [activePositions]);
+
   if (activePositions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
@@ -50,20 +66,35 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
 
   return (
     <div className="space-y-4">
-      {/* Toggle View Mode */}
-      <div className="flex bg-[#1a1b1e] rounded-lg p-1 w-max mb-4">
-        <button 
-          onClick={() => setViewMode('lite')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'lite' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'}`}
-        >
-          Lite
-        </button>
-        <button 
-          onClick={() => setViewMode('detailed')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'detailed' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'}`}
-        >
-          Detailed
-        </button>
+      {/* Header Controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-center bg-[#1a1b1e] rounded-lg p-2 gap-4">
+        {/* Toggle View Mode */}
+        <div className="flex bg-[#12131a] rounded-lg p-1 w-full sm:w-max">
+          <button 
+            onClick={() => setViewMode('lite')}
+            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'lite' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'}`}
+          >
+            Lite
+          </button>
+          <button 
+            onClick={() => setViewMode('detailed')}
+            className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'detailed' ? 'bg-[#2a2b30] text-white' : 'text-[#8E9299] hover:text-white'}`}
+          >
+            Detailed
+          </button>
+        </div>
+
+        {/* Position Stats */}
+        <div className="flex items-center gap-1.5 text-sm font-medium whitespace-nowrap px-2">
+          <span className="text-[#8E9299]">Positions:</span>
+          <span className="text-[#2F6BFF] ml-1">{activePositions.length}</span>
+          <span className="text-[#3f4046] mx-1">-</span>
+          <span className="text-[#8E9299]">Longs</span>
+          <span className="text-[#00C853] ml-0.5">({longs})</span>
+          <span className="text-[#3f4046] mx-1">/</span>
+          <span className="text-[#8E9299]">Shorts</span>
+          <span className="text-[#FF4444] ml-0.5">({shorts})</span>
+        </div>
       </div>
 
       {viewMode === 'detailed' && activePositions.map((pos) => {
