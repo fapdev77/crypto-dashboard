@@ -8,9 +8,11 @@ export interface UnifiedPosition {
   exchange: ExchangeName;
   label: string; // Account label/name
   symbol: string;
+  ccy?: string; // Margin/PNL currency (e.g. USDT, BTC)
   side: PositionSide;
   size: number; // For position size
   valueUsd?: number; // approx value
+  notionalUsd?: number; // True notional value from API
   entryPrice: number;
   markPrice: number;
   unrealizedPnl: number;
@@ -33,6 +35,7 @@ export interface UnifiedHistoryPosition {
   exchange: ExchangeName;
   label: string;
   symbol: string;
+  ccy?: string;
   side: PositionSide;
   realizedPnl: number;
   closeTime: number; // timestamp

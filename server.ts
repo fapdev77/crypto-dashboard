@@ -17,11 +17,13 @@ async function startServer() {
     pathRewrite: {
       '^/ws-proxy/bitget': '', // remove o path de entrada
     },
-    onProxyReqWs: (proxyReq, req, socket, options, head) => {
-      // Remove a origem do navegador para simular uma conexão server-to-server
-      proxyReq.removeHeader('origin');
+    on: {
+      proxyReqWs: (proxyReq, req, socket, options, head) => {
+        // Remove a origem do navegador para simular uma conexão server-to-server
+        proxyReq.removeHeader('origin');
+      }
     }
-  }));
+  }) as any);
 
   // We need express.text or raw to parse arbitrary body formats, but json is also good
   // ONLY for non-websocket proxy routes
@@ -36,6 +38,8 @@ async function startServer() {
       if (!targetUrl || !method) {
         return res.status(400).json({ error: "Missing targetUrl or method" });
       }
+      
+      console.log(`[Proxy] ${method} ${targetUrl}`);
 
       // We omit host/origin headers to avoid 403s from strict exchange proxies
       const cleanHeaders = { ...headers };
@@ -59,8 +63,11 @@ async function startServer() {
       try {
         responseData = JSON.parse(responseText);
       } catch (e) {
+        console.warn(`[Proxy] Warning: Failed to parse JSON from ${targetUrl}. Status: ${response.status}`);
         responseData = responseText;
       }
+
+      console.log(`[Proxy] Response status from ${targetUrl}: ${response.status}`);
 
       res.status(response.status).json(responseData);
 

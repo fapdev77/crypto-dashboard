@@ -54,6 +54,7 @@ export function useMultiExchangeWS() {
           label: 'Mock Account',
           symbol: pos.symbol || pos.instId || '',
           side: (pos.side || pos.posSide || pos.holdSide || 'net').toLowerCase() as any,
+          ccy: pos.ccy || pos.marginCoin || pos.settleCoin || 'USDT',
           size: parseFloat(pos.size || pos.pos || pos.total || '0'),
           entryPrice: parseFloat(pos.avgPrice || pos.avgPx || pos.openPriceAvg || '0'),
           markPrice: parseFloat(pos.markPrice || pos.markPx || '0'),
@@ -218,6 +219,7 @@ export function useMultiExchangeWS() {
                 exchange: 'bybit',
                 label: config.label,
                 symbol: pos.symbol,
+                ccy: pos.settleCoin || pos.coin || 'USDT',
                 side: pos.side ? pos.side.toLowerCase() as any : 'net', 
                 size: parseFloat(pos.size || '0'),
                 entryPrice: parseFloat(pos.avgPrice || pos.entryPrice || '0'),
@@ -227,6 +229,7 @@ export function useMultiExchangeWS() {
                 leverage: parseFloat(pos.leverage || '0'),
                 marginMode: pos.tradeMode === 1 ? 'isolated' : 'cross',
                 margin: parseFloat(pos.positionIM || '0'),
+                notionalUsd: parseFloat(pos.positionValue || '0'),
                 liquidationPrice: parseFloat(pos.liqPrice || '0'),
                 breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
                 tp: parseFloat(pos.takeProfit || '0'),
@@ -411,6 +414,8 @@ export function useMultiExchangeWS() {
             raw: pos
           };
           if (pos.instId !== undefined) update.symbol = pos.instId;
+          if (pos.ccy !== undefined) update.ccy = pos.ccy;
+          else if (pos.marginCoin !== undefined) update.ccy = pos.marginCoin;
           if (pos.posSide !== undefined) update.side = pos.posSide as any;
           if (pos.pos !== undefined) update.size = parseFloat(pos.pos);
           if (pos.avgPx !== undefined) update.entryPrice = parseFloat(pos.avgPx);
@@ -420,6 +425,7 @@ export function useMultiExchangeWS() {
           if (pos.lever !== undefined) update.leverage = parseFloat(pos.lever);
           if (pos.mgnMode !== undefined) update.marginMode = pos.mgnMode === 'isolated' ? 'isolated' : 'cross';
           if (pos.margin !== undefined) update.margin = parseFloat(pos.margin);
+          if (pos.notionalUsd !== undefined) update.notionalUsd = parseFloat(pos.notionalUsd);
           if (pos.liqPx !== undefined) update.liquidationPrice = parseFloat(pos.liqPx);
           if (pos.bePx !== undefined) update.breakEvenPrice = parseFloat(pos.bePx);
           if (pos.uplRatio !== undefined) update.roe = parseFloat(pos.uplRatio) * 100;
@@ -470,6 +476,8 @@ export function useMultiExchangeWS() {
           
           if (pos.symbol !== undefined) update.symbol = pos.symbol;
           if (pos.side !== undefined && pos.side !== '') update.side = pos.side.toLowerCase() as any;
+          if (pos.settleCoin !== undefined) update.ccy = pos.settleCoin;
+          else if (pos.coin !== undefined) update.ccy = pos.coin;
           if (pos.size !== undefined) update.size = parseFloat(pos.size);
           if (pos.entryPrice !== undefined && pos.entryPrice !== "") update.entryPrice = parseFloat(pos.entryPrice);
           else if (pos.avgPrice !== undefined && pos.avgPrice !== "") update.entryPrice = parseFloat(pos.avgPrice);
@@ -479,6 +487,7 @@ export function useMultiExchangeWS() {
           if (pos.leverage !== undefined && pos.leverage !== "") update.leverage = parseFloat(pos.leverage);
           if (pos.tradeMode !== undefined) update.marginMode = pos.tradeMode === 1 ? 'isolated' : 'cross';
           if (pos.positionIM !== undefined && pos.positionIM !== "") update.margin = parseFloat(pos.positionIM);
+          if (pos.positionValue !== undefined && pos.positionValue !== "") update.notionalUsd = parseFloat(pos.positionValue);
           if (pos.liqPrice !== undefined && pos.liqPrice !== "") update.liquidationPrice = parseFloat(pos.liqPrice);
           if (pos.breakEvenPrice !== undefined && pos.breakEvenPrice !== "") update.breakEvenPrice = parseFloat(pos.breakEvenPrice);
           if (pos.takeProfit !== undefined && pos.takeProfit !== "") update.tp = parseFloat(pos.takeProfit);
@@ -522,8 +531,9 @@ export function useMultiExchangeWS() {
            // Futures
            data.data.forEach((item: any) => {
               const coin = item.marginCoin || 'USDT';
-              const amt = parseFloat(item.usdtEquity || item.equity || '0');
-              if (amt > 0 || (data.action === 'snapshot')) {
+              const tokenAmount = parseFloat(item.equity || item.available || '0');
+              const usdAmount = parseFloat(item.usdtEquity || item.equity || '0');
+              if (tokenAmount > 0 || (data.action === 'snapshot')) {
                 // we include it to overwrite previous 0 balances if needed
                  balances.push({
                    id: `${cid}-${instType}-${coin}`,
@@ -531,8 +541,8 @@ export function useMultiExchangeWS() {
                    exchange,
                    label: `${label} (${instType})`,
                    ccy: coin,
-                   amount: amt,
-                   usdValue: amt // Assuming usdtEquity gives USD value directly
+                   amount: tokenAmount,
+                   usdValue: usdAmount
                  });
               }
            });
@@ -552,6 +562,8 @@ export function useMultiExchangeWS() {
             label,
             raw: pos
           };
+          
+          if (pos.marginCoin !== undefined) update.ccy = pos.marginCoin;
           
           if (pos.instId !== undefined) update.symbol = pos.instId;
           if (pos.holdSide !== undefined) update.side = pos.holdSide.toLowerCase() as any;

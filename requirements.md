@@ -26,3 +26,35 @@ Como o requisito constitucional #2 dita que as credenciais *NUNCA* podem ser env
 - **Tarefa 3: Motor de WebSocket Privado:** Gerenciamento dos WebSockets simultâneos (Bitget, OKX, Bybit), subscrições, pings/heartbeats.
 - **Tarefa 4: Componentes da Dashboard e Mock Data:** Integração dos cálculos (Total Equity, Unrealized PnL), modos de exibição "Lite" e "Detailed", tabelas de saldo interativas e alternância de Dados Simulados (Mocking) para desenvolvimento/testes desassociados.
 - **Tarefa 5: Refinamento e Histórico:** Módulo REST para histórico (Posições Fechadas) com filtros granulares temporais, Status de conexão global contínuo e ocultação de elementos sem saldos/posições.
+
+## 5. Serviço de Normalização de Histórico de Posições (Multi-Exchange)
+
+Foi implementado um serviço de reatividade para o histórico de posições que consolida dados das APIs V2/V3 (Bitget) e V5 (Bybit e OKX) em um schema padronizado.
+
+### Schema Unificado (UnifiedHistoryPosition)
+- **id**: ID único da transação ou gerado via concatenação.
+- **exchange**: 'BITGET' | 'BYBIT' | 'OKX'.
+- **symbol**: Símbolo do contrato (ex: BTCUSDT).
+- **side**: 'LONG' | 'SHORT'.
+- **pnl**: Realized PnL numérico em moeda base.
+- **timestamp**: Unix timestamp em ms.
+- **entryPrice**, **exitPrice**, **size**, **roi**.
+
+### Mapeamento Crítico por Corretora
+
+**A. Bitget (API V2)**
+- *Endpoint*: `GET /api/v2/mix/position/history-position`
+- *Paginação*: Baseada no cursor `idLessThan` para grandes históricos e prevenção de data loss.
+- *Mapeamento*: `openAvgPrice` -> `entryPrice`, `closeAvgPrice` -> `exitPrice`.
+
+**B. Bybit (API V5)**
+- *Endpoint*: `GET /v5/position/closed-pnl`
+- *Paginação*: Baseada em cursor longo (parâmetro `cursor`) se necessário, obrigatório `category` (`linear` ou `inverse`).
+- *Mapeamento*: Atenção ao cálculo de inverse mode para PnL caso operado; sinais e campos vêm em `closedPnl`.
+
+**C. OKX (API V5)**
+- *Endpoint*: `GET /api/v5/account/positions-history`
+- *Paginação*: Suporta `after` e `before` via Unix timestamp em ms, e cursores se necessário para limites de até 100 itens.
+- *Mapeamento*: O PnL pode precisar ser normalizado junto de size.
+
+Esses mappers são gerenciados via um Strategy Pattern no código, orquestrado pelo motor de fetch.

@@ -21,70 +21,119 @@ const proxyFetch = async (req: ProxyRequest) => {
 };
 
 export class RestClient {
-  static async getHistoryOkx(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number) {
+  static async getHistoryOkx(instType: string, apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, after?: string) {
     const method = 'GET';
-    const requestPath = '/api/v5/account/positions-history?limit=100';
+    let query = `instType=${instType}&limit=100`;
+    if (after) query += `&after=${after}`;
+    const requestPath = `/api/v5/account/positions-history?${query}`;
     const targetUrl = `https://www.okx.com${requestPath}`;
     
     const headers = ExchangeAuth.getOkxHeaders(apiKey, apiSecret, passphrase, method, requestPath);
     
-    const response = await proxyFetch({
-      targetUrl,
-      method,
-      headers
-    });
-    
-    let list = response.data || [];
-    if (start && end) {
-      list = list.filter((p: any) => p.cTime >= start && p.cTime <= end);
+    console.log(`[REST-Okx-History] req params: start=${start}, end=${end}, after=${after}`);
+    console.log(`[REST-Okx-History] targetUrl:`, targetUrl);
+
+    try {
+      const response = await proxyFetch({
+        targetUrl,
+        method,
+        headers
+      });
+      console.log(`[REST-Okx-History] response code:`, response.code, `msg:`, response.msg);
+
+      let list = response.data || [];
+      if (start && end) {
+        list = list.filter((p: any) => parseInt(p.uTime || p.cTime || '0') >= start && parseInt(p.uTime || p.cTime || '0') <= end);
+      }
+      console.log(`[REST-Okx-History] found ${list.length} items (after filter)`);
+      return list;
+    } catch (error) {
+      console.error(`[REST-Okx-History] fetch error:`, error);
+      return [];
     }
-    return list;
   }
 
-  static async getHistoryBitget(apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number) {
+  static async getHistoryBitget(productType: string, apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, idLessThan?: string) {
     // Bitget V2 endpoints: https://api.bitget.com/api/v2/mix/position/history-position
     const method = 'GET';
-    let query = 'productType=USDT-FUTURES';
+    let query = `productType=${productType}&limit=100`;
     if (start) query += `&startTime=${start}`;
     if (end) query += `&endTime=${end}`;
+    if (idLessThan) query += `&idLessThan=${idLessThan}`;
     
     const requestPath = `/api/v2/mix/position/history-position?${query}`;
     const targetUrl = `https://api.bitget.com${requestPath}`;
 
     const headers = ExchangeAuth.getBitgetHeaders(apiKey, apiSecret, passphrase, method, requestPath);
     
-    const response = await proxyFetch({
-      targetUrl,
-      method,
-      headers
-    });
-    
-    return response.data?.list || [];
+    console.log(`[REST-Bitget-History] req params: start=${start}, end=${end}, idLessThan=${idLessThan}`);
+    console.log(`[REST-Bitget-History] targetUrl:`, targetUrl);
+
+    try {
+      const response = await proxyFetch({
+        targetUrl,
+        method,
+        headers
+      });
+      console.log(`[REST-Bitget-History] response code:`, response.code, `msg:`, response.msg);
+      // Bitget response.data might be a list or object containing list
+      const list = response.data?.entList || response.data?.list || [];
+      console.log(`[REST-Bitget-History] found ${list.length} items`);
+      return list;
+    } catch (error) {
+      console.error(`[REST-Bitget-History] fetch error:`, error);
+      return [];
+    }
   }
 
-  static async getHistoryBybit(apiKey: string, apiSecret: string, start?: number, end?: number) {
-    // Bybit V5 endpoint: /v5/position/closed-pnl
+  static async fetchBybitCategory(category: string, apiKey: string, apiSecret: string, start?: number, end?: number, cursor?: string) {
     const method = 'GET';
-    let query = 'category=linear&limit=100'; // Required for V5 depending on account type. Using linear for USDT perps.
+    let query = `category=${category}&limit=100`;
     if (start) query += `&startTime=${start}`;
     if (end) query += `&endTime=${end}`;
+    if (cursor) query += `&cursor=${cursor}`;
     
     const requestPath = `/v5/position/closed-pnl?${query}`;
     const targetUrl = `https://api.bybit.com${requestPath}`;
 
     const headers = ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
     
-    const response = await proxyFetch({
-      targetUrl,
-      method,
-      headers
-    });
-    
-    if (response.retCode !== 0) {
-      throw new Error(`Bybit API Proxy Error (${response.retCode}): ${response.retMsg}`);
+    console.log(`[REST-Bybit-History-${category}] req params: start=${start}, end=${end}`);
+    console.log(`[REST-Bybit-History-${category}] targetUrl:`, targetUrl);
+
+    try {
+      const response = await proxyFetch({
+        targetUrl,
+        method,
+        headers
+      });
+      
+      console.log(`[REST-Bybit-History-${category}] response retCode:`, response.retCode, `retMsg:`, response.retMsg);
+
+      if (response.retCode !== 0) {
+        if (response.retCode === 10001) return []; // Empty or unsupported for this account type
+        console.warn(`Bybit API Proxy Warning (${response.retCode}): ${response.retMsg}`);
+        return [];
+      }
+      
+      const list = response.result?.list || [];
+      console.log(`[REST-Bybit-History-${category}] found ${list.length} items`);
+      return list;
+    } catch (error) {
+      console.error(`[REST-Bybit-History-${category}] fetch error:`, error);
+      return [];
     }
-    
-    return response.result?.list || [];
+  }
+
+  static async getHistoryBybit(apiKey: string, apiSecret: string, start?: number, end?: number, cursor?: string) {
+    try {
+      const linear = await this.fetchBybitCategory('linear', apiKey, apiSecret, start, end, cursor);
+      const inverse = await this.fetchBybitCategory('inverse', apiKey, apiSecret, start, end, cursor);
+      return [...linear, ...inverse];
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
 
   static async getPositionsBybit(apiKey: string, apiSecret: string) {

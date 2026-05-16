@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { useSettingsStore } from '../store/settingsStore';
-import { RestClient } from '../services/RestClient';
-import { UnifiedHistoryPosition, formatValue } from '../types';
+import { formatValue } from '../types';
+import { usePositionHistory } from '../hooks/usePositionHistory';
 import { Search, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -17,169 +16,8 @@ interface ClosedPositionsProps {
 }
 
 export function ClosedPositions({ filterText, exchangeFilter, period, customStartDate, customEndDate, triggerSearch }: ClosedPositionsProps) {
-  const keys = useApiKeysStore(state => state.keys);
-  const useMockData = useSettingsStore(state => state.useMockData);
-  
-  const [closedPositions, setClosedPositions] = useState<UnifiedHistoryPosition[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { positions: closedPositions, isLoading } = usePositionHistory(period, customStartDate, customEndDate, triggerSearch);
   const [error, setError] = useState<string | null>(null);
-
-  const getDateRange = () => {
-    const end = Date.now();
-    if (period === '1w') return { start: end - 7 * 24 * 60 * 60 * 1000, end };
-    if (period === '2w') return { start: end - 14 * 24 * 60 * 60 * 1000, end };
-    if (period === '1m') return { start: end - 30 * 24 * 60 * 60 * 1000, end };
-    
-    if (period === 'custom' && customStartDate && customEndDate) {
-      return { 
-        start: new Date(customStartDate).getTime(), 
-        end: new Date(customEndDate).getTime() + 24 * 60 * 60 * 1000 - 1
-      };
-    }
-    return { start: end - 7 * 24 * 60 * 60 * 1000, end };
-  };
-
-  const fetchHistory = async () => {
-    setIsLoading(true);
-    setError(null);
-    let allHistory: UnifiedHistoryPosition[] = [];
-    const { start, end } = getDateRange();
-    
-    try {
-      if (useMockData) {
-        // Generate mock history data
-        allHistory = [
-          {
-            id: 'mock-hist-1',
-            connectionId: 'mock',
-            exchange: 'bybit',
-            label: 'Mock Account',
-            symbol: 'BTCUSDT',
-            side: 'long',
-            realizedPnl: 150.25,
-            closeTime: Date.now() - 3600000, // 1 hour ago
-            entryPrice: 60100.5,
-            closePrice: 60500.0,
-            size: 0.375,
-            raw: { leverage: 10, marginMode: 'cross' }
-          },
-          {
-            id: 'mock-hist-2',
-            connectionId: 'mock',
-            exchange: 'okx',
-            label: 'Mock Account',
-            symbol: 'ETH-USDT-SWAP',
-            side: 'short',
-            realizedPnl: -45.50,
-            closeTime: Date.now() - 86400000, // 1 day ago
-            entryPrice: 3100.25,
-            closePrice: 3150.75,
-            size: 0.9,
-            raw: { leverage: 5, marginMode: 'isolated' }
-          },
-          {
-            id: 'mock-hist-3',
-            connectionId: 'mock',
-            exchange: 'bitget',
-            label: 'Mock Account',
-            symbol: 'SOLUSDT',
-            side: 'long',
-            realizedPnl: 320.75,
-            closeTime: Date.now() - 172800000, // 2 days ago
-            entryPrice: 140.5,
-            closePrice: 152.0,
-            size: 27.8,
-            raw: { leverage: 20, marginMode: 'cross' }
-          }
-        ];
-        
-        setClosedPositions(allHistory);
-        return;
-      }
-
-      const activeKeys = keys.filter(k => k.isActive);
-
-      for (const k of activeKeys) {
-        if (k.exchange === 'okx') {
-          try {
-            const res = await RestClient.getHistoryOkx(k.apiKey, k.apiSecret, k.passphrase || '', start, end);
-            const mapped: UnifiedHistoryPosition[] = res.map((p: any) => ({
-              id: `${k.id}-${p.instId}-${p.cTime}`,
-              connectionId: k.id,
-              exchange: k.exchange,
-              label: k.label,
-              symbol: p.instId,
-              side: p.posSide || p.direction,
-              realizedPnl: parseFloat(p.realizedPnl || p.pnl || '0'),
-              closeTime: parseInt(p.uTime || p.cTime),
-              entryPrice: parseFloat(p.openAvgPx || '0'),
-              closePrice: parseFloat(p.avgPx || p.closeAvgPx || '0'),
-              size: parseFloat(p.closeVol || p.closeTotalPos || '0'),
-              raw: p
-            }));
-            allHistory = [...allHistory, ...mapped];
-          } catch (e: any) {
-            console.error(`OKX History Error (${k.label}):`, e);
-          }
-        }
-        else if (k.exchange === 'bitget') {
-           try {
-            const res = await RestClient.getHistoryBitget(k.apiKey, k.apiSecret, k.passphrase || '', start, end);
-            const mapped: UnifiedHistoryPosition[] = res.map((p: any) => ({
-              id: `${k.id}-${p.posId}-${p.cTime}`,
-              connectionId: k.id,
-              exchange: k.exchange,
-              label: k.label,
-              symbol: p.instId,
-              side: p.holdSide || p.posSide,
-              realizedPnl: parseFloat(p.achievedProfits || p.netProfit || '0'),
-              closeTime: parseInt(p.uTime),
-              entryPrice: parseFloat(p.openPriceAvg || p.openAvgPx || '0'),
-              closePrice: parseFloat(p.closePriceAvg || p.closeAvgPx || '0'),
-              size: parseFloat(p.closeSize || p.closeVol || '0'),
-              raw: p
-            }));
-            allHistory = [...allHistory, ...mapped];
-          } catch (e: any) {
-             console.error(`Bitget History Error (${k.label}):`, e);
-          }
-        }
-        else if (k.exchange === 'bybit') {
-           try {
-            const res = await RestClient.getHistoryBybit(k.apiKey, k.apiSecret, start, end);
-            const mapped: UnifiedHistoryPosition[] = res.map((p: any) => ({
-              id: `${k.id}-${p.orderId}`,
-              connectionId: k.id,
-              exchange: k.exchange,
-              label: k.label,
-              symbol: p.symbol,
-              side: p.side,
-              realizedPnl: parseFloat(p.closedPnl || '0'),
-              closeTime: parseInt(p.updatedTime),
-              entryPrice: parseFloat(p.avgEntryPrice || '0'),
-              closePrice: parseFloat(p.avgExitPrice || '0'),
-              size: parseFloat(p.closedSize || '0'),
-              raw: p
-            }));
-            allHistory = [...allHistory, ...mapped];
-          } catch (e: any) {
-            console.error(`Bybit History Error (${k.label}):`, e);
-          }
-        }
-      }
-
-      allHistory.sort((a, b) => b.closeTime - a.closeTime);
-      setClosedPositions(allHistory);
-    } catch (e: any) {
-      setError(e.message || "Failed to load history");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchHistory();
-  }, [period, triggerSearch, useMockData]);
 
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
@@ -212,15 +50,24 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
     let sumLoss = 0;
 
     filteredClosedPositions.forEach(p => {
-      totalPnl += p.realizedPnl;
-      if (p.realizedPnl > 0) {
+      const isUSDT = p.symbol.includes('USDT');
+      const isUSDC = p.symbol.includes('USDC');
+      const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD'));
+      const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
+      let pnlInUsd = p.realizedPnl;
+      if (!isFiatCcy && p.closePrice) {
+        pnlInUsd = p.realizedPnl * p.closePrice;
+      }
+
+      totalPnl += pnlInUsd;
+      if (pnlInUsd > 0) {
         wins++;
-        sumWin += p.realizedPnl;
-        if (p.realizedPnl > largestWin) largestWin = p.realizedPnl;
-      } else if (p.realizedPnl < 0) {
+        sumWin += pnlInUsd;
+        if (pnlInUsd > largestWin) largestWin = pnlInUsd;
+      } else if (pnlInUsd < 0) {
         losses++;
-        sumLoss += p.realizedPnl;
-        if (p.realizedPnl < largestLoss) largestLoss = p.realizedPnl;
+        sumLoss += pnlInUsd;
+        if (pnlInUsd < largestLoss) largestLoss = pnlInUsd;
       }
     });
 
@@ -348,10 +195,10 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                 let hasRoi = false;
                 
                 // Identify the quote currency for the PnL (e.g. USDT)
-                // For USDT/USDC margined, it's usually the part after - or just USDT
                 const isUSDT = p.symbol.includes('USDT');
                 const isUSDC = p.symbol.includes('USDC');
-                const pnlCurrency = isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD');
+                const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD'));
+                const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
                 
                 if (p.raw?.roi !== undefined && p.raw?.roi !== null) {
                    roiValue = parseFloat(p.raw.roi) * 100;
@@ -422,6 +269,11 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                       <div className={`font-mono text-sm ${pnlClass}`}>
                         {p.realizedPnl > 0 ? '+' : ''}{formatValue(p.realizedPnl, 4)} <span className="font-sans text-xs text-[#8E9299]">{pnlCurrency}</span>
                       </div>
+                      {!isFiatCcy && p.closePrice ? (
+                        <div className={`font-mono text-xs mt-1 ${pnlClass}`}>
+                          ≈ {p.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(p.realizedPnl) * p.closePrice, 2)} USD
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`font-mono text-sm ${roiClass}`}>{roiStr}</span>
