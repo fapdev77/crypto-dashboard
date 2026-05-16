@@ -54,6 +54,7 @@ export function useMultiExchangeWS() {
           label: 'Mock Account',
           symbol: pos.symbol || pos.instId || '',
           side: (pos.side || pos.posSide || pos.holdSide || 'net').toLowerCase() as any,
+          ccy: pos.ccy || pos.marginCoin || pos.settleCoin || 'USDT',
           size: parseFloat(pos.size || pos.pos || pos.total || '0'),
           entryPrice: parseFloat(pos.avgPrice || pos.avgPx || pos.openPriceAvg || '0'),
           markPrice: parseFloat(pos.markPrice || pos.markPx || '0'),
@@ -218,6 +219,7 @@ export function useMultiExchangeWS() {
                 exchange: 'bybit',
                 label: config.label,
                 symbol: pos.symbol,
+                ccy: pos.settleCoin || pos.coin || 'USDT',
                 side: pos.side ? pos.side.toLowerCase() as any : 'net', 
                 size: parseFloat(pos.size || '0'),
                 entryPrice: parseFloat(pos.avgPrice || pos.entryPrice || '0'),
@@ -412,6 +414,8 @@ export function useMultiExchangeWS() {
             raw: pos
           };
           if (pos.instId !== undefined) update.symbol = pos.instId;
+          if (pos.ccy !== undefined) update.ccy = pos.ccy;
+          else if (pos.marginCoin !== undefined) update.ccy = pos.marginCoin;
           if (pos.posSide !== undefined) update.side = pos.posSide as any;
           if (pos.pos !== undefined) update.size = parseFloat(pos.pos);
           if (pos.avgPx !== undefined) update.entryPrice = parseFloat(pos.avgPx);
@@ -472,6 +476,8 @@ export function useMultiExchangeWS() {
           
           if (pos.symbol !== undefined) update.symbol = pos.symbol;
           if (pos.side !== undefined && pos.side !== '') update.side = pos.side.toLowerCase() as any;
+          if (pos.settleCoin !== undefined) update.ccy = pos.settleCoin;
+          else if (pos.coin !== undefined) update.ccy = pos.coin;
           if (pos.size !== undefined) update.size = parseFloat(pos.size);
           if (pos.entryPrice !== undefined && pos.entryPrice !== "") update.entryPrice = parseFloat(pos.entryPrice);
           else if (pos.avgPrice !== undefined && pos.avgPrice !== "") update.entryPrice = parseFloat(pos.avgPrice);
@@ -556,6 +562,8 @@ export function useMultiExchangeWS() {
             label,
             raw: pos
           };
+          
+          if (pos.marginCoin !== undefined) update.ccy = pos.marginCoin;
           
           if (pos.instId !== undefined) update.symbol = pos.instId;
           if (pos.holdSide !== undefined) update.side = pos.holdSide.toLowerCase() as any;

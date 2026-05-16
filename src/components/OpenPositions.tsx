@@ -112,12 +112,20 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Margin</span>
-                <span className="font-mono text-white">{formatValue(pos.margin, 2)} <span className="font-sans text-[10px] text-[#8E9299]">USDT</span></span>
+                <span className="font-mono text-white">
+                  {formatValue(pos.margin, 2)} <span className="font-sans text-[10px] text-[#8E9299]">{pos.ccy || 'USDT'}</span>
+                  {pos.ccy && !pos.ccy.includes('USD') && pos.margin && pos.markPrice ? (
+                    <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(pos.margin * pos.markPrice, 2)} USD</span>
+                  ) : null}
+                </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Realized PnL</span>
                 <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                  {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-[10px]">USDT</span>
+                  {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-[10px]">{pos.ccy || 'USDT'}</span>
+                  {pos.ccy && !pos.ccy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
+                    <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(Math.abs(pos.realizedPnl) * pos.markPrice, 2)} USD</span>
+                  ) : null}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -131,7 +139,10 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Unrealized PnL</span>
                 <span className={`font-mono ${uplColor}`}>
-                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">USDT</span>
+                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{pos.ccy || 'USDT'}</span>
+                  {pos.ccy && !pos.ccy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
+                    <span className="text-[#8E9299] text-[10px] ml-1">≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.unrealizedPnl) * pos.markPrice, 2)} USD</span>
+                  ) : null}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -241,23 +252,34 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                       <div className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatValue(pos.liquidationPrice, 4)}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-mono text-white text-sm flex items-center gap-1">{formatValue(pos.margin, 2)} <span className="font-sans text-xs text-[#8E9299]">USDT</span></div>
+                      <div className="font-mono text-white text-sm flex items-center gap-1">
+                        {formatValue(pos.margin, 2)} <span className="font-sans text-xs text-[#8E9299]">{pos.ccy || 'USDT'}</span>
+                      </div>
+                      {pos.ccy && !pos.ccy.includes('USD') && pos.margin && pos.markPrice ? (
+                        <div className="font-mono text-xs mt-1 text-[#8E9299]">
+                          ≈ {formatValue(pos.margin * pos.markPrice, 2)} USD
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">
                       <div className={`font-mono text-sm flex items-center gap-1 ${uplColor}`}>
-                        {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="font-sans text-xs">({pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'})</span>
+                        {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="font-sans text-xs">{pos.ccy || 'USDT'} ({pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'})</span>
                       </div>
-                      <div className={`font-mono text-xs mt-1 ${uplColor}`}>
-                         ≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} USD
-                      </div>
+                      {pos.ccy && !pos.ccy.includes('USD') ? (
+                        <div className={`font-mono text-xs mt-1 ${uplColor}`}>
+                          ≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.unrealizedPnl || 0) * pos.markPrice, 2)} USD
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">
                       <div className={`font-mono text-sm flex items-center gap-1 ${realizedPnlColor}`}>
-                        {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-xs">USDT</span>
+                        {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-xs">{pos.ccy || 'USDT'}</span>
                       </div>
-                      <div className={`font-mono text-xs mt-1 ${realizedPnlColor}`}>
-                         ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} USD
-                      </div>
+                      {pos.ccy && !pos.ccy.includes('USD') ? (
+                        <div className={`font-mono text-xs mt-1 ${realizedPnlColor}`}>
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.realizedPnl || 0) * pos.markPrice, 2)} USD
+                        </div>
+                      ) : null}
                     </td>
                   </tr>
                 );

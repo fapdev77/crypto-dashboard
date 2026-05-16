@@ -8,6 +8,7 @@ export interface UnifiedPosition {
   exchange: ExchangeName;
   label: string; // Account label/name
   symbol: string;
+  ccy?: string; // Margin/PNL currency (e.g. USDT, BTC)
   side: PositionSide;
   size: number; // For position size
   valueUsd?: number; // approx value
