@@ -20,6 +20,7 @@ export class BitgetPositionMapper implements PositionMapperStrategy {
         label,
         exchange: 'BITGET',
         symbol: p.instId || p.symbol,
+        ccy: p.marginCoin || p.settleCoin || (p.symbol ? (p.symbol.endsWith('USDT') ? 'USDT' : p.symbol.endsWith('USDC') ? 'USDC' : p.symbol.replace(/USD.*/, '')) : 'USDT'),
         side: isLong ? 'long' : isShort ? 'short' : 'net',
         realizedPnl,
         closeTime: cTime,

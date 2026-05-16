@@ -50,15 +50,24 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
     let sumLoss = 0;
 
     filteredClosedPositions.forEach(p => {
-      totalPnl += p.realizedPnl;
-      if (p.realizedPnl > 0) {
+      const isUSDT = p.symbol.includes('USDT');
+      const isUSDC = p.symbol.includes('USDC');
+      const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD'));
+      const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
+      let pnlInUsd = p.realizedPnl;
+      if (!isFiatCcy && p.closePrice) {
+        pnlInUsd = p.realizedPnl * p.closePrice;
+      }
+
+      totalPnl += pnlInUsd;
+      if (pnlInUsd > 0) {
         wins++;
-        sumWin += p.realizedPnl;
-        if (p.realizedPnl > largestWin) largestWin = p.realizedPnl;
-      } else if (p.realizedPnl < 0) {
+        sumWin += pnlInUsd;
+        if (pnlInUsd > largestWin) largestWin = pnlInUsd;
+      } else if (pnlInUsd < 0) {
         losses++;
-        sumLoss += p.realizedPnl;
-        if (p.realizedPnl < largestLoss) largestLoss = p.realizedPnl;
+        sumLoss += pnlInUsd;
+        if (pnlInUsd < largestLoss) largestLoss = pnlInUsd;
       }
     });
 
@@ -186,10 +195,10 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                 let hasRoi = false;
                 
                 // Identify the quote currency for the PnL (e.g. USDT)
-                // For USDT/USDC margined, it's usually the part after - or just USDT
                 const isUSDT = p.symbol.includes('USDT');
                 const isUSDC = p.symbol.includes('USDC');
-                const pnlCurrency = isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD');
+                const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD'));
+                const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
                 
                 if (p.raw?.roi !== undefined && p.raw?.roi !== null) {
                    roiValue = parseFloat(p.raw.roi) * 100;
@@ -260,6 +269,11 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                       <div className={`font-mono text-sm ${pnlClass}`}>
                         {p.realizedPnl > 0 ? '+' : ''}{formatValue(p.realizedPnl, 4)} <span className="font-sans text-xs text-[#8E9299]">{pnlCurrency}</span>
                       </div>
+                      {!isFiatCcy && p.closePrice ? (
+                        <div className={`font-mono text-xs mt-1 ${pnlClass}`}>
+                          ≈ {p.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(p.realizedPnl) * p.closePrice, 2)} USD
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`font-mono text-sm ${roiClass}`}>{roiStr}</span>

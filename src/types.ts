@@ -35,6 +35,7 @@ export interface UnifiedHistoryPosition {
   exchange: ExchangeName;
   label: string;
   symbol: string;
+  ccy?: string;
   side: PositionSide;
   realizedPnl: number;
   closeTime: number; // timestamp

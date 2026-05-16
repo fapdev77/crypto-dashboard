@@ -25,6 +25,7 @@ export class OkxPositionMapper implements PositionMapperStrategy {
         label,
         exchange: 'OKX',
         symbol: p.instId,
+        ccy: p.ccy || p.marginCoin || (p.instId.includes('-USDT') ? 'USDT' : p.instId.includes('-USDC') ? 'USDC' : p.instId.split('-')[0]),
         side: isLong ? 'long' : isShort ? 'short' : 'net',
         realizedPnl,
         closeTime: cTime,

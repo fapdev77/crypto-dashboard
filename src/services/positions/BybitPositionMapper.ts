@@ -24,6 +24,7 @@ export class BybitPositionMapper implements PositionMapperStrategy {
         label,
         exchange: 'BYBIT',
         symbol: p.symbol,
+        ccy: p.settleCoin || p.coin || (p.symbol.endsWith('USDT') ? 'USDT' : p.symbol.endsWith('USDC') ? 'USDC' : p.symbol.replace(/USD.*/, '')),
         side: isLong ? 'long' : isShort ? 'short' : 'net',
         realizedPnl: realizedPnl,
         closeTime: cTime,
