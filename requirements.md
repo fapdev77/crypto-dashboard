@@ -26,6 +26,7 @@ Como o requisito constitucional #2 dita que as credenciais *NUNCA* podem ser env
 - **Tarefa 3: Motor de WebSocket Privado:** Gerenciamento dos WebSockets simultâneos (Bitget, OKX, Bybit), subscrições, pings/heartbeats.
 - **Tarefa 4: Componentes da Dashboard e Mock Data:** Integração dos cálculos (Total Equity, Unrealized PnL), modos de exibição "Lite" e "Detailed", tabelas de saldo interativas e alternância de Dados Simulados (Mocking) para desenvolvimento/testes desassociados.
 - **Tarefa 5: Refinamento e Histórico:** Módulo REST para histórico (Posições Fechadas) com filtros granulares temporais, Status de conexão global contínuo e ocultação de elementos sem saldos/posições.
+- **Tarefa 6: UI/UX Avançado:** Estilização global e customizada das barras de rolagem (ocultamento de scrollbars verticais para maximizar a imersão visual e personalização de scrollbars horizontais aderentes ao tema Dark Mode), garantindo responsividade e elegância na exibição de tabelas densas no Dashboard.
 
 ## 5. Serviço de Normalização de Histórico de Posições (Multi-Exchange)
 
