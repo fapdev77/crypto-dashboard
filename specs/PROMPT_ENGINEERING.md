@@ -12,7 +12,7 @@ You are an Expert Full-Stack Crypto Systems Engineer focusing heavily on Client-
 We must natively support three major exchanges: **OKX**, **Bitget**, and **Bybit**.
 
 ### Goal
-Build a real-time terminal that connects via WebSocket (primary) and REST (secondary backup) to OKX, Bitget, and Bybit to retrieve account balances and open positions concurrently.
+Construir um gerenciador de portfólio em tempo real que se conecta via WebSocket (primário) e REST (secundário) na OKX, Bitget e Bybit para recuperar saldos de contas e posições abertas simultaneamente.
 
 ### Architectural Constraints (Zero-Trust Security Focus)
 1. **API Secrets**: Must NEVER be dispatched to a backend or database as plain text constraints. They stay locked in the browser's `localStorage` and are resolved exclusively in memory.

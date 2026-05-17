@@ -1,6 +1,6 @@
 {
-  "name": "crypto-dashboard",
-  "description": "Crypto Dashboard",
+  "name": "Gerenciador de Portfólio Crypto Mult-Exchange",
+  "description": "Gerenciador de Portfólio Crypto Mult-Exchange conectando múltiplas corretoras",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
 
 ## 1. Project Overview
-**Project Name:** Multi-Exchange Crypto Dashboard  
-**Objective:** A Unified Cryptocurrency Trading Terminal that consolidates real-time wallet balances, financial history, and active positions directly from the Top 3 global crypto exchanges: **Bitget**, **OKX**, and **Bybit**. 
+**Project Name:** Gerenciador de Portfólio Crypto Mult-Exchange  
+**Objective:** Um gerenciador de portfólio de criptomoedas unificado que consolida saldos em tempo real, histórico financeiro e posições abertas diretamente das 3 maiores corretoras: **Bitget**, **OKX** e **Bybit**. 
 
 ## 2. Core Objectives
 - **Real-time Aggregation:** Combine balances, PnL, and open positions across multiple crypto exchanges into a single unified interface.

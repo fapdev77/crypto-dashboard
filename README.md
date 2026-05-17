@@ -1,6 +1,6 @@
-# Multi-Exchange Crypto Dashboard
+# Gerenciador de Portfólio Crypto Mult-Exchange
 
-Um terminal de operações multi-exchange avançado para consolidar dados (carteira, saldos e posições) de forma unificada e em tempo real. Atualmente suporta Bitget, OKX e Bybit.
+Um gerenciador de portfólio crypto multi-exchange avançado para consolidar dados (carteira, saldos e posições) de forma unificada e em tempo real. Atualmente suporta Bitget, OKX e Bybit.
 
 ## 🚀 Visão Geral e Arquitetura
 

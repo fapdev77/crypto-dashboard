@@ -26,12 +26,12 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
 
   return (
     <aside className="w-64 bg-[#151619] border-r border-[#2a2b30] flex flex-col h-full">
-      <div className="p-6 border-b border-[#2a2b30]">
-        <h1 className="text-xl font-semibold tracking-tight text-white flex items-center gap-2">
-          <Activity className="w-5 h-5 text-[#2F6BFF]" />
-          Terminal
+      <div className="p-6 border-b border-[#2a2b30] shrink-0">
+        <h1 className="text-lg font-semibold tracking-tight text-white flex items-center gap-2 leading-tight">
+          <Activity className="w-6 h-6 text-[#2F6BFF] shrink-0" />
+          <span className="line-clamp-2">Gerenciador de Portfólio</span>
         </h1>
-        <p className="text-xs text-[#8E9299] font-mono mt-1 uppercase tracking-widest">Multi-Exchange</p>
+        <p className="text-[10px] text-[#8E9299] font-mono mt-2 uppercase tracking-widest truncate">Crypto Mult-Exchange</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">
