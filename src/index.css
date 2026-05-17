@@ -24,11 +24,41 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Remove a barra visualmente mantendo o funcionamento do scroll */
-.hide-scrollbar::-webkit-scrollbar {
+/* Custom Scrollbar Global - Estilos Dark Mode */
+::-webkit-scrollbar {
+  width: 8px; /* Largura da barra vertical, se houver noutros componentes */
+  height: 8px; /* Altura da barra horizontal */
+}
+
+::-webkit-scrollbar-track {
+  background: var(--panel-bg); 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-secondary);
+}
+
+/* Estilo global para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) var(--panel-bg);
+}
+
+/* Remove a barra vertical visualmente mantendo o funcionamento do scroll */
+.hide-scrollbar::-webkit-scrollbar:vertical {
+  width: 0px;
   display: none;
 }
+
 .hide-scrollbar {
+  /* Firefox e Edge/IE - Nota: isso oculta ambas as barras nestes browsers. 
+     Para Firefox exibir apenas a horizontal não é possível via CSS puro com scrollbar-width, então priorizamos a beleza. */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
