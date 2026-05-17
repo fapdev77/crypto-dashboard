@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { LayoutDashboard, KeyRound, Settings, Activity, Terminal } from 'lucide-react';
+import { useDashboardStore } from '../store/dashboardStore';
+import { useSettingsStore } from '../store/settingsStore';
 
 interface SidebarProps {
   activeTab: string;
@@ -7,9 +9,19 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+  const { positions } = useDashboardStore();
+  const useMockData = useSettingsStore(state => state.useMockData);
+
+  const openCount = useMemo(() => {
+    const list = Object.values(positions);
+    return list.filter(p => 
+      (useMockData ? p.connectionId === 'mock' : p.connectionId !== 'mock') && Math.abs(p.size) > 0
+    ).length;
+  }, [positions, useMockData]);
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'positions', label: 'Positions', icon: Activity },
+    { id: 'positions', label: 'Positions', icon: Activity, badge: openCount },
   ];
 
   return (
@@ -34,7 +46,14 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
             }`}
           >
             <item.icon className="w-4 h-4" />
-            {item.label}
+            <span className="flex-1 text-left">{item.label}</span>
+            {item.badge !== undefined && item.badge > 0 && (
+              <span className={`px-2 py-0.5 text-xs rounded-full ${
+                activeTab === item.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+              }`}>
+                {item.badge}
+              </span>
+            )}
           </button>
         ))}
       </nav>

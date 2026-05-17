@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Activity, History, Search, X } from 'lucide-react';
 import { useApiKeysStore } from '../store/apiKeysStore';
+import { useDashboardStore } from '../store/dashboardStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { format } from 'date-fns';
 import { OpenPositions } from './OpenPositions';
 import { ClosedPositions } from './ClosedPositions';
 
 export function Positions() {
   const keys = useApiKeysStore(state => state.keys);
+  const { positions } = useDashboardStore();
+  const useMockData = useSettingsStore(state => state.useMockData);
+  
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
   const [filterText, setFilterText] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
@@ -15,6 +20,13 @@ export function Positions() {
   const [customStartDate, setCustomStartDate] = useState(format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'));
   const [customEndDate, setCustomEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [triggerSearch, setTriggerSearch] = useState(false);
+
+  const openCount = useMemo(() => {
+    const list = Object.values(positions);
+    return list.filter(p => 
+      (useMockData ? p.connectionId === 'mock' : p.connectionId !== 'mock') && Math.abs(p.size) > 0
+    ).length;
+  }, [positions, useMockData]);
 
   const handleCustomDateSearch = () => {
     setTriggerSearch(!triggerSearch);
