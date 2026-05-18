@@ -227,7 +227,7 @@ export function Dashboard() {
             <p className="text-[#8E9299]/60 text-sm mt-1">Connect your accounts to view balances.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6 items-start">
             {(Object.entries(hierarchy) as [string, { total: number; accounts: Record<string, { label: string; total: number; balances: BalanceItem[] }> }][]).map(([exchange, exData]) => {
               const totalExchangeValue = exData.total;
               const isExExpanded = expandedExchanges[exchange] ?? false;
