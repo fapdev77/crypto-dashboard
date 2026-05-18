@@ -47,9 +47,12 @@ export function PositionsTicker() {
             | {pos.symbol}
           </span>
           
-          <span className={`text-xs ml-1 font-medium ${priceColor}`}>
-            {isPriceUp ? '↗ ' : isPriceDown ? '↘ ' : ''}{Math.abs(priceVariation).toFixed(2)}%
-          </span>
+          <div className={`flex items-center gap-1 text-sm font-medium ml-1 ${priceColor}`}>
+            {isPriceUp && <TrendingUp className="w-3.5 h-3.5" />}
+            {isPriceDown && <TrendingDown className="w-3.5 h-3.5" />}
+            {!isPriceUp && !isPriceDown && <Minus className="w-3.5 h-3.5" />}
+            <span>{Math.abs(priceVariation).toFixed(2)}%</span>
+          </div>
 
           <span className={`font-mono text-sm ml-1 ${priceColor}`}>
             ${formatValue(pos.markPrice, pos.markPrice < 1 ? 4 : 2)}
