@@ -22,7 +22,7 @@ Build a real-time terminal that connects via WebSocket (primary) and REST (secon
 ### Tech Stack Details
 - React 19, TypeScript, Vite.
 - Tailwind CSS v4 (incorporating Dark mode natively, and `font-mono` exclusively for numeric financial displays).
-- Zustand for immutable state management (`apiKeysStore`, `dashboardStore`).
+- Zustand for immutable state management (`apiKeysStore`, `dashboardStore`, `settingsStore`).
 - `crypto-js` native module for HMAC hashing.
 - `lucide-react` for semantic icon UI.
 
@@ -32,6 +32,8 @@ Build a real-time terminal that connects via WebSocket (primary) and REST (secon
   - Manage auto-reconnection and send required heartbeats (`ping` or `{"op": "ping"}`). 
   - Grasp the different cryptographic payload constraints: OKX uses ISO 8601 formatting and Base64 signatures, Bitget uses Unix Nano Time strings and Base64, Bybit uses Milliseconds Unix Time and Hexadecimals.
 - **Data Table Features**: The Balances table must include functional interactive columns to filter (regex localized text search) and directionally sort by asset, name, amount, or USD value.
+- **Closed Positions History**: Include a dedicated module/page tab filtering up to 90 days of closed position history via REST. Must align all timezone logic and harmonize the PnL definitions per exchange.
+- **Mock Data**: Support a Developer 'Mock Data' feature that overrides WS streams to dump UI-placeholder values safely for testing.
 - **Special Edge Case (Bybit)**: Bybit's WSS mechanism generally only pushes *delta* (changes) updates for Accounts. Therefore, implement a one-off REST fetch on Dashboard Mount (utilizing the CORS proxy) to fetch the initial snapshot for Wallet/Positions, before falling back strictly to WSS streams.
 
 Assume you are working in an environment running Vite with an active setup. Execute the development following strict Clean Code paradigms.

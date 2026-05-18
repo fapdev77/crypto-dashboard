@@ -40,3 +40,6 @@ This project implements a unique Hybrid-Proxy Client Architecture to resolve bro
 - **`useDashboardStore`:** 
   - Subscribes to UI flows. Aggregates positions, balances.
   - Dynamically computes UI values on mapping loops (e.g. Total USD Equity).
+- **`useSettingsStore`:** 
+  - Manages application-wide config (e.g. `useMockData`, visibility toggles).
+  - Persisted to local storage for user preferences.
