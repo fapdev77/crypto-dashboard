@@ -1,6 +1,6 @@
-# Gerenciador de Portfólio Crypto Mult-Exchange
+# Gerenciador de Portfólio Crypto Multi-Exchange
 
-Um gerenciador de portfólio crypto multi-exchange avançado para consolidar dados (carteira, saldos e posições) de forma unificada e em tempo real. Atualmente suporta Bitget, OKX e Bybit.
+Um gerenciador e painel unificado avançado para consolidar dados (carteira, saldos e posições) de forma unificada e em tempo real. Atualmente suporta Bitget, OKX e Bybit.
 
 ## 🚀 Visão Geral e Arquitetura
 

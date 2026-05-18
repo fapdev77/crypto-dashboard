@@ -1,6 +1,8 @@
 {
-  "name": "Gerenciador de Portfólio Crypto Mult-Exchange",
-  "description": "Gerenciador de Portfólio Crypto Mult-Exchange conectando múltiplas corretoras",
+  "name": "Gerenciador de Portfólio Crypto Multi-Exchange",
+  "description": "Gerenciador e painel unificado de portfólios para corretoras de criptomoedas, suportando Bitget, Bybit e OKX.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
