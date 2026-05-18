@@ -1,7 +1,7 @@
 # Product Requirements Document (PRD)
 
 ## 1. Project Overview
-**Project Name:** Gerenciador de Portfólio Crypto Multi-Exchange  
+**Project Name:** Crypto Portfolio Manager (Multi-Exchange)  
 **Objective:** A Unified Cryptocurrency Trading Terminal that consolidates real-time wallet balances, financial history, and active positions directly from the Top 3 global crypto exchanges: **Bitget**, **OKX**, and **Bybit**. 
 
 ## 2. Core Objectives

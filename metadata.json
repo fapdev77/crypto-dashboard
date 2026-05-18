@@ -1,5 +1,5 @@
 {
-  "name": "Gerenciador de Portfólio Crypto Multi-Exchange",
+  "name": "Crypto Portfolio Manager",
   "description": "Gerenciador e painel unificado de portfólios para corretoras de criptomoedas, suportando Bitget, Bybit e OKX.",
   "requestFramePermissions": [],
   "majorCapabilities": [

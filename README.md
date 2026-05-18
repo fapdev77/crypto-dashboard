@@ -1,4 +1,4 @@
-# Gerenciador de Portfólio Crypto Multi-Exchange
+# Crypto Portfolio Manager: Multi-Exchange
 
 Um gerenciador e painel unificado avançado para consolidar dados (carteira, saldos e posições) de forma unificada e em tempo real. Atualmente suporta Bitget, OKX e Bybit.
 
