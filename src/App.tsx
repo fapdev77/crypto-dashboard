@@ -13,6 +13,7 @@ import { Positions } from './components/Positions';
 import { Settings } from './components/Settings';
 import { ApiTester } from './components/ApiTester';
 import { StatusBar } from './components/StatusBar';
+import { PositionsTicker } from './components/PositionsTicker';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -27,6 +28,7 @@ export default function App() {
   return (
     <WorkSpace>
       <div className="flex flex-col h-screen bg-[#0b0c10] overflow-hidden">
+        <PositionsTicker />
         <div className="flex flex-1 overflow-hidden relative">
           <Sidebar 
             activeTab={activeTab} 

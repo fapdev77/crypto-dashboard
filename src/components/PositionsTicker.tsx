@@ -1,0 +1,87 @@
+import React, { useMemo } from 'react';
+import { useDashboardStore } from '../store/dashboardStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { formatValue } from '../types';
+
+export function PositionsTicker() {
+  const { positions } = useDashboardStore();
+  const useMockData = useSettingsStore(state => state.useMockData);
+
+  const activePositions = useMemo(() => {
+    const list = Object.values(positions);
+    return useMockData
+      ? list.filter(p => p.connectionId === 'mock')
+      : list.filter(p => p.connectionId !== 'mock');
+  }, [positions, useMockData]);
+
+  // Se nao há posicoes abertas, retorne null
+  if (activePositions.length === 0) return null;
+
+  const content = activePositions.map((pos) => {
+    const isLong = pos.side === 'long';
+    let variation = pos.roe;
+    if (variation === undefined) {
+       const priceDiff = pos.markPrice - pos.entryPrice;
+       const rawRoe = (priceDiff / (pos.entryPrice || 1)) * 100 * (pos.leverage || 1);
+       variation = isLong ? rawRoe : -rawRoe;
+    }
+
+    const priceVariation = pos.entryPrice ? ((pos.markPrice - pos.entryPrice) / pos.entryPrice) * 100 : 0;
+    const isPriceUp = priceVariation > 0;
+    const isPriceDown = priceVariation < 0;
+    const priceColor = isPriceUp ? 'text-emerald-500' : isPriceDown ? 'text-red-500' : 'text-gray-400';
+
+    const isPositive = variation > 0;
+    const isNegative = variation < 0;
+    const isNeutral = variation === 0;
+
+    return (
+      <div 
+        key={pos.id} 
+        className="flex items-center gap-4 px-6 py-2 border-r border-[#2a2b30]/50 shrink-0 cursor-default"
+        title={`Ativo: ${pos.symbol}\nPosição: ${pos.side.toUpperCase()} ${pos.leverage}x\nPreço Atual: $${pos.markPrice}\nPreço de Entrada: ${pos.entryPrice ? '$' + pos.entryPrice : 'N/A'}\nVariação de Preço (desde entrada): ${formatValue(priceVariation, 2)}%\nLucro/Prejuízo (ROE): ${formatValue(variation, 2)}%`}
+      >
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-white text-sm tracking-wide">
+            | {pos.symbol}
+          </span>
+          
+          <span className={`text-xs ml-1 font-medium ${priceColor}`}>
+            {isPriceUp ? '↗ ' : isPriceDown ? '↘ ' : ''}{Math.abs(priceVariation).toFixed(2)}%
+          </span>
+
+          <span className={`font-mono text-sm ml-1 ${priceColor}`}>
+            ${formatValue(pos.markPrice, pos.markPrice < 1 ? 4 : 2)}
+          </span>
+
+          <span className="text-xs ml-2 px-1.5 py-0.5 rounded uppercase font-medium bg-[#1a1b1e] text-[#8E9299]">
+            Pos: {pos.side} {pos.leverage}x
+          </span>
+        </div>
+
+        <div className={`flex items-center gap-1 text-sm font-medium ml-1 ${isPositive ? 'text-emerald-500' : isNegative ? 'text-red-500' : 'text-gray-400'}`}>
+          {isPositive && <TrendingUp className="w-4 h-4" />}
+          {isNegative && <TrendingDown className="w-4 h-4" />}
+          {isNeutral && <Minus className="w-4 h-4" />}
+          <span>
+            {isPositive ? '+' : ''}{formatValue(variation, 2)}%
+          </span>
+        </div>
+      </div>
+    );
+  });
+
+  return (
+    <div className="bg-[#151619] border-b border-[#2a2b30] flex items-center overflow-hidden shrink-0 h-10 w-full relative z-10 group">
+      <div className="flex w-max animate-marquee group-hover:[animation-play-state:paused]">
+        <div className="flex shrink-0">
+          {content}
+        </div>
+        <div className="flex shrink-0">
+          {content}
+        </div>
+      </div>
+    </div>
+  );
+}

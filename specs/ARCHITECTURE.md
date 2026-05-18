@@ -5,6 +5,7 @@ This project implements a unique Hybrid-Proxy Client Architecture to resolve bro
 
 - **Client-Side (React/Vite):** 
   - Handles the UI, continuous WebSocket connections, State handling (Zustand), and all Cryptography (`crypto-js`). 
+  - The UI utilizes an advanced Responsive Masonry chunking algorithm (`flex`/`columns` hybrids) for optimized component rendering to ensure dynamic collapsible UI modules don't displace vertically adjacent objects. Sidebar utilizes collapsible real-time logic.
   - API keys reside solely here in `localStorage`.
 - **Backend "Dumb" Proxy (Node.js/Express):** 
   - Serves exclusively to bypass CORS blocking for inevitable REST API calls (like fetching 24h history or bootstrapping Bybit's initial balances/positions).
