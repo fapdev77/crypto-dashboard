@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface ExchangeIconProps {
   exchange: string;
@@ -6,8 +6,34 @@ interface ExchangeIconProps {
 }
 
 export function ExchangeIcon({ exchange, className = "w-4 h-4" }: ExchangeIconProps) {
+  const [hasError, setHasError] = useState(false);
   const ex = exchange.toLowerCase();
 
+  const token = 'pk_W-08Gy3bQ66pu3yMO7UNxQ';
+  let domain = '';
+
+  if (ex.includes('bitget')) domain = 'bitget.com';
+  else if (ex.includes('bybit')) domain = 'bybit.com';
+  else if (ex.includes('okx')) domain = 'okx.com';
+  else if (ex.includes('binance')) domain = 'binance.com';
+  else domain = `${ex}.com`; // Tenta adivinhar o domínio para as outras corretoras
+
+  const handleError = () => setHasError(true);
+
+  if (!hasError && domain) {
+    return (
+      <img 
+        src={`https://img.logo.dev/${domain}?token=${token}`}
+        alt={exchange}
+        title={exchange}
+        className={`rounded-full object-contain shrink-0 ${className}`}
+        onError={handleError}
+      />
+    );
+  }
+
+  // -- Fallbacks Originais SVG em caso de falha da logo.dev --
+  
   // Cores originais se quiser, mas podemos usar currentColor no fill/stroke
   if (ex.includes('bitget')) {
     return (
@@ -33,7 +59,7 @@ export function ExchangeIcon({ exchange, className = "w-4 h-4" }: ExchangeIconPr
     );
   }
 
-  // Falback genérico
+  // Falback genérico em caso de não ter SVG mapeado e falhar o logo.dev
   return (
     <div className={`rounded-full bg-gray-700 flex justify-center items-center ${className}`}>
       <span className="text-[8px] font-bold text-white">{exchange.substring(0, 1).toUpperCase()}</span>

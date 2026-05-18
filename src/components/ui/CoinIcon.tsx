@@ -7,7 +7,7 @@ interface CoinIconProps {
 }
 
 export function CoinIcon({ symbol, className = "w-6 h-6", size = 32 }: CoinIconProps) {
-  const [hasError, setHasError] = useState(false);
+  const [imageState, setImageState] = useState<'logodev-crypto' | 'logodev-ticker' | 'coincap' | 'error'>('logodev-crypto');
   
   let cleanSymbol = symbol.toLowerCase();
 
@@ -21,8 +21,8 @@ export function CoinIcon({ symbol, className = "w-6 h-6", size = 32 }: CoinIconP
     }
   }
 
-  // Fallback visual se a imagem não carregar
-  if (hasError || !cleanSymbol) {
+  // Fallback visual se nenhuma imagem carregar
+  if (imageState === 'error' || !cleanSymbol) {
     return (
       <div className={`rounded-full bg-[#1e2025] border border-[#2a2b30] flex items-center justify-center shrink-0 ${className}`}>
         <span className="text-[10px] sm:text-xs font-bold text-[#8E9299]">
@@ -32,16 +32,37 @@ export function CoinIcon({ symbol, className = "w-6 h-6", size = 32 }: CoinIconP
     );
   }
 
-  // Usando coincap para as moedas
-  const iconUrl = `https://assets.coincap.io/assets/icons/${cleanSymbol}@2x.png`;
+  const token = 'pk_W-08Gy3bQ66pu3yMO7UNxQ';
+  
+  // Logo.dev (Crypto API)
+  const logoDevCryptoUrl = `https://img.logo.dev/crypto/${cleanSymbol.toUpperCase()}?token=${token}`;
+  // Logo.dev (Ticker API para mercado tradicional)
+  const logoDevTickerUrl = `https://img.logo.dev/ticker/${cleanSymbol.toUpperCase()}?token=${token}`;
+  // Fallback para o CoinCap
+  const coinCapUrl = `https://assets.coincap.io/assets/icons/${cleanSymbol}@2x.png`;
+
+  let currentUrl = '';
+  if (imageState === 'logodev-crypto') currentUrl = logoDevCryptoUrl;
+  else if (imageState === 'logodev-ticker') currentUrl = logoDevTickerUrl;
+  else currentUrl = coinCapUrl;
+
+  const handleError = () => {
+    if (imageState === 'logodev-crypto') {
+      setImageState('logodev-ticker');
+    } else if (imageState === 'logodev-ticker') {
+      setImageState('coincap');
+    } else {
+      setImageState('error');
+    }
+  };
 
   return (
     <img 
-      src={iconUrl} 
+      src={currentUrl} 
       alt={symbol}
       title={symbol}
       className={`rounded-full object-contain shrink-0 ${className}`}
-      onError={() => setHasError(true)}
+      onError={handleError}
     />
   );
 }
