@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Save, Trash2, Power, Eye, EyeOff, Plus, Activity, AlertCircle } from 'lucide-react';
 import { useApiKeysStore, Exchange } from '../store/apiKeysStore';
 import { useDashboardStore } from '../store/dashboardStore';
+import { ExchangeIcon } from './ui/ExchangeIcon';
 
 const EXCHANGES: { id: Exchange; name: string; requiresPassphrase?: boolean }[] = [
   { id: 'bitget', name: 'Bitget', requiresPassphrase: true },
@@ -22,6 +23,7 @@ export function ApiKeys() {
   const [passphrase, setPassphrase] = useState('');
   const [showSecret, setShowSecret] = useState(false);
   const [keyToDelete, setKeyToDelete] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,9 +69,12 @@ export function ApiKeys() {
                     : 'text-[#8E9299] hover:bg-[#2a2b30]/50'
                 }`}
               >
-                <div>
-                  <span className="font-medium text-sm block">{k.label}</span>
-                  <span className="text-xs opacity-70 uppercase tracking-wider">{k.exchange}</span>
+                <div className="flex items-center gap-3">
+                  <ExchangeIcon exchange={k.exchange} className="w-6 h-6" />
+                  <div>
+                    <span className="font-medium text-sm block">{k.label}</span>
+                    <span className="text-xs opacity-70 uppercase tracking-wider">{k.exchange}</span>
+                  </div>
                 </div>
                 <div className={`w-2 h-2 rounded-full ${dotClass}`} />
               </button>
@@ -94,9 +99,12 @@ export function ApiKeys() {
       <div className="flex-1 bg-[#151619] border border-[#2a2b30] rounded-xl p-6 overflow-y-auto">
         {existingKey ? (
           <div className="space-y-6 max-w-3xl w-full">
-             <div className="mb-6">
-              <h3 className="text-xl font-medium text-white mb-1">{existingKey.label}</h3>
-              <p className="text-xs text-[#8E9299] uppercase">{existingKey.exchange}</p>
+             <div className="mb-6 flex gap-3 items-center">
+              <ExchangeIcon exchange={existingKey.exchange} className="w-8 h-8" />
+              <div>
+                <h3 className="text-xl font-medium text-white mb-1">{existingKey.label}</h3>
+                <p className="text-xs text-[#8E9299] uppercase">{existingKey.exchange}</p>
+              </div>
             </div>
             
             <div className="space-y-4">
@@ -206,15 +214,48 @@ export function ApiKeys() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2">Exchange</label>
-                <select
-                  value={exchange}
-                  onChange={(e) => setExchange(e.target.value as Exchange)}
-                  className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
-                >
-                  {EXCHANGES.map(ex => (
-                    <option key={ex.id} value={ex.id}>{ex.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors appearance-none text-left flex items-center justify-between"
+                  >
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <ExchangeIcon exchange={exchange} className="w-5 h-5" />
+                    </div>
+                    <span>{EXCHANGES.find(ex => ex.id === exchange)?.name}</span>
+                    <svg className={`h-4 w-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {isDropdownOpen && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-10" 
+                        onClick={() => setIsDropdownOpen(false)}
+                      />
+                      <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
+                        {EXCHANGES.map(ex => (
+                          <button
+                            key={ex.id}
+                            type="button"
+                            onClick={() => {
+                              setExchange(ex.id as Exchange);
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                              exchange === ex.id ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                            }`}
+                          >
+                            <ExchangeIcon exchange={ex.id} className="w-5 h-5" />
+                            <span>{ex.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div>

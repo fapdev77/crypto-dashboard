@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useDashboardStore } from '../store/dashboardStore';
 import { Activity } from 'lucide-react';
+import { ExchangeIcon } from './ui/ExchangeIcon';
 
 export function StatusBar() {
   const { keys } = useApiKeysStore();
@@ -39,9 +40,12 @@ export function StatusBar() {
             const xKeys = xKeysRaw as typeof keys;
             return (
               <div key={exchange} className="flex items-center gap-2 border-r border-[#1f2937]/50 pr-5 last:border-0 last:pr-0">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">
-                  {exchange}:
-                </span>
+                <div className="flex items-center gap-1.5 opacity-60">
+                  <ExchangeIcon exchange={exchange} className="w-3.5 h-3.5" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">
+                    {exchange}:
+                  </span>
+                </div>
                 <div className="flex items-center gap-3">
                   {xKeys.map(key => {
                   const status = statuses[key.id] || 'disconnected';
