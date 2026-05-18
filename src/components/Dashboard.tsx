@@ -227,107 +227,140 @@ export function Dashboard() {
             <p className="text-[#8E9299]/60 text-sm mt-1">Connect your accounts to view balances.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6 items-start">
-            {(Object.entries(hierarchy) as [string, { total: number; accounts: Record<string, { label: string; total: number; balances: BalanceItem[] }> }][]).map(([exchange, exData]) => {
-              const totalExchangeValue = exData.total;
-              const isExExpanded = expandedExchanges[exchange] ?? false;
+          <div className="w-full">
+            {(() => {
+              const hierarchyEntries = Object.entries(hierarchy) as [string, { total: number; accounts: Record<string, { label: string; total: number; balances: BalanceItem[] }> }][];
+              const cards = hierarchyEntries.map(([exchange, exData]) => {
+                const totalExchangeValue = exData.total;
+                const isExExpanded = expandedExchanges[exchange] ?? false;
 
-              return (
-                <div key={exchange} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg overflow-hidden flex flex-col">
-                  {/* Exchange Header */}
-                  <button
-                    onClick={() => toggleExchange(exchange)}
-                    className="w-full flex items-center justify-between p-4 bg-[#1a1b1e] hover:bg-[#2a2b30]/30 transition-colors border-b border-[#2a2b30] group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <ExchangeIcon exchange={exchange} className="w-8 h-8 rounded-md bg-[#2a2b30] p-1" />
-                      <div className="text-left">
-                        <h4 className="text-base font-bold text-white capitalize">{exchange}</h4>
-                        <div className="text-xs text-[#8E9299] font-medium tracking-wide">
-                          Total Balance: <span className="font-mono text-white">${totalExchangeValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                return (
+                  <div key={exchange} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg overflow-hidden flex flex-col w-full">
+                    {/* Exchange Header */}
+                    <button
+                      onClick={() => toggleExchange(exchange)}
+                      className="w-full flex items-center justify-between p-4 bg-[#1a1b1e] hover:bg-[#2a2b30]/30 transition-colors border-b border-[#2a2b30] group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <ExchangeIcon exchange={exchange} className="w-8 h-8 rounded-md bg-[#2a2b30] p-1" />
+                        <div className="text-left">
+                          <h4 className="text-base font-bold text-white capitalize">{exchange}</h4>
+                          <div className="text-xs text-[#8E9299] font-medium tracking-wide">
+                            Total Balance: <span className="font-mono text-white">${totalExchangeValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                     <div className="text-[#8E9299] group-hover:text-white transition-colors">
-                      {isExExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-                    </div>
-                  </button>
+                       <div className="text-[#8E9299] group-hover:text-white transition-colors">
+                        {isExExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                      </div>
+                    </button>
 
-                  {/* Accounts List */}
-                  {isExExpanded && (
-                    <div className="flex-1 overflow-hidden flex flex-col bg-[#111216]">
-                      {Object.entries(exData.accounts).map(([connId, accData]) => {
-                        const isAccExpanded = expandedAccounts[connId] ?? false;
-                        
-                        // Determistic fake sparkline based on account total
-                        const hash = (accData.total * 13) % 100;
-                        const isPositive = hash > 50;
-                        const sparkData = [
-                          hash, 
-                          (hash * 1.5) % 100, 
-                          (hash * 0.8) % 100, 
-                          (hash * 1.2) % 100, 
-                          isPositive ? hash + 20 : Math.max(10, hash - 20)
-                        ];
+                    {/* Accounts List */}
+                    {isExExpanded && (
+                      <div className="flex-1 overflow-hidden flex flex-col bg-[#111216]">
+                        {Object.entries(exData.accounts).map(([connId, accData]) => {
+                          const isAccExpanded = expandedAccounts[connId] ?? false;
+                          
+                          // Determistic fake sparkline based on account total
+                          const hash = (accData.total * 13) % 100;
+                          const isPositive = hash > 50;
+                          const sparkData = [
+                            hash, 
+                            (hash * 1.5) % 100, 
+                            (hash * 0.8) % 100, 
+                            (hash * 1.2) % 100, 
+                            isPositive ? hash + 20 : Math.max(10, hash - 20)
+                          ];
 
-                        return (
-                          <div key={connId} className="border-b border-[#2a2b30] last:border-0">
-                            <button
-                              onClick={() => toggleAccount(connId)}
-                              className="w-full flex items-center justify-between p-3 pl-4 bg-[#151619] hover:bg-[#2a2b30]/30 transition-colors group"
-                            >
-                              <div className="flex items-center gap-2">
-                                <div className="text-[#8E9299] group-hover:text-white transition-colors">
-                                  {isAccExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          return (
+                            <div key={connId} className="border-b border-[#2a2b30] last:border-0">
+                              <button
+                                onClick={() => toggleAccount(connId)}
+                                className="w-full flex items-center justify-between p-3 pl-4 bg-[#151619] hover:bg-[#2a2b30]/30 transition-colors group"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className="text-[#8E9299] group-hover:text-white transition-colors">
+                                    {isAccExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                  </div>
+                                  <div className="hidden sm:block ml-4 pl-4 border-l border-[#2a2b30] opacity-70 group-hover:opacity-100 transition-opacity">
+                                    <Sparkline data={sparkData} color={isPositive ? 'emerald' : 'red'} width={60} height={20} />
+                                  </div>
+                                  <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{accData.label}</span>
                                 </div>
-                                <div className="hidden sm:block ml-4 pl-4 border-l border-[#2a2b30] opacity-70 group-hover:opacity-100 transition-opacity">
-                                  <Sparkline data={sparkData} color={isPositive ? 'emerald' : 'red'} width={60} height={20} />
-                                </div>
-                                <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{accData.label}</span>
-                              </div>
-                              <span className="text-sm font-bold text-white font-mono">${accData.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            </button>
+                                <span className="text-sm font-bold text-white font-mono">${accData.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </button>
 
-                            {/* Assets Table */}
-                            {isAccExpanded && (
-                              <div className="bg-[#111216]">
-                                <table className="w-full text-left border-collapse">
-                                  <thead className="sticky top-0 bg-[#111216]">
-                                    <tr>
-                                      <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">Asset</th>
-                                      <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">Amount</th>
-                                      <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">Value (≈USD)</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-[#2a2b30]">
-                                    {accData.balances.map(b => (
-                                      <tr key={b.id} className="hover:bg-[#1a1b1e] transition-colors">
-                                        <td className="px-4 py-2.5 whitespace-nowrap">
-                                          <div className="flex items-center gap-2">
-                                            <CoinIcon symbol={b.ccy} size={20} className="w-5 h-5" />
-                                            <span className="text-sm font-bold text-white leading-none mt-0.5">{b.ccy}</span>
-                                          </div>
-                                        </td>
-                                        <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
-                                          {b.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })}
-                                        </td>
-                                        <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
-                                          ${b.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </td>
+                              {/* Assets Table */}
+                              {isAccExpanded && (
+                                <div className="bg-[#111216]">
+                                  <table className="w-full text-left border-collapse">
+                                    <thead className="sticky top-0 bg-[#111216]">
+                                      <tr>
+                                        <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">Asset</th>
+                                        <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">Amount</th>
+                                        <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">Value (≈USD)</th>
                                       </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                                    </thead>
+                                    <tbody className="divide-y divide-[#2a2b30]">
+                                      {accData.balances.map(b => (
+                                        <tr key={b.id} className="hover:bg-[#1a1b1e] transition-colors">
+                                          <td className="px-4 py-2.5 whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
+                                              <CoinIcon symbol={b.ccy} size={20} className="w-5 h-5" />
+                                              <span className="text-sm font-bold text-white leading-none mt-0.5">{b.ccy}</span>
+                                            </div>
+                                          </td>
+                                          <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
+                                            {b.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                                          </td>
+                                          <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
+                                            ${b.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              });
+
+              return (
+                <>
+                  {/* Mobile (1 col) */}
+                  <div className="flex xl:hidden flex-col gap-6">
+                    {cards}
+                  </div>
+                  {/* XL (2 cols) */}
+                  <div className="hidden xl:flex 2xl:hidden gap-6 items-start">
+                    <div className="flex-1 flex flex-col gap-6">
+                      {cards.filter((_, i) => i % 2 === 0)}
                     </div>
-                  )}
-                </div>
+                    <div className="flex-1 flex flex-col gap-6">
+                      {cards.filter((_, i) => i % 2 === 1)}
+                    </div>
+                  </div>
+                  {/* 2XL (3 cols) */}
+                  <div className="hidden 2xl:flex gap-6 items-start">
+                    <div className="flex-1 flex flex-col gap-6">
+                      {cards.filter((_, i) => i % 3 === 0)}
+                    </div>
+                    <div className="flex-1 flex flex-col gap-6">
+                      {cards.filter((_, i) => i % 3 === 1)}
+                    </div>
+                    <div className="flex-1 flex flex-col gap-6">
+                      {cards.filter((_, i) => i % 3 === 2)}
+                    </div>
+                  </div>
+                </>
               );
-            })}
+            })()}
           </div>
         )}
       </div>
