@@ -227,13 +227,13 @@ export function Dashboard() {
             <p className="text-[#8E9299]/60 text-sm mt-1">Connect your accounts to view balances.</p>
           </div>
         ) : (
-          <div className="columns-1 xl:columns-2 2xl:columns-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6 items-start">
             {(Object.entries(hierarchy) as [string, { total: number; accounts: Record<string, { label: string; total: number; balances: BalanceItem[] }> }][]).map(([exchange, exData]) => {
               const totalExchangeValue = exData.total;
               const isExExpanded = expandedExchanges[exchange] ?? false;
 
               return (
-                <div key={exchange} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg overflow-hidden flex flex-col mb-6 break-inside-avoid">
+                <div key={exchange} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg overflow-hidden flex flex-col">
                   {/* Exchange Header */}
                   <button
                     onClick={() => toggleExchange(exchange)}
