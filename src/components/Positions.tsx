@@ -6,6 +6,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { format } from 'date-fns';
 import { OpenPositions } from './OpenPositions';
 import { ClosedPositions } from './ClosedPositions';
+import { ExchangeIcon } from './ui/ExchangeIcon';
 
 export function Positions() {
   const keys = useApiKeysStore(state => state.keys);
@@ -15,6 +16,7 @@ export function Positions() {
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
   const [filterText, setFilterText] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
+  const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
   
   const [period, setPeriod] = useState<'1w' | '2w' | '1m' | 'custom'>('1w');
   const [customStartDate, setCustomStartDate] = useState(format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'));
@@ -60,16 +62,66 @@ export function Positions() {
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Exchange Filter - For Both Tabs */}
-          <select
-            value={exchangeFilter}
-            onChange={(e) => setExchangeFilter(e.target.value)}
-            className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
-          >
-            <option value="all">Todas Exchanges</option>
-            {Array.from(new Set(keys.filter(k => k.isActive).map(k => k.exchange))).map(ext => (
-              <option key={ext} value={ext}>{ext.charAt(0).toUpperCase() + ext.slice(1)}</option>
-            ))}
-          </select>
+          <div className="relative z-20">
+            <button
+              type="button"
+              onClick={() => setIsExchangeDropdownOpen(!isExchangeDropdownOpen)}
+              className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between min-w-[160px]"
+            >
+              <div className="flex items-center gap-2">
+                {exchangeFilter !== 'all' && (
+                  <ExchangeIcon exchange={exchangeFilter} className="w-4 h-4" />
+                )}
+                <span>
+                  {exchangeFilter === 'all' 
+                    ? 'Todas Exchanges' 
+                    : exchangeFilter.charAt(0).toUpperCase() + exchangeFilter.slice(1)}
+                </span>
+              </div>
+              <svg className={`h-4 w-4 ml-2 text-gray-400 transition-transform ${isExchangeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {isExchangeDropdownOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setIsExchangeDropdownOpen(false)}
+                />
+                <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExchangeFilter('all');
+                      setIsExchangeDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
+                      exchangeFilter === 'all' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                    }`}
+                  >
+                    <span>Todas Exchanges</span>
+                  </button>
+                  {Array.from(new Set(keys.filter(k => k.isActive).map(k => k.exchange))).map(ext => (
+                    <button
+                      key={ext}
+                      type="button"
+                      onClick={() => {
+                        setExchangeFilter(ext);
+                        setIsExchangeDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
+                        exchangeFilter === ext ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                      }`}
+                    >
+                      <ExchangeIcon exchange={ext} className="w-4 h-4" />
+                      <span>{ext.charAt(0).toUpperCase() + ext.slice(1)}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
 
           {activeTab === 'closed' && (
             <>
