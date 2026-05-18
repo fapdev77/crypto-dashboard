@@ -17,6 +17,7 @@ import { StatusBar } from './components/StatusBar';
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   let activeTabName = activeTab;
   if (activeTab === 'api-keys') activeTabName = 'API Keys';
@@ -32,6 +33,8 @@ export default function App() {
             setActiveTab={setActiveTab} 
             isMobileMenuOpen={isMobileMenuOpen}
             setIsMobileMenuOpen={setIsMobileMenuOpen}
+            isCollapsed={isSidebarCollapsed}
+            setIsCollapsed={setIsSidebarCollapsed}
           />
 
           <main className="flex-1 overflow-hidden bg-[#0b0c10] p-4 md:p-6 flex flex-col min-w-0">

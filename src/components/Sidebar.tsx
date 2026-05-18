@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight} from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 
@@ -8,9 +8,11 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   isMobileMenuOpen?: boolean;
   setIsMobileMenuOpen?: (isOpen: boolean) => void;
+  isCollapsed?: boolean;
+  setIsCollapsed?: (collapsed: boolean) => void;
 }
 
-export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
   const { positions } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
 
@@ -34,17 +36,27 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   ];
 
   return (
-    <aside className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-[#151619] border-r border-[#2a2b30] flex flex-col h-full transform transition-transform duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className="p-4 md:p-6 border-b border-[#2a2b30] flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-white flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-[#2F6BFF]" />
-              <span className="text-lg">Crypto Portfolio Manager</span>
-            </div>
-          </h1>
-          <p className="text-xs text-[#8E9299] font-mono mt-2 uppercase tracking-widest">Multi-Exchange</p>
-        </div>
+    <aside className={`fixed md:static inset-y-0 left-0 z-40 ${isCollapsed ? 'w-20' : 'w-64'} bg-[#151619] border-r border-[#2a2b30] flex flex-col h-full transform transition-all duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`p-4 md:p-6 border-b border-[#2a2b30] flex items-start ${isCollapsed ? 'justify-center' : 'justify-between'} relative`}>
+        {!isCollapsed ? (
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-white flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0">
+                  <span className="text-[#151619] font-bold text-sm tracking-tighter">TE</span>
+                </div>
+                <span className="text-[15px] font-bold leading-tight">
+                  Gerenciador de Portfólio
+                  <span className="block text-[11px] text-[#8E9299] font-normal tracking-wide mt-0.5">Crypto Mult-Exchange</span>
+                </span>
+              </div>
+            </h1>
+          </div>
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 mt-1">
+            <span className="text-[#151619] font-bold text-sm tracking-tighter">TE</span>
+          </div>
+        )}
         
         {/* Mobile Close Button */}
         <button 
@@ -53,66 +65,65 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         >
           <X className="w-5 h-5" />
         </button>
+
+        {/* Desktop Collapse Toggle */}
+        <button
+          onClick={() => setIsCollapsed?.(!isCollapsed)}
+          className="hidden md:flex absolute -right-3 top-6 w-6 h-6 bg-[#1a1b1e] border border-[#2a2b30] rounded-full items-center justify-center text-gray-400 hover:text-white hover:bg-[#2a2b30] transition-colors z-50"
+        >
+          {isCollapsed ? <ChevronsRight className="w-5 h-5" /> : <ChevronsLeft className="w-5 h-5" />}
+        </button>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className={`flex-1 p-4 space-y-2 ${isCollapsed ? 'px-3' : ''}`}>
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => handleTabClick(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            title={item.label}
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} rounded-lg text-sm font-medium transition-colors ${
               activeTab === item.id
                 ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
                 : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
             }`}
           >
-            <item.icon className="w-4 h-4" />
-            <span className="flex-1 text-left">{item.label}</span>
-            {item.badge !== undefined && item.badge > 0 && (
-              <span className={`px-2 py-0.5 text-xs rounded-full ${
-                activeTab === item.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
-              }`}>
-                {item.badge}
-              </span>
+            <item.icon className={`w-5 h-5 shrink-0 ${activeTab === item.id ? 'text-[#2F6BFF]' : 'text-gray-400'}`} />
+            {!isCollapsed && (
+              <>
+                <span className="flex-1 text-left">{item.label}</span>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${
+                    activeTab === item.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
+              </>
             )}
           </button>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-[#2a2b30]">
-        <button
-          onClick={() => handleTabClick('api-keys')}
-          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'api-keys'
-              ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
-              : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
-          }`}
-        >
-          <KeyRound className="w-4 h-4" />
-          API Keys
-        </button>
-        <button
-          onClick={() => handleTabClick('api-tester')}
-          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors mt-1 ${
-            activeTab === 'api-tester'
-              ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
-              : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
-          }`}
-        >
-          <Terminal className="w-4 h-4" />
-          Execução de Testes
-        </button>
-        <button
-          onClick={() => handleTabClick('settings')}
-          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors mt-1 ${
-            activeTab === 'settings'
-              ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
-              : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
-          }`}
-        >
-          <Settings className="w-4 h-4" />
-          Settings
-        </button>
+      <div className={`p-4 border-t border-[#2a2b30] ${isCollapsed ? 'px-3' : ''}`}>
+        {[
+          { id: 'api-keys', label: 'API Keys', icon: KeyRound },
+          { id: 'api-tester', label: 'Execução de Testes', icon: Terminal },
+          { id: 'settings', label: 'Settings', icon: Settings },
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => handleTabClick(item.id)}
+            title={item.label}
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} text-sm font-medium rounded-lg transition-colors mt-1 ${
+              activeTab === item.id
+                ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
+                : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
+            }`}
+          >
+            <item.icon className="w-5 h-5 shrink-0" />
+            {!isCollapsed && <span>{item.label}</span>}
+          </button>
+        ))}
       </div>
     </aside>
   );
