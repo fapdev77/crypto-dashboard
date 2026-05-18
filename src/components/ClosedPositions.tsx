@@ -4,6 +4,8 @@ import { formatValue } from '../types';
 import { usePositionHistory } from '../hooks/usePositionHistory';
 import { Search, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { CoinIcon } from './ui/CoinIcon';
+import { ExchangeIcon } from './ui/ExchangeIcon';
 
 interface ClosedPositionsProps {
   filterText: string;
@@ -244,12 +246,18 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                   <tr key={p.id} className="hover:bg-[#2a2b30]/30 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
+                        <div className="flex items-center relative pr-1">
+                          <CoinIcon symbol={p.symbol} size={24} className="w-6 h-6" />
+                          <div className="bg-[#151619] rounded-full p-[1.5px] absolute -bottom-1.5 -right-1.5">
+                            <ExchangeIcon exchange={p.exchange} className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
                         <span className="font-bold text-white text-sm">{p.symbol}</span>
                         <span className="text-[10px] font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-1.5 py-0.5 rounded capitalize">
                           {p.exchange} ({p.label})
                         </span>
                       </div>
-                      <div className={`text-xs mt-1 flex items-center gap-1 ${sideColor}`}>
+                      <div className={`text-xs mt-2 flex items-center gap-1 ${sideColor}`}>
                         {sideLabel} · {leverage}x · {marginModeLabel}
                       </div>
                     </td>

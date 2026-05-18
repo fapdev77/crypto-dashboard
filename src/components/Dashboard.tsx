@@ -3,6 +3,8 @@ import { useDashboardStore } from '../store/dashboardStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { DollarSign, Wallet, ArrowUpDown, Search, X } from 'lucide-react';
+import { CoinIcon } from './ui/CoinIcon';
+import { ExchangeIcon } from './ui/ExchangeIcon';
 
 export function Dashboard() {
   const { balances } = useDashboardStore();
@@ -165,9 +167,7 @@ export function Dashboard() {
                   <tr key={b.id} className="hover:bg-[#2a2b30]/30 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#2a2b30] flex items-center justify-center text-xs font-medium text-white">
-                          {b.ccy.substring(0, 1)}
-                        </div>
+                        <CoinIcon symbol={b.ccy} size={24} className="w-6 h-6" />
                         <span className="text-sm font-bold text-white">{b.ccy}</span>
                       </div>
                     </td>
@@ -175,9 +175,12 @@ export function Dashboard() {
                       <span className="text-sm font-medium text-white">{b.label}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-2 py-1 rounded capitalize">
-                        {b.exchange}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <ExchangeIcon exchange={b.exchange} className="w-4 h-4" />
+                        <span className="text-xs font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-2 py-1 rounded capitalize">
+                          {b.exchange}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-mono text-right">
                       {b.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })}

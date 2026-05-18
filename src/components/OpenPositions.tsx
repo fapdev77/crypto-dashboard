@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { UnifiedPosition, formatValue } from '../types';
+import { CoinIcon } from './ui/CoinIcon';
+import { ExchangeIcon } from './ui/ExchangeIcon';
 
 interface OpenPositionsProps {
   filterText: string;
@@ -116,7 +118,13 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
             {/* Linha 1: Cabeçalho */}
             <div className="flex justify-between items-center pb-2 border-b border-[#2a2b30]">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-white text-lg">{pos.symbol}</span>
+                <div className="flex items-center relative">
+                  <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" />
+                  <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
+                    <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <span className="font-bold text-white text-lg ml-1">{pos.symbol}</span>
                 <span className={`font-semibold bg-[#2a2b30]/50 px-2 py-0.5 rounded text-sm`}>
                   {marginModeLabel} <span className="mx-1">·</span> <span className={sideColor}>{sideLabel}</span> <span className="mx-1">·</span> {pos.leverage}x
                 </span>
@@ -259,12 +267,20 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                   <tr key={pos.id} className="hover:bg-[#2a2b30]/30 transition-colors">
                     <td className={`px-4 py-3 border-l-2 ${sideBorderColor}`}>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-sm">{pos.symbol}</span>
-                        <span className="text-[10px] font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-1.5 py-0.5 rounded capitalize">
+                        <div className="flex items-center relative">
+                          <CoinIcon symbol={pos.symbol} size={24} className="w-6 h-6" />
+                          <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
+                            <ExchangeIcon exchange={pos.exchange} className="w-3 h-3" />
+                          </div>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-white text-sm">{pos.symbol}</span>
+                        </div>
+                        <span className="text-[10px] font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-1.5 py-0.5 rounded capitalize ml-1">
                           {pos.exchange} ({pos.label})
                         </span>
                       </div>
-                      <div className={`text-xs mt-1 ${sideColor}`}>
+                      <div className={`text-xs mt-1.5 ${sideColor}`}>
                         {sideLabel} · {pos.leverage}x · {marginModeLabel}
                       </div>
                     </td>
