@@ -5,6 +5,8 @@ import { useSettingsStore } from '../store/settingsStore';
 import { UnifiedPosition } from '../types';
 import { ExchangeAuth } from '../services/ExchangeAuth';
 import { RestClient } from '../services/RestClient';
+import mockAccountsData from '../mock/accounts.json';
+import mockBalancesData from '../mock/balances.json';
 import mockPositionsData from '../mock/positions.json';
 
 const getBitgetUrl = () => {
@@ -42,48 +44,18 @@ export function useMultiExchangeWS() {
       keys.forEach(k => useDashboardStore.getState().clearConnectionData(k.id));
       
       // Load Mock data directly to the store
-      const mappedPositions: UnifiedPosition[] = [];
-      let i = 0;
-      for (const [key, pos] of Object.entries(mockPositionsData) as [string, any][]) {
-        i++;
-        const exchange = key.includes('bybit') ? 'bybit' : key.includes('bitget') ? 'bitget' : 'okx';
-        mappedPositions.push({
-          id: `mock-${exchange}-${i}`,
-          connectionId: 'mock',
-          exchange: exchange as any,
-          label: 'Mock Account',
-          symbol: pos.symbol || pos.instId || '',
-          side: (pos.side || pos.posSide || pos.holdSide || 'net').toLowerCase() as any,
-          ccy: pos.ccy || pos.marginCoin || pos.settleCoin || 'USDT',
-          size: parseFloat(pos.size || pos.pos || pos.total || '0'),
-          entryPrice: parseFloat(pos.avgPrice || pos.avgPx || pos.openPriceAvg || '0'),
-          markPrice: parseFloat(pos.markPrice || pos.markPx || '0'),
-          unrealizedPnl: parseFloat(pos.unrealisedPnl || pos.unrealizedPL || pos.upl || '0'),
-          realizedPnl: parseFloat(pos.curRealisedPnl || pos.achievedProfits || pos.realizedPnl || '0'),
-          leverage: parseFloat(pos.leverage || pos.lever || '0'),
-          marginMode: pos.marginMode === 'isolated' || pos.mgnMode === 'isolated' || pos.tradeMode === 1 ? 'isolated' : 'cross',
-          margin: parseFloat(pos.positionIM || pos.marginSize || pos.margin || '0'),
-          liquidationPrice: parseFloat(pos.liqPrice || pos.liquidationPrice || pos.liqPx || '0'),
-          breakEvenPrice: parseFloat(pos.breakEvenPrice || pos.bePx || '0'),
-          roe: pos.uplRatio ? parseFloat(pos.uplRatio)*100 : undefined,
-          raw: pos
-        });
-      }
+      const currentState = useDashboardStore.getState();
       
-      // Calculate missing roe dynamically
-      mappedPositions.forEach(p => {
-        if (p.roe === undefined && p.unrealizedPnl && p.margin && p.margin > 0) {
-          p.roe = (p.unrealizedPnl / p.margin) * 100;
-        }
+      // Group by connectionId and update store
+      mockAccountsData.forEach((acc: any) => {
+        const { connectionId } = acc;
+        
+        const accountBalances = mockBalancesData.filter((b: any) => b.connectionId === connectionId);
+        currentState.updateBalances(connectionId, accountBalances as any);
+        
+        const accountPositions = mockPositionsData.filter((p: any) => p.connectionId === connectionId);
+        currentState.updatePositions(connectionId, accountPositions as any);
       });
-      
-      updatePositions('mock', mappedPositions);
-      
-      const mockBalances: BalanceItem[] = [
-        { id: 'mock-b1', connectionId: 'mock', exchange: 'bybit', label: 'Mock Account', ccy: 'USDT', amount: 15000, usdValue: 15000 },
-        { id: 'mock-b2', connectionId: 'mock', exchange: 'okx', label: 'Mock Account', ccy: 'USDC', amount: 5000, usdValue: 5000 }
-      ];
-      updateBalances('mock', mockBalances);
       
       return;
     }
@@ -92,7 +64,10 @@ export function useMultiExchangeWS() {
     const activeIds = new Set<string>();
 
     // Clear mock connection data when disabled
-    useDashboardStore.getState().clearConnectionData('mock');
+    const currentState = useDashboardStore.getState();
+    mockAccountsData.forEach((acc: any) => {
+      currentState.clearConnectionData(acc.connectionId);
+    });
 
     keys.forEach((config) => {
       if (config.isActive) {
@@ -111,14 +86,13 @@ export function useMultiExchangeWS() {
     });
 
     // Clean up data for keys that are no longer active or have been removed
-    const currentState = useDashboardStore.getState();
     const existingConnectionIds = new Set([
       ...Object.values(currentState.balances).map(b => b.connectionId),
       ...Object.values(currentState.positions).map(p => p.connectionId)
     ]);
     
     existingConnectionIds.forEach(id => {
-      if (id !== 'mock' && !activeIds.has(id)) {
+      if (!id.startsWith('mocked-data') && !activeIds.has(id)) {
         currentState.clearConnectionData(id);
       }
     });

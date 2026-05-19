@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import mockHistoryData from '../mock/history.json';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { UnifiedPosition } from '../types/positions';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
@@ -14,50 +15,8 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
     let isMounted = true;
     const fetchHistory = async () => {
       if (useMockData) {
-        setPositions([
-          {
-            id: 'mock-hist-1',
-            connectionId: 'mock',
-            exchange: 'BYBIT',
-            label: 'Mock Account',
-            symbol: 'BTCUSDT',
-            side: 'long',
-            realizedPnl: 150.25,
-            closeTime: Date.now() - 3600000,
-            entryPrice: 60100.5,
-            closePrice: 60500.0,
-            size: 0.375,
-            raw: { leverage: 10, marginMode: 'cross' }
-          },
-          {
-            id: 'mock-hist-2',
-            connectionId: 'mock',
-            exchange: 'OKX',
-            label: 'Mock Account',
-            symbol: 'ETH-USDT-SWAP',
-            side: 'short',
-            realizedPnl: -45.50,
-            closeTime: Date.now() - 86400000,
-            entryPrice: 3100.25,
-            closePrice: 3150.75,
-            size: 0.9,
-            raw: { leverage: 5, marginMode: 'isolated' }
-          },
-          {
-            id: 'mock-hist-3',
-            connectionId: 'mock',
-            exchange: 'BITGET',
-            label: 'Mock Account',
-            symbol: 'SOLUSDT',
-            side: 'long',
-            realizedPnl: 320.75,
-            closeTime: Date.now() - 172800000,
-            entryPrice: 140.5,
-            closePrice: 152.0,
-            size: 27.8,
-            raw: { leverage: 20, marginMode: 'cross' }
-          }
-        ]);
+        const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeTime - a.closeTime);
+        setPositions(sortedHistory as UnifiedPosition[]);
         return;
       }
 
