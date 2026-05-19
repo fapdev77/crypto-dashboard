@@ -14,6 +14,10 @@
 .animate-marquee {
   animation: marquee 120s linear infinite;
 }
+/* Pausar ao passar o mouse no marquee*/
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
 
 :root {
   --bg-color: #0b0c10;

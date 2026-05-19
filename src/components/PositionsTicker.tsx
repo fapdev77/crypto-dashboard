@@ -19,6 +19,7 @@ export function PositionsTicker() {
   if (activePositions.length === 0) return null;
 
   const content = activePositions.map((pos) => {
+    console.log("MARQUEE: ", JSON.stringify(pos))
     const isLong = pos.side === 'long';
     let variation = pos.roe;
     if (variation === undefined) {
@@ -40,7 +41,7 @@ export function PositionsTicker() {
       <div 
         key={pos.id} 
         className="flex items-center gap-4 px-6 py-2 border-r border-[#2a2b30]/50 shrink-0 cursor-default"
-        title={`Ativo: ${pos.symbol}\nPosição: ${pos.side.toUpperCase()} ${pos.leverage}x\nPreço Atual: $${pos.markPrice}\nPreço de Entrada: ${pos.entryPrice ? '$' + pos.entryPrice : 'N/A'}\nVariação de Preço (desde entrada): ${formatValue(priceVariation, 2)}%\nLucro/Prejuízo (ROE): ${formatValue(variation, 2)}%`}
+        title={`Exchange: ${pos.exchange}\nAtivo: ${pos.symbol}\nPosição: ${pos.side.toUpperCase()} ${pos.leverage}x\nPreço Atual: $${pos.markPrice}\nPreço de Entrada: ${pos.entryPrice ? '$' + pos.entryPrice : 'N/A'}\nVariação de Preço (desde entrada): ${formatValue(priceVariation, 2)}%\nLucro/Prejuízo (ROE): ${formatValue(variation, 2)}%`}
       >
         <div className="flex items-center gap-2">
           <span className="font-bold text-white text-sm tracking-wide">
@@ -77,7 +78,7 @@ export function PositionsTicker() {
 
   return (
     <div className="bg-[#151619] border-b border-[#2a2b30] flex items-center overflow-hidden shrink-0 h-10 w-full relative z-10 group">
-      <div className="flex w-max animate-marquee group-hover:[animation-play-state:paused]">
+      <div className="flex w-max animate-marquee">
         <div className="flex shrink-0">
           {content}
         </div>
