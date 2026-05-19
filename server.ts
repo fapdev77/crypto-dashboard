@@ -27,8 +27,8 @@ async function startServer() {
 
   // We need express.text or raw to parse arbitrary body formats, but json is also good
   // ONLY for non-websocket proxy routes
-  app.use(express.json());
-  app.use(express.text()); // Just in case it's stringified
+  app.use(express.json({ limit: '1mb' }));
+  app.use(express.text({ limit: '1mb' })); // Just in case it's stringified
 
   // Simple Dumb Proxy to bypass CORS
   app.post("/api/proxy", async (req, res) => {
@@ -38,7 +38,25 @@ async function startServer() {
       if (!targetUrl || !method) {
         return res.status(400).json({ error: "Missing targetUrl or method" });
       }
-      
+
+      // Prevenção de SSRF: Validar Domínio (Allowlist)
+      const allowedDomains = [
+        'api.bybit.com',
+        'api.bitget.com',
+        'www.okx.com',
+        'api.okx.com'
+      ];
+
+      try {
+        const urlObj = new URL(targetUrl);
+        if (!allowedDomains.includes(urlObj.hostname)) {
+          console.error(`[Proxy-SSRF-Block] Tentativa de acesso bloqueado a domínio não autorizado: ${urlObj.hostname}`);
+          return res.status(403).json({ error: "Forbidden: Domain not in proxy allowlist" });
+        }
+      } catch (err) {
+        return res.status(400).json({ error: "Invalid targetUrl format" });
+      }
+
       console.log(`[Proxy] ${method} ${targetUrl}`);
 
       // We omit host/origin headers to avoid 403s from strict exchange proxies
