@@ -12,6 +12,10 @@ A classe responsável agora detêm mecânica regenerativa que aplica retrocesso 
 ### B. O Princípio de Falha Rápida (Fail-Fast)
 Ao invés do encapsulamento passivo (*Swallowing Errors* onde a inferência sumia por trás de colchetes `[]`), integrações do tipo `RestClient.ts` manifestam e propagam agora falha deliberada via `throw new Error(...)`. Em contrapartida, as engrenagens reativas da Interface interceptam devidamente os sinais por intermédio orgânico do `react-hot-toast`, promovendo visibilidade ativa frente ao usuário e descaracterizando visões deturpadas do dashboard centralizado.
 
+### C. Network Resilience & Geo-Block Defense (Hybrid-Fetch)
+Dadas restrições em ecossistemas de Cloud Hosting que operam em data-centers baseados nos Estados Unidos, trocas diretas REST costumam ser mitigadas via *Geo-Block HTTP 403* (ex: Bybit API).
+O sistema consolidou o padrão **Hybrid-Fetch** para estas corretoras: uma preempção agressiva aciona as chamadas diretamente pelas propriedades de rede do indivíduo (Client Browser). Falhando no arranjo nativo ou mediante CORS estrito, *auto-fallback* redireciona a requisição por túnel reverso ao Proxy do Node. Isso assegurou que futuras tentativas refatoradas não encerrem sem precedentes a operabilidade em regiões com travas de mercado.
+
 ## 2. Segregação de Contextos e Solid (SRP)
 
 ### A. Eliminação do Antipadrão "God object" em Sockets

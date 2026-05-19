@@ -21,3 +21,6 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 
 **6. Motor Expansivo de Dados Fictícios (Mocks)** [✓]
 *   **Ação Aplicada:** Geração dinâmica de dataset massivo via ferramenta isolada JSON. Refatoração dos componentes para mapeamento de instâncias via critério `.startsWith('mocked-data')`, entregando um teste de estresse autêntico para a Interface Gráfica.
+
+**7. Arquitetura Híbrida: Mitigation de Geo-Block (Bybit)** [✓]
+*   **Ação Aplicada:** O `RestClient.ts` adotou a arquitetura `hybridFetch` para driblar restrições geográficas originárias da hospedagem US-East (AI Studio Cloud), priorizando requisições via navegador do usuário (Client-Side) com _fallback_ ao Proxy (Server-Side) visando alta escalabilidade no ecossistema BYBIT V5.

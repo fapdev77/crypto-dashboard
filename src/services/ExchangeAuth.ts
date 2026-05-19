@@ -72,23 +72,48 @@ export class ExchangeAuth {
   static async syncBybitTime() {
     try {
       const targetUrl = 'https://api.bybit.com/v5/market/time';
-      const response = await fetch('/api/proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetUrl,
-          method: 'GET',
-          headers: {}
-        }),
-      });
-      const data = await response.json();
-      if (data && data.time) {
+      let data;
+
+      try {
+        /**
+         * Workaround para Geo-Block Bybit:
+         * Assim como em hybridFetch, o Cloud Run (onde o proxy roda) está na região US-East.
+         * A Bybit bloqueia conexões nativas do US. Sendo assim, antes de usar o backend-proxy,
+         * nós tentamos bater no endpoint usando "Direct Fetch" (pelo navegador do usuário,
+         * se aproveitando que V5 GET aceita CORS). Assim evitamos os bloqueios geográficos de IP na inicialização.
+         */
+        const res = await fetch(targetUrl, { method: 'GET', headers: {} });
+        if (res.ok) {
+          data = await res.json();
+        } else {
+          throw new Error('Direct fetch HTTP Status não-OK');
+        }
+      } catch (err) {
+        console.warn("[Time-Sync] Fetch direto falhou, usando Proxy...");
+        const response = await fetch('/api/proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            targetUrl,
+            method: 'GET',
+            headers: {}
+          }),
+        });
+        data = await response.json();
+      }
+
+      if (data && data.retCode === 0 && data.result?.timeSecond) {
+        // Bybit V5 returns timeSecond (seconds) and timeNano (nanoseconds)
+        const serverTime = parseInt(data.result.timeSecond, 10) * 1000;
+        this.bybitTimeOffset = serverTime - Date.now();
+        console.log(`[Time-Sync] Bybit sincronizada via V5. Offset: ${this.bybitTimeOffset}ms`);
+      } else if (data && data.time) {
         const serverTime = parseInt(data.time, 10);
         this.bybitTimeOffset = serverTime - Date.now();
         console.log(`[Time-Sync] Bybit sincronizada. Offset: ${this.bybitTimeOffset}ms`);
       }
     } catch (e) {
-      console.error("[Time-Sync] Erro ao sincronizar com Bybit, usando offset 0.");
+      console.error("[Time-Sync] Erro ao sincronizar com Bybit, usando offset 0.", e);
     }
   }
 

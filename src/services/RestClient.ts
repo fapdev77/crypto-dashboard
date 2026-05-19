@@ -19,6 +19,29 @@ const proxyFetch = async (req: ProxyRequest) => {
   return response.json();
 };
 
+/**
+ * Hybrid Fetch Workaround:
+ * O servidor proxy no AI Studio / Cloud Run normalmente está em região US-East.
+ * A Bybit bloqueia ativamente requisições para seus endpoints originadas de IP dos EUA (Geo-Block HTTP 403).
+ * Este helper tenta realizar um 'direct fetch' via navegador do próprio usuário (que normalmente estará fora dos EUA e Bybit permite CORS para GET v5)
+ * Se falhar (ex: erro de rede/CORS estrito em outro ambiente), recorre ao proxyFetch convencional na nuvem.
+ * NÃO REMOVA: Sem este fallback, a renderização da Bybit no dashboard falhará em ambientes hospedados em solo americano.
+ */
+const hybridFetch = async (targetUrl: string, method: string, headers: Record<string, string>) => {
+  try {
+    // Browser-Direct Attempt (escapes WAF/GeoBlock Bybit on US Cloud Run instances)
+    const res = await fetch(targetUrl, { method, headers });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    console.warn(`[HybridFetch] Fetch direto falhou, acionando Proxy...`, targetUrl);
+  }
+  
+  // Proxy Fallback
+  return await proxyFetch({ targetUrl, method, headers });
+};
+
 export class RestClient {
   static async getHistoryOkx(instType: string, apiKey: string, apiSecret: string, passphrase: string, start?: number, end?: number, after?: string) {
     const method = 'GET';
@@ -84,7 +107,7 @@ export class RestClient {
     const headers = await ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
     
     try {
-      const response = await proxyFetch({ targetUrl, method, headers });
+      const response = await hybridFetch(targetUrl, method, headers as Record<string, string>);
       if (response.retCode !== 0) {
         if (response.retCode === 10001) return { list: [], nextCursor: undefined }; // Unsupported account type
         throw new Error(`Bybit API Error (${response.retCode}): ${response.retMsg}`);
@@ -107,13 +130,13 @@ export class RestClient {
     const headers = await ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
     
     try {
-      const response = await proxyFetch({ targetUrl, method, headers });
+      const response = await hybridFetch(targetUrl, method, headers as Record<string, string>);
       if (response.retCode !== 0) {
         throw new Error(`Bybit API Proxy Error (${response.retCode}): ${response.retMsg}`);
       }
       return response.result?.list || [];
     } catch (err) {
-      console.error('[REST-Bybit-Positions] Proxy fetch falhou com erro:', err);
+      console.error('[REST-Bybit-Positions] Fetch falhou com erro:', err);
       throw err;
     }
   }
@@ -127,13 +150,13 @@ export class RestClient {
     const headers = await ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
     
     try {
-      const response = await proxyFetch({ targetUrl, method, headers });
+      const response = await hybridFetch(targetUrl, method, headers as Record<string, string>);
       if (response.retCode !== 0) {
         throw new Error(`Bybit API Proxy Error (${response.retCode}): ${response.retMsg}`);
       }
       return response.result?.list?.[0] || null;
     } catch (err) {
-       console.error('[REST-Bybit-Wallet] Proxy fetch falhou com erro:', err);
+       console.error('[REST-Bybit-Wallet] Fetch falhou com erro:', err);
        throw err;
     }
   }
