@@ -4,7 +4,7 @@
 This project implements a unique Hybrid-Proxy Client Architecture to resolve browser limitation contexts (CORS) while enforcing strict Zero-Trust Data security.
 
 - **Client-Side (React/Vite):** 
-  - Handles the UI, continuous WebSocket connections, State handling (Zustand), and all Cryptography (`crypto-js`). 
+  - Handles the UI, continuous WebSocket connections, State handling (Zustand), and all Cryptography (`window.crypto.subtle`). 
   - The UI utilizes an advanced Responsive Masonry chunking algorithm (`flex`/`columns` hybrids) for optimized component rendering to ensure dynamic collapsible UI modules don't displace vertically adjacent objects. Sidebar utilizes collapsible real-time logic.
   - API keys reside solely here in `localStorage`.
 - **Backend "Dumb" Proxy (Node.js/Express):** 
@@ -15,7 +15,7 @@ This project implements a unique Hybrid-Proxy Client Architecture to resolve bro
 - **Core Frontend:** React 18/19, TypeScript, Vite.
 - **Styling:** Tailwind CSS v4, Lucide React (Icons).
 - **Backend (Proxy):** Node.js + Express (run natively via `tsx server.ts`).
-- **Cryptography Engine:** `crypto-js` (HMAC-SHA256, Base64).
+- **Cryptography Engine:** Web Crypto API (HMAC-SHA256, Base64).
 - **State Controller:** Zustand (Micro-store architecture).
 
 ## 3. Data Flow and Synchronization

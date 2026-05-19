@@ -16,14 +16,14 @@ Build a real-time terminal that connects via WebSocket (primary) and REST (secon
 
 ### Architectural Constraints (Zero-Trust Security Focus)
 1. **API Secrets**: Must NEVER be dispatched to a backend or database as plain text constraints. They stay locked in the browser's `localStorage` and are resolved exclusively in memory.
-2. **WebSockets First**: The React frontend must connect directly to the Exchange WebSockets. You will construct the login signatures in the browser dynamically using `crypto-js` (HMAC SHA256).
+2. **WebSockets First**: The React frontend must connect directly to the Exchange WebSockets. You will construct the login signatures in the browser dynamically using the native Web Crypto API (HMAC SHA256).
 3. **Dumb CORS Proxy**: Because REST APIs heavily block direct browser requests via CORS, you MUST implement a local Express (`server.ts`) proxy. The React app will securely generate the Authorization Headers (timestamp, signatures) on the frontend, and pass them safely to the proxy. The proxy acts as a dumb pipe, simply forwarding the header request to the Exchange.
 
 ### Tech Stack Details
 - React 19, TypeScript, Vite.
 - Tailwind CSS v4 (incorporating Dark mode natively, and `font-mono` exclusively for numeric financial displays).
 - Zustand for immutable state management (`apiKeysStore`, `dashboardStore`, `settingsStore`).
-- `crypto-js` native module for HMAC hashing.
+- `window.crypto.subtle` utilized natively for HMAC hashing.
 - `lucide-react` for semantic icon UI.
 
 ### Implementation Specifics

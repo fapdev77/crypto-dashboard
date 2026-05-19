@@ -116,7 +116,7 @@ export function ApiTester() {
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
-    ws.onopen = () => {
+    ws.onopen = async () => {
       setWsConnected(true);
       logWs('Connected.');
       
@@ -124,11 +124,11 @@ export function ApiTester() {
       try {
         let authPayload: any = null;
         if (activeKey.exchange === 'okx') {
-          authPayload = ExchangeAuth.getOkxWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
+          authPayload = await ExchangeAuth.getOkxWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
         } else if (activeKey.exchange === 'bitget') {
-          authPayload = ExchangeAuth.getBitgetWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
+          authPayload = await ExchangeAuth.getBitgetWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
         } else if (activeKey.exchange === 'bybit') {
-          authPayload = ExchangeAuth.getBybitWsAuth(activeKey.apiKey, activeKey.apiSecret);
+          authPayload = await ExchangeAuth.getBybitWsAuth(activeKey.apiKey, activeKey.apiSecret);
         }
 
         if (authPayload) {

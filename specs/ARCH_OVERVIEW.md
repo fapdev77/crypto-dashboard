@@ -20,6 +20,6 @@ A stack atual repousa sobre fundações modernas, porém com alguns pontos crít
     *   *Risco:* Tailwind v4 acabou de ser lançado (estágio inicial de adoção). Algumas bibliotecas de componentes ainda não são totalmente compatíveis.
 *   **State Management:** Zustand 5.0.
     *   *Risco:* Uso intensivo de assinaturas diretas ao estado nos *hooks* de WebSockets (`dashboardStore.getState()`) ao invés do fluxo reativo puro do React, o que é eficiente mas propenso a dessincronização visual se não controlado corretamente.
-*   **Security & Crypto:** `crypto-js` 4.2.0.
-    *   *Risco:* `crypto-js` é amplamente usado para assinar requests (HMAC-SHA256). Entretanto, ele é um pacote grande e não recebe grandes atualizações frequentemente. Em contextos modernos de navegador, a API nativa `window.crypto.subtle` é preferível para reduzir a superfície de ataque e o tamanho do bundle.
+*   **Security & Crypto:** `window.crypto.subtle`.
+    *   *Risco (Mitigado):* Utiliza de forma profunda a API Web Crypto nativa do navegador (`window.crypto.subtle`) para assinar requests (HMAC-SHA256). Isto substituiu efetivamente bibliotecas de grande tamanho e pouco atualizadas, garantindo performance de computação criptográfica nativa.
 *   **Networking:** `axios` (REST), WebSockets Nativos, `http-proxy-middleware`.

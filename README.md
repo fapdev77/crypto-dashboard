@@ -8,7 +8,7 @@ O projeto foi construído com a premissa de **Zero Trust Security** e eficiênci
 
 A arquitetura resolve o problema tradicional de CORS e as restrições arquiteturais para clientes puros (browsers) da seguinte forma:
 
-1. **WebSockets (Real-time):** A conexão é feita de forma nativa e direta pelo navegador às corretoras para obter atualizações em alta frequência. A autenticação do WebSocket é efetuada no client-side (`crypto-js`). O dashboard possui engine de auto reconexão e gerencia os "Heartbeats" (Ping/Pong) de cada Exchange para manter as conexões de streaming vivas.
+1. **WebSockets (Real-time):** A conexão é feita de forma nativa e direta pelo navegador às corretoras para obter atualizações em alta frequência. A autenticação do WebSocket é efetuada no client-side via Web Crypto API nativa. O dashboard possui engine de auto reconexão e gerencia os "Heartbeats" (Ping/Pong) de cada Exchange para manter as conexões de streaming vivas.
 2. **REST API via Local Proxy:** Como navegadores encaram o bloqueio rigoroso do CORS (Cross-Origin Resource Sharing) ao fazer GET/POST para endpoints da API V5/V2 das corretoras, empregamos um Proxy local reverso e seguro construído com Node.js e Express (`server.ts`). O Frontend cuida de toda a criptografia na ponta do usuário, assinando as requisições gerando os cabeçalhos (`headers`) necessários. O Proxy então atua de forma inerte e "burra", apenas recebendo os cabeçalhos já verificados e as URLs destino, repassando o payload real sem adulterar assinaturas ou armazenar logs. 
 
    *Observação:* Para casos específicos como **Bybit**, onde o WebSocket usualmente retorna apenas deltas e atualizações, implementamos uma carga síncrona prévia via REST (também utilizando o Proxy) para a população imediata e coerente dos estoques e posições.
@@ -19,7 +19,7 @@ O sistema é inteiramente fundamentado no ecossistema de TypeScript moderno:
 - **Gerenciamento de Estado**: **Zustand**. Utilizamos o `useDashboardStore` para o gerenciamento ultrarrápido dos objetos recebidos por WebSockets e o `useApiKeysStore` para a persistência e ciclo de vida criptografado das chaves de API locais.
 - **Tabelas Analíticas:** Visualização rica com ordenação multidirecional de resultados e sistemas de busca em tempo-real embutidos nas Views (filtros multicritério por ativo, nome ou corretora).
 - **Backend / Proxy de Hospedagem**: Servidor minimalista escalável fundado no Node.js com Express e capacidades de roteamento local Vite injetadas para o modo de desenvolvimento. Executado via `tsx`.
-- **Criptografia SecOps**: A espinha dorsal para assinatura de rotas REST, payloads ISO Timestamp (OKX), Nano Time (Bitget) e Hex Signatures (Bybit). Todos via pacote leve modular `crypto-js`.
+- **Criptografia SecOps**: A espinha dorsal para assinatura de rotas REST, payloads ISO Timestamp (OKX), Nano Time (Bitget) e Hex Signatures (Bybit). Todos utilizando a nativa Web Crypto API (`window.crypto.subtle`).
 
 ## 📦 Configuração Inicial e Execução
 
@@ -50,7 +50,7 @@ npm start # Executa tsx server.ts com as flags NODE_ENV=production necessárias.
 ```
 *Note que pelo design reverso da `server.ts` ao rodar fora do Node_Env dev, ele atua ativamente lendo da pasta compilada de produção local (`/dist`)*.
 
-Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se for acoplar em Domínios customizados — O WebCrypto e navegadores como o Chrome bloqueiam criptografia do `crypto-js` caso a hospedagem venha como HTTP (não segura) exceto requisições em Localhost.
+Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se for acoplar em Domínios customizados — navegadores modernos como o Chrome bloqueiam a API WebCrypto caso a hospedagem use HTTP (não segura), exceto em Localhost.
 
 ## 🧰 Guia Prático - Configurando as Corretores no Client Local
 
