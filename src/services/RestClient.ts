@@ -123,22 +123,47 @@ export class RestClient {
 
   static async getPositionsBybit(apiKey: string, apiSecret: string) {
     const method = 'GET';
-    const query = 'category=linear&settleCoin=USDT';
-    const requestPath = `/v5/position/list?${query}`;
-    const targetUrl = `https://api.bybit.com${requestPath}`;
 
-    const headers = await ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
-    
-    try {
-      const response = await hybridFetch(targetUrl, method, headers as Record<string, string>);
-      if (response.retCode !== 0) {
-        throw new Error(`Bybit API Proxy Error (${response.retCode}): ${response.retMsg}`);
+    // Para contas UTA (Unified Trading Account), posições existem em 3 categorias distintas.
+    // Usamos Promise.allSettled para que uma falha em 'inverse' (ex: conta sem essa permissão)
+    // não impeça o carregamento das posições 'linear'.
+    const categories = [
+      { category: 'linear', settleCoin: 'USDT' },
+      { category: 'linear', settleCoin: 'USDC' },
+      { category: 'inverse', settleCoin: null },
+    ];
+
+    const results = await Promise.allSettled(
+      categories.map(async ({ category, settleCoin }) => {
+        let query = `category=${category}&limit=200`;
+        if (settleCoin) query += `&settleCoin=${settleCoin}`;
+        const targetUrl = `https://api.bybit.com/v5/position/list?${query}`;
+        const headers = await ExchangeAuth.getBybitHeaders(apiKey, apiSecret, query);
+
+        const response = await hybridFetch(targetUrl, method, headers as Record<string, string>);
+
+        // retCode 10001 = account type not supported for this category — ignorar silenciosamente
+        if (response.retCode === 10001) return [];
+        if (response.retCode !== 0) {
+          throw new Error(`Bybit Positions [${category}/${settleCoin}] Error (${response.retCode}): ${response.retMsg}`);
+        }
+        // Apenas posições com size > 0 são relevantes
+        return (response.result?.list || []).filter((p: any) => parseFloat(p.size || '0') > 0);
+      })
+    );
+
+    // Consolidar todos os resultados bem-sucedidos em um array único
+    const allPositions: any[] = [];
+    results.forEach((result, idx) => {
+      if (result.status === 'fulfilled') {
+        allPositions.push(...result.value);
+      } else {
+        const cat = categories[idx];
+        console.warn(`[REST-Bybit-Positions] categoria ${cat.category}/${cat.settleCoin} falhou:`, result.reason?.message);
       }
-      return response.result?.list || [];
-    } catch (err) {
-      console.error('[REST-Bybit-Positions] Fetch falhou com erro:', err);
-      throw err;
-    }
+    });
+
+    return allPositions;
   }
 
   static async getWalletBybit(apiKey: string, apiSecret: string) {
