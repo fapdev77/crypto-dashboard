@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { Exchange, useApiKeysStore, ApiCredentials } from '../store/apiKeysStore';
 import { useDashboardStore, BalanceItem } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -8,9 +9,9 @@ import { RestClient } from '../services/RestClient';
 import mockAccountsData from '../mock/accounts.json';
 import mockBalancesData from '../mock/balances.json';
 import mockPositionsData from '../mock/positions.json';
+import { WsParsers } from '../services/ws/WsParsers';
 
 const getBitgetUrl = () => {
-  // If we are in the browser, we construct the proxy URL based on the current location.
   if (typeof window !== 'undefined') {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${protocol}//${window.location.host}/ws-proxy/bitget/v2/ws/private`;
@@ -19,7 +20,6 @@ const getBitgetUrl = () => {
 }
 
 const WS_URLS = {
-  // Utilizamos o proxy local para a Bitget contornar a obrigatoriedade de ausência de Origin (WAF/CORS)
   bitget: getBitgetUrl(), 
   okx: 'wss://ws.okx.com:8443/ws/v5/private',
   bybit: 'wss://stream.bybit.com/v5/private',
@@ -36,34 +36,25 @@ export function useMultiExchangeWS() {
   const socketsRef = useRef<Record<string, WebSocket | null>>({});
   const intervalsRef = useRef<Record<string, NodeJS.Timeout | null>>({});
   const reconnectTimers = useRef<Record<string, NodeJS.Timeout | null>>({});
+  const retryCounters = useRef<Record<string, number>>({});
 
   useEffect(() => {
-    // If mock data is enabled, clear all existing connections immediately
     if (useMockData) {
       Object.keys(socketsRef.current).forEach(id => disconnect(id));
       keys.forEach(k => useDashboardStore.getState().clearConnectionData(k.id));
       
-      // Load Mock data directly to the store
       const currentState = useDashboardStore.getState();
-      
-      // Group by connectionId and update store
       mockAccountsData.forEach((acc: any) => {
         const { connectionId } = acc;
-        
         const accountBalances = mockBalancesData.filter((b: any) => b.connectionId === connectionId);
         currentState.updateBalances(connectionId, accountBalances as any);
-        
         const accountPositions = mockPositionsData.filter((p: any) => p.connectionId === connectionId);
         currentState.updatePositions(connectionId, accountPositions as any);
       });
-      
       return;
     }
 
-    // Normal Connection Flow
     const activeIds = new Set<string>();
-
-    // Clear mock connection data when disabled
     const currentState = useDashboardStore.getState();
     mockAccountsData.forEach((acc: any) => {
       currentState.clearConnectionData(acc.connectionId);
@@ -73,19 +64,18 @@ export function useMultiExchangeWS() {
       if (config.isActive) {
         activeIds.add(config.id);
         if (!socketsRef.current[config.id]) {
+          retryCounters.current[config.id] = 0; // reset on fresh connect
           connect(config);
         }
       }
     });
 
-    // Disconnect removed or inactive keys
     Object.keys(socketsRef.current).forEach((id) => {
       if (!activeIds.has(id)) {
         disconnect(id);
       }
     });
 
-    // Clean up data for keys that are no longer active or have been removed
     const existingConnectionIds = new Set([
       ...Object.values(currentState.balances).map(b => b.connectionId),
       ...Object.values(currentState.positions).map(p => p.connectionId)
@@ -100,9 +90,7 @@ export function useMultiExchangeWS() {
 
   useEffect(() => {
     return () => {
-      Object.keys(socketsRef.current).forEach((id) => {
-        disconnect(id);
-      });
+      Object.keys(socketsRef.current).forEach((id) => disconnect(id));
     };
   }, []);
 
@@ -140,7 +128,7 @@ export function useMultiExchangeWS() {
           console.log(`[WS-${config.id}][Keep-Alive] Ping enviado (${config.exchange}).`);
         }
       }
-    }, 20000); // 20 seconds
+    }, 20000); 
   };
 
   const connect = (config: ApiCredentials) => {
@@ -148,11 +136,9 @@ export function useMultiExchangeWS() {
 
     setConnectionStatus(id, 'connecting', null);
     setConnectionError(id, null);
-    const wsUrl = exchange === 'bitget' ? getBitgetUrl() : WS_URLS[exchange];
+    const wsUrl = exchange === 'bitget' ? getBitgetUrl() : (WS_URLS as any)[exchange];
     console.log(`[WS-${id}] Iniciando conexão para: ${wsUrl}`);
     
-    // Some connections fail due to browser CORS/Origin policies. 
-    // We try to connect directly first. Timeouts/errors will be caught here.
     const ws = new WebSocket(wsUrl);
     socketsRef.current[id] = ws;
 
@@ -160,6 +146,7 @@ export function useMultiExchangeWS() {
       (async () => {
         try {
           console.log(`[REST-${id}] Buscando dados iniciais para Bybit via REST...`);
+          await ExchangeAuth.syncBybitTime();
           const [walletData, positionsData] = await Promise.all([
             RestClient.getWalletBybit(apiKey, apiSecret),
             RestClient.getPositionsBybit(apiKey, apiSecret)
@@ -179,9 +166,7 @@ export function useMultiExchangeWS() {
                 usdValue: parseFloat(item.usdValue)
               });
             });
-            if (balances.length > 0) {
-              updateBalances(id, balances);
-            }
+            if (balances.length > 0) updateBalances(id, balances);
           }
 
           if (positionsData && Array.isArray(positionsData)) {
@@ -212,40 +197,41 @@ export function useMultiExchangeWS() {
                 raw: pos
               });
             });
-            if (positions.length > 0) {
-              updatePositions(id, positions);
-            }
+            if (positions.length > 0) updatePositions(id, positions);
           }
           console.log(`[REST-${id}] Dados iniciais carregados para Bybit.`);
         } catch (error: any) {
           console.error(`[REST-${id}] Erro ao buscar dados iniciais para Bybit:`, error);
           setConnectionError(id, `REST Error: ${error.message}`);
+          toast.error(`Bybit Initial Sync Failed: ${error.message}`, { id: `rest-err-${id}` });
         }
       })();
     }
 
-    ws.onopen = () => {
+    ws.onopen = async () => {
       console.log(`[WS-${id}] Conexão física estabelecida com sucesso.`);
       setConnectionStatus(id, 'connected', null);
       setConnectionError(id, null);
+      retryCounters.current[id] = 0; // Reset retry count on successful open
       startPing(config, ws);
 
       try {
         let authPayload;
         if (exchange === 'okx') {
-          authPayload = ExchangeAuth.getOkxWsAuth(apiKey, apiSecret, passphrase || '');
+          authPayload = await ExchangeAuth.getOkxWsAuth(apiKey, apiSecret, passphrase || '');
         } else if (exchange === 'bitget') {
-          authPayload = ExchangeAuth.getBitgetWsAuth(apiKey, apiSecret, passphrase || '');
+          authPayload = await ExchangeAuth.getBitgetWsAuth(apiKey, apiSecret, passphrase || '');
         } else if (exchange === 'bybit') {
-          authPayload = ExchangeAuth.getBybitWsAuth(apiKey, apiSecret);
+          authPayload = await ExchangeAuth.getBybitWsAuth(apiKey, apiSecret);
         }
 
         if (authPayload) {
           console.log(`[WS-${id}] Enviando credenciais de login...`);
           ws.send(JSON.stringify(authPayload));
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error(`[WS-${id}] Falha ao montar o payload de autenticação:`, err);
+        toast.error(`Failed to auth ${exchange}: ${err.message}`, { id: `auth-err-${id}` });
         ws.close();
       }
     };
@@ -259,22 +245,19 @@ export function useMultiExchangeWS() {
       
       try {
         const data = JSON.parse(msg.toString());
-        if (config.exchange === 'bybit') {
-           console.log(`[WS-${id}][DEBUG] Mensagem Bybit recebida:`, data);
-        }
-        
         handleSubscriptionAndAuth(config, ws, data);
-        parseDataStream(config, data);
+        WsParsers.parseStream(config, data);
       } catch (err) {
         console.error(`[WS-${id}] Erro ao realizar o parse da mensagem:`, err);
       }
     };
 
     ws.onerror = (error) => {
-      console.error(`[WS-${id}] EVENTO DE ERRO. Se "isTrusted: true" sem detalhes, possivelmente o navegador bloqueou a conexão (ex: CORS/Origin rejection, WAF, ou problema de rede).`);
+      console.error(`[WS-${id}] EVENTO DE ERRO. Se "isTrusted: true" sem detalhes, possivelmente o navegador bloqueou a conexão.`);
       console.error(`[WS-${id}] Detalhes do erro:`, error);
       setConnectionStatus(id, 'error', 'WebSocket Connection Error');
       setConnectionError(id, 'WebSocket Connection Error');
+      toast.error(`${exchange.toUpperCase()} WebSocket Error. Check your connection or API keys.`, { id: `ws-err-${id}` });
     };
 
     ws.onclose = (event) => {
@@ -282,10 +265,17 @@ export function useMultiExchangeWS() {
       const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
       if (currentConfig && currentConfig.isActive) {
         setConnectionStatus(id, 'error', event.reason || 'Closed');
-        console.log(`[WS-${id}] Tentando reconectar em 5 segundos...`);
+        
+        // Exponential Backoff
+        const retryCount = retryCounters.current[id] || 0;
+        const delay = Math.min(5000 * Math.pow(2, retryCount), 60000); // Max 60s
+        retryCounters.current[id] = retryCount + 1;
+        
+        console.log(`[WS-${id}] Tentando reconectar em ${delay/1000} segundos... (Tentativa ${retryCount + 1})`);
+        
         reconnectTimers.current[id] = setTimeout(() => {
           connect(currentConfig);
-        }, 5000);
+        }, delay);
       }
     };
   };
@@ -293,11 +283,10 @@ export function useMultiExchangeWS() {
   const handleSubscriptionAndAuth = (config: ApiCredentials, ws: WebSocket, data: any) => {
     const { id, exchange } = config;
     
-    // Handle Bitget login
     if (exchange === 'bitget') {
       if (data.event === 'login' && data.code === 0) {
         console.log(`[WS-${id}][Auth] Bitget login realizado com sucesso!`);
-        console.log(`[WS-${id}][Sub] Inscrevendo nos canais de conta (SPOT, FUTURES) e posições...`);
+        toast.success(`Bitget connected successfully!`, { id: `success-${id}` });
         ws.send(JSON.stringify({
           op: 'subscribe',
           args: [
@@ -312,12 +301,14 @@ export function useMultiExchangeWS() {
       } else if (data.event === 'error') {
         console.error(`[WS-${id}][Error] Bitget erro:`, data.code, data.msg);
         setConnectionError(id, `Bitget WS Error (${data.code}): ${data.msg}`);
+        toast.error(`Bitget Auth Error: ${data.msg}`, { id: `auth-err-${id}` });
       }
     }
 
     if (exchange === 'okx') {
       if (data.event === 'login' && data.code === '0') {
         console.log(`[WS-${id}][Auth] OKX login realizado com sucesso!`);
+        toast.success(`OKX connected successfully!`, { id: `success-${id}` });
         ws.send(JSON.stringify({
           op: 'subscribe',
           args: [
@@ -329,13 +320,14 @@ export function useMultiExchangeWS() {
       } else if (data.event === 'error') {
         console.error(`[WS-${id}][Error] OKX erro:`, data.code, data.msg);
         setConnectionError(id, `OKX WS Error (${data.code}): ${data.msg}`);
+        toast.error(`OKX Auth Error: ${data.msg}`, { id: `auth-err-${id}` });
       }
     }
 
     if (exchange === 'bybit' && data.op === 'auth') {
       if (data.success === true) {
         console.log(`[WS-${id}][Auth] Bybit login realizado com sucesso!`);
-        console.log(`[WS-${id}][Sub] Inscrevendo nos canais de bybit...`, ['wallet', 'position']);
+        toast.success(`Bybit connected successfully!`, { id: `success-${id}` });
         ws.send(JSON.stringify({
           op: 'subscribe',
           args: ['wallet', 'position']
@@ -343,237 +335,7 @@ export function useMultiExchangeWS() {
       } else {
         console.error(`[WS-${id}][Error] Bybit erro de login:`, data);
         setConnectionError(id, `Bybit Auth Error: ${data.ret_msg}`);
-      }
-    }
-    
-    if (exchange === 'bybit' && data.op === 'subscribe') {
-      if (data.success === true) {
-        console.log(`[WS-${id}][Sub] Bybit inscricao realizada com sucesso!`, data);
-      } else {
-        console.error(`[WS-${id}][Error] Bybit erro de inscricao:`, data);
-      }
-    }
-  };
-
-  const parseDataStream = (config: ApiCredentials, data: any) => {
-    const { id: cid, exchange, label } = config;
-    
-    if (data.action === 'snapshot' || data.action === 'update' || data.data) {
-      console.log(`[WS-${cid}] Stream Data (${exchange}):`, data.action || data.topic || data.arg?.channel, data);
-    }
-    
-    if (exchange === 'okx' && data.arg && data.data) {
-      if (data.arg.channel === 'account') {
-        const balances: Partial<BalanceItem>[] = data.data[0].details.map((item: any) => {
-          const bal: Partial<BalanceItem> = {
-            id: `${cid}-${item.ccy}`,
-            connectionId: cid,
-            exchange,
-            label,
-            ccy: item.ccy,
-          };
-          if (item.eq !== undefined) bal.amount = parseFloat(item.eq);
-          if (item.eqUsd !== undefined) bal.usdValue = parseFloat(item.eqUsd);
-          return bal;
-        });
-        useDashboardStore.getState().updateBalancesDelta(cid, balances);
-      }
-      if (data.arg.channel === 'positions') {
-        const positions: Partial<UnifiedPosition>[] = data.data.map((pos: any) => {
-          const update: Partial<UnifiedPosition> = {
-            id: `${cid}-${pos.posId}`,
-            connectionId: cid,
-            exchange: 'okx',
-            label,
-            raw: pos
-          };
-          if (pos.instId !== undefined) update.symbol = pos.instId;
-          if (pos.ccy !== undefined) update.ccy = pos.ccy;
-          else if (pos.marginCoin !== undefined) update.ccy = pos.marginCoin;
-          if (pos.posSide !== undefined) update.side = pos.posSide as any;
-          if (pos.pos !== undefined) update.size = parseFloat(pos.pos);
-          if (pos.avgPx !== undefined) update.entryPrice = parseFloat(pos.avgPx);
-          if (pos.markPx !== undefined) update.markPrice = parseFloat(pos.markPx);
-          if (pos.upl !== undefined) update.unrealizedPnl = parseFloat(pos.upl);
-          if (pos.realizedPnl !== undefined) update.realizedPnl = parseFloat(pos.realizedPnl);
-          if (pos.lever !== undefined) update.leverage = parseFloat(pos.lever);
-          if (pos.mgnMode !== undefined) update.marginMode = pos.mgnMode === 'isolated' ? 'isolated' : 'cross';
-          if (pos.margin !== undefined) update.margin = parseFloat(pos.margin);
-          if (pos.notionalUsd !== undefined) update.notionalUsd = parseFloat(pos.notionalUsd);
-          if (pos.liqPx !== undefined) update.liquidationPrice = parseFloat(pos.liqPx);
-          if (pos.bePx !== undefined) update.breakEvenPrice = parseFloat(pos.bePx);
-          if (pos.uplRatio !== undefined) update.roe = parseFloat(pos.uplRatio) * 100;
-          return update;
-        });
-        useDashboardStore.getState().updatePositionsDelta(cid, positions);
-      }
-    }
-
-    if (exchange === 'bybit' && data.topic) {
-      if (data.topic === 'wallet') {
-        const balances: Partial<BalanceItem>[] = [];
-        data.data.forEach((acc: any) => {
-          if (acc.coin && Array.isArray(acc.coin)) {
-            acc.coin.forEach((item: any) => {
-              const bal: Partial<BalanceItem> = {
-                id: `${cid}-${acc.accountType || 'UNIFIED'}-${item.coin}`,
-                connectionId: cid,
-                exchange,
-                label: `${label} (${acc.accountType || 'UNIFIED'})`,
-                ccy: item.coin,
-              };
-              
-              if (item.equity !== undefined) bal.amount = parseFloat(item.equity);
-              else if (item.walletBalance !== undefined) bal.amount = parseFloat(item.walletBalance);
-              
-              if (item.usdValue !== undefined && item.usdValue !== "") bal.usdValue = parseFloat(item.usdValue);
-              else if (bal.amount !== undefined) bal.usdValue = bal.amount;
-
-              balances.push(bal);
-            });
-          }
-        });
-        if (balances.length > 0) {
-          useDashboardStore.getState().updateBalancesDelta(cid, balances);
-        }
-      }
-      if (data.topic === 'position') {
-        const positions: Partial<UnifiedPosition>[] = [];
-        data.data.forEach((pos: any) => {
-          const update: Partial<UnifiedPosition> = {
-            id: `${cid}-${pos.symbol}-${pos.positionIdx || 0}`,
-            connectionId: cid,
-            exchange: 'bybit',
-            label,
-            raw: pos
-          };
-          
-          if (pos.symbol !== undefined) update.symbol = pos.symbol;
-          if (pos.side !== undefined && pos.side !== '') update.side = pos.side.toLowerCase() as any;
-          if (pos.settleCoin !== undefined) update.ccy = pos.settleCoin;
-          else if (pos.coin !== undefined) update.ccy = pos.coin;
-          if (pos.size !== undefined) update.size = parseFloat(pos.size);
-          if (pos.entryPrice !== undefined && pos.entryPrice !== "") update.entryPrice = parseFloat(pos.entryPrice);
-          else if (pos.avgPrice !== undefined && pos.avgPrice !== "") update.entryPrice = parseFloat(pos.avgPrice);
-          if (pos.markPrice !== undefined && pos.markPrice !== "") update.markPrice = parseFloat(pos.markPrice);
-          if (pos.unrealisedPnl !== undefined && pos.unrealisedPnl !== "") update.unrealizedPnl = parseFloat(pos.unrealisedPnl);
-          if (pos.curRealisedPnl !== undefined && pos.curRealisedPnl !== "") update.realizedPnl = parseFloat(pos.curRealisedPnl);
-          if (pos.leverage !== undefined && pos.leverage !== "") update.leverage = parseFloat(pos.leverage);
-          if (pos.tradeMode !== undefined) update.marginMode = pos.tradeMode === 1 ? 'isolated' : 'cross';
-          if (pos.positionIM !== undefined && pos.positionIM !== "") update.margin = parseFloat(pos.positionIM);
-          if (pos.positionValue !== undefined && pos.positionValue !== "") update.notionalUsd = parseFloat(pos.positionValue);
-          if (pos.liqPrice !== undefined && pos.liqPrice !== "") update.liquidationPrice = parseFloat(pos.liqPrice);
-          if (pos.breakEvenPrice !== undefined && pos.breakEvenPrice !== "") update.breakEvenPrice = parseFloat(pos.breakEvenPrice);
-          if (pos.takeProfit !== undefined && pos.takeProfit !== "") update.tp = parseFloat(pos.takeProfit);
-          if (pos.stopLoss !== undefined && pos.stopLoss !== "") update.sl = parseFloat(pos.stopLoss);
-
-          if (update.unrealizedPnl !== undefined && update.margin !== undefined && update.margin > 0) {
-            update.roe = (update.unrealizedPnl / update.margin) * 100;
-          }
-
-          positions.push(update);
-        });
-        if (positions.length > 0) {
-          useDashboardStore.getState().updatePositionsDelta(cid, positions);
-        }
-      }
-    }
-
-    if (exchange === 'bitget' && (data.action === 'snapshot' || data.action === 'update')) {
-      if (data.arg.channel === 'account' || data.arg.channel === 'equity') {
-        const balances: BalanceItem[] = [];
-        const instType = data.arg.instType;
-
-        if (instType === 'SPOT') {
-           data.data.forEach((item: any) => {
-             const coin = item.coin || item.marginCoin;
-             // Se for SPOT, considera available + frozen
-             if (coin && parseFloat(item.available || '0') + parseFloat(item.frozen || '0') > 0) {
-               const amt = parseFloat(item.available || '0') + parseFloat(item.frozen || '0');
-               balances.push({
-                 id: `${cid}-SPOT-${coin}`,
-                 connectionId: cid,
-                 exchange,
-                 label: `${label} (Spot)`,
-                 ccy: coin,
-                 amount: amt,
-                 usdValue: coin === 'USDT' || coin === 'USDC' ? amt : amt // We don't have spot prices here, so we assume USD stablecoins for simplicity or just amt.
-               });
-             }
-           });
-        } else {
-           // Futures
-           data.data.forEach((item: any) => {
-              const coin = item.marginCoin || 'USDT';
-              const tokenAmount = parseFloat(item.equity || item.available || '0');
-              const usdAmount = parseFloat(item.usdtEquity || item.equity || '0');
-              if (tokenAmount > 0 || (data.action === 'snapshot')) {
-                // we include it to overwrite previous 0 balances if needed
-                 balances.push({
-                   id: `${cid}-${instType}-${coin}`,
-                   connectionId: cid,
-                   exchange,
-                   label: `${label} (${instType})`,
-                   ccy: coin,
-                   amount: tokenAmount,
-                   usdValue: usdAmount
-                 });
-              }
-           });
-        }
-
-        if (balances.length > 0) {
-          updateBalances(cid, balances);
-        }
-      }
-      if (data.arg.channel === 'positions') {
-        const positions: Partial<UnifiedPosition>[] = [];
-        data.data.forEach((pos: any) => {
-          const update: Partial<UnifiedPosition> = {
-            id: `${cid}-${pos.posId || pos.instId}`,
-            connectionId: cid,
-            exchange: 'bitget',
-            label,
-            raw: pos
-          };
-          
-          if (pos.marginCoin !== undefined) update.ccy = pos.marginCoin;
-          
-          if (pos.instId !== undefined) update.symbol = pos.instId;
-          if (pos.holdSide !== undefined) update.side = pos.holdSide.toLowerCase() as any;
-          else if (pos.posSide !== undefined) update.side = pos.posSide.toLowerCase() as any;
-          
-          if (pos.total !== undefined) update.size = parseFloat(pos.total);
-          else if (pos.pos !== undefined) update.size = parseFloat(pos.pos);
-
-          if (pos.openPriceAvg !== undefined) update.entryPrice = parseFloat(pos.openPriceAvg);
-          else if (pos.avgPx !== undefined) update.entryPrice = parseFloat(pos.avgPx);
-
-          if (pos.markPrice !== undefined) update.markPrice = parseFloat(pos.markPrice);
-          else if (pos.markPx !== undefined) update.markPrice = parseFloat(pos.markPx);
-
-          if (pos.unrealizedPL !== undefined) update.unrealizedPnl = parseFloat(pos.unrealizedPL);
-          else if (pos.upl !== undefined) update.unrealizedPnl = parseFloat(pos.upl);
-
-          if (pos.achievedProfits !== undefined) update.realizedPnl = parseFloat(pos.achievedProfits);
-
-          if (pos.leverage !== undefined) update.leverage = parseFloat(pos.leverage);
-          else if (pos.lever !== undefined) update.leverage = parseFloat(pos.lever);
-
-          if (pos.marginMode !== undefined) update.marginMode = pos.marginMode === 'isolated' ? 'isolated' : 'cross';
-          if (pos.marginSize !== undefined) update.margin = parseFloat(pos.marginSize);
-          if (pos.liquidationPrice !== undefined) update.liquidationPrice = parseFloat(pos.liquidationPrice);
-          if (pos.breakEvenPrice !== undefined) update.breakEvenPrice = parseFloat(pos.breakEvenPrice);
-
-          if (update.unrealizedPnl !== undefined && update.margin !== undefined && update.margin > 0) {
-            update.roe = (update.unrealizedPnl / update.margin) * 100;
-          }
-
-          positions.push(update);
-        });
-        if (positions.length > 0) {
-          useDashboardStore.getState().updatePositionsDelta(cid, positions);
-        }
+        toast.error(`Bybit Auth Error: ${data.ret_msg}`, { id: `auth-err-${id}` });
       }
     }
   };

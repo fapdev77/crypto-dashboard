@@ -1,25 +1,43 @@
-import CryptoJS from 'crypto-js';
-
 export interface SignatureHeaders {
   [key: string]: string;
 }
 
 export class ExchangeAuth {
+  // Helper assíncrono usando Web Crypto API
+  private static async hmacSha256(prehash: string, secret: string, format: 'hex' | 'base64'): Promise<string> {
+    const encoder = new TextEncoder();
+    const key = await window.crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const signatureBuffer = await window.crypto.subtle.sign('HMAC', key, encoder.encode(prehash));
+    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+    
+    if (format === 'hex') {
+      return signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } else {
+      return btoa(String.fromCharCode(...signatureArray));
+    }
+  }
+
   // ==========================================
   // REST API Headers
   // ==========================================
 
-  static getOkxHeaders(
+  static async getOkxHeaders(
     apiKey: string,
     apiSecret: string,
     passphrase: string,
     method: string,
     requestPath: string,
     body: string = ''
-  ): SignatureHeaders {
+  ): Promise<SignatureHeaders> {
     const timestamp = new Date().toISOString();
     const prehash = timestamp + method.toUpperCase() + requestPath + body;
-    const signature = CryptoJS.HmacSHA256(prehash, apiSecret).toString(CryptoJS.enc.Base64);
+    const signature = await this.hmacSha256(prehash, apiSecret, 'base64');
 
     return {
       'OK-ACCESS-KEY': apiKey,
@@ -29,17 +47,17 @@ export class ExchangeAuth {
     };
   }
 
-  static getBitgetHeaders(
+  static async getBitgetHeaders(
     apiKey: string,
     apiSecret: string,
     passphrase: string,
     method: string,
     requestPath: string,
     body: string = ''
-  ): SignatureHeaders {
+  ): Promise<SignatureHeaders> {
     const timestamp = Date.now().toString();
     const prehash = timestamp + method.toUpperCase() + requestPath + body;
-    const signature = CryptoJS.HmacSHA256(prehash, apiSecret).toString(CryptoJS.enc.Base64);
+    const signature = await this.hmacSha256(prehash, apiSecret, 'base64');
 
     return {
       'ACCESS-KEY': apiKey,
@@ -74,15 +92,16 @@ export class ExchangeAuth {
     }
   }
 
-  static getBybitHeaders(
+  static async getBybitHeaders(
     apiKey: string,
     apiSecret: string,
-    bodyOrQuery: string = '' // For GET, this is the query string (e.g., 'category=linear&symbol=BTCUSDT'). For POST, JSON string.
-  ): SignatureHeaders {
+    bodyOrQuery: string = '' // For GET, this is the query string. For POST, JSON string.
+  ): Promise<SignatureHeaders> {
     const timestamp = (Date.now() + this.bybitTimeOffset).toString();
-    const recvWindow = '10000';
+    // Mitigação de Replay Attack: reduzido para 5000ms
+    const recvWindow = '5000';
     const prehash = timestamp + apiKey + recvWindow + bodyOrQuery;
-    const signature = CryptoJS.HmacSHA256(prehash, apiSecret).toString(CryptoJS.enc.Hex);
+    const signature = await this.hmacSha256(prehash, apiSecret, 'hex');
 
     return {
       'X-BAPI-API-KEY': apiKey,
@@ -92,15 +111,14 @@ export class ExchangeAuth {
     };
   }
 
-
   // ==========================================
   // WebSocket Authentication Payloads
   // ==========================================
 
-  static getOkxWsAuth(apiKey: string, apiSecret: string, passphrase: string) {
+  static async getOkxWsAuth(apiKey: string, apiSecret: string, passphrase: string) {
     const timestamp = (Date.now() / 1000).toString(); // OKX accepts epoch in seconds
     const prehash = timestamp + 'GET' + '/users/self/verify';
-    const signature = CryptoJS.HmacSHA256(prehash, apiSecret).toString(CryptoJS.enc.Base64);
+    const signature = await this.hmacSha256(prehash, apiSecret, 'base64');
 
     return {
       op: 'login',
@@ -113,10 +131,10 @@ export class ExchangeAuth {
     };
   }
 
-  static getBitgetWsAuth(apiKey: string, apiSecret: string, passphrase: string) {
+  static async getBitgetWsAuth(apiKey: string, apiSecret: string, passphrase: string) {
     const timestamp = Date.now().toString(); // Bitget uses milliseconds
     const prehash = timestamp + 'GET' + '/user/verify';
-    const signature = CryptoJS.HmacSHA256(prehash, apiSecret).toString(CryptoJS.enc.Base64);
+    const signature = await this.hmacSha256(prehash, apiSecret, 'base64');
 
     return {
       op: 'login',
@@ -129,10 +147,10 @@ export class ExchangeAuth {
     };
   }
 
-  static getBybitWsAuth(apiKey: string, apiSecret: string) {
-    const expires = Date.now() + 10000;
+  static async getBybitWsAuth(apiKey: string, apiSecret: string) {
+    const expires = Date.now() + this.bybitTimeOffset + 10000; // Auth key is valid for 10s for WS
     const prehash = 'GET/realtime' + expires;
-    const signature = CryptoJS.HmacSHA256(prehash, apiSecret).toString(CryptoJS.enc.Hex);
+    const signature = await this.hmacSha256(prehash, apiSecret, 'hex');
 
     return {
       op: 'auth',

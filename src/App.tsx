@@ -14,6 +14,7 @@ import { Settings } from './components/Settings';
 import { ApiTester } from './components/ApiTester';
 import { StatusBar } from './components/StatusBar';
 import { PositionsTicker } from './components/PositionsTicker';
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -27,6 +28,28 @@ export default function App() {
 
   return (
     <WorkSpace>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#1a1b1e',
+            color: '#fff',
+            border: '1px solid #2a2b30',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: '#1a1b1e',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#1a1b1e',
+            },
+          },
+        }}
+      />
       <div className="flex flex-col h-screen bg-[#0b0c10] overflow-hidden">
         <PositionsTicker />
         <div className="flex flex-1 overflow-hidden relative">

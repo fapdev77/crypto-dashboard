@@ -19,13 +19,12 @@ export function PositionsTicker() {
   if (activePositions.length === 0) return null;
 
   const content = activePositions.map((pos) => {
-    console.log("MARQUEE: ", JSON.stringify(pos))
     const isLong = pos.side === 'long';
     let variation = pos.roe;
     if (variation === undefined) {
-       const priceDiff = pos.markPrice - pos.entryPrice;
-       const rawRoe = (priceDiff / (pos.entryPrice || 1)) * 100 * (pos.leverage || 1);
-       variation = isLong ? rawRoe : -rawRoe;
+      const priceDiff = pos.markPrice - pos.entryPrice;
+      const rawRoe = (priceDiff / (pos.entryPrice || 1)) * 100 * (pos.leverage || 1);
+      variation = isLong ? rawRoe : -rawRoe;
     }
 
     const priceVariation = pos.entryPrice ? ((pos.markPrice - pos.entryPrice) / pos.entryPrice) * 100 : 0;
@@ -38,8 +37,8 @@ export function PositionsTicker() {
     const isNeutral = variation === 0;
 
     return (
-      <div 
-        key={pos.id} 
+      <div
+        key={pos.id}
         className="flex items-center gap-4 px-6 py-2 border-r border-[#2a2b30]/50 shrink-0 cursor-default"
         title={`Exchange: ${pos.exchange}\nAtivo: ${pos.symbol}\nPosição: ${pos.side.toUpperCase()} ${pos.leverage}x\nPreço Atual: $${pos.markPrice}\nPreço de Entrada: ${pos.entryPrice ? '$' + pos.entryPrice : 'N/A'}\nVariação de Preço (desde entrada): ${formatValue(priceVariation, 2)}%\nLucro/Prejuízo (ROE): ${formatValue(variation, 2)}%`}
       >
@@ -47,7 +46,7 @@ export function PositionsTicker() {
           <span className="font-bold text-white text-sm tracking-wide">
             | {pos.symbol}
           </span>
-          
+
           <div className={`flex items-center gap-1 text-sm font-medium ml-1 ${priceColor}`}>
             {isPriceUp && <TrendingUp className="w-3.5 h-3.5" />}
             {isPriceDown && <TrendingDown className="w-3.5 h-3.5" />}
@@ -82,7 +81,7 @@ export function PositionsTicker() {
 
   return (
     <div className="bg-[#151619] border-b border-[#2a2b30] flex items-center overflow-hidden shrink-0 h-10 w-full relative z-10 group">
-      <div 
+      <div
         className="flex w-max animate-marquee"
         style={{ animationDuration: `${duration}s` }}
       >
