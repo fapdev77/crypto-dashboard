@@ -11,8 +11,8 @@ export function PositionsTicker() {
   const activePositions = useMemo(() => {
     const list = Object.values(positions);
     return useMockData
-      ? list.filter(p => p.connectionId === 'mock')
-      : list.filter(p => p.connectionId !== 'mock');
+      ? list.filter(p => p.connectionId.startsWith('mocked-data'))
+      : list.filter(p => !p.connectionId.startsWith('mocked-data'));
   }, [positions, useMockData]);
 
   // Se nao há posicoes abertas, retorne null
@@ -76,9 +76,16 @@ export function PositionsTicker() {
     );
   });
 
+  // Calcula o tempo total baseado na quantidade de itens.
+  // Assumimos ~4 segundos por item para uma leitura confortável.
+  const duration = Math.max(activePositions.length * 4, 20); // Minimo de 20s
+
   return (
     <div className="bg-[#151619] border-b border-[#2a2b30] flex items-center overflow-hidden shrink-0 h-10 w-full relative z-10 group">
-      <div className="flex w-max animate-marquee">
+      <div 
+        className="flex w-max animate-marquee"
+        style={{ animationDuration: `${duration}s` }}
+      >
         <div className="flex shrink-0">
           {content}
         </div>

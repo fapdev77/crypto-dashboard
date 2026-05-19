@@ -22,14 +22,14 @@ export function Dashboard() {
 
   const activeBalances = useMemo(() => {
     return useMockData 
-      ? balancesList.filter(b => b.connectionId === 'mock')
-      : balancesList.filter(b => b.connectionId !== 'mock');
+      ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
+      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data'));
   }, [balancesList, useMockData]);
 
   const activePositions = useMemo(() => {
     return useMockData
-      ? positionsList.filter(p => p.connectionId === 'mock')
-      : positionsList.filter(p => p.connectionId !== 'mock');
+      ? positionsList.filter(p => p.connectionId.startsWith('mocked-data'))
+      : positionsList.filter(p => !p.connectionId.startsWith('mocked-data'));
   }, [positionsList, useMockData]);
 
   const totalEquity = useMemo(() => {

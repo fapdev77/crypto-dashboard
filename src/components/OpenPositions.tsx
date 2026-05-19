@@ -20,8 +20,8 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
   const activePositions = useMemo(() => {
     // First, filter by mock connection rule
     let filtered = useMockData 
-      ? positionsList.filter(p => p.connectionId === 'mock')
-      : positionsList.filter(p => p.connectionId !== 'mock');
+      ? positionsList.filter(p => p.connectionId.startsWith('mocked-data'))
+      : positionsList.filter(p => !p.connectionId.startsWith('mocked-data'));
 
     // Then, apply size filter
     filtered = filtered.filter(p => Math.abs(p.size) > 0);
