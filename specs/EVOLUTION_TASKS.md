@@ -27,3 +27,6 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 
 **8. Real-Time Engine: Correção de PnL Estático Bybit** [✓]
 *   **Ação Aplicada:** Diferente das outras exchanges, Bybit não realiza push via Websocket Privado de MarkPrice/PnL (apenas em ações de execuções de ordens). Foi instaurado em `useMultiExchangeWS.ts` um hook silencioso de Short-Polling configurável dinamicamente via `Settings` (1s a 15s) no Client-side, para requisições na REST API e update em micro-chunks no Redux Zustand para a Bybit renderizar sua variação real de mercado. Removidos resquícios da biblioteca obsoleta `crypto-js` também nesta leva, modernizando o stack com WebCrypto.
+
+**9. UI Analytics: Macro Capital & Cross-Exchange Treemap** [✓]
+*   **Ação Aplicada:** Instalou-se a biblioteca de gráficos `recharts`. Adicionou-se ao `Dashboard.tsx` dois novos visuais (Ideias #1 e #2 do plano de Evolução Analítica): um Gráfico de Rosca (Donut) demonstrando Risco por Exchange (Distribuição Macro), e um Treemap mapeando visualmente a diversidade total de ativos cruzando as 3 contas simultaneamente. Customização forte com cores da identidade visual do app.

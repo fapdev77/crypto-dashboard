@@ -6,6 +6,8 @@ import { DollarSign, Wallet, Search, X, TrendingUp, TrendingDown, ChevronDown, C
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { Sparkline } from './ui/Sparkline';
+import { MacroCapitalChart } from './analytics/MacroCapitalChart';
+import { CrossExchangeTreemap } from './analytics/CrossExchangeTreemap';
 
 export function Dashboard() {
   const { balances, positions } = useDashboardStore();
@@ -84,6 +86,43 @@ export function Dashboard() {
 
     return acc;
   }, [filteredBalances]);
+
+  const donutData = useMemo(() => {
+    const dataMap: Record<string, number> = {};
+    activeBalances.forEach(b => {
+      const val = b.usdValue || 0;
+      if (val > 1) { // Ignore dust
+        dataMap[b.exchange] = (dataMap[b.exchange] || 0) + val;
+      }
+    });
+    return Object.entries(dataMap)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [activeBalances]);
+
+  const treemapData = useMemo(() => {
+    const exchangeTotals: Record<string, number> = {};
+    const assets: Array<{ exchange: string, ccy: string, size: number }> = [];
+
+    activeBalances.forEach(b => {
+      const val = b.usdValue || 0;
+      if (val > 1) {
+        exchangeTotals[b.exchange] = (exchangeTotals[b.exchange] || 0) + val;
+        assets.push({ exchange: b.exchange, ccy: b.ccy, size: val });
+      }
+    });
+
+    return assets
+      .map(a => ({
+        name: `${a.exchange.toUpperCase()} - ${a.ccy}`,
+        exchange: a.exchange,
+        ccy: a.ccy,
+        size: a.size,
+        exchangeTotal: exchangeTotals[a.exchange]
+      }))
+      .sort((a, b) => b.size - a.size)
+      .slice(0, 20); // Limit chunks for visual clarity
+  }, [activeBalances]);
 
   const toggleExchange = (exchange: string) => {
     setExpandedExchanges(prev => ({ ...prev, [exchange]: !(prev[exchange] ?? false) }));
@@ -183,6 +222,13 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+
+      {donutData.length > 0 && treemapData.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <MacroCapitalChart data={donutData} />
+          <CrossExchangeTreemap data={treemapData} />
+        </div>
+      )}
 
       <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-4 md:p-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
