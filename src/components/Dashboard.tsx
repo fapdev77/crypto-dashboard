@@ -42,6 +42,11 @@ export function Dashboard() {
 
   const dailyPnLPercent = totalEquity > 0 ? (dailyPnL / totalEquity) * 100 : 0;
   const openPositionsCount = activePositions.length;
+  
+  const longPositions = activePositions.filter(p => p.side === 'long' || p.side === 'buy').length;
+  const shortPositions = activePositions.filter(p => p.side === 'short' || p.side === 'sell').length;
+  const longPercent = openPositionsCount > 0 ? (longPositions / openPositionsCount) * 100 : 0;
+  const shortPercent = openPositionsCount > 0 ? (shortPositions / openPositionsCount) * 100 : 0;
 
   const filteredBalances = useMemo(() => {
     let filtered = activeBalances;
@@ -116,57 +121,66 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-[#151619] border border-[#2a2b30] p-6 rounded-xl flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <DollarSign className="w-24 h-24" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Total Equity Card */}
+        <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Total Equity (USD)</span>
           </div>
-          <div className="flex items-center justify-between mb-4 relative z-10">
-            <span className="text-[#8E9299] text-sm font-medium tracking-wider">Total Equity (USD)</span>
-            <div className="w-8 h-8 rounded-full bg-[#2F6BFF]/10 flex items-center justify-center">
-              <DollarSign className="w-4 h-4 text-[#2F6BFF]" />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-white font-mono relative z-10">
-            <span className="text-[#8E9299] mr-1">$</span>
-            {totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-        </div>
-
-        <div className="bg-[#151619] border border-[#2a2b30] p-6 rounded-xl flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            {dailyPnL >= 0 ? <TrendingUp className="w-24 h-24 text-emerald-500" /> : <TrendingDown className="w-24 h-24 text-red-500" />}
-          </div>
-          <div className="flex items-center justify-between mb-4 relative z-10">
-            <span className="text-[#8E9299] text-sm font-medium tracking-wider">Daily P&L</span>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${dailyPnL >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
-              {dailyPnL >= 0 ? <TrendingUp className="w-4 h-4 text-emerald-500" /> : <TrendingDown className="w-4 h-4 text-red-500" />}
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2 relative z-10">
-            <p className={`text-3xl font-bold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-              {dailyPnL >= 0 ? '+' : '-'}${Math.abs(dailyPnL).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div className="flex items-center gap-2 relative z-10">
+            <p className="text-2xl font-bold text-white font-mono">
+              ${totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <span className={`text-sm font-medium ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-              ({dailyPnL >= 0 ? '+' : ''}{dailyPnLPercent.toFixed(2)}%)
-            </span>
+            {dailyPnL >= 0 ? <TrendingUp className="w-4 h-4 text-emerald-500/70" /> : <TrendingDown className="w-4 h-4 text-red-500/70" />}
           </div>
         </div>
 
-        <div className="bg-[#151619] border border-[#2a2b30] p-6 rounded-xl flex flex-col justify-between relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-4 opacity-10">
-            <BarChart2 className="w-24 h-24 text-[#2F6BFF]" />
+        {/* Daily P&L Card */}
+        <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Daily P&L</span>
           </div>
-          <div className="flex items-center justify-between mb-4 relative z-10">
-            <span className="text-[#8E9299] text-sm font-medium tracking-wider">Total Open Positions</span>
-            <div className="w-8 h-8 rounded-full bg-[#2F6BFF]/10 flex items-center justify-center">
-              <BarChart2 className="w-4 h-4 text-[#2F6BFF]" />
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-baseline gap-2">
+              <p className={`text-2xl font-bold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                {dailyPnL >= 0 ? '+' : '-'}${Math.abs(dailyPnL).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              <span className={`text-sm font-medium ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                ({dailyPnL >= 0 ? '+' : ''}{dailyPnLPercent.toFixed(2)}%)
+              </span>
+            </div>
+            
+            <div className="w-[80px] h-[30px] opacity-80">
+              <Sparkline data={[10, 25, 15, 40, 30, 50, 45, 60, dailyPnL >= 0 ? 80 : 20]} color={dailyPnL >= 0 ? 'emerald' : 'red'} width={80} height={30} />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white relative z-10 flex items-baseline gap-2">
-            {openPositionsCount}
-            <span className="text-lg text-[#8E9299] font-medium">Active</span>
-          </p>
+        </div>
+
+        {/* Total Open Positions Card */}
+        <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Total Open Positions</span>
+            <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
+          </div>
+          <div className="flex items-center justify-between relative z-10">
+            <p className="text-2xl font-bold text-white relative z-10 flex items-baseline gap-1.5">
+              {openPositionsCount}
+              <span className="text-sm text-[#8E9299] font-medium mr-3">Active</span>
+            </p>
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-xs font-bold text-emerald-500">{longPositions}</span>
+                <span className="text-[10px] font-medium text-emerald-500/80">({longPercent.toFixed(0)}%)</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-red-500/10 px-2.5 py-1 rounded-md border border-red-500/20">
+                <TrendingDown className="w-3.5 h-3.5 text-red-500" />
+                <span className="text-xs font-bold text-red-500">{shortPositions}</span>
+                <span className="text-[10px] font-medium text-red-500/80">({shortPercent.toFixed(0)}%)</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
