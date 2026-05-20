@@ -31,7 +31,7 @@ Unir a agilidade mecânica da Solução 2 com a veracidade contábil da Soluçã
 ---
 
 ## Sugestão de Decisão
-**Se você quer agilidade de entrega:** Vamos na **Solução 1** (Short-polling a cada 5s). Resolve o problema em 5 linhas de código sem quebrar a cabeça e atinge excelente resultado.
-**Se você quer visual super Premium (Real-Time Puro):** Recomendo a **Solução 3** (ou tentar a Solução 1 provisoriamente, e ver se agrada antes de adicionar complexidade de Frontend Engine).
+**Status:** **[✓ PLANO IMPLEMENTADO]**
+Foi adotada a **Solução 1** (Short-Polling Oculto), parametrizável!
 
-Aguardando seu veredito de como prosseguir.
+Adicionou-se ao Zustand (`settingsStore.ts`) e a aba UI de **Settings** uma range bar de 1 a 15 segundos (`bybitPollingInterval`). O Engine de Websocket `useMultiExchangeWS.ts` verifica essa variável e implementa o Long-Polling seguro utilizando as bases Rest do `RestClient.ts`. Assim, a Bybit renderiza sem gargalos o PnL Dinâmico frente as flutuações. Adicionalmente, encerrou-se o ciclo de eliminação total do pacote `crypto-js` da branch em favor da `Web Crypto API` nativa.

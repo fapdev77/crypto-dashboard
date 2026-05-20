@@ -24,3 +24,6 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 
 **7. Arquitetura Híbrida: Mitigation de Geo-Block (Bybit)** [✓]
 *   **Ação Aplicada:** O `RestClient.ts` adotou a arquitetura `hybridFetch` para driblar restrições geográficas originárias da hospedagem US-East (AI Studio Cloud), priorizando requisições via navegador do usuário (Client-Side) com _fallback_ ao Proxy (Server-Side) visando alta escalabilidade no ecossistema BYBIT V5.
+
+**8. Real-Time Engine: Correção de PnL Estático Bybit** [✓]
+*   **Ação Aplicada:** Diferente das outras exchanges, Bybit não realiza push via Websocket Privado de MarkPrice/PnL (apenas em ações de execuções de ordens). Foi instaurado em `useMultiExchangeWS.ts` um hook silencioso de Short-Polling configurável dinamicamente via `Settings` (1s a 15s) no Client-side, para requisições na REST API e update em micro-chunks no Redux Zustand para a Bybit renderizar sua variação real de mercado. Removidos resquícios da biblioteca obsoleta `crypto-js` também nesta leva, modernizando o stack com WebCrypto.

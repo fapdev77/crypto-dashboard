@@ -107,6 +107,12 @@ export function useMultiExchangeWS() {
       delete intervalsRef.current[id];
     }
     
+    const pollTimer = intervalsRef.current[id + '-poll'];
+    if (pollTimer) {
+      clearTimeout(pollTimer);
+      delete intervalsRef.current[id + '-poll'];
+    }
+    
     const rTimer = reconnectTimers.current[id];
     if (rTimer) {
       clearTimeout(rTimer);
@@ -131,6 +137,92 @@ export function useMultiExchangeWS() {
     }, 20000); 
   };
 
+  const syncBybitRestData = async (config: ApiCredentials) => {
+    const { id, exchange, apiKey, apiSecret } = config;
+    try {
+      // console.log(`[REST-${id}] Buscando dados para Bybit via REST...`);
+      const [walletData, positionsData] = await Promise.all([
+        RestClient.getWalletBybit(apiKey, apiSecret),
+        RestClient.getPositionsBybit(apiKey, apiSecret)
+      ]);
+      
+      const currentState = useDashboardStore.getState();
+
+      if (walletData && walletData.coin) {
+        const balances: BalanceItem[] = [];
+        walletData.coin.forEach((item: any) => {
+          const accountType = walletData.accountType || 'UNIFIED';
+          balances.push({
+            id: `${id}-${accountType}-${item.coin}`,
+            connectionId: id,
+            exchange,
+            label: `${config.label} (${accountType})`,
+            ccy: item.coin,
+            amount: parseFloat(item.walletBalance || item.equity),
+            usdValue: parseFloat(item.usdValue)
+          });
+        });
+        if (balances.length > 0) currentState.updateBalances(id, balances);
+      }
+
+      if (positionsData && Array.isArray(positionsData)) {
+        const positions: UnifiedPosition[] = [];
+        positionsData.forEach((pos: any) => {
+          positions.push({
+            id: `${id}-${pos.symbol}-${pos.positionIdx || 0}`,
+            connectionId: id,
+            exchange: 'bybit',
+            label: config.label,
+            symbol: pos.symbol,
+            ccy: pos.settleCoin || pos.coin || 'USDT',
+            side: pos.side ? pos.side.toLowerCase() as any : 'net', 
+            size: parseFloat(pos.size || '0'),
+            entryPrice: parseFloat(pos.avgPrice || pos.entryPrice || '0'),
+            markPrice: parseFloat(pos.markPrice || '0'),
+            unrealizedPnl: parseFloat(pos.unrealisedPnl || '0'),
+            realizedPnl: parseFloat(pos.curRealisedPnl || '0'),
+            leverage: parseFloat(pos.leverage || '0'),
+            marginMode: pos.tradeMode === 1 ? 'isolated' : 'cross',
+            margin: parseFloat(pos.positionIM || '0'),
+            notionalUsd: parseFloat(pos.positionValue || '0'),
+            liquidationPrice: parseFloat(pos.liqPrice || '0'),
+            breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
+            tp: parseFloat(pos.takeProfit || '0'),
+            sl: parseFloat(pos.stopLoss || '0'),
+            roe: parseFloat(pos.positionIM) > 0 ? (parseFloat(pos.unrealisedPnl) / parseFloat(pos.positionIM)) * 100 : undefined,
+            raw: pos
+          });
+        });
+        if (positions.length > 0) currentState.updatePositions(id, positions);
+      }
+    } catch (err) {
+      console.error(`[REST-${id}] Bybit REST fetch falhou:`, err);
+    }
+  };
+
+  const startBybitPolling = (config: ApiCredentials) => {
+    const { id } = config;
+    const poll = async () => {
+      if (intervalsRef.current[id + '-poll'] === null) return; // Prevent execution if disconnected
+      
+      const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
+      if (!currentConfig || !currentConfig.isActive || socketsRef.current[id]?.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      await syncBybitRestData(config);
+
+      const intervalMs = useSettingsStore.getState().bybitPollingInterval * 1000;
+      if (intervalsRef.current[id + '-poll'] !== null) {
+        intervalsRef.current[id + '-poll'] = setTimeout(poll, intervalMs);
+      }
+    };
+
+    // First cycle
+    const intervalMs = useSettingsStore.getState().bybitPollingInterval * 1000;
+    intervalsRef.current[id + '-poll'] = setTimeout(poll, intervalMs);
+  };
+
   const connect = (config: ApiCredentials) => {
     const { id, exchange, apiKey, apiSecret, passphrase } = config;
 
@@ -145,61 +237,11 @@ export function useMultiExchangeWS() {
     if (exchange === 'bybit') {
       (async () => {
         try {
-          console.log(`[REST-${id}] Buscando dados iniciais para Bybit via REST...`);
+          console.log(`[REST-${id}] Buscando dados iniciais para Bybit via REST e iniciando Short-Polling...`);
           await ExchangeAuth.syncBybitTime();
-          const [walletData, positionsData] = await Promise.all([
-            RestClient.getWalletBybit(apiKey, apiSecret),
-            RestClient.getPositionsBybit(apiKey, apiSecret)
-          ]);
-          
-          if (walletData && walletData.coin) {
-            const balances: BalanceItem[] = [];
-            walletData.coin.forEach((item: any) => {
-              const accountType = walletData.accountType || 'UNIFIED';
-              balances.push({
-                id: `${id}-${accountType}-${item.coin}`,
-                connectionId: id,
-                exchange,
-                label: `${config.label} (${accountType})`,
-                ccy: item.coin,
-                amount: parseFloat(item.walletBalance || item.equity),
-                usdValue: parseFloat(item.usdValue)
-              });
-            });
-            if (balances.length > 0) updateBalances(id, balances);
-          }
-
-          if (positionsData && Array.isArray(positionsData)) {
-            const positions: UnifiedPosition[] = [];
-            positionsData.forEach((pos: any) => {
-              positions.push({
-                id: `${id}-${pos.symbol}-${pos.positionIdx || 0}`,
-                connectionId: id,
-                exchange: 'bybit',
-                label: config.label,
-                symbol: pos.symbol,
-                ccy: pos.settleCoin || pos.coin || 'USDT',
-                side: pos.side ? pos.side.toLowerCase() as any : 'net', 
-                size: parseFloat(pos.size || '0'),
-                entryPrice: parseFloat(pos.avgPrice || pos.entryPrice || '0'),
-                markPrice: parseFloat(pos.markPrice || '0'),
-                unrealizedPnl: parseFloat(pos.unrealisedPnl || '0'),
-                realizedPnl: parseFloat(pos.curRealisedPnl || '0'),
-                leverage: parseFloat(pos.leverage || '0'),
-                marginMode: pos.tradeMode === 1 ? 'isolated' : 'cross',
-                margin: parseFloat(pos.positionIM || '0'),
-                notionalUsd: parseFloat(pos.positionValue || '0'),
-                liquidationPrice: parseFloat(pos.liqPrice || '0'),
-                breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
-                tp: parseFloat(pos.takeProfit || '0'),
-                sl: parseFloat(pos.stopLoss || '0'),
-                roe: parseFloat(pos.positionIM) > 0 ? (parseFloat(pos.unrealisedPnl) / parseFloat(pos.positionIM)) * 100 : undefined,
-                raw: pos
-              });
-            });
-            if (positions.length > 0) updatePositions(id, positions);
-          }
+          await syncBybitRestData(config);
           console.log(`[REST-${id}] Dados iniciais carregados para Bybit.`);
+          startBybitPolling(config);
         } catch (error: any) {
           console.error(`[REST-${id}] Erro ao buscar dados iniciais para Bybit:`, error);
           setConnectionError(id, `REST Error: ${error.message}`);
