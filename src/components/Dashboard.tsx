@@ -7,7 +7,7 @@ import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { Sparkline } from './ui/Sparkline';
 import { MacroCapitalChart } from './analytics/MacroCapitalChart';
-import { CrossExchangeTreemap } from './analytics/CrossExchangeTreemap';
+import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
 
 export function Dashboard() {
   const { balances, positions } = useDashboardStore();
@@ -100,28 +100,71 @@ export function Dashboard() {
       .sort((a, b) => b.value - a.value);
   }, [activeBalances]);
 
-  const treemapData = useMemo(() => {
-    const exchangeTotals: Record<string, number> = {};
-    const assets: Array<{ exchange: string, ccy: string, size: number }> = [];
+  const crossExchangeAssets = useMemo(() => {
+    const exchangesMap: Record<string, { total: number, assetsMap: Record<string, number> }> = {};
+    let globalTotal = 0;
 
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
-      if (val > 1) {
-        exchangeTotals[b.exchange] = (exchangeTotals[b.exchange] || 0) + val;
-        assets.push({ exchange: b.exchange, ccy: b.ccy, size: val });
+      if (val > 1) { // ignore dust
+        if (!exchangesMap[b.exchange]) exchangesMap[b.exchange] = { total: 0, assetsMap: {} };
+        exchangesMap[b.exchange].total += val;
+        exchangesMap[b.exchange].assetsMap[b.ccy] = (exchangesMap[b.exchange].assetsMap[b.ccy] || 0) + val;
+        globalTotal += val;
       }
     });
 
-    return assets
-      .map(a => ({
-        name: `${a.exchange.toUpperCase()} - ${a.ccy}`,
-        exchange: a.exchange,
-        ccy: a.ccy,
-        size: a.size,
-        exchangeTotal: exchangeTotals[a.exchange]
-      }))
-      .sort((a, b) => b.size - a.size)
-      .slice(0, 20); // Limit chunks for visual clarity
+    const formattedData: any[] = [];
+    let maxSegments = 0;
+
+    for (const [exchange, data] of Object.entries(exchangesMap)) {
+      const sorted = Object.entries(data.assetsMap)
+        .map(([ccy, val]) => ({ ccy, val }))
+        .sort((a, b) => b.val - a.val);
+
+      let outrosVal = 0;
+      const segments: any[] = [];
+      const rawAssets: any[] = [];
+
+      sorted.forEach(asset => {
+        const percent = data.total > 0 ? (asset.val / data.total) * 100 : 0;
+        const percentOfGlobal = globalTotal > 0 ? (asset.val / globalTotal) * 100 : 0;
+        
+        rawAssets.push({ name: asset.ccy, value: asset.val, percent, percentOfGlobal });
+
+        if (percentOfGlobal < 10) {
+          outrosVal += asset.val;
+        } else {
+          segments.push({ name: asset.ccy, value: asset.val, percent, percentOfGlobal });
+        }
+      });
+
+      if (outrosVal > 0) {
+        segments.push({ 
+          name: 'Outros', 
+          value: outrosVal, 
+          percent: data.total > 0 ? (outrosVal / data.total) * 100 : 0,
+          percentOfGlobal: globalTotal > 0 ? (outrosVal / globalTotal) * 100 : 0
+        });
+      }
+
+      if (segments.length > maxSegments) {
+        maxSegments = segments.length;
+      }
+
+      const rowData: any = { exchange: exchange.toLowerCase(), total: data.total, rawAssets };
+      segments.forEach((seg: any, idx: number) => {
+        rowData[`segment${idx}`] = seg.value;
+        rowData[`_meta${idx}`] = { name: seg.name, percent: seg.percent, percentOfGlobal: seg.percentOfGlobal };
+      });
+
+      formattedData.push(rowData);
+    }
+
+    return { 
+      data: formattedData.sort((a, b) => b.total - a.total), 
+      maxSegments 
+    };
   }, [activeBalances]);
 
   const toggleExchange = (exchange: string) => {
@@ -223,10 +266,10 @@ export function Dashboard() {
         </div>
       </div>
 
-      {donutData.length > 0 && treemapData.length > 0 && (
+      {donutData.length > 0 && crossExchangeAssets.data.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <MacroCapitalChart data={donutData} />
-          <CrossExchangeTreemap data={treemapData} />
+          <CrossExchangeAssetsChart data={crossExchangeAssets.data} maxSegments={crossExchangeAssets.maxSegments} />
         </div>
       )}
 
