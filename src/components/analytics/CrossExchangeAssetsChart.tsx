@@ -37,7 +37,7 @@ const CustomBarShape = (props: any) => {
   const meta = payload[metaKey];
 
   const isLightBackground = fill === '#ffffff';
-  const textColor = isLightBackground ? '#151619' : '#ffffff';
+  const textColor = isLightBackground ? '#4b5563' : '#ffffff';
   const textShadow = isLightBackground ? 'none' : '0px 1px 3px rgba(0,0,0,0.8), 0px 0px 1px rgba(0,0,0,0.5)';
 
   return (
@@ -60,7 +60,7 @@ const CustomBarShape = (props: any) => {
                )}
             </div>
             <span 
-              className="font-bold text-[13px] whitespace-nowrap mt-0.5"
+              className="font-bold text-[13px] whitespace-nowrap mt-1.5"
               style={{ color: textColor, textShadow, opacity: isLightBackground ? 0.95 : 0.9 }}
             >
                {meta.percent.toFixed(0)}%
