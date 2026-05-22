@@ -1,8 +1,7 @@
-import { PositionMapperStrategy } from './PositionMapperStrategy';
-import { UnifiedPosition } from '../../types/positions';
+import { UnifiedHistoryPosition } from '../../../types';
 
-export class BitgetPositionMapper implements PositionMapperStrategy {
-  mapHistory(rawPayload: any[], connectionId: string, label: string): UnifiedPosition[] {
+export class BitgetHistoryAdapter {
+  static parse(rawPayload: any[], connectionId: string, label: string): UnifiedHistoryPosition[] {
     return rawPayload.map((p: any) => {
       const realizedPnl = parseFloat(p.achievedProfits || p.netProfit || '0');
       const entryPrice = parseFloat(p.openPriceAvg || p.openAvgPx || '0');
@@ -18,7 +17,7 @@ export class BitgetPositionMapper implements PositionMapperStrategy {
         id: `${connectionId}-${p.posId || p.positionId}-${cTime}`,
         connectionId,
         label,
-        exchange: 'BITGET',
+        exchange: 'bitget',
         symbol: p.instId || p.symbol,
         ccy: p.marginCoin || p.settleCoin || (p.symbol ? (p.symbol.endsWith('USDT') ? 'USDT' : p.symbol.endsWith('USDC') ? 'USDC' : p.symbol.replace(/USD.*/, '')) : 'USDT'),
         side: isLong ? 'long' : isShort ? 'short' : 'net',

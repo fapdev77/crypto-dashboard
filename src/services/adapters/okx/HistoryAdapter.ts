@@ -1,8 +1,7 @@
-import { PositionMapperStrategy } from './PositionMapperStrategy';
-import { UnifiedPosition } from '../../types/positions';
+import { UnifiedHistoryPosition } from '../../../types';
 
-export class OkxPositionMapper implements PositionMapperStrategy {
-  mapHistory(rawPayload: any[], connectionId: string, label: string): UnifiedPosition[] {
+export class OkxHistoryAdapter {
+  static parse(rawPayload: any[], connectionId: string, label: string): UnifiedHistoryPosition[] {
     return rawPayload.map((p: any) => {
       const isLong = p.posSide === 'long' || p.direction === 'long';
       const isShort = p.posSide === 'short' || p.direction === 'short';
@@ -14,16 +13,15 @@ export class OkxPositionMapper implements PositionMapperStrategy {
       const cTime = parseInt(p.uTime || p.cTime || '0', 10);
       
       let roi: number | undefined;
-      // Depending on margin mode and available data, okx might have roi or we can calculate
       if (p.pnlRatio) {
-        roi = parseFloat(p.pnlRatio); // okx returns ratio, usually needs to be * 100 for percentage
+        roi = parseFloat(p.pnlRatio); // Sometimes needs * 100 depending on endpoint
       }
 
       return {
         id: `${connectionId}-${p.instId}-${cTime}`,
         connectionId,
         label,
-        exchange: 'OKX',
+        exchange: 'okx',
         symbol: p.instId,
         ccy: p.ccy || p.marginCoin || (p.instId.includes('-USDT') ? 'USDT' : p.instId.includes('-USDC') ? 'USDC' : p.instId.split('-')[0]),
         side: isLong ? 'long' : isShort ? 'short' : 'net',

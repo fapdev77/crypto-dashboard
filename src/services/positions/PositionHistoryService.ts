@@ -1,16 +1,12 @@
-import { UnifiedPosition } from '../../types/positions';
-import { OkxPositionMapper } from './OkxPositionMapper';
-import { BitgetPositionMapper } from './BitgetPositionMapper';
-import { BybitPositionMapper } from './BybitPositionMapper';
+import { UnifiedHistoryPosition } from '../../types';
+import { OkxHistoryAdapter } from '../adapters/okx/HistoryAdapter';
+import { BitgetHistoryAdapter } from '../adapters/bitget/HistoryAdapter';
+import { BybitHistoryAdapter } from '../adapters/bybit/HistoryAdapter';
 import { RestClient } from '../RestClient';
 import { ExchangeAuth } from '../ExchangeAuth';
 
 export class PositionHistoryService {
-  private okxMapper = new OkxPositionMapper();
-  private bitgetMapper = new BitgetPositionMapper();
-  private bybitMapper = new BybitPositionMapper();
-
-  public async fetchExchangeHistory(key: any, start?: number, end?: number): Promise<UnifiedPosition[]> {
+  public async fetchExchangeHistory(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     try {
       console.log(`[PositionHistoryService] Fetching history for ${key.exchange} (${key.label})`);
       if (key.exchange === 'okx') {
@@ -20,18 +16,18 @@ export class PositionHistoryService {
         ));
         const allRaw = results.flat();
         console.log(`[PositionHistoryService] OKX raw records: ${allRaw.length}`);
-        return this.okxMapper.mapHistory(allRaw, key.id, key.label);
+        return OkxHistoryAdapter.parse(allRaw, key.id, key.label);
 
       } else if (key.exchange === 'bitget') {
         const raw = await this.fetchBitgetPaginated(key, start, end);
         console.log(`[PositionHistoryService] Bitget raw records: ${raw.length}`);
-        return this.bitgetMapper.mapHistory(raw, key.id, key.label);
+        return BitgetHistoryAdapter.parse(raw, key.id, key.label);
 
       } else if (key.exchange === 'bybit') {
         await ExchangeAuth.syncBybitTime();
         const raw = await this.fetchBybitPaginated(key, start, end);
         console.log(`[PositionHistoryService] Bybit raw records: ${raw.length}`);
-        return this.bybitMapper.mapHistory(raw, key.id, key.label);
+        return BybitHistoryAdapter.parse(raw, key.id, key.label);
       }
     } catch (error) {
       console.error(`Error fetching history for ${key.exchange} (${key.label}):`, error);

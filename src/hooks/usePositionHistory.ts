@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import mockHistoryData from '../mock/history.json';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { UnifiedPosition } from '../types/positions';
+import { UnifiedHistoryPosition } from '../types';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { useSettingsStore } from '../store/settingsStore';
 
 export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', customStart: string, customEnd: string, triggerSearch: boolean) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
-  const [positions, setPositions] = useState<UnifiedPosition[]>([]);
+  const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
     const fetchHistory = async () => {
       if (useMockData) {
         const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeTime - a.closeTime);
-        setPositions(sortedHistory as UnifiedPosition[]);
+        setPositions(sortedHistory as UnifiedHistoryPosition[]);
         return;
       }
 
@@ -45,7 +45,7 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
       }
 
       const service = new PositionHistoryService();
-      let allHistory: UnifiedPosition[] = [];
+      let allHistory: UnifiedHistoryPosition[] = [];
 
       // Parallell connection requests for speed
       const promises = keys.map(k => service.fetchExchangeHistory(k, start, end));
