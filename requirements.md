@@ -58,4 +58,4 @@ Foi implementado um serviço de reatividade para o histórico de posições que 
 - *Paginação*: Suporta `after` e `before` via Unix timestamp em ms, e cursores se necessário para limites de até 100 itens.
 - *Mapeamento*: O PnL pode precisar ser normalizado junto de size.
 
-Esses mappers são gerenciados via um Strategy Pattern no código, orquestrado pelo motor de fetch.
+Esses mappers e parsers são implementados no diretório `src/services/adapters/` utilizando classes estáticas isoladas por exchange, garantindo responsabilidade única e conversão para interfaces estritas (ex: `UnifiedHistoryPosition`, `UnifiedPosition`).
