@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { formatValue } from '../types';
+import { formatValue } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
 import { Search, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';

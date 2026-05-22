@@ -4,12 +4,7 @@ import { EXCHANGE_COLORS } from './MacroCapitalChart';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { MoreHorizontal } from 'lucide-react';
-
-const formatCompactUSD = (val: number, decimals = 2) => {
-  if (val >= 1000000) return `$${(val / 1000000).toFixed(decimals)}M`;
-  if (val >= 1000) return `$${(val / 1000).toFixed(decimals)}k`;
-  return `$${val.toFixed(2)}`;
-};
+import { formatCompactUSD } from '../../utils/formatters';
 
 const CustomBarShape = (props: any) => {
   const { fill, x, y, width, height, payload, dataKey, fillOpacity, value } = props;
@@ -49,7 +44,7 @@ const CustomBarShape = (props: any) => {
           <div className="flex flex-col items-center justify-center w-full h-full pointer-events-none px-1 overflow-hidden" xmlns="http://www.w3.org/1999/xhtml">
             <div className="flex items-center gap-1.5 opacity-100 overflow-hidden bg-transparent">
                {meta.name !== 'Outros' && width >= 55 && (
-                 <div className="w-[18px] h-[18px] flex-shrink-0" style={{ filter: isLightBackground ? 'none' : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
+                 <div className="pb-6 w-[18px] h-[18px] flex-shrink-0" style={{ filter: isLightBackground ? 'none' : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
                    <CoinIcon symbol={meta.name} />
                  </div>
                )}
@@ -60,7 +55,7 @@ const CustomBarShape = (props: any) => {
                )}
             </div>
             <span 
-              className="font-bold text-[13px] whitespace-nowrap mt-1.5"
+              className="font-bold text-[13px] whitespace-nowrap mt-2.5"
               style={{ color: textColor, textShadow, opacity: isLightBackground ? 0.95 : 0.9 }}
             >
                {meta.percent.toFixed(0)}%

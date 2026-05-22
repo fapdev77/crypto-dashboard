@@ -80,15 +80,15 @@ export function ApiTester() {
       let headers: Record<string, string> = {};
       
       if (activeKey.exchange === 'okx') {
-         headers = ExchangeAuth.getOkxHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
+         headers = await ExchangeAuth.getOkxHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
       } else if (activeKey.exchange === 'bitget') {
-         headers = ExchangeAuth.getBitgetHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
+         headers = await ExchangeAuth.getBitgetHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
       } else if (activeKey.exchange === 'bybit') {
          // Bybit auth usually takes the payload string or query string.
          // If GET, query is everything after `?`.
          const queryStr = restPath.includes('?') ? restPath.split('?')[1] : '';
          const authPayload = restMethod === 'POST' ? restBody : queryStr;
-         headers = ExchangeAuth.getBybitHeaders(activeKey.apiKey, activeKey.apiSecret, authPayload);
+         headers = await ExchangeAuth.getBybitHeaders(activeKey.apiKey, activeKey.apiSecret, authPayload) as Record<string, string>;
       }
       
       const payloadObj = restMethod === 'POST' && restBody ? JSON.parse(restBody) : undefined;

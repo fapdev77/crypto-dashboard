@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { formatValue } from '../types';
+import { formatValue } from '../utils/formatters';
 
 export function PositionsTicker() {
   const { positions } = useDashboardStore();

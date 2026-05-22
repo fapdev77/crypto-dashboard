@@ -11,11 +11,7 @@ interface MacroCapitalChartProps {
   data: Array<{ name: string; value: number }>;
 }
 
-const formatCompactUSD = (val: number, decimals = 1) => {
-  if (val >= 1000000) return `$${(val / 1000000).toFixed(decimals)}M`;
-  if (val >= 1000) return `$${(val / 1000).toFixed(decimals)}k`;
-  return `$${val.toFixed(0)}`;
-};
+import { formatCompactUSD } from '../../utils/formatters';
 
 const renderCustomizedLabel = (props: any) => {
   const { cx, cy, x, y, midAngle, innerRadius, outerRadius, name, value, percent } = props;

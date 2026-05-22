@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { UnifiedPosition, formatValue } from '../types';
+import { UnifiedPosition } from '../types';
+import { formatValue } from '../utils/formatters';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 

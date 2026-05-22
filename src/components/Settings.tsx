@@ -58,8 +58,6 @@ export function Settings() {
           />
           <div className="flex justify-between text-xs text-[#8E9299] font-mono">
             <span>1s</span>
-            <span>5s</span>
-            <span>10s</span>
             <span>15s</span>
           </div>
         </div>

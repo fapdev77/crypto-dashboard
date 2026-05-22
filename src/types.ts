@@ -44,8 +44,3 @@ export interface UnifiedHistoryPosition {
   size?: number;
   raw?: any;
 }
-
-export function formatValue(val: number | undefined | null, decimals: number = 2): string {
-  if (val === undefined || val === null || isNaN(val)) return '--';
-  return val.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-}
