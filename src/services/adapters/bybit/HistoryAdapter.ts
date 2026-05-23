@@ -8,8 +8,11 @@ const MAX_DEEP_PAGES = 50;
 export class BybitHistoryAdapter implements IExchangeAdapter {
   
   static bybitTimeOffset = 0;
+  static lastSyncTime = 0;
 
   static async syncBybitTime() {
+    // Evitar consultar repetidamente (cache de 5 minutos)
+    if (Date.now() - this.lastSyncTime < 300000) return;
     try {
       const targetUrl = 'https://api.bybit.com/v5/market/time';
       let data;
@@ -30,10 +33,12 @@ export class BybitHistoryAdapter implements IExchangeAdapter {
       if (data && data.retCode === 0 && data.result?.timeSecond) {
         const serverTime = parseInt(data.result.timeSecond, 10) * 1000;
         this.bybitTimeOffset = serverTime - Date.now();
+        this.lastSyncTime = Date.now();
         console.log(`[Time-Sync] Bybit sincronizada via V5. Offset: ${this.bybitTimeOffset}ms`);
       } else if (data && data.time) {
         const serverTime = parseInt(data.time, 10);
         this.bybitTimeOffset = serverTime - Date.now();
+        this.lastSyncTime = Date.now();
         console.log(`[Time-Sync] Bybit sincronizada. Offset: ${this.bybitTimeOffset}ms`);
       }
     } catch (e) {
@@ -47,8 +52,9 @@ export class BybitHistoryAdapter implements IExchangeAdapter {
     apiSecret: string,
     bodyOrQuery: string = ''
   ): Promise<Record<string, string>> {
+    await this.syncBybitTime();
     const timestamp = (Date.now() + this.bybitTimeOffset).toString();
-    const recvWindow = '5000';
+    const recvWindow = '20000';
     const prehash = timestamp + apiKey + recvWindow + bodyOrQuery;
     const signature = await hmacSha256(prehash, apiSecret, 'hex');
 
@@ -62,6 +68,7 @@ export class BybitHistoryAdapter implements IExchangeAdapter {
   
   // WS Auth exposed for ApiTester
   static async getWsAuth(apiKey: string, apiSecret: string) {
+    await this.syncBybitTime();
     const expires = Date.now() + this.bybitTimeOffset + 10000;
     const prehash = 'GET/realtime' + expires;
     const signature = await hmacSha256(prehash, apiSecret, 'hex');
