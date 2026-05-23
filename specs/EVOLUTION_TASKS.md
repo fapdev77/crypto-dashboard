@@ -30,3 +30,19 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 
 **9. UI Analytics: Macro Capital & Cross-Exchange Treemap** [✓]
 *   **Ação Aplicada:** Instalou-se a biblioteca de gráficos `recharts`. Adicionou-se ao `Dashboard.tsx` dois novos visuais (Ideias #1 e #2 do plano de Evolução Analítica): um Gráfico de Rosca (Donut) demonstrando Risco por Exchange (Distribuição Macro), e um Treemap mapeando visualmente a diversidade total de ativos cruzando as 3 contas simultaneamente. Customização forte com cores da identidade visual do app.
+
+---
+
+## Sprint Atual: Arquitetura Avançada e Inteligência de Relatórios [CONCLUÍDO]
+
+**1. Desacoplamento da Camada de Normalização (SRP & Strategy Pattern)** [✓]
+*   **Ação Aplicada:** Extinção radical dos arquivos *God Objects* (`RestClient.ts` e `ExchangeAuth.ts`). Toda a lógica de fetch REST e WSS (autenticação e assinatura de headers) foi modularizada em diretórios isolados (`src/services/adapters/[exchange]`), forçando a injeção em fábricas como `PositionHistoryService`. O sistema atinge compliance total com o item 1 da Constituição (`AGENTS.md`).
+
+**2. Relatórios de Performance (Reports Dashboard)** [✓]
+*   **Ação Aplicada:** Implementação de visualizações tabulares ricas de histórico de trades utilizando *Incremental Fetch* (memória cache) e permitindo exportações nativas diretas para PDF (via `jspdf` e `jspdf-autotable`), Excel (`xlsx`) e CSV puro. Funciona nativamente cross-exchange e possui paginação robusta de baixo nível nos *Adapters*.
+
+**3. Dashboard Analítico de Estratégia (Analytics Dashboard)** [✓]
+*   **Ação Aplicada:** Lançamento de métricas avançadas matemáticas (`Big.js` nativo na mente) calculando Win Rate, Profit Factor, Extração de PnL Diário e Custos Totais (Trading Fees e Net Funding Fees). A interface dispõe de gráficos da biblioteca `recharts` apresentando *Seasonality* (lucratividade por dia da semana e horários da janela operacional).
+
+**4. External Flow Control e Live Bills API** [✓]
+*   **Ação Aplicada:** Implementação do conceito de PnL Operacional Puro. O aplicativo efetua conexões diretas nas APIs da Bybit (`query-record`), OKX (`deposit-history`/`withdrawal-history`) e Bitget (`deposit-records`) através de um robusto orquestrador `BillsHistoryService` acoplado ao hook `useBillsHistory`. O sistema deduz matematicamente as interações do usuário (Depósitos/Saques) da rentabilidade total orgânica. Adicionado suporte dinâmico para *Mock Data* no Switch.
