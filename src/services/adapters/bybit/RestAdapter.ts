@@ -44,50 +44,39 @@ export class BybitRestAdapter {
   }
 
   static async fetchWallet(apiKey: string, apiSecret: string) {
-    const accountTypes = ['UNIFIED', 'CONTRACT', 'SPOT'];
-    const results = await Promise.allSettled(
-      accountTypes.map(async (accType) => {
-        const query = `accountType=${accType}`;
-        const targetUrl = `https://api.bybit.com/v5/account/wallet-balance?${query}`;
-        const headers = await BybitHistoryAdapter.getHeaders(apiKey, apiSecret, query);
-        const response = await hybridFetch(targetUrl, 'GET', headers);
-        if (response.retCode !== 0) {
-          throw new Error(`[${accType}] ${response.retMsg}`);
-        }
-        return response.result?.list || [];
-      })
-    );
+    const method = 'GET';
+    const query = 'accountType=UNIFIED';
+    const requestPath = `/v5/account/wallet-balance?${query}`;
+    const targetUrl = `https://api.bybit.com${requestPath}`;
 
-    const mergedList: any[] = [];
-    results.forEach((result) => {
-      if (result.status === 'fulfilled') {
-        mergedList.push(...result.value);
-      } else {
-        console.warn(`[REST-Bybit-Wallet] Falha ao buscar lista:`, result.reason?.message);
+    const headers = await BybitHistoryAdapter.getHeaders(apiKey, apiSecret, query);
+    
+    try {
+      const response = await hybridFetch(targetUrl, method, headers);
+      if (response.retCode !== 0) {
+        throw new Error(`Bybit API Proxy Error (${response.retCode}): ${response.retMsg}`);
       }
-    });
-
-    return mergedList;
+      return response.result?.list?.[0] || null;
+    } catch (err) {
+       console.error('[REST-Bybit-Wallet] Fetch falhou com erro:', err);
+       throw err;
+    }
   }
 
-  static parseBalances(walletDataList: any[], id: string, exchange: string, label: string): BalanceItem[] {
+  static parseBalances(walletData: any, id: string, exchange: string, label: string): BalanceItem[] {
     const balances: BalanceItem[] = [];
-    if (walletDataList && Array.isArray(walletDataList)) {
-      walletDataList.forEach((walletData: any) => {
-        if (walletData.coin) {
-          walletData.coin.forEach((item: any) => {
-            const accountType = walletData.accountType || 'UNIFIED';
-            balances.push({
-              id: `${id}-${accountType}-${item.coin}`,
-              connectionId: id,
-              exchange,
-              label: `${label} (${accountType})`,
-              ccy: item.coin,
-              amount: parseFloat(item.walletBalance || item.equity),
-              usdValue: parseFloat(item.usdValue)
-            });
-          });
-        }
+    if (walletData && walletData.coin) {
+      walletData.coin.forEach((item: any) => {
+        const accountType = walletData.accountType || 'UNIFIED';
+        balances.push({
+          id: `${id}-${accountType}-${item.coin}`,
+          connectionId: id,
+          exchange,
+          label: `${label} (${accountType})`,
+          ccy: item.coin,
+          amount: parseFloat(item.walletBalance || item.equity),
+          usdValue: parseFloat(item.usdValue)
+        });
       });
     }
     return balances;
