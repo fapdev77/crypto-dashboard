@@ -22,6 +22,8 @@ To prevent "Context Rot" and "Utils Bloat", follow this strict partitioning [1, 
 ## 4. Normalization Layer Contract (✅ FASE 1: CONCLUÍDA)
 All exchange-specific data must pass through an adapter (`src/services/adapters/`) before reaching the UI components. No raw API responses allowed in React components. UI Components expect strict interfaces like `UnifiedPosition` or `BalanceItem` [14].
 
+> **Exceção (Tech Debt Permitido):** O componente `ApiTester` atua estritamente como ferramenta interna (Dev Tools) para testes de conectividade e validação bruta, sendo temporariamente isento da obrigatoriedade da camada de normalização de UI.
+
 ## 5. Resiliência e Desempenho (🚧 FASE 2: PLANEJADA)
 Para gerenciar o alto fluxo de dados do WebSocket de Trading, aderimos aos seguintes mandamentos de estabilidade:
 - **State Offloading (Zustand Otimizado)**: Evitar renders em cascata não assinando toda a global store de uma vez em componentes React pesados; isolamento de sub-stores e `selectors`. Componentes devem reagir a deltas restritos.
