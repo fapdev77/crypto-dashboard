@@ -10,7 +10,7 @@ A arquitetura resolve o problema tradicional de CORS e as restrições arquitetu
 
 1. **WebSockets (Real-time):** A conexão é feita de forma nativa e direta pelo navegador às corretoras para obter atualizações em alta frequência. A autenticação do WebSocket é efetuada no client-side via Web Crypto API nativa. O dashboard possui engine de auto reconexão e gerencia os "Heartbeats" (Ping/Pong) de cada Exchange para manter as conexões de streaming vivas.
 2. **REST API via Local Proxy:** Como navegadores encaram o bloqueio rigoroso do CORS (Cross-Origin Resource Sharing) ao fazer GET/POST para endpoints da API V5/V2 das corretoras, empregamos um Proxy local reverso e seguro construído com Node.js e Express (`server.ts`). O Frontend cuida de toda a criptografia na ponta do usuário, assinando as requisições gerando os cabeçalhos (`headers`) necessários. O Proxy então atua de forma inerte e "burra", apenas recebendo os cabeçalhos já verificados e as URLs destino, repassando o payload real sem adulterar assinaturas ou armazenar logs. 
-3. **Camada de Normalização (Adapters):** Todos os dados recebidos via REST e WebSocket não são repassados isoladamente à UI. Eles encontram primeiramente um conjunto modular de adaptadores `src/services/adapters/[exchange]`, processando "Raw API Responses" oriundas da OKX, Bitget e Bybit, normalizando os payloads dinâmicos sob uma interface unificada estrita (ex. `UnifiedPosition`, `UnifiedHistoryPosition`, `BalanceItem`). Isso garante Single Responsibility (SRP) e impede corrupção de Contexto por parte dos componentes React.
+3. **Camada de Normalização (Adapters):** Todos os dados recebidos via REST e WebSocket não são repassados isoladamente à UI. Eles encontram primeiramente um conjunto modular de adaptadores `src/services/adapters/[exchange]`, processando "Raw API Responses" oriundas da OKX, Bitget e Bybit. Isso obedece rigorosamente ao **Single Responsibility Principle (SRP)** e ao padrão **Strategy**, delegando a geração de headers e normalização para os próprios adapters, extinguindo arquivos "God Object" de requisição.
 
    *Observação:* Para casos específicos como **Bybit**, onde o WebSocket usualmente retorna apenas deltas e atualizações, implementamos uma carga síncrona prévia via REST (também utilizando o Proxy) para a população imediata e coerente dos estoques e posições.
 
@@ -65,7 +65,13 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 - ✅ **Gestão Avançada de Posições:** 
   - **Posições Abertas:** Monitoramento em tempo real com informações detalhadas como PnL Não Realizado, ROE, Margem, Preço de Liquidação. Inclui suporte para modos de visualização alternativos (**Detailed** e **Lite**) para adaptar a densidade da interface segundo a preferência do usuário.
   - **Posições Encerradas (Histórico):** Aba especializada para o histórico de trades via REST APIs para cada corretora (suportando bitget, bybit e okx). Inclui funcionalidade sofisticada de filtragem por alcance de tempo (1 Dia, 1 Semana, 1 Mês, 3 Meses e Datas Customizadas) validando e normalizando retornos e fusos para uma amostragem única de lucros consolidados.
-- ✅ **Modo de Desenvolvimento e Testes (Mock Data):** Por meio do novo menu de `Settings`, desenvolvedores ou usuários testando o produto podem ativar de forma nativa a o preenchimento da UI com Dados Simulados (Mockados). O ativar da opção encerra programaticamente qualquer streaming real e insere PNL, saldos, e tabelas de histórico fictícias para debug de componentes de UI. Ao desabilitar, a recuperação do Real-Time é feita instantaneamente.
+- ✅ **Reports Dashboard:** Exportação consolidada de histórico em PDF, CSV e Excel com formatação rigorosa e cache incremental em memória.
+- ✅ **Analytics Dashboard:** Extração de inteligência dos trades passados contendo:
+  - **Métricas Avançadas:** *Win Rate*, *Profit Factor*, Taxas brutas e líquidas pagas.
+  - **Seasonality (Sazonalidade):** Desempenho mapeado por dia da semana e horários da janela operacional (4 horas).
+  - **External Flow:** Leitura nativa de *Bills* (Depósitos e Saques) para isolar o crescimento patrimonial *puramente operacional*.
+  - **Milestone Matrix:** Acompanhamento da flutuação patrimonial em relação aos "brackets" de preços atingidos pelo Bitcoin.
+- ✅ **Modo de Desenvolvimento e Testes (Mock Data):** Por meio do novo menu de `Settings`, desenvolvedores ou usuários testando o produto podem ativar de forma nativa a o preenchimento da UI com Dados Simulados (Mockados). O ativar da opção encerra programaticamente qualquer streaming real e insere PNL, saldos, bills (depósitos) e tabelas de histórico fictícias para debug de componentes de UI. Ao desabilitar, a recuperação do Real-Time é feita instantaneamente.
 - ✅ **Refinamentos na Tabela de Balances:** Visualização por colunas incluindo Asset (Moedas), Labels e Accounts e suas designações para a respectiva infraestrutura, Exigência para saldos base em unificados e quantias decimais flexíveis. Além disso, as colunas contam com sorting interativo e barra multi-buscas (Filtros locais via Regex).
 - ✅ **Layout Dashboard Masonry:** O painel de saldos foi refinado para utilizar um formato responsivo em *Masonry Layout* utilizando CSS Native Columns (1, 2, ou até 3 colunas baseadas na largura da tela), garantindo que a expansão de saldos não afete negativamente as corretoras adjacentes.
 - ✅ **Sidebar Inteligente e Sparklines Estilizados:** A barra de menus (Sidebar) foi atualizada para permitir o recurso "Collapsible", oferecendo uma área expansível ou oculta que prioriza o espaço utilitário da tela. Sparklines de PnL Diário foram introduzidos nativamente na lista de subcontas nos modais das corretoras.
@@ -76,9 +82,9 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 
 ### Manutenção - Adicionando Nova Corretora
 Caso deseja escalonar o dashboard: 
-1. Adicione a assinatura no utilitário de segurança: `src/services/ExchangeAuth.ts`.
+1. Crie os arquivos `RestAdapter`, `HistoryAdapter` e `WsAdapter` na pasta `src/services/adapters/[nova_corretora]`.
 2. Inclua o nome referenciado no Union type `Exchange` de lib `store/apiKeysStore.ts` e propague sua tipagem via React Forms da modal de Configurações `components/ApiConfigModal.tsx`.
-3. Direcione a lógica central de Websockets da nova plataforma ou Endpoints históricos REST nos hooks (`useMultiExchangeWS.ts` & `RestClient.ts`).
+3. Direcione a lógica central de Websockets da nova plataforma nos hooks (`useMultiExchangeWS.ts`) e instancie-a nas fábricas `PositionHistoryService` e `BillsHistoryService`.
 
 ## 📚 Documentação para Desenvolvedores e Engenharia de IA
 Este projeto adota o modelo **Spec-Driven Development (SDD)** e está preparado para recriação ou refatoração por IAs Generativas (ex: Antigravity, Claude, ChatGPT). 
