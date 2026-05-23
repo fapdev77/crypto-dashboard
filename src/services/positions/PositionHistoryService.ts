@@ -2,88 +2,88 @@ import { UnifiedHistoryPosition } from '../../types';
 import { OkxHistoryAdapter } from '../adapters/okx/HistoryAdapter';
 import { BitgetHistoryAdapter } from '../adapters/bitget/HistoryAdapter';
 import { BybitHistoryAdapter } from '../adapters/bybit/HistoryAdapter';
-import { RestClient } from '../RestClient';
-import { ExchangeAuth } from '../ExchangeAuth';
+import { IExchangeAdapter } from '../adapters/IExchangeAdapter';
+import {
+  getCachedHistory,
+  saveCachedHistory,
+  getLastFetchTimestamp,
+  updateCacheMeta,
+} from '../historyCache';
 
 export class PositionHistoryService {
+  
+  private getAdapter(exchange: string): IExchangeAdapter {
+    switch (exchange) {
+      case 'okx':
+        return new OkxHistoryAdapter();
+      case 'bitget':
+        return new BitgetHistoryAdapter();
+      case 'bybit':
+        return new BybitHistoryAdapter();
+      default:
+        throw new Error(`[PositionHistoryService] No adapter found for exchange: ${exchange}`);
+    }
+  }
+
+  /**
+   * Standard fetch: hits the exchange API directly for the requested period.
+   */
   public async fetchExchangeHistory(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     try {
       console.log(`[PositionHistoryService] Fetching history for ${key.exchange} (${key.label})`);
-      if (key.exchange === 'okx') {
-        const instTypes = ['SWAP', 'FUTURES', 'MARGIN'];
-        const results = await Promise.all(instTypes.map(type => 
-           RestClient.getHistoryOkx(type, key.apiKey, key.apiSecret, key.passphrase || '', start, end)
-        ));
-        const allRaw = results.flat();
-        console.log(`[PositionHistoryService] OKX raw records: ${allRaw.length}`);
-        return OkxHistoryAdapter.parse(allRaw, key.id, key.label);
-
-      } else if (key.exchange === 'bitget') {
-        const raw = await this.fetchBitgetPaginated(key, start, end);
-        console.log(`[PositionHistoryService] Bitget raw records: ${raw.length}`);
-        return BitgetHistoryAdapter.parse(raw, key.id, key.label);
-
-      } else if (key.exchange === 'bybit') {
-        await ExchangeAuth.syncBybitTime();
-        const raw = await this.fetchBybitPaginated(key, start, end);
-        console.log(`[PositionHistoryService] Bybit raw records: ${raw.length}`);
-        return BybitHistoryAdapter.parse(raw, key.id, key.label);
-      }
+      const adapter = this.getAdapter(key.exchange);
+      return await adapter.fetchAndNormalize(key, start, end);
     } catch (error) {
       console.error(`Error fetching history for ${key.exchange} (${key.label}):`, error);
     }
     return [];
   }
 
-  private async fetchBitgetPaginated(key: any, start?: number, end?: number): Promise<any[]> {
-    const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
-    
-    const fetchAllForType = async (pType: string) => {
-      let list: any[] = [];
-      let nextId: string | undefined = undefined;
-      let pages = 0;
-      try {
-        do {
-          const res = await RestClient.getHistoryBitget(pType, key.apiKey, key.apiSecret, key.passphrase || '', start, end, nextId);
-          if (res.list && res.list.length > 0) {
-            list = [...list, ...res.list];
-          }
-          nextId = res.nextId;
-          pages++;
-        } while (nextId && pages < 10);
-      } catch (err) {
-        console.warn(`Failed to fetch all Bitget history for ${pType}:`, err);
-      }
-      return list;
-    };
+  /**
+   * Incremental fetch with IndexedDB caching.
+   * 1. Loads cached history immediately.
+   * 2. Determines the latest cached timestamp.
+   * 3. Fetches only NEW records from the exchange (start = lastCachedTime + 1).
+   * 4. Merges and persists the new data into IndexedDB.
+   */
+  public async fetchWithCache(key: any): Promise<UnifiedHistoryPosition[]> {
+    const connectionId = key.id;
 
-    const results = await Promise.all(productTypes.map(pType => fetchAllForType(pType)));
-    return results.flat();
-  }
+    // Step 1: Load existing cache
+    const cachedPositions = await getCachedHistory(connectionId);
+    console.log(`[HistoryCache] ${connectionId}: ${cachedPositions.length} records in cache`);
 
-  private async fetchBybitPaginated(key: any, start?: number, end?: number): Promise<any[]> {
-    const categories = ['linear', 'inverse'];
+    // Step 2: Determine incremental start
+    const lastTimestamp = await getLastFetchTimestamp(connectionId);
+    const incrementalStart = lastTimestamp > 0 ? lastTimestamp + 1 : undefined;
+    const now = Date.now();
 
-    const fetchAllForCategory = async (category: string) => {
-      let list: any[] = [];
-      let nextCursor: string | undefined = undefined;
-      let pages = 0;
-      try {
-        do {
-          const res = await RestClient.fetchBybitCategory(category, key.apiKey, key.apiSecret, start, end, nextCursor);
-          if (res.list && res.list.length > 0) {
-            list = [...list, ...res.list];
-          }
-          nextCursor = res.nextCursor;
-          pages++;
-        } while (nextCursor && nextCursor !== "" && pages < 10);
-      } catch (err) {
-        console.warn(`Failed to fetch all Bybit history for ${category}:`, err);
-      }
-      return list;
-    };
+    // Step 3: Fetch only new records
+    let newPositions: UnifiedHistoryPosition[] = [];
+    try {
+      newPositions = await this.fetchExchangeHistory(key, incrementalStart, now);
+      console.log(`[HistoryCache] ${connectionId}: ${newPositions.length} new records fetched`);
+    } catch (err) {
+      console.warn(`[HistoryCache] Incremental fetch failed for ${connectionId}, returning stale cache`, err);
+      return cachedPositions; // Graceful fallback to stale data (AGENTS.md §5)
+    }
 
-    const results = await Promise.all(categories.map(cat => fetchAllForCategory(cat)));
-    return results.flat();
+    // Step 4: Persist new records and update metadata
+    if (newPositions.length > 0) {
+      await saveCachedHistory(newPositions);
+
+      const latestCloseTime = Math.max(...newPositions.map(r => r.closeTime));
+      await updateCacheMeta(connectionId, latestCloseTime);
+    }
+
+    // Step 5: Merge and deduplicate (by id)
+    const mergedMap = new Map<string, UnifiedHistoryPosition>();
+    for (const pos of cachedPositions) mergedMap.set(pos.id, pos);
+    for (const pos of newPositions) mergedMap.set(pos.id, pos); // new overrides old
+
+    const merged = Array.from(mergedMap.values());
+    merged.sort((a, b) => b.closeTime - a.closeTime);
+
+    return merged;
   }
 }

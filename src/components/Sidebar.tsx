@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight} from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 
@@ -33,6 +33,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'positions', label: 'Positions', icon: Activity, badge: openCount },
+    { id: 'analytics', label: 'Analytics', icon: BarChart2 },
+    { id: 'reports', label: 'Reports', icon: FileText },
   ];
 
   return (

@@ -120,6 +120,8 @@ function generate() {
           entryPrice,
           closePrice,
           size,
+          fundingFee: randomNum(-10, 10),
+          tradingFee: randomNum(-5, 0),
           raw: {
             mockData: true,
             leverage: randomInt(1, 100),
@@ -130,11 +132,47 @@ function generate() {
     }
   });
 
+  // Generate Bills (Deposits / Withdrawals)
+  const bills = [];
+  let billIdCounter = 1;
+  const billTypes = ['deposit', 'withdrawal'];
+  const billCurrencies = ['USDT', 'USDC', 'BTC', 'ETH'];
+  
+  exchanges.forEach(exchange => {
+    for (let i = 1; i <= ACCOUNTS_PER_EXCHANGE; i++) {
+      const connectionId = `mocked-data-${exchange}-${i}`;
+      const label = `Mock ${exchange.toUpperCase()} ${i}`;
+      const numBills = randomInt(3, 8);
+      
+      for (let j = 0; j < numBills; j++) {
+        const type = randomItem(billTypes);
+        const ccy = randomItem(billCurrencies);
+        const amount = type === 'deposit' 
+          ? (ccy.includes('USD') ? randomNum(500, 25000) : randomNum(0.05, 5))
+          : (ccy.includes('USD') ? -randomNum(100, 10000) : -randomNum(0.01, 2));
+        const timestamp = Date.now() - randomNum(0, 90 * 24 * 60 * 60 * 1000); // last 90 days
+        
+        bills.push({
+          id: `bill-${billIdCounter++}`,
+          connectionId,
+          exchange,
+          label,
+          type,
+          amount,
+          ccy,
+          timestamp,
+          raw: { mockData: true }
+        });
+      }
+    }
+  });
+
   const outDir = path.join(process.cwd(), 'src', 'mock');
   fs.writeFileSync(path.join(outDir, 'accounts.json'), JSON.stringify(accounts, null, 2));
   fs.writeFileSync(path.join(outDir, 'balances.json'), JSON.stringify(balances, null, 2));
   fs.writeFileSync(path.join(outDir, 'positions.json'), JSON.stringify(positions, null, 2));
   fs.writeFileSync(path.join(outDir, 'history.json'), JSON.stringify(history, null, 2));
+  fs.writeFileSync(path.join(outDir, 'bills.json'), JSON.stringify(bills, null, 2));
 
   console.log('Mock files generated successfully.');
 }

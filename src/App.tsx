@@ -15,6 +15,8 @@ import { ApiTester } from './components/ApiTester';
 import { StatusBar } from './components/StatusBar';
 import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
+import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard';
+import { ReportsDashboard } from './components/analytics/ReportsDashboard';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -79,6 +81,8 @@ export default function App() {
             <div className="flex-1 overflow-auto hide-scrollbar">
               {activeTab === 'dashboard' && <Dashboard />}
               {activeTab === 'positions' && <Positions />}
+              {activeTab === 'analytics' && <AnalyticsDashboard />}
+              {activeTab === 'reports' && <ReportsDashboard />}
               {activeTab === 'api-keys' && <ApiKeys />}
               {activeTab === 'settings' && <Settings />}
               {activeTab === 'api-tester' && <ApiTester />}

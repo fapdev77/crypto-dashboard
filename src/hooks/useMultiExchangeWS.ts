@@ -4,13 +4,14 @@ import { Exchange, useApiKeysStore, ApiCredentials } from '../store/apiKeysStore
 import { useDashboardStore, BalanceItem } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { UnifiedPosition } from '../types';
-import { ExchangeAuth } from '../services/ExchangeAuth';
-import { RestClient } from '../services/RestClient';
 import mockAccountsData from '../mock/accounts.json';
 import mockBalancesData from '../mock/balances.json';
 import mockPositionsData from '../mock/positions.json';
 import { WsParsers } from '../services/ws/WsParsers';
 import { BybitRestAdapter } from '../services/adapters/bybit/RestAdapter';
+import { BybitHistoryAdapter } from '../services/adapters/bybit/HistoryAdapter';
+import { OkxHistoryAdapter } from '../services/adapters/okx/HistoryAdapter';
+import { BitgetHistoryAdapter } from '../services/adapters/bitget/HistoryAdapter';
 
 const getBitgetUrl = () => {
   if (typeof window !== 'undefined') {
@@ -143,8 +144,8 @@ export function useMultiExchangeWS() {
     try {
       // console.log(`[REST-${id}] Buscando dados para Bybit via REST...`);
       const [walletData, positionsData] = await Promise.all([
-        RestClient.getWalletBybit(apiKey, apiSecret),
-        RestClient.getPositionsBybit(apiKey, apiSecret)
+        BybitRestAdapter.fetchWallet(apiKey, apiSecret),
+        BybitRestAdapter.fetchPositions(apiKey, apiSecret)
       ]);
       
       const currentState = useDashboardStore.getState();
@@ -201,7 +202,7 @@ export function useMultiExchangeWS() {
       (async () => {
         try {
           console.log(`[REST-${id}] Buscando dados iniciais para Bybit via REST e iniciando Short-Polling...`);
-          await ExchangeAuth.syncBybitTime();
+          await BybitHistoryAdapter.syncBybitTime();
           await syncBybitRestData(config);
           console.log(`[REST-${id}] Dados iniciais carregados para Bybit.`);
           startBybitPolling(config);
@@ -223,11 +224,11 @@ export function useMultiExchangeWS() {
       try {
         let authPayload;
         if (exchange === 'okx') {
-          authPayload = await ExchangeAuth.getOkxWsAuth(apiKey, apiSecret, passphrase || '');
+          authPayload = await OkxHistoryAdapter.getWsAuth(apiKey, apiSecret, passphrase || '');
         } else if (exchange === 'bitget') {
-          authPayload = await ExchangeAuth.getBitgetWsAuth(apiKey, apiSecret, passphrase || '');
+          authPayload = await BitgetHistoryAdapter.getWsAuth(apiKey, apiSecret, passphrase || '');
         } else if (exchange === 'bybit') {
-          authPayload = await ExchangeAuth.getBybitWsAuth(apiKey, apiSecret);
+          authPayload = await BybitHistoryAdapter.getWsAuth(apiKey, apiSecret);
         }
 
         if (authPayload) {

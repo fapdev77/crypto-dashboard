@@ -42,5 +42,22 @@ export interface UnifiedHistoryPosition {
   entryPrice?: number;
   closePrice?: number;
   size?: number;
+  fundingFee?: number;
+  tradingFee?: number;
   raw?: any;
 }
+
+export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
+
+export interface UnifiedBillRecord {
+  id: string;
+  connectionId: string;
+  exchange: ExchangeName;
+  label: string;
+  type: BillType;
+  amount: number;
+  ccy: string;
+  timestamp: number;
+  raw?: any;
+}
+
