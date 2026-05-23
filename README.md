@@ -77,7 +77,7 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 - ✅ **Sidebar Inteligente e Sparklines Estilizados:** A barra de menus (Sidebar) foi atualizada para permitir o recurso "Collapsible", oferecendo uma área expansível ou oculta que prioriza o espaço utilitário da tela. Sparklines de PnL Diário foram introduzidos nativamente na lista de subcontas nos modais das corretoras.
 - ✅ **Ticker de Mercado Dinâmico (Real-Time):** Adicionado ao cabeçalho global do sistema um mostrador deslizante (Marquee Carousel) interativo que espelha os ativos das posições em aberto, revelando a variação base e preço das moedas operadas em tempo real.
 - ✅ **Refinamentos na Interface (UI/UX):** Ocultamento inteligente de scrollbars verticais e personalização das barras horizontais implementando o estilo responsivo nativo Dark Mode (`index.css`), o que traz uma imersão muito mais elegante enquanto se monitora ativamente as tabelas do Dashboard.
-- ✅ **Carga REST híbrida introduzida para Bybit:** Websockets limitavam listagens estáticas ativas, a API resolve com fetchs silenciosos aos Endpoints unificados `v5/account/wallet-balance` e posições pre-cached.
+- ✅ **Carga REST híbrida introduzida para Bybit:** Websockets limitavam listagens estáticas ativas, a API resolve com fetchs silenciosos aos Endpoints unificados `v5/account/wallet-balance` (somente `UNIFIED` account type suportado e recomendado após a migração da corretora) e posições pre-cached.
 - ✅ **Ocultamento de PNL de Posições Nulas:** Só aparecem recursos em execução com size > 0 .
 
 ### Manutenção - Adicionando Nova Corretora
