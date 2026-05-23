@@ -142,25 +142,28 @@ export function useMultiExchangeWS() {
   const syncBybitRestData = async (config: ApiCredentials) => {
     const { id, exchange, apiKey, apiSecret } = config;
     try {
-      // console.log(`[REST-${id}] Buscando dados para Bybit via REST...`);
-      const [walletData, positionsData] = await Promise.all([
+      const results = await Promise.allSettled([
         BybitRestAdapter.fetchWallet(apiKey, apiSecret),
         BybitRestAdapter.fetchPositions(apiKey, apiSecret)
       ]);
       
       const currentState = useDashboardStore.getState();
 
-      if (walletData) {
-        const balances = BybitRestAdapter.parseBalances(walletData, id, exchange, config.label);
+      if (results[0].status === 'fulfilled' && results[0].value) {
+        const balances = BybitRestAdapter.parseBalances(results[0].value as any[], id, exchange, config.label);
         if (balances.length > 0) currentState.updateBalances(id, balances);
+      } else if (results[0].status === 'rejected') {
+        console.error(`[REST-${id}] Bybit Wallet fetch falhou:`, results[0].reason);
       }
 
-      if (positionsData) {
-        const positions = BybitRestAdapter.parsePositions(positionsData, id, config.label);
+      if (results[1].status === 'fulfilled' && results[1].value) {
+        const positions = BybitRestAdapter.parsePositions(results[1].value as any[], id, config.label);
         if (positions.length > 0) currentState.updatePositions(id, positions);
+      } else if (results[1].status === 'rejected') {
+        console.error(`[REST-${id}] Bybit Positions fetch falhou:`, results[1].reason);
       }
     } catch (err) {
-      console.error(`[REST-${id}] Bybit REST fetch falhou:`, err);
+      console.error(`[REST-${id}] Bybit REST fetch falhou completamente:`, err);
     }
   };
 
