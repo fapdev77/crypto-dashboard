@@ -112,6 +112,26 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
 
         // Approximations
         const sizeValUsd = pos.notionalUsd || (pos.size * pos.markPrice); 
+        const isUSDT = pos.symbol.includes('USDT');
+        const isUSDC = pos.symbol.includes('USDC');
+        let posCcy = 'USDT';
+        
+        if (pos.exchange === 'bitget') {
+          const pType = pos.raw?.productType;
+          if (pType === 'USDT-FUTURES' || pos.symbol.endsWith('USDT')) posCcy = 'USDT';
+          else if (pType === 'USDC-FUTURES' || pos.symbol.endsWith('USDC')) posCcy = 'USDC';
+          else posCcy = pos.symbol.replace(/USD.*/, '');
+        } else if (pos.exchange === 'bybit') {
+          if (pos.symbol.endsWith('USDT') || pos.symbol.includes('USDT-')) posCcy = 'USDT';
+          else if (pos.symbol.endsWith('USDC') || pos.symbol.includes('USDC-')) posCcy = 'USDC';
+          else posCcy = pos.symbol.replace(/USD.*/, '');
+        } else if (pos.exchange === 'okx') {
+          if (pos.symbol.includes('-USDT')) posCcy = 'USDT';
+          else if (pos.symbol.includes('-USDC')) posCcy = 'USDC';
+          else posCcy = pos.symbol.split('-')[0];
+        } else {
+          posCcy = isUSDT ? 'USDT' : (isUSDC ? 'USDC' : pos.symbol.replace(/USD.*/, ''));
+        }
 
         return (
           <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col p-4 gap-4">
@@ -153,8 +173,8 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Margin</span>
                 <span className="font-mono text-white">
-                  {formatValue(pos.margin, 2)} <span className="font-sans text-[10px] text-[#8E9299]">{pos.ccy || 'USDT'}</span>
-                  {pos.ccy && !pos.ccy.includes('USD') && pos.margin && pos.markPrice ? (
+                  {formatValue(pos.margin, 2)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
+                  {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
                     <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(pos.margin * pos.markPrice, 2)} USD</span>
                   ) : null}
                 </span>
@@ -162,8 +182,8 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Realized PnL</span>
                 <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                  {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-[10px]">{pos.ccy || 'USDT'}</span>
-                  {pos.ccy && !pos.ccy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
+                  {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-[10px]">{posCcy}</span>
+                  {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
                     <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(Math.abs(pos.realizedPnl) * pos.markPrice, 2)} USD</span>
                   ) : null}
                 </span>
@@ -179,8 +199,8 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Unrealized PnL</span>
                 <span className={`font-mono ${uplColor}`}>
-                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{pos.ccy || 'USDT'}</span>
-                  {pos.ccy && !pos.ccy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
+                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{posCcy}</span>
+                  {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
                     <span className="text-[#8E9299] text-[10px] ml-1">≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.unrealizedPnl) * pos.markPrice, 2)} USD</span>
                   ) : null}
                 </span>
@@ -263,6 +283,26 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                 const realizedPnlColor = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
                 
                 const sizeValUsd = pos.notionalUsd || (pos.size * pos.markPrice); 
+                const isUSDT = pos.symbol.includes('USDT');
+                const isUSDC = pos.symbol.includes('USDC');
+                let posCcy = 'USDT';
+                
+                if (pos.exchange === 'bitget') {
+                  const pType = pos.raw?.productType;
+                  if (pType === 'USDT-FUTURES' || pos.symbol.endsWith('USDT')) posCcy = 'USDT';
+                  else if (pType === 'USDC-FUTURES' || pos.symbol.endsWith('USDC')) posCcy = 'USDC';
+                  else posCcy = pos.symbol.replace(/USD.*/, '');
+                } else if (pos.exchange === 'bybit') {
+                  if (pos.symbol.endsWith('USDT') || pos.symbol.includes('USDT-')) posCcy = 'USDT';
+                  else if (pos.symbol.endsWith('USDC') || pos.symbol.includes('USDC-')) posCcy = 'USDC';
+                  else posCcy = pos.symbol.replace(/USD.*/, '');
+                } else if (pos.exchange === 'okx') {
+                  if (pos.symbol.includes('-USDT')) posCcy = 'USDT';
+                  else if (pos.symbol.includes('-USDC')) posCcy = 'USDC';
+                  else posCcy = pos.symbol.split('-')[0];
+                } else {
+                  posCcy = isUSDT ? 'USDT' : (isUSDC ? 'USDC' : pos.symbol.replace(/USD.*/, ''));
+                }
 
                 return (
                   <tr key={pos.id} className="hover:bg-[#2a2b30]/30 transition-colors">
@@ -301,9 +341,9 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-mono text-white text-sm flex items-center gap-1">
-                        {formatValue(pos.margin, 2)} <span className="font-sans text-xs text-[#8E9299]">{pos.ccy || 'USDT'}</span>
+                        {formatValue(pos.margin, 2)} <span className="font-sans text-xs text-[#8E9299]">{posCcy}</span>
                       </div>
-                      {pos.ccy && !pos.ccy.includes('USD') && pos.margin && pos.markPrice ? (
+                      {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
                         <div className="font-mono text-xs mt-1 text-[#8E9299]">
                           ≈ {formatValue(pos.margin * pos.markPrice, 2)} USD
                         </div>
@@ -311,9 +351,9 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                     </td>
                     <td className="px-4 py-3">
                       <div className={`font-mono text-sm flex items-center gap-1 ${uplColor}`}>
-                        {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="font-sans text-xs">{pos.ccy || 'USDT'} ({pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'})</span>
+                        {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="font-sans text-xs">{posCcy} ({pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'})</span>
                       </div>
-                      {pos.ccy && !pos.ccy.includes('USD') ? (
+                      {posCcy && !posCcy.includes('USD') ? (
                         <div className={`font-mono text-xs mt-1 ${uplColor}`}>
                           ≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.unrealizedPnl || 0) * pos.markPrice, 2)} USD
                         </div>
@@ -321,9 +361,9 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                     </td>
                     <td className="px-4 py-3">
                       <div className={`font-mono text-sm flex items-center gap-1 ${realizedPnlColor}`}>
-                        {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-xs">{pos.ccy || 'USDT'}</span>
+                        {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-xs">{posCcy}</span>
                       </div>
-                      {pos.ccy && !pos.ccy.includes('USD') ? (
+                      {posCcy && !posCcy.includes('USD') ? (
                         <div className={`font-mono text-xs mt-1 ${realizedPnlColor}`}>
                           ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.realizedPnl || 0) * pos.markPrice, 2)} USD
                         </div>

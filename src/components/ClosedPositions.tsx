@@ -54,7 +54,7 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
     filteredClosedPositions.forEach(p => {
       const isUSDT = p.symbol.includes('USDT');
       const isUSDC = p.symbol.includes('USDC');
-      const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD'));
+      const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : p.symbol.split('-')[0].replace(/USD.*/, '')));
       const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
       let pnlInUsd = p.realizedPnl;
       if (!isFiatCcy && p.closePrice) {
@@ -199,7 +199,7 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                 // Identify the quote currency for the PnL (e.g. USDT)
                 const isUSDT = p.symbol.includes('USDT');
                 const isUSDC = p.symbol.includes('USDC');
-                const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD'));
+                const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : p.symbol.split('-')[0].replace(/USD.*/, '')));
                 const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
                 
                 if (p.raw?.roi !== undefined && p.raw?.roi !== null) {
