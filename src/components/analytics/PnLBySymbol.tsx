@@ -1,16 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import Big from 'big.js';
 import { usePnLBySymbol } from '../../hooks/usePnLBySymbol';
-import { Download, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { Download, ArrowUpDown, ChevronDown, Search } from 'lucide-react';
 import { SymbolPnLRecord } from '../../types';
+import { ExchangeIcon } from '../ui/ExchangeIcon';
+import { CoinIcon } from '../ui/CoinIcon';
 
-type SortField = 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
+type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
 
 export function PnLBySymbol() {
   const [period, setPeriod] = useState<'today' | '1w' | '2w' | '1m' | '3m' | 'all'>('1m');
   const [exchange, setExchange] = useState<string>('All');
   const [instrument, setInstrument] = useState<string>('All');
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [sortField, setSortField] = useState<SortField>('totalPnL');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -47,10 +50,19 @@ export function PnLBySymbol() {
   }, [pnlData]);
 
   const sortedData = useMemo(() => {
-    const sorted = [...pnlData];
-    sorted.sort((a, b) => {
+    let filtered = [...pnlData];
+    
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(p => p.symbol.toLowerCase().includes(term) || p.exchange.toLowerCase().includes(term));
+    }
+
+    filtered.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
+        case 'exchange':
+          cmp = a.exchange.localeCompare(b.exchange);
+          break;
         case 'symbol':
           cmp = a.symbol.localeCompare(b.symbol);
           break;
@@ -69,8 +81,8 @@ export function PnLBySymbol() {
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
-    return sorted;
-  }, [pnlData, sortField, sortDir]);
+    return filtered;
+  }, [pnlData, sortField, sortDir, searchTerm]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -110,6 +122,16 @@ export function PnLBySymbol() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 pb-2">
         <h2 className="text-xl font-bold tracking-tight">PnL by symbol</h2>
         <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search symbol..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg pl-9 pr-3 py-1.5 focus:outline-none w-36 focus:w-48 transition-all"
+            />
+          </div>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-500 whitespace-nowrap">Exchange:</label>
             <select 
@@ -173,15 +195,18 @@ export function PnLBySymbol() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto px-4 md:px-6">
+      <div className="flex-1 overflow-auto hide-scrollbar px-4 md:px-6">
         {isLoading ? (
           <div className="text-sm text-gray-500 py-4">Carregando dados...</div>
         ) : (
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-[#2a2b30]">
+            <thead className="text-xs text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-[#2a2b30] sticky top-0 bg-white dark:bg-[#0b0c10] z-10">
               <tr>
+                <th className="py-3 font-normal cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('exchange')}>
+                  <div className="flex items-center gap-1">Exchange <ArrowUpDown className="w-3 h-3" /></div>
+                </th>
                 <th className="py-3 font-normal cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('symbol')}>
-                  <div className="flex items-center gap-1">Symbol <ArrowUpDown className="w-3 h-3" /></div>
+                  <div className="flex items-center gap-1">Name <ArrowUpDown className="w-3 h-3" /></div>
                 </th>
                 <th className="py-3 font-normal cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('instrument')}>
                   <div className="flex items-center gap-1">Instrument <ArrowUpDown className="w-3 h-3" /></div>
@@ -200,8 +225,19 @@ export function PnLBySymbol() {
             <tbody>
               {sortedData.map((row) => (
                 <tr key={`${row.exchange}-${row.symbol}-${row.instrument}`} className="border-b border-gray-50 dark:border-[#2a2b30]/50 hover:bg-gray-50 dark:hover:bg-[#2a2b30]/20 transition-colors">
-                  <td className="py-4 font-bold text-[15px]">{row.symbol}</td>
-                  <td className="py-4 text-gray-500">{row.instrument} <span className="text-[10px] ml-1 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{row.exchange}</span></td>
+                  <td className="py-4">
+                    <div className="flex items-center gap-2">
+                      <ExchangeIcon exchange={row.exchange} className="w-5 h-5 rounded-sm" />
+                      <span className="capitalize">{row.exchange}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 font-bold text-[15px]">
+                    <div className="flex items-center gap-2">
+                      <CoinIcon symbol={row.symbol} className="w-6 h-6 rounded-full" />
+                      <span>{row.symbol}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 text-gray-500">{row.instrument}</td>
                   <td className="py-4 text-right">
                      <PnLCell value={row.totalPnL} maxAbs={maxTotal} />
                   </td>
@@ -215,7 +251,7 @@ export function PnLBySymbol() {
               ))}
               {sortedData.length === 0 && (
                 <tr>
-                   <td colSpan={5} className="py-10 text-center text-gray-500">Nenhum dado encontrado para os filtros selecionados.</td>
+                   <td colSpan={6} className="py-10 text-center text-gray-500">Nenhum dado encontrado para os filtros selecionados.</td>
                 </tr>
               )}
             </tbody>
