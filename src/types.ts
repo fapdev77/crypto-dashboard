@@ -1,3 +1,5 @@
+import Big from 'big.js';
+
 export type ExchangeName = 'bybit' | 'bitget' | 'okx';
 
 export type PositionSide = 'long' | 'short' | 'net';
@@ -59,5 +61,15 @@ export interface UnifiedBillRecord {
   ccy: string;
   timestamp: number;
   raw?: any;
+}
+
+export interface SymbolPnLRecord {
+  symbol: string;
+  instrument: string;
+  totalPnL: Big;
+  longPnL: Big;
+  shortPnL: Big;
+  exchange: 'bitget' | 'bybit' | 'okx';
+  lastActivity: number;
 }
 

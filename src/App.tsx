@@ -16,6 +16,7 @@ import { StatusBar } from './components/StatusBar';
 import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
 import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard';
+import { PnLBySymbol } from './components/analytics/PnLBySymbol';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
 
 export default function App() {
@@ -23,10 +24,11 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  let activeTabName = activeTab;
+  let activeTabName = activeTab.replace('analytics-', '').replace('-', ' ');
   if (activeTab === 'api-keys') activeTabName = 'API Keys';
   if (activeTab === 'settings') activeTabName = 'Settings';
   if (activeTab === 'api-tester') activeTabName = 'Execução de Testes';
+  if (activeTab === 'analytics-pnl-symbol') activeTabName = 'PnL by Symbol';
 
   return (
     <WorkSpace>
@@ -81,7 +83,8 @@ export default function App() {
             <div className="flex-1 overflow-auto hide-scrollbar">
               {activeTab === 'dashboard' && <Dashboard />}
               {activeTab === 'positions' && <Positions />}
-              {activeTab === 'analytics' && <AnalyticsDashboard />}
+              {(activeTab === 'analytics' || activeTab === 'analytics-overview') && <AnalyticsDashboard />}
+              {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
               {activeTab === 'reports' && <ReportsDashboard />}
               {activeTab === 'api-keys' && <ApiKeys />}
               {activeTab === 'settings' && <Settings />}
