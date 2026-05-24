@@ -35,20 +35,35 @@ export function usePnLBySymbol(
       // Infer instrument
       let instrument = 'Unknown';
       if (pos.exchange === 'bitget') {
-        instrument = pos.raw?.productType || pos.raw?.marginCoin || 'Futures';
+        const pType = pos.raw?.productType;
+        if (pType === 'USDT-FUTURES') instrument = 'USDT-M';
+        else if (pType === 'COIN-FUTURES') instrument = 'Coin-M';
+        else if (pType === 'USDC-FUTURES') instrument = 'USDC-M';
+        else if (pos.symbol.endsWith('USDT')) instrument = 'USDT-M';
+        else if (pos.symbol.endsWith('USDC')) instrument = 'USDC-M';
+        else if (pos.symbol.endsWith('USD')) instrument = 'Coin-M';
+        else instrument = pType || pos.raw?.marginCoin || 'Futures';
       } else if (pos.exchange === 'bybit') {
-        if (pos.symbol.endsWith('USDT')) instrument = 'linear';
-        else if (pos.symbol.endsWith('USD')) instrument = 'inverse';
+        if (pos.symbol.endsWith('USDT') || pos.symbol.endsWith('USDC') || pos.symbol.includes('USDC-') || pos.symbol.includes('USDT-')) instrument = 'Linear';
+        else if (pos.symbol.endsWith('USD') || pos.symbol.includes('USD-') || pos.symbol.match(/USD[A-Z0-9]+$/)) instrument = 'Inverse';
         else instrument = pos.raw?.category || 'Perpetual';
       } else if (pos.exchange === 'okx') {
-        instrument = pos.raw?.instType || 'SWAP';
+        if (pos.symbol.includes('-USDT')) instrument = 'USDT-margined';
+        else if (pos.symbol.includes('-USDC')) instrument = 'USDC-margined';
+        else if (pos.symbol.includes('-USD')) instrument = 'Coin-margined';
+        else instrument = pos.raw?.instType || 'SWAP';
       }
 
       if (instrumentFilter !== 'All' && instrument.toLowerCase() !== instrumentFilter.toLowerCase()) {
         continue;
       }
 
-      const key = `${pos.exchange}-${pos.symbol}-${instrument}`;
+      // Determine ccy. Fallback to USDT if it doesn't exist, though it should.
+      const isUSDT = pos.symbol.includes('USDT');
+      const isUSDC = pos.symbol.includes('USDC');
+      const ccy = pos.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : pos.symbol.split('-')[0].replace(/USD.*/, '')));
+
+      const key = `${pos.exchange}-${pos.symbol}-${instrument}-${ccy}`;
       
       const realizedPnl = new Big(pos.realizedPnl || 0);
 
@@ -56,7 +71,8 @@ export function usePnLBySymbol(
         symbolMap.set(key, {
           symbol: pos.symbol,
           instrument,
-          exchange: pos.exchange,
+          ccy,
+          exchange: pos.exchange as any,
           totalPnL: new Big(0),
           longPnL: new Big(0),
           shortPnL: new Big(0),

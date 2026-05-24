@@ -84,7 +84,7 @@ export class BitgetHistoryAdapter implements IExchangeAdapter {
         do {
           const res = await BitgetHistoryAdapter.fetchHistory(pType, key.apiKey, key.apiSecret, key.passphrase || '', start, end, nextId);
           if (res.list && res.list.length > 0) {
-            list = [...list, ...res.list];
+            list = [...list, ...res.list.map((item: any) => ({ ...item, productType: pType }))];
           }
           nextId = res.nextId;
           pages++;
@@ -102,15 +102,20 @@ export class BitgetHistoryAdapter implements IExchangeAdapter {
 
   private parse(unprocessedPayload: any[], connectionId: string, label: string): UnifiedHistoryPosition[] {
     return unprocessedPayload.map((p: any) => {
-      const realizedPnl = parseFloat(p.achievedProfits || p.netProfit || '0');
-      const entryPrice = parseFloat(p.openPriceAvg || p.openAvgPx || '0');
-      const closePrice = parseFloat(p.closePriceAvg || p.closeAvgPx || '0');
-      const size = parseFloat(p.closeSize || p.closeVol || '0');
-      const cTime = parseInt(p.uTime || '0', 10);
+      const realizedPnl = parseFloat(p.netProfit ?? p.pnl ?? p.achievedProfits ?? '0');
+      const entryPrice = parseFloat(p.openAvgPrice || p.openPriceAvg || p.openAvgPx || '0');
+      const closePrice = parseFloat(p.closeAvgPrice || p.closePriceAvg || p.closeAvgPx || '0');
+      const size = parseFloat(p.closeTotalPos || p.closeSize || p.closeVol || '0');
+      const cTime = parseInt(p.utime || p.uTime || p.ctime || p.cTime || '0', 10);
       
       const sideRaw = p.holdSide || p.posSide || p.side;
       const isLong = sideRaw?.toLowerCase() === 'long' || sideRaw?.toLowerCase() === 'buy';
       const isShort = sideRaw?.toLowerCase() === 'short' || sideRaw?.toLowerCase() === 'sell';
+
+      let totalTradingFee = 0;
+      if (p.openFee) totalTradingFee += parseFloat(p.openFee);
+      if (p.closeFee) totalTradingFee += parseFloat(p.closeFee);
+      if (p.fee) totalTradingFee += parseFloat(p.fee);
 
       return {
         id: `${connectionId}-${p.posId || p.positionId}-${cTime}`,
@@ -125,8 +130,8 @@ export class BitgetHistoryAdapter implements IExchangeAdapter {
         entryPrice,
         closePrice,
         size,
-        fundingFee: p.fundingFee ? parseFloat(p.fundingFee) : undefined,
-        tradingFee: p.fee ? parseFloat(p.fee) : undefined,
+        fundingFee: p.totalFunding ? parseFloat(p.totalFunding) : (p.fundingFee ? parseFloat(p.fundingFee) : undefined),
+        tradingFee: totalTradingFee || undefined,
         raw: p,
       };
     });

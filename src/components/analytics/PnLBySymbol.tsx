@@ -6,6 +6,8 @@ import { SymbolPnLRecord } from '../../types';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 
+import { formatValue } from '../../utils/formatters';
+
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
 
@@ -21,9 +23,9 @@ export function PnLBySymbol() {
   const { pnlData, isLoading } = usePnLBySymbol(period, '', '', true, exchange, instrument);
 
   const instrumentsAvailable = useMemo(() => {
-    if (exchange === 'bitget') return ['All', 'USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
-    if (exchange === 'bybit') return ['All', 'linear', 'inverse', 'option'];
-    if (exchange === 'okx') return ['All', 'SWAP', 'FUTURES', 'MARGIN'];
+    if (exchange === 'bitget') return ['All', 'USDT-M', 'Coin-M', 'USDC-M'];
+    if (exchange === 'bybit') return ['All', 'Linear', 'Inverse'];
+    if (exchange === 'okx') return ['All', 'USDT-margined', 'Coin-margined', 'USDC-margined'];
     return ['All'];
   }, [exchange]);
 
@@ -239,13 +241,13 @@ export function PnLBySymbol() {
                   </td>
                   <td className="py-4 text-gray-500">{row.instrument}</td>
                   <td className="py-4 text-right">
-                     <PnLCell value={row.totalPnL} maxAbs={maxTotal} />
+                     <PnLCell value={row.totalPnL} maxAbs={maxTotal} ccy={row.ccy} />
                   </td>
                   <td className="py-4 text-right">
-                     <PnLCell value={row.longPnL} maxAbs={maxLong} />
+                     <PnLCell value={row.longPnL} maxAbs={maxLong} ccy={row.ccy} />
                   </td>
                   <td className="py-4 text-right">
-                     <PnLCell value={row.shortPnL} maxAbs={maxShort} />
+                     <PnLCell value={row.shortPnL} maxAbs={maxShort} ccy={row.ccy} />
                   </td>
                 </tr>
               ))}
@@ -262,7 +264,7 @@ export function PnLBySymbol() {
   );
 }
 
-function PnLCell({ value, maxAbs }: { value: Big, maxAbs: Big }) {
+function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string }) {
   const isPositive = value.gt(0);
   const isZero = value.eq(0);
   const colorTextClass = isZero ? 'text-gray-400' : isPositive ? 'text-[#10B981]' : 'text-pink-500';
@@ -272,10 +274,14 @@ function PnLCell({ value, maxAbs }: { value: Big, maxAbs: Big }) {
   const maxNum = Number(maxAbs) === 0 ? 1 : Number(maxAbs);
   const percentage = (Math.abs(valNum) / maxNum) * 100;
 
+  const isFiatCcy = ccy.includes('USD') || ccy === 'EUR';
+  const decimals = isFiatCcy ? 2 : 4;
+  const displayCcy = ccy || 'USDT';
+
   return (
     <div className="flex flex-col items-end gap-2 w-full max-w-[200px] ml-auto">
        <span className={`${colorTextClass} font-mono text-sm`}>
-          {isPositive ? '+' : ''}{value.toFixed(2, 0)} <span className="text-xs">USDT</span>
+          {isPositive ? '+' : ''}{formatValue(valNum, decimals)} <span className="text-xs">{displayCcy}</span>
        </span>
        <div className="w-full h-[3px] bg-gray-100 dark:bg-[#1e1f24] rounded-full flex relative overflow-hidden">
           {/* Middle divider */}

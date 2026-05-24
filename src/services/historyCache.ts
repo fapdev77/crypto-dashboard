@@ -114,3 +114,11 @@ export async function clearAllCache(): Promise<void> {
   await db.clear(HISTORY_STORE);
   await db.clear(META_STORE);
 }
+
+/**
+ * Get the total number of cached history positions.
+ */
+export async function getCacheSize(): Promise<number> {
+  const db = await getDB();
+  return db.count(HISTORY_STORE);
+}

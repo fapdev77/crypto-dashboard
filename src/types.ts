@@ -66,6 +66,7 @@ export interface UnifiedBillRecord {
 export interface SymbolPnLRecord {
   symbol: string;
   instrument: string;
+  ccy: string;
   totalPnL: Big;
   longPnL: Big;
   shortPnL: Big;
