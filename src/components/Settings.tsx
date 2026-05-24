@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { clearAllCache, getCacheSize } from '../services/historyCache';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
-import { Database, Trash2, CheckCircle2, Loader2 } from 'lucide-react';
+import { Database, Trash2, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 
 export function Settings() {
   const { 
@@ -16,11 +17,35 @@ export function Settings() {
 
   const [isClearing, setIsClearing] = useState(false);
   const [cleared, setCleared] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [synced, setSynced] = useState(false);
   const [cacheSize, setCacheSize] = useState<number | null>(null);
 
   useEffect(() => {
     getCacheSize().then(setCacheSize).catch(console.error);
   }, []);
+
+  const handleForceSync = async () => {
+    if (keys.length === 0) return;
+    setIsSyncing(true);
+    setSynced(false);
+    try {
+      const service = new PositionHistoryService();
+      await Promise.all(keys.map(k => service.fetchWithCache(k)));
+      
+      const newSize = await getCacheSize();
+      setCacheSize(newSize);
+      
+      setSynced(true);
+      toast.success('Cache synced successfully', { id: 'cache-sync' });
+      setTimeout(() => setSynced(false), 3000);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Failed to sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-sync' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleClearCache = async () => {
     setIsClearing(true);
@@ -40,9 +65,11 @@ export function Settings() {
       }
       
       setCleared(true);
+      toast.success('Cache cleared and re-synced successfully', { id: 'cache-clear' });
       setTimeout(() => setCleared(false), 3000);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      toast.error(`Failed to clear and sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-clear' });
     } finally {
       setIsClearing(false);
     }
@@ -68,7 +95,10 @@ export function Settings() {
               type="checkbox" 
               className="sr-only peer" 
               checked={useMockData}
-              onChange={(e) => setUseMockData(e.target.checked)}
+              onChange={(e) => {
+                setUseMockData(e.target.checked);
+                toast.success(`Mock Data ${e.target.checked ? 'Enabled' : 'Disabled'}`, { id: 'mock-toggle' });
+              }}
             />
             <div className="w-11 h-6 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00C853]"></div>
           </label>
@@ -101,12 +131,22 @@ export function Settings() {
               step="5"
               value={historyCacheInterval}
               onChange={(e) => setHistoryCacheInterval(Number(e.target.value))}
+              onPointerUp={(e) => toast.success(`Background Update Interval set to ${historyCacheInterval}m\n(Effective next background run)`, { id: 'cache-interval' })}
               className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-[#00C853]"
             />
-            <div className="flex justify-between text-xs text-[#8E9299] font-mono">
+            <div className="flex justify-between text-xs text-[#8E9299] font-mono mb-2">
               <span>5m</span>
               <span>60m</span>
             </div>
+            
+            <button
+              onClick={handleForceSync}
+              disabled={isSyncing || synced || isClearing || keys.length === 0}
+              className="self-start flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              {isSyncing ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin" /> : synced ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <RefreshCw className="w-4 h-4 text-blue-400" />}
+              {isSyncing ? 'Syncing Now...' : synced ? 'Synced!' : 'Force Sync Now'}
+            </button>
           </div>
 
           <div className="flex items-start justify-between gap-4 pt-2">
@@ -125,7 +165,7 @@ export function Settings() {
               </p>
               <button
                 onClick={handleClearCache}
-                disabled={isClearing || cleared}
+                disabled={isClearing || cleared || isSyncing}
                 className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 {isClearing ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin" /> : cleared ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <Trash2 className="w-4 h-4 text-red-400" />}
@@ -159,6 +199,7 @@ export function Settings() {
             max="15" 
             value={bybitPollingInterval}
             onChange={(e) => setBybitPollingInterval(Number(e.target.value))}
+            onPointerUp={(e) => toast.success(`Bybit Refresh Interval set to ${bybitPollingInterval}s`, { id: 'bybit-interval' })}
             className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-[#00C853]"
           />
           <div className="flex justify-between text-xs text-[#8E9299] font-mono">
