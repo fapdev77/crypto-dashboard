@@ -64,13 +64,16 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 ## 🛠 Features e UI/UX Recentes
 - ✅ **Gestão Avançada de Posições:** 
   - **Posições Abertas:** Monitoramento em tempo real com informações detalhadas como PnL Não Realizado, ROE, Margem, Preço de Liquidação. Inclui suporte para modos de visualização alternativos (**Detailed** e **Lite**) para adaptar a densidade da interface segundo a preferência do usuário.
-  - **Posições Encerradas (Histórico):** Aba especializada para o histórico de trades via REST APIs para cada corretora (suportando bitget, bybit e okx). Inclui funcionalidade sofisticada de filtragem por alcance de tempo (1 Dia, 1 Semana, 1 Mês, 3 Meses e Datas Customizadas) validando e normalizando retornos e fusos para uma amostragem única de lucros consolidados.
-- ✅ **Reports Dashboard:** Exportação consolidada de histórico em PDF, CSV e Excel com formatação rigorosa e cache incremental em memória.
-- ✅ **Analytics Dashboard:** Extração de inteligência dos trades passados contendo:
+  - **Posições Encerradas (Histórico) e IndexedDB Cache:** Aba especializada para o histórico de trades via REST APIs para cada corretora (suportando Bitget, Bybit e OKX). Para mitigar restrições de chamadas de API (Rate Limits) das corretoras e permitir acesso ágil ao longo histórico, o Dashboard implementa um sistema agressivo e robusto de **Local Caching via IndexedDB** (`idb`). Com ele, o sistema garante:
+    - Sincronização e Download progressivo em segundo plano (Background Polling configurável de 5 a 60 minutos).
+    - Opções avançadas via modal de `Settings` para purgar (Clear Local Cache), re-sincronizar (Force Sync) de forma indolor o histórico diretamente das exchanges, emitindo notificações instantâneas de sucesso/erro via **Toast UI**.
+    - Filtros ricos e avançados que realizam varreduras de dados via banco in-memory, possibilitando visualização em recortes temporais predefinidos ou datas customizadas sem delays de requisições externas.
+- ✅ **Insights & Analytics Dashboard:** Extração de inteligência dos trades passados contendo:
   - **Métricas Avançadas:** *Win Rate*, *Profit Factor*, Taxas brutas e líquidas pagas.
-  - **Seasonality (Sazonalidade):** Desempenho mapeado por dia da semana e horários da janela operacional (4 horas).
+  - **Sazonalidade (Seasonality):** Desempenho mapeado por dia da semana e horários da janela operacional (4 horas).
   - **External Flow:** Leitura nativa de *Bills* (Depósitos e Saques) para isolar o crescimento patrimonial *puramente operacional*.
   - **Milestone Matrix:** Acompanhamento da flutuação patrimonial em relação aos "brackets" de preços atingidos pelo Bitcoin.
+  - **PnL By Symbol (Distribuição de Lucros/Prejuízos por Moeda):** Tabela e Gráfico detalhado categorizando o PnL fechado associado aos ativos da carteira com precisão nas particularidades de alavancagem de cada corretora (USDT-M, USDC-M e Coin-Margined na Bitget; Inverse/Linear na Bybit; e SWAP na OKX), com um filtro customizável para cada tipo de Instrumento transacionado.
 - ✅ **Modo de Desenvolvimento e Testes (Mock Data):** Por meio do novo menu de `Settings`, desenvolvedores ou usuários testando o produto podem ativar de forma nativa a o preenchimento da UI com Dados Simulados (Mockados). O ativar da opção encerra programaticamente qualquer streaming real e insere PNL, saldos, bills (depósitos) e tabelas de histórico fictícias para debug de componentes de UI. Ao desabilitar, a recuperação do Real-Time é feita instantaneamente.
 - ✅ **Refinamentos na Tabela de Balances:** Visualização por colunas incluindo Asset (Moedas), Labels e Accounts e suas designações para a respectiva infraestrutura, Exigência para saldos base em unificados e quantias decimais flexíveis. Além disso, as colunas contam com sorting interativo e barra multi-buscas (Filtros locais via Regex).
 - ✅ **Layout Dashboard Masonry:** O painel de saldos foi refinado para utilizar um formato responsivo em *Masonry Layout* utilizando CSS Native Columns (1, 2, ou até 3 colunas baseadas na largura da tela), garantindo que a expansão de saldos não afete negativamente as corretoras adjacentes.

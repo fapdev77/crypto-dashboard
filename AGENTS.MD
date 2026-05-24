@@ -24,9 +24,10 @@ All exchange-specific data must pass through an adapter (`src/services/adapters/
 
 > **Exceção (Tech Debt Permitido):** O componente `ApiTester` atua estritamente como ferramenta interna (Dev Tools) para testes de conectividade e validação bruta, sendo temporariamente isento da obrigatoriedade da camada de normalização de UI.
 
-## 5. Resiliência e Desempenho (🚧 FASE 2: PLANEJADA)
+## 5. Resiliência, Desempenho e Armazenamento Local (✅ FASE 2: CONCLUÍDA)
 Para gerenciar o alto fluxo de dados do WebSocket de Trading, aderimos aos seguintes mandamentos de estabilidade:
-- **State Offloading (Zustand Otimizado)**: Evitar renders em cascata não assinando toda a global store de uma vez em componentes React pesados; isolamento de sub-stores e `selectors`. Componentes devem reagir a deltas restritos.
-- **Circuit Breakers & Network Healing**: Qualquer serviço com polling ou streams (WS) deve possuir políticas automáticas de Retry. Disconnects do WSS devem rodar exponential backoffs e gerenciar localmente timeouts com "Liveness Probes" (Ping/Pong).
-- **Graceful UI Fallbacks**: Se APIs V5 de REST ou WS rate-limitarem ou tomarem timeout (Cors/WAF em proxy), a interface deve permanecer íntegra renderizando *Stale Data* mas emitindo status visual (Disconnected/Reconnecting) para os usuários.
+- **State Offloading (Zustand Otimizado)**: Evitamos renders em cascata não assinando toda a global store de uma vez em componentes React pesados; isolamento de sub-stores e `selectors`. Componentes reagem ativamente apenas a deltas restritos.
+- **Circuit Breakers & Network Healing**: Qualquer serviço com polling ou streams (WS) possui políticas automáticas de Retry. Disconnects do WSS rodam exponential backoffs e gerenciam timeouts locais com "Liveness Probes" (Ping/Pong).
+- **Graceful UI Fallbacks**: Se APIs V5 de REST ou WS rate-limitarem ou tomarem timeout (Cors/WAF em proxy), a interface permanece íntegra renderizando *Stale Data* mas emitindo status visual (Disconnected/Reconnecting) e Toasts textuais para os usuários.
+- **Indexação Local (IndexedDB)**: Implementação fundamental concluída via `idb`. Operações analíticas custosas (PnL History, Win Rates e Seasonality) agora desfrutam de Cache Local persistente para sanar requisições sucessivas longas para *Position History APIs*, agilizando carregamentos pesados (com opção nativa de cache bypass em `Settings`).
 

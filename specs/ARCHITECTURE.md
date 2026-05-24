@@ -36,13 +36,14 @@ A stack atual repousa sobre fundações modernas, possuindo os seguintes pontos 
 3. Once logged in, WS subscribes to `wallet` and `positions` topics.
 4. Active heartbeat mechanisms (`setInterval`) ping exchanges to keep-alive.
 
-### REST API (Initial Snapshots & Historical Logs)
+### REST API (Initial Snapshots & Historical Logs & caching)
 1. Fetching historical data requires specific `GET` requests via the Orchestrator/Factory services (`PositionHistoryService` and `BillsHistoryService`).
 2. The orchestrator delegates the request to the specific `IExchangeAdapter` (e.g. `BybitHistoryAdapter`, `OkxHistoryAdapter`).
 3. The adapter generates signatures and HTTP headers for the specific Timestamp + Endpoint path.
 4. The adapter sends requests to the local backend proxy at `/api/proxy` via `hybridFetch`.
 5. Express Proxy forwards to the authentic endpoint (`api.bitget.com`, `api.bybit.com`, etc.) and streams the data back.
 6. The adapter parses and normalizes the Raw API response into the unified format (`UnifiedHistoryPosition`, `UnifiedBillRecord`).
+7. **Local Caching (Position History):** To bypass aggressive exchange rate limits and decouple UI analytics delays from network latency, historical operations query a robust **IndexedDB Database** (`crypto-dashboard-cache`). The caching mechanism includes a periodic background synchronization task (controlled via setting intervals) that seamlessly pulls delta records using exchange cursors, rendering historic views (PnL charts, Analytics) instantaneously from the local store.
 
 ## 5. State Management Models
 - **`useApiKeysStore`:** 
@@ -53,4 +54,5 @@ A stack atual repousa sobre fundações modernas, possuindo os seguintes pontos 
   - Dynamically computes UI values on mapping loops (e.g. Total USD Equity).
 - **`useSettingsStore`:** 
   - Manages application-wide config (e.g. `useMockData`, visibility toggles).
+  - Handles network heuristics configurations like `bybitPollingInterval` (for static REST calls) and `historyCacheInterval` (for background PnL sync limits).
   - Persisted to local storage for user preferences.

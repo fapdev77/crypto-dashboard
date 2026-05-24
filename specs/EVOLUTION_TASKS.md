@@ -46,3 +46,9 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 
 **4. External Flow Control e Live Bills API** [✓]
 *   **Ação Aplicada:** Implementação do conceito de PnL Operacional Puro. O aplicativo efetua conexões diretas nas APIs da Bybit (`query-record`), OKX (`deposit-history`/`withdrawal-history`) e Bitget (`deposit-records`) através de um robusto orquestrador `BillsHistoryService` acoplado ao hook `useBillsHistory`. O sistema deduz matematicamente as interações do usuário (Depósitos/Saques) da rentabilidade total orgânica. Adicionado suporte dinâmico para *Mock Data* no Switch.
+
+**5. IndexedDB History Caching e Background Polling** [✓]
+*   **Ação Aplicada:** Criação do banco in-memory (`crypto-dashboard-cache`) baseada na biblioteca interativa `idb` que reestrutura radicalmente o fetch pesado de Histórico de Posições fechadas. Uma Engine de Background Polling com intervalos customizáveis no Menu Settings mantém deltas rodando transparentemente em modo inerte visando zerar o Request Latency Time durante Analytics pesados, burlando com maestria Rate Limits de API por fetch contínuo das 3 Exchanges. Incluído também gerencial de Cache Manual para purgar ou re-sincronizar ativamente bases, com UI informando progressos em *Toasts*.
+
+**6. PnL By Symbol Report com Dynamic Intensity Bars e Margin Mapping** [✓]
+*   **Ação Aplicada:** Adicionada métrica *PnL by Symbol* sob o menu Analytics contendo um mapeamento cross-change impecável de Margin Types: `USDT-M/USDC-M/Coin-M` de Bitget e correlatos de Bybit/OKX (Linear, Inverse). Essa estrutura renderiza tabelas enriquecidas com Dynamic Intensity Progress Bars indicando a agressividade da posição perante as maiores posições (High Watermarks), incluindo um robusto filtro multi-corretora e tipo de derivativo transacionado interagindo ativamente com a Store nativa.
