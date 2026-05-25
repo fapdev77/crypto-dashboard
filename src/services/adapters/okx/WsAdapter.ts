@@ -35,7 +35,20 @@ export class OkxWsAdapter {
         if (pos.ccy !== undefined) update.ccy = pos.ccy;
         else if (pos.marginCoin !== undefined) update.ccy = pos.marginCoin;
         if (pos.posSide !== undefined) update.side = pos.posSide as any;
-        if (pos.pos !== undefined) update.size = parseFloat(pos.pos);
+        if (pos.pos !== undefined) {
+          const rawSize = parseFloat(pos.pos);
+          update.size = rawSize;
+          
+          // Refine size based on notional geometry (always yields exact base coin amount for BOTH linear and inverse contracts)
+          const notionalUsd = pos.notionalUsd ? parseFloat(pos.notionalUsd) : 0;
+          const markPx = pos.markPx ? parseFloat(pos.markPx) : 0;
+          
+          if (notionalUsd > 0 && markPx > 0) {
+            update.size = notionalUsd / markPx;
+          } else if (pos.notionalCcy !== undefined && pos.notionalCcy !== "") {
+            update.size = parseFloat(pos.notionalCcy);
+          }
+        }
         if (pos.avgPx !== undefined) update.entryPrice = parseFloat(pos.avgPx);
         if (pos.markPx !== undefined) update.markPrice = parseFloat(pos.markPx);
         if (pos.upl !== undefined) update.unrealizedPnl = parseFloat(pos.upl);

@@ -49,7 +49,24 @@ export class BybitWsAdapter {
         if (pos.side !== undefined && pos.side !== '') update.side = pos.side.toLowerCase() as any;
         if (pos.settleCoin !== undefined) update.ccy = pos.settleCoin;
         else if (pos.coin !== undefined) update.ccy = pos.coin;
-        if (pos.size !== undefined) update.size = parseFloat(pos.size);
+        if (pos.size !== undefined) {
+          update.size = parseFloat(pos.size);
+          
+          const isInverse = pos.symbol && pos.symbol.endsWith('USD') && !pos.symbol.includes('USDT') && !pos.symbol.includes('USDC');
+          const positionValue = pos.positionValue ? parseFloat(pos.positionValue) : 0;
+          const entryPrice = pos.avgPrice ? parseFloat(pos.avgPrice) : (pos.entryPrice ? parseFloat(pos.entryPrice) : 0);
+          
+          if (positionValue > 0) {
+            if (isInverse) {
+              // Inverse contract: positionValue is crypto size, size is USD (contracts)
+              update.size = positionValue;
+            } else if (entryPrice > 0) {
+              // Linear contract: refine size from position value and entry price to overcome arbitrary lot multipliers
+              const refinedSize = positionValue / entryPrice;
+              update.size = refinedSize;
+            }
+          }
+        }
         if (pos.entryPrice !== undefined && pos.entryPrice !== "") update.entryPrice = parseFloat(pos.entryPrice);
         else if (pos.avgPrice !== undefined && pos.avgPrice !== "") update.entryPrice = parseFloat(pos.avgPrice);
         if (pos.markPrice !== undefined && pos.markPrice !== "") update.markPrice = parseFloat(pos.markPrice);
@@ -58,7 +75,13 @@ export class BybitWsAdapter {
         if (pos.leverage !== undefined && pos.leverage !== "") update.leverage = parseFloat(pos.leverage);
         if (pos.tradeMode !== undefined) update.marginMode = pos.tradeMode === 1 ? 'isolated' : 'cross';
         if (pos.positionIM !== undefined && pos.positionIM !== "") update.margin = parseFloat(pos.positionIM);
-        if (pos.positionValue !== undefined && pos.positionValue !== "") update.notionalUsd = parseFloat(pos.positionValue);
+        if (pos.positionValue !== undefined && pos.positionValue !== "") {
+          update.notionalUsd = parseFloat(pos.positionValue);
+          const isInverse = pos.symbol && pos.symbol.endsWith('USD') && !pos.symbol.includes('USDT') && !pos.symbol.includes('USDC');
+          if (isInverse && pos.size !== undefined) {
+             update.notionalUsd = parseFloat(pos.size); // For inverse contracts, size is notional value in USD
+          }
+        }
         if (pos.liqPrice !== undefined && pos.liqPrice !== "") update.liquidationPrice = parseFloat(pos.liqPrice);
         if (pos.breakEvenPrice !== undefined && pos.breakEvenPrice !== "") update.breakEvenPrice = parseFloat(pos.breakEvenPrice);
         if (pos.takeProfit !== undefined && pos.takeProfit !== "") update.tp = parseFloat(pos.takeProfit);

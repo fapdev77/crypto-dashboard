@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { formatValue } from '../utils/formatters';
+import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 
 export function PositionsTicker() {
   const { positions } = useDashboardStore();
@@ -36,11 +36,13 @@ export function PositionsTicker() {
     const isNegative = variation < 0;
     const isNeutral = variation === 0;
 
+    const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
+
     return (
       <div
         key={pos.id}
         className="flex items-center gap-4 px-6 py-2 border-r border-[#2a2b30]/50 shrink-0 cursor-default"
-        title={`Exchange: ${pos.exchange}\nAtivo: ${pos.symbol}\nPosição: ${pos.side.toUpperCase()} ${pos.leverage}x\nPreço Atual: $${pos.markPrice}\nPreço de Entrada: ${pos.entryPrice ? '$' + pos.entryPrice : 'N/A'}\nVariação de Preço (desde entrada): ${formatValue(priceVariation, 2)}%\nLucro/Prejuízo (ROE): ${formatValue(variation, 2)}%`}
+        title={`Exchange: ${pos.exchange}\nAtivo: ${pos.symbol}\nPosição: ${pos.side.toUpperCase()} ${pos.leverage}x\nPreço Atual: $${formatPrice(pos.markPrice, isFiatPair)}\nPreço de Entrada: ${pos.entryPrice ? '$' + formatPrice(pos.entryPrice, isFiatPair) : 'N/A'}\nVariação de Preço (desde entrada): ${formatValue(priceVariation, 2)}%\nLucro/Prejuízo (ROE): ${formatValue(variation, 2)}%`}
       >
         <div className="flex items-center gap-2">
           <span className="font-bold text-white text-sm tracking-wide">
@@ -55,7 +57,7 @@ export function PositionsTicker() {
           </div>
 
           <span className={`font-mono text-sm ml-1 ${priceColor}`}>
-            ${formatValue(pos.markPrice, pos.markPrice < 1 ? 4 : 2)}
+            ${formatPrice(pos.markPrice, isFiatPair)}
           </span>
 
           <span className="text-xs ml-2 px-1.5 py-0.5 rounded uppercase font-medium bg-[#1a1b1e] text-[#8E9299]">

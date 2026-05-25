@@ -6,7 +6,7 @@ import { SymbolPnLRecord } from '../../types';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 
-import { formatValue } from '../../utils/formatters';
+import { formatValue, formatCrypto } from '../../utils/formatters';
 
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
@@ -275,13 +275,12 @@ function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string 
   const percentage = (Math.abs(valNum) / maxNum) * 100;
 
   const isFiatCcy = ccy.includes('USD') || ccy === 'EUR';
-  const decimals = isFiatCcy ? 2 : 4;
   const displayCcy = ccy || 'USDT';
 
   return (
     <div className="flex flex-col items-end gap-2 w-full max-w-[200px] ml-auto">
        <span className={`${colorTextClass} font-mono text-sm`}>
-          {isPositive ? '+' : ''}{formatValue(valNum, decimals)} <span className="text-xs">{displayCcy}</span>
+          {isPositive ? '+' : ''}{isFiatCcy ? formatValue(valNum, 2) : formatCrypto(valNum)} <span className="text-xs">{displayCcy}</span>
        </span>
        <div className="w-full h-[3px] bg-gray-100 dark:bg-[#1e1f24] rounded-full flex relative overflow-hidden">
           {/* Middle divider */}

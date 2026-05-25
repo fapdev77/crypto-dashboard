@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { UnifiedPosition } from '../types';
-import { formatValue } from '../utils/formatters';
+import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 
@@ -133,6 +133,10 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
           posCcy = isUSDT ? 'USDT' : (isUSDC ? 'USDC' : pos.symbol.replace(/USD.*/, ''));
         }
 
+        const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
+        const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
+        const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
+
         return (
           <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col p-4 gap-4">
             
@@ -162,18 +166,18 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Position</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="font-mono text-white">{formatValue(pos.size, 4)}</span>
+                  <span className="font-mono text-white">{formatCrypto(pos.size)}</span>
                   <span className="text-[#8E9299] text-xs">≈ {formatValue(sizeValUsd, 2)} USD</span>
                 </div>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Entry price</span>
-                <span className="font-mono text-white">{formatValue(pos.entryPrice, 4)}</span>
+                <span className="font-mono text-white">{formatPrice(pos.entryPrice, isFiatPair)}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Margin</span>
                 <span className="font-mono text-white">
-                  {formatValue(pos.margin, 2)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
+                  {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
                   {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
                     <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(pos.margin * pos.markPrice, 2)} USD</span>
                   ) : null}
@@ -182,7 +186,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Realized PnL</span>
                 <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                  {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-[10px]">{posCcy}</span>
+                  {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                   {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
                     <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(Math.abs(pos.realizedPnl) * pos.markPrice, 2)} USD</span>
                   ) : null}
@@ -191,7 +195,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
                 <span className="font-mono text-white">
-                  {pos.tp ? formatValue(pos.tp, 4) : '--'} / {pos.sl ? formatValue(pos.sl, 4) : '--'}
+                  {pos.tp ? formatPrice(pos.tp, isFiatPair) : '--'} / {pos.sl ? formatPrice(pos.sl, isFiatPair) : '--'}
                 </span>
               </div>
 
@@ -199,7 +203,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Unrealized PnL</span>
                 <span className={`font-mono ${uplColor}`}>
-                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{posCcy}</span>
+                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{posCcy}</span>
                   {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
                     <span className="text-[#8E9299] text-[10px] ml-1">≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.unrealizedPnl) * pos.markPrice, 2)} USD</span>
                   ) : null}
@@ -207,7 +211,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Mark price</span>
-                <span className="font-mono text-white">{formatValue(pos.markPrice, 4)}</span>
+                <span className="font-mono text-white">{formatPrice(pos.markPrice, isFiatPair)}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Tiered maintenance margin rate</span>
@@ -215,7 +219,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Breakeven price</span>
-                <span className="font-mono text-white">{formatValue(pos.breakEvenPrice, 4)}</span>
+                <span className="font-mono text-white">{formatPrice(pos.breakEvenPrice, isFiatPair)}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
@@ -231,7 +235,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Est. liq. price</span>
-                <span className="font-mono text-orange-400">{formatValue(pos.liquidationPrice, 4)}</span>
+                <span className="font-mono text-orange-400">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Placed/ Max close</span>
@@ -304,6 +308,10 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                   posCcy = isUSDT ? 'USDT' : (isUSDC ? 'USDC' : pos.symbol.replace(/USD.*/, ''));
                 }
 
+                const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
+                const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
+                const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
+
                 return (
                   <tr key={pos.id} className="hover:bg-[#2a2b30]/30 transition-colors">
                     <td className={`px-4 py-3 border-l-2 ${sideBorderColor}`}>
@@ -326,22 +334,22 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-mono text-white text-sm">{formatValue(pos.size, 4)}</div>
+                      <div className="font-mono text-white text-sm">{formatCrypto(pos.size)}</div>
                       <div className="font-mono text-white text-sm mt-1">0</div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-mono text-white text-sm">{formatValue(sizeValUsd, 2)} USD</div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-mono text-white text-sm truncate">{formatValue(pos.entryPrice, 4)}</div>
-                      <div className="font-mono text-white text-sm truncate mt-1">{formatValue(pos.markPrice, 4)}</div>
+                      <div className="font-mono text-white text-sm truncate">{formatPrice(pos.entryPrice, isFiatPair)}</div>
+                      <div className="font-mono text-white text-sm truncate mt-1">{formatPrice(pos.markPrice, isFiatPair)}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatValue(pos.liquidationPrice, 4)}</div>
+                      <div className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatPrice(pos.liquidationPrice, isFiatPair)}</div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-mono text-white text-sm flex items-center gap-1">
-                        {formatValue(pos.margin, 2)} <span className="font-sans text-xs text-[#8E9299]">{posCcy}</span>
+                        {formatCcy(pos.margin)} <span className="font-sans text-xs text-[#8E9299]">{posCcy}</span>
                       </div>
                       {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
                         <div className="font-mono text-xs mt-1 text-[#8E9299]">
@@ -351,7 +359,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                     </td>
                     <td className="px-4 py-3">
                       <div className={`font-mono text-sm flex items-center gap-1 ${uplColor}`}>
-                        {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(pos.unrealizedPnl, 2)} <span className="font-sans text-xs">{posCcy} ({pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'})</span>
+                        {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-xs">{posCcy} ({pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'})</span>
                       </div>
                       {posCcy && !posCcy.includes('USD') ? (
                         <div className={`font-mono text-xs mt-1 ${uplColor}`}>
@@ -361,7 +369,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                     </td>
                     <td className="px-4 py-3">
                       <div className={`font-mono text-sm flex items-center gap-1 ${realizedPnlColor}`}>
-                        {pos.realizedPnl > 0 ? '+' : ''}{formatValue(pos.realizedPnl, 2)} <span className="font-sans text-xs">{posCcy}</span>
+                        {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-xs">{posCcy}</span>
                       </div>
                       {posCcy && !posCcy.includes('USD') ? (
                         <div className={`font-mono text-xs mt-1 ${realizedPnlColor}`}>

@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { formatValue } from '../utils/formatters';
+import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
 import { Search, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -201,39 +201,67 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                 const isUSDC = p.symbol.includes('USDC');
                 const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : p.symbol.split('-')[0].replace(/USD.*/, '')));
                 const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
+                const isFiatPair = p.symbol.includes('USD') || p.symbol.includes('EUR');
+                const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
+                
+                const isBybitInverse = p.exchange === 'bybit' && p.symbol.endsWith('USD') && !p.symbol.includes('USDT') && !p.symbol.includes('USDC');
+
+                let positionValueUsd = 0;
+                let actualCoinSize = p.size || 0;
+
+                if (p.exchange === 'okx' && p.raw?.pnl) {
+                  const priceDiff = Math.abs((p.closePrice || 0) - (p.entryPrice || 0));
+                  const purePnl = Math.abs(parseFloat(p.raw.pnl));
+                  if (priceDiff > 0) {
+                    actualCoinSize = purePnl / priceDiff;
+                    positionValueUsd = actualCoinSize * (p.entryPrice || 0);
+                  } else {
+                    positionValueUsd = (p.entryPrice || 0) * (p.size || 0);
+                  }
+                } else if (p.exchange === 'bybit' && p.raw?.cumEntryValue) {
+                  positionValueUsd = parseFloat(p.raw.cumEntryValue);
+                  actualCoinSize = p.entryPrice ? positionValueUsd / p.entryPrice : 0;
+                } else if (isBybitInverse) {
+                  positionValueUsd = p.size || 0;
+                  actualCoinSize = p.entryPrice ? positionValueUsd / p.entryPrice : 0;
+                } else {
+                  positionValueUsd = (p.entryPrice || 0) * (p.size || 0);
+                  actualCoinSize = p.size || 0;
+                }
                 
                 if (p.raw?.roi !== undefined && p.raw?.roi !== null) {
                    roiValue = parseFloat(p.raw.roi) * 100;
                    hasRoi = true;
                 } else if (p.entryPrice && p.closePrice && p.size && leverage) {
                   const numLeverage = parseFloat(leverage);
-                  
-                  let positionValueUsd = 0;
-                  
-                  // For OKX, size is in contracts. We can deduce actual coin size from 'pnl' and price diff
-                  if (p.exchange === 'okx' && p.raw?.pnl) {
-                    const priceDiff = Math.abs(p.closePrice - p.entryPrice);
-                    const purePnl = Math.abs(parseFloat(p.raw.pnl));
-                    if (priceDiff > 0) {
-                      const actualCoinSize = purePnl / priceDiff;
-                      positionValueUsd = actualCoinSize * p.entryPrice;
-                    } else {
-                      // Fallback if price diff is 0 (ROI is 0 anyway)
-                      positionValueUsd = p.entryPrice * p.size;
-                    }
-                  } else if (p.exchange === 'bybit' && p.raw?.cumEntryValue) {
-                    positionValueUsd = parseFloat(p.raw.cumEntryValue);
-                  } else {
-                    // For Bitget and others where size is in base coin
-                    positionValueUsd = p.entryPrice * p.size;
-                  }
-                  
                   const initialMargin = positionValueUsd / numLeverage;
                   
                   if (initialMargin > 0) {
                      roiValue = (p.realizedPnl / initialMargin) * 100;
                      hasRoi = true;
                   }
+                }
+
+                let displayQuantity = '--';
+                let displayUnit = '';
+                let displaySecondaryQuantity = '--';
+                let displaySecondaryUnit = '';
+
+                if (isBybitInverse) {
+                  displayQuantity = p.size ? formatValue(p.size, 2) : '--';
+                  displayUnit = 'USD';
+                  displaySecondaryQuantity = actualCoinSize ? formatCrypto(actualCoinSize) : '--';
+                  displaySecondaryUnit = symbolSuffix;
+                } else if (p.exchange === 'okx') {
+                  displayQuantity = positionValueUsd ? formatValue(positionValueUsd, 2) : '--';
+                  displayUnit = 'USD';
+                  displaySecondaryQuantity = actualCoinSize ? formatCrypto(actualCoinSize) : '--';
+                  displaySecondaryUnit = symbolSuffix;
+                } else {
+                  displayQuantity = p.size ? formatCrypto(p.size) : '--';
+                  displayUnit = symbolSuffix;
+                  displaySecondaryQuantity = positionValueUsd ? formatValue(positionValueUsd, 2) : '--';
+                  displaySecondaryUnit = 'USD';
                 }
                 
                 if (hasRoi && isFinite(roiValue)) {
@@ -266,16 +294,18 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                       <div className="text-sm font-mono text-white mt-1">--</div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-mono text-white text-sm truncate">{formatValue(p.entryPrice, 4)}</div>
-                      <div className="font-mono text-white text-sm truncate mt-1">{formatValue(p.closePrice, 4)}</div>
+                      <div className="font-mono text-white text-sm truncate">{formatPrice(p.entryPrice, isFiatPair)}</div>
+                      <div className="font-mono text-white text-sm truncate mt-1">{formatPrice(p.closePrice, isFiatPair)}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-mono text-white text-sm">{p.size ? formatValue(p.size, 4) : '--'} <span className="font-sans text-xs text-[#8E9299]">{p.exchange === 'okx' ? 'Cont.' : symbolSuffix}</span></div>
-                      <div className="font-mono text-[#8E9299] text-xs mt-1">{p.size ? formatValue(p.size, 4) : '--'} <span className="font-sans text-xs text-[#8E9299]">{p.exchange === 'okx' ? 'Cont.' : symbolSuffix}</span></div>
+                      <div className="font-mono text-white text-sm">{displayQuantity} <span className="font-sans text-xs text-[#8E9299]">{displayUnit}</span></div>
+                      {displaySecondaryQuantity !== '--' && (
+                        <div className="font-mono text-[#8E9299] text-xs mt-1">{displaySecondaryQuantity} <span className="font-sans text-xs text-[#8E9299]">{displaySecondaryUnit}</span></div>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className={`font-mono text-sm ${pnlClass}`}>
-                        {p.realizedPnl > 0 ? '+' : ''}{formatValue(p.realizedPnl, 4)} <span className="font-sans text-xs text-[#8E9299]">{pnlCurrency}</span>
+                        {p.realizedPnl > 0 ? '+' : ''}{formatCcy(p.realizedPnl)} <span className="font-sans text-xs text-[#8E9299]">{pnlCurrency}</span>
                       </div>
                       {!isFiatCcy && p.closePrice ? (
                         <div className={`font-mono text-xs mt-1 ${pnlClass}`}>

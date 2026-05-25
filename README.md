@@ -62,7 +62,10 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 5. Volte para a rota principal "Dashboard", agora deverá ver seus saldos totais atualizando globalmente.
 
 ## 🛠 Features e UI/UX Recentes
-- ✅ **Gestão Avançada de Posições:** 
+- ✅ **Múltiplos Formatos de Contratos e Exatidão de Precisão:** 
+  - **Identificação Dinâmica de Pares:** O sistema distingue ativamente pares Fiats/Stablecoins (Ex: BTCUSDT, EURUSD) de Contratos Inversos Puros ("Inverse Contracts" como BTCUSD) em toda a arquitetura UI e de cálculo em background.
+  - **Tamanho e Valores de Posição:** Foram realizadas estabilizações robustas do cálculo de tamanho em criptomoedas (Base Coin Size) versus Volume Financeiro em Dólar (Notional USD) para ativos peculiares em *Bybit* (Contratos onde "Size" é enviado como USD) e em *OKX* onde o *Size* costuma vir como número de Contratos (Contracts). As inferências ocorrem retroativamente calculando margens puras em `Close/Entry Prices` em registros históricos PnL.
+  - **Formatadores Globais Inteligentes:** Funções utilitárias customizadas (`formatCrypto`, `formatPrice`, `formatValue`) que reagem ativamente ao tipo e à magnitude do valor (0.0000 -> 8 casas, enquanto $10k -> 2 casas) sem intervenção manual.
   - **Posições Abertas:** Monitoramento em tempo real com informações detalhadas como PnL Não Realizado, ROE, Margem, Preço de Liquidação. Inclui suporte para modos de visualização alternativos (**Detailed** e **Lite**) para adaptar a densidade da interface segundo a preferência do usuário.
   - **Posições Encerradas (Histórico) e IndexedDB Cache:** Aba especializada para o histórico de trades via REST APIs para cada corretora (suportando Bitget, Bybit e OKX). Para mitigar restrições de chamadas de API (Rate Limits) das corretoras e permitir acesso ágil ao longo histórico, o Dashboard implementa um sistema agressivo e robusto de **Local Caching via IndexedDB** (`idb`). Com ele, o sistema garante:
     - Sincronização e Download progressivo em segundo plano (Background Polling configurável de 5 a 60 minutos).

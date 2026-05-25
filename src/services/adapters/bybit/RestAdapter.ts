@@ -86,6 +86,20 @@ export class BybitRestAdapter {
     const positions: UnifiedPosition[] = [];
     if (positionsData && Array.isArray(positionsData)) {
       positionsData.forEach((pos: any) => {
+        const rawSize = parseFloat(pos.size || '0');
+        let size = rawSize;
+        let notionalUsd = parseFloat(pos.positionValue || '0');
+        
+        const isInverse = pos.symbol && pos.symbol.endsWith('USD') && !pos.symbol.includes('USDT') && !pos.symbol.includes('USDC');
+        const entryPrice = parseFloat(pos.avgPrice || pos.entryPrice || '0');
+        
+        if (isInverse) {
+          size = parseFloat(pos.positionValue || '0');
+          notionalUsd = rawSize;
+        } else if (notionalUsd > 0 && entryPrice > 0) {
+          size = notionalUsd / entryPrice;
+        }
+
         positions.push({
           id: `${id}-${pos.symbol}-${pos.positionIdx || 0}`,
           connectionId: id,
@@ -94,15 +108,15 @@ export class BybitRestAdapter {
           symbol: pos.symbol,
           ccy: pos.settleCoin || pos.coin || 'USDT',
           side: pos.side ? pos.side.toLowerCase() as any : 'net', 
-          size: parseFloat(pos.size || '0'),
-          entryPrice: parseFloat(pos.avgPrice || pos.entryPrice || '0'),
+          size: size,
+          entryPrice: entryPrice,
           markPrice: parseFloat(pos.markPrice || '0'),
           unrealizedPnl: parseFloat(pos.unrealisedPnl || '0'),
           realizedPnl: parseFloat(pos.curRealisedPnl || '0'),
           leverage: parseFloat(pos.leverage || '0'),
           marginMode: pos.tradeMode === 1 ? 'isolated' : 'cross',
           margin: parseFloat(pos.positionIM || '0'),
-          notionalUsd: parseFloat(pos.positionValue || '0'),
+          notionalUsd: notionalUsd,
           liquidationPrice: parseFloat(pos.liqPrice || '0'),
           breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
           tp: parseFloat(pos.takeProfit || '0'),

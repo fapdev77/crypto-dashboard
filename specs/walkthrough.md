@@ -1,0 +1,253 @@
+# Deep Dive Arquitetural — Estado Atual do Projeto
+
+## 1. Visão Geral
+
+O **Crypto Portfolio Manager** é uma SPA React/TypeScript que consolida em tempo real saldos, posições e histórico de três exchanges de criptomoedas (**Bybit**, **OKX**, **Bitget**) sob uma interface unificada. Opera sob princípio **Zero-Trust**: nenhuma chave de API trafega por servidores terceiros.
+
+---
+
+## 2. Arquitetura de Runtime (2-Tier Local)
+
+```mermaid
+graph LR
+  subgraph Browser["Tier 1: Browser SPA"]
+    UI["React 19 + Zustand"]
+    WC["Web Crypto API<br/>(HMAC-SHA256)"]
+    IDB["IndexedDB<br/>(Cache Local)"]
+    WSN["WebSocket Nativo<br/>(OKX, Bybit)"]
+  end
+
+  subgraph Proxy["Tier 2: Node/Express Proxy"]
+    REST["/api/proxy<br/>(CORS Bypass)"]
+    WSP["/ws-proxy/bitget<br/>(WS Proxy)"]
+  end
+
+  subgraph Exchanges["Exchanges"]
+    BYBIT["Bybit V5"]
+    OKX["OKX V5"]
+    BITGET["Bitget V2"]
+  end
+
+  UI --> WC
+  UI --> IDB
+  UI -->|Direct WS| WSN
+  WSN -->|wss://| OKX
+  WSN -->|wss://| BYBIT
+  UI -->|hybridFetch| REST
+  UI -->|ws via proxy| WSP
+  REST -->|HTTP Forward| BYBIT
+  REST -->|HTTP Forward| OKX
+  REST -->|HTTP Forward| BITGET
+  WSP -->|wss://| BITGET
+```
+
+| Camada | Responsabilidade |
+|--------|-----------------|
+| **Browser (Tier 1)** | UI, WebSocket direto (OKX/Bybit), criptografia (`window.crypto.subtle`), estado (Zustand), cache (IndexedDB). Chaves API vivem exclusivamente em `localStorage`. |
+| **Express Proxy (Tier 2)** | Bypass CORS para REST APIs. Proxy WebSocket exclusivo para Bitget. **Totalmente agnóstico** a secrets — recebe headers pré-assinados e repassa. Possui allowlist de domínios (`api.bybit.com`, `api.bitget.com`, `www.okx.com`, `api.okx.com`). |
+
+---
+
+## 3. Stack Tecnológica
+
+| Domínio | Tecnologia |
+|---------|------------|
+| Frontend | React 19, TypeScript, Vite 6.2, Tailwind CSS v4 |
+| Estado | Zustand 5 (3 micro-stores: `apiKeysStore`, `dashboardStore`, `settingsStore`) |
+| Criptografia | Web Crypto API nativa (`hmacSha256` em [cryptoLib.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/utils/cryptoLib.ts)) |
+| Gráficos | Recharts 3.8 |
+| Exportação | jsPDF + jspdf-autotable (PDF), xlsx (Excel), CSV nativo |
+| Cache | `idb` 8.0 (IndexedDB wrapper) |
+| Proxy | Express 4 + `http-proxy-middleware` |
+| Math | `big.js` 7.0, `date-fns` 4.1 |
+| Testes | Vitest 4.1 |
+
+---
+
+## 4. Tipos Unificados (Contratos da Camada de Normalização)
+
+Definidos em [types.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/types.ts):
+
+| Interface | Finalidade |
+|-----------|-----------|
+| `UnifiedPosition` | Posição aberta em tempo real (18 campos: size, entryPrice, markPrice, unrealizedPnl, leverage, liquidationPrice, roe, tp, sl, etc.) |
+| `UnifiedHistoryPosition` | Posição encerrada do histórico (realizedPnl, closeTime, entryPrice, closePrice, fundingFee, tradingFee) |
+| `UnifiedBillRecord` | Depósito/Saque (type: deposit/withdrawal/funding/fee/transfer/other, amount, ccy, timestamp) |
+| `SymbolPnLRecord` | Agregação PnL por símbolo com `Big.js` (totalPnL, longPnL, shortPnL) |
+
+---
+
+## 5. Adapter Layer (Strategy Pattern)
+
+Todos os adapters implementam [IExchangeAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/IExchangeAdapter.ts) com dois contratos:
+- `fetchAndNormalize(key, start?, end?)` → `UnifiedHistoryPosition[]`
+- `fetchBills?(key, start?, end?)` → `UnifiedBillRecord[]`
+
+### Adapters por Exchange
+
+| Exchange | Adapters | Observações |
+|----------|----------|-------------|
+| **Bybit** | [HistoryAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bybit/HistoryAdapter.ts) (229 LOC), [RestAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bybit/RestAdapter.ts) (118 LOC), [WsAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bybit/WsAdapter.ts) (78 LOC) | Time-sync dedicado (`syncBybitTime`). Categorias: linear + inverse. REST polling ativo (Short-Polling) para suprir deficiência do WS. |
+| **OKX** | [HistoryAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/okx/HistoryAdapter.ts) (188 LOC), [WsAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/okx/WsAdapter.ts) (63 LOC) | Inst types: SWAP, FUTURES, MARGIN. WS direto do browser. |
+| **Bitget** | [HistoryAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bitget/HistoryAdapter.ts) (197 LOC), [WsAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bitget/WsAdapter.ts) (103 LOC) | Product types: USDT-FUTURES, COIN-FUTURES, USDC-FUTURES. WS via proxy (Bitget bloqueia browser WS direto). |
+
+Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWsAuth()` para auth de REST e WebSocket. Cada `WsAdapter` parseia streams delta e injeta diretamente no `dashboardStore` via `getState()`.
+
+---
+
+## 6. Orquestradores (Factory Services)
+
+| Serviço | Arquivo | Papel |
+|---------|---------|-------|
+| **PositionHistoryService** | [PositionHistoryService.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/positions/PositionHistoryService.ts) | Factory → Adapter. Dois modos: `fetchExchangeHistory` (direto) e `fetchWithCache` (incremental com IndexedDB). |
+| **BillsHistoryService** | [BillsHistoryService.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/bills/BillsHistoryService.ts) | Factory → Adapter. Modo direto (sem cache IndexedDB por enquanto). |
+
+---
+
+## 7. Camada de Persistência Local (IndexedDB)
+
+[historyCache.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/historyCache.ts) — DB `crypto-dashboard-cache` com 2 object stores:
+
+| Store | Key | Índices | Uso |
+|-------|-----|---------|-----|
+| `positionHistory` | `id` (UnifiedHistoryPosition.id) | `by-connectionId`, `by-closeTime` | Cache incremental de trades encerrados |
+| `cacheMeta` | `connectionId` | — | Rastreia `lastFetchTimestamp` para fetches incrementais |
+
+**Fluxo incremental**: Load cache → detecta `lastFetchTimestamp` → fetch apenas novos → merge dedup por ID → persist.
+
+---
+
+## 8. Hooks React (Camada de Integração)
+
+| Hook | Arquivo | Responsabilidade |
+|------|---------|-----------------|
+| `useMultiExchangeWS` | [useMultiExchangeWS.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useMultiExchangeWS.ts) (349 LOC) | Gerencia ciclo de vida completo dos WebSockets. Exponential backoff (cap 60s). Ping/Pong a cada 20s. Short-Polling REST Bybit configurável. Mock data injection. |
+| `usePositionHistory` | [usePositionHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePositionHistory.ts) | Orquestra `PositionHistoryService.fetchWithCache()` em paralelo para todas as keys. Filtra por período in-memory. |
+| `useBillsHistory` | [useBillsHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useBillsHistory.ts) | Orquestra `BillsHistoryService.fetchBills()` em paralelo. Live + Mock mode. |
+| `useHistoryCachePolling` | [useHistoryCachePolling.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useHistoryCachePolling.ts) | Background polling configurável (default 15 min) para manter cache IndexedDB atualizado. |
+| `usePnLBySymbol` | [usePnLBySymbol.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePnLBySymbol.ts) | Agregação PnL por símbolo usando `Big.js`. |
+
+---
+
+## 9. Zustand Stores (Estado Global)
+
+| Store | Persistência | Campos-chave |
+|-------|-------------|--------------|
+| [apiKeysStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/apiKeysStore.ts) | `localStorage` (`crypto-dashboard-api-keys-v2`) | `keys[]` (id, label, exchange, apiKey, apiSecret, passphrase, isActive) |
+| [dashboardStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/dashboardStore.ts) | **Memória** (volátil) | `statuses{}`, `errors{}`, `balances{}`, `positions{}` + delta updaters |
+| [settingsStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/settingsStore.ts) | `localStorage` (`terminal-settings`) | `useMockData`, `bybitPollingInterval` (default 5s), `historyCacheInterval` (default 15min) |
+
+---
+
+## 10. Componentes React (UI)
+
+### Páginas Principais
+| Componente | Rota/Tab | Descrição |
+|------------|----------|-----------|
+| [Dashboard.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Dashboard.tsx) (23KB) | `dashboard` | Painel principal: balances masonry, Donut chart (risk by exchange), Treemap (cross-exchange assets). |
+| [Positions.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Positions.tsx) | `positions` | Container com tabs Open/Closed. |
+| [OpenPositions.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/OpenPositions.tsx) (21KB) | — | Tabela real-time com modos Detailed/Lite. PnL, ROE, Margin, Liquidation. |
+| [ClosedPositions.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ClosedPositions.tsx) (15KB) | — | Histórico com filtros de período (1w/2w/1m/custom). |
+| [AnalyticsDashboard.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/AnalyticsDashboard.tsx) (15KB) | `analytics` | Win Rate, Profit Factor, Seasonality (day/hour), External Flow, Milestone Matrix. |
+| [PnLBySymbol.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/PnLBySymbol.tsx) (14KB) | `analytics-pnl-symbol` | Tabela/gráfico PnL agregado por ativo. |
+| [ReportsDashboard.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/ReportsDashboard.tsx) (4.7KB) | `reports` | Exportação PDF/CSV/Excel do histórico. |
+| [ApiKeys.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ApiKeys.tsx) (16KB) | `api-keys` | CRUD de credenciais com Sparklines de PnL. |
+| [Settings.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Settings.tsx) (10KB) | `settings` | Toggle Mock Data, polling intervals, cache management. |
+| [ApiTester.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ApiTester.tsx) (15KB) | `api-tester` | **Dev Tools** — Testes de conectividade REST/WS brutos. ⚠️ Tech Debt Permitido. |
+
+### Componentes Auxiliares
+| Componente | Responsabilidade |
+|------------|-----------------|
+| [Sidebar.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Sidebar.tsx) | Navegação colapsável com badge de posições abertas. |
+| [StatusBar.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/StatusBar.tsx) | Barra inferior com status de conexão por exchange. |
+| [PositionsTicker.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/PositionsTicker.tsx) | Marquee ticker em tempo real no topo. |
+| [WorkSpace.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/WorkSpace.tsx) | Container wrapper simples. |
+
+---
+
+## 11. Utilitários Puros
+
+| Arquivo | Papel | LOC |
+|---------|-------|-----|
+| [cryptoLib.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/utils/cryptoLib.ts) | `hmacSha256()` via Web Crypto API (hex/base64) | 23 |
+| [math-crypto.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/utils/math-crypto.ts) | `calculateRoe()` | 7 |
+| [analyticsMath.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/utils/analyticsMath.ts) | Win Rate, Profit Factor, Funding Efficiency, Daily ROI, Seasonality | 79 |
+| [milestoneMath.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/utils/milestoneMath.ts) | Milestone Price Matrix (⚠️ atualmente simulado) | 67 |
+| [exportUtils.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/utils/exportUtils.ts) | Exportação PDF/CSV/Excel | 73 |
+| [formatters.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/utils/formatters.ts) | Formatação de moedas (USD/BRL) | ~20 |
+| [proxyFetch.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/utils/proxyFetch.ts) | `proxyFetch()` + `hybridFetch()` (Direct → Proxy fallback) | 42 |
+
+---
+
+## 12. Mock Data & Testes
+
+### Mocks
+Em [src/mock/](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/mock/):
+- `accounts.json` (1.2KB) — 3 contas mockadas
+- `balances.json` (18KB) — ~50 balances
+- `positions.json` (308KB) — ~150 posições
+- `history.json` (251KB) — ~500 trades históricos
+- `bills.json` (17KB) — ~50 depósitos/saques
+- `generateMocks.js` (6KB) — Script gerador
+
+Toggle via `settingsStore.useMockData`. Quando ativado, desconecta WebSockets reais e injeta JSONs estáticos.
+
+### Testes
+- [analyticsMath.test.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/utils/analyticsMath.test.ts) — Unit tests com Vitest
+- Runner: `npm test` → `vitest run`
+
+---
+
+## 13. Fluxo de Dados Completo
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant App as App.tsx
+    participant Hook as useMultiExchangeWS
+    participant WS as WebSocket
+    participant Adapter as WsAdapter
+    participant Store as dashboardStore
+    participant UI as Dashboard/Positions
+
+    User->>App: Adiciona API Key
+    App->>Hook: keys[] changed
+    Hook->>WS: new WebSocket(wsUrl)
+    Hook->>Adapter: getWsAuth() + getHeaders()
+    WS->>Hook: onopen → send auth
+    WS->>Hook: onmessage (stream)
+    Hook->>Adapter: WsParsers.parseStream()
+    Adapter->>Store: updateBalancesDelta / updatePositionsDelta
+    Store->>UI: Zustand reactive re-render
+```
+
+---
+
+## 14. Documentação Existente
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| [AGENTS.MD](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/AGENTS.MD) | Constituição do projeto (SRP, Normalization Layer, Resiliência). Fases 1-2 ✅ concluídas. |
+| [README.md](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/README.md) | Visão geral, setup, features, guia de manutenção. |
+| [specs/ARCHITECTURE.md](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/specs/ARCHITECTURE.md) | Specs técnicas consolidadas. |
+| [specs/EVOLUTION_TASKS.md](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/specs/EVOLUTION_TASKS.md) | Histórico de refatorações e sprints. |
+| [specs/QUALITY_AUDIT.md](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/specs/QUALITY_AUDIT.md) | Auditoria de qualidade anterior. |
+| [specs/SECURITY_HARDENING.md](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/specs/SECURITY_HARDENING.md) | Hardening de segurança. |
+
+---
+
+## 15. Pontos de Atenção Identificados
+
+> [!WARNING]
+> ### Débitos Técnicos Ativos
+> 1. **`milestoneMath.ts`** — A lógica de Milestone Matrix é **100% simulada** (`Math.random()`). Precisa de integração com K-lines reais de BTC para reconstruir equity histórica.
+> 2. **`ApiTester.tsx`** — Exceção oficial (Dev Tools): consome dados brutos das APIs sem passar pela camada de normalização.
+> 3. **`BillsHistoryService`** — Não possui cache IndexedDB (diferente do `PositionHistoryService`). Cada consulta de Bills faz fetch direto.
+
+> [!NOTE]
+> ### Saúde Arquitetural
+> - **56 arquivos TypeScript/TSX** no total em `src/`
+> - Nenhum arquivo acima de 350 LOC (compliance com AGENTS.md §3: max 300, com margem tolerável)
+> - `Dashboard.tsx` com 23KB é o maior componente — candidato a decomposição futura
+> - Todos os adapters seguem o contrato `IExchangeAdapter` (Strategy Pattern ✅)
+> - Zero instâncias de raw API access em componentes React (exceto `ApiTester`)
