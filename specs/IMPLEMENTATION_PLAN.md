@@ -14,7 +14,10 @@ Este documento rastreia a evolução da implementação da Camada de Normalizaç
     - Divisões reversas do Notional Financeiro (`cumEntryValue` / `entryPrice`) na Bybit para determinar as criptos totais reais posicionadas em contratos inversos.
 - [X] **Tarefa 3 (Refatoração de Paineis GUI):** Atualização dos componentes React de listagem (*ClosedPositions*, *OpenPositions*, *PositionsTicker*) para renderizar a abstração `Base Coin Size` VS `Notional USD Value` fluentemente e sem degradações lógicas.
 
-## Fase 3: Lógica Histórica, Real-Time Orquestrado e Gestão (Tarefas Complexas) - [PENDENTE / EM ANDAMENTO]
-- [ ] **Tarefa 1 (Saldos e Agregação):** Consolidar o endpoint final `getBalance()` via Aggregators. Limpar conversões arbitrárias de `totalEquity`, `usdtEquity` e `totalEq`, blindando os dados para UI através de *Big.js/Math*.
-- [ ] **Tarefa 2 (Sincronia WebSocket Unificada):** Normalizar definitivamente campos como `holdSide`, `side`, `posSide` na injeção bruta dos *WsAdapters* e consolidar as tratativas de Updates/Flickers sem interferir no estado real React Zustand.
-- [ ] **Tarefa 3 (Tratamento de Rate Limits e Janelas Históricas):** Auditar e alertar as lacunas e *rate limit limits* inerentes de cada *Exchange* (Ex: avisos informando que a Bitget suporta apenas *90 dias* vs os 2 anos da Bybit) ao longo das interfaces de Relatórios.
+## Fase 3: Lógica Histórica, Real-Time Orquestrado e Gestão (Tarefas Complexas) - [CONCLUÍDA]
+- [X] **Tarefa 1 (Saldos e Agregação):** Consolidar o endpoint final `getBalance()` via Aggregators. Limpar conversões arbitrárias de `totalEquity`, `usdtEquity` e `totalEq`, blindando os dados para UI através de *Big.js/Math*. (Implementado via `ExchangeAggregator.ts` com Bootloader Híbrido).
+- [X] **Tarefa 2 (Sincronia WebSocket Unificada):** Normalizar definitivamente campos como `holdSide`, `side`, `posSide` na injeção bruta dos *WsAdapters* e consolidar as tratativas de Updates/Flickers sem interferir no estado real React Zustand. (Adapters únicos concentraram a lógica).
+- [X] **Tarefa 3 (Tratamento de Rate Limits e Janelas Históricas):** Auditar e alertar as lacunas e *rate limit limits* inerentes de cada *Exchange* ao longo das interfaces de Relatórios.
+  - [X] Criar compomente `HistoryLimitWarning.tsx` para apresentar alertas elegamentes sobre limite da API.
+  - [X] Implementar regra de detecção: Limitados Bitget (90 dias) e OKX (90 dias) vs Bybit (2 anos).
+  - [X] Injetar o alerta nas telas `ClosedPositions.tsx`, `AnalyticsDashboard.tsx`, e `ReportsDashboard.tsx`.

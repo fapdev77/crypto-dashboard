@@ -3,6 +3,7 @@ import { usePositionHistory } from '../../hooks/usePositionHistory';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportUtils';
 import { DownloadCloud, FileText, Table } from 'lucide-react';
 import { format } from 'date-fns';
+import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
 
 export function ReportsDashboard() {
   const [period, setPeriod] = useState<'1w'|'2w'|'1m'|'custom'>('1m');
@@ -49,6 +50,8 @@ export function ReportsDashboard() {
           </div>
         </div>
       </div>
+      
+      <HistoryLimitWarning period={period} />
 
       <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
         <div className="overflow-x-auto">

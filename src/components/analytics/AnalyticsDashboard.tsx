@@ -7,6 +7,7 @@ import { calculateWinRate, calculateProfitFactor, calculateTotalFees, calculateD
 import { calculateMilestones } from '../../utils/milestoneMath';
 import { Target, DollarSign, PieChart, Calendar, Activity, ArrowRightLeft, ShieldAlert, Mountain } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
+import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
 
 export function AnalyticsDashboard() {
   const [period, setPeriod] = useState<'1w'|'2w'|'1m'|'custom'>('1m');
@@ -61,6 +62,8 @@ export function AnalyticsDashboard() {
           <option value="1m">Last 30 Days</option>
         </select>
       </div>
+      
+      <HistoryLimitWarning period={period} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Quality & Consistency Metrics */}

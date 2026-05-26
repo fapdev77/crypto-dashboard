@@ -7,6 +7,8 @@ import { format } from 'date-fns';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 
+import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
+
 interface ClosedPositionsProps {
   filterText: string;
   exchangeFilter: string;
@@ -109,6 +111,8 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
 
   return (
     <div className="space-y-6">
+      <HistoryLimitWarning period={period} customStartDate={customStartDate} customEndDate={customEndDate} />
+      
       {closedStats && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
           <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
