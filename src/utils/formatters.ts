@@ -17,7 +17,7 @@ export function formatValue(val: number | undefined | null, decimalsOrSymbol: nu
   return val.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-export function formatCrypto(val: number | undefined | null, decimalsOrSymbol: number | string = 6): string {
+export function formatCrypto(val: number | undefined | null, decimalsOrSymbol: number | string = 8): string {
   if (val === undefined || val === null || isNaN(val)) return '--';
   
   if (typeof decimalsOrSymbol === 'string') {
