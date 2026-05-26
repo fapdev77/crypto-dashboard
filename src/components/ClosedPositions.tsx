@@ -327,10 +327,10 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-mono text-white text-sm">
-                        {p.closeTime && !isNaN(p.closeTime) ? format(new Date(p.closeTime), 'yyyy-MM-dd') : '--'}
+                        {p.closeUpdateTime && !isNaN(p.closeUpdateTime) ? format(new Date(p.closeUpdateTime), 'yyyy-MM-dd') : '--'}
                       </div>
                       <div className="font-mono text-white text-sm mt-1">
-                        {p.closeTime && !isNaN(p.closeTime) ? format(new Date(p.closeTime), 'HH:mm:ss') : '--'}
+                        {p.closeUpdateTime && !isNaN(p.closeUpdateTime) ? format(new Date(p.closeUpdateTime), 'HH:mm:ss') : '--'}
                       </div>
                     </td>
                   </tr>

@@ -8,7 +8,7 @@ const formatCurrency = (val: number) => `$${Math.abs(val).toFixed(2)}${val < 0 ?
 
 const getExportData = (history: UnifiedHistoryPosition[]) => {
   return history.map(p => ({
-    'Date': format(new Date(p.closeTime), 'yyyy-MM-dd HH:mm'),
+    'Date': format(new Date(p.closeUpdateTime), 'yyyy-MM-dd HH:mm'),
     'Exchange': p.exchange,
     'Symbol': p.symbol,
     'Side': p.side.toUpperCase(),

@@ -77,7 +77,7 @@ export function ReportsDashboard() {
                   const net = p.realizedPnl + (p.fundingFee || 0) + (p.tradingFee || 0);
                   return (
                     <tr key={p.id} className="border-b border-[#2a2b30]/50 hover:bg-[#2a2b30]/20 transition-colors">
-                      <td className="px-4 py-3 text-gray-300">{format(new Date(p.closeTime), 'MMM dd, HH:mm')}</td>
+                      <td className="px-4 py-3 text-gray-300">{format(new Date(p.closeUpdateTime), 'MMM dd, HH:mm')}</td>
                       <td className="px-4 py-3 text-gray-400 capitalize">{p.exchange}</td>
                       <td className="px-4 py-3 font-medium text-white">{p.symbol}</td>
                       <td className="px-4 py-3">

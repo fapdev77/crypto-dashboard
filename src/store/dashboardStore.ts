@@ -51,7 +51,6 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     newBalances.forEach(b => {
       nextBalances[b.id] = b;
     });
-    // Remove zero balances
     for (const key in nextBalances) {
       if (nextBalances[key].amount <= 0) {
         delete nextBalances[key];
@@ -84,7 +83,6 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     newPositions.forEach(p => {
       nextPositions[p.id] = p;
     });
-    // Remove zero size positions
     for (const key in nextPositions) {
       if (Math.abs(nextPositions[key].size) <= 0) {
         delete nextPositions[key];

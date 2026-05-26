@@ -47,7 +47,6 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
       const service = new PositionHistoryService();
       let allHistory: UnifiedHistoryPosition[] = [];
 
-      // Parallel connection requests using the new caching strategy
       const promises = keys.map(k => service.fetchWithCache(k));
       const results = await Promise.all(promises);
       
@@ -55,12 +54,10 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
         allHistory = [...allHistory, ...result];
       }
 
-      // Filter by the requested period in-memory since cache has EVERYTHING
       if (start !== undefined && end !== undefined) {
         allHistory = allHistory.filter(p => p.closeTime >= start! && p.closeTime <= end!);
       }
 
-      // Order by close time descending
       allHistory.sort((a, b) => b.closeTime - a.closeTime);
 
       if (isMounted) {

@@ -55,7 +55,7 @@ export interface UnifiedHistoryPosition {
   ccy?: string;
   side: PositionSide;
   realizedPnl: number;
-  closeTime: number; // timestamp
+  closeUpdateTime: number; // timestamp
   entryPrice?: number;
   closePrice?: number;
   size?: number;

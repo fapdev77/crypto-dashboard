@@ -224,14 +224,14 @@ export class BitgetAdapter implements IExchangeAdapter {
     const results = await Promise.all(productTypes.map(pType => fetchType(pType)));
 
     return results.flat().map((p: any) => {
-      const cTime = parseInt(p.utime || p.uTime || p.ctime || p.cTime || '0', 10);
+      const closeUpdateTime = parseInt(p.utime || p.uTime || p.ctime || p.cTime || '0', 10);
       let totalFee = 0;
       if (p.openFee) totalFee += parseFloat(p.openFee);
       if (p.closeFee) totalFee += parseFloat(p.closeFee);
       if (p.fee) totalFee += parseFloat(p.fee);
 
       return {
-        id: `${key.id}-${p.posId || p.positionId}-${cTime}`,
+        id: `${key.id}-${p.posId || p.positionId}-${closeUpdateTime}`,
         connectionId: key.id,
         label: key.label,
         exchange: 'bitget',
@@ -239,7 +239,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         ccy: p.marginCoin || 'USDT',
         side: p.holdSide?.toLowerCase() === 'long' || p.side?.toLowerCase() === 'buy' ? 'long' : 'short',
         realizedPnl: parseFloat(p.netProfit ?? p.pnl ?? p.achievedProfits ?? '0'),
-        closeTime: cTime,
+        closeUpdateTime: closeUpdateTime,
         entryPrice: parseFloat(p.openPriceAvg || '0'),
         closePrice: parseFloat(p.closePriceAvg || '0'),
         size: parseFloat(p.closeTotalPos || '0'),

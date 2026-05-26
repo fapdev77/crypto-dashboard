@@ -11,9 +11,6 @@ export function usePnLBySymbol(
   exchangeFilter: string,
   instrumentFilter: string
 ) {
-  // We use the existing usePositionHistory to fetch data
-  // But wait, usePositionHistory doesn't support 'all' right now.
-  // Actually, position history uses cache, so we can fetch custom period or basically history available.
   const mappedPeriod = period === 'all' || period === '3m' || period === 'today' ? 'custom' : period;
   const mappedStart = period === 'all' ? new Date(0).toISOString().split('T')[0] : 
                       period === '3m' ? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
@@ -32,7 +29,6 @@ export function usePnLBySymbol(
         continue;
       }
 
-      // Infer instrument
       let instrument = 'Unknown';
       if (pos.exchange === 'bitget') {
         const pType = pos.raw?.productType;
@@ -58,7 +54,6 @@ export function usePnLBySymbol(
         continue;
       }
 
-      // Determine ccy. Fallback to USDT if it doesn't exist, though it should.
       const isUSDT = pos.symbol.includes('USDT');
       const isUSDC = pos.symbol.includes('USDC');
       const ccy = pos.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : pos.symbol.split('-')[0].replace(/USD.*/, '')));
@@ -94,7 +89,6 @@ export function usePnLBySymbol(
       }
     }
 
-    // Convert Map back to array
     return Array.from(symbolMap.values());
   }, [positions, exchangeFilter, instrumentFilter]);
 

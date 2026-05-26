@@ -43,8 +43,8 @@ export function calculateDailyROI(history: UnifiedHistoryPosition[]): number {
   if (history.length === 0) return 0;
   const totalPnL = history.reduce((sum, p) => sum + p.realizedPnl + (p.fundingFee || 0) + (p.tradingFee || 0), 0);
   
-  const minTime = Math.min(...history.map(p => p.closeTime));
-  const maxTime = Math.max(...history.map(p => p.closeTime));
+  const minTime = Math.min(...history.map(p => p.closeUpdateTime));
+  const maxTime = Math.max(...history.map(p => p.closeUpdateTime));
   const daysActive = Math.max(1, (maxTime - minTime) / (1000 * 60 * 60 * 24));
   
   return totalPnL / daysActive;
@@ -60,7 +60,7 @@ export function getSeasonalityData(history: UnifiedHistoryPosition[]) {
   hourWindows.forEach(h => hourMap[h] = 0);
   
   history.forEach(p => {
-    const d = new Date(p.closeTime);
+    const d = new Date(p.closeUpdateTime);
     const dayName = days[d.getDay()];
     const net = p.realizedPnl + (p.fundingFee || 0) + (p.tradingFee || 0);
     dayMap[dayName] += net;

@@ -190,13 +190,13 @@ export class BybitAdapter implements IExchangeAdapter {
     };
 
     const results = await Promise.all(categories.map(cat => fetchCategory(cat)));
-    const cTimeFallback = () => Date.now().toString(36);
+    const closeUpdateTimeFallback = () => Date.now().toString(36);
 
     return results.flat().map((p: any) => {
-      const cTime = parseInt(p.updatedTime || '0', 10);
+      const closeUpdateTime = parseInt(p.updatedTime || '0', 10);
       const createdTime = parseInt(p.createdTime || '0', 10);
       return {
-        id: `${key.id}-${p.orderId || p.closedPnlId || cTimeFallback()}-${cTime}`,
+        id: `${key.id}-${p.orderId || p.closedPnlId || closeUpdateTimeFallback()}-${closeUpdateTime}`,
         connectionId: key.id,
         label: key.label,
         exchange: 'bybit',
@@ -204,7 +204,7 @@ export class BybitAdapter implements IExchangeAdapter {
         ccy: p.settleCoin || p.coin || 'USDT',
         side: p.side === 'Buy' ? 'long' : p.side === 'Sell' ? 'short' : 'net',
         realizedPnl: parseFloat(p.closedPnl || '0'),
-        closeTime: cTime,
+        closeUpdateTime: closeUpdateTime,
         createdTime: createdTime,
         entryPrice: parseFloat(p.avgEntryPrice || '0'),
         closePrice: parseFloat(p.avgExitPrice || '0'),

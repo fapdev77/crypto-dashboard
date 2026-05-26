@@ -204,9 +204,9 @@ export class OkxAdapter implements IExchangeAdapter {
     const results = await Promise.all(instTypes.map(type => fetchType(type)));
 
     return results.flat().map((p: any) => {
-      const cTime = parseInt(p.uTime || p.cTime || '0', 10);
+      const closeUpdateTime = parseInt(p.uTime || p.cTime || '0', 10);
       return {
-        id: `${key.id}-${p.instId}-${cTime}`,
+        id: `${key.id}-${p.instId}-${closeUpdateTime}`,
         connectionId: key.id,
         label: key.label,
         exchange: 'okx',
@@ -214,7 +214,7 @@ export class OkxAdapter implements IExchangeAdapter {
         ccy: p.ccy || 'USDT',
         side: p.posSide === 'long' || p.direction === 'long' ? 'long' : 'short',
         realizedPnl: parseFloat(p.realizedPnl || p.pnl || '0'),
-        closeTime: cTime,
+        closeUpdateTime: closeUpdateTime,
         entryPrice: parseFloat(p.openAvgPx || '0'),
         closePrice: parseFloat(p.avgPx || p.closeAvgPx || '0'),
         size: parseFloat(p.closeVol || p.closeTotalPos || '0'),
