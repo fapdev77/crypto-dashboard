@@ -1,11 +1,31 @@
-export function formatValue(val: number | undefined | null, decimals: number = 2): string {
+export function isStablecoin(ccy: string | undefined | null): boolean {
+  if (!ccy) return false;
+  const normalized = ccy.toUpperCase();
+  return ['USDT', 'USDC', 'USDG', 'USD', 'BRL'].some(stable => normalized.includes(stable));
+}
+
+export function formatValue(val: number | undefined | null, decimalsOrSymbol: number | string = 2): string {
   if (val === undefined || val === null || isNaN(val)) return '--';
+  
+  let decimals = 2;
+  if (typeof decimalsOrSymbol === 'number') {
+    decimals = decimalsOrSymbol;
+  } else if (typeof decimalsOrSymbol === 'string') {
+    decimals = isStablecoin(decimalsOrSymbol) ? 2 : 8;
+  }
+  
   return val.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-export function formatCrypto(val: number | undefined | null, decimals: number = 6): string {
+export function formatCrypto(val: number | undefined | null, decimalsOrSymbol: number | string = 6): string {
   if (val === undefined || val === null || isNaN(val)) return '--';
-  return val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: decimals });
+  
+  if (typeof decimalsOrSymbol === 'string') {
+    const decimals = isStablecoin(decimalsOrSymbol) ? 2 : 8;
+    return val.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+  
+  return val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: decimalsOrSymbol });
 }
 
 export function formatPrice(val: number | undefined | null, isFiatPair: boolean = true): string {

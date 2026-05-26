@@ -1,7 +1,7 @@
 import { ApiCredentials } from '../../store/apiKeysStore';
-import { BybitWsAdapter } from '../adapters/bybit/WsAdapter';
-import { OkxWsAdapter } from '../adapters/okx/WsAdapter';
-import { BitgetWsAdapter } from '../adapters/bitget/WsAdapter';
+import { BybitAdapter } from '../adapters/BybitAdapter';
+import { OkxAdapter } from '../adapters/OkxAdapter';
+import { BitgetAdapter } from '../adapters/BitgetAdapter';
 
 export class WsParsers {
   static parseStream(config: ApiCredentials, data: any) {
@@ -12,11 +12,11 @@ export class WsParsers {
     }
     
     if (exchange === 'okx') {
-      OkxWsAdapter.parse(cid, exchange, label, data);
+      OkxAdapter.parse(cid, exchange, label, data);
     } else if (exchange === 'bybit') {
-      BybitWsAdapter.parse(cid, exchange, label, data);
+      BybitAdapter.parse(cid, exchange, label, data);
     } else if (exchange === 'bitget') {
-      BitgetWsAdapter.parse(cid, exchange, label, data);
+      BitgetAdapter.parse(cid, exchange, label, data);
     }
   }
 }

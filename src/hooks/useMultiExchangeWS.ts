@@ -8,10 +8,10 @@ import mockAccountsData from '../mock/accounts.json';
 import mockBalancesData from '../mock/balances.json';
 import mockPositionsData from '../mock/positions.json';
 import { WsParsers } from '../services/ws/WsParsers';
-import { BybitRestAdapter } from '../services/adapters/bybit/RestAdapter';
-import { BybitHistoryAdapter } from '../services/adapters/bybit/HistoryAdapter';
-import { OkxHistoryAdapter } from '../services/adapters/okx/HistoryAdapter';
-import { BitgetHistoryAdapter } from '../services/adapters/bitget/HistoryAdapter';
+import { BybitAdapter } from '../services/adapters/BybitAdapter';
+import { BitgetAdapter } from '../services/adapters/BitgetAdapter';
+import { OkxAdapter } from '../services/adapters/OkxAdapter';
+import { ExchangeAggregator } from '../services/adapters/ExchangeAggregator';
 
 const getBitgetUrl = () => {
   if (typeof window !== 'undefined') {
@@ -140,27 +140,17 @@ export function useMultiExchangeWS() {
   };
 
   const syncBybitRestData = async (config: ApiCredentials) => {
-    const { id, exchange, apiKey, apiSecret } = config;
     try {
-      // console.log(`[REST-${id}] Buscando dados para Bybit via REST...`);
-      const [walletData, positionsData] = await Promise.all([
-        BybitRestAdapter.fetchWallet(apiKey, apiSecret),
-        BybitRestAdapter.fetchPositions(apiKey, apiSecret)
+      const adapter = new BybitAdapter();
+      const [balances, positions] = await Promise.all([
+        adapter.getBalance(config),
+        adapter.getOpenPositions(config)
       ]);
-      
       const currentState = useDashboardStore.getState();
-
-      if (walletData) {
-        const balances = BybitRestAdapter.parseBalances(walletData, id, exchange, config.label);
-        if (balances.length > 0) currentState.updateBalances(id, balances);
-      }
-
-      if (positionsData) {
-        const positions = BybitRestAdapter.parsePositions(positionsData, id, config.label);
-        if (positions.length > 0) currentState.updatePositions(id, positions);
-      }
+      currentState.updateBalances(config.id, balances as any);
+      currentState.updatePositions(config.id, positions);
     } catch (err) {
-      console.error(`[REST-${id}] Bybit REST fetch falhou:`, err);
+      console.error(`[REST-${config.id}] Bybit REST polling failed:`, err);
     }
   };
 
@@ -198,37 +188,36 @@ export function useMultiExchangeWS() {
     const ws = new WebSocket(wsUrl);
     socketsRef.current[id] = ws;
 
-    if (exchange === 'bybit') {
-      (async () => {
-        try {
-          console.log(`[REST-${id}] Buscando dados iniciais para Bybit via REST e iniciando Short-Polling...`);
-          await BybitHistoryAdapter.syncBybitTime();
-          await syncBybitRestData(config);
-          console.log(`[REST-${id}] Dados iniciais carregados para Bybit.`);
+    // REST Bootloader for all exchanges
+    (async () => {
+      try {
+        console.log(`[REST-${id}] Bootloading initial balances and positions...`);
+        await ExchangeAggregator.bootloadConnection(config);
+        console.log(`[REST-${id}] REST Bootload completed.`);
+        
+        if (exchange === 'bybit') {
           startBybitPolling(config);
-        } catch (error: any) {
-          console.error(`[REST-${id}] Erro ao buscar dados iniciais para Bybit:`, error);
-          setConnectionError(id, `REST Error: ${error.message}`);
-          toast.error(`Bybit Initial Sync Failed: ${error.message}`, { id: `rest-err-${id}` });
         }
-      })();
-    }
+      } catch (error: any) {
+        console.error(`[REST-${id}] REST Bootload failed:`, error);
+        setConnectionError(id, `REST Bootload Error: ${error.message}`);
+        toast.error(`${exchange.toUpperCase()} initial sync failed: ${error.message}`, { id: `rest-err-${id}` });
+      }
+    })();
 
     ws.onopen = async () => {
       console.log(`[WS-${id}] Conexão física estabelecida com sucesso.`);
-      setConnectionStatus(id, 'connected', null);
-      setConnectionError(id, null);
       retryCounters.current[id] = 0; // Reset retry count on successful open
       startPing(config, ws);
 
       try {
         let authPayload;
         if (exchange === 'okx') {
-          authPayload = await OkxHistoryAdapter.getWsAuth(apiKey, apiSecret, passphrase || '');
+          authPayload = await OkxAdapter.getWsAuth(apiKey, apiSecret, passphrase || '');
         } else if (exchange === 'bitget') {
-          authPayload = await BitgetHistoryAdapter.getWsAuth(apiKey, apiSecret, passphrase || '');
+          authPayload = await BitgetAdapter.getWsAuth(apiKey, apiSecret, passphrase || '');
         } else if (exchange === 'bybit') {
-          authPayload = await BybitHistoryAdapter.getWsAuth(apiKey, apiSecret);
+          authPayload = await BybitAdapter.getWsAuth(apiKey, apiSecret);
         }
 
         if (authPayload) {

@@ -4,6 +4,21 @@ export type ExchangeName = 'bybit' | 'bitget' | 'okx';
 
 export type PositionSide = 'long' | 'short' | 'net';
 
+export interface UnifiedBalance {
+  id: string; // e.g., 'connId-ccy'
+  connectionId: string;
+  exchange: ExchangeName;
+  label: string;
+  ccy: string;
+  amount: number;
+  usdValue: number;
+  totalEquity?: number;
+  walletBalance?: number;
+  availableMargin?: number;
+  unrealizedPnl?: number;
+  raw?: any;
+}
+
 export interface UnifiedPosition {
   id: string; // Ex: 'connId-okx-BTC-USDT-long'
   connectionId: string;
@@ -13,7 +28,6 @@ export interface UnifiedPosition {
   ccy?: string; // Margin/PNL currency (e.g. USDT, BTC)
   side: PositionSide;
   size: number; // For position size
-  valueUsd?: number; // approx value
   notionalUsd?: number; // True notional value from API
   entryPrice: number;
   markPrice: number;
@@ -28,6 +42,7 @@ export interface UnifiedPosition {
   roe?: number; // Return on Equity (%)
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
+  instrumentType?: string; // e.g. linear/inverse, swap, margin, futures
   raw?: any; // To store the original broker data if needed
 }
 

@@ -83,14 +83,14 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 - ✅ **Sidebar Inteligente e Sparklines Estilizados:** A barra de menus (Sidebar) foi atualizada para permitir o recurso "Collapsible", oferecendo uma área expansível ou oculta que prioriza o espaço utilitário da tela. Sparklines de PnL Diário foram introduzidos nativamente na lista de subcontas nos modais das corretoras.
 - ✅ **Ticker de Mercado Dinâmico (Real-Time):** Adicionado ao cabeçalho global do sistema um mostrador deslizante (Marquee Carousel) interativo que espelha os ativos das posições em aberto, revelando a variação base e preço das moedas operadas em tempo real.
 - ✅ **Refinamentos na Interface (UI/UX):** Ocultamento inteligente de scrollbars verticais e personalização das barras horizontais implementando o estilo responsivo nativo Dark Mode (`index.css`), o que traz uma imersão muito mais elegante enquanto se monitora ativamente as tabelas do Dashboard.
-- ✅ **Carga REST híbrida introduzida para Bybit:** Websockets limitavam listagens estáticas ativas, a API resolve com fetchs silenciosos aos Endpoints unificados `v5/account/wallet-balance` (somente `UNIFIED` account type suportado e recomendado após a migração da corretora) e posições pre-cached.
+- ✅ **Bootloading REST Paralelo (ExchangeAggregator):** Websockets limitavam listagens estáticas ativas (snapshots base de portfólio), o dashboard agora orquestra uma carga paralela híbrida assíncrona ao iniciar a aplicação buscando simultaneamente balanços e posições (`v5/account/wallet-balance`, `api/v2/spot/account/assets`, etc.) para **todas** as corretoras integradas.
 - ✅ **Ocultamento de PNL de Posições Nulas:** Só aparecem recursos em execução com size > 0 .
 
 ### Manutenção - Adicionando Nova Corretora
 Caso deseja escalonar o dashboard: 
-1. Crie os arquivos `RestAdapter`, `HistoryAdapter` e `WsAdapter` na pasta `src/services/adapters/[nova_corretora]`.
-2. Inclua o nome referenciado no Union type `Exchange` de lib `store/apiKeysStore.ts` e propague sua tipagem via React Forms da modal de Configurações `components/ApiConfigModal.tsx`.
-3. Direcione a lógica central de Websockets da nova plataforma nos hooks (`useMultiExchangeWS.ts`) e instancie-a nas fábricas `PositionHistoryService` e `BillsHistoryService`.
+1. Crie um único arquivo adapter (ex: `NovaCorretoraAdapter.ts`) na pasta `src/services/adapters/` estendendo a interface comum `IExchangeAdapter`. Ele deve agrupar métodos de `getBalance`, `getOpenPositions`, polling de histórico REST, fetch de bills e o parsing global do WebSocket (limitado a < 400 linhas para preservar o contexto e a regra do *Clean Code*).
+2. Inclua o nome referenciado no Union type `ExchangeName` do tipo de configurações (em `types.ts` ou `store/apiKeysStore.ts`) e propague sua tipagem via React Forms no modal de Configurações `components/ApiConfigModal.tsx`.
+3. Direcione a inicialização na classe `ExchangeAggregator.ts`, no hook de websockets (`useMultiExchangeWS.ts`) e instancie-a nas fábricas `PositionHistoryService` e `BillsHistoryService`.
 
 ## 📚 Documentação para Desenvolvedores e Engenharia de IA
 Este projeto adota o modelo **Spec-Driven Development (SDD)** e está preparado para recriação ou refatoração por IAs Generativas (ex: Antigravity, Claude, ChatGPT). 

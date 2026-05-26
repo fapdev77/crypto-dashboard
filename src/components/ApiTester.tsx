@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApiKeysStore, Exchange } from '../store/apiKeysStore';
-import { OkxHistoryAdapter } from '../services/adapters/okx/HistoryAdapter';
-import { BitgetHistoryAdapter } from '../services/adapters/bitget/HistoryAdapter';
-import { BybitHistoryAdapter } from '../services/adapters/bybit/HistoryAdapter';
+import { OkxAdapter } from '../services/adapters/OkxAdapter';
+import { BitgetAdapter } from '../services/adapters/BitgetAdapter';
+import { BybitAdapter } from '../services/adapters/BybitAdapter';
 import { proxyFetch } from '../utils/proxyFetch';
 import { Send, Play, Square, Wifi, WifiOff, Terminal, ListCollapse } from 'lucide-react';
 
@@ -75,15 +75,15 @@ export function ApiTester() {
       let headers: Record<string, string> = {};
       
       if (activeKey.exchange === 'okx') {
-         headers = await OkxHistoryAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
+         headers = await OkxAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
       } else if (activeKey.exchange === 'bitget') {
-         headers = await BitgetHistoryAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
+         headers = await BitgetAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
       } else if (activeKey.exchange === 'bybit') {
          // Bybit auth usually takes the payload string or query string.
          // If GET, query is everything after `?`.
          const queryStr = restPath.includes('?') ? restPath.split('?')[1] : '';
          const authPayload = restMethod === 'POST' ? restBody : queryStr;
-         headers = await BybitHistoryAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, authPayload) as Record<string, string>;
+         headers = await BybitAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, authPayload) as Record<string, string>;
       }
       
       const payloadObj = restMethod === 'POST' && restBody ? JSON.parse(restBody) : undefined;
@@ -119,11 +119,11 @@ export function ApiTester() {
       try {
         let exchangeCredentials: any = null;
         if (activeKey.exchange === 'okx') {
-          exchangeCredentials = await OkxHistoryAdapter.getWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
+          exchangeCredentials = await OkxAdapter.getWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
         } else if (activeKey.exchange === 'bitget') {
-          exchangeCredentials = await BitgetHistoryAdapter.getWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
+          exchangeCredentials = await BitgetAdapter.getWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
         } else if (activeKey.exchange === 'bybit') {
-          exchangeCredentials = await BybitHistoryAdapter.getWsAuth(activeKey.apiKey, activeKey.apiSecret);
+          exchangeCredentials = await BybitAdapter.getWsAuth(activeKey.apiKey, activeKey.apiSecret);
         }
 
         if (exchangeCredentials) {

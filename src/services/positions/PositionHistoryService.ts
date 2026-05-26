@@ -1,7 +1,7 @@
 import { UnifiedHistoryPosition } from '../../types';
-import { OkxHistoryAdapter } from '../adapters/okx/HistoryAdapter';
-import { BitgetHistoryAdapter } from '../adapters/bitget/HistoryAdapter';
-import { BybitHistoryAdapter } from '../adapters/bybit/HistoryAdapter';
+import { OkxAdapter } from '../adapters/OkxAdapter';
+import { BitgetAdapter } from '../adapters/BitgetAdapter';
+import { BybitAdapter } from '../adapters/BybitAdapter';
 import { IExchangeAdapter } from '../adapters/IExchangeAdapter';
 import {
   getCachedHistory,
@@ -15,11 +15,11 @@ export class PositionHistoryService {
   private getAdapter(exchange: string): IExchangeAdapter {
     switch (exchange) {
       case 'okx':
-        return new OkxHistoryAdapter();
+        return new OkxAdapter();
       case 'bitget':
-        return new BitgetHistoryAdapter();
+        return new BitgetAdapter();
       case 'bybit':
-        return new BybitHistoryAdapter();
+        return new BybitAdapter();
       default:
         throw new Error(`[PositionHistoryService] No adapter found for exchange: ${exchange}`);
     }
