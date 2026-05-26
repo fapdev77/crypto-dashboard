@@ -294,8 +294,13 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                       </div>
                     </td>
                     <td className="px-4 py-3 text-[#8E9299]">
-                      <div className="text-sm font-mono text-white">--</div>
-                      <div className="text-sm font-mono text-white mt-1">--</div>
+                      <div className="text-sm font-mono text-white">
+                        {p.createdTime && !isNaN(p.createdTime) ? format(new Date(p.createdTime), 'yyyy-MM-dd') : '--'}
+                      </div>
+                      <div className="font-mono text-white text-sm mt-1">
+                        {p.createdTime && !isNaN(p.createdTime) ? format(new Date(p.createdTime), 'HH:mm:ss') : '--'}
+                      </div>
+
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-mono text-white text-sm truncate">{formatPrice(p.entryPrice, isFiatPair)}</div>

@@ -193,7 +193,8 @@ export class BybitAdapter implements IExchangeAdapter {
     const cTimeFallback = () => Date.now().toString(36);
 
     return results.flat().map((p: any) => {
-      const cTime = parseInt(p.updatedTime || p.createdTime || '0', 10);
+      const cTime = parseInt(p.updatedTime || '0', 10);
+      const createdTime = parseInt(p.createdTime || '0', 10);
       return {
         id: `${key.id}-${p.orderId || p.closedPnlId || cTimeFallback()}-${cTime}`,
         connectionId: key.id,
@@ -204,6 +205,7 @@ export class BybitAdapter implements IExchangeAdapter {
         side: p.side === 'Buy' ? 'long' : p.side === 'Sell' ? 'short' : 'net',
         realizedPnl: parseFloat(p.closedPnl || '0'),
         closeTime: cTime,
+        createdTime: createdTime,
         entryPrice: parseFloat(p.avgEntryPrice || '0'),
         closePrice: parseFloat(p.avgExitPrice || '0'),
         size: parseFloat(p.closedSize || '0'),
