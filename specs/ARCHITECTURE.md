@@ -26,7 +26,33 @@ A stack atual repousa sobre fundações modernas, possuindo os seguintes pontos 
   - *Risk (Mitigated):* Replaced bloated third-party crypto libraries to ensure native cryptographic performance for HMAC-SHA256 and Base64 signatures.
 - **Networking:** Native `fetch` API (`hybridFetch`), Native WebSockets, Express Proxy (`http-proxy-middleware`).
 
-## 4. Data Flow and Synchronization
+## 4. Normalization Layer (Unified Interfaces vs Real Implementation)
+Conforme discutido no design técnico (SDD Phase 1 & 2), o projeto implementou o **Padrão Adapter** com subagregadores na camada `src/services/adapters/`. Segue o mapeamento exato executado no código em contraste com a documentação original.
+
+### UnifiedBalance (Balanços e Carteiras)
+- **Documentação de Design:** Previa extrair `Total Equity`, `Available Margin`, `Unrealized PnL` no payload global de conta.
+- **Implementação Real (`BalanceItem`):** Reduzimos a complexidade extraindo diretamente `amount` e `usdValue` por moeda individual (array de coins na corretora), delegando o cálculo do "Total Equity" para o momento de renderização da UI (`Dashboard.tsx`). Isso evita armazenar redundâncias (o total global pode ficar obsoleto em relação aos valores granulares individuais).
+- Campos retidos: `id`, `connectionId`, `exchange`, `label`, `ccy`, `amount`, `usdValue`.
+
+### UnifiedPosition (Posições Abertas)
+- **Documentação de Design:** Mapear `category`, `productType`, etc.
+- **Implementação Real:** Usamos inferências implícitas. Por exemplo, distinguimos Contratos Inversos Puros (Bybit `BTCUSD`) e pares Standard Fiat (Bybit & OKX `BTCUSDT`, `BTCUSDC`, `BTC-USD`) convertendo o Size para a métrica final durante o runtime do WebSocket e adaptadores REST.
+- Transformações Críticas (Size/Notional): 
+  - Na Bybit Inversa, o "size" enviado pela API na verdade é o "Notional USD", e para achar as moedas reais, divide-se por `entryPrice`.
+  - Na OKX, o "size" pode vir como "Contratos", sendo convertido pela relação via API `notionalUsd` ou geometria da posição, unificando para Size sempre representar a quantidade de Cripto Básica (Base Coin Size) ou vice-versa, permitindo formatadores visuais consistentes e assertivos na UI.
+
+### UnifiedPnLRecord (Histórico e Realized PnL)
+- **Documentação de Design:** Previsto captar "Closed PnL", "Net Profit", "Fees".
+- **Implementação Real (`UnifiedHistoryPosition`):** Concentramos a lógica em exibir o `realizedPnl`. Embora os fees sejam mapeados, eles não foram abstraídos da UI. Nas métricas de ROI e Value, adotou-se o modelo matemático agressivo e fallback:
+  - Na Okx (Rest) caso falte os "Sizes" no payload histórico ou o formato retorne Contratos, tentamos isolar o *Volume (Size)* retroagindo `pnl` dividido pela diferença de preços (`abs(closePx - entryPx)`).
+
+### Formatadores Core & Regras Decimais
+As regras propostas no SDD (2 casas para Stables, 8 para Assets) foram consolidadas integralmente em `src/utils/formatters.ts`:
+- **`formatCrypto`**: Utilizado para *Base Coin Sizes* com até 8 casas adaptativas.
+- **`formatPrice`**: Identifica dinamicamente via parâmetro se o par é Fiat/Stable (`true` = 2 a 4 casas dependendo do valor) ou Cripto Baseado (onde o preço precisa ir a 8 dígitos caso se trate de pares micro como SHIBUSDT).
+- **`formatValue`**: Resolve totais financeiros (`realizedPnl`, Total Equity, etc) impondo estaticamente 2 a 4 casas de precisão (USD Defaults).
+
+## 5. Data Flow and Synchronization
 ### WebSockets (Real-Time Streams)
 1. Browser opens WebSockets: 
    - `wss://ws.okx.com:8443/ws/v5/private`
