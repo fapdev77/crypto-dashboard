@@ -48,6 +48,8 @@ export interface UnifiedPosition {
   exchange: ExchangeName;
   label: string; // Account label/name
   symbol: string;
+  baseCoin: string; // E.g., 'BTC'
+  quoteCoin: string; // E.g., 'USDT' or 'USD'
   ccy?: string; // Margin/PNL currency (e.g. USDT, BTC)
   side: PositionSide; // 'long' | 'short' | 'net'
   size: number; // For position size
@@ -57,7 +59,7 @@ export interface UnifiedPosition {
   unrealizedPnl: number;
   realizedPnl: number;
   leverage: number;
-  marginMode?: 'cross' | 'isolated';
+  marginMode?: UnifiedMarginMode; // 'cross' | 'isolated'
   margin?: number; // Position Margin / Isolated Margin
   marginRatio?: number; // Tiered MMR or Margin Ratio (%)
   liquidationPrice?: number;
@@ -99,6 +101,8 @@ export interface UnifiedHistoryPosition {
   exchange: ExchangeName;
   label: string;
   symbol: string;
+  baseCoin: string;
+  quoteCoin: string;
   ccy?: string;
   side: PositionSide;
   realizedPnl: number;

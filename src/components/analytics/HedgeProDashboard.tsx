@@ -36,7 +36,7 @@ export function HedgeProDashboard() {
     inversePositions.forEach(pos => {
       const ex = pos.exchange;
       const cid = pos.connectionId;
-      const ccy = (pos.ccy || pos.symbol.split('-')[0]).toUpperCase();
+      const ccy = (pos.ccy || pos.baseCoin || pos.symbol.split('-')[0]).toUpperCase();
 
       if (!root[ex]) root[ex] = {};
       if (!root[ex][cid]) root[ex][cid] = {};
@@ -434,7 +434,7 @@ function AssetPnLChart({ history, ccy, currentPrice }: any) {
   // Filter history to this exact ccy
   const ccyHistory = history.filter((h: UnifiedHistoryPosition) => {
     const isBase = h.ccy?.toUpperCase() === ccy;
-    const isSym = h.symbol.split('-')[0].toUpperCase() === ccy; // e.g. BTC-USD
+    const isSym = (h.baseCoin || h.symbol.split('-')[0]).toUpperCase() === ccy; // e.g. BTC-USD
     return isBase || isSym;
   }).reverse(); // chronological
 

@@ -112,26 +112,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
 
         // Approximations
         const sizeValUsd = pos.notionalUsd || (pos.size * pos.markPrice); 
-        const isUSDT = pos.symbol.includes('USDT');
-        const isUSDC = pos.symbol.includes('USDC');
-        let posCcy = 'USDT';
-        
-        if (pos.exchange === 'bitget') {
-          const pType = pos.raw?.productType;
-          if (pType === 'USDT-FUTURES' || pos.symbol.endsWith('USDT')) posCcy = 'USDT';
-          else if (pType === 'USDC-FUTURES' || pos.symbol.endsWith('USDC')) posCcy = 'USDC';
-          else posCcy = pos.symbol.replace(/USD.*/, '');
-        } else if (pos.exchange === 'bybit') {
-          if (pos.symbol.endsWith('USDT') || pos.symbol.includes('USDT-')) posCcy = 'USDT';
-          else if (pos.symbol.endsWith('USDC') || pos.symbol.includes('USDC-')) posCcy = 'USDC';
-          else posCcy = pos.symbol.replace(/USD.*/, '');
-        } else if (pos.exchange === 'okx') {
-          if (pos.symbol.includes('-USDT')) posCcy = 'USDT';
-          else if (pos.symbol.includes('-USDC')) posCcy = 'USDC';
-          else posCcy = pos.symbol.split('-')[0];
-        } else {
-          posCcy = isUSDT ? 'USDT' : (isUSDC ? 'USDC' : pos.symbol.replace(/USD.*/, ''));
-        }
+        const posCcy = pos.ccy || pos.baseCoin || 'USDT';
 
         const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
         const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
@@ -287,26 +268,7 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                 const realizedPnlColor = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
                 
                 const sizeValUsd = pos.notionalUsd || (pos.size * pos.markPrice); 
-                const isUSDT = pos.symbol.includes('USDT');
-                const isUSDC = pos.symbol.includes('USDC');
-                let posCcy = 'USDT';
-                
-                if (pos.exchange === 'bitget') {
-                  const pType = pos.raw?.productType;
-                  if (pType === 'USDT-FUTURES' || pos.symbol.endsWith('USDT')) posCcy = 'USDT';
-                  else if (pType === 'USDC-FUTURES' || pos.symbol.endsWith('USDC')) posCcy = 'USDC';
-                  else posCcy = pos.symbol.replace(/USD.*/, '');
-                } else if (pos.exchange === 'bybit') {
-                  if (pos.symbol.endsWith('USDT') || pos.symbol.includes('USDT-')) posCcy = 'USDT';
-                  else if (pos.symbol.endsWith('USDC') || pos.symbol.includes('USDC-')) posCcy = 'USDC';
-                  else posCcy = pos.symbol.replace(/USD.*/, '');
-                } else if (pos.exchange === 'okx') {
-                  if (pos.symbol.includes('-USDT')) posCcy = 'USDT';
-                  else if (pos.symbol.includes('-USDC')) posCcy = 'USDC';
-                  else posCcy = pos.symbol.split('-')[0];
-                } else {
-                  posCcy = isUSDT ? 'USDT' : (isUSDC ? 'USDC' : pos.symbol.replace(/USD.*/, ''));
-                }
+                const posCcy = pos.ccy || pos.baseCoin || 'USDT';
 
                 const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
                 const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';

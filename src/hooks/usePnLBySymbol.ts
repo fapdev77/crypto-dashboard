@@ -54,9 +54,7 @@ export function usePnLBySymbol(
         continue;
       }
 
-      const isUSDT = pos.symbol.includes('USDT');
-      const isUSDC = pos.symbol.includes('USDC');
-      const ccy = pos.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : pos.symbol.split('-')[0].replace(/USD.*/, '')));
+      const ccy = pos.ccy || pos.baseCoin || 'USDT';
 
       const key = `${pos.exchange}-${pos.symbol}-${instrument}-${ccy}`;
       

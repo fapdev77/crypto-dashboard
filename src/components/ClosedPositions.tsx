@@ -54,9 +54,7 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
     let sumLoss = 0;
 
     filteredClosedPositions.forEach(p => {
-      const isUSDT = p.symbol.includes('USDT');
-      const isUSDC = p.symbol.includes('USDC');
-      const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : p.symbol.split('-')[0].replace(/USD.*/, '')));
+      const pnlCurrency = p.ccy || p.baseCoin || 'USDT';
       const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
       let pnlInUsd = p.realizedPnl;
       if (!isFiatCcy && p.closePrice) {
@@ -201,9 +199,7 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                 let hasRoi = false;
                 
                 // Identify the quote currency for the PnL (e.g. USDT)
-                const isUSDT = p.symbol.includes('USDT');
-                const isUSDC = p.symbol.includes('USDC');
-                const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : p.symbol.split('-')[0].replace(/USD.*/, '')));
+                const pnlCurrency = p.ccy || p.baseCoin || 'USDT';
                 const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
                 const isFiatPair = p.symbol.includes('USD') || p.symbol.includes('EUR');
                 const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);

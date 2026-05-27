@@ -58,6 +58,12 @@ function generate() {
         const symbol = randomItem(symbols);
         const isInverse = symbol.endsWith('USD');
         const ccy = isInverse ? symbol.replace('USD', '') : randomItem(['USDT', 'USDC']);
+        
+        let baseCoin = symbol;
+        let quoteCoin = 'USD';
+        if (symbol.endsWith('USDT')) { baseCoin = symbol.replace('USDT', ''); quoteCoin = 'USDT'; }
+        else if (symbol.endsWith('USD')) { baseCoin = symbol.replace('USD', ''); quoteCoin = 'USD'; }
+
         const side = randomItem(sides);
         const entryPrice = randomNum(1, 60000);
         const markPrice = entryPrice * randomNum(0.8, 1.2);
@@ -89,6 +95,8 @@ function generate() {
           exchange,
           label,
           symbol,
+          baseCoin,
+          quoteCoin,
           side,
           ccy,
           size,
@@ -113,6 +121,12 @@ function generate() {
       // Generate History
       for (let j = 0; j < HISTORY_PER_ACCOUNT; j++) {
         const symbol = randomItem(symbols);
+        
+        let baseCoin = symbol;
+        let quoteCoin = 'USD';
+        if (symbol.endsWith('USDT')) { baseCoin = symbol.replace('USDT', ''); quoteCoin = 'USDT'; }
+        else if (symbol.endsWith('USD')) { baseCoin = symbol.replace('USD', ''); quoteCoin = 'USD'; }
+
         const side = randomItem(sides);
         const entryPrice = randomNum(1, 60000);
         const closePrice = entryPrice * randomNum(0.8, 1.2);
@@ -145,6 +159,8 @@ function generate() {
           exchange,
           label,
           symbol,
+          baseCoin,
+          quoteCoin,
           side,
           realizedPnl,
           closeUpdateTime,

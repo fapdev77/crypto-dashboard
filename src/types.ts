@@ -3,6 +3,7 @@ import Big from 'big.js';
 export type ExchangeName = 'bybit' | 'bitget' | 'okx';
 
 export type PositionSide = 'long' | 'short' | 'net';
+export type UnifiedMarginMode = 'cross' | 'isolated' | 'unknown';
 
 export interface UnifiedBalance {
   id: string; // e.g., 'connId-ccy'
@@ -27,6 +28,8 @@ export interface UnifiedPosition {
   exchange: ExchangeName;
   label: string; // Account label/name
   symbol: string;
+  baseCoin: string; // E.g., 'BTC'
+  quoteCoin: string; // E.g., 'USDT'
   ccy?: string; // Margin/PNL currency (e.g. USDT, BTC)
   side: PositionSide;
   size: number; // For position size
@@ -36,7 +39,7 @@ export interface UnifiedPosition {
   unrealizedPnl: number;
   realizedPnl: number;
   leverage: number;
-  marginMode?: 'cross' | 'isolated';
+  marginMode?: UnifiedMarginMode;
   margin?: number; // Position Margin / Isolated Margin
   marginRatio?: number; // Tiered MMR or Margin Ratio (%)
   liquidationPrice?: number;
@@ -54,6 +57,8 @@ export interface UnifiedHistoryPosition {
   exchange: ExchangeName;
   label: string;
   symbol: string;
+  baseCoin: string;
+  quoteCoin: string;
   ccy?: string;
   side: PositionSide;
   realizedPnl: number;
