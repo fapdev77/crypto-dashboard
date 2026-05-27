@@ -61,10 +61,10 @@ Inverse contracts use the base crypto asset (e.g., BTC) for settlement and value
 
 ## 3. Atomic Implementation Tasks
 
-- [ ] **Task 1: Project Setup & Types.** Validate exports in `src/types.ts` and set up the base `HedgeProDashboard.tsx` structure and generic layout.
-- [ ] **Task 2: Data Hooks & Filtering.** Create custom logic (possibly a hook like `useInverseData`) to consume `dashboardStore` and `historyCache`, applying the `inverse` / `COIN-FUTURES` instrument filter. 
-- [ ] **Task 3: Asset Metrics & Hierarchy.** Implement `ExchangeNode`, `AccountNode`, and `AssetNode` components. Add formatting utilities for `8 decimals (Crypto)` and `2 decimals (USD)`.
-- [ ] **Task 4: The Hedge Pro Concept Logic.** Implement position cards. Compute the Delta Neutral stats for Short positions and Double Exposure stats for Long positions using `Big.js`.
-- [ ] **Task 5: Hedge-Mode Consolidation.** Write the logic to pair Longs and Shorts and render the `HedgeNetCard`. 
-- [ ] **Task 6: Performance Simulator & Chart.** Add the interactive calculator and 90-days PnL trend chart (utilizing `usePositionHistory`). 
-- [ ] **Task 7: Trades Accordion & Final Polish.** Build the trades list, ensure Tailwind CSS is pixel-perfect, completely responsive, and follows standard colors.
+- [x] **Task 1: Project Setup & Types.** Validate exports in `src/types.ts` and set up the base `HedgeProDashboard.tsx` structure and generic layout.
+- [x] **Task 2: Data Hooks & Filtering.** Create custom logic (possibly a hook like `useInverseData`) to consume `dashboardStore` and `historyCache`, applying the `inverse` / `COIN-FUTURES` instrument filter. 
+- [x] **Task 3: Asset Metrics & Hierarchy.** Implement `ExchangeNode`, `AccountNode`, and `AssetNode` components. Add formatting utilities for `8 decimals (Crypto)` and `2 decimals (USD)`.
+- [x] **Task 4: The Hedge Pro Concept Logic.** Implement position cards. Compute the Delta Neutral stats for Short positions and Double Exposure stats for Long positions using `Big.js`.
+- [x] **Task 5: Hedge-Mode Consolidation.** Write the logic to pair Longs and Shorts and render the `HedgeNetCard`. 
+- [x] **Task 6: Performance Simulator & Chart.** Add the interactive calculator and 90-days PnL trend chart (utilizing `usePositionHistory`). 
+- [x] **Task 7: Trades Accordion & Final Polish.** Build the trades list, ensure Tailwind CSS is pixel-perfect, completely responsive, and follows standard colors.
