@@ -18,6 +18,7 @@ import { Toaster } from 'react-hot-toast';
 import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard';
 import { PnLBySymbol } from './components/analytics/PnLBySymbol';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
+import { HedgeProDashboard } from './components/analytics/HedgeProDashboard';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -29,6 +30,7 @@ export default function App() {
   if (activeTab === 'settings') activeTabName = 'Settings';
   if (activeTab === 'api-tester') activeTabName = 'Execução de Testes';
   if (activeTab === 'analytics-pnl-symbol') activeTabName = 'PnL by Symbol';
+  if (activeTab === 'analytics-hedge-pro') activeTabName = 'Hedge Pro';
 
   return (
     <WorkSpace>
@@ -85,6 +87,7 @@ export default function App() {
               {activeTab === 'positions' && <Positions />}
               {(activeTab === 'analytics' || activeTab === 'analytics-overview') && <AnalyticsDashboard />}
               {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
+              {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
               {activeTab === 'reports' && <ReportsDashboard />}
               {activeTab === 'api-keys' && <ApiKeys />}
               {activeTab === 'settings' && <Settings />}

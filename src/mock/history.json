@@ -7,7 +7,7 @@
     "symbol": "ETHUSDT",
     "side": "short",
     "realizedPnl": 44721.80805758315,
-    "closeTime": 1778217953909.9084,
+    "closeUpdateTime": 1778217953909.9084,
     "entryPrice": 8080.253811499038,
     "closePrice": 7195.6837509188945,
     "size": 50.55767773583973,

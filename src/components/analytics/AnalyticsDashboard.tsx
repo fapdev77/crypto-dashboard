@@ -191,7 +191,7 @@ export function AnalyticsDashboard() {
             {/* Day of Week */}
             <div className="h-48">
               <span className="text-xs text-gray-500 block mb-2 text-center">Performance by Day of Week</span>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <BarChart data={dayData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <XAxis dataKey="name" stroke="#8E9299" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis hide />

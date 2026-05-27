@@ -15,7 +15,7 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
     let isMounted = true;
     const fetchHistory = async () => {
       if (useMockData) {
-        const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeTime - a.closeTime);
+        const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeTime);
         setPositions(sortedHistory as UnifiedHistoryPosition[]);
         return;
       }

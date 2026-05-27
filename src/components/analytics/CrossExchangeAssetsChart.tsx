@@ -137,7 +137,7 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
     <div className="bg-[#151619] border border-[#2a2b30] p-5 rounded-xl flex flex-col h-[300px]">
       <h3 className="text-sm font-semibold text-white mb-4">Cross-Exchange Asset Composition</h3>
       <div className="flex-1 min-h-0 min-w-0 w-full relative">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           <BarChart
             data={data}
             layout="vertical"

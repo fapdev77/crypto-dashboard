@@ -72,7 +72,7 @@ export class PositionHistoryService {
     if (newPositions.length > 0) {
       await saveCachedHistory(newPositions);
 
-      const latestCloseTime = Math.max(...newPositions.map(r => r.closeTime));
+      const latestCloseTime = Math.max(...newPositions.map(r => r.closeUpdateTime));
       await updateCacheMeta(connectionId, latestCloseTime);
     }
 

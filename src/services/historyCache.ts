@@ -12,7 +12,7 @@ interface CacheDB extends DBSchema {
     value: UnifiedHistoryPosition;
     indexes: {
       'by-connectionId': string;
-      'by-closeTime': number;
+      'by-closeUpdateTime': number;
     };
   };
   cacheMeta: {

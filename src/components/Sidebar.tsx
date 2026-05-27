@@ -35,7 +35,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     { id: 'positions', label: 'Positions', icon: Activity, badge: openCount },
     { id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
       { id: 'analytics-overview', label: 'Overview' },
-      { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' }
+      { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
+      { id: 'analytics-hedge-pro', label: 'Hedge Pro (Inverse)' }
     ]},
     { id: 'reports', label: 'Reports', icon: FileText },
   ];
