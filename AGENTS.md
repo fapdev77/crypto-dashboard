@@ -1,3 +1,41 @@
+# 🏛 Regras Governamentais do Agente (CONSTITUTION.md)
+
+## 1. Fluxo Metodológico Obrigatório (SDD-First)
+- **Especificar antes de Codar**: Siga rigorosamente o ciclo: **Especificar (O quê) -> Planejar (Como) -> Decompor (Tarefas) -> Implementar (Código) -> Validar (Testes)**.
+- **Proibição de "Geração de Um Clique"**: Nunca gere implementações complexas diretamente de um prompt vago; solicite primeiro uma análise de requisitos e critérios de aceitação e obtenha aprovação do Plano Técnico.
+- **Validação de Plano**: Antes de modificar arquivos, apresente um plano técnico e aguarde a aprovação humana para evitar o "Vibe Coding Doom Loop".
+
+## 2. Engenharia de Contexto e Memória
+- **Combate ao Context Rot**: Quando a sessão se tornar longa ou confusa, utilize o comando `/compact` ou resuma o estado atual para iniciar uma nova sessão limpa.
+- **Divulgação Progressiva**: Mantenha o arquivo principal de regras conciso (< 350 linhas) e aponte para documentos específicos (ex: `/specs/auth.md`) apenas quando necessário para economizar a janela de tokens.
+- **Referência à Fonte da Verdade**: Sempre consulte o arquivo `AGENTS.md` no início de cada sessão para garantir a continuidade dos padrões arquiteturais.
+
+## 3. Padrões de Clean Code e Nomenclatura
+- **Nomenclatura Intencional**: Utilize nomenclatura baseada em intenção, pattern "Return Early, use nomes de variáveis e funções que expressem "o porquê" e não apenas "o quê"; Evite "noise words" genéricas como: data, info ou model.
+- **English Only**: Todo o código, variáveis, funções e comentários devem ser escritos estritamente em Inglês para manter a compatibilidade idiomática da stack.
+- **SRP & Funções Curtas**: Cada função deve ter uma única responsabilidade e ter, idealmente, entre 10 a 40 linhas para facilitar a manutenção e testes.
+- **Pattern "Return Early"**: Minimize o aninhamento de código priorizando retornos antecipados e validações de entrada no início da função.
+- **Aritmética:** Utilize bibliotecas de alta precisão (ex: Big.js) para cálculos financeiros.
+- **Não adivinhe:** Se algo for ambíguo na especificação, pergunte antes de assumir uma arquitetura.
+
+##4. Diretrizes de Comentários e Documentação
+- **Código Autodocumentado**: Priorize a clareza do código para que ele seja lido "como um livro". Se uma variável se chama isLiquidationPriceReached, ela não precisa de comentário explicativo.
+- **O "Porquê", não o "O Quê"**: Comentários devem explicar decisões de design não óbvias, regras de negócio complexas ou trade-offs técnicos. O código deve deixar claro o que está fazendo por si só.
+- **Limpeza de AI Bloat**: Remova obrigatoriamente comentários redundantes gerados por IA que explicam o código linha a linha (ex: // sets value to 10).
+- **Documentação de API (JSDoc)**: Use o padrão JSDoc para funções públicas, Hooks customizados e Props de componentes React, descrevendo parâmetros, retornos e possíveis exceções.
+- **Sem Código Morto**: Nunca inclua blocos de código comentados. Utilize o histórico do Git para recuperação de versões anteriores.
+
+## 5. Segurança e Qualidade (TDD Nativo)
+- **Testes Primeiro (TDD)**: Escreva ou atualize os testes unitários/integração *antes* da implementação para servir como verificador objetivo da tarefa.
+- **Crítica Recursiva (RCI)**: Após gerar o código, revise-o internamente em busca de vulnerabilidades de segurança (OWASP), inconsistências de tipos ou erros de lógica antes de apresentar a solução.
+- **Gestão de Segredos**: Nunca sugira chaves de API ou segredos em texto puro; utilize apenas referências a variáveis de ambiente ou cofres de segredos.
+- **Privacidade:** Nunca armazene ou processe PII em texto puro.
+
+## 6. Documentação e Setup
+- **README Dinâmico**: Mantenha as instruções de configuração e execução no `README.md` sempre atualizadas a cada mudança na stack tecnológica, O README.md deve conter instruções de setup determinísticas para que qualquer humano ou agente consiga rodar o projeto do zero [README].
+- **Comentários de Valor**: Remova comentários verbosos da IA que apenas descrevem o óbvio; use comentários apenas para explicar decisões de design complexas ou restrições de domínio.
+- **Sincronização Contínua**: Sempre atualize o `AGENTS.md` com novas decisões de design, padrões descobertos ou mudanças na stack tecnológica.
+
 # System Instructions & Project Guidelines
 
 When developing in this project, enforce the following rules:
