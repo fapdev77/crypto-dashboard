@@ -82,3 +82,12 @@ As regras propostas no SDD (2 casas para Stables, 8 para Assets) foram consolida
   - Manages application-wide config (e.g. `useMockData`, visibility toggles).
   - Handles network heuristics configurations like `bybitPollingInterval` (for static REST calls) and `historyCacheInterval` (for background PnL sync limits).
   - Persisted to local storage for user preferences.
+
+## 6. Mocks, Types & Schema Consistency Protocol
+It is mandatory to uphold strict synchronization across the entire stack when modifying unified interfaces (e.g., `UnifiedHistoryPosition`, `UnifiedPosition`, `UnifiedBalance`).
+
+If a property name or data type is altered (e.g., changing `closeTime` to `closeUpdateTime`), developers MUST systematically update:
+1. **Mock Generators:** Update scripts like `src/mock/generateMocks.js` and regenerated mock files (`src/mock/history.json`) to reflect the new keys. Use `npm run generate-mocks` (or `tsx src/mock/generateMocks.js`) to regenerate the JSON files.
+2. **IndexedDB Schemas:** Increment the `DB_VERSION` in caching layers (e.g., `src/services/historyCache.ts`), and update upgrade routines (`db.createIndex`, `transaction.objectStore(...)`) to index the new property names correctly.
+3. **Analytics & Hooks:** Check and update any localized sorting/filtering logic within hooks (e.g., `usePositionHistory`, `usePnLBySymbol`) that map over historical data, ensuring they use the newly established property names.
+4. **Validation:** Always test the app with `useMockData = true` temporarily, to ensure no blank charts or infinite loops occur due to mismatched properties before deploying.

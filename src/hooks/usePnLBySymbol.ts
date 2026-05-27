@@ -71,7 +71,7 @@ export function usePnLBySymbol(
           totalPnL: new Big(0),
           longPnL: new Big(0),
           shortPnL: new Big(0),
-          lastActivity: pos.closeTime,
+          lastActivity: pos.closeUpdateTime,
         });
       }
 
@@ -84,8 +84,8 @@ export function usePnLBySymbol(
         record.shortPnL = record.shortPnL.plus(realizedPnl);
       }
 
-      if (pos.closeTime > record.lastActivity) {
-        record.lastActivity = pos.closeTime;
+      if (pos.closeUpdateTime > record.lastActivity) {
+        record.lastActivity = pos.closeUpdateTime;
       }
     }
 

@@ -208,7 +208,7 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                 const isFiatPair = p.symbol.includes('USD') || p.symbol.includes('EUR');
                 const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
                 
-                const isBybitInverse = p.exchange === 'bybit' && p.symbol.endsWith('USD') && !p.symbol.includes('USDT') && !p.symbol.includes('USDC');
+                const isInverse = p.instrumentType === 'INVERSE';
 
                 let positionValueUsd = 0;
                 let actualCoinSize = p.size || 0;
@@ -225,7 +225,7 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                 } else if (p.exchange === 'bybit' && p.raw?.cumEntryValue) {
                   positionValueUsd = parseFloat(p.raw.cumEntryValue);
                   actualCoinSize = p.entryPrice ? positionValueUsd / p.entryPrice : 0;
-                } else if (isBybitInverse) {
+                } else if (isInverse) {
                   positionValueUsd = p.size || 0;
                   actualCoinSize = p.entryPrice ? positionValueUsd / p.entryPrice : 0;
                 } else {
@@ -251,7 +251,7 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
                 let displaySecondaryQuantity = '--';
                 let displaySecondaryUnit = '';
 
-                if (isBybitInverse) {
+                if (isInverse) {
                   displayQuantity = p.size ? formatValue(p.size, 2) : '--';
                   displayUnit = 'USD';
                   displaySecondaryQuantity = actualCoinSize ? formatCrypto(actualCoinSize) : '--';

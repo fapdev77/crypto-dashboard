@@ -82,7 +82,7 @@ export class PositionHistoryService {
     for (const pos of newPositions) mergedMap.set(pos.id, pos); // new overrides old
 
     const merged = Array.from(mergedMap.values());
-    merged.sort((a, b) => b.closeTime - a.closeTime);
+    merged.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
 
     return merged;
   }

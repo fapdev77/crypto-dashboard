@@ -20,11 +20,8 @@ export function HedgeProDashboard() {
   // Filter inverse positions
   const inversePositions = useMemo(() => {
     return Object.values(positions).filter(pos => {
-      const type = (pos.instrumentType || '').toUpperCase();
-      if (type === 'INVERSE' || type === 'COIN-FUTURES') return true;
-      // OKX fallback for inverse: not USDT/USDC settled, not spot
-      if (pos.exchange === 'okx' && type !== 'SPOT' && pos.ccy && !['USDT', 'USDC'].includes(pos.ccy.toUpperCase())) return true;
-      return false;
+      // With the standard unified interfaces, we just check for 'INVERSE'
+      return pos.instrumentType === 'INVERSE';
     });
   }, [positions]);
 

@@ -4,6 +4,7 @@ import { proxyFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { calculateRoe } from '../../utils/math-crypto';
+import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -149,7 +150,7 @@ export class OkxAdapter implements IExchangeAdapter {
         liquidationPrice: parseFloat(pos.liqPx || '0'),
         breakEvenPrice: parseFloat(pos.bePx || '0'),
         roe: pos.uplRatio ? parseFloat(pos.uplRatio) * 100 : (margin > 0 ? (unrealizedPnl / margin) * 100 : undefined),
-        instrumentType: pos.instType || 'SWAP',
+        instrumentType: mapInstrumentType('okx', pos.instType || 'SWAP', pos.ccy || pos.marginCoin || 'USDT'),
         raw: pos
       };
     });
@@ -198,7 +199,7 @@ export class OkxAdapter implements IExchangeAdapter {
       } catch (err) {
         console.warn(`[OKX-History] error for ${type}:`, err);
       }
-      return list;
+      return list.map(item => ({ ...item, _instType: type }));
     };
 
     const results = await Promise.all(instTypes.map(type => fetchType(type)));
@@ -220,6 +221,7 @@ export class OkxAdapter implements IExchangeAdapter {
         size: parseFloat(p.closeVol || p.closeTotalPos || '0'),
         fundingFee: p.fundingFee ? parseFloat(p.fundingFee) : undefined,
         tradingFee: p.fee ? parseFloat(p.fee) : undefined,
+        instrumentType: mapInstrumentType('okx', p.instType || p._instType || 'SWAP', p.ccy || 'USDT'),
         raw: p,
       };
     });
@@ -351,7 +353,7 @@ export class OkxAdapter implements IExchangeAdapter {
           liquidationPrice: parseFloat(pos.liqPx || '0'),
           breakEvenPrice: parseFloat(pos.bePx || '0'),
           roe: pos.uplRatio ? parseFloat(pos.uplRatio) * 100 : (margin > 0 ? (unrealizedPnl / margin) * 100 : undefined),
-          instrumentType: pos.instType || 'SWAP',
+          instrumentType: mapInstrumentType('okx', pos.instType || 'SWAP', pos.ccy || pos.marginCoin || 'USDT'),
           raw: pos
         };
       });

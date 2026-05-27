@@ -65,7 +65,7 @@ export interface UnifiedPosition {
   roe?: number; // Return on Equity (%)
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
-  instrumentType?: string; // e.g. linear/inverse, swap, margin, futures
+  instrumentType?: UnifiedInstrumentType; // 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN'
   raw?: any; // To store the original broker data if needed
 }
 ```
@@ -74,7 +74,7 @@ export interface UnifiedPosition {
 | Field | Bybit (V5) | Bitget (V2) | OKX (V5) | Normalization Logic |
 | :--- | :--- | :--- | :--- | :--- |
 | `symbol` | `symbol` | `symbol` | `instId` | Direct mapping |
-| `instrumentType`| `category` | `productType` | `instType` | linear, inverse, USDT-FUTURES, SWAP |
+| `instrumentType`| `category` | `instType` | `instType` & `ccy` | Mapped to `UnifiedInstrumentType` |
 | `side` | `side` (`Buy`/`Sell`) | `holdSide` / `posSide` | `posSide` | `long`, `short`, `net` |
 | `size` | `size` (calc inverse vs USDT) | `total` | `pos` / `notionalUsd / markPx` | Base asset mapped normalized size |
 | `notionalUsd`| `positionValue` | `total * markPrice` | `notionalUsd` | Notional USD conversion fallback |
@@ -108,6 +108,7 @@ export interface UnifiedHistoryPosition {
   size?: number;
   fundingFee?: number;
   tradingFee?: number;
+  instrumentType?: UnifiedInstrumentType;
   raw?: any;
 }
 ```
@@ -120,6 +121,7 @@ export interface UnifiedHistoryPosition {
 | `entryPrice`| `avgEntryPrice`| `openPriceAvg` | `openAvgPx` | Average open order fill price |
 | `closePrice`| `avgExitPrice` | `closePriceAvg` | `avgPx` / `closeAvgPx` | Average close order fill price |
 | `size` | `closedSize` | `closeTotalPos` | `closeVol` / `closeTotalPos`| Volume of the closed position |
+| `instrumentType`| N/A | `instType` | `instType` | Mapped `UnifiedInstrumentType` |
 
 ---
 

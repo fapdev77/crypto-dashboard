@@ -15,7 +15,7 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
     let isMounted = true;
     const fetchHistory = async () => {
       if (useMockData) {
-        const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeTime);
+        const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime);
         setPositions(sortedHistory as UnifiedHistoryPosition[]);
         return;
       }
@@ -55,10 +55,10 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
       }
 
       if (start !== undefined && end !== undefined) {
-        allHistory = allHistory.filter(p => p.closeTime >= start! && p.closeTime <= end!);
+        allHistory = allHistory.filter(p => p.closeUpdateTime >= start! && p.closeUpdateTime <= end!);
       }
 
-      allHistory.sort((a, b) => b.closeTime - a.closeTime);
+      allHistory.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
 
       if (isMounted) {
         setPositions(allHistory);

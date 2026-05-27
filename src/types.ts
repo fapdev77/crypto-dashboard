@@ -19,6 +19,8 @@ export interface UnifiedBalance {
   raw?: any;
 }
 
+export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
+
 export interface UnifiedPosition {
   id: string; // Ex: 'connId-okx-BTC-USDT-long'
   connectionId: string;
@@ -42,7 +44,7 @@ export interface UnifiedPosition {
   roe?: number; // Return on Equity (%)
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
-  instrumentType?: string; // e.g. linear/inverse, swap, margin, futures
+  instrumentType?: UnifiedInstrumentType;
   raw?: any; // To store the original broker data if needed
 }
 
@@ -61,6 +63,7 @@ export interface UnifiedHistoryPosition {
   size?: number;
   fundingFee?: number;
   tradingFee?: number;
+  instrumentType?: UnifiedInstrumentType;
   raw?: any;
 }
 

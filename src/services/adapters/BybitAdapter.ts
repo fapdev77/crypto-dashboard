@@ -4,6 +4,7 @@ import { proxyFetch, hybridFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { calculateRoe } from '../../utils/math-crypto';
+import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -151,7 +152,7 @@ export class BybitAdapter implements IExchangeAdapter {
       tp: parseFloat(pos.takeProfit || '0'),
       sl: parseFloat(pos.stopLoss || '0'),
       roe: margin > 0 ? (unrealizedPnl / margin) * 100 : undefined,
-      instrumentType: pos.category || 'linear',
+      instrumentType: mapInstrumentType('bybit', pos.category || 'linear'),
       raw: pos
     };
   }
@@ -186,7 +187,7 @@ export class BybitAdapter implements IExchangeAdapter {
       } catch (err) {
         console.warn(`[Bybit-History] error for ${category}:`, err);
       }
-      return list;
+      return list.map(item => ({ ...item, _category: category }));
     };
 
     const results = await Promise.all(categories.map(cat => fetchCategory(cat)));
@@ -211,6 +212,7 @@ export class BybitAdapter implements IExchangeAdapter {
         size: parseFloat(p.closedSize || '0'),
         fundingFee: p.fundingFee ? parseFloat(p.fundingFee) : undefined,
         tradingFee: p.execFee ? parseFloat(p.execFee) : undefined,
+        instrumentType: mapInstrumentType('bybit', p._category || 'linear'),
         raw: p,
       };
     });
@@ -340,7 +342,7 @@ export class BybitAdapter implements IExchangeAdapter {
           tp: parseFloat(pos.takeProfit || '0'),
           sl: parseFloat(pos.stopLoss || '0'),
           roe: margin > 0 ? (unrealizedPnl / margin) * 100 : undefined,
-          instrumentType: pos.category || 'linear',
+          instrumentType: mapInstrumentType('bybit', pos.category || 'linear'),
           raw: pos
         });
       });

@@ -4,6 +4,7 @@ import { proxyFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { calculateRoe } from '../../utils/math-crypto';
+import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -181,7 +182,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           tp: parseFloat(pos.takeProfit || '0'),
           sl: parseFloat(pos.stopLoss || '0'),
           roe: margin > 0 ? (unrealizedPnl / margin) * 100 : undefined,
-          instrumentType: pos.productType || 'USDT-FUTURES',
+          instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
           raw: pos
         };
       });
@@ -245,6 +246,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         size: parseFloat(p.closeTotalPos || '0'),
         fundingFee: p.totalFunding ? parseFloat(p.totalFunding) : undefined,
         tradingFee: totalFee || undefined,
+        instrumentType: mapInstrumentType('bitget', p.productType || 'USDT-FUTURES'),
         raw: p,
       };
     });
@@ -382,7 +384,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           liquidationPrice: parseFloat(pos.liquidationPrice || '0'),
           breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
           roe: margin > 0 ? (unrealizedPnl / margin) * 100 : undefined,
-          instrumentType: data.arg.instType || 'USDT-FUTURES',
+          instrumentType: mapInstrumentType('bitget', data.arg.instType || 'USDT-FUTURES'),
           raw: pos
         });
       });

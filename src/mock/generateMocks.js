@@ -72,6 +72,17 @@ function generate() {
         else if (exchange === 'okx') instType = randomItem(['SWAP', 'FUTURES', 'MARGIN', 'SPOT', 'OPTION']);
         else if (exchange === 'bybit') instType = isInverse ? 'inverse' : randomItem(['linear', 'spot', 'option']);
 
+        let instrumentType = 'PERP';
+        if (instType === 'COIN-FUTURES' || instType === 'inverse' || (instType === 'SWAP' && !['USDT', 'USDC'].includes(ccy))) {
+          instrumentType = 'INVERSE';
+        } else if (instType === 'SPOT' || instType === 'MARGIN' || instType === 'spot') {
+          instrumentType = 'SPOT';
+        } else if (instType === 'OPTION' || instType === 'option') {
+          instrumentType = 'OPTION';
+        } else if (instType === 'FUTURES') {
+          instrumentType = ['USDT', 'USDC'].includes(ccy) ? 'FUTURES' : 'INVERSE';
+        }
+
         positions.push({
           id: `pos-${posIdCounter++}`,
           connectionId,
@@ -91,6 +102,7 @@ function generate() {
           liquidationPrice: side === 'long' ? entryPrice * 0.8 : entryPrice * 1.2,
           breakEvenPrice: entryPrice * 1.001,
           roe,
+          instrumentType,
           raw: {
             mockData: true,
             instType
@@ -106,8 +118,27 @@ function generate() {
         const closePrice = entryPrice * randomNum(0.8, 1.2);
         const size = randomNum(0.01, 100);
         const realizedPnl = (side === 'long' ? (closePrice - entryPrice) : (entryPrice - closePrice)) * size;
-        const closeTime = Date.now() - randomNum(0, 30 * 24 * 60 * 60 * 1000); // within last 30 days
+        const closeUpdateTime = Date.now() - randomNum(0, 30 * 24 * 60 * 60 * 1000); // within last 30 days
         
+        let instType = 'USDT-FUTURES';
+        const isInverseHistory = randomItem([true, false]);
+        const ccyHistory = isInverseHistory ? symbol.replace('USD', '') : randomItem(['USDT', 'USDC']);
+
+        if (exchange === 'bitget') instType = isInverseHistory ? 'COIN-FUTURES' : randomItem(['USDT-FUTURES', 'USDC-FUTURES', 'SPOT']);
+        else if (exchange === 'okx') instType = randomItem(['SWAP', 'FUTURES', 'MARGIN', 'SPOT', 'OPTION']);
+        else if (exchange === 'bybit') instType = isInverseHistory ? 'inverse' : randomItem(['linear', 'spot', 'option']);
+
+        let instrumentType = 'PERP';
+        if (instType === 'COIN-FUTURES' || instType === 'inverse' || (instType === 'SWAP' && !['USDT', 'USDC'].includes(ccyHistory))) {
+          instrumentType = 'INVERSE';
+        } else if (instType === 'SPOT' || instType === 'MARGIN' || instType === 'spot') {
+          instrumentType = 'SPOT';
+        } else if (instType === 'OPTION' || instType === 'option') {
+          instrumentType = 'OPTION';
+        } else if (instType === 'FUTURES') {
+          instrumentType = ['USDT', 'USDC'].includes(ccyHistory) ? 'FUTURES' : 'INVERSE';
+        }
+
         history.push({
           id: `hist-${histIdCounter++}`,
           connectionId,
@@ -116,16 +147,19 @@ function generate() {
           symbol,
           side,
           realizedPnl,
-          closeTime,
+          closeUpdateTime,
           entryPrice,
           closePrice,
           size,
+          ccy: ccyHistory,
           fundingFee: randomNum(-10, 10),
           tradingFee: randomNum(-5, 0),
+          instrumentType,
           raw: {
             mockData: true,
             leverage: randomInt(1, 100),
-            marginMode: randomItem(marginModes)
+            marginMode: randomItem(marginModes),
+            instType
           }
         });
       }
