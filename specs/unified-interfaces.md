@@ -60,6 +60,7 @@ export interface UnifiedPosition {
   realizedPnl: number;
   leverage: number;
   marginMode?: UnifiedMarginMode; // 'cross' | 'isolated'
+  positionMode?: UnifiedPositionMode; // 'hedge' | 'one_way' | 'unknown'
   margin?: number; // Position Margin / Isolated Margin
   marginRatio?: number; // Tiered MMR or Margin Ratio (%)
   liquidationPrice?: number;
@@ -112,6 +113,11 @@ export interface UnifiedHistoryPosition {
   size?: number;
   fundingFee?: number;
   tradingFee?: number;
+  leverage?: number;
+  marginMode?: UnifiedMarginMode;
+  positionMode?: UnifiedPositionMode;
+  notionalUsd?: number;
+  roi?: number;
   instrumentType?: UnifiedInstrumentType;
   raw?: any;
 }

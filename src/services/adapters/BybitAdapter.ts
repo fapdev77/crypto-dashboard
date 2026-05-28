@@ -1,4 +1,5 @@
-import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
+import Big from 'big.js';
+import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance, UnifiedPositionMode } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
 import { proxyFetch, hybridFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
@@ -91,6 +92,20 @@ export class BybitAdapter implements IExchangeAdapter {
 
   // REST Positions
   public async getOpenPositions(key: any): Promise<UnifiedPosition[]> {
+    let accountMarginMode: 'cross' | 'isolated' | 'unknown' = 'unknown';
+    try {
+      const accUrl = `https://api.bybit.com/v5/account/info`;
+      const accHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret);
+      const accRes = await hybridFetch(accUrl, 'GET', accHeaders);
+      if (accRes?.retCode === 0 && accRes?.result?.marginMode) {
+        const mm = accRes.result.marginMode;
+        if (mm === 'ISOLATED_MARGIN') accountMarginMode = 'isolated';
+        else if (mm === 'REGULAR_MARGIN' || mm === 'PORTFOLIO_MARGIN') accountMarginMode = 'cross';
+      }
+    } catch (err) {
+      console.warn('[Bybit-AccountInfo]', err);
+    }
+
     const categories = ['linear', 'inverse'];
     const requests = categories.map(async (category) => {
       const query = `category=${category}&limit=200`;
@@ -98,7 +113,7 @@ export class BybitAdapter implements IExchangeAdapter {
       const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
       const response = await hybridFetch(targetUrl, 'GET', headers);
 
-      if (response.retCode === 10001) return [];
+      if (response.retCode === 10001) return []; // "position idx not match position mode" generic catch
       if (response.retCode !== 0) throw new Error(response.retMsg);
       return response.result?.list || [];
     });
@@ -110,10 +125,10 @@ export class BybitAdapter implements IExchangeAdapter {
 
     return rawList
       .filter(p => parseFloat(p.size || '0') > 0)
-      .map(p => this.mapPosition(p, key.id, key.label));
+      .map(p => this.mapPosition(p, key.id, key.label, accountMarginMode));
   }
 
-  private mapPosition(pos: any, connectionId: string, label: string): UnifiedPosition {
+  private mapPosition(pos: any, connectionId: string, label: string, accountMarginMode: 'cross' | 'isolated' | 'unknown' = 'unknown'): UnifiedPosition {
     const rawSize = parseFloat(pos.size || '0');
     const entryPrice = parseFloat(pos.avgPrice || pos.entryPrice || '0');
     const markPrice = parseFloat(pos.markPrice || '0');
@@ -131,8 +146,15 @@ export class BybitAdapter implements IExchangeAdapter {
     const margin = parseFloat(pos.positionIM || '0');
     const unrealizedPnl = parseFloat(pos.unrealisedPnl || '0');
 
+    const positionIdx = parseInt(pos.positionIdx || '0', 10);
+    const positionMode: UnifiedPositionMode = positionIdx === 0 ? 'one_way' : 'hedge';
+
+    const marginObj = new Big(pos.positionIM || '0');
+    const uPnlObj = new Big(pos.unrealisedPnl || '0');
+    const roe = marginObj.gt(0) ? Number(uPnlObj.div(marginObj).times(100)) : undefined;
+
     return {
-      id: `${connectionId}-${pos.symbol}-${pos.positionIdx || 0}`,
+      id: `${connectionId}-${pos.symbol}-${positionIdx}`,
       connectionId,
       exchange: 'bybit',
       label,
@@ -147,14 +169,15 @@ export class BybitAdapter implements IExchangeAdapter {
       unrealizedPnl,
       realizedPnl: parseFloat(pos.curRealisedPnl || '0'),
       leverage: parseFloat(pos.leverage || '0'),
-      marginMode: mapMarginMode('bybit', pos.tradeMode),
+      marginMode: accountMarginMode !== 'unknown' ? accountMarginMode : mapMarginMode('bybit', pos.tradeMode),
+      positionMode,
       margin,
       notionalUsd,
       liquidationPrice: parseFloat(pos.liqPrice || '0'),
       breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
       tp: parseFloat(pos.takeProfit || '0'),
       sl: parseFloat(pos.stopLoss || '0'),
-      roe: margin > 0 ? (unrealizedPnl / margin) * 100 : undefined,
+      roe,
       instrumentType: mapInstrumentType('bybit', pos.category || 'linear'),
       raw: pos
     };
@@ -215,6 +238,7 @@ export class BybitAdapter implements IExchangeAdapter {
         entryPrice: parseFloat(p.avgEntryPrice || '0'),
         closePrice: parseFloat(p.avgExitPrice || '0'),
         size: parseFloat(p.closedSize || '0'),
+        leverage: parseFloat(p.leverage || '0'),
         fundingFee: p.fundingFee ? parseFloat(p.fundingFee) : undefined,
         tradingFee: p.execFee ? parseFloat(p.execFee) : undefined,
         instrumentType: mapInstrumentType('bybit', p._category || 'linear'),

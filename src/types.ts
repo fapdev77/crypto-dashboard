@@ -4,6 +4,7 @@ export type ExchangeName = 'bybit' | 'bitget' | 'okx';
 
 export type PositionSide = 'long' | 'short' | 'net';
 export type UnifiedMarginMode = 'cross' | 'isolated' | 'unknown';
+export type UnifiedPositionMode = 'hedge' | 'one_way' | 'unknown';
 
 export interface UnifiedBalance {
   id: string; // e.g., 'connId-ccy'
@@ -40,6 +41,7 @@ export interface UnifiedPosition {
   realizedPnl: number;
   leverage: number;
   marginMode?: UnifiedMarginMode;
+  positionMode?: UnifiedPositionMode;
   margin?: number; // Position Margin / Isolated Margin
   marginRatio?: number; // Tiered MMR or Margin Ratio (%)
   liquidationPrice?: number;
@@ -68,6 +70,11 @@ export interface UnifiedHistoryPosition {
   size?: number;
   fundingFee?: number;
   tradingFee?: number;
+  leverage?: number;
+  marginMode?: UnifiedMarginMode;
+  positionMode?: UnifiedPositionMode;
+  notionalUsd?: number;
+  roi?: number;
   instrumentType?: UnifiedInstrumentType;
   raw?: any;
 }
