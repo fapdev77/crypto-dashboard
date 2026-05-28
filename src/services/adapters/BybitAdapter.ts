@@ -115,7 +115,13 @@ export class BybitAdapter implements IExchangeAdapter {
 
       if (response.retCode === 10001) return []; // "position idx not match position mode" generic catch
       if (response.retCode !== 0) throw new Error(response.retMsg);
-      return response.result?.list || [];
+
+      // Bybit category value came in the result object so we need to inject it in the list object to be returned
+      const list = response.result?.list || [];
+      return list.map(position => ({
+        ...position,
+        category: category
+      }));
     });
 
     const results = await Promise.allSettled(requests);
