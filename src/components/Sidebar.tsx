@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 
@@ -39,6 +39,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       { id: 'analytics-hedge-pro', label: 'Hedge Pro (Inverse)' }
     ]},
     { id: 'reports', label: 'Reports', icon: FileText },
+    { id: 'testes-mvp', label: 'Testes MVP', icon: Beaker },
   ];
 
   return (
