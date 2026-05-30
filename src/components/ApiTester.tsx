@@ -186,9 +186,9 @@ export function ApiTester() {
               className="w-full bg-[#0b0c10] border border-[#2a2b30] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#2F6BFF]"
             >
               {keys.length === 0 && <option value="" disabled>No API Keys found</option>}
-              {keys.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.label} ({k.exchange})
+              {keys.map((apiKey) => (
+                <option key={apiKey.id} value={apiKey.id}>
+                  {apiKey.label} ({apiKey.exchange})
                 </option>
               ))}
             </select>

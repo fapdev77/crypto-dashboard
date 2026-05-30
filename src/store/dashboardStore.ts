@@ -80,8 +80,8 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   positions: {},
   updatePositions: (connectionId, newPositions) => set((state) => {
     const nextPositions = { ...state.positions };
-    newPositions.forEach(p => {
-      nextPositions[p.id] = p;
+    newPositions.forEach(pos => {
+      nextPositions[pos.id] = pos;
     });
     for (const key in nextPositions) {
       if (Math.abs(nextPositions[key].size) <= 0) {
@@ -93,12 +93,12 @@ export const useDashboardStore = create<DashboardState>((set) => ({
 
   updatePositionsDelta: (connectionId, deltaPositions) => set((state) => {
     const nextPositions = { ...state.positions };
-    deltaPositions.forEach(p => {
-      if (!p.id) return;
-      if (nextPositions[p.id]) {
-        nextPositions[p.id] = { ...nextPositions[p.id], ...p };
+    deltaPositions.forEach(pos => {
+      if (!pos.id) return;
+      if (nextPositions[pos.id]) {
+        nextPositions[pos.id] = { ...nextPositions[pos.id], ...pos };
       } else {
-        nextPositions[p.id] = p as UnifiedPosition;
+        nextPositions[pos.id] = pos as UnifiedPosition;
       }
     });
     for (const key in nextPositions) {

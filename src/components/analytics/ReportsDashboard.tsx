@@ -73,16 +73,16 @@ export function ReportsDashboard() {
                   </td>
                 </tr>
               ) : (
-                history.map((p) => {
-                  const net = p.realizedPnl + (p.fundingFee || 0) + (p.tradingFee || 0);
+                history.map((pos) => {
+                  const net = pos.realizedPnl + (pos.fundingFee || 0) + (pos.tradingFee || 0);
                   return (
-                    <tr key={p.id} className="border-b border-[#2a2b30]/50 hover:bg-[#2a2b30]/20 transition-colors">
-                      <td className="px-4 py-3 text-gray-300">{format(new Date(p.closeUpdateTime), 'MMM dd, HH:mm')}</td>
-                      <td className="px-4 py-3 text-gray-400 capitalize">{p.exchange}</td>
-                      <td className="px-4 py-3 font-medium text-white">{p.symbol}</td>
+                    <tr key={pos.id} className="border-b border-[#2a2b30]/50 hover:bg-[#2a2b30]/20 transition-colors">
+                      <td className="px-4 py-3 text-gray-300">{format(new Date(pos.closeUpdateTime), 'MMM dd, HH:mm')}</td>
+                      <td className="px-4 py-3 text-gray-400 capitalize">{pos.exchange}</td>
+                      <td className="px-4 py-3 font-medium text-white">{pos.symbol}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-xs ${p.side === 'long' ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-[#EF4444]/10 text-[#EF4444]'}`}>
-                          {p.side.toUpperCase()}
+                        <span className={`px-2 py-0.5 rounded text-xs ${pos.side === 'long' ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-[#EF4444]/10 text-[#EF4444]'}`}>
+                          {pos.side.toUpperCase()}
                         </span>
                       </td>
                       <td className={`px-4 py-3 text-right font-medium ${net >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>

@@ -33,15 +33,15 @@ export function ClosedPositions() {
     let filtered = [...closedPositions];
     
     if (exchangeFilter !== 'all') {
-      filtered = filtered.filter(p => p.exchange.toLowerCase() === exchangeFilter.toLowerCase());
+      filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchangeFilter.toLowerCase());
     }
 
     if (filterText) {
       const lowerFilter = filterText.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.symbol.toLowerCase().includes(lowerFilter) || 
-        p.label.toLowerCase().includes(lowerFilter) ||
-        p.exchange.toLowerCase().includes(lowerFilter)
+      filtered = filtered.filter(pos => 
+        pos.symbol.toLowerCase().includes(lowerFilter) || 
+        pos.label.toLowerCase().includes(lowerFilter) ||
+        pos.exchange.toLowerCase().includes(lowerFilter)
       );
     }
 
@@ -61,16 +61,16 @@ export function ClosedPositions() {
     let longs = 0;
     let shorts = 0;
 
-    filteredClosedPositions.forEach(p => {
-      const pnlCurrency = p.ccy || p.baseCoin || 'USDT';
+    filteredClosedPositions.forEach(pos => {
+      const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
       const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
-      let pnlInUsd = p.realizedPnl;
-      if (!isFiatCcy && p.closePrice) {
-        pnlInUsd = p.realizedPnl * p.closePrice;
+      let pnlInUsd = pos.realizedPnl;
+      if (!isFiatCcy && pos.closePrice) {
+        pnlInUsd = pos.realizedPnl * pos.closePrice;
       }
 
-      const isLong = p.side?.toLowerCase() === 'long' || p.side?.toLowerCase() === 'buy';
-      const isShort = p.side?.toLowerCase() === 'short' || p.side?.toLowerCase() === 'sell';
+      const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
+      const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
       if (isLong) longs++;
       if (isShort) shorts++;
 
@@ -168,20 +168,20 @@ export function ClosedPositions() {
                   >
                     <span>Todas Exchanges</span>
                   </button>
-                  {Array.from(new Set(keys.filter((k: any) => k.isActive).map((k: any) => k.exchange))).map(ext => (
+                  {Array.from(new Set(keys.filter((apiKey: any) => apiKey.isActive).map((apiKey: any) => apiKey.exchange))).map(exchange => (
                     <button
-                      key={ext}
+                      key={exchange}
                       type="button"
                       onClick={() => {
-                        setExchangeFilter(ext);
+                        setExchangeFilter(exchange);
                         setIsExchangeDropdownOpen(false);
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
-                        exchangeFilter === ext ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                        exchangeFilter === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
                       }`}
                     >
-                      <ExchangeIcon exchange={ext} className="w-4 h-4" />
-                      <span>{ext.charAt(0).toUpperCase() + ext.slice(1)}</span>
+                      <ExchangeIcon exchange={exchange} className="w-4 h-4" />
+                      <span>{exchange.charAt(0).toUpperCase() + exchange.slice(1)}</span>
                     </button>
                   ))}
                 </div>
@@ -337,62 +337,62 @@ export function ClosedPositions() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {filteredClosedPositions.map((p) => {
-            const isLong = p.side?.toLowerCase() === 'long' || p.side?.toLowerCase() === 'buy';
-            const isShort = p.side?.toLowerCase() === 'short' || p.side?.toLowerCase() === 'sell';
-            const sideLabel = isLong ? 'Long' : isShort ? 'Short' : p.side || 'Net';
+          {filteredClosedPositions.map((pos) => {
+            const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
+            const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
+            const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
             const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
             
-            const pnlClass = p.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
+            const pnlClass = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
             
-            const leverage = p.raw?.leverage || p.raw?.lever || '1';
-            const marginModeLabel = (p.raw?.marginMode || p.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
-            const symbolSuffix = p.symbol.replace(/USDT|USDC|USD|-|SWAP/g, '');
+            const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
+            const marginModeLabel = (pos.raw?.marginMode || pos.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
+            const symbolSuffix = pos.symbol.replace(/USDT|USDC|USD|-|SWAP/g, '');
 
             let roiStr = '--';
             let roiValue = 0;
             let hasRoi = false;
             
             // Identify the quote currency for the PnL (e.g. USDT)
-            const pnlCurrency = p.ccy || p.baseCoin || 'USDT';
+            const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
             const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
-            const isFiatPair = p.symbol.includes('USD') || p.symbol.includes('EUR');
+            const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
             const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
             
-            const isInverse = p.instrumentType === 'INVERSE';
+            const isInverse = pos.instrumentType === 'INVERSE';
 
             let positionValueUsd = 0;
-            let actualCoinSize = p.size || 0;
+            let actualCoinSize = pos.size || 0;
 
-            if (p.exchange === 'okx' && p.raw?.pnl) {
-              const priceDiff = Math.abs((p.closePrice || 0) - (p.entryPrice || 0));
-              const purePnl = Math.abs(parseFloat(p.raw.pnl));
+            if (pos.exchange === 'okx' && pos.raw?.pnl) {
+              const priceDiff = Math.abs((pos.closePrice || 0) - (pos.entryPrice || 0));
+              const purePnl = Math.abs(parseFloat(pos.raw.pnl));
               if (priceDiff > 0) {
                 actualCoinSize = purePnl / priceDiff;
-                positionValueUsd = actualCoinSize * (p.entryPrice || 0);
+                positionValueUsd = actualCoinSize * (pos.entryPrice || 0);
               } else {
-                positionValueUsd = (p.entryPrice || 0) * (p.size || 0);
+                positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
               }
-            } else if (p.exchange === 'bybit' && p.raw?.cumEntryValue) {
-              positionValueUsd = parseFloat(p.raw.cumEntryValue);
-              actualCoinSize = p.entryPrice ? positionValueUsd / p.entryPrice : 0;
+            } else if (pos.exchange === 'bybit' && pos.raw?.cumEntryValue) {
+              positionValueUsd = parseFloat(pos.raw.cumEntryValue);
+              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
             } else if (isInverse) {
-              positionValueUsd = p.size || 0;
-              actualCoinSize = p.entryPrice ? positionValueUsd / p.entryPrice : 0;
+              positionValueUsd = pos.size || 0;
+              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
             } else {
-              positionValueUsd = (p.entryPrice || 0) * (p.size || 0);
-              actualCoinSize = p.size || 0;
+              positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
+              actualCoinSize = pos.size || 0;
             }
             
-            if (p.raw?.roi !== undefined && p.raw?.roi !== null) {
-               roiValue = parseFloat(p.raw.roi) * 100;
+            if (pos.raw?.roi !== undefined && pos.raw?.roi !== null) {
+               roiValue = parseFloat(pos.raw.roi) * 100;
                hasRoi = true;
-            } else if (p.entryPrice && p.closePrice && p.size && leverage) {
+            } else if (pos.entryPrice && pos.closePrice && pos.size && leverage) {
               const numLeverage = parseFloat(leverage);
               const initialMargin = positionValueUsd / numLeverage;
               
               if (initialMargin > 0) {
-                 roiValue = (p.realizedPnl / initialMargin) * 100;
+                 roiValue = (pos.realizedPnl / initialMargin) * 100;
                  hasRoi = true;
               }
             }
@@ -403,17 +403,17 @@ export function ClosedPositions() {
             let displaySecondaryUnit = '';
 
             if (isInverse) {
-              displayQuantity = p.size ? formatValue(p.size, 2) : '--';
+              displayQuantity = pos.size ? formatValue(pos.size, 2) : '--';
               displayUnit = 'USD';
               displaySecondaryQuantity = actualCoinSize ? formatCrypto(actualCoinSize) : '--';
               displaySecondaryUnit = symbolSuffix;
-            } else if (p.exchange === 'okx') {
+            } else if (pos.exchange === 'okx') {
               displayQuantity = positionValueUsd ? formatValue(positionValueUsd, 2) : '--';
               displayUnit = 'USD';
               displaySecondaryQuantity = actualCoinSize ? formatCrypto(actualCoinSize) : '--';
               displaySecondaryUnit = symbolSuffix;
             } else {
-              displayQuantity = p.size ? formatCrypto(p.size) : '--';
+              displayQuantity = pos.size ? formatCrypto(pos.size) : '--';
               displayUnit = symbolSuffix;
               displaySecondaryQuantity = positionValueUsd ? formatValue(positionValueUsd, 2) : '--';
               displaySecondaryUnit = 'USD';
@@ -426,25 +426,25 @@ export function ClosedPositions() {
             const roiClass = hasRoi ? (roiValue >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]') : 'text-[#8E9299]';
 
             return (
-              <div key={p.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col transition-colors hover:border-[#3a3b40]">
+              <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col transition-colors hover:border-[#3a3b40]">
                 <div className="p-4 grid grid-cols-2 lg:grid-cols-6 gap-4">
                   {/* Asset info */}
                   <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
                     <div className="flex items-center relative pr-1">
-                      <CoinIcon symbol={p.symbol} size={28} className="w-7 h-7" />
+                      <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" />
                       <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
-                        <ExchangeIcon exchange={p.exchange} className="w-3.5 h-3.5" />
+                        <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
                       </div>
                     </div>
                     <div className="flex flex-col">
                       <div className="flex items-center gap-1">
-                        <span className="font-bold text-white text-sm">{p.symbol}</span>
+                        <span className="font-bold text-white text-sm">{pos.symbol}</span>
                       </div>
                       <span className={`text-xs mt-0.5 font-medium ${sideColor}`}>
                          {sideLabel} <span className="mx-0.5 text-[#8E9299]">·</span> {leverage}x <span className="mx-0.5 text-[#8E9299]">·</span> {marginModeLabel}
                       </span>
                       <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
-                        {p.label}
+                        {pos.label}
                       </span>
                     </div>
                   </div>
@@ -461,21 +461,21 @@ export function ClosedPositions() {
                   {/* Entry / Exit Price */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
                     <span className="text-[10px] text-[#8E9299] uppercase">Entry / Exit Price</span>
-                    <span className="font-mono text-white text-sm truncate">{formatPrice(p.entryPrice, isFiatPair)}</span>
-                    <span className="font-mono text-white text-xs truncate">{formatPrice(p.closePrice, isFiatPair)}</span>
+                    <span className="font-mono text-white text-sm truncate">{formatPrice(pos.entryPrice, isFiatPair)}</span>
+                    <span className="font-mono text-white text-xs truncate">{formatPrice(pos.closePrice, isFiatPair)}</span>
                   </div>
 
                   {/* Realized PnL (ROE) */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
                     <span className="text-[10px] text-[#8E9299] uppercase">Realized PnL (ROE)</span>
                     <span className={`font-mono text-sm ${pnlClass}`}>
-                      {p.realizedPnl > 0 ? '+' : ''}{formatCcy(p.realizedPnl)} <span className="font-sans text-[10px]">{pnlCurrency}</span>
+                      {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{pnlCurrency}</span>
                     </span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className={`font-mono text-xs ${roiClass}`}>{roiStr}</span>
-                      {!isFiatCcy && p.closePrice ? (
+                      {!isFiatCcy && pos.closePrice ? (
                         <span className={`font-mono text-[10px] ${pnlClass} opacity-80`}>
-                          ≈ {p.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(p.realizedPnl) * p.closePrice, 2)} USD
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.realizedPnl) * pos.closePrice, 2)} USD
                         </span>
                       ) : null}
                     </div>
@@ -485,10 +485,10 @@ export function ClosedPositions() {
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
                     <span className="text-[10px] text-[#8E9299] uppercase">Open Time</span>
                     <span className="font-mono text-white text-sm">
-                      {p.createdTime && !isNaN(p.createdTime) ? format(new Date(p.createdTime), 'yyyy-MM-dd') : '--'}
+                      {pos.createdTime && !isNaN(pos.createdTime) ? format(new Date(pos.createdTime), 'yyyy-MM-dd') : '--'}
                     </span>
                     <span className="font-mono text-[#8E9299] text-xs">
-                      {p.createdTime && !isNaN(p.createdTime) ? format(new Date(p.createdTime), 'HH:mm:ss') : '--'}
+                      {pos.createdTime && !isNaN(pos.createdTime) ? format(new Date(pos.createdTime), 'HH:mm:ss') : '--'}
                     </span>
                   </div>
 
@@ -496,10 +496,10 @@ export function ClosedPositions() {
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
                     <span className="text-[10px] text-[#8E9299] uppercase">Closed Time</span>
                     <span className="font-mono text-white text-sm">
-                      {p.closeUpdateTime && !isNaN(p.closeUpdateTime) ? format(new Date(p.closeUpdateTime), 'yyyy-MM-dd') : '--'}
+                      {pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd') : '--'}
                     </span>
                     <span className="font-mono text-[#8E9299] text-xs">
-                      {p.closeUpdateTime && !isNaN(p.closeUpdateTime) ? format(new Date(p.closeUpdateTime), 'HH:mm:ss') : '--'}
+                      {pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) ? format(new Date(pos.closeUpdateTime), 'HH:mm:ss') : '--'}
                     </span>
                   </div>
 

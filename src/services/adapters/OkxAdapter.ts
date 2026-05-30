@@ -185,8 +185,8 @@ export class OkxAdapter implements IExchangeAdapter {
           
           let filtered = rows;
           if (start && end) {
-            filtered = rows.filter((p: any) => {
-              const t = parseInt(p.uTime || p.cTime || '0', 10);
+            filtered = rows.filter((pos: any) => {
+              const t = parseInt(pos.uTime || pos.cTime || '0', 10);
               return t >= start && t <= end;
             });
           }
@@ -207,27 +207,27 @@ export class OkxAdapter implements IExchangeAdapter {
 
     const results = await Promise.all(instTypes.map(type => fetchType(type)));
 
-    return results.flat().map((p: any) => {
-      const closeUpdateTime = parseInt(p.uTime || p.cTime || '0', 10);
+    return results.flat().map((pos: any) => {
+      const closeUpdateTime = parseInt(pos.uTime || pos.cTime || '0', 10);
       return {
-        id: `${key.id}-${p.instId}-${closeUpdateTime}`,
+        id: `${key.id}-${pos.instId}-${closeUpdateTime}`,
         connectionId: key.id,
         label: key.label,
         exchange: 'okx',
-        symbol: p.instId,
-        baseCoin: extractBaseCoin('okx', p.instId),
-        quoteCoin: extractQuoteCoin('okx', p.instId),
-        ccy: extractCcy('okx', p.ccy, undefined, undefined, p.instId),
-        side: mapPositionSide('okx', p.posSide, p.direction),
-        realizedPnl: parseFloat(p.realizedPnl || p.pnl || '0'),
+        symbol: pos.instId,
+        baseCoin: extractBaseCoin('okx', pos.instId),
+        quoteCoin: extractQuoteCoin('okx', pos.instId),
+        ccy: extractCcy('okx', pos.ccy, undefined, undefined, pos.instId),
+        side: mapPositionSide('okx', pos.posSide, pos.direction),
+        realizedPnl: parseFloat(pos.realizedPnl || pos.pnl || '0'),
         closeUpdateTime: closeUpdateTime,
-        entryPrice: parseFloat(p.openAvgPx || '0'),
-        closePrice: parseFloat(p.avgPx || p.closeAvgPx || '0'),
-        size: parseFloat(p.closeVol || p.closeTotalPos || '0'),
-        fundingFee: p.fundingFee ? parseFloat(p.fundingFee) : undefined,
-        tradingFee: p.fee ? parseFloat(p.fee) : undefined,
-        instrumentType: mapInstrumentType('okx', p.instType || p._instType || 'SWAP', p.ccy || 'USDT'),
-        raw: p,
+        entryPrice: parseFloat(pos.openAvgPx || '0'),
+        closePrice: parseFloat(pos.avgPx || pos.closeAvgPx || '0'),
+        size: parseFloat(pos.closeVol || pos.closeTotalPos || '0'),
+        fundingFee: pos.fundingFee ? parseFloat(pos.fundingFee) : undefined,
+        tradingFee: pos.fee ? parseFloat(pos.fee) : undefined,
+        instrumentType: mapInstrumentType('okx', pos.instType || pos._instType || 'SWAP', pos.ccy || 'USDT'),
+        raw: pos,
       };
     });
   }
@@ -258,8 +258,8 @@ export class OkxAdapter implements IExchangeAdapter {
           
           let filtered = rows;
           if (start && end) {
-            filtered = rows.filter((p: any) => {
-              const t = parseInt(p.ts || '0', 10);
+            filtered = rows.filter((pos: any) => {
+              const t = parseInt(pos.ts || '0', 10);
               return t >= start && t <= end;
             });
           }

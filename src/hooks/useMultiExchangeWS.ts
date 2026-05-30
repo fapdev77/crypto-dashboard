@@ -50,7 +50,7 @@ export function useMultiExchangeWS() {
         const { connectionId } = acc;
         const accountBalances = mockBalancesData.filter((b: any) => b.connectionId === connectionId);
         currentState.updateBalances(connectionId, accountBalances as any);
-        const accountPositions = mockPositionsData.filter((p: any) => p.connectionId === connectionId);
+        const accountPositions = mockPositionsData.filter((pos: any) => pos.connectionId === connectionId);
         currentState.updatePositions(connectionId, accountPositions as any);
       });
       return;
@@ -257,7 +257,7 @@ export function useMultiExchangeWS() {
 
     ws.onclose = (event) => {
       console.log(`[WS-${id}] Conexão encerrada. Code: ${event.code}, Reason: ${event.reason || "Sem razão especificada"}`);
-      const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
+      const currentConfig = useApiKeysStore.getState().keys.find((apiKey) => apiKey.id === id);
       if (currentConfig && currentConfig.isActive) {
         setConnectionStatus(id, 'error', event.reason || 'Closed');
         

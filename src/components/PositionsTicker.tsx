@@ -11,8 +11,8 @@ export function PositionsTicker() {
   const activePositions = useMemo(() => {
     const list = Object.values(positions);
     return useMockData
-      ? list.filter(p => p.connectionId.startsWith('mocked-data'))
-      : list.filter(p => !p.connectionId.startsWith('mocked-data'));
+      ? list.filter(pos => pos.connectionId.startsWith('mocked-data'))
+      : list.filter(pos => !pos.connectionId.startsWith('mocked-data'));
   }, [positions, useMockData]);
 
   // Se nao há posicoes abertas, retorne null

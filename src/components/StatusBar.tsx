@@ -8,7 +8,7 @@ export function StatusBar() {
   const { keys } = useApiKeysStore();
   const { statuses, errors } = useDashboardStore();
 
-  const activeKeys = keys.filter(k => k.isActive);
+  const activeKeys = keys.filter(apiKey => apiKey.isActive);
 
   const exchangeGroups = useMemo(() => {
     const groups: Record<string, typeof keys> = {};

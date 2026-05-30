@@ -31,7 +31,7 @@ export function Settings() {
     setSynced(false);
     try {
       const service = new PositionHistoryService();
-      await Promise.all(keys.map(k => service.fetchWithCache(k)));
+      await Promise.all(keys.map(apiKey => service.fetchWithCache(apiKey)));
       
       const newSize = await getCacheSize();
       setCacheSize(newSize);
@@ -57,7 +57,7 @@ export function Settings() {
       if (keys.length > 0) {
         // Trigger background sync
         const service = new PositionHistoryService();
-        await Promise.all(keys.map(k => service.fetchWithCache(k)));
+        await Promise.all(keys.map(apiKey => service.fetchWithCache(apiKey)));
         
         // Update cache size after syncing
         const newSize = await getCacheSize();

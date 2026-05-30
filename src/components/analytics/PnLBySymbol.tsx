@@ -42,10 +42,10 @@ export function PnLBySymbol() {
     let maxL = new Big(0);
     let maxS = new Big(0);
     
-    pnlData.forEach(p => {
-      if (p.totalPnL.abs().gt(maxT)) maxT = p.totalPnL.abs();
-      if (p.longPnL.abs().gt(maxL)) maxL = p.longPnL.abs();
-      if (p.shortPnL.abs().gt(maxS)) maxS = p.shortPnL.abs();
+    pnlData.forEach(pos => {
+      if (pos.totalPnL.abs().gt(maxT)) maxT = pos.totalPnL.abs();
+      if (pos.longPnL.abs().gt(maxL)) maxL = pos.longPnL.abs();
+      if (pos.shortPnL.abs().gt(maxS)) maxS = pos.shortPnL.abs();
     });
 
     return { maxTotal: maxT, maxLong: maxL, maxShort: maxS };
@@ -56,7 +56,7 @@ export function PnLBySymbol() {
     
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(p => p.symbol.toLowerCase().includes(term) || p.exchange.toLowerCase().includes(term));
+      filtered = filtered.filter(pos => pos.symbol.toLowerCase().includes(term) || pos.exchange.toLowerCase().includes(term));
     }
 
     filtered.sort((a, b) => {

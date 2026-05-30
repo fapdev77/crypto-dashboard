@@ -45,8 +45,8 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
       } else if (oldVersion < 2) {
         // Upgrade from v1 -> v2
         const historyStore = transaction.objectStore(HISTORY_STORE);
-        if (historyStore.indexNames.contains('by-closeTime')) {
-          historyStore.deleteIndex('by-closeTime');
+        if ((historyStore.indexNames as any).contains('by-closeTime')) {
+          historyStore.deleteIndex('by-closeTime' as any);
         }
         if (!historyStore.indexNames.contains('by-closeUpdateTime')) {
           historyStore.createIndex('by-closeUpdateTime', 'closeUpdateTime');

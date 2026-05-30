@@ -16,7 +16,7 @@ export function useHistoryCachePolling() {
       console.log('[HistoryCachePolling] Executing background update...');
       const service = new PositionHistoryService();
       try {
-        await Promise.all(keys.map(k => service.fetchWithCache(k)));
+        await Promise.all(keys.map(apiKey => service.fetchWithCache(apiKey)));
         console.log('[HistoryCachePolling] Background update complete.');
       } catch (err) {
         console.error('[HistoryCachePolling] Error during background update:', err);

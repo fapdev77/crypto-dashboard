@@ -7,17 +7,17 @@ import { format } from 'date-fns';
 const formatCurrency = (val: number) => `$${Math.abs(val).toFixed(2)}${val < 0 ? '-' : ''}`; // simplified for export
 
 const getExportData = (history: UnifiedHistoryPosition[]) => {
-  return history.map(p => ({
-    'Date': format(new Date(p.closeUpdateTime), 'yyyy-MM-dd HH:mm'),
-    'Exchange': p.exchange,
-    'Symbol': p.symbol,
-    'Side': p.side.toUpperCase(),
-    'Size': p.size || 0,
-    'Entry Price': p.entryPrice || 0,
-    'Close Price': p.closePrice || 0,
-    'Trading Fee': p.tradingFee || 0,
-    'Funding Fee': p.fundingFee || 0,
-    'Net PnL': p.realizedPnl + (p.fundingFee || 0) + (p.tradingFee || 0)
+  return history.map(pos => ({
+    'Date': format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm'),
+    'Exchange': pos.exchange,
+    'Symbol': pos.symbol,
+    'Side': pos.side.toUpperCase(),
+    'Size': pos.size || 0,
+    'Entry Price': pos.entryPrice || 0,
+    'Close Price': pos.closePrice || 0,
+    'Trading Fee': pos.tradingFee || 0,
+    'Funding Fee': pos.fundingFee || 0,
+    'Net PnL': pos.realizedPnl + (pos.fundingFee || 0) + (pos.tradingFee || 0)
   }));
 };
 

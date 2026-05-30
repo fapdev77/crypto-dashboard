@@ -33,13 +33,13 @@ export const useApiKeysStore = create<ApiKeysState>()(
         })),
       toggleKey: (id) =>
         set((state) => ({
-          keys: state.keys.map((k) => 
-            k.id === id ? { ...k, isActive: !k.isActive } : k
+          keys: state.keys.map((apiKey) => 
+            apiKey.id === id ? { ...apiKey, isActive: !apiKey.isActive } : apiKey
           ),
         })),
       removeKey: (id) =>
         set((state) => ({
-          keys: state.keys.filter((k) => k.id !== id),
+          keys: state.keys.filter((apiKey) => apiKey.id !== id),
         })),
     }),
     {

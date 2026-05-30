@@ -15,8 +15,10 @@
 - **English Only**: Todo o código, variáveis, funções e comentários devem ser escritos estritamente em Inglês para manter a compatibilidade idiomática da stack.
 - **SRP & Funções Curtas**: Cada função deve ter uma única responsabilidade e ter, idealmente, entre 10 a 40 linhas para facilitar a manutenção e testes.
 - **Pattern "Return Early"**: Minimize o aninhamento de código priorizando retornos antecipados e validações de entrada no início da função.
-- **Aritmética:** Utilize bibliotecas de alta precisão (ex: Big.js) para cálculos financeiros.
+  - **Aritmética:** Utilize bibliotecas de alta precisão (ex: Big.js) para cálculos financeiros.
 - **Não adivinhe:** Se algo for ambíguo na especificação, pergunte antes de assumir uma arquitetura.
+- **Consistência de Nomenclatura no Ecossistema**: O projeto deve manter uma padronização estrita e uniforme para variáveis de domínio. Para posições (`UnifiedPosition`), utilize invariavelmente `pos` (nunca varie entre `p`, `row`, `h` ou `t`). Para exchanges, utilize `exchange` ou `exchangeName` (nunca `ex` ou `ext`). Para chaves de API, utilize `apiKey` (nunca `k` ou `key`). Para ativos ou moedas, utilize `symbol` ou `currency`.
+
 
 ##4. Diretrizes de Comentários e Documentação
 - **Código Autodocumentado**: Priorize a clareza do código para que ele seja lido "como um livro". Se uma variável se chama isLiquidationPriceReached, ela não precisa de comentário explicativo.

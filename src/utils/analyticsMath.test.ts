@@ -4,9 +4,9 @@ import { UnifiedHistoryPosition } from '../types';
 
 describe('analyticsMath', () => {
   const mockHistory: UnifiedHistoryPosition[] = [
-    { id: '1', connectionId: 'c1', exchange: 'bybit', label: 'L1', symbol: 'BTCUSDT', side: 'long', realizedPnl: 100, closeUpdateTime: 1, tradingFee: -2, fundingFee: 5 },
-    { id: '2', connectionId: 'c1', exchange: 'bybit', label: 'L1', symbol: 'BTCUSDT', side: 'long', realizedPnl: -50, closeUpdateTime: 2, tradingFee: -1, fundingFee: -2 },
-    { id: '3', connectionId: 'c1', exchange: 'bybit', label: 'L1', symbol: 'BTCUSDT', side: 'long', realizedPnl: 200, closeUpdateTime: 3, tradingFee: -4, fundingFee: 10 },
+    { id: '1', connectionId: 'c1', exchange: 'bybit', label: 'L1', symbol: 'BTCUSDT', baseCoin: 'BTC', quoteCoin: 'USDT', side: 'long', realizedPnl: 100, closeUpdateTime: 1, tradingFee: -2, fundingFee: 5 },
+    { id: '2', connectionId: 'c1', exchange: 'bybit', label: 'L1', symbol: 'BTCUSDT', baseCoin: 'BTC', quoteCoin: 'USDT', side: 'long', realizedPnl: -50, closeUpdateTime: 2, tradingFee: -1, fundingFee: -2 },
+    { id: '3', connectionId: 'c1', exchange: 'bybit', label: 'L1', symbol: 'BTCUSDT', baseCoin: 'BTC', quoteCoin: 'USDT', side: 'long', realizedPnl: 200, closeUpdateTime: 3, tradingFee: -4, fundingFee: 10 },
   ];
 
   it('calculates win rate correctly', () => {

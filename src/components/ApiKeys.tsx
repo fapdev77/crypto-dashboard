@@ -42,7 +42,7 @@ export function ApiKeys() {
   };
 
   const activeEx = EXCHANGES.find(e => e.id === exchange)!;
-  const existingKey = keys.find(k => k.id === selectedKeyId);
+  const existingKey = keys.find(k => apiKey.id === selectedKeyId);
 
   return (
     <div className="flex flex-col md:flex-row h-full gap-6">
@@ -50,9 +50,9 @@ export function ApiKeys() {
       <div className="w-full md:w-[320px] lg:w-[360px] shrink-0 bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col p-4 overflow-y-auto">
         <h2 className="text-lg font-medium text-white mb-4">Connections</h2>
         <div className="space-y-2 flex-1">
-          {keys.map((k) => {
-            const status = statuses[k.id] || 'disconnected';
-            const isActive = k.isActive;
+          {keys.map((apiKey) => {
+            const status = statuses[apiKey.id] || 'disconnected';
+            const isActive = apiKey.isActive;
             const dotClass = 
               !isActive ? 'bg-[#8E9299]' :
               status === 'connected' ? 'bg-[#00C853]' : 
@@ -61,19 +61,19 @@ export function ApiKeys() {
 
             return (
               <button
-                key={k.id}
-                onClick={() => setSelectedKeyId(k.id)}
+                key={apiKey.id}
+                onClick={() => setSelectedKeyId(apiKey.id)}
                 className={`w-full text-left px-4 py-3 rounded-lg flex items-center justify-between transition-colors ${
-                  selectedKeyId === k.id
+                  selectedKeyId === apiKey.id
                     ? 'bg-[#2a2b30] text-white'
                     : 'text-[#8E9299] hover:bg-[#2a2b30]/50'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <ExchangeIcon exchange={k.exchange} className="w-6 h-6" />
+                  <ExchangeIcon exchange={apiKey.exchange} className="w-6 h-6" />
                   <div>
-                    <span className="font-medium text-sm block">{k.label}</span>
-                    <span className="text-xs opacity-70 uppercase tracking-wider">{k.exchange}</span>
+                    <span className="font-medium text-sm block">{apiKey.label}</span>
+                    <span className="text-xs opacity-70 uppercase tracking-wider">{apiKey.exchange}</span>
                   </div>
                 </div>
                 <div className={`w-2 h-2 rounded-full ${dotClass}`} />

@@ -25,8 +25,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
 
   const openCount = useMemo(() => {
     const list = Object.values(positions);
-    return list.filter(p => 
-      (useMockData ? p.connectionId.startsWith('mocked-data') : !p.connectionId.startsWith('mocked-data')) && Math.abs(p.size) > 0
+    return list.filter(pos => 
+      (useMockData ? pos.connectionId.startsWith('mocked-data') : !pos.connectionId.startsWith('mocked-data')) && Math.abs(pos.size) > 0
     ).length;
   }, [positions, useMockData]);
 

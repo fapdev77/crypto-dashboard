@@ -182,7 +182,7 @@ function AssetNode({ ccy, balances, positions, history }: any) {
   }
 
   // Hedge consolidation check
-  const symbols = Array.from(new Set(positions.map((p: UnifiedPosition) => p.symbol)));
+  const symbols = Array.from(new Set(positions.map((pos: UnifiedPosition) => pos.symbol)));
 
   return (
     <div className="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg p-5">
@@ -206,9 +206,9 @@ function AssetNode({ ccy, balances, positions, history }: any) {
 
       <div className="space-y-6">
         {symbols.map(sym => {
-          const symPositions = positions.filter((p: UnifiedPosition) => p.symbol === sym);
-          const longs = symPositions.filter((p: UnifiedPosition) => p.side === 'long');
-          const shorts = symPositions.filter((p: UnifiedPosition) => p.side === 'short');
+          const symPositions = positions.filter((pos: UnifiedPosition) => pos.symbol === sym);
+          const longs = symPositions.filter((pos: UnifiedPosition) => pos.side === 'long');
+          const shorts = symPositions.filter((pos: UnifiedPosition) => pos.side === 'short');
           const isHedged = longs.length > 0 && shorts.length > 0;
 
           return (

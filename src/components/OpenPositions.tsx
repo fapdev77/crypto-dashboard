@@ -28,22 +28,22 @@ export function OpenPositions() {
   const activePositions = useMemo(() => {
     // First, filter by mock connection rule
     let filtered = useMockData 
-      ? positionsList.filter(p => p.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(p => !p.connectionId.startsWith('mocked-data'));
+      ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
+      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data'));
 
     // Then, apply size filter
-    filtered = filtered.filter(p => Math.abs(p.size) > 0);
+    filtered = filtered.filter(pos => Math.abs(pos.size) > 0);
 
     if (exchangeFilter !== 'all') {
-      filtered = filtered.filter(p => p.exchange.toLowerCase() === exchangeFilter.toLowerCase());
+      filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchangeFilter.toLowerCase());
     }
 
     if (filterText) {
       const lowerFilter = filterText.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.symbol.toLowerCase().includes(lowerFilter) || 
-        p.label.toLowerCase().includes(lowerFilter) ||
-        p.exchange.toLowerCase().includes(lowerFilter)
+      filtered = filtered.filter(pos => 
+        pos.symbol.toLowerCase().includes(lowerFilter) || 
+        pos.label.toLowerCase().includes(lowerFilter) ||
+        pos.exchange.toLowerCase().includes(lowerFilter)
       );
     }
 
@@ -53,14 +53,14 @@ export function OpenPositions() {
   const { longs, shorts } = useMemo(() => {
     let longsCount = 0;
     let shortsCount = 0;
-    activePositions.forEach(p => {
-      const isLong = p.side === 'long' || p.side === 'buy';
-      const isShort = p.side === 'short' || p.side === 'sell';
+    activePositions.forEach(pos => {
+      const isLong = pos.side === 'long' || pos.side === 'buy';
+      const isShort = pos.side === 'short' || pos.side === 'sell';
       if (isLong) longsCount++;
       if (isShort) shortsCount++;
-      if (p.side === 'net') {
-         if (p.size > 0) longsCount++;
-         else if (p.size < 0) shortsCount++;
+      if (pos.side === 'net') {
+         if (pos.size > 0) longsCount++;
+         else if (pos.size < 0) shortsCount++;
       }
     });
     return { longs: longsCount, shorts: shortsCount };
@@ -69,13 +69,13 @@ export function OpenPositions() {
   const { totalUnrealizedPnl, totalRealizedPnl } = useMemo(() => {
     let uPnl = 0;
     let rPnl = 0;
-    activePositions.forEach(p => {
-      const posCcy = p.ccy || p.baseCoin || 'USDT';
+    activePositions.forEach(pos => {
+      const posCcy = pos.ccy || pos.baseCoin || 'USDT';
       const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
-      const multiplier = isFiatCcy ? 1 : (p.markPrice || 1);
+      const multiplier = isFiatCcy ? 1 : (pos.markPrice || 1);
       
-      uPnl += ((p.unrealizedPnl || 0) * multiplier);
-      rPnl += ((p.realizedPnl || 0) * multiplier);
+      uPnl += ((pos.unrealizedPnl || 0) * multiplier);
+      rPnl += ((pos.realizedPnl || 0) * multiplier);
     });
     return { totalUnrealizedPnl: uPnl, totalRealizedPnl: rPnl };
   }, [activePositions]);
@@ -125,20 +125,20 @@ export function OpenPositions() {
                 >
                   <span>Todas Exchanges</span>
                 </button>
-                {Array.from(new Set(keys.filter(k => k.isActive).map(k => k.exchange))).map(ext => (
+                {Array.from(new Set(keys.filter(apiKey => apiKey.isActive).map(apiKey => apiKey.exchange))).map(exchange => (
                   <button
-                    key={ext}
+                    key={exchange}
                     type="button"
                     onClick={() => {
-                      setExchangeFilter(ext);
+                      setExchangeFilter(exchange);
                       setIsExchangeDropdownOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
-                      exchangeFilter === ext ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                      exchangeFilter === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
                     }`}
                   >
-                    <ExchangeIcon exchange={ext} className="w-4 h-4" />
-                    <span>{ext.charAt(0).toUpperCase() + ext.slice(1)}</span>
+                    <ExchangeIcon exchange={exchange} className="w-4 h-4" />
+                    <span>{exchange.charAt(0).toUpperCase() + exchange.slice(1)}</span>
                   </button>
                 ))}
               </div>

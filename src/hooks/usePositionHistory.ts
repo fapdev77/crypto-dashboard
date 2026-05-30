@@ -50,7 +50,7 @@ export function usePositionHistory(period: 'today' | '7d' | '30d' | '90d' | 'cus
       const service = new PositionHistoryService();
       let allHistory: UnifiedHistoryPosition[] = [];
 
-      const promises = keys.map(k => service.fetchWithCache(k));
+      const promises = keys.map(apiKey => service.fetchWithCache(apiKey));
       const results = await Promise.all(promises);
       
       for (const result of results) {
@@ -58,7 +58,7 @@ export function usePositionHistory(period: 'today' | '7d' | '30d' | '90d' | 'cus
       }
 
       if (start !== undefined && end !== undefined) {
-        allHistory = allHistory.filter(p => p.closeUpdateTime >= start! && p.closeUpdateTime <= end!);
+        allHistory = allHistory.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
       }
 
       allHistory.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);

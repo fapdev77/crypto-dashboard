@@ -50,7 +50,7 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
       const service = new BillsHistoryService();
       let allBills: UnifiedBillRecord[] = [];
       
-      const promises = keys.map(k => service.fetchBills(k, start, end));
+      const promises = keys.map(apiKey => service.fetchBills(apiKey, start, end));
       const results = await Promise.all(promises);
       for (const result of results) {
         allBills = [...allBills, ...result];

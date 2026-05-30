@@ -227,32 +227,32 @@ export class BitgetAdapter implements IExchangeAdapter {
 
     const results = await Promise.all(productTypes.map(pType => fetchType(pType)));
 
-    return results.flat().map((p: any) => {
-      const closeUpdateTime = parseInt(p.utime || p.uTime || p.ctime || p.cTime || '0', 10);
+    return results.flat().map((pos: any) => {
+      const closeUpdateTime = parseInt(pos.utime || pos.uTime || pos.ctime || pos.cTime || '0', 10);
       let totalFee = 0;
-      if (p.openFee) totalFee += parseFloat(p.openFee);
-      if (p.closeFee) totalFee += parseFloat(p.closeFee);
-      if (p.fee) totalFee += parseFloat(p.fee);
+      if (pos.openFee) totalFee += parseFloat(pos.openFee);
+      if (pos.closeFee) totalFee += parseFloat(pos.closeFee);
+      if (pos.fee) totalFee += parseFloat(pos.fee);
 
       return {
-        id: `${key.id}-${p.posId || p.positionId}-${closeUpdateTime}`,
+        id: `${key.id}-${pos.posId || pos.positionId}-${closeUpdateTime}`,
         connectionId: key.id,
         label: key.label,
         exchange: 'bitget',
-        symbol: p.instId || p.symbol,
-        baseCoin: extractBaseCoin('bitget', p.instId || p.symbol),
-        quoteCoin: extractQuoteCoin('bitget', p.instId || p.symbol),
-        ccy: extractCcy('bitget', p.marginCoin, undefined, undefined, p.instId || p.symbol),
-        side: mapPositionSide('bitget', p.holdSide, p.side),
-        realizedPnl: parseFloat(p.netProfit ?? p.pnl ?? p.achievedProfits ?? '0'),
+        symbol: pos.instId || pos.symbol,
+        baseCoin: extractBaseCoin('bitget', pos.instId || pos.symbol),
+        quoteCoin: extractQuoteCoin('bitget', pos.instId || pos.symbol),
+        ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.instId || pos.symbol),
+        side: mapPositionSide('bitget', pos.holdSide, pos.side),
+        realizedPnl: parseFloat(pos.netProfit ?? pos.pnl ?? pos.achievedProfits ?? '0'),
         closeUpdateTime: closeUpdateTime,
-        entryPrice: parseFloat(p.openPriceAvg || '0'),
-        closePrice: parseFloat(p.closePriceAvg || '0'),
-        size: parseFloat(p.closeTotalPos || '0'),
-        fundingFee: p.totalFunding ? parseFloat(p.totalFunding) : undefined,
+        entryPrice: parseFloat(pos.openPriceAvg || '0'),
+        closePrice: parseFloat(pos.closePriceAvg || '0'),
+        size: parseFloat(pos.closeTotalPos || '0'),
+        fundingFee: pos.totalFunding ? parseFloat(pos.totalFunding) : undefined,
         tradingFee: totalFee || undefined,
-        instrumentType: mapInstrumentType('bitget', p.productType || 'USDT-FUTURES'),
-        raw: p,
+        instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
+        raw: pos,
       };
     });
   }

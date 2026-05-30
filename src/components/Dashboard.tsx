@@ -30,8 +30,8 @@ export function Dashboard() {
 
   const activePositions = useMemo(() => {
     return useMockData
-      ? positionsList.filter(p => p.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(p => !p.connectionId.startsWith('mocked-data'));
+      ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
+      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data'));
   }, [positionsList, useMockData]);
 
   const totalEquity = useMemo(() => {
@@ -45,8 +45,8 @@ export function Dashboard() {
   const dailyPnLPercent = totalEquity > 0 ? (dailyPnL / totalEquity) * 100 : 0;
   const openPositionsCount = activePositions.length;
   
-  const longPositions = activePositions.filter(p => p.side === 'long' || p.side === 'buy').length;
-  const shortPositions = activePositions.filter(p => p.side === 'short' || p.side === 'sell').length;
+  const longPositions = activePositions.filter(pos => pos.side === 'long' || pos.side === 'buy').length;
+  const shortPositions = activePositions.filter(pos => pos.side === 'short' || pos.side === 'sell').length;
   const longPercent = openPositionsCount > 0 ? (longPositions / openPositionsCount) * 100 : 0;
   const shortPercent = openPositionsCount > 0 ? (shortPositions / openPositionsCount) * 100 : 0;
 

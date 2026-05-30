@@ -130,8 +130,8 @@ export class BybitAdapter implements IExchangeAdapter {
       .flatMap(r => r.value);
 
     return rawList
-      .filter(p => parseFloat(p.size || '0') > 0)
-      .map(p => this.mapPosition(p, key.id, key.label, accountMarginMode));
+      .filter(pos => parseFloat(pos.size || '0') > 0)
+      .map(pos => this.mapPosition(pos, key.id, key.label, accountMarginMode));
   }
 
   private mapPosition(pos: any, connectionId: string, label: string, accountMarginMode: 'cross' | 'isolated' | 'unknown' = 'unknown'): UnifiedPosition {
@@ -225,30 +225,30 @@ export class BybitAdapter implements IExchangeAdapter {
     const results = await Promise.all(categories.map(cat => fetchCategory(cat)));
     const closeUpdateTimeFallback = () => Date.now().toString(36);
 
-    return results.flat().map((p: any) => {
-      const closeUpdateTime = parseInt(p.updatedTime || '0', 10);
-      const createdTime = parseInt(p.createdTime || '0', 10);
+    return results.flat().map((pos: any) => {
+      const closeUpdateTime = parseInt(pos.updatedTime || '0', 10);
+      const createdTime = parseInt(pos.createdTime || '0', 10);
       return {
-        id: `${key.id}-${p.orderId || p.closedPnlId || closeUpdateTimeFallback()}-${closeUpdateTime}`,
+        id: `${key.id}-${pos.orderId || pos.closedPnlId || closeUpdateTimeFallback()}-${closeUpdateTime}`,
         connectionId: key.id,
         label: key.label,
         exchange: 'bybit',
-        symbol: p.symbol,
-        baseCoin: extractBaseCoin('bybit', p.symbol),
-        quoteCoin: extractQuoteCoin('bybit', p.symbol),
-        ccy: extractCcy('bybit', p.settleCoin, undefined, p.coin, p.symbol),
-        side: mapPositionSide('bybit', p.side),
-        realizedPnl: parseFloat(p.closedPnl || '0'),
+        symbol: pos.symbol,
+        baseCoin: extractBaseCoin('bybit', pos.symbol),
+        quoteCoin: extractQuoteCoin('bybit', pos.symbol),
+        ccy: extractCcy('bybit', pos.settleCoin, undefined, pos.coin, pos.symbol),
+        side: mapPositionSide('bybit', pos.side),
+        realizedPnl: parseFloat(pos.closedPnl || '0'),
         closeUpdateTime: closeUpdateTime,
         createdTime: createdTime,
-        entryPrice: parseFloat(p.avgEntryPrice || '0'),
-        closePrice: parseFloat(p.avgExitPrice || '0'),
-        size: parseFloat(p.closedSize || '0'),
-        leverage: parseFloat(p.leverage || '0'),
-        fundingFee: p.fundingFee ? parseFloat(p.fundingFee) : undefined,
-        tradingFee: p.execFee ? parseFloat(p.execFee) : undefined,
-        instrumentType: mapInstrumentType('bybit', p._category || 'linear'),
-        raw: p,
+        entryPrice: parseFloat(pos.avgEntryPrice || '0'),
+        closePrice: parseFloat(pos.avgExitPrice || '0'),
+        size: parseFloat(pos.closedSize || '0'),
+        leverage: parseFloat(pos.leverage || '0'),
+        fundingFee: pos.fundingFee ? parseFloat(pos.fundingFee) : undefined,
+        tradingFee: pos.execFee ? parseFloat(pos.execFee) : undefined,
+        instrumentType: mapInstrumentType('bybit', pos._category || 'linear'),
+        raw: pos,
       };
     });
   }
