@@ -5,7 +5,7 @@ import { UnifiedHistoryPosition } from '../types';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { useSettingsStore } from '../store/settingsStore';
 
-export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', customStart: string, customEnd: string, triggerSearch: boolean) {
+export function usePositionHistory(period: 'today' | '7d' | '30d' | '90d' | 'custom', customStart: string, customEnd: string, triggerSearch: boolean) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
@@ -33,14 +33,17 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
       if (period === 'custom' && customStart && customEnd) {
         start = new Date(customStart).setHours(0, 0, 0, 0);
         end = new Date(customEnd).setHours(23, 59, 59, 999);
-      } else if (period === '1w') {
+      } else if (period === 'today') {
+        start = new Date(now).setHours(0, 0, 0, 0);
+        end = now;
+      } else if (period === '7d') {
         start = now - 7 * 24 * 60 * 60 * 1000;
         end = now;
-      } else if (period === '2w') {
-        start = now - 14 * 24 * 60 * 60 * 1000;
-        end = now;
-      } else if (period === '1m') {
+      } else if (period === '30d') {
         start = now - 30 * 24 * 60 * 60 * 1000;
+        end = now;
+      } else if (period === '90d') {
+        start = now - 90 * 24 * 60 * 60 * 1000;
         end = now;
       }
 

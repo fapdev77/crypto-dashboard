@@ -35,12 +35,14 @@ export function HistoryLimitWarning({ period, customStartDate, customEndDate, cl
       const daysFromNow = (now - start) / (1000 * 60 * 60 * 24);
       
       daysRequested = Math.max(rangeLength, daysFromNow);
-    } else if (period === '1w') {
+    } else if (period === 'today') {
+      daysRequested = 1;
+    } else if (period === '7d') {
       daysRequested = 7;
-    } else if (period === '2w') {
-      daysRequested = 14;
-    } else if (period === '1m') {
+    } else if (period === '30d') {
       daysRequested = 30;
+    } else if (period === '90d') {
+      daysRequested = 90;
     }
 
     const warnedExchanges: string[] = [];

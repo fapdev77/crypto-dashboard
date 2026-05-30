@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 
 export function HedgeProDashboard() {
   const { positions, balances } = useDashboardStore();
-  const { positions: history } = usePositionHistory('1m', '', '', true); // 30 days history
+  const { positions: history } = usePositionHistory('30d', '', '', true); // 30 days history
 
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
 

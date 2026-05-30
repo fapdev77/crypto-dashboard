@@ -17,7 +17,7 @@ export function ClosedPositions() {
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
   const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
   
-  const [period, setPeriod] = useState<'1w' | '2w' | '1m' | 'custom'>('1w');
+  const [period, setPeriod] = useState<'today' | '7d' | '30d' | '90d' | 'custom'>('7d');
   const [customStartDate, setCustomStartDate] = useState(format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'));
   const [customEndDate, setCustomEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [triggerSearch, setTriggerSearch] = useState(false);
@@ -126,8 +126,7 @@ export function ClosedPositions() {
     <div className="space-y-6">
       
       {/* Filters Header */}
-      <div className="flex flex-col xl:flex-row justify-between gap-4 xl:items-center -mx-2 -mt-2 p-2">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
           {/* Exchange Filter */}
           <div className="relative z-20">
             <button
@@ -195,9 +194,10 @@ export function ClosedPositions() {
             onChange={(e) => setPeriod(e.target.value as any)}
             className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
           >
-            <option value="1w">1 Sem</option>
-            <option value="2w">2 Sem</option>
-            <option value="1m">1 Mês</option>
+            <option value="today">Hoje</option>
+            <option value="7d">7 Days</option>
+            <option value="30d">30 Days</option>
+            <option value="90d">90 Days</option>
             <option value="custom">Personalizado</option>
           </select>
           
@@ -225,7 +225,7 @@ export function ClosedPositions() {
             </div>
           )}
 
-          <div className="relative ml-auto">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-[#8E9299]" />
             </div>
@@ -246,7 +246,6 @@ export function ClosedPositions() {
               </button>
             )}
           </div>
-        </div>
       </div>
 
       <HistoryLimitWarning period={period} customStartDate={customStartDate} customEndDate={customEndDate} />
