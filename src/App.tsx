@@ -9,7 +9,8 @@ import { Sidebar } from './components/Sidebar';
 import { ApiKeys } from './components/ApiKeys';
 import { WorkSpace } from './components/WorkSpace';
 import { Dashboard } from './components/Dashboard';
-import { Positions } from './components/Positions';
+import { OpenPositions } from './components/OpenPositions';
+import { ClosedPositions } from './components/ClosedPositions';
 import { Settings } from './components/Settings';
 import { ApiTester } from './components/ApiTester';
 import { StatusBar } from './components/StatusBar';
@@ -86,7 +87,8 @@ export default function App() {
 
             <div className="flex-1 overflow-auto hide-scrollbar">
               {activeTab === 'dashboard' && <Dashboard />}
-              {activeTab === 'positions' && <Positions />}
+              {activeTab === 'positions-open' && <OpenPositions />}
+              {activeTab === 'positions-history' && <ClosedPositions />}
               {(activeTab === 'analytics' || activeTab === 'analytics-overview') && <AnalyticsDashboard />}
               {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
               {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}

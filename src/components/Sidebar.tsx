@@ -32,7 +32,10 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'positions', label: 'Positions', icon: Activity, badge: openCount },
+    { id: 'positions', label: 'Positions', icon: Activity, subItems: [
+      { id: 'positions-open', label: 'Abertas', badge: openCount },
+      { id: 'positions-history', label: 'Histórico' }
+    ]},
     { id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
       { id: 'analytics-overview', label: 'Overview' },
       { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
@@ -106,11 +109,11 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
               {!isCollapsed && (
                 <>
                   <span className="flex-1 text-left">{item.label}</span>
-                  {item.badge !== undefined && item.badge > 0 && (
+                  {'badge' in item && item.badge !== undefined && (item.badge as number) > 0 && (
                     <span className={`px-2 py-0.5 text-xs rounded-full ${
                       (activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab))) ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
                     }`}>
-                      {item.badge}
+                      {item.badge as number}
                     </span>
                   )}
                 </>
@@ -122,13 +125,20 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                   <button
                     key={sub.id}
                     onClick={() => handleTabClick(sub.id)}
-                    className={`text-left text-sm py-2 px-3 rounded-md transition-colors ${
+                    className={`flex items-center justify-between text-left text-sm py-2 px-3 rounded-md transition-colors ${
                       activeTab === sub.id 
                         ? 'text-white bg-[#2a2b30]/60 font-medium' 
                         : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/40'
                     }`}
                   >
-                    {sub.label}
+                    <span>{sub.label}</span>
+                    {sub.badge !== undefined && sub.badge > 0 && (
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        activeTab === sub.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+                      }`}>
+                        {sub.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>

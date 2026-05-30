@@ -1,21 +1,23 @@
 import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Search, X } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useApiKeysStore } from '../store/apiKeysStore';
 import { UnifiedPosition } from '../types';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 
-interface OpenPositionsProps {
-  filterText: string;
-  exchangeFilter: string;
-}
-
-export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps) {
+export function OpenPositions() {
   const { positions } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
+  const keys = useApiKeysStore(state => state.keys);
+  
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const [filterText, setFilterText] = useState('');
+  const [exchangeFilter, setExchangeFilter] = useState<string>('all');
+  const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
 
   const toggleRow = (id: string) => {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
@@ -78,25 +80,109 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
     return { totalUnrealizedPnl: uPnl, totalRealizedPnl: rPnl };
   }, [activePositions]);
 
-  if (activePositions.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-        <p className="text-[#8E9299]">Nenhuma posição aberta encontrada.</p>
-      </div>
-    );
-  }
-
-  const POSITIONS_DONUT = [
-    { name: 'Long', value: longs, color: '#00C853' },
-    { name: 'Short', value: shorts, color: '#FF4444' }
-  ];
-
   return (
     <div className="space-y-4">
       {/* Header Controls */}
+      <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
+        {/* Exchange Filter */}
+        <div className="relative z-20">
+          <button
+            type="button"
+            onClick={() => setIsExchangeDropdownOpen(!isExchangeDropdownOpen)}
+            className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between min-w-[160px]"
+          >
+            <div className="flex items-center gap-2">
+              {exchangeFilter !== 'all' && (
+                <ExchangeIcon exchange={exchangeFilter} className="w-4 h-4" />
+              )}
+              <span>
+                {exchangeFilter === 'all' 
+                  ? 'Todas Exchanges' 
+                  : exchangeFilter.charAt(0).toUpperCase() + exchangeFilter.slice(1)}
+              </span>
+            </div>
+            <svg className={`h-4 w-4 ml-2 text-gray-400 transition-transform ${isExchangeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
 
-      {/* 3 Columns Sub-cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+          {isExchangeDropdownOpen && (
+            <>
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setIsExchangeDropdownOpen(false)}
+              />
+              <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExchangeFilter('all');
+                    setIsExchangeDropdownOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
+                    exchangeFilter === 'all' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                  }`}
+                >
+                  <span>Todas Exchanges</span>
+                </button>
+                {Array.from(new Set(keys.filter(k => k.isActive).map(k => k.exchange))).map(ext => (
+                  <button
+                    key={ext}
+                    type="button"
+                    onClick={() => {
+                      setExchangeFilter(ext);
+                      setIsExchangeDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
+                      exchangeFilter === ext ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                    }`}
+                  >
+                    <ExchangeIcon exchange={ext} className="w-4 h-4" />
+                    <span>{ext.charAt(0).toUpperCase() + ext.slice(1)}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-[#8E9299]" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search..."
+            className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-64"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+          />
+          {filterText && (
+            <button 
+              onClick={() => setFilterText('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
+              title="Clear filter"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {activePositions.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
+          <p className="text-[#8E9299]">Nenhuma posição aberta encontrada.</p>
+        </div>
+      ) : (
+        <>
+          {(() => {
+            const POSITIONS_DONUT = [
+              { name: 'Long', value: longs, color: '#00C853' },
+              { name: 'Short', value: shorts, color: '#FF4444' }
+            ];
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
         <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
            <div className="flex flex-col">
              <span className="text-xs text-[#8E9299]">Total Positions</span>
@@ -139,6 +225,8 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
           </span>
         </div>
       </div>
+            );
+          })()}
 
       <div className="flex flex-col gap-3">
       {activePositions.map((pos) => {
@@ -178,14 +266,14 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1">
                     <span className="font-bold text-white text-sm">{pos.symbol}</span>
-                    <span className="text-[10px] font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-1.5 py-0.5 rounded capitalize">
-                      {pos.exchange} ({pos.label})
-                    </span>
                   </div>
                   <span className={`text-xs mt-0.5 font-medium ${sideColor}`}>
                     {sideLabel} <span className="mx-0.5 text-[#8E9299]">·</span> {pos.leverage}x <span className="mx-0.5 text-[#8E9299]">·</span> {marginModeLabel}
                   </span>
-                </div>
+                  <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
+                    {pos.label}
+                  </span>
+               </div>
               </div>
 
               {/* Size / Value */}
@@ -335,7 +423,9 @@ export function OpenPositions({ filterText, exchangeFilter }: OpenPositionsProps
           </div>
         );
       })}
-    </div>
+      </div>
+        </>
+      )}
     </div>
   );
 }
