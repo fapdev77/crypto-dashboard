@@ -1,1 +1,3 @@
-Iniciar nova implementação de asset classification - completo com sucesso.
+Ideias e melhorias:
+1. Item de privacidade: incluir icone de olho para privacidade, estilo um togglee para esconder todos os valores monetários de todas as telas. aberto (mostrar valores)/fechado (ocultar valores)
+2. Incluir indicador de proteção de capital no dashboard exibindo qual o valor protegido e a porcentagem do capital total (posições hedge (inverse) - saldo total) simples e outro mostrando o real considerando tambem o pnl das posições.
