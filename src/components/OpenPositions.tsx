@@ -267,6 +267,11 @@ export function OpenPositions() {
                       <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
                     </div>
                   </div>
+                  {pos.instrumentType && (
+                    <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                      {pos.instrumentType}
+                    </span>
+                  )}
                   <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
                     {category}
                   </span>
