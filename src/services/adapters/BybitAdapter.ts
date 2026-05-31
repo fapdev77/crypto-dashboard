@@ -305,6 +305,38 @@ export class BybitAdapter implements IExchangeAdapter {
     });
   }
 
+  // Instrument Metadata (Public)
+  public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
+    try {
+      const res = await proxyFetch({
+         targetUrl: `https://api.bybit.com/v5/market/instruments-info?category=linear&symbol=${symbol}`,
+         method: 'GET',
+         headers: {}
+      });
+      // Try spot if not found in linear
+      let data = res;
+      if (data.retCode !== 0 || !data.result?.list?.length) {
+         const res2 = await proxyFetch({
+            targetUrl: `https://api.bybit.com/v5/market/instruments-info?category=spot&symbol=${symbol}`,
+            method: 'GET',
+            headers: {}
+         });
+         data = res2;
+      }
+      if (data.retCode === 0 && data.result?.list?.length > 0) {
+         const info = data.result.list[0];
+         const sType = info.symbolType?.toLowerCase();
+         if (sType === 'stock' || sType === 'xstocks') {
+             return 'STOCK';
+         }
+         return 'CRYPTO';
+      }
+    } catch (err) {
+      console.warn('[Bybit-Metadata] Fetch error:', err);
+    }
+    return 'NOT_FOUND';
+  }
+
   // WSS private channel parser
   public static parse(cid: string, exchange: string, label: string, data: any) {
     if (!data.topic) return;

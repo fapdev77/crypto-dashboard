@@ -313,6 +313,27 @@ export class BitgetAdapter implements IExchangeAdapter {
     });
   }
 
+  // Instrument Metadata (Public)
+  public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
+      try {
+          const spotRes = await proxyFetch({
+             targetUrl: `https://api.bitget.com/api/v2/spot/public/symbols?symbol=${symbol}`,
+             method: 'GET',
+             headers: {}
+          });
+          if (spotRes.code === '00000' && spotRes.data && spotRes.data.length > 0) {
+             const info = spotRes.data.find((s: any) => s.symbol === symbol);
+             if (info) {
+                 if (info.isRwa === 'YES') return 'STOCK';
+                 return 'CRYPTO';
+             }
+          }
+      } catch (err) {
+          console.warn('[Bitget-Metadata] Fetch error', err);
+      }
+      return 'NOT_FOUND';
+  }
+
   // WSS private channel parser
   public static parse(cid: string, exchange: string, label: string, data: any) {
     if (data.action !== 'snapshot' && data.action !== 'update') return;

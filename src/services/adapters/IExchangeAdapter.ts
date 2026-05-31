@@ -1,4 +1,4 @@
-import { UnifiedHistoryPosition } from '../../types';
+import { UnifiedHistoryPosition, UnifiedAssetCategory } from '../../types';
 
 export interface IExchangeAdapter {
   /**
@@ -20,4 +20,10 @@ export interface IExchangeAdapter {
    * @param end Optional end timestamp
    */
   fetchBills?(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedBillRecord[]>;
+
+  /**
+   * Fetches public metadata for a specific instrument to determine its category.
+   * Does NOT require authentication.
+   */
+  fetchInstrumentMetadata?(symbol: string): Promise<UnifiedAssetCategory | 'NOT_FOUND'>;
 }

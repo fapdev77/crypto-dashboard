@@ -42,7 +42,10 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       { id: 'analytics-hedge-pro', label: 'Hedge Pro (Inverse)' }
     ]},
     { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'testes-mvp', label: 'Testes MVP', icon: Beaker },
+    { id: 'testes-mvp', label: 'Testes MVP', icon: Beaker, subItems: [
+      { id: 'testes-mvp-main', label: 'Playground Principal' }, // Assuming this was just standard tab? But wait, let's remap it.
+      { id: 'mvp-asset-metadata', label: 'Informações de Ativos' }
+    ]},
   ];
 
   return (

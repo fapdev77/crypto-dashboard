@@ -8,6 +8,7 @@ import { UnifiedPosition } from '../types';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
+import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
 
 export function OpenPositions() {
   const { positions } = useDashboardStore();
@@ -248,6 +249,8 @@ export function OpenPositions() {
         const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
         const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
         const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
+        
+        const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
         return (
           <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]" onClick={() => toggleRow(pos.id)}>
@@ -257,11 +260,16 @@ export function OpenPositions() {
               
               {/* Asset info */}
               <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
-                <div className="flex items-center relative">
-                  <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" />
-                  <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
-                    <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
+                <div className="flex flex-col items-center gap-1.5 shrink-0">
+                  <div className="flex items-center relative">
+                    <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" category={category} />
+                    <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
+                      <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
+                    </div>
                   </div>
+                  <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                    {category}
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1">

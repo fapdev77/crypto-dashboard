@@ -21,6 +21,7 @@ import { PnLBySymbol } from './components/analytics/PnLBySymbol';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
 import { HedgeProDashboard } from './components/analytics/HedgeProDashboard';
 import { MvpTestsDashboard } from './components/MvpTestsDashboard';
+import { AssetMetadataPlayground } from './components/AssetMetadataPlayground';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -34,6 +35,7 @@ export default function App() {
   if (activeTab === 'api-tester') activeTabName = 'Execução de Testes';
   if (activeTab === 'analytics-pnl-symbol') activeTabName = 'PnL by Symbol';
   if (activeTab === 'analytics-hedge-pro') activeTabName = 'Hedge Pro';
+  if (activeTab === 'mvp-asset-metadata') activeTabName = 'Informações de Ativos';
 
   return (
     <WorkSpace>
@@ -93,7 +95,8 @@ export default function App() {
               {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
               {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
               {activeTab === 'reports' && <ReportsDashboard />}
-              {activeTab === 'testes-mvp' && <MvpTestsDashboard />}
+              {(activeTab === 'testes-mvp' || activeTab === 'testes-mvp-main') && <MvpTestsDashboard />}
+              {activeTab === 'mvp-asset-metadata' && <AssetMetadataPlayground />}
               {activeTab === 'api-keys' && <ApiKeys />}
               {activeTab === 'settings' && <Settings />}
               {activeTab === 'api-tester' && <ApiTester />}

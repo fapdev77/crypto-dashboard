@@ -22,6 +22,7 @@ export interface UnifiedBalance {
 }
 
 export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
+export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
 
 export interface UnifiedPosition {
   id: string; // Ex: 'connId-okx-BTC-USDT-long'

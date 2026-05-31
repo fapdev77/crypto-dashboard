@@ -1,10 +1,11 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { UnifiedHistoryPosition } from '../types';
+import { UnifiedHistoryPosition, UnifiedAssetCategory } from '../types';
 
 const DB_NAME = 'crypto-dashboard-cache';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const HISTORY_STORE = 'positionHistory';
 const META_STORE = 'cacheMeta';
+const ASSET_META_STORE = 'assetMetadata';
 
 interface CacheDB extends DBSchema {
   positionHistory: {
@@ -21,6 +22,14 @@ interface CacheDB extends DBSchema {
       connectionId: string;
       lastFetchTimestamp: number;  // most recent closeTime cached
       updatedAt: number;          // when cache was last written
+    };
+  };
+  assetMetadata: {
+    key: string;      // "exchange_symbol" (e.g. "bybit_BTCUSDT")
+    value: {
+      id: string; // same as key
+      category: UnifiedAssetCategory;
+      updatedAt: number; // timestamp of fetch
     };
   };
 }
@@ -52,11 +61,54 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
           historyStore.createIndex('by-closeUpdateTime', 'closeUpdateTime');
         }
       }
+      
+      if (oldVersion < 3) {
+         if (!db.objectStoreNames.contains(ASSET_META_STORE)) {
+            db.createObjectStore(ASSET_META_STORE, { keyPath: 'id' });
+         }
+      }
     },
   });
 
   return dbInstance;
 }
+
+/**
+ * Save Asset Metadata
+ */
+export async function saveAssetMetadata(id: string, category: UnifiedAssetCategory): Promise<void> {
+  const db = await getDB();
+  await db.put(ASSET_META_STORE, {
+    id,
+    category,
+    updatedAt: Date.now(),
+  });
+}
+
+/**
+ * Get Asset Metadata
+ */
+export async function getAssetMetadata(id: string): Promise<{id: string, category: UnifiedAssetCategory, updatedAt: number} | undefined> {
+  const db = await getDB();
+  return db.get(ASSET_META_STORE, id);
+}
+
+/**
+ * Get the total number of cached Asset Metadata entries.
+ */
+export async function getAssetMetadataCacheSize(): Promise<number> {
+  const db = await getDB();
+  return db.count(ASSET_META_STORE);
+}
+
+/**
+ * Clear cached asset metadata
+ */
+export async function clearAssetMetadataCache(): Promise<void> {
+  const db = await getDB();
+  await db.clear(ASSET_META_STORE);
+}
+
 
 /**
  * Get all cached history positions for a given connection.

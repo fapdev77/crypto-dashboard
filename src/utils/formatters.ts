@@ -1,3 +1,6 @@
+import Big from 'big.js';
+import { UnifiedAssetCategory } from '../types';
+
 export function isStablecoin(ccy: string | undefined | null): boolean {
   if (!ccy) return false;
   const normalized = ccy.toUpperCase();
@@ -48,3 +51,22 @@ export function formatCompactUSD(val: number, decimals = 2): string {
   if (val >= 1000) return `$${(val / 1000).toFixed(decimals)}k`;
   return `$${val.toFixed(decimals)}`;
 }
+
+/**
+ * Formats an asset amount based on its category
+ * Utilizing big.js to prevent precision issues for crypto amounts
+ */
+export function formatAssetAmount(val: number | string | undefined | null, category: UnifiedAssetCategory): string {
+  if (val === undefined || val === null || val === '') return '--';
+  try {
+    const bigVal = new Big(val);
+    if (category === 'STOCK') {
+       return bigVal.toFixed(2);
+    }
+    // MAX 8 decimals for crypto, and strip trailing zeroes after decimal point
+    return bigVal.toFixed(8).replace(/\.?0+$/, ''); 
+  } catch {
+    return '--';
+  }
+}
+

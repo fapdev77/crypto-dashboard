@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { clearAllCache, getCacheSize } from '../services/historyCache';
+import { clearAllCache, getCacheSize, getAssetMetadataCacheSize, clearAssetMetadataCache } from '../services/historyCache';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
-import { Database, Trash2, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import { Database, Trash2, CheckCircle2, Loader2, RefreshCw, Briefcase } from 'lucide-react';
 
 export function Settings() {
   const { 
     useMockData, setUseMockData, 
     bybitPollingInterval, setBybitPollingInterval,
-    historyCacheInterval, setHistoryCacheInterval 
+    historyCacheInterval, setHistoryCacheInterval,
+    metadataCacheTtlHours, setMetadataCacheTtlHours
   } = useSettingsStore();
 
   const keys = useApiKeysStore(state => state.keys);
@@ -20,9 +21,12 @@ export function Settings() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [synced, setSynced] = useState(false);
   const [cacheSize, setCacheSize] = useState<number | null>(null);
+  const [metaCacheSize, setMetaCacheSize] = useState<number | null>(null);
+  const [isClearingMeta, setIsClearingMeta] = useState(false);
 
   useEffect(() => {
     getCacheSize().then(setCacheSize).catch(console.error);
+    getAssetMetadataCacheSize().then(setMetaCacheSize).catch(console.error);
   }, []);
 
   const handleForceSync = async () => {
@@ -72,6 +76,21 @@ export function Settings() {
       toast.error(`Failed to clear and sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-clear' });
     } finally {
       setIsClearing(false);
+    }
+  };
+
+  const handleClearMetaCache = async () => {
+    setIsClearingMeta(true);
+    try {
+      await clearAssetMetadataCache();
+      setMetaCacheSize(0);
+      toast.success('Metadata cache cleared', { id: 'meta-cache-clear' });
+      // Background refetch could happen upon next usage from components
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Failed to clear metadata cache: ${e.message || 'Unknown error'}`, { id: 'err-meta-cache-clear' });
+    } finally {
+      setIsClearingMeta(false);
     }
   };
 
@@ -208,6 +227,67 @@ export function Settings() {
           </div>
         </div>
       </div>
+      <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Briefcase className="w-5 h-5 text-purple-400" />
+          Asset Metadata Cache Management
+        </h3>
+        
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 border-b border-[#2a2b30] pb-6">
+            <div>
+              <div className="flex justify-between mb-1">
+                <h4 className="text-white font-medium">Metadata TTL</h4>
+                <span className="text-[#00C853] font-mono text-sm">{metadataCacheTtlHours}h</span>
+              </div>
+              <p className="text-[#8E9299] text-sm mt-1 mb-4">
+                Control the standard validity duration of cached metadata for market assets (CRYPTO vs STOCK categorization). Assets will fetch new metadata automatically once their TTL expires.
+              </p>
+            </div>
+            
+            <input 
+              type="range" 
+              min="1" 
+              max="24" 
+              step="1"
+              value={metadataCacheTtlHours}
+              onChange={(e) => setMetadataCacheTtlHours(Number(e.target.value))}
+              onPointerUp={(e) => toast.success(`Metadata TTL set to ${metadataCacheTtlHours}h`, { id: 'cache-ttl' })}
+              className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-purple-400"
+            />
+            <div className="flex justify-between text-xs text-[#8E9299] font-mono">
+              <span>1h</span>
+              <span>24h</span>
+            </div>
+          </div>
+
+          <div className="flex items-start justify-between gap-4 pt-2">
+            <div className="w-full">
+              <div className="flex justify-between items-center mb-1">
+                <h4 className="text-white font-medium">Clear Metadata Cache</h4>
+                {metaCacheSize !== null && (
+                  <div className="flex items-center gap-2 bg-[#2a2b30]/50 px-2.5 py-1 rounded-md border border-[#2a2b30]">
+                    <span className="text-[#8E9299] text-xs">Stored records:</span>
+                    <span className="text-purple-400 font-mono text-sm font-medium">{metaCacheSize}</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-[#8E9299] text-sm mb-4">
+                Force refetch of symbol definitions by clearing cached flags like CRYPTO or STOCK classifications.
+              </p>
+              <button
+                onClick={handleClearMetaCache}
+                disabled={isClearingMeta}
+                className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                {isClearingMeta ? <Loader2 className="w-4 h-4 text-purple-400 animate-spin" /> : <Trash2 className="w-4 h-4 text-red-400" />}
+                {isClearingMeta ? 'Clearing...' : 'Clear Metadata Cache'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }

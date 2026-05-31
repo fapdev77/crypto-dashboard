@@ -299,6 +299,50 @@ export class OkxAdapter implements IExchangeAdapter {
     });
   }
 
+  private static cachedSwapInstruments: any[] | null = null;
+  private static cachedSwapInstrumentsTime: number = 0;
+
+  // Instrument Metadata (Public)
+  public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
+    try {
+       // Cache the full list of OKX SWAP instruments for exactly 1 hour
+       if (!OkxAdapter.cachedSwapInstruments || Date.now() - OkxAdapter.cachedSwapInstrumentsTime > 1000 * 60 * 60) {
+           const res = await proxyFetch({
+               targetUrl: `https://www.okx.com/api/v5/public/instruments?instType=SWAP`,
+               method: 'GET',
+               headers: {}
+           });
+           if (res.code === '0' && res.data) {
+               OkxAdapter.cachedSwapInstruments = res.data;
+               OkxAdapter.cachedSwapInstrumentsTime = Date.now();
+           }
+       }
+
+       if (OkxAdapter.cachedSwapInstruments) {
+           // Replace standard quote coin variations to isolate the base asset
+           // We might receive "NVDA", "NVDA-USDT", "BTC"
+           const normalizedSymbol = symbol.replace(/USDT$|USDC$|USD$|-USDT$|-USD$|-USDC$/, '');
+           
+           const info = OkxAdapter.cachedSwapInstruments.find((inst: any) => {
+               // instFamily is like "NVDA-USDT", "BTC-USD"
+               if (inst.instFamily === `${normalizedSymbol}-USDT` || inst.instFamily === `${normalizedSymbol}-USDC` || inst.instFamily === `${normalizedSymbol}-USD`) return true;
+               if (inst.uly === `${normalizedSymbol}-USDT` || inst.uly === `${normalizedSymbol}-USDC` || inst.uly === `${normalizedSymbol}-USD`) return true;
+               if (inst.instFamily && inst.instFamily.startsWith(normalizedSymbol + '-')) return true;
+               return false;
+           });
+
+           if (info) {
+               if (info.instCategory === '3') return 'STOCK';
+               if (info.instCategory === '1') return 'CRYPTO';
+               return 'CRYPTO'; 
+           }
+       }
+    } catch (err) {
+      console.warn('[OKX-Metadata] Fetch error:', err);
+    }
+    return 'NOT_FOUND';
+  }
+
   // WSS private channel parser
   public static parse(cid: string, exchange: string, label: string, data: any) {
     if (!data.arg || !data.data) return;

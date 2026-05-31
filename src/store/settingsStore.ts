@@ -8,6 +8,8 @@ interface SettingsState {
   setBybitPollingInterval: (interval: number) => void;
   historyCacheInterval: number;
   setHistoryCacheInterval: (interval: number) => void;
+  metadataCacheTtlHours: number;
+  setMetadataCacheTtlHours: (hours: number) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -19,6 +21,8 @@ export const useSettingsStore = create<SettingsState>()(
       setBybitPollingInterval: (bybitPollingInterval: number) => set({ bybitPollingInterval }),
       historyCacheInterval: 15,
       setHistoryCacheInterval: (historyCacheInterval: number) => set({ historyCacheInterval }),
+      metadataCacheTtlHours: 24,
+      setMetadataCacheTtlHours: (metadataCacheTtlHours: number) => set({ metadataCacheTtlHours }),
     }),
     {
       name: 'terminal-settings',
