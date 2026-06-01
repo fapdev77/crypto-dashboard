@@ -44,8 +44,8 @@ const CustomBarShape = (props: any) => {
           <div className="flex flex-col items-center justify-center w-full h-full pointer-events-none px-1 overflow-hidden" xmlns="http://www.w3.org/1999/xhtml">
             <div className="flex items-center gap-1.5 opacity-100 overflow-hidden bg-transparent">
                {meta.name !== 'Outros' && width >= 55 && (
-                 <div className="pb-6 w-[18px] h-[18px] flex-shrink-0" style={{ filter: isLightBackground ? 'none' : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
-                   <CoinIcon symbol={meta.name} />
+                 <div className="w-[18px] h-[18px] flex-shrink-0" style={{ filter: isLightBackground ? 'none' : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
+                   <CoinIcon symbol={meta.name} className="w-full h-full" />
                  </div>
                )}
                {meta.name === 'Outros' && width >= 45 && (
@@ -87,7 +87,7 @@ const CustomTooltip = ({ active, payload }: any) => {
               <div key={idx} className="flex justify-between items-center gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 flex-shrink-0">
-                    <CoinIcon symbol={asset.name} />
+                    <CoinIcon symbol={asset.name} className="w-full h-full" />
                   </div>
                   <span className="text-[#8E9299] font-semibold text-xs tracking-wider uppercase">{asset.name}</span>
                 </div>
