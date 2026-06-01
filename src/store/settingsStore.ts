@@ -4,8 +4,8 @@ import { persist } from 'zustand/middleware';
 interface SettingsState {
   useMockData: boolean;
   setUseMockData: (useMockData: boolean) => void;
-  bybitPollingInterval: number;
-  setBybitPollingInterval: (interval: number) => void;
+  pollingInterval: number;
+  setPollingInterval: (interval: number) => void;
   historyCacheInterval: number;
   setHistoryCacheInterval: (interval: number) => void;
   metadataCacheTtlHours: number;
@@ -17,8 +17,8 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       useMockData: false,
       setUseMockData: (useMockData: boolean) => set({ useMockData }),
-      bybitPollingInterval: 5,
-      setBybitPollingInterval: (bybitPollingInterval: number) => set({ bybitPollingInterval }),
+      pollingInterval: 5,
+      setPollingInterval: (pollingInterval: number) => set({ pollingInterval }),
       historyCacheInterval: 15,
       setHistoryCacheInterval: (historyCacheInterval: number) => set({ historyCacheInterval }),
       metadataCacheTtlHours: 24,

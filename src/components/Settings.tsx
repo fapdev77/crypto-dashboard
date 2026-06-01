@@ -9,7 +9,7 @@ import { Database, Trash2, CheckCircle2, Loader2, RefreshCw, Briefcase } from 'l
 export function Settings() {
   const { 
     useMockData, setUseMockData, 
-    bybitPollingInterval, setBybitPollingInterval,
+    pollingInterval, setPollingInterval,
     historyCacheInterval, setHistoryCacheInterval,
     metadataCacheTtlHours, setMetadataCacheTtlHours
   } = useSettingsStore();
@@ -201,13 +201,13 @@ export function Settings() {
         <div className="flex flex-col gap-4">
           <div>
             <div className="flex justify-between mb-1">
-              <h4 className="text-white font-medium">Bybit Refresh Interval</h4>
-              <span className="text-[#00C853] font-mono text-sm">{bybitPollingInterval}s</span>
+              <h4 className="text-white font-medium">Exchanges Background Refresh Interval</h4>
+              <span className="text-[#00C853] font-mono text-sm">{pollingInterval}s</span>
             </div>
             <p className="text-[#8E9299] text-sm mt-1 mb-4">
-              Bybit's private WebSocket only pushes data upon order execution or balance changes. 
-              To ensure Mark Price, PnL, and Balances update smoothly when the market moves without transactions, 
-              we poll the REST API in the background. Choose the refresh rate (1 to 15 seconds). 
+              Private WebSockets usually push data only upon order execution or active balance changes. 
+              To ensure Mark Price, PnL, and Total Balance update smoothly across all exchanges (Bybit, Bitget, OKX) when the market moves without transactions, 
+              we periodically poll the REST API in the background. Choose the refresh rate (1 to 60 seconds). 
               Lower values provide faster updates but increase network consumption.
             </p>
           </div>
@@ -215,15 +215,15 @@ export function Settings() {
           <input 
             type="range" 
             min="1" 
-            max="15" 
-            value={bybitPollingInterval}
-            onChange={(e) => setBybitPollingInterval(Number(e.target.value))}
-            onPointerUp={(e) => toast.success(`Bybit Refresh Interval set to ${bybitPollingInterval}s`, { id: 'bybit-interval' })}
+            max="60" 
+            value={pollingInterval}
+            onChange={(e) => setPollingInterval(Number(e.target.value))}
+            onPointerUp={(e) => toast.success(`Background Tracking Interval set to ${pollingInterval}s`, { id: 'rest-interval' })}
             className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-[#00C853]"
           />
           <div className="flex justify-between text-xs text-[#8E9299] font-mono">
             <span>1s</span>
-            <span>15s</span>
+            <span>60s</span>
           </div>
         </div>
       </div>

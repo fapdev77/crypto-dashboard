@@ -87,7 +87,7 @@ Todos os adapters implementam [IExchangeAdapter](file:///x:/Dev/git/CriptoDashbo
 
 | Exchange | Adapters | Observações |
 |----------|----------|-------------|
-| **Bybit** | [HistoryAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bybit/HistoryAdapter.ts) (229 LOC), [RestAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bybit/RestAdapter.ts) (118 LOC), [WsAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bybit/WsAdapter.ts) (78 LOC) | Time-sync dedicado (`syncBybitTime`). Categorias: linear + inverse. REST polling ativo (Short-Polling) para suprir deficiência do WS. |
+| **Bybit** | [HistoryAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bybit/HistoryAdapter.ts) (229 LOC), [RestAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bybit/RestAdapter.ts) (118 LOC), [WsAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bybit/WsAdapter.ts) (78 LOC) | Time-sync dedicado (`syncBybitTime`). Categorias: linear + inverse. |
 | **OKX** | [HistoryAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/okx/HistoryAdapter.ts) (188 LOC), [WsAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/okx/WsAdapter.ts) (63 LOC) | Inst types: SWAP, FUTURES, MARGIN. WS direto do browser. |
 | **Bitget** | [HistoryAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bitget/HistoryAdapter.ts) (197 LOC), [WsAdapter](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/adapters/bitget/WsAdapter.ts) (103 LOC) | Product types: USDT-FUTURES, COIN-FUTURES, USDC-FUTURES. WS via proxy (Bitget bloqueia browser WS direto). |
 
@@ -121,7 +121,7 @@ Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWs
 
 | Hook | Arquivo | Responsabilidade |
 |------|---------|-----------------|
-| `useMultiExchangeWS` | [useMultiExchangeWS.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useMultiExchangeWS.ts) (349 LOC) | Gerencia ciclo de vida completo dos WebSockets. Exponential backoff (cap 60s). Ping/Pong a cada 20s. Short-Polling REST Bybit configurável. Mock data injection. |
+| `useMultiExchangeWS` | [useMultiExchangeWS.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useMultiExchangeWS.ts) (349 LOC) | Gerencia ciclo de vida completo dos WebSockets. Exponential backoff (cap 60s). Ping/Pong a cada 20s. Short-Polling REST universal (todas exchanges) configurável. Mock data injection. |
 | `usePositionHistory` | [usePositionHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePositionHistory.ts) | Orquestra `PositionHistoryService.fetchWithCache()` em paralelo para todas as keys. Filtra por período in-memory. |
 | `useBillsHistory` | [useBillsHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useBillsHistory.ts) | Orquestra `BillsHistoryService.fetchBills()` em paralelo. Live + Mock mode. |
 | `useHistoryCachePolling` | [useHistoryCachePolling.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useHistoryCachePolling.ts) | Background polling configurável (default 15 min) para manter cache IndexedDB atualizado. |
@@ -135,7 +135,7 @@ Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWs
 |-------|-------------|--------------|
 | [apiKeysStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/apiKeysStore.ts) | `localStorage` (`crypto-dashboard-api-keys-v2`) | `keys[]` (id, label, exchange, apiKey, apiSecret, passphrase, isActive) |
 | [dashboardStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/dashboardStore.ts) | **Memória** (volátil) | `statuses{}`, `errors{}`, `balances{}`, `positions{}` + delta updaters |
-| [settingsStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/settingsStore.ts) | `localStorage` (`terminal-settings`) | `useMockData`, `bybitPollingInterval` (default 5s), `historyCacheInterval` (default 15min) |
+| [settingsStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/settingsStore.ts) | `localStorage` (`terminal-settings`) | `useMockData`, `pollingInterval` (default 5s), `historyCacheInterval` (default 15min) |
 
 ---
 

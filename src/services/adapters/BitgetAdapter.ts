@@ -70,68 +70,74 @@ export class BitgetAdapter implements IExchangeAdapter {
 
   // REST Balances
   public async getBalance(key: any): Promise<UnifiedBalance[]> {
-    const spotPath = '/api/v2/spot/account/assets?assetType=hold_only';
-    const futuresPath = '/api/v2/mix/account/accounts?productType=USDT-FUTURES';
+    const endpoints = [
+      { path: '/api/v2/spot/account/assets?assetType=hold_only', type: 'SPOT' },
+      { path: '/api/v2/mix/account/accounts?productType=USDT-FUTURES', type: 'USDT-FUTURES' },
+      { path: '/api/v2/mix/account/accounts?productType=COIN-FUTURES', type: 'COIN-FUTURES' },
+      { path: '/api/v2/mix/account/accounts?productType=USDC-FUTURES', type: 'USDC-FUTURES' },
+      { path: '/api/v2/margin/crossed/account/assets', type: 'MARGIN_CROSS' },
+      { path: '/api/v2/margin/isolated/account/assets', type: 'MARGIN_ISOLATED' }
+    ];
 
-    const [spotRes, futuresRes] = await Promise.allSettled([
-      proxyFetch({
-        targetUrl: `https://api.bitget.com${spotPath}`,
-        method: 'GET',
-        headers: await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', spotPath)
-      }),
-      proxyFetch({
-        targetUrl: `https://api.bitget.com${futuresPath}`,
-        method: 'GET',
-        headers: await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', futuresPath)
-      })
-    ]);
+    const requests = endpoints.map(async (ep) => {
+      try {
+        const headers = await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', ep.path);
+        const res = await proxyFetch({ targetUrl: `https://api.bitget.com${ep.path}`, method: 'GET', headers });
+        return { res, type: ep.type };
+      } catch (err) {
+        console.warn(`[BitgetAdapter] fetch failed for ${ep.path}`, err);
+        return { res: { code: 'error' }, type: ep.type };
+      }
+    });
 
+    const results = await Promise.all(requests);
     const balances: UnifiedBalance[] = [];
 
-    // Spot balance mapping
-    if (spotRes.status === 'fulfilled' && spotRes.value.code === '00000' && Array.isArray(spotRes.value.data)) {
-      spotRes.value.data.forEach((item: any) => {
-        const available = parseFloat(item.available || '0');
-        const frozen = parseFloat(item.frozen || '0');
-        const amount = available + frozen;
-        if (amount > 0) {
-          balances.push({
-            id: `${key.id}-SPOT-${item.coin}`,
-            connectionId: key.id,
-            exchange: 'bitget',
-            label: `${key.label} (Spot)`,
-            ccy: item.coin.toUpperCase(),
-            amount,
-            usdValue: amount, // Spot values treated 1:1 USD approx
-            walletBalance: amount,
-            availableMargin: available,
-            raw: item
+    results.forEach(({ res, type }) => {
+      if (res.code === '00000' && Array.isArray(res.data)) {
+        if (type === 'SPOT' || type === 'MARGIN_CROSS' || type === 'MARGIN_ISOLATED') {
+          res.data.forEach((item: any) => {
+            const available = parseFloat(item.available || '0');
+            const frozen = parseFloat(item.frozen || '0');
+            const amount = available + frozen;
+            if (amount > 0) {
+              balances.push({
+                id: `${key.id}-${type}-${item.coin || item.symbol}`,
+                connectionId: key.id,
+                exchange: 'bitget',
+                label: `${key.label} (${type.replace('_', ' ')})`,
+                ccy: (item.coin || item.symbol || '').toUpperCase(),
+                amount,
+                usdValue: amount, // Approximating as 1:1 USD for now if not available
+                walletBalance: amount,
+                availableMargin: available,
+                raw: item
+              });
+            }
+          });
+        } else {
+          // Futures
+          res.data.forEach((item: any) => {
+            const totalEquity = parseFloat(item.usdtEquity || item.accountEquity || '0');
+            const walletBalance = parseFloat(item.crossedMaxAvailable || item.available || '0');
+            balances.push({
+              id: `${key.id}-${type}-${item.marginCoin}`,
+              connectionId: key.id,
+              exchange: 'bitget',
+              label: `${key.label} (${type})`,
+              ccy: item.marginCoin.toUpperCase(),
+              amount: parseFloat(item.accountEquity || item.available || '0'),
+              usdValue: totalEquity,
+              totalEquity,
+              walletBalance,
+              availableMargin: parseFloat(item.crossedMaxAvailable || '0'),
+              unrealizedPnl: parseFloat(item.unrealizedPL || '0'),
+              raw: item
+            });
           });
         }
-      });
-    }
-
-    // Futures balance mapping
-    if (futuresRes.status === 'fulfilled' && futuresRes.value.code === '00000' && Array.isArray(futuresRes.value.data)) {
-      futuresRes.value.data.forEach((item: any) => {
-        const totalEquity = parseFloat(item.usdtEquity || item.accountEquity || '0');
-        const walletBalance = parseFloat(item.crossedMaxAvailable || item.available || '0');
-        balances.push({
-          id: `${key.id}-USDT-FUTURES-${item.marginCoin}`,
-          connectionId: key.id,
-          exchange: 'bitget',
-          label: `${key.label} (USDT-FUTURES)`,
-          ccy: item.marginCoin.toUpperCase(),
-          amount: parseFloat(item.accountEquity || item.available || '0'),
-          usdValue: totalEquity,
-          totalEquity,
-          walletBalance,
-          availableMargin: parseFloat(item.crossedMaxAvailable || '0'),
-          unrealizedPnl: parseFloat(item.unrealizedPL || '0'),
-          raw: item
-        });
-      });
-    }
+      }
+    });
 
     return balances;
   }
@@ -339,21 +345,25 @@ export class BitgetAdapter implements IExchangeAdapter {
     if (data.action !== 'snapshot' && data.action !== 'update') return;
     const store = useDashboardStore.getState();
 
-    if (data.arg.channel === 'account' || data.arg.channel === 'equity') {
+    if (data.arg.channel === 'account' || data.arg.channel === 'equity' || data.arg.channel === 'account-crossed' || data.arg.channel === 'account-isolated') {
       const balances: UnifiedBalance[] = [];
       const instType = data.arg.instType;
 
-      if (instType === 'SPOT') {
+      if (instType === 'SPOT' || instType === 'MARGIN') {
         data.data.forEach((item: any) => {
           const coin = item.coin || item.marginCoin;
           const available = parseFloat(item.available || '0');
           const amount = available + parseFloat(item.frozen || '0');
           if (coin && amount > 0) {
+            let labelSuffix = 'Spot';
+            if (data.arg.channel === 'account-crossed') labelSuffix = 'Margin Cross';
+            if (data.arg.channel === 'account-isolated') labelSuffix = 'Margin Isolated';
+            
             balances.push({
-              id: `${cid}-SPOT-${coin}`,
+              id: `${cid}-${labelSuffix.toUpperCase().replace(' ', '_')}-${coin}`,
               connectionId: cid,
               exchange: 'bitget',
-              label: `${label} (Spot)`,
+              label: `${label} (${labelSuffix})`,
               ccy: coin.toUpperCase(),
               amount,
               usdValue: amount,

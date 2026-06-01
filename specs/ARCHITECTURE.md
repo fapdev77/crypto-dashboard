@@ -80,7 +80,7 @@ As regras propostas no SDD (2 casas para Stables, 8 para Assets) foram consolida
   - Dynamically computes UI values on mapping loops (e.g. Total USD Equity).
 - **`useSettingsStore`:** 
   - Manages application-wide config (e.g. `useMockData`, visibility toggles).
-  - Handles network heuristics configurations like `bybitPollingInterval` (for static REST calls) and `historyCacheInterval` (for background PnL sync limits).
+  - Handles network heuristics configurations like `pollingInterval` (for static REST calls) and `historyCacheInterval` (for background PnL sync limits).
   - Persisted to local storage for user preferences.
 
 ## 6. Mocks, Types & Schema Consistency Protocol

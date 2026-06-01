@@ -139,9 +139,9 @@ export function useMultiExchangeWS() {
     }, 20000); 
   };
 
-  const syncBybitRestData = async (config: ApiCredentials) => {
+  const syncRestData = async (config: ApiCredentials) => {
     try {
-      const adapter = new BybitAdapter();
+      const adapter = ExchangeAggregator.getAdapter(config.exchange);
       const [balances, positions] = await Promise.all([
         adapter.getBalance(config),
         adapter.getOpenPositions(config)
@@ -150,11 +150,11 @@ export function useMultiExchangeWS() {
       currentState.updateBalances(config.id, balances as any);
       currentState.updatePositions(config.id, positions);
     } catch (err) {
-      console.error(`[REST-${config.id}] Bybit REST polling failed:`, err);
+      console.error(`[REST-${config.id}] ${config.exchange} REST polling failed:`, err);
     }
   };
 
-  const startBybitPolling = (config: ApiCredentials) => {
+  const startRestPolling = (config: ApiCredentials) => {
     const { id } = config;
     const poll = async () => {
       if (intervalsRef.current[id + '-poll'] === null) return; // Prevent execution if disconnected
@@ -164,16 +164,16 @@ export function useMultiExchangeWS() {
         return;
       }
 
-      await syncBybitRestData(config);
+      await syncRestData(config);
 
-      const intervalMs = useSettingsStore.getState().bybitPollingInterval * 1000;
+      const intervalMs = useSettingsStore.getState().pollingInterval * 1000;
       if (intervalsRef.current[id + '-poll'] !== null) {
         intervalsRef.current[id + '-poll'] = setTimeout(poll, intervalMs);
       }
     };
 
     // First cycle
-    const intervalMs = useSettingsStore.getState().bybitPollingInterval * 1000;
+    const intervalMs = useSettingsStore.getState().pollingInterval * 1000;
     intervalsRef.current[id + '-poll'] = setTimeout(poll, intervalMs);
   };
 
@@ -195,9 +195,11 @@ export function useMultiExchangeWS() {
         await ExchangeAggregator.bootloadConnection(config);
         console.log(`[REST-${id}] REST Bootload completed.`);
         
-        if (exchange === 'bybit') {
-          startBybitPolling(config);
+        // Start generic REST fallback polling for all exchanges to ensure Mark Price/Unrealized PnL is kept fresh
+        if (intervalsRef.current[id + '-poll']) {
+          clearTimeout(intervalsRef.current[id + '-poll'] as NodeJS.Timeout);
         }
+        startRestPolling(config);
       } catch (error: any) {
         console.error(`[REST-${id}] REST Bootload failed:`, error);
         setConnectionError(id, `REST Bootload Error: ${error.message}`);
@@ -289,8 +291,11 @@ export function useMultiExchangeWS() {
             { instType: 'USDT-FUTURES', channel: 'account', coin: 'default' },
             { instType: 'COIN-FUTURES', channel: 'account', coin: 'default' },
             { instType: 'USDC-FUTURES', channel: 'account', coin: 'default' },
+            { instType: 'MARGIN', channel: 'account-crossed', coin: 'default' },
+            { instType: 'MARGIN', channel: 'account-isolated', coin: 'default' },
             { instType: 'USDT-FUTURES', channel: 'positions', instId: 'default' },
-            { instType: 'COIN-FUTURES', channel: 'positions', instId: 'default' }
+            { instType: 'COIN-FUTURES', channel: 'positions', instId: 'default' },
+            { instType: 'USDC-FUTURES', channel: 'positions', instId: 'default' }
           ]
         }));
       } else if (data.event === 'error') {
