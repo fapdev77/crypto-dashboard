@@ -51,13 +51,13 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
       <h3 className="text-sm font-semibold text-white mb-4">Macro Capital Distribution</h3>
       <div className="flex-1 min-h-0 w-full relative">
         <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-          <PieChart margin={{ top: 20, right: 30, left: 30, bottom: 20 }}>
+          <PieChart margin={{ top: 35, right: 30, left: 30, bottom: 35 }}>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
               innerRadius={50}
-              outerRadius={80}
+              outerRadius={70}
               paddingAngle={3}
               dataKey="value"
               stroke="none"
