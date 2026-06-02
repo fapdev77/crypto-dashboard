@@ -338,7 +338,7 @@ export function Dashboard() {
                 const isExExpanded = expandedExchanges[exchange] ?? false;
 
                 return (
-                  <div key={exchange} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg overflow-hidden flex flex-col w-full">
+                  <div key={exchange} data-theme={exchange.toLowerCase()} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg overflow-hidden flex flex-col w-full">
                     {/* Exchange Header */}
                     <button
                       onClick={() => toggleExchange(exchange)}
@@ -347,7 +347,7 @@ export function Dashboard() {
                       <div className="flex items-center gap-3">
                         <ExchangeIcon exchange={exchange} className="w-8 h-8 rounded-md bg-[#2a2b30] p-1" />
                         <div className="text-left">
-                          <h4 className="text-base font-bold text-white capitalize">{exchange}</h4>
+                          <h4 className="text-base font-bold text-brand-normal capitalize">{exchange}</h4>
                           <div className="text-xs text-[#8E9299] font-medium tracking-wide">
                             Total Balance: <span className="font-mono text-white">${totalExchangeValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>

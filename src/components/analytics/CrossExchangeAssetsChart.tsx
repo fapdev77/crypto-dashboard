@@ -74,12 +74,12 @@ const CustomTooltip = ({ active, payload }: any) => {
     const assets = row.rawAssets || [];
     
     return (
-      <div className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-4 shadow-xl z-50 min-w-[220px]">
+      <div data-theme={row.exchange.toLowerCase()} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-4 shadow-xl z-50 min-w-[220px]">
         <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[#2a2b30]">
           <div className="w-5 h-5 grayscale opacity-80 mix-blend-screen">
              <ExchangeIcon exchange={row.exchange} />
           </div>
-          <span className="text-white font-bold capitalize">{row.exchange} Composition</span>
+          <span className="text-brand-normal font-bold capitalize">{row.exchange} Composition</span>
         </div>
         <div className="space-y-2">
           {assets.map((asset: any, idx: number) => {
@@ -111,11 +111,11 @@ const customYAxisTick = (props: any) => {
   return (
     <g transform={`translate(${x - 85}, ${y - 12})`}>
       <foreignObject width={80} height={24}>
-        <div className="flex items-center justify-end w-full h-full pr-1 gap-2" xmlns="http://www.w3.org/1999/xhtml">
+        <div data-theme={ex.toLowerCase()} className="flex items-center justify-end w-full h-full pr-1 gap-2" xmlns="http://www.w3.org/1999/xhtml">
           <div className="w-[18px] h-[18px] opacity-80 flex-shrink-0">
             <ExchangeIcon exchange={ex} />
           </div>
-          <span className="text-[#8E9299] text-xs font-semibold capitalize whitespace-nowrap">{ex}</span>
+          <span className="text-brand-normal text-xs font-semibold capitalize whitespace-nowrap">{ex}</span>
         </div>
       </foreignObject>
     </g>

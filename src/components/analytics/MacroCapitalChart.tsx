@@ -2,9 +2,9 @@ import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Label } from 'recharts';
 
 export const EXCHANGE_COLORS: Record<string, string> = {
-  okx: '#e2e8f0', // soft slate
-  bitget: '#4ade80', // softer emerald
-  bybit: '#fbbf24', // softer amber
+  okx: '#fafafa', 
+  bitget: '#03aac7',
+  bybit: '#ff9c2e', 
 };
 
 interface MacroCapitalChartProps {

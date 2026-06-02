@@ -228,7 +228,7 @@ export function PnLBySymbol() {
               {sortedData.map((row) => (
                 <tr key={`${row.exchange}-${row.symbol}-${row.instrument}`} className="border-b border-gray-50 dark:border-[#2a2b30]/50 hover:bg-gray-50 dark:hover:bg-[#2a2b30]/20 transition-colors">
                   <td className="py-4">
-                    <div className="flex items-center gap-2">
+                    <div data-theme={row.exchange.toLowerCase()} className="flex items-center gap-2 text-brand-normal font-medium">
                       <ExchangeIcon exchange={row.exchange} className="w-5 h-5 rounded-sm" />
                       <span className="capitalize">{row.exchange}</span>
                     </div>
