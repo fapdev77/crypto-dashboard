@@ -2,9 +2,9 @@ import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Label } from 'recharts';
 
 export const EXCHANGE_COLORS: Record<string, string> = {
-  okx: '#fafafa', 
+  okx: '#fafafa',
   bitget: '#03aac7',
-  bybit: '#ff9c2e', 
+  bybit: '#ff9c2e',
 };
 
 interface MacroCapitalChartProps {
@@ -18,8 +18,9 @@ const renderCustomizedLabel = (props: any) => {
   const isLeft = x < cx;
   const textAnchor = isLeft ? 'end' : 'start';
 
-  const valColor = EXCHANGE_COLORS[name.toLowerCase()] || '#ffffff';
-  
+  const valColorExchange = EXCHANGE_COLORS[name.toLowerCase()] || '#ffffff';
+  const valColorValue = '#d8c9c9c0';
+
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const inX = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -32,11 +33,11 @@ const renderCustomizedLabel = (props: any) => {
           {(percent * 100).toFixed(0)}%
         </text>
       )}
-      
-      <text x={x + (isLeft ? -8 : 8)} y={y - 8} fill="#8E9299" textAnchor={textAnchor} dominantBaseline="central" fontSize={12} className="capitalize">
+
+      <text x={x + (isLeft ? -8 : 8)} y={y - 8} fill={valColorExchange} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} className="capitalize font-semibold">
         {name}
       </text>
-      <text x={x + (isLeft ? -8 : 8)} y={y + 8} fill={valColor} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fontWeight="bold" className="font-mono">
+      <text x={x + (isLeft ? -8 : 8)} y={y + 8} fill={valColorValue} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fontWeight="bold" className="font-mono">
         {formatCompactUSD(value)}
       </text>
     </g>
@@ -68,7 +69,7 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={EXCHANGE_COLORS[entry.name.toLowerCase()] || '#8E9299'} />
               ))}
-              <Label 
+              <Label
                 content={({ viewBox }) => {
                   const { cx, cy } = viewBox as any;
                   return (
@@ -76,7 +77,7 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
                       <text x={cx} y={cy - 10} fill="#8E9299" fontSize={12} textAnchor="middle" dominantBaseline="central">
                         Total:
                       </text>
-                      <text x={cx} y={cy + 12} fill="#ffffff" fontSize={20} fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="central">
+                      <text x={cx} y={cy + 12} fill="#ffffffc0" fontSize={20} fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="central">
                         {formatCompactUSD(totalValue, 2)}
                       </text>
                     </g>
@@ -84,7 +85,7 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
                 }}
               />
             </Pie>
-            <RechartsTooltip 
+            <RechartsTooltip
               contentStyle={{ backgroundColor: '#1a1b1e', borderColor: '#2a2b30', borderRadius: '8px', padding: '8px 12px' }}
               itemStyle={{ color: '#fff', fontWeight: 'bold' }}
               formatter={(value: number) => `$${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`}

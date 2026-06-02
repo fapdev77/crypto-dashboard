@@ -4,10 +4,13 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  /* Definir as propriedades para o Tailwind v4 criar as classes text-brand-*, bg-brand-* */
   --color-brand-normal: var(--brand-normal);
   --color-brand-hover: var(--brand-hover);
   --color-brand-pressed: var(--brand-pressed);
   --color-brand-focus: var(--brand-focus);
+  
   --color-bitget: #03aac7;
   --color-okx: #fafafa;
   --color-bybit: #ff9c2e;
@@ -19,6 +22,11 @@
   --brand-hover: #35ccfa;
   --brand-pressed: #0293ad;
   --brand-focus: #02869e;
+  
+  --color-brand-normal: #03aac7;
+  --color-brand-hover: #35ccfa;
+  --color-brand-pressed: #0293ad;
+  --color-brand-focus: #02869e;
 }
 
 /* Tema OKX */
@@ -27,6 +35,11 @@
   --brand-hover: #ffffff;
   --brand-pressed: #e5e5e5;
   --brand-focus: #dbdbdb;
+  
+  --color-brand-normal: #fafafa;
+  --color-brand-hover: #ffffff;
+  --color-brand-pressed: #e5e5e5;
+  --color-brand-focus: #dbdbdb;
 }
 
 /* Tema Bybit */
@@ -35,6 +48,11 @@
   --brand-hover: #ffc35c;
   --brand-pressed: #f0960e;
   --brand-focus: #eb8d13;
+  
+  --color-brand-normal: #ff9c2e;
+  --color-brand-hover: #ffc35c;
+  --color-brand-pressed: #f0960e;
+  --color-brand-focus: #eb8d13;
 }
 
 @keyframes marquee {

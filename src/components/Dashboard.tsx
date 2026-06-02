@@ -23,7 +23,7 @@ export function Dashboard() {
   const positionsList = Object.values(positions);
 
   const activeBalances = useMemo(() => {
-    return useMockData 
+    return useMockData
       ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
       : balancesList.filter(b => !b.connectionId.startsWith('mocked-data'));
   }, [balancesList, useMockData]);
@@ -44,7 +44,7 @@ export function Dashboard() {
 
   const dailyPnLPercent = totalEquity > 0 ? (dailyPnL / totalEquity) * 100 : 0;
   const openPositionsCount = activePositions.length;
-  
+
   const longPositions = activePositions.filter(pos => pos.side === 'long' || pos.side === 'buy').length;
   const shortPositions = activePositions.filter(pos => pos.side === 'short' || pos.side === 'sell').length;
   const longPercent = openPositionsCount > 0 ? (longPositions / openPositionsCount) * 100 : 0;
@@ -57,8 +57,8 @@ export function Dashboard() {
     }
     if (filterText) {
       const lowerFilter = filterText.toLowerCase();
-      filtered = filtered.filter(b => 
-        b.ccy.toLowerCase().includes(lowerFilter) || 
+      filtered = filtered.filter(b =>
+        b.ccy.toLowerCase().includes(lowerFilter) ||
         b.label.toLowerCase().includes(lowerFilter) ||
         b.exchange.toLowerCase().includes(lowerFilter)
       );
@@ -71,7 +71,7 @@ export function Dashboard() {
   // Hierarchical Data: Exchange -> Account -> Balances
   const hierarchy = useMemo(() => {
     const acc: Record<string, { total: number; accounts: Record<string, { label: string; total: number; balances: BalanceItem[] }> }> = {};
-    
+
     filteredBalances.forEach(b => {
       if (!acc[b.exchange]) {
         acc[b.exchange] = { total: 0, accounts: {} };
@@ -129,7 +129,7 @@ export function Dashboard() {
       sorted.forEach(asset => {
         const percent = data.total > 0 ? (asset.val / data.total) * 100 : 0;
         const percentOfGlobal = globalTotal > 0 ? (asset.val / globalTotal) * 100 : 0;
-        
+
         rawAssets.push({ name: asset.ccy, value: asset.val, percent, percentOfGlobal });
 
         if (percentOfGlobal < 10) {
@@ -140,9 +140,9 @@ export function Dashboard() {
       });
 
       if (outrosVal > 0) {
-        segments.push({ 
-          name: 'Outros', 
-          value: outrosVal, 
+        segments.push({
+          name: 'Outros',
+          value: outrosVal,
           percent: data.total > 0 ? (outrosVal / data.total) * 100 : 0,
           percentOfGlobal: globalTotal > 0 ? (outrosVal / globalTotal) * 100 : 0
         });
@@ -161,9 +161,9 @@ export function Dashboard() {
       formattedData.push(rowData);
     }
 
-    return { 
-      data: formattedData.sort((a, b) => b.total - a.total), 
-      maxSegments 
+    return {
+      data: formattedData.sort((a, b) => b.total - a.total),
+      maxSegments
     };
   }, [activeBalances]);
 
@@ -203,7 +203,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
         {/* Total Equity Card */}
         <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between mb-3 relative z-10">
@@ -231,7 +231,7 @@ export function Dashboard() {
                 ({dailyPnL >= 0 ? '+' : ''}{dailyPnLPercent.toFixed(2)}%)
               </span>
             </div>
-            
+
             <div className="w-[80px] h-[30px] opacity-80">
               <Sparkline data={[10, 25, 15, 40, 30, 50, 45, 60, dailyPnL >= 0 ? 80 : 20]} color={dailyPnL >= 0 ? 'emerald' : 'red'} width={80} height={30} />
             </div>
@@ -242,6 +242,34 @@ export function Dashboard() {
         <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between mb-3 relative z-10">
             <span className="text-[#8E9299] text-xs font-medium tracking-wider">Total Open Positions</span>
+            <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
+          </div>
+          <div className="flex items-center justify-between relative z-10">
+            <p className="text-2xl font-bold text-white relative z-10 flex items-baseline gap-1.5">
+              {openPositionsCount}
+              <span className="text-sm text-[#8E9299] font-medium mr-3">Active</span>
+            </p>
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-xs font-bold text-emerald-500">{longPositions}</span>
+                <span className="text-[10px] font-medium text-emerald-500/80">({longPercent.toFixed(0)}%)</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-red-500/10 px-2.5 py-1 rounded-md border border-red-500/20">
+                <TrendingDown className="w-3.5 h-3.5 text-red-500" />
+                <span className="text-xs font-bold text-red-500">{shortPositions}</span>
+                <span className="text-[10px] font-medium text-red-500/80">({shortPercent.toFixed(0)}%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Hedge Mode Positions Card */}
+        {/* Desenvolver - esse card vai apresentar as informações somente das posições hedge e vai mostrar a porcentagem do total protegido e o total exposto com relação ao capital total. */}
+        <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Hedge Mode Positions</span>
             <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
           </div>
           <div className="flex items-center justify-between relative z-10">
@@ -277,7 +305,7 @@ export function Dashboard() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <h3 className="text-xl font-semibold text-white">Balances</h3>
           <div className="flex flex-wrap items-center gap-3">
-             <div className="relative flex-1 min-w-[200px]">
+            <div className="relative flex-1 min-w-[200px]">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-[#8E9299]" />
               </div>
@@ -289,7 +317,7 @@ export function Dashboard() {
                 onChange={(e) => setFilterText(e.target.value)}
               />
               {filterText && (
-                <button 
+                <button
                   onClick={() => setFilterText('')}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
                 >
@@ -297,7 +325,7 @@ export function Dashboard() {
                 </button>
               )}
             </div>
-            
+
             <button
               onClick={() => setHideSmallBalances(!hideSmallBalances)}
               className="flex items-center gap-2 px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] hover:bg-[#2a2b30]/50 rounded-lg text-sm text-[#8E9299] hover:text-white transition-colors"
@@ -338,7 +366,7 @@ export function Dashboard() {
                 const isExExpanded = expandedExchanges[exchange] ?? false;
 
                 return (
-                  <div key={exchange} data-theme={exchange.toLowerCase()} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg overflow-hidden flex flex-col w-full">
+                  <div key={exchange} data-theme={exchange.toLowerCase().trim()} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg overflow-hidden flex flex-col w-full">
                     {/* Exchange Header */}
                     <button
                       onClick={() => toggleExchange(exchange)}
@@ -353,7 +381,7 @@ export function Dashboard() {
                           </div>
                         </div>
                       </div>
-                       <div className="text-[#8E9299] group-hover:text-white transition-colors">
+                      <div className="text-[#8E9299] group-hover:text-white transition-colors">
                         {isExExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                       </div>
                     </button>
@@ -363,15 +391,15 @@ export function Dashboard() {
                       <div className="flex-1 overflow-hidden flex flex-col bg-[#111216]">
                         {Object.entries(exData.accounts).map(([connId, accData]) => {
                           const isAccExpanded = expandedAccounts[connId] ?? false;
-                          
+
                           // Determistic fake sparkline based on account total
                           const hash = (accData.total * 13) % 100;
                           const isPositive = hash > 50;
                           const sparkData = [
-                            hash, 
-                            (hash * 1.5) % 100, 
-                            (hash * 0.8) % 100, 
-                            (hash * 1.2) % 100, 
+                            hash,
+                            (hash * 1.5) % 100,
+                            (hash * 0.8) % 100,
+                            (hash * 1.2) % 100,
                             isPositive ? hash + 20 : Math.max(10, hash - 20)
                           ];
 
