@@ -10,12 +10,12 @@ interface CoinIconProps {
 }
 
 export function CoinIcon({ symbol, className = "w-6 h-6", size = 32, category, name }: CoinIconProps) {
-  const initialState = category === 'STOCK' ? 'logodev-ticker' : 'okx';
+  const initialState = 'okx';
   const [imageState, setImageState] = useState<'okx' | 'logodev-crypto' | 'logodev-ticker' | 'logodev-name' | 'coincap' | 'error'>(initialState);
   
   // Refaz o initialState caso a propriedade category mude fora
   useEffect(() => {
-    setImageState(category === 'STOCK' ? 'logodev-ticker' : 'okx');
+    setImageState('okx');
   }, [category, symbol]);
   
   let cleanSymbol = symbol.toLowerCase();
