@@ -10,12 +10,12 @@ interface CoinIconProps {
 }
 
 export function CoinIcon({ symbol, className = "w-6 h-6", size = 32, category, name }: CoinIconProps) {
-  const initialState = category === 'STOCK' ? 'logodev-ticker' : 'logodev-crypto';
-  const [imageState, setImageState] = useState<'logodev-crypto' | 'logodev-ticker' | 'logodev-name' | 'coincap' | 'error'>(initialState);
+  const initialState = category === 'STOCK' ? 'logodev-ticker' : 'okx';
+  const [imageState, setImageState] = useState<'okx' | 'logodev-crypto' | 'logodev-ticker' | 'logodev-name' | 'coincap' | 'error'>(initialState);
   
   // Refaz o initialState caso a propriedade category mude fora
   useEffect(() => {
-    setImageState(category === 'STOCK' ? 'logodev-ticker' : 'logodev-crypto');
+    setImageState(category === 'STOCK' ? 'logodev-ticker' : 'okx');
   }, [category, symbol]);
   
   let cleanSymbol = symbol.toLowerCase();
@@ -43,6 +43,9 @@ export function CoinIcon({ symbol, className = "w-6 h-6", size = 32, category, n
 
   const token = 'pk_W-08Gy3bQ66pu3yMO7UNxQ';
   
+  // OKX CDN
+  const okxUrl = `https://www.okx.com/cdn/oksupport/asset/currency/icon/${cleanSymbol}.png`;
+
   // Logo.dev (Crypto API)
   const logoDevCryptoUrl = `https://img.logo.dev/crypto/${cleanSymbol.toUpperCase()}?token=${token}&fallback=404`;
   // Logo.dev (Ticker API para mercado tradicional)
@@ -57,13 +60,16 @@ export function CoinIcon({ symbol, className = "w-6 h-6", size = 32, category, n
   const coinCapUrl = `https://assets.coincap.io/assets/icons/${cleanSymbol}@2x.png`;
 
   let currentUrl = '';
-  if (imageState === 'logodev-crypto') currentUrl = logoDevCryptoUrl;
+  if (imageState === 'okx') currentUrl = okxUrl;
+  else if (imageState === 'logodev-crypto') currentUrl = logoDevCryptoUrl;
   else if (imageState === 'logodev-ticker') currentUrl = logoDevTickerUrl;
   else if (imageState === 'logodev-name') currentUrl = logoDevNameUrl;
   else currentUrl = coinCapUrl;
 
   const handleError = () => {
-    if (imageState === 'logodev-crypto') {
+    if (imageState === 'okx') {
+      setImageState('logodev-crypto');
+    } else if (imageState === 'logodev-crypto') {
       setImageState('logodev-ticker');
     } else if (imageState === 'logodev-ticker') {
       if (category === 'STOCK') {
