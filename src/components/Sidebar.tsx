@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker, AlignLeft } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 
@@ -153,6 +153,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       <div className={`p-4 border-t border-[#2a2b30] ${isCollapsed ? 'px-3' : ''}`}>
         {[
           { id: 'api-keys', label: 'API Keys', icon: KeyRound },
+          { id: 'logs', label: 'Logs', icon: AlignLeft },
           { id: 'api-tester', label: 'Execução de Testes', icon: Terminal },
           { id: 'settings', label: 'Settings', icon: Settings },
         ].map((item) => (

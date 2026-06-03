@@ -22,6 +22,7 @@ import { ReportsDashboard } from './components/analytics/ReportsDashboard';
 import { HedgeProDashboard } from './components/analytics/HedgeProDashboard';
 import { MvpTestsDashboard } from './components/MvpTestsDashboard';
 import { AssetMetadataPlayground } from './components/AssetMetadataPlayground';
+import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -30,6 +31,7 @@ export default function App() {
 
   let activeTabName = activeTab.replace('analytics-', '').replace('-', ' ');
   if (activeTab === 'api-keys') activeTabName = 'API Keys';
+  if (activeTab === 'logs') activeTabName = 'Live Connection Logs';
   if (activeTab === 'settings') activeTabName = 'Settings';
   if (activeTab === 'testes-mvp') activeTabName = 'Testes MVP';
   if (activeTab === 'api-tester') activeTabName = 'Execução de Testes';
@@ -87,7 +89,7 @@ export default function App() {
               </h2>
             </header>
 
-            <div className="flex-1 overflow-auto hide-scrollbar">
+            <div className="flex-1 overflow-auto hide-scrollbar relative">
               {activeTab === 'dashboard' && <Dashboard />}
               {activeTab === 'positions-open' && <OpenPositions />}
               {activeTab === 'positions-history' && <ClosedPositions />}
@@ -98,6 +100,7 @@ export default function App() {
               {(activeTab === 'testes-mvp' || activeTab === 'testes-mvp-main') && <MvpTestsDashboard />}
               {activeTab === 'mvp-asset-metadata' && <AssetMetadataPlayground />}
               {activeTab === 'api-keys' && <ApiKeys />}
+              {activeTab === 'logs' && <ConnectionLogTerminal />}
               {activeTab === 'settings' && <Settings />}
               {activeTab === 'api-tester' && <ApiTester />}
             </div>

@@ -109,11 +109,65 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     return { positions: nextPositions };
   }),
 
+  // Telemetry
+  telemetry: {},
+  updateLatency: (connectionId, ms) => set((state) => {
+    const current = state.telemetry[connectionId] || {
+      latencyHistory: [], throughputHistory: [], lastPingMs: 0, bytesPerSecond: 0, accumulatingBytes: 0, lastThroughputUpdate: Date.now()
+    };
+    const newHistory = [...current.latencyHistory, ms].slice(-20);
+    return {
+      telemetry: {
+        ...state.telemetry,
+        [connectionId]: {
+          ...current,
+          lastPingMs: ms,
+          latencyHistory: newHistory
+        }
+      }
+    };
+  }),
+  addBytesReceived: (connectionId, bytes) => set((state) => {
+    const current = state.telemetry[connectionId];
+    if (!current) return state;
+    return {
+      telemetry: {
+        ...state.telemetry,
+        [connectionId]: {
+          ...current,
+          accumulatingBytes: current.accumulatingBytes + bytes
+        }
+      }
+    };
+  }),
+  tickThroughput: () => set((state) => {
+    const now = Date.now();
+    const nextTelemetry = { ...state.telemetry };
+    Object.keys(nextTelemetry).forEach(id => {
+      const current = nextTelemetry[id];
+      const deltaMs = now - current.lastThroughputUpdate;
+      if (deltaMs >= 1000) {
+        const bytesPerSec = (current.accumulatingBytes / deltaMs) * 1000;
+        const newHistory = [...current.throughputHistory, bytesPerSec].slice(-20);
+        
+        nextTelemetry[id] = {
+          ...current,
+          bytesPerSecond: bytesPerSec,
+          throughputHistory: newHistory,
+          accumulatingBytes: 0,
+          lastThroughputUpdate: now
+        };
+      }
+    });
+    return { telemetry: nextTelemetry };
+  }),
+
   clearConnectionData: (connectionId) => set((state) => {
     const nextBalances = { ...state.balances };
     const nextPositions = { ...state.positions };
     const nextStatuses = { ...state.statuses };
     const nextErrors = { ...state.errors };
+    const nextTelemetry = { ...state.telemetry };
     
     for (const key in nextBalances) {
       if (nextBalances[key].connectionId === connectionId) {
@@ -129,8 +183,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     
     delete nextStatuses[connectionId];
     delete nextErrors[connectionId];
+    delete nextTelemetry[connectionId];
 
-    return { balances: nextBalances, positions: nextPositions, statuses: nextStatuses, errors: nextErrors };
+    return { balances: nextBalances, positions: nextPositions, statuses: nextStatuses, errors: nextErrors, telemetry: nextTelemetry };
   })
 }));
 

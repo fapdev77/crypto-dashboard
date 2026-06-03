@@ -34,11 +34,20 @@ export function useMultiExchangeWS() {
   const setConnectionError = useDashboardStore((state) => state.setConnectionError);
   const updateBalances = useDashboardStore((state) => state.updateBalances);
   const updatePositions = useDashboardStore((state) => state.updatePositions);
+  const updateLatency = useDashboardStore((state) => state.updateLatency);
+  const addBytesReceived = useDashboardStore((state) => state.addBytesReceived);
+  const tickThroughput = useDashboardStore((state) => state.tickThroughput);
 
   const socketsRef = useRef<Record<string, WebSocket | null>>({});
   const intervalsRef = useRef<Record<string, NodeJS.Timeout | null>>({});
   const reconnectTimers = useRef<Record<string, NodeJS.Timeout | null>>({});
   const retryCounters = useRef<Record<string, number>>({});
+  const lastPingRef = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    const throughputInterval = setInterval(tickThroughput, 1000);
+    return () => clearInterval(throughputInterval);
+  }, [tickThroughput]);
 
   useEffect(() => {
     if (useMockData) {
@@ -128,6 +137,7 @@ export function useMultiExchangeWS() {
   const startPing = (config: ApiCredentials, ws: WebSocket) => {
     intervalsRef.current[config.id] = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
+        lastPingRef.current[config.id] = Date.now();
         if (config.exchange === 'bybit') {
           ws.send(JSON.stringify({ op: 'ping' }));
           console.log(`[WS-${config.id}][Keep-Alive] Ping enviado (Bybit).`);
@@ -235,13 +245,32 @@ export function useMultiExchangeWS() {
 
     ws.onmessage = (event) => {
       const msg = event.data;
+      
+      const byteSize = typeof msg === 'string' ? new Blob([msg]).size : (msg instanceof ArrayBuffer || msg instanceof Blob ? msg.size || msg.byteLength : 0);
+      addBytesReceived(id, byteSize);
+      
       if (typeof msg === 'string' && msg === 'pong') {
         console.log(`[WS-${id}] Recebido: pong`);
+        const sentTime = lastPingRef.current[id];
+        if (sentTime) {
+          updateLatency(id, Date.now() - sentTime);
+        }
         return;
       }
       
       try {
         const data = JSON.parse(msg.toString());
+        
+        // Handle Bybit pong ({"success":true,"ret_msg":"pong","conn_id":"...","req_id":"","op":"ping"})
+        if (exchange === 'bybit' && data.op === 'ping' && data.ret_msg === 'pong') {
+          console.log(`[WS-${id}] Recebido: pong`);
+          const sentTime = lastPingRef.current[id];
+          if (sentTime) {
+            updateLatency(id, Date.now() - sentTime);
+          }
+          return;
+        }
+
         handleSubscriptionAndAuth(config, ws, data);
         WsParsers.parseStream(config, data);
       } catch (err) {
