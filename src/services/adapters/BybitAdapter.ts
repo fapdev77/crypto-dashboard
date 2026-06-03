@@ -159,8 +159,10 @@ export class BybitAdapter implements IExchangeAdapter {
     const uPnlObj = new Big(pos.unrealisedPnl || '0');
     const roe = marginObj.gt(0) ? Number(uPnlObj.div(marginObj).times(100)) : undefined;
 
+    const side = mapPositionSide('bybit', pos.side);
+    
     return {
-      id: `${connectionId}-${pos.symbol}-${positionIdx}`,
+      id: `${connectionId}-bybit-${pos.symbol}-${side}`,
       connectionId,
       exchange: 'bybit',
       label,
@@ -386,9 +388,10 @@ export class BybitAdapter implements IExchangeAdapter {
 
         const margin = parseFloat(pos.positionIM || '0');
         const unrealizedPnl = parseFloat(pos.unrealisedPnl || '0');
+        const side = mapPositionSide('bybit', pos.side);
 
         positions.push({
-          id: `${cid}-${pos.symbol}-${pos.positionIdx || 0}`,
+          id: `${cid}-bybit-${pos.symbol}-${side}`,
           connectionId: cid,
           exchange: 'bybit',
           label,

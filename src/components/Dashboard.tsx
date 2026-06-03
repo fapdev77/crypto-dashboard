@@ -50,6 +50,23 @@ export function Dashboard() {
   const longPercent = openPositionsCount > 0 ? (longPositions / openPositionsCount) * 100 : 0;
   const shortPercent = openPositionsCount > 0 ? (shortPositions / openPositionsCount) * 100 : 0;
 
+  // Hedge Mode / Inverse calculations
+  const inversePositions = activePositions.filter(pos => pos.instrumentType === 'INVERSE');
+  const inverseOpenCount = inversePositions.length;
+  const inverseLongCount = inversePositions.filter(pos => pos.side === 'long' || pos.side === 'buy').length;
+  const inverseShortCount = inversePositions.filter(pos => pos.side === 'short' || pos.side === 'sell').length;
+
+  const totalProtected = inversePositions.reduce((acc, pos) => {
+    if (pos.side === 'short' || pos.side === 'sell') {
+      return acc + (pos.margin || 0) * (pos.markPrice || 0);
+    }
+    return acc;
+  }, 0);
+  const totalExposed = totalEquity - totalProtected;
+  
+  const protectedPercent = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
+  const exposedPercent = totalEquity > 0 ? (totalExposed / totalEquity) * 100 : 0;
+
   const filteredBalances = useMemo(() => {
     let filtered = activeBalances;
     if (hideSmallBalances) {
@@ -266,28 +283,39 @@ export function Dashboard() {
         </div>
 
         {/* Hedge Mode Positions Card */}
-        {/* Desenvolver - esse card vai apresentar as informações somente das posições hedge e vai mostrar a porcentagem do total protegido e o total exposto com relação ao capital total. */}
         <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3 relative z-10">
-            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Hedge Mode Positions</span>
-            <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
-          </div>
-          <div className="flex items-center justify-between relative z-10">
-            <p className="text-2xl font-bold text-white relative z-10 flex items-baseline gap-1.5">
-              {openPositionsCount}
-              <span className="text-sm text-[#8E9299] font-medium mr-3">Active</span>
-            </p>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-xs font-bold text-emerald-500">{longPositions}</span>
-                <span className="text-[10px] font-medium text-emerald-500/80">({longPercent.toFixed(0)}%)</span>
+          <div className="flex items-center justify-between mb-2 relative z-10">
+            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Hedge Mode (Inverse)</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-emerald-500">L:{inverseLongCount}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-red-500/10 px-2.5 py-1 rounded-md border border-red-500/20">
-                <TrendingDown className="w-3.5 h-3.5 text-red-500" />
-                <span className="text-xs font-bold text-red-500">{shortPositions}</span>
-                <span className="text-[10px] font-medium text-red-500/80">({shortPercent.toFixed(0)}%)</span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-red-500">S:{inverseShortCount}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 relative z-10 mb-3">
+            <p className="text-xl font-bold text-white relative z-10 flex items-baseline gap-1.5">
+              {inverseOpenCount}
+              <span className="text-xs text-[#8E9299] font-medium">Active</span>
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1 relative z-10 mt-auto">
+            <div className="flex items-center justify-between bg-[#1a1b1e] px-2 py-1.5 rounded border border-[#2a2b30]">
+              <span className="text-[10px] text-[#8E9299] font-medium">Protected</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-mono text-white">${totalProtected.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="text-[10px] font-medium text-emerald-500">({protectedPercent.toFixed(1)}%)</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between bg-[#1a1b1e] px-2 py-1.5 rounded border border-[#2a2b30]">
+              <span className="text-[10px] text-[#8E9299] font-medium">Exposed</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-mono text-white">${totalExposed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="text-[10px] font-medium text-[#8E9299]">({exposedPercent.toFixed(1)}%)</span>
               </div>
             </div>
           </div>

@@ -131,8 +131,10 @@ export class OkxAdapter implements IExchangeAdapter {
         size = notionalUsd / markPx;
       }
 
+      const side = mapPositionSide('okx', pos.posSide);
+
       return {
-        id: `${key.id}-${pos.posId}`,
+        id: `${key.id}-okx-${pos.instId}-${side}`,
         connectionId: key.id,
         exchange: 'okx',
         label: key.label,
@@ -140,7 +142,7 @@ export class OkxAdapter implements IExchangeAdapter {
         baseCoin: extractBaseCoin('okx', pos.instId),
         quoteCoin: extractQuoteCoin('okx', pos.instId),
         ccy: extractCcy('okx', pos.ccy, undefined, pos.marginCoin, pos.instId),
-        side: mapPositionSide('okx', pos.posSide),
+        side,
         size,
         entryPrice: parseFloat(pos.avgPx || '0'),
         markPrice: markPx,
@@ -382,8 +384,10 @@ export class OkxAdapter implements IExchangeAdapter {
           size = notionalUsd / markPx;
         }
 
+        const side = mapPositionSide('okx', pos.posSide);
+
         return {
-          id: `${cid}-${pos.posId}`,
+          id: `${cid}-okx-${pos.instId}-${side}`,
           connectionId: cid,
           exchange: 'okx',
           label,
@@ -391,7 +395,7 @@ export class OkxAdapter implements IExchangeAdapter {
           baseCoin: extractBaseCoin('okx', pos.instId),
           quoteCoin: extractQuoteCoin('okx', pos.instId),
           ccy: extractCcy('okx', pos.ccy, undefined, pos.marginCoin, pos.instId),
-          side: mapPositionSide('okx', pos.posSide),
+          side,
           size,
           entryPrice: parseFloat(pos.avgPx || '0'),
           markPrice: markPx,

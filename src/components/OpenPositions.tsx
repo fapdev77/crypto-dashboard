@@ -14,7 +14,7 @@ export function OpenPositions() {
   const { positions } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
   const keys = useApiKeysStore(state => state.keys);
-  
+
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [filterText, setFilterText] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
@@ -28,7 +28,7 @@ export function OpenPositions() {
 
   const activePositions = useMemo(() => {
     // First, filter by mock connection rule
-    let filtered = useMockData 
+    let filtered = useMockData
       ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
       : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data'));
 
@@ -41,8 +41,8 @@ export function OpenPositions() {
 
     if (filterText) {
       const lowerFilter = filterText.toLowerCase();
-      filtered = filtered.filter(pos => 
-        pos.symbol.toLowerCase().includes(lowerFilter) || 
+      filtered = filtered.filter(pos =>
+        pos.symbol.toLowerCase().includes(lowerFilter) ||
         pos.label.toLowerCase().includes(lowerFilter) ||
         pos.exchange.toLowerCase().includes(lowerFilter)
       );
@@ -60,8 +60,8 @@ export function OpenPositions() {
       if (isLong) longsCount++;
       if (isShort) shortsCount++;
       if (pos.side === 'net') {
-         if (pos.size > 0) longsCount++;
-         else if (pos.size < 0) shortsCount++;
+        if (pos.size > 0) longsCount++;
+        else if (pos.size < 0) shortsCount++;
       }
     });
     return { longs: longsCount, shorts: shortsCount };
@@ -74,9 +74,15 @@ export function OpenPositions() {
       const posCcy = pos.ccy || pos.baseCoin || 'USDT';
       const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
       const multiplier = isFiatCcy ? 1 : (pos.markPrice || 1);
-      
+      console.log("OpenPositions antes/depois", pos);
+      console.log("OpenPositions UPL", pos.unrealizedPnl);
+      console.log("OpenPositions RPL", pos.realizedPnl);
+
       uPnl += ((pos.unrealizedPnl || 0) * multiplier);
       rPnl += ((pos.realizedPnl || 0) * multiplier);
+
+      console.log("OpenPositions UPL", uPnl);
+      console.log("OpenPositions RPL", rPnl);
     });
     return { totalUnrealizedPnl: uPnl, totalRealizedPnl: rPnl };
   }, [activePositions]);
@@ -97,8 +103,8 @@ export function OpenPositions() {
                 <ExchangeIcon exchange={exchangeFilter} className="w-4 h-4" />
               )}
               <span>
-                {exchangeFilter === 'all' 
-                  ? 'Todas Exchanges' 
+                {exchangeFilter === 'all'
+                  ? 'Todas Exchanges'
                   : exchangeFilter.charAt(0).toUpperCase() + exchangeFilter.slice(1)}
               </span>
             </div>
@@ -109,8 +115,8 @@ export function OpenPositions() {
 
           {isExchangeDropdownOpen && (
             <>
-              <div 
-                className="fixed inset-0 z-10" 
+              <div
+                className="fixed inset-0 z-10"
                 onClick={() => setIsExchangeDropdownOpen(false)}
               />
               <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
@@ -120,9 +126,8 @@ export function OpenPositions() {
                     setExchangeFilter('all');
                     setIsExchangeDropdownOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
-                    exchangeFilter === 'all' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === 'all' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                    }`}
                 >
                   <span>Todas Exchanges</span>
                 </button>
@@ -134,9 +139,8 @@ export function OpenPositions() {
                       setExchangeFilter(exchange);
                       setIsExchangeDropdownOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
-                      exchangeFilter === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                      }`}
                   >
                     <ExchangeIcon exchange={exchange} className="w-4 h-4" />
                     <span>{exchange.charAt(0).toUpperCase() + exchange.slice(1)}</span>
@@ -160,7 +164,7 @@ export function OpenPositions() {
             onChange={(e) => setFilterText(e.target.value)}
           />
           {filterText && (
-            <button 
+            <button
               onClick={() => setFilterText('')}
               className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
               title="Clear filter"
@@ -184,259 +188,260 @@ export function OpenPositions() {
             ];
             return (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-        <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
-           <div className="flex flex-col">
-             <span className="text-xs text-[#8E9299]">Total Positions</span>
-             <div className="flex items-baseline gap-2">
-               <span className="text-xl font-medium text-white">{activePositions.length}</span>
-               {activePositions.length > 0 && (
-                 <div className="flex text-[10px] gap-2 font-mono">
-                   <span className="text-[#00C853]">{longs}L ({((longs / activePositions.length) * 100).toFixed(0)}%)</span>
-                   <span className="text-[#FF4444]">{shorts}S ({((shorts / activePositions.length) * 100).toFixed(0)}%)</span>
-                 </div>
-               )}
-             </div>
-           </div>
-           <div className="w-12 h-12">
-             <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '12px' }}
-                    itemStyle={{ color: '#fff' }}
-                  />
-                  <Pie data={POSITIONS_DONUT} cx="50%" cy="50%" innerRadius="60%" outerRadius="100%" dataKey="value" stroke="none">
-                     {POSITIONS_DONUT.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                  </Pie>
-                </PieChart>
-             </ResponsiveContainer>
-           </div>
-        </div>
-        
-        <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-          <span className="text-xs text-[#8E9299] mb-1">Unrealized PnL</span>
-          <span className={`text-lg font-medium ${totalUnrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-            {totalUnrealizedPnl >= 0 ? '+' : ''}${formatValue(totalUnrealizedPnl, 2)}
-          </span>
-        </div>
+                <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-[#8E9299]">Total Positions</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xl font-medium text-white">{activePositions.length}</span>
+                      {activePositions.length > 0 && (
+                        <div className="flex text-[10px] gap-2 font-mono">
+                          <span className="text-[#00C853]">{longs}L ({((longs / activePositions.length) * 100).toFixed(0)}%)</span>
+                          <span className="text-[#FF4444]">{shorts}S ({((shorts / activePositions.length) * 100).toFixed(0)}%)</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="w-12 h-12">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '12px' }}
+                          itemStyle={{ color: '#fff' }}
+                        />
+                        <Pie data={POSITIONS_DONUT} cx="50%" cy="50%" innerRadius="60%" outerRadius="100%" dataKey="value" stroke="none">
+                          {POSITIONS_DONUT.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
 
-        <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-          <span className="text-xs text-[#8E9299] mb-1">Realized PnL</span>
-          <span className={`text-lg font-medium ${totalRealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-            {totalRealizedPnl >= 0 ? '+' : ''}${formatValue(totalRealizedPnl, 2)}
-          </span>
-        </div>
-      </div>
+                <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+                  <span className="text-xs text-[#8E9299] mb-1">Unrealized PnL</span>
+                  <span className={`text-lg font-medium ${totalUnrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                    {totalUnrealizedPnl >= 0 ? '+' : ''}${formatValue(totalUnrealizedPnl, 2)}
+                  </span>
+                </div>
+
+                <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+                  <span className="text-xs text-[#8E9299] mb-1">Realized PnL</span>
+                  <span className={`text-lg font-medium ${totalRealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                    {totalRealizedPnl >= 0 ? '+' : ''}${formatValue(totalRealizedPnl, 2)}
+                  </span>
+                </div>
+              </div>
             );
           })()}
 
-      <div className="flex flex-col gap-3">
-      {activePositions.map((pos) => {
-        const isExpanded = expandedRows[pos.id];
-        const isLong = pos.side === 'long' || pos.side === 'buy';
-        const isShort = pos.side === 'short' || pos.side === 'sell';
-        const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
-        const sideLabel = isLong ? 'Long' : isShort ? 'Short' : 'Net';
-        const marginModeLabel = pos.marginMode === 'isolated' ? 'Isolated' : 'Cross';
-        
-        const uplColor = pos.unrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
-        const roeColor = (pos.roe || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
-        const realizedPnlColor = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
+          <div className="flex flex-col gap-3">
+            {activePositions.map((pos) => {
+              const isExpanded = expandedRows[pos.id];
+              const isLong = pos.side === 'long' || pos.side === 'buy';
+              const isShort = pos.side === 'short' || pos.side === 'sell';
+              const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
+              const sideLabel = isLong ? 'Long' : isShort ? 'Short' : 'Net';
+              const marginModeLabel = pos.marginMode === 'isolated' ? 'Isolated' : 'Cross';
 
-        // Approximations
-        const sizeValUsd = pos.notionalUsd || (pos.size * pos.markPrice); 
-        const posCcy = pos.ccy || pos.baseCoin || 'USDT';
+              const uplColor = pos.unrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
+              const roeColor = (pos.roe || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
+              const realizedPnlColor = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
 
-        const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
-        const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
-        const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
-        
-        const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
+              // Approximations
+              const sizeValUsd = pos.notionalUsd || (pos.size * pos.markPrice);
+              const posCcy = pos.ccy || pos.baseCoin || 'USDT';
 
-        return (
-          <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]" onClick={() => toggleRow(pos.id)}>
-            
-            {/* Main Row / Lite Info */}
-            <div className="p-4 grid grid-cols-2 lg:grid-cols-6 gap-4">
-              
-              {/* Asset info */}
-              <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
-                <div className="flex flex-col items-center gap-1.5 shrink-0">
-                  <div className="flex items-center relative">
-                    <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" category={category} />
-                    <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
-                      <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
+              const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
+              const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
+              const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
+
+              const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
+
+              return (
+                <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]" onClick={() => toggleRow(pos.id)}>
+
+                  {/* Main Row / Lite Info */}
+                  <div className="p-4 grid grid-cols-2 lg:grid-cols-6 gap-4">
+
+                    {/* Asset info */}
+                    <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
+                      <div className="flex flex-col items-center gap-1.5 shrink-0">
+                        <div className="flex items-center relative">
+                          <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" category={category} />
+                          <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
+                            <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                        {pos.instrumentType && (
+                          <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                            {pos.instrumentType}
+                          </span>
+                        )}
+                        <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                          {category}
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-1">
+                          <span className="font-bold text-white text-sm">{pos.symbol}</span>
+                        </div>
+                        <span className={`text-xs mt-0.5 font-medium ${sideColor}`}>
+                          {sideLabel} <span className="mx-0.5 text-[#8E9299]">·</span> {pos.leverage}x <span className="mx-0.5 text-[#8E9299]">·</span> {marginModeLabel}
+                        </span>
+                        <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
+                          {pos.label}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Size / Value */}
+                    <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                      <span className="text-[10px] text-[#8E9299] uppercase">Pos Size / Value</span>
+                      <span className="font-mono text-white text-sm">{formatCrypto(pos.size)}</span>
+                      <span className="text-xs text-[#8E9299] font-mono">≈ {formatValue(sizeValUsd, 2)} USD</span>
+                    </div>
+
+                    {/* Prices */}
+                    <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                      <span className="text-[10px] text-[#8E9299] uppercase">Entry / Mark Price</span>
+                      <span className="font-mono text-white text-sm">{formatPrice(pos.entryPrice, isFiatPair)}</span>
+                      <span className="font-mono text-white text-xs">{formatPrice(pos.markPrice, isFiatPair)}</span>
+                    </div>
+
+                    {/* Margin & Liq Price */}
+                    <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                      <span className="text-[10px] text-[#8E9299] uppercase">Liq Price / Margin</span>
+                      <span className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
+                      <span className="font-mono text-white text-xs">
+                        {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
+                      </span>
+                    </div>
+
+                    {/* Unrealized PnL (ROE) */}
+                    <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                      <span className="text-[10px] text-[#8E9299] uppercase">Unrealized PnL (ROE)</span>
+                      <span className={`font-mono text-sm ${uplColor}`}>
+                        {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
+                      </span>
+                      <span className={`font-mono text-xs ${roeColor}`}>
+                        {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl !== undefined ? formatValue(pos.unrealizedPnl, 2) + ' USD /' : ''}
+                        {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
+                      </span>
+                    </div>
+
+                    {/* Realized PnL */}
+                    <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                      <span className="text-[10px] text-[#8E9299] uppercase">Realized PnL</span>
+                      <span className={`font-mono text-sm ${realizedPnlColor}`}>
+                        {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
+                      </span>
+                      {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
+                        <span className={`font-mono text-xs ${realizedPnlColor} opacity-80`}>
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.realizedPnl) * pos.markPrice, 2)} USD
+                        </span>
+                      ) : (
+                        <span className="text-[10px] opacity-0">-</span>
+                      )}
+                    </div>
+
                   </div>
-                  {pos.instrumentType && (
-                    <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
-                      {pos.instrumentType}
-                    </span>
+
+                  {/* Detalhes Expandidos: Grid de 5 colunas x 3 linhas */}
+                  {isExpanded && (
+                    <div className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-[#2a2b30] animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-y-5 gap-x-4 text-sm mt-4">
+
+                        {/* Linha 1 */}
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs">Position</span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="font-mono text-white">{formatCrypto(pos.size)}</span>
+                            <span className="text-[#8E9299] text-xs">≈ {formatValue(sizeValUsd, 2)} USD</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs">Entry price</span>
+                          <span className="font-mono text-white">{formatPrice(pos.entryPrice, isFiatPair)}</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs">Margin</span>
+                          <span className="font-mono text-white">
+                            {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
+                            {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
+                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(pos.margin * pos.markPrice, 2)} USD</span>
+                            ) : null}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs">Realized PnL</span>
+                          <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                            {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
+                            {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
+                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(Math.abs(pos.realizedPnl) * pos.markPrice, 2)} USD</span>
+                            ) : null}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
+                          <span className="font-mono text-white">
+                            {pos.tp ? formatPrice(pos.tp, isFiatPair) : '--'} / {pos.sl ? formatPrice(pos.sl, isFiatPair) : '--'}
+                          </span>
+                        </div>
+
+                        {/* Linha 2 */}
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Unrealized PnL</span>
+                          <span className={`font-mono ${uplColor}`}>
+                            {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{posCcy}</span>
+                            {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
+                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.unrealizedPnl) * pos.markPrice, 2)} USD</span>
+                            ) : null}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Mark price</span>
+                          <span className="font-mono text-white">{formatPrice(pos.markPrice, isFiatPair)}</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Tiered maintenance margin rate</span>
+                          <span className="font-mono text-white">{pos.marginRatio ? formatValue(pos.marginRatio, 2) + '%' : '--'}</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Breakeven price</span>
+                          <span className="font-mono text-white">{formatPrice(pos.breakEvenPrice, isFiatPair)}</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
+                          <span className="font-mono text-[#8E9299]">--</span>
+                        </div>
+
+                        {/* Linha 3 */}
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">ROE</span>
+                          <span className={`font-mono ${roeColor}`}>
+                            {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Est. liq. price</span>
+                          <span className="font-mono text-orange-400">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Placed/ Max close</span>
+                          <span className="font-mono text-[#8E9299]">--/--</span>
+                        </div>
+                        <div className="hidden md:block"></div> {/* Espaço vazio na coluna 4 */}
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Trailing TP/SL/ MMR SL</span>
+                          <span className="font-mono text-[#8E9299]">--/--</span>
+                        </div>
+
+                      </div>
+                    </div>
                   )}
-                  <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
-                    {category}
-                  </span>
                 </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold text-white text-sm">{pos.symbol}</span>
-                  </div>
-                  <span className={`text-xs mt-0.5 font-medium ${sideColor}`}>
-                    {sideLabel} <span className="mx-0.5 text-[#8E9299]">·</span> {pos.leverage}x <span className="mx-0.5 text-[#8E9299]">·</span> {marginModeLabel}
-                  </span>
-                  <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
-                    {pos.label}
-                  </span>
-               </div>
-              </div>
-
-              {/* Size / Value */}
-              <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                <span className="text-[10px] text-[#8E9299] uppercase">Pos Size / Value</span>
-                <span className="font-mono text-white text-sm">{formatCrypto(pos.size)}</span>
-                <span className="text-xs text-[#8E9299] font-mono">≈ {formatValue(sizeValUsd, 2)} USD</span>
-              </div>
-
-              {/* Prices */}
-              <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                <span className="text-[10px] text-[#8E9299] uppercase">Entry / Mark Price</span>
-                <span className="font-mono text-white text-sm">{formatPrice(pos.entryPrice, isFiatPair)}</span>
-                <span className="font-mono text-white text-xs">{formatPrice(pos.markPrice, isFiatPair)}</span>
-              </div>
-
-              {/* Margin & Liq Price */}
-              <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                <span className="text-[10px] text-[#8E9299] uppercase">Liq Price / Margin</span>
-                <span className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
-                <span className="font-mono text-white text-xs">
-                  {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
-                </span>
-              </div>
-
-              {/* Unrealized PnL (ROE) */}
-              <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                <span className="text-[10px] text-[#8E9299] uppercase">Unrealized PnL (ROE)</span>
-                <span className={`font-mono text-sm ${uplColor}`}>
-                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
-                </span>
-                <span className={`font-mono text-xs ${roeColor}`}>
-                  {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
-                </span>
-              </div>
-
-              {/* Realized PnL */}
-              <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                <span className="text-[10px] text-[#8E9299] uppercase">Realized PnL</span>
-                <span className={`font-mono text-sm ${realizedPnlColor}`}>
-                  {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
-                </span>
-                {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
-                  <span className={`font-mono text-xs ${realizedPnlColor} opacity-80`}>
-                    ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.realizedPnl) * pos.markPrice, 2)} USD
-                  </span>
-                ) : (
-                  <span className="text-[10px] opacity-0">-</span>
-                )}
-              </div>
-
-            </div>
-
-            {/* Detalhes Expandidos: Grid de 5 colunas x 3 linhas */}
-            {isExpanded && (
-              <div className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-[#2a2b30] animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-y-5 gap-x-4 text-sm mt-4">
-              
-              {/* Linha 1 */}
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs">Position</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-mono text-white">{formatCrypto(pos.size)}</span>
-                  <span className="text-[#8E9299] text-xs">≈ {formatValue(sizeValUsd, 2)} USD</span>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs">Entry price</span>
-                <span className="font-mono text-white">{formatPrice(pos.entryPrice, isFiatPair)}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs">Margin</span>
-                <span className="font-mono text-white">
-                  {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
-                  {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
-                    <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(pos.margin * pos.markPrice, 2)} USD</span>
-                  ) : null}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs">Realized PnL</span>
-                <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                  {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
-                  {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
-                    <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(Math.abs(pos.realizedPnl) * pos.markPrice, 2)} USD</span>
-                  ) : null}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
-                <span className="font-mono text-white">
-                  {pos.tp ? formatPrice(pos.tp, isFiatPair) : '--'} / {pos.sl ? formatPrice(pos.sl, isFiatPair) : '--'}
-                </span>
-              </div>
-
-              {/* Linha 2 */}
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Unrealized PnL</span>
-                <span className={`font-mono ${uplColor}`}>
-                  {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{posCcy}</span>
-                  {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
-                    <span className="text-[#8E9299] text-[10px] ml-1">≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.unrealizedPnl) * pos.markPrice, 2)} USD</span>
-                  ) : null}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Mark price</span>
-                <span className="font-mono text-white">{formatPrice(pos.markPrice, isFiatPair)}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Tiered maintenance margin rate</span>
-                <span className="font-mono text-white">{pos.marginRatio ? formatValue(pos.marginRatio, 2) + '%' : '--'}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Breakeven price</span>
-                <span className="font-mono text-white">{formatPrice(pos.breakEvenPrice, isFiatPair)}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
-                <span className="font-mono text-[#8E9299]">--</span>
-              </div>
-
-              {/* Linha 3 */}
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">ROE</span>
-                <span className={`font-mono ${roeColor}`}>
-                  {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
-                </span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Est. liq. price</span>
-                <span className="font-mono text-orange-400">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Placed/ Max close</span>
-                <span className="font-mono text-[#8E9299]">--/--</span>
-              </div>
-              <div className="hidden md:block"></div> {/* Espaço vazio na coluna 4 */}
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Trailing TP/SL/ MMR SL</span>
-                <span className="font-mono text-[#8E9299]">--/--</span>
-              </div>
-
-              </div>
-              </div>
-            )}
+              );
+            })}
           </div>
-        );
-      })}
-      </div>
         </>
       )}
     </div>

@@ -167,8 +167,10 @@ export class BitgetAdapter implements IExchangeAdapter {
       .map(pos => {
         const margin = parseFloat(pos.marginSize || '0');
         const unrealizedPnl = parseFloat(pos.unrealizedPL || '0');
+        const side = mapPositionSide('bitget', pos.holdSide);
+
         return {
-          id: `${key.id}-${pos.posId || pos.instId}`,
+          id: `${key.id}-bitget-${pos.symbol || pos.instId}-${side}`,
           connectionId: key.id,
           exchange: 'bitget',
           label: key.label,
@@ -176,7 +178,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           baseCoin: extractBaseCoin('bitget', pos.symbol),
           quoteCoin: extractQuoteCoin('bitget', pos.symbol),
           ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.symbol),
-          side: mapPositionSide('bitget', pos.holdSide),
+          side,
           size: parseFloat(pos.total || '0'),
           entryPrice: parseFloat(pos.openPriceAvg || pos.avgPx || '0'),
           markPrice: parseFloat(pos.markPrice || '0'),
@@ -321,23 +323,23 @@ export class BitgetAdapter implements IExchangeAdapter {
 
   // Instrument Metadata (Public)
   public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
-      try {
-          const spotRes = await proxyFetch({
-             targetUrl: `https://api.bitget.com/api/v2/spot/public/symbols?symbol=${symbol}`,
-             method: 'GET',
-             headers: {}
-          });
-          if (spotRes.code === '00000' && spotRes.data && spotRes.data.length > 0) {
-             const info = spotRes.data.find((s: any) => s.symbol === symbol);
-             if (info) {
-                 if (info.isRwa === 'YES') return 'STOCK';
-                 return 'CRYPTO';
-             }
-          }
-      } catch (err) {
-          console.warn('[Bitget-Metadata] Fetch error', err);
+    try {
+      const spotRes = await proxyFetch({
+        targetUrl: `https://api.bitget.com/api/v2/spot/public/symbols?symbol=${symbol}`,
+        method: 'GET',
+        headers: {}
+      });
+      if (spotRes.code === '00000' && spotRes.data && spotRes.data.length > 0) {
+        const info = spotRes.data.find((s: any) => s.symbol === symbol);
+        if (info) {
+          if (info.isRwa === 'YES') return 'STOCK';
+          return 'CRYPTO';
+        }
       }
-      return 'NOT_FOUND';
+    } catch (err) {
+      console.warn('[Bitget-Metadata] Fetch error', err);
+    }
+    return 'NOT_FOUND';
   }
 
   // WSS private channel parser
@@ -358,7 +360,7 @@ export class BitgetAdapter implements IExchangeAdapter {
             let labelSuffix = 'Spot';
             if (data.arg.channel === 'account-crossed') labelSuffix = 'Margin Cross';
             if (data.arg.channel === 'account-isolated') labelSuffix = 'Margin Isolated';
-            
+
             balances.push({
               id: `${cid}-${labelSuffix.toUpperCase().replace(' ', '_')}-${coin}`,
               connectionId: cid,
@@ -398,10 +400,20 @@ export class BitgetAdapter implements IExchangeAdapter {
       const positions: Partial<UnifiedPosition>[] = [];
       data.data.forEach((pos: any) => {
         const margin = parseFloat(pos.marginSize || '0');
-        const unrealizedPnl = parseFloat(pos.unrealizedPL || pos.upl || '0');
+        const markPrice = parseFloat(pos.markPrice || pos.markPx || '0');
+        let unrealizedPnl = parseFloat(pos.unrealizedPL || pos.upl || '0');
+
+        const instrumentType = mapInstrumentType('bitget', data.arg.instType || 'USDT-FUTURES');
+        const isInverse = instrumentType === 'INVERSE';
+
+        if (isInverse && pos.upl !== undefined && pos.unrealizedPL === undefined && markPrice > 0) {
+          unrealizedPnl = unrealizedPnl / markPrice;
+        }
+
+        const side = mapPositionSide('bitget', pos.holdSide, pos.posSide);
 
         positions.push({
-          id: `${cid}-${pos.posId || pos.instId}`,
+          id: `${cid}-bitget-${pos.instId || pos.symbol}-${side}`,
           connectionId: cid,
           exchange: 'bitget',
           label,
@@ -409,10 +421,10 @@ export class BitgetAdapter implements IExchangeAdapter {
           baseCoin: extractBaseCoin('bitget', pos.instId),
           quoteCoin: extractQuoteCoin('bitget', pos.instId),
           ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.instId),
-          side: mapPositionSide('bitget', pos.holdSide, pos.posSide),
+          side,
           size: parseFloat(pos.total || pos.pos || '0'),
           entryPrice: parseFloat(pos.openPriceAvg || pos.avgPx || '0'),
-          markPrice: parseFloat(pos.markPrice || pos.markPx || '0'),
+          markPrice,
           unrealizedPnl,
           realizedPnl: parseFloat(pos.achievedProfits || '0'),
           leverage: parseFloat(pos.leverage || pos.lever || '0'),
