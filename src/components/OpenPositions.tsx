@@ -316,7 +316,7 @@ export function OpenPositions() {
                         {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                       </span>
                       <span className={`font-mono text-xs ${roeColor}`}>
-                        {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl !== undefined ? formatValue(pos.unrealizedPnl, 2) + ' USD /' : ''}
+                        {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl !== undefined && pos.markPrice ? (pos.unrealizedPnl > 0 ? '+' : '') + formatValue(Math.abs(pos.unrealizedPnl) * pos.markPrice, 2) + ' USD / ' : ''}
                         {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
                       </span>
                     </div>

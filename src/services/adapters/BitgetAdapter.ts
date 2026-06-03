@@ -166,7 +166,16 @@ export class BitgetAdapter implements IExchangeAdapter {
       .filter(pos => parseFloat(pos.total || '0') > 0)
       .map(pos => {
         const margin = parseFloat(pos.marginSize || '0');
-        const unrealizedPnl = parseFloat(pos.unrealizedPL || '0');
+        const markPrice = parseFloat(pos.markPrice || '0');
+        let unrealizedPnl = parseFloat(pos.unrealizedPL || '0');
+        
+        const instrumentType = mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES');
+        const isInverse = instrumentType === 'INVERSE';
+
+        if (isInverse && markPrice > 0) {
+          unrealizedPnl = unrealizedPnl / markPrice;
+        }
+        
         const side = mapPositionSide('bitget', pos.holdSide);
 
         return {
@@ -406,7 +415,8 @@ export class BitgetAdapter implements IExchangeAdapter {
         const instrumentType = mapInstrumentType('bitget', data.arg.instType || 'USDT-FUTURES');
         const isInverse = instrumentType === 'INVERSE';
 
-        if (isInverse && pos.upl !== undefined && pos.unrealizedPL === undefined && markPrice > 0) {
+        // Bitget inverse returns unrealized PnL in USD/Quote value, we need it in base coin (crypto) value
+        if (isInverse && markPrice > 0) {
           unrealizedPnl = unrealizedPnl / markPrice;
         }
 
