@@ -91,7 +91,7 @@ export function AssetMetadataPlayground() {
     }
   };
 
-  const AssetRow = ({ item, icon: Icon, colorClass }: { item: any, icon: any, colorClass: string }) => {
+  const AssetRow = ({ item, icon: Icon, colorClass }: { key?: any, item: any, icon: any, colorClass: string }) => {
       const cat = classifications[item.sym];
       return (
           <div className="flex justify-between items-center py-3 border-b border-[#2a2b30]/40 last:border-0 hover:bg-[#2a2b30]/20 px-3 -mx-3 rounded-lg transition-colors">

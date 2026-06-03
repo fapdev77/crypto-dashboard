@@ -74,15 +74,8 @@ export function OpenPositions() {
       const posCcy = pos.ccy || pos.baseCoin || 'USDT';
       const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
       const multiplier = isFiatCcy ? 1 : (pos.markPrice || 1);
-      console.log("OpenPositions antes/depois", pos);
-      console.log("OpenPositions UPL", pos.unrealizedPnl);
-      console.log("OpenPositions RPL", pos.realizedPnl);
-
       uPnl += ((pos.unrealizedPnl || 0) * multiplier);
       rPnl += ((pos.realizedPnl || 0) * multiplier);
-
-      console.log("OpenPositions UPL", uPnl);
-      console.log("OpenPositions RPL", rPnl);
     });
     return { totalUnrealizedPnl: uPnl, totalRealizedPnl: rPnl };
   }, [activePositions]);
