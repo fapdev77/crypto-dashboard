@@ -13,6 +13,15 @@ export interface BalanceItem {
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
+export interface ConnectionTelemetry {
+  latencyHistory: number[];
+  throughputHistory: number[];
+  lastPingMs: number;
+  bytesPerSecond: number;
+  accumulatingBytes: number;
+  lastThroughputUpdate: number;
+}
+
 interface DashboardState {
   // Connection statuses tracking (keyed by connectionId)
   statuses: Record<string, ConnectionStatus>;
@@ -30,6 +39,12 @@ interface DashboardState {
   updatePositions: (connectionId: string, newPositions: UnifiedPosition[]) => void;
   updatePositionsDelta: (connectionId: string, deltaPositions: Partial<UnifiedPosition>[]) => void;
   
+  // Telemetry
+  telemetry: Record<string, ConnectionTelemetry>;
+  updateLatency: (connectionId: string, ms: number) => void;
+  addBytesReceived: (connectionId: string, bytes: number) => void;
+  tickThroughput: () => void;
+
   // Clear all data for a specific connection
   clearConnectionData: (connectionId: string) => void;
 }

@@ -246,7 +246,13 @@ export function useMultiExchangeWS() {
     ws.onmessage = (event) => {
       const msg = event.data;
       
-      const byteSize = typeof msg === 'string' ? new Blob([msg]).size : (msg instanceof ArrayBuffer || msg instanceof Blob ? msg.size || msg.byteLength : 0);
+      const byteSize = typeof msg === 'string' 
+        ? new Blob([msg]).size 
+        : (msg instanceof Blob 
+            ? msg.size 
+            : (msg instanceof ArrayBuffer 
+                ? msg.byteLength 
+                : 0));
       addBytesReceived(id, byteSize);
       
       if (typeof msg === 'string' && msg === 'pong') {

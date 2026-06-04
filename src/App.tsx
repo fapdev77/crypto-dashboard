@@ -30,7 +30,7 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   let activeTabName = activeTab.replace('analytics-', '').replace('-', ' ');
-  if (activeTab === 'api-keys') activeTabName = 'API Keys';
+  if (activeTab === 'api-keys') activeTabName = 'API Keys Manager';
   if (activeTab === 'logs') activeTabName = 'Live Connection Logs';
   if (activeTab === 'settings') activeTabName = 'Settings';
   if (activeTab === 'testes-mvp') activeTabName = 'Testes MVP';
@@ -66,9 +66,9 @@ export default function App() {
       <div className="flex flex-col h-screen bg-[#0b0c10] overflow-hidden">
         <PositionsTicker />
         <div className="flex flex-1 overflow-hidden relative">
-          <Sidebar 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
             isMobileMenuOpen={isMobileMenuOpen}
             setIsMobileMenuOpen={setIsMobileMenuOpen}
             isCollapsed={isSidebarCollapsed}
@@ -77,7 +77,7 @@ export default function App() {
 
           <main className="flex-1 overflow-hidden bg-[#0b0c10] p-4 md:p-6 flex flex-col min-w-0">
             <header className="mb-4 md:mb-6 shrink-0 flex items-center gap-3">
-              <button 
+              <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-[#2a2b30] rounded-lg transition-colors"
                 aria-label="Open menu"
@@ -108,7 +108,7 @@ export default function App() {
 
           {/* Mobile Overlay */}
           {isMobileMenuOpen && (
-            <div 
+            <div
               className="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm"
               onClick={() => setIsMobileMenuOpen(false)}
             />
