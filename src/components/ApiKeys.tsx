@@ -186,22 +186,23 @@ export function ApiKeys() {
                             <div className="flex items-center justify-end gap-2.5 pt-1">
                               {keyToDelete === apiKey.id ? (
                                 <div className="flex items-center gap-1 bg-[#FF4444]/10 border border-[#FF4444]/20 p-0.5 rounded">
-                                  <span className="text-[9px] font-medium text-[#FF4444] px-1">Sure?</span>
-                                  <button
-                                    onClick={() => setKeyToDelete(null)}
-                                    className="text-[9px] px-1.5 py-0.5 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded transition-colors"
-                                  >
-                                    No
-                                  </button>
+                                  <span className="text-[15px] font-medium text-[#FF4444] px-15">Deletar a chave?</span>
                                   <button
                                     onClick={() => {
                                       clearConnectionData(apiKey.id);
                                       removeKey(apiKey.id);
                                       setKeyToDelete(null);
                                     }}
-                                    className="text-[9px] px-1.5 py-0.5 bg-[#FF4444] hover:bg-[#CC0000] text-white rounded transition-colors"
+                                    className="text-[15px] px-4 py-0.5 bg-[#FF4444] hover:bg-[#CC0000] text-white rounded transition-colors"
                                   >
-                                    Yes
+                                    Sim
+                                  </button>
+                                  |
+                                  <button
+                                    onClick={() => setKeyToDelete(null)}
+                                    className="text-[15px] px-4 py-0.5 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded transition-colors"
+                                  >
+                                    Não
                                   </button>
                                 </div>
                               ) : (
