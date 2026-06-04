@@ -27,7 +27,7 @@ import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   let activeTabName = activeTab.replace('analytics-', '').replace('-', ' ');
   if (activeTab === 'api-keys') activeTabName = 'API Keys Manager';
