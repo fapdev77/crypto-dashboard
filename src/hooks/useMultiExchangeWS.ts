@@ -169,8 +169,10 @@ export function useMultiExchangeWS() {
     const poll = async () => {
       if (intervalsRef.current[id + '-poll'] === null) return; // Prevent execution if disconnected
       
+      const isMockEnabled = useSettingsStore.getState().useMockData;
       const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
-      if (!currentConfig || !currentConfig.isActive || socketsRef.current[id]?.readyState !== WebSocket.OPEN) {
+      
+      if (isMockEnabled || !currentConfig || !currentConfig.isActive || socketsRef.current[id]?.readyState !== WebSocket.OPEN) {
         return;
       }
 
@@ -295,7 +297,9 @@ export function useMultiExchangeWS() {
     ws.onclose = (event) => {
       console.log(`[WS-${id}] Conexão encerrada. Code: ${event.code}, Reason: ${event.reason || "Sem razão especificada"}`);
       const currentConfig = useApiKeysStore.getState().keys.find((apiKey) => apiKey.id === id);
-      if (currentConfig && currentConfig.isActive) {
+      const isMockEnabled = useSettingsStore.getState().useMockData;
+      
+      if (currentConfig && currentConfig.isActive && !isMockEnabled) {
         setConnectionStatus(id, 'error', event.reason || 'Closed');
         
         // Exponential Backoff

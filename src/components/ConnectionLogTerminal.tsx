@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLogStore, LogLevel } from '../store/logStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { Search, X, ChevronUp, ChevronDown } from 'lucide-react';
 
 import { useDashboardStore } from '../store/dashboardStore';
@@ -9,6 +10,7 @@ export function ConnectionLogTerminal() {
   const { entries, maxEntries, clearLogs } = useLogStore();
   const keys = useApiKeysStore(state => state.keys);
   const telemetry = useDashboardStore(state => state.telemetry);
+  const useMockData = useSettingsStore(state => state.useMockData);
   
   const [selectedLevels, setSelectedLevels] = useState<LogLevel[]>(['ERROR', 'WARN']);
   const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
@@ -184,8 +186,18 @@ export function ConnectionLogTerminal() {
          <span className="text-[10px] font-mono text-[#8E9299]">
             History: <span className="text-[#FFFFFF]">{entries.length} / {maxEntries} lines</span>
          </span>
-         <span className="text-[10px] font-mono text-[#8E9299]">
-            Connections: <span className="text-[#00C853]">{activeCount} Active</span> | Throughput: <span className="text-[#2F6BFF]">{throughputKB} KB/s</span> | Latency: <span className="text-[#00C853]">{avgLatency}ms</span>
+         <span className="text-[10px] font-mono text-[#8E9299] flex items-center gap-1.5">
+            {useMockData && (
+              <>
+                <span className="text-yellow-500 font-bold bg-yellow-500/10 px-1.5 py-0.5 rounded leading-none">TEST MODE ACTIVE</span>
+                <span>|</span>
+              </>
+            )}
+            <span>Connections: <span className="text-[#00C853]">{activeCount} Active</span></span>
+            <span>|</span>
+            <span>Throughput: <span className="text-[#2F6BFF]">{throughputKB} KB/s</span></span>
+            <span>|</span>
+            <span>Latency: <span className="text-[#00C853]">{avgLatency}ms</span></span>
          </span>
       </div>
     </div>

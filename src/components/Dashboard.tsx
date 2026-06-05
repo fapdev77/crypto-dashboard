@@ -220,6 +220,12 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {useMockData && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center justify-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+          <span className="text-yellow-500 text-sm font-medium tracking-wide uppercase">Simulation Mode Active - Displaying Mock Data</span>
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Card 1: Patrimonio e P&L */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-6 md:divide-x divide-[#2a2b30]">

@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useDashboardStore } from '../store/dashboardStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { Activity } from 'lucide-react';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 
 export function StatusBar() {
   const { keys } = useApiKeysStore();
   const { statuses, errors } = useDashboardStore();
+  const useMockData = useSettingsStore(state => state.useMockData);
 
   const activeKeys = keys.filter(apiKey => apiKey.isActive);
 
@@ -19,7 +21,7 @@ export function StatusBar() {
     return groups;
   }, [activeKeys]);
 
-  if (activeKeys.length === 0) {
+  if (activeKeys.length === 0 && !useMockData) {
     return (
       <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 text-xs text-gray-500 shrink-0 select-none">
         Nenhuma conexão API ativa.
@@ -30,12 +32,23 @@ export function StatusBar() {
   return (
     <div className="min-h-8 py-1 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 flex-wrap shrink-0 select-none">
       <div className="flex items-center gap-6 w-full">
-        <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
-          <Activity className="w-3.5 h-3.5" />
-          <span>Status das Conexões</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+            <Activity className="w-3.5 h-3.5" />
+            <span>Status das Conexões</span>
+          </div>
+          {useMockData && (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-500 text-[10px] font-bold uppercase tracking-widest shrink-0">
+               <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+               Simulation Mode
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-5 flex-wrap">
+          {activeKeys.length === 0 && useMockData && (
+            <span className="text-[10px] text-gray-500 italic">Simulando conexões...</span>
+          )}
           {Object.entries(exchangeGroups).map(([exchange, xKeysRaw]) => {
             const xKeys = xKeysRaw as typeof keys;
             return (
