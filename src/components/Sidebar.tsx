@@ -88,9 +88,9 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         </button>
       </div>
 
-      <nav className={`flex-1 p-4 space-y-2 ${isCollapsed ? 'px-3' : ''} overflow-y-auto hide-scrollbar`}>
+      <nav className={`flex-1 p-4 space-y-2 ${isCollapsed ? 'px-3 overflow-visible' : 'overflow-y-auto'} hide-scrollbar`}>
         {navItems.map((item) => (
-          <div key={item.id} className="flex flex-col gap-1">
+          <div key={item.id} className="flex flex-col gap-1 relative group">
             <button
               onClick={() => {
                 if (item.subItems) {
@@ -122,6 +122,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                 </>
               )}
             </button>
+
+            {/* Submenu inline when expanded */}
             {!isCollapsed && item.subItems && item.subItems.some(sub => sub.id === activeTab || item.subItems?.some(s => s.id === activeTab)) && (
               <div className="pl-11 pr-2 flex flex-col gap-1 mt-1 transition-all">
                 {item.subItems.map((sub) => (
@@ -137,6 +139,35 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                     <span>{sub.label}</span>
                     {sub.badge !== undefined && sub.badge > 0 && (
                       <span className={`px-2 py-0.5 text-xs rounded-full ${
+                        activeTab === sub.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+                      }`}>
+                        {sub.badge}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Submenu flyout when collapsed */}
+            {isCollapsed && item.subItems && (
+              <div className="absolute left-full top-0 ml-2 w-48 bg-[#151619] border border-[#2a2b30] rounded-lg shadow-xl hidden group-hover:flex flex-col py-2 z-50 transition-all duration-200">
+                <div className="px-3 py-1 text-[11px] font-bold text-[#8E9299] uppercase tracking-wider border-b border-[#2a2b30]/65 mb-1.5">
+                  {item.label}
+                </div>
+                {item.subItems.map((sub) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => handleTabClick(sub.id)}
+                    className={`w-full text-left text-sm py-2 px-3 transition-colors flex items-center justify-between ${
+                      activeTab === sub.id
+                        ? 'text-[#2F6BFF] bg-[#2F6BFF]/10 font-semibold'
+                        : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/50'
+                    }`}
+                  >
+                    <span>{sub.label}</span>
+                    {sub.badge !== undefined && sub.badge > 0 && (
+                      <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${
                         activeTab === sub.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
                       }`}>
                         {sub.badge}

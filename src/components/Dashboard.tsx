@@ -220,102 +220,132 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
-        {/* Total Equity Card */}
-        <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3 relative z-10">
-            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Total Equity (USD)</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Card 1: Patrimonio e P&L */}
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-6 md:divide-x divide-[#2a2b30]">
+          {/* Lado Esquerdo: Patrimonio */}
+          <div className="flex-1 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Total Equity (USD)</span>
+                <span className={`inline-block w-2 h-2 rounded-full ${dailyPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
+              </div>
+              <div className="flex items-baseline gap-2 mt-1">
+                <p className="text-3xl font-bold text-white font-mono tracking-tight">
+                  ${totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                {dailyPnL >= 0 ? (
+                  <TrendingUp className="w-4 h-4 text-emerald-500/70" />
+                ) : (
+                  <TrendingDown className="w-4 h-4 text-red-500/70" />
+                )}
+              </div>
+            </div>
+            <div className="mt-4 text-xs text-[#8E9299] font-medium">
+              Net balance across all connected exchanges
+            </div>
           </div>
-          <div className="flex items-center gap-2 relative z-10">
-            <p className="text-2xl font-bold text-white font-mono">
-              ${totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            {dailyPnL >= 0 ? <TrendingUp className="w-4 h-4 text-emerald-500/70" /> : <TrendingDown className="w-4 h-4 text-red-500/70" />}
-          </div>
-        </div>
 
-        {/* Daily P&L Card */}
-        <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3 relative z-10">
-            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Daily P&L</span>
-          </div>
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-baseline gap-2">
+          {/* Lado Direito: Daily P&L */}
+          <div className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Daily P&L</span>
+              <div className="w-[80px] h-[30px] opacity-90">
+                <Sparkline
+                  data={[10, 25, 15, 40, 30, 50, 45, 60, dailyPnL >= 0 ? 80 : 20]}
+                  color={dailyPnL >= 0 ? 'emerald' : 'red'}
+                  width={80}
+                  height={30}
+                />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2 mt-1">
               <p className={`text-2xl font-bold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                 {dailyPnL >= 0 ? '+' : '-'}${Math.abs(dailyPnL).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
-              <span className={`text-sm font-medium ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+              <span className={`text-sm font-semibold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                 ({dailyPnL >= 0 ? '+' : ''}{dailyPnLPercent.toFixed(2)}%)
               </span>
             </div>
-
-            <div className="w-[80px] h-[30px] opacity-80">
-              <Sparkline data={[10, 25, 15, 40, 30, 50, 45, 60, dailyPnL >= 0 ? 80 : 20]} color={dailyPnL >= 0 ? 'emerald' : 'red'} width={80} height={30} />
+            <div className="mt-4 text-[10px] text-[#8E9299]/80 font-medium">
+              Unrealized P&L from active positions
             </div>
           </div>
         </div>
 
-        {/* Total Open Positions Card */}
-        <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3 relative z-10">
-            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Total Open Positions</span>
-            <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
-          </div>
-          <div className="flex items-center justify-between relative z-10">
-            <p className="text-2xl font-bold text-white relative z-10 flex items-baseline gap-1.5">
-              {openPositionsCount}
-              <span className="text-sm text-[#8E9299] font-medium mr-3">Active</span>
-            </p>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
-                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-xs font-bold text-emerald-500">{longPositions}</span>
-                <span className="text-[10px] font-medium text-emerald-500/80">({longPercent.toFixed(0)}%)</span>
+        {/* Card 2: Posições e Hedge Mode */}
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-6 md:divide-x divide-[#2a2b30]">
+          {/* Lado Esquerdo: Posições Ativas */}
+          <div className="flex-1 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Active Positions</span>
+                <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
               </div>
-              <div className="flex items-center gap-1.5 bg-red-500/10 px-2.5 py-1 rounded-md border border-red-500/20">
-                <TrendingDown className="w-3.5 h-3.5 text-red-500" />
-                <span className="text-xs font-bold text-red-500">{shortPositions}</span>
-                <span className="text-[10px] font-medium text-red-500/80">({shortPercent.toFixed(0)}%)</span>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <p className="text-3xl font-bold text-white font-mono">
+                  {openPositionsCount}
+                </p>
+                <span className="text-xs text-[#8E9299] font-semibold">Active</span>
+              </div>
+            </div>
+
+            {/* Long vs Short Bar */}
+            <div className="space-y-2 mt-4">
+              <div className="flex justify-between text-[11px] font-semibold">
+                <span className="text-emerald-500 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" /> Longs: {longPositions} ({longPercent.toFixed(0)}%)
+                </span>
+                <span className="text-red-500 flex items-center gap-1">
+                  <TrendingDown className="w-3 h-3" /> Shorts: {shortPositions} ({shortPercent.toFixed(0)}%)
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
+                {openPositionsCount > 0 ? (
+                  <>
+                    <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${longPercent}%` }} />
+                    <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${shortPercent}%` }} />
+                  </>
+                ) : (
+                  <div className="h-full w-full bg-[#2a2b30]" />
+                )}
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Hedge Mode Positions Card */}
-        <div className="bg-[#151619] border border-[#2a2b30] px-5 py-4 rounded-xl flex flex-col justify-between relative overflow-hidden">
-          <div className="flex items-center justify-between mb-2 relative z-10">
-            <span className="text-[#8E9299] text-xs font-medium tracking-wider">Hedge Mode (Inverse)</span>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-bold text-emerald-500">L:{inverseLongCount}</span>
+          {/* Lado Direito: Hedge Mode (Inverse) */}
+          <div className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Hedge Mode (Inverse)</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-emerald-500">L:{inverseLongCount}</span>
+                  <span className="text-[10px] font-bold text-red-500">S:{inverseShortCount}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-bold text-red-500">S:{inverseShortCount}</span>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-bold text-white font-mono">
+                  {inverseOpenCount}
+                </p>
+                <span className="text-xs text-[#8E9299] font-medium">Active Contracts</span>
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2 relative z-10 mb-3">
-            <p className="text-xl font-bold text-white relative z-10 flex items-baseline gap-1.5">
-              {inverseOpenCount}
-              <span className="text-xs text-[#8E9299] font-medium">Active</span>
-            </p>
-          </div>
 
-          <div className="flex flex-col gap-1 relative z-10 mt-auto">
-            <div className="flex items-center justify-between bg-[#1a1b1e] px-2 py-1.5 rounded border border-[#2a2b30]">
-              <span className="text-[10px] text-[#8E9299] font-medium">Protected</span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-mono text-white">${totalProtected.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                <span className="text-[10px] font-medium text-emerald-500">({protectedPercent.toFixed(1)}%)</span>
+            {/* Protected vs Exposed Bar */}
+            <div className="space-y-2 mt-4">
+              <div className="flex justify-between text-[11px] font-semibold font-mono">
+                <span className="text-emerald-500/90">Prot: ${totalProtected.toLocaleString('en-US', { maximumFractionDigits: 0 })} ({protectedPercent.toFixed(1)}%)</span>
+                <span className="text-[#8E9299]">Exp: ${totalExposed.toLocaleString('en-US', { maximumFractionDigits: 0 })} ({exposedPercent.toFixed(1)}%)</span>
               </div>
-            </div>
-            <div className="flex items-center justify-between bg-[#1a1b1e] px-2 py-1.5 rounded border border-[#2a2b30]">
-              <span className="text-[10px] text-[#8E9299] font-medium">Exposed</span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-mono text-white">${totalExposed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                <span className="text-[10px] font-medium text-[#8E9299]">({exposedPercent.toFixed(1)}%)</span>
+              <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
+                {totalEquity > 0 ? (
+                  <>
+                    <div className="h-full bg-emerald-500/80 transition-all duration-300" style={{ width: `${protectedPercent}%` }} />
+                    <div className="h-full bg-[#2a2b30] transition-all duration-300" style={{ width: `${exposedPercent}%` }} />
+                  </>
+                ) : (
+                  <div className="h-full w-full bg-[#2a2b30]" />
+                )}
               </div>
             </div>
           </div>
