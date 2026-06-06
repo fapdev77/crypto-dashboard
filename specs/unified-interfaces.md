@@ -59,7 +59,7 @@ export interface UnifiedPosition {
   unrealizedPnl: number;
   realizedPnl: number;
   leverage: number;
-  marginMode?: UnifiedMarginMode; // 'cross' | 'isolated'
+  marginMode?: UnifiedMarginMode; // 'cross' | 'isolated' | 'unknown'
   positionMode?: UnifiedPositionMode; // 'hedge' | 'one_way' | 'unknown'
   margin?: number; // Position Margin / Isolated Margin
   marginRatio?: number; // Tiered MMR or Margin Ratio (%)
@@ -76,7 +76,11 @@ export interface UnifiedPosition {
 ### Mappings Table
 | Field | Bybit (V5) | Bitget (V2) | OKX (V5) | Normalization Logic |
 | :--- | :--- | :--- | :--- | :--- |
+| `id` | Computed | Computed | Computed | Synthesized string to identify position uniquely |
 | `symbol` | `symbol` | `symbol` | `instId` | Direct mapping |
+| `baseCoin` | Extracted via logic | Extracted via logic | Extracted via logic | Clean asset string e.g., BTC |
+| `quoteCoin` | Extracted via logic | Extracted via logic | Extracted via logic | Pair asset string e.g., USDT/USD |
+| `ccy` | `settleCoin` / `coin` | `marginCoin` | `ccy` / `marginCoin` | Base asset currency for margin/PnL |
 | `instrumentType`| `category` | `instType` | `instType` & `ccy` | Mapped to `UnifiedInstrumentType` |
 | `side` | `side` (`Buy`/`Sell`) | `holdSide` / `posSide` | `posSide` | `long`, `short`, `net` |
 | `size` | `size` (calc inverse vs USDT) | `total` | `pos` / `notionalUsd / markPx` | Base asset mapped normalized size |
@@ -85,8 +89,14 @@ export interface UnifiedPosition {
 | `markPrice` | `markPrice` | `markPrice` | `markPx` | Current mark price |
 | `unrealizedPnl` | `unrealisedPnl` | `unrealizedPL` | `upl` | Floating PnL |
 | `realizedPnl` | `curRealisedPnl` | `achievedProfits` | `realizedPnl` | Already realized profits / fees |
+| `leverage` | `leverage` | `leverage` | `lever` | Active position leverage |
+| `marginMode` | `tradeMode` / `marginMode`| `marginMode` | `mgnMode` | `cross` \| `isolated` |
+| `positionMode` | `positionIdx` | N/A (One Way fallback) | N/A | `hedge` \| `one_way` |
 | `margin` | `positionIM` | `marginSize` | `margin` | Active margin assigned |
 | `liquidationPrice`| `liqPrice` | `liquidationPrice`| `liqPx` | Liquidation reference |
+| `breakEvenPrice` | `breakEvenPrice` | `breakEvenPrice` | `bePx` | The 0 profit reference price |
+| `tp` | `takeProfit` | `takeProfit` | N/A | Take profit reference |
+| `sl` | `stopLoss` | `stopLoss` | N/A | Stop loss reference |
 | `roe` | Calculated (`UPL / IM`) | Calculated / `uplRatio` | `uplRatio * 100` | Normalized ROE % |
 
 ---
@@ -108,6 +118,7 @@ export interface UnifiedHistoryPosition {
   side: PositionSide;
   realizedPnl: number;
   closeUpdateTime: number; // timestamp
+  createdTime?: number; // open time timestamp
   entryPrice?: number;
   closePrice?: number;
   size?: number;
@@ -126,12 +137,22 @@ export interface UnifiedHistoryPosition {
 ### Mappings Table
 | Field | Bybit (V5) | Bitget (V2) | OKX (V5) | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `realizedPnl` | `closedPnl` | `netProfit` / `achievedProfits` | `realizedPnl` | Total final PnL of closed position |
+| `id` | Computed | Computed | Computed | Synthesized string ID (using closed pos ID and/or timestamp) |
+| `symbol` | `symbol` | `instId` / `symbol` | `instId` | Direct mapping of the ticker |
+| `baseCoin` | Extracted via logic | Extracted via logic | Extracted via logic | Clean asset string e.g., BTC |
+| `quoteCoin` | Extracted via logic | Extracted via logic | Extracted via logic | Pair asset string e.g., USDT/USD |
+| `ccy` | `settleCoin` / `coin` | `marginCoin` | `ccy` / `marginCoin` | Base asset currency for margin/PnL |
+| `side` | `side` (`Buy`/`Sell`) | `holdSide` / `side` | `posSide` / `direction` | `long`, `short`, `net` |
+| `realizedPnl` | `closedPnl` | `netProfit` / `achievedProfits` | `realizedPnl` / `pnl` | Total final PnL of closed position |
+| `createdTime` | `createdTime` | `cTime` | `cTime` | Milliseconds timestamp of creation |
 | `closeUpdateTime`| `updatedTime` | `utime` / `cTime` | `uTime` / `cTime` | Milliseconds timestamp of closure |
 | `entryPrice`| `avgEntryPrice`| `openPriceAvg` | `openAvgPx` | Average open order fill price |
 | `closePrice`| `avgExitPrice` | `closePriceAvg` | `avgPx` / `closeAvgPx` | Average close order fill price |
 | `size` | `closedSize` | `closeTotalPos` | `closeVol` / `closeTotalPos`| Volume of the closed position |
-| `instrumentType`| N/A | `instType` | `instType` | Mapped `UnifiedInstrumentType` |
+| `fundingFee` | `fundingFee` | `totalFunding` | `fundingFee` | Cost of funding period |
+| `tradingFee` | `execFee` | `fee` / sum(openFee, closeFee) | `fee` | Platform trade fee |
+| `leverage` | `leverage` | `leverage` | `lever` | Active position leverage upon closing |
+| `instrumentType`| Mapped (`category`) | `instType` / `productType` | `instType` | Mapped `UnifiedInstrumentType` |
 
 ---
 

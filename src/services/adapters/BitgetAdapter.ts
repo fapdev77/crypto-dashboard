@@ -246,6 +246,7 @@ export class BitgetAdapter implements IExchangeAdapter {
 
     return results.flat().map((pos: any) => {
       const closeUpdateTime = parseInt(pos.utime || pos.uTime || pos.ctime || pos.cTime || '0', 10);
+      const createdTime = parseInt(pos.ctime || pos.cTime || pos.utime || pos.uTime || '0', 10);
       let totalFee = 0;
       if (pos.openFee) totalFee += parseFloat(pos.openFee);
       if (pos.closeFee) totalFee += parseFloat(pos.closeFee);
@@ -263,6 +264,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         side: mapPositionSide('bitget', pos.holdSide, pos.side),
         realizedPnl: parseFloat(pos.netProfit ?? pos.pnl ?? pos.achievedProfits ?? '0'),
         closeUpdateTime: closeUpdateTime,
+        createdTime: createdTime,
         entryPrice: parseFloat(pos.openPriceAvg || '0'),
         closePrice: parseFloat(pos.closePriceAvg || '0'),
         size: parseFloat(pos.closeTotalPos || '0'),

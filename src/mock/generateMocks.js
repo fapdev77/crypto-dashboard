@@ -133,6 +133,7 @@ function generate() {
         const size = randomNum(0.01, 100);
         const realizedPnl = (side === 'long' ? (closePrice - entryPrice) : (entryPrice - closePrice)) * size;
         const closeUpdateTime = Date.now() - randomNum(0, 30 * 24 * 60 * 60 * 1000); // within last 30 days
+        const createdTime = closeUpdateTime - randomNum(3600000, 7 * 24 * 3600000); // 1 hour to 7 days before close
         
         let instType = 'USDT-FUTURES';
         const isInverseHistory = randomItem([true, false]);
@@ -164,6 +165,7 @@ function generate() {
           side,
           realizedPnl,
           closeUpdateTime,
+          createdTime,
           entryPrice,
           closePrice,
           size,

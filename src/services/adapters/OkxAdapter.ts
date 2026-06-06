@@ -211,6 +211,7 @@ export class OkxAdapter implements IExchangeAdapter {
 
     return results.flat().map((pos: any) => {
       const closeUpdateTime = parseInt(pos.uTime || pos.cTime || '0', 10);
+      const createdTime = parseInt(pos.cTime || pos.uTime || '0', 10);
       return {
         id: `${key.id}-${pos.instId}-${closeUpdateTime}`,
         connectionId: key.id,
@@ -223,6 +224,7 @@ export class OkxAdapter implements IExchangeAdapter {
         side: mapPositionSide('okx', pos.posSide, pos.direction),
         realizedPnl: parseFloat(pos.realizedPnl || pos.pnl || '0'),
         closeUpdateTime: closeUpdateTime,
+        createdTime: createdTime,
         entryPrice: parseFloat(pos.openAvgPx || '0'),
         closePrice: parseFloat(pos.avgPx || pos.closeAvgPx || '0'),
         size: parseFloat(pos.closeVol || pos.closeTotalPos || '0'),

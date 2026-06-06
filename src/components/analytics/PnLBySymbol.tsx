@@ -16,7 +16,7 @@ export function PnLBySymbol() {
   const [exchange, setExchange] = useState<string>('All');
   const [instrument, setInstrument] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const [sortField, setSortField] = useState<SortField>('totalPnL');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -41,7 +41,7 @@ export function PnLBySymbol() {
     let maxT = new Big(0);
     let maxL = new Big(0);
     let maxS = new Big(0);
-    
+
     pnlData.forEach(pos => {
       if (pos.totalPnL.abs().gt(maxT)) maxT = pos.totalPnL.abs();
       if (pos.longPnL.abs().gt(maxL)) maxL = pos.longPnL.abs();
@@ -53,7 +53,7 @@ export function PnLBySymbol() {
 
   const sortedData = useMemo(() => {
     let filtered = [...pnlData];
-    
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(pos => pos.symbol.toLowerCase().includes(term) || pos.exchange.toLowerCase().includes(term));
@@ -103,7 +103,7 @@ export function PnLBySymbol() {
     sortedData.forEach(r => {
       content += `${r.symbol},${r.instrument},${r.exchange},${r.totalPnL.toString()},${r.longPnL.toString()},${r.shortPnL.toString()}\n`;
     });
-    
+
     // Simplification: all formats download CSV for now.
     // In a real prod environment we'd use unirest/xlsx for Excel and jsPDF for PDF
     const extension = format === 'csv' ? 'csv' : format === 'excel' ? 'xls' : 'pdf';
@@ -136,7 +136,7 @@ export function PnLBySymbol() {
           </div>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-500 whitespace-nowrap">Exchange:</label>
-            <select 
+            <select
               value={exchange}
               onChange={(e) => setExchange(e.target.value)}
               className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none"
@@ -147,10 +147,10 @@ export function PnLBySymbol() {
               <option value="okx">OKX</option>
             </select>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-500 whitespace-nowrap">Instrument:</label>
-            <select 
+            <select
               value={instrument}
               onChange={(e) => setInstrument(e.target.value)}
               disabled={exchange === 'All'}
@@ -164,7 +164,7 @@ export function PnLBySymbol() {
 
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-500 whitespace-nowrap">Period:</label>
-            <select 
+            <select
               value={period}
               onChange={(e) => setPeriod(e.target.value as any)}
               className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none"
@@ -177,13 +177,13 @@ export function PnLBySymbol() {
               <option value="all">All</option>
             </select>
           </div>
-          
+
           <div className="relative">
-            <button 
+            <button
               onClick={() => setExportMenuOpen(!exportMenuOpen)}
               className="p-2 ml-2 bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] flex items-center gap-2 rounded-lg hover:bg-gray-200 dark:hover:bg-[#2a2b30] transition-colors"
             >
-              <Download className="w-4 h-4" /> 
+              <Download className="w-4 h-4" />
               Export <ChevronDown className="w-3 h-3" />
             </button>
             {exportMenuOpen && (
@@ -240,20 +240,25 @@ export function PnLBySymbol() {
                     </div>
                   </td>
                   <td className="py-4 text-gray-500">{row.instrument}</td>
-                  <td className="py-4 text-right">
-                     <PnLCell value={row.totalPnL} maxAbs={maxTotal} ccy={row.ccy} />
+                  {/* TD REFINADO: Fonte pesada, fundo presente e linhas de grade verticais exclusivas */}
+                  <td
+                    className="py-4 text-right px-4 font-bold text-[15px]
+                         bg-gray-50/70 dark:bg-[#1c1d22]/40 
+                         border-x border-gray-100 dark:border-[#2a2b30]/40"
+                  >
+                    <PnLCell value={row.totalPnL} maxAbs={maxTotal} ccy={row.ccy} />
                   </td>
                   <td className="py-4 text-right">
-                     <PnLCell value={row.longPnL} maxAbs={maxLong} ccy={row.ccy} />
+                    <PnLCell value={row.longPnL} maxAbs={maxLong} ccy={row.ccy} />
                   </td>
                   <td className="py-4 text-right">
-                     <PnLCell value={row.shortPnL} maxAbs={maxShort} ccy={row.ccy} />
+                    <PnLCell value={row.shortPnL} maxAbs={maxShort} ccy={row.ccy} />
                   </td>
                 </tr>
               ))}
               {sortedData.length === 0 && (
                 <tr>
-                   <td colSpan={6} className="py-10 text-center text-gray-500">Nenhum dado encontrado para os filtros selecionados.</td>
+                  <td colSpan={6} className="py-10 text-center text-gray-500">Nenhum dado encontrado para os filtros selecionados.</td>
                 </tr>
               )}
             </tbody>
@@ -269,7 +274,7 @@ function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string 
   const isZero = value.eq(0);
   const colorTextClass = isZero ? 'text-gray-400' : isPositive ? 'text-[#10B981]' : 'text-pink-500';
   const colorBgClass = isPositive ? 'bg-[#10B981]' : 'bg-pink-500';
-  
+
   const valNum = Number(value);
   const maxNum = Number(maxAbs) === 0 ? 1 : Number(maxAbs);
   const percentage = (Math.abs(valNum) / maxNum) * 100;
@@ -278,24 +283,24 @@ function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string 
   const displayCcy = ccy || 'USDT';
 
   return (
-    <div className="flex flex-col items-end gap-2 w-full max-w-[200px] ml-auto">
-       <span className={`${colorTextClass} font-mono text-sm`}>
-          {isPositive ? '+' : ''}{isFiatCcy ? formatValue(valNum, 2) : formatCrypto(valNum)} <span className="text-xs">{displayCcy}</span>
-       </span>
-       <div className="w-full h-[3px] bg-gray-100 dark:bg-[#1e1f24] rounded-full flex relative overflow-hidden">
-          {/* Middle divider */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gray-300 dark:bg-[#2a2b30] z-10" />
-          
-          {/* Negative Side */}
-          <div className="w-1/2 h-full flex justify-end">
-             {!isPositive && !isZero && <div className={`${colorBgClass}`} style={{ width: `${percentage}%` }} />}
-          </div>
-          
-          {/* Positive Side */}
-          <div className="w-1/2 h-full flex justify-start">
-             {isPositive && !isZero && <div className={`${colorBgClass}`} style={{ width: `${percentage}%` }} />}
-          </div>
-       </div>
+    <div className="flex flex-col items-end gap-2 w-full gap-1.5 pl-4">
+      <span className={`${colorTextClass} font-mono text-sm`}>
+        {isPositive ? '+' : ''}{isFiatCcy ? formatValue(valNum, 2) : formatCrypto(valNum)} <span className="text-xs">{displayCcy}</span>
+      </span>
+      <div className="w-full h-[3px] bg-gray-200 dark:bg-[#2e3039] rounded-full flex relative overflow-hidden">
+        {/* Middle divider */}
+        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gray-300 dark:bg-[#2a2b30] z-10" />
+
+        {/* Negative Side */}
+        <div className="w-1/2 h-full flex justify-end">
+          {!isPositive && !isZero && <div className={`${colorBgClass}`} style={{ width: `${percentage}%` }} />}
+        </div>
+
+        {/* Positive Side */}
+        <div className="w-1/2 h-full flex justify-start">
+          {isPositive && !isZero && <div className={`${colorBgClass}`} style={{ width: `${percentage}%` }} />}
+        </div>
+      </div>
     </div>
   );
 }
