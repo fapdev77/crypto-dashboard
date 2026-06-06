@@ -7,6 +7,7 @@ import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 
 import { formatValue, formatCrypto } from '../../utils/formatters';
+import { useTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
@@ -279,14 +280,24 @@ function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string 
   const maxNum = Number(maxAbs) === 0 ? 1 : Number(maxAbs);
   const percentage = (Math.abs(valNum) / maxNum) * 100;
 
-  const isFiatCcy = ccy.includes('USD') || ccy === 'EUR';
+  const isFiatCcy = ccy.includes('USD') || ccy === 'EUR' || ccy === 'BRL';
   const displayCcy = ccy || 'USDT';
+  
+  const tokenUsdPrice = useTokenUsdPrice(ccy);
+  const usdValue = tokenUsdPrice ? valNum * tokenUsdPrice : null;
 
   return (
     <div className="flex flex-col items-end gap-2 w-full gap-1.5 pl-4">
-      <span className={`${colorTextClass} font-mono text-sm`}>
-        {isPositive ? '+' : ''}{isFiatCcy ? formatValue(valNum, 2) : formatCrypto(valNum)} <span className="text-xs">{displayCcy}</span>
-      </span>
+      <div className="flex flex-col items-end px-1">
+        <span className={`${colorTextClass} font-mono text-sm leading-tight tracking-tight`}>
+          {isPositive ? '+' : ''}{isFiatCcy ? formatValue(valNum, 2) : formatCrypto(valNum)} <span className="text-xs ml-0.5">{displayCcy}</span>
+        </span>
+        {!isFiatCcy && usdValue !== null && (
+          <span className="text-xs text-gray-400 dark:text-gray-500 font-mono tracking-tight leading-none mt-0.5" title={`~$${formatValue(tokenUsdPrice || 0, 2)} per ${displayCcy}`}>
+            ≈ {isPositive ? '+' : '-'}${formatValue(Math.abs(usdValue), 2)}
+          </span>
+        )}
+      </div>
       <div className="w-full h-[3px] bg-gray-200 dark:bg-[#2e3039] rounded-full flex relative overflow-hidden">
         {/* Middle divider */}
         <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gray-300 dark:bg-[#2a2b30] z-10" />

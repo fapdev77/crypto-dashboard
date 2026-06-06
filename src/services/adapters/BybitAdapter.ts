@@ -161,6 +161,11 @@ export class BybitAdapter implements IExchangeAdapter {
 
     const side = mapPositionSide('bybit', pos.side);
     
+    let ccy = extractCcy('bybit', pos.settleCoin, undefined, pos.coin, pos.symbol);
+    if (isInverse && ccy === 'USD') {
+      ccy = extractBaseCoin('bybit', pos.symbol);
+    }
+    
     return {
       id: `${connectionId}-bybit-${pos.symbol}-${side}`,
       connectionId,
@@ -169,7 +174,7 @@ export class BybitAdapter implements IExchangeAdapter {
       symbol: pos.symbol,
       baseCoin: extractBaseCoin('bybit', pos.symbol),
       quoteCoin: extractQuoteCoin('bybit', pos.symbol),
-      ccy: extractCcy('bybit', pos.settleCoin, undefined, pos.coin, pos.symbol),
+      ccy,
       side: mapPositionSide('bybit', pos.side),
       size,
       entryPrice,
@@ -230,6 +235,12 @@ export class BybitAdapter implements IExchangeAdapter {
     return results.flat().map((pos: any) => {
       const closeUpdateTime = parseInt(pos.updatedTime || '0', 10);
       const createdTime = parseInt(pos.createdTime || '0', 10);
+      let ccy = extractCcy('bybit', pos.settleCoin, undefined, pos.coin, pos.symbol);
+      const isInverse = pos.symbol?.endsWith('USD') && !pos.symbol.includes('USDT') && !pos.symbol.includes('USDC');
+      if (isInverse && ccy === 'USD') {
+        ccy = extractBaseCoin('bybit', pos.symbol);
+      }
+
       return {
         id: `${key.id}-${pos.orderId || pos.closedPnlId || closeUpdateTimeFallback()}-${closeUpdateTime}`,
         connectionId: key.id,
@@ -238,7 +249,7 @@ export class BybitAdapter implements IExchangeAdapter {
         symbol: pos.symbol,
         baseCoin: extractBaseCoin('bybit', pos.symbol),
         quoteCoin: extractQuoteCoin('bybit', pos.symbol),
-        ccy: extractCcy('bybit', pos.settleCoin, undefined, pos.coin, pos.symbol),
+        ccy,
         side: mapPositionSide('bybit', pos.side),
         realizedPnl: parseFloat(pos.closedPnl || '0'),
         closeUpdateTime: closeUpdateTime,
