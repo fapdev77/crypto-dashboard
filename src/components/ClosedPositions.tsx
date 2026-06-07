@@ -8,11 +8,14 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
-
 import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
+import { useFormatCurrency } from '../hooks/useFormatCurrency';
+import { usePrivacy } from '../context/PrivacyContext';
 
 export function ClosedPositions() {
   const keys = useApiKeysStore(state => state.keys);
+  const formatCurrency = useFormatCurrency();
+  const { isPrivateMode } = usePrivacy();
 
   const [filterText, setFilterText] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
@@ -262,7 +265,7 @@ export function ClosedPositions() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
             <span className="text-xs text-[#8E9299] mb-1">Total PnL</span>
             <span className={`text-xl font-medium ${closedStats.totalPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-              {closedStats.totalPnl >= 0 ? '+' : ''}${formatValue(closedStats.totalPnl, 2)}
+              {isPrivateMode ? '$••••' : `${closedStats.totalPnl >= 0 ? '+' : ''}${formatCurrency(closedStats.totalPnl, 'usd')}`}
             </span>
           </div>
 
@@ -313,17 +316,17 @@ export function ClosedPositions() {
               <div className="flex flex-col bg-[#111216] p-2 rounded justify-center items-center">
                  <span className="text-[10px] text-[#8E9299]">Avg W/L</span>
                  <div className="font-mono mt-0.5 whitespace-nowrap">
-                   <span className="text-[#00C853]">+{formatValue(closedStats.avgWin, 2)}</span>
+                   <span className="text-[#00C853]">+{formatCurrency(closedStats.avgWin, 'crypto', 2)}</span>
                    <span className="text-[#3f4046] mx-0.5">/</span>
-                   <span className="text-[#FF4444]">{formatValue(closedStats.avgLoss, 2)}</span>
+                   <span className="text-[#FF4444]">{formatCurrency(closedStats.avgLoss, 'crypto', 2)}</span>
                  </div>
               </div>
               <div className="flex flex-col bg-[#111216] p-2 rounded justify-center items-center">
                  <span className="text-[10px] text-[#8E9299]">Largest W/L</span>
                  <div className="font-mono mt-0.5 whitespace-nowrap">
-                   <span className="text-[#00C853]">+{formatValue(closedStats.largestWin, 2)}</span>
+                   <span className="text-[#00C853]">+{formatCurrency(closedStats.largestWin, 'crypto', 2)}</span>
                    <span className="text-[#3f4046] mx-0.5">/</span>
-                   <span className="text-[#FF4444]">{formatValue(closedStats.largestLoss, 2)}</span>
+                   <span className="text-[#FF4444]">{formatCurrency(closedStats.largestLoss, 'crypto', 2)}</span>
                  </div>
               </div>
             </div>
@@ -354,11 +357,10 @@ export function ClosedPositions() {
             let roiValue = 0;
             let hasRoi = false;
             
-            // Identify the quote currency for the PnL (e.g. USDT)
             const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
             const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
             const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
-            const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
+            const formatCcy = (v: number | undefined | null) => formatCurrency(v, 'crypto', isFiatCcy ? 2 : 8);
             
             const isInverse = pos.instrumentType === 'INVERSE';
 
@@ -404,24 +406,24 @@ export function ClosedPositions() {
             let displaySecondaryUnit = '';
 
             if (isInverse) {
-              displayQuantity = pos.size ? formatValue(pos.size, 2) : '--';
+              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 2) : '--';
               displayUnit = 'USD';
-              displaySecondaryQuantity = actualCoinSize ? formatCrypto(actualCoinSize) : '--';
+              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
               displaySecondaryUnit = symbolSuffix;
             } else if (pos.exchange === 'okx') {
-              displayQuantity = positionValueUsd ? formatValue(positionValueUsd, 2) : '--';
+              displayQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
               displayUnit = 'USD';
-              displaySecondaryQuantity = actualCoinSize ? formatCrypto(actualCoinSize) : '--';
+              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
               displaySecondaryUnit = symbolSuffix;
             } else {
-              displayQuantity = pos.size ? formatCrypto(pos.size) : '--';
+              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 8) : '--';
               displayUnit = symbolSuffix;
-              displaySecondaryQuantity = positionValueUsd ? formatValue(positionValueUsd, 2) : '--';
+              displaySecondaryQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
               displaySecondaryUnit = 'USD';
             }
             
             if (hasRoi && isFinite(roiValue)) {
-               roiStr = `${roiValue > 0 ? '+' : ''}${formatValue(roiValue, 2)}%`;
+               roiStr = `${roiValue > 0 ? '+' : ''}${formatCurrency(roiValue, 'crypto', 2)}%`;
             }
             
             const roiClass = hasRoi ? (roiValue >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]') : 'text-[#8E9299]';
@@ -487,7 +489,7 @@ export function ClosedPositions() {
                       <span className={`font-mono text-xs ${roiClass}`}>{roiStr}</span>
                       {!isFiatCcy && pos.closePrice ? (
                         <span className={`font-mono text-[10px] ${pnlClass} opacity-80`}>
-                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.realizedPnl) * pos.closePrice, 2)} USD
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(pos.realizedPnl) * pos.closePrice, 'crypto', 2)} USD
                         </span>
                       ) : null}
                     </div>

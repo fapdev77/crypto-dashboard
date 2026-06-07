@@ -8,6 +8,8 @@ import { CoinIcon } from '../ui/CoinIcon';
 
 import { formatValue, formatCrypto } from '../../utils/formatters';
 import { useTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
+import { useFormatCurrency } from '../../hooks/useFormatCurrency';
+import { usePrivacy } from '../../context/PrivacyContext';
 
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
@@ -271,6 +273,9 @@ export function PnLBySymbol() {
 }
 
 function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string }) {
+  const { isPrivateMode } = usePrivacy();
+  const formatCurrency = useFormatCurrency();
+
   const isPositive = value.gt(0);
   const isZero = value.eq(0);
   const colorTextClass = isZero ? 'text-gray-400' : isPositive ? 'text-[#10B981]' : 'text-pink-500';
@@ -290,11 +295,11 @@ function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string 
     <div className="flex flex-col items-end gap-2 w-full gap-1.5 pl-4">
       <div className="flex flex-col items-end px-1">
         <span className={`${colorTextClass} font-mono text-sm leading-tight tracking-tight`}>
-          {isPositive ? '+' : ''}{isFiatCcy ? formatValue(valNum, 2) : formatCrypto(valNum)} <span className="text-xs ml-0.5">{displayCcy}</span>
+          {isPrivateMode ? '••••' : `${isPositive ? '+' : ''}${formatCurrency(valNum, 'crypto', isFiatCcy ? 2 : 8)}`} <span className="text-xs ml-0.5">{displayCcy}</span>
         </span>
         {!isFiatCcy && usdValue !== null && (
-          <span className="text-xs text-gray-400 dark:text-gray-500 font-mono tracking-tight leading-none mt-0.5" title={`~$${formatValue(tokenUsdPrice || 0, 2)} per ${displayCcy}`}>
-            ≈ {isPositive ? '+' : '-'}${formatValue(Math.abs(usdValue), 2)}
+          <span className="text-xs text-gray-400 dark:text-gray-500 font-mono tracking-tight leading-none mt-0.5" title={isPrivateMode ? '' : `~$${formatValue(tokenUsdPrice || 0, 2)} per ${displayCcy}`}>
+            ≈ {isPrivateMode ? '$••••' : `${isPositive ? '+' : ''}${formatCurrency(usdValue, 'usd')}`}
           </span>
         )}
       </div>

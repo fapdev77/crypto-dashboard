@@ -5,6 +5,7 @@ import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { MoreHorizontal } from 'lucide-react';
 import { formatCompactUSD } from '../../utils/formatters';
+import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 
 const CustomBarShape = (props: any) => {
   const { fill, x, y, width, height, payload, dataKey, fillOpacity, value } = props;
@@ -68,7 +69,7 @@ const CustomBarShape = (props: any) => {
 };
 
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload, formatCurrency }: any) => {
   if (active && payload && payload.length) {
     const row = payload[0].payload;
     const assets = row.rawAssets || [];
@@ -92,7 +93,9 @@ const CustomTooltip = ({ active, payload }: any) => {
                   <span className="text-[#8E9299] font-semibold text-xs tracking-wider uppercase">{asset.name}</span>
                 </div>
                 <div className="text-right flex items-center justify-end gap-3 min-w-[100px]">
-                  <span className="text-white font-mono">${asset.value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
+                  <span className="text-white font-mono">
+                    {formatCurrency ? formatCurrency(asset.value, 'usd') : `$${asset.value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}`}
+                  </span>
                   <span className="text-[#8E9299] opacity-80 font-mono text-xs w-10 text-right">{asset.percent.toFixed(1)}%</span>
                 </div>
               </div>
@@ -130,6 +133,7 @@ interface CrossExchangeAssetsChartProps {
 export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAssetsChartProps) {
   if (!data || data.length === 0) return null;
 
+  const formatCurrency = useFormatCurrency();
   const segments = Array.from({ length: maxSegments }).map((_, i) => `segment${i}`);
   const maxTotal = Math.max(...data.map(d => d.total));
 
@@ -146,7 +150,7 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
           >
             <XAxis type="number" domain={[0, maxTotal]} hide />
             <YAxis dataKey="exchange" type="category" axisLine={false} tickLine={false} tick={customYAxisTick} width={80} />
-            <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.03)' }} content={<CustomTooltip />} isAnimationActive={false} />
+            <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.03)' }} content={<CustomTooltip formatCurrency={formatCurrency} />} isAnimationActive={false} />
             
             {segments.map((key, i) => (
               <Bar

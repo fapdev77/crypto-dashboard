@@ -4,10 +4,12 @@ import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportUtils
 import { DownloadCloud, FileText, Table } from 'lucide-react';
 import { format } from 'date-fns';
 import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
+import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 
 export function ReportsDashboard() {
   const [period, setPeriod] = useState<'1w'|'2w'|'1m'|'custom'>('1m');
   const { positions: history, isLoading } = usePositionHistory(period, '', '', true);
+  const formatCurrency = useFormatCurrency();
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -86,7 +88,7 @@ export function ReportsDashboard() {
                         </span>
                       </td>
                       <td className={`px-4 py-3 text-right font-medium ${net >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
-                        ${net.toFixed(2)}
+                        {formatCurrency(net, 'usd')}
                       </td>
                     </tr>
                   );

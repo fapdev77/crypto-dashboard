@@ -23,6 +23,8 @@ import { HedgeProDashboard } from './components/analytics/HedgeProDashboard';
 import { MvpTestsDashboard } from './components/MvpTestsDashboard';
 import { AssetMetadataPlayground } from './components/AssetMetadataPlayground';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
+import { PrivacyProvider } from './context/PrivacyContext';
+import { PrivacyToggleButton } from './components/PrivacyToggleButton';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -40,6 +42,7 @@ export default function App() {
   if (activeTab === 'mvp-asset-metadata') activeTabName = 'Informações de Ativos';
 
   return (
+    <PrivacyProvider>
     <WorkSpace>
       <Toaster
         position="top-right"
@@ -76,17 +79,20 @@ export default function App() {
           />
 
           <main className="flex-1 overflow-hidden bg-[#0b0c10] p-4 md:p-6 flex flex-col min-w-0">
-            <header className="mb-4 md:mb-6 shrink-0 flex items-center gap-3">
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-[#2a2b30] rounded-lg transition-colors"
-                aria-label="Open menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-              <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-white capitalize">
-                {activeTabName}
-              </h2>
+            <header className="mb-4 md:mb-6 shrink-0 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-[#2a2b30] rounded-lg transition-colors"
+                  aria-label="Open menu"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+                <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-white capitalize">
+                  {activeTabName}
+                </h2>
+              </div>
+              <PrivacyToggleButton />
             </header>
 
             <div className="flex-1 overflow-auto hide-scrollbar relative">
@@ -117,6 +123,7 @@ export default function App() {
         <StatusBar />
       </div>
     </WorkSpace>
+    </PrivacyProvider>
   );
 }
 

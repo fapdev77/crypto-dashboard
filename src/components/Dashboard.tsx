@@ -8,11 +8,15 @@ import { ExchangeIcon } from './ui/ExchangeIcon';
 import { Sparkline } from './ui/Sparkline';
 import { MacroCapitalChart } from './analytics/MacroCapitalChart';
 import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
+import { useFormatCurrency } from '../hooks/useFormatCurrency';
+import { usePrivacy } from '../context/PrivacyContext';
 
 export function Dashboard() {
   const { balances, positions } = useDashboardStore();
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const formatCurrency = useFormatCurrency();
+  const { isPrivateMode } = usePrivacy();
 
   const [filterText, setFilterText] = useState('');
   const [hideSmallBalances, setHideSmallBalances] = useState(true);
@@ -238,7 +242,7 @@ export function Dashboard() {
               </div>
               <div className="flex items-baseline gap-2 mt-1">
                 <p className="text-3xl font-bold text-white font-mono tracking-tight">
-                  ${totalEquity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(totalEquity, 'usd')}
                 </p>
                 {dailyPnL >= 0 ? (
                   <TrendingUp className="w-4 h-4 text-emerald-500/70" />
@@ -267,10 +271,10 @@ export function Dashboard() {
             </div>
             <div className="flex items-baseline gap-2 mt-1">
               <p className={`text-2xl font-bold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                {dailyPnL >= 0 ? '+' : '-'}${Math.abs(dailyPnL).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {isPrivateMode ? '$••••' : `${dailyPnL >= 0 ? '+' : ''}${formatCurrency(dailyPnL, 'usd')}`}
               </p>
               <span className={`text-sm font-semibold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                ({dailyPnL >= 0 ? '+' : ''}{dailyPnLPercent.toFixed(2)}%)
+                {isPrivateMode ? '(••••%)' : `(${dailyPnL >= 0 ? '+' : ''}${dailyPnLPercent.toFixed(2)}%)`}
               </span>
             </div>
             <div className="mt-4 text-[10px] text-[#8E9299]/80 font-medium">
@@ -340,8 +344,8 @@ export function Dashboard() {
             {/* Protected vs Exposed Bar */}
             <div className="space-y-2 mt-4">
               <div className="flex justify-between text-[11px] font-semibold font-mono">
-                <span className="text-emerald-500/90">Prot: ${totalProtected.toLocaleString('en-US', { maximumFractionDigits: 0 })} ({protectedPercent.toFixed(1)}%)</span>
-                <span className="text-[#8E9299]">Exp: ${totalExposed.toLocaleString('en-US', { maximumFractionDigits: 0 })} ({exposedPercent.toFixed(1)}%)</span>
+                <span className="text-emerald-500/90">Prot: {formatCurrency(totalProtected, 'usd', 0)} ({protectedPercent.toFixed(1)}%)</span>
+                <span className="text-[#8E9299]">Exp: {formatCurrency(totalExposed, 'usd', 0)} ({exposedPercent.toFixed(1)}%)</span>
               </div>
               <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
                 {totalEquity > 0 ? (
@@ -441,7 +445,7 @@ export function Dashboard() {
                         <div className="text-left">
                           <h4 className="text-base font-bold text-brand-normal capitalize">{exchange}</h4>
                           <div className="text-xs text-[#8E9299] font-medium tracking-wide">
-                            Total Balance: <span className="font-mono text-white">${totalExchangeValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            Total Balance: <span className="font-mono text-white">{formatCurrency(totalExchangeValue, 'usd')}</span>
                           </div>
                         </div>
                       </div>
@@ -482,7 +486,7 @@ export function Dashboard() {
                                   </div>
                                   <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{accData.label}</span>
                                 </div>
-                                <span className="text-sm font-bold text-white font-mono">${accData.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span className="text-sm font-bold text-white font-mono">{formatCurrency(accData.total, 'usd')}</span>
                               </button>
 
                               {/* Assets Table */}
@@ -506,10 +510,10 @@ export function Dashboard() {
                                             </div>
                                           </td>
                                           <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
-                                            {b.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })}
+                                            {formatCurrency(b.amount, 'crypto', 6)}
                                           </td>
                                           <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
-                                            ${b.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            {formatCurrency(b.usdValue, 'usd')}
                                           </td>
                                         </tr>
                                       ))}

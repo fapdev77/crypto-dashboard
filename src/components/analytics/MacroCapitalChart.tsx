@@ -11,41 +11,42 @@ interface MacroCapitalChartProps {
   data: Array<{ name: string; value: number }>;
 }
 
-import { formatCompactUSD } from '../../utils/formatters';
-
-const renderCustomizedLabel = (props: any) => {
-  const { cx, cy, x, y, midAngle, innerRadius, outerRadius, name, value, percent } = props;
-  const isLeft = x < cx;
-  const textAnchor = isLeft ? 'end' : 'start';
-
-  const valColorExchange = EXCHANGE_COLORS[name.toLowerCase()] || '#ffffff';
-  const valColorValue = '#d8c9c9c0';
-
-  const RADIAN = Math.PI / 180;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const inX = cx + radius * Math.cos(-midAngle * RADIAN);
-  const inY = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  return (
-    <g>
-      {percent > 0.04 && (
-        <text x={inX} y={inY} fill="#151619" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight="bold">
-          {(percent * 100).toFixed(0)}%
-        </text>
-      )}
-
-      <text x={x + (isLeft ? -8 : 8)} y={y - 8} fill={valColorExchange} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} className="capitalize font-semibold">
-        {name}
-      </text>
-      <text x={x + (isLeft ? -8 : 8)} y={y + 8} fill={valColorValue} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fontWeight="bold" className="font-mono">
-        {formatCompactUSD(value)}
-      </text>
-    </g>
-  );
-};
+import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 
 export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
+  const formatCurrency = useFormatCurrency();
   const totalValue = useMemo(() => data.reduce((acc, cur) => acc + cur.value, 0), [data]);
+
+  const renderCustomizedLabel = (props: any) => {
+    const { cx, cy, x, y, midAngle, innerRadius, outerRadius, name, value, percent } = props;
+    const isLeft = x < cx;
+    const textAnchor = isLeft ? 'end' : 'start';
+
+    const valColorExchange = EXCHANGE_COLORS[name.toLowerCase()] || '#ffffff';
+    const valColorValue = '#d8c9c9c0';
+
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const inX = cx + radius * Math.cos(-midAngle * RADIAN);
+    const inY = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <g>
+        {percent > 0.04 && (
+          <text x={inX} y={inY} fill="#151619" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight="bold">
+            {(percent * 100).toFixed(0)}%
+          </text>
+        )}
+
+        <text x={x + (isLeft ? -8 : 8)} y={y - 8} fill={valColorExchange} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} className="capitalize font-semibold">
+          {name}
+        </text>
+        <text x={x + (isLeft ? -8 : 8)} y={y + 8} fill={valColorValue} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fontWeight="bold" className="font-mono">
+          {formatCurrency(value, 'compact')}
+        </text>
+      </g>
+    );
+  };
 
   return (
     <div className="bg-[#151619] border border-[#2a2b30] p-5 rounded-xl flex flex-col h-[300px]">
@@ -78,7 +79,7 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
                         Total:
                       </text>
                       <text x={cx} y={cy + 12} fill="#ffffffc0" fontSize={20} fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="central">
-                        {formatCompactUSD(totalValue, 2)}
+                        {formatCurrency(totalValue, 'compact', 2)}
                       </text>
                     </g>
                   );
@@ -88,7 +89,7 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
             <RechartsTooltip
               contentStyle={{ backgroundColor: '#1a1b1e', borderColor: '#2a2b30', borderRadius: '8px', padding: '8px 12px' }}
               itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-              formatter={(value: number) => `$${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`}
+              formatter={(value: number) => formatCurrency(value, 'usd')}
               labelStyle={{ display: 'none' }}
               isAnimationActive={false}
             />

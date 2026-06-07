@@ -9,11 +9,15 @@ import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
+import { useFormatCurrency } from '../hooks/useFormatCurrency';
+import { usePrivacy } from '../context/PrivacyContext';
 
 export function OpenPositions() {
   const { positions } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
   const keys = useApiKeysStore(state => state.keys);
+  const formatCurrency = useFormatCurrency();
+  const { isPrivateMode } = usePrivacy();
 
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [filterText, setFilterText] = useState('');
@@ -212,14 +216,14 @@ export function OpenPositions() {
                 <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
                   <span className="text-xs text-[#8E9299] mb-1">Unrealized PnL</span>
                   <span className={`text-lg font-medium ${totalUnrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                    {totalUnrealizedPnl >= 0 ? '+' : ''}${formatValue(totalUnrealizedPnl, 2)}
+                    {isPrivateMode ? '$••••' : `${totalUnrealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalUnrealizedPnl, 'usd')}`}
                   </span>
                 </div>
 
                 <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
                   <span className="text-xs text-[#8E9299] mb-1">Realized PnL</span>
                   <span className={`text-lg font-medium ${totalRealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                    {totalRealizedPnl >= 0 ? '+' : ''}${formatValue(totalRealizedPnl, 2)}
+                    {isPrivateMode ? '$••••' : `${totalRealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalRealizedPnl, 'usd')}`}
                   </span>
                 </div>
               </div>
@@ -245,7 +249,7 @@ export function OpenPositions() {
 
               const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
               const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
-              const formatCcy = (v: number | undefined | null) => isFiatCcy ? formatValue(v, 2) : formatCrypto(v);
+              const formatCcy = (v: number | undefined | null) => formatCurrency(v, 'crypto', isFiatCcy ? 2 : 8);
 
               const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
@@ -289,8 +293,8 @@ export function OpenPositions() {
                     {/* Size / Value */}
                     <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
                       <span className="text-[10px] text-[#8E9299] uppercase">Pos Size / Value</span>
-                      <span className="font-mono text-white text-sm">{formatCrypto(pos.size)}</span>
-                      <span className="text-xs text-[#8E9299] font-mono">≈ {formatValue(sizeValUsd, 2)} USD</span>
+                      <span className="font-mono text-white text-sm">{formatCurrency(pos.size, 'crypto')}</span>
+                      <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
                     </div>
 
                     {/* Prices */}
@@ -316,7 +320,7 @@ export function OpenPositions() {
                         {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                       </span>
                       <span className={`font-mono text-xs ${roeColor}`}>
-                        {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl !== undefined && pos.markPrice ? (pos.unrealizedPnl > 0 ? '+' : '') + formatValue(Math.abs(pos.unrealizedPnl) * pos.markPrice, 2) + ' USD / ' : ''}
+                        {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl !== undefined && pos.markPrice ? (pos.unrealizedPnl > 0 ? '+' : '') + formatCurrency(Math.abs(pos.unrealizedPnl) * pos.markPrice, 'crypto', 2) + ' USD / ' : ''}
                         {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
                       </span>
                     </div>
@@ -329,7 +333,7 @@ export function OpenPositions() {
                       </span>
                       {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
                         <span className={`font-mono text-xs ${realizedPnlColor} opacity-80`}>
-                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.realizedPnl) * pos.markPrice, 2)} USD
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(pos.realizedPnl) * pos.markPrice, 'crypto', 2)} USD
                         </span>
                       ) : (
                         <span className="text-[10px] opacity-0">-</span>
@@ -347,8 +351,8 @@ export function OpenPositions() {
                         <div className="flex flex-col gap-1">
                           <span className="text-[#8E9299] text-xs">Position</span>
                           <div className="flex items-baseline gap-1">
-                            <span className="font-mono text-white">{formatCrypto(pos.size)}</span>
-                            <span className="text-[#8E9299] text-xs">≈ {formatValue(sizeValUsd, 2)} USD</span>
+                            <span className="font-mono text-white">{formatCurrency(pos.size, 'crypto')}</span>
+                            <span className="text-[#8E9299] text-xs">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
                           </div>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -360,7 +364,7 @@ export function OpenPositions() {
                           <span className="font-mono text-white">
                             {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
                             {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
-                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(pos.margin * pos.markPrice, 2)} USD</span>
+                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(pos.margin * pos.markPrice, 'crypto', 2)} USD</span>
                             ) : null}
                           </span>
                         </div>
@@ -369,7 +373,7 @@ export function OpenPositions() {
                           <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                             {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                             {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
-                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatValue(Math.abs(pos.realizedPnl) * pos.markPrice, 2)} USD</span>
+                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(Math.abs(pos.realizedPnl) * pos.markPrice, 'crypto', 2)} USD</span>
                             ) : null}
                           </span>
                         </div>
@@ -386,7 +390,7 @@ export function OpenPositions() {
                           <span className={`font-mono ${uplColor}`}>
                             {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{posCcy}</span>
                             {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
-                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(pos.unrealizedPnl) * pos.markPrice, 2)} USD</span>
+                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(pos.unrealizedPnl) * pos.markPrice, 'crypto', 2)} USD</span>
                             ) : null}
                           </span>
                         </div>
