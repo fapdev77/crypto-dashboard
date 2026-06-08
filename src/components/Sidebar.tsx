@@ -2,6 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker, AlignLeft } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
+import logo1 from '../assets/CriptoDashboard-logo1.PNG';
 
 interface SidebarProps {
   activeTab: string;
@@ -54,10 +55,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         {!isCollapsed ? (
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-white flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0">
-                  <span className="text-[#151619] font-bold text-sm tracking-tighter">TE</span>
-                </div>
+              <div className="flex items-center gap-3">
+                <img src={logo1} alt="Logo" className="w-8 h-8 object-contain shrink-0" />
                 <span className="text-[15px] font-bold leading-tight">
                   Gerenciador de Portfólio
                   <span className="block text-[11px] text-[#8E9299] font-normal tracking-wide mt-0.5">Crypto Mult-Exchange</span>
@@ -66,9 +65,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
             </h1>
           </div>
         ) : (
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 mt-1">
-            <span className="text-[#151619] font-bold text-sm tracking-tighter">TE</span>
-          </div>
+          <img src={logo1} alt="Logo" className="w-8 h-8 object-contain shrink-0 mt-1" />
         )}
         
         {/* Mobile Close Button */}
