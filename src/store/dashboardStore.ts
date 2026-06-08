@@ -143,8 +143,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     };
   }),
   addBytesReceived: (connectionId, bytes) => set((state) => {
-    const current = state.telemetry[connectionId];
-    if (!current) return state;
+    const current = state.telemetry[connectionId] || {
+      latencyHistory: [], throughputHistory: [], lastPingMs: 0, bytesPerSecond: 0, accumulatingBytes: 0, lastThroughputUpdate: Date.now()
+    };
     return {
       telemetry: {
         ...state.telemetry,

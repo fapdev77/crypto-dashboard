@@ -9,7 +9,6 @@ import { useDashboardStore } from '../store/dashboardStore';
 export function ConnectionLogTerminal() {
   const { entries, maxEntries, clearLogs } = useLogStore();
   const keys = useApiKeysStore(state => state.keys);
-  const telemetry = useDashboardStore(state => state.telemetry);
   const useMockData = useSettingsStore(state => state.useMockData);
   
   const [selectedLevels, setSelectedLevels] = useState<LogLevel[]>(['ERROR', 'WARN']);
@@ -26,23 +25,6 @@ export function ConnectionLogTerminal() {
   }, [entries]);
 
   const activeKeys = keys.filter(k => k.isActive);
-  const activeCount = activeKeys.length;
-  
-  let sumLatency = 0;
-  let latencyCount = 0;
-  let totalThroughput = 0;
-  activeKeys.forEach(k => {
-    if (telemetry[k.id]) {
-       const ping = telemetry[k.id].lastPingMs;
-       if (ping > 0) {
-         sumLatency += ping;
-         latencyCount++;
-       }
-       totalThroughput += telemetry[k.id].bytesPerSecond || 0;
-    }
-  });
-  const avgLatency = latencyCount > 0 ? Math.round(sumLatency / latencyCount) : 0;
-  const throughputKB = (totalThroughput / 1024).toFixed(1);
 
   // Format Date
   const formatDate = (ts: number) => {
@@ -185,19 +167,6 @@ export function ConnectionLogTerminal() {
       <div className="h-6 bg-[#000000] border-t border-[#1a1b1e] flex items-center px-4 justify-between shrink-0">
          <span className="text-[10px] font-mono text-[#8E9299]">
             History: <span className="text-[#FFFFFF]">{entries.length} / {maxEntries} lines</span>
-         </span>
-         <span className="text-[10px] font-mono text-[#8E9299] flex items-center gap-1.5">
-            {useMockData && (
-              <>
-                <span className="text-yellow-500 font-bold bg-yellow-500/10 px-1.5 py-0.5 rounded leading-none">TEST MODE ACTIVE</span>
-                <span>|</span>
-              </>
-            )}
-            <span>Connections: <span className="text-[#00C853]">{activeCount} Active</span></span>
-            <span>|</span>
-            <span>Throughput: <span className="text-[#2F6BFF]">{throughputKB} KB/s</span></span>
-            <span>|</span>
-            <span>Latency: <span className="text-[#00C853]">{avgLatency}ms</span></span>
          </span>
       </div>
     </div>

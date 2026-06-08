@@ -257,7 +257,7 @@ export function useMultiExchangeWS() {
                 : 0));
       addBytesReceived(id, byteSize);
       
-      if (typeof msg === 'string' && msg === 'pong') {
+      if (typeof msg === 'string' && (msg === 'pong' || msg.trim() === 'pong' || msg === '"pong"')) {
         console.log(`[WS-${id}] Recebido: pong`);
         const sentTime = lastPingRef.current[id];
         if (sentTime) {
@@ -269,8 +269,12 @@ export function useMultiExchangeWS() {
       try {
         const data = JSON.parse(msg.toString());
         
-        // Handle Bybit pong ({"success":true,"ret_msg":"pong","conn_id":"...","req_id":"","op":"ping"})
-        if (exchange === 'bybit' && data.op === 'ping' && data.ret_msg === 'pong') {
+        // Handle JSON pongs (OKX/Bitget "pong", Bybit object)
+        if (
+          data === 'pong' || 
+          data.event === 'pong' || 
+          (exchange === 'bybit' && data.op === 'ping' && data.ret_msg === 'pong')
+        ) {
           console.log(`[WS-${id}] Recebido: pong`);
           const sentTime = lastPingRef.current[id];
           if (sentTime) {

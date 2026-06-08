@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Power, Edit2, Trash2 } from 'lucide-react';
 import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
 import { useDashboardStore } from '../store/dashboardStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { ApiKeyModal } from './ApiKeyModal';
 import { Sparkline } from './ui/Sparkline';
@@ -15,6 +16,7 @@ const EXCHANGES: { id: Exchange; name: string }[] = [
 export function ApiKeys() {
   const { keys, toggleKey, removeKey } = useApiKeysStore();
   const { clearConnectionData, statuses, telemetry } = useDashboardStore(state => state);
+  const useMockData = useSettingsStore(state => state.useMockData);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
@@ -52,6 +54,25 @@ export function ApiKeys() {
     setModalMode('edit');
     setModalOpen(true);
   };
+
+  const activeKeys = keys.filter(k => k.isActive);
+  const activeCount = activeKeys.length;
+  
+  let sumLatency = 0;
+  let latencyCount = 0;
+  let totalThroughput = 0;
+  activeKeys.forEach(k => {
+    if (telemetry[k.id]) {
+       const ping = telemetry[k.id].lastPingMs;
+       if (ping > 0) {
+         sumLatency += ping;
+         latencyCount++;
+       }
+       totalThroughput += telemetry[k.id].bytesPerSecond || 0;
+    }
+  });
+  const avgLatency = latencyCount > 0 ? Math.round(sumLatency / latencyCount) : 0;
+  const throughputKB = (totalThroughput / 1024).toFixed(1);
 
   return (
     <div className="flex flex-col h-full bg-[#111216] overflow-hidden rounded-xl border border-[#2a2b30]">
@@ -248,6 +269,22 @@ export function ApiKeys() {
             })}
           </div>
         </div>
+      </div>
+
+      <div className="h-8 bg-[#000000] border-t border-[#1a1b1e] flex items-center px-4 justify-end shrink-0">
+          <span className="text-xs font-mono text-[#8E9299] flex items-center gap-2">
+            {useMockData && (
+              <>
+                <span className="text-yellow-500 font-bold bg-yellow-500/10 px-1.5 py-0.5 rounded leading-none">TEST MODE ACTIVE</span>
+                <span>|</span>
+              </>
+            )}
+            <span>Connections: <span className="text-[#00C853]">{activeCount} Active</span></span>
+            <span>|</span>
+            <span>Throughput: <span className="text-[#2F6BFF]">{throughputKB} KB/s</span></span>
+            <span>|</span>
+            <span>Latency: <span className="text-[#00C853]">{avgLatency}ms</span></span>
+          </span>
       </div>
 
       <ApiKeyModal
