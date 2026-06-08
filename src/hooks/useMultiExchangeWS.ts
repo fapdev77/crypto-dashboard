@@ -22,7 +22,7 @@ const getBitgetUrl = () => {
 }
 
 const WS_URLS = {
-  bitget: getBitgetUrl(), 
+  bitget: getBitgetUrl(),
   okx: 'wss://ws.okx.com:8443/ws/v5/private',
   bybit: 'wss://stream.bybit.com/v5/private',
 };
@@ -53,7 +53,7 @@ export function useMultiExchangeWS() {
     if (useMockData) {
       Object.keys(socketsRef.current).forEach(id => disconnect(id));
       keys.forEach(k => useDashboardStore.getState().clearConnectionData(k.id));
-      
+
       const currentState = useDashboardStore.getState();
       mockAccountsData.forEach((acc: any) => {
         const { connectionId } = acc;
@@ -91,7 +91,7 @@ export function useMultiExchangeWS() {
       ...Object.values(currentState.balances).map(b => b.connectionId),
       ...Object.values(currentState.positions).map(p => p.connectionId)
     ]);
-    
+
     existingConnectionIds.forEach(id => {
       if (!id.startsWith('mocked-data') && !activeIds.has(id)) {
         currentState.clearConnectionData(id);
@@ -111,19 +111,19 @@ export function useMultiExchangeWS() {
       ws.close();
       delete socketsRef.current[id];
     }
-    
+
     const pingTimer = intervalsRef.current[id];
     if (pingTimer) {
       clearInterval(pingTimer);
       delete intervalsRef.current[id];
     }
-    
+
     const pollTimer = intervalsRef.current[id + '-poll'];
     if (pollTimer) {
       clearTimeout(pollTimer);
       delete intervalsRef.current[id + '-poll'];
     }
-    
+
     const rTimer = reconnectTimers.current[id];
     if (rTimer) {
       clearTimeout(rTimer);
@@ -146,7 +146,7 @@ export function useMultiExchangeWS() {
           console.log(`[WS-${config.id}][Keep-Alive] Ping enviado (${config.exchange}).`);
         }
       }
-    }, 20000); 
+    }, 20000);
   };
 
   const syncRestData = async (config: ApiCredentials) => {
@@ -168,10 +168,10 @@ export function useMultiExchangeWS() {
     const { id } = config;
     const poll = async () => {
       if (intervalsRef.current[id + '-poll'] === null) return; // Prevent execution if disconnected
-      
+
       const isMockEnabled = useSettingsStore.getState().useMockData;
       const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
-      
+
       if (isMockEnabled || !currentConfig || !currentConfig.isActive || socketsRef.current[id]?.readyState !== WebSocket.OPEN) {
         return;
       }
@@ -196,7 +196,7 @@ export function useMultiExchangeWS() {
     setConnectionError(id, null);
     const wsUrl = exchange === 'bitget' ? getBitgetUrl() : (WS_URLS as any)[exchange];
     console.log(`[WS-${id}] Iniciando conexão para: ${wsUrl}`);
-    
+
     const ws = new WebSocket(wsUrl);
     socketsRef.current[id] = ws;
 
@@ -206,7 +206,7 @@ export function useMultiExchangeWS() {
         console.log(`[REST-${id}] Bootloading initial balances and positions...`);
         await ExchangeAggregator.bootloadConnection(config);
         console.log(`[REST-${id}] REST Bootload completed.`);
-        
+
         // Start generic REST fallback polling for all exchanges to ensure Mark Price/Unrealized PnL is kept fresh
         if (intervalsRef.current[id + '-poll']) {
           clearTimeout(intervalsRef.current[id + '-poll'] as NodeJS.Timeout);
@@ -220,7 +220,7 @@ export function useMultiExchangeWS() {
     })();
 
     ws.onopen = async () => {
-      console.log(`[WS-${id}] Conexão física estabelecida com sucesso.`);
+      console.log(`[WS-${id}] [${exchange}] - Conexão física estabelecida com sucesso.`);
       retryCounters.current[id] = 0; // Reset retry count on successful open
       startPing(config, ws);
 
@@ -247,35 +247,34 @@ export function useMultiExchangeWS() {
 
     ws.onmessage = (event) => {
       const msg = event.data;
-      
-      const byteSize = typeof msg === 'string' 
-        ? new Blob([msg]).size 
-        : (msg instanceof Blob 
-            ? msg.size 
-            : (msg instanceof ArrayBuffer 
-                ? msg.byteLength 
-                : 0));
+
+      const byteSize = typeof msg === 'string'
+        ? new Blob([msg]).size
+        : (msg instanceof Blob
+          ? msg.size
+          : (msg instanceof ArrayBuffer
+            ? msg.byteLength
+            : 0));
       addBytesReceived(id, byteSize);
-      
+
       if (typeof msg === 'string' && (msg === 'pong' || msg.trim() === 'pong' || msg === '"pong"')) {
-        console.log(`[WS-${id}] Recebido: pong`);
+        console.log(`[WS-${id}] [${exchange}] - Recebido: pong`);
         const sentTime = lastPingRef.current[id];
         if (sentTime) {
           updateLatency(id, Date.now() - sentTime);
         }
         return;
       }
-      
+
       try {
         const data = JSON.parse(msg.toString());
-        
         // Handle JSON pongs (OKX/Bitget "pong", Bybit object)
         if (
-          data === 'pong' || 
-          data.event === 'pong' || 
-          (exchange === 'bybit' && data.op === 'ping' && data.ret_msg === 'pong')
+          data === 'pong' ||
+          data.event === 'pong' ||
+          data.op === 'pong'
         ) {
-          console.log(`[WS-${id}] Recebido: pong`);
+          console.log(`[WS-${id}] [${exchange}] - Recebido: pong`);
           const sentTime = lastPingRef.current[id];
           if (sentTime) {
             updateLatency(id, Date.now() - sentTime);
@@ -286,33 +285,33 @@ export function useMultiExchangeWS() {
         handleSubscriptionAndAuth(config, ws, data);
         WsParsers.parseStream(config, data);
       } catch (err) {
-        console.error(`[WS-${id}] Erro ao realizar o parse da mensagem:`, err);
+        console.error(`[WS-${id}] [${exchange}] Erro ao realizar o parse da mensagem:`, err);
       }
     };
 
     ws.onerror = (error) => {
-      console.error(`[WS-${id}] EVENTO DE ERRO. Se "isTrusted: true" sem detalhes, possivelmente o navegador bloqueou a conexão.`);
-      console.error(`[WS-${id}] Detalhes do erro:`, error);
+      console.error(`[WS-${id}] [${exchange}] EVENTO DE ERRO. Se "isTrusted: true" sem detalhes, possivelmente o navegador bloqueou a conexão.`);
+      console.error(`[WS-${id}] [${exchange}] Detalhes do erro:`, error);
       setConnectionStatus(id, 'error', 'WebSocket Connection Error');
       setConnectionError(id, 'WebSocket Connection Error');
       toast.error(`${exchange.toUpperCase()} WebSocket Error. Check your connection or API keys.`, { id: `ws-err-${id}` });
     };
 
     ws.onclose = (event) => {
-      console.log(`[WS-${id}] Conexão encerrada. Code: ${event.code}, Reason: ${event.reason || "Sem razão especificada"}`);
+      console.log(`[WS-${id}] [${exchange}] - Conexão encerrada. Code: ${event.code}, Reason: ${event.reason || "Sem razão especificada"}`);
       const currentConfig = useApiKeysStore.getState().keys.find((apiKey) => apiKey.id === id);
       const isMockEnabled = useSettingsStore.getState().useMockData;
-      
+
       if (currentConfig && currentConfig.isActive && !isMockEnabled) {
         setConnectionStatus(id, 'error', event.reason || 'Closed');
-        
+
         // Exponential Backoff
         const retryCount = retryCounters.current[id] || 0;
         const delay = Math.min(5000 * Math.pow(2, retryCount), 60000); // Max 60s
         retryCounters.current[id] = retryCount + 1;
-        
-        console.log(`[WS-${id}] Tentando reconectar em ${delay/1000} segundos... (Tentativa ${retryCount + 1})`);
-        
+
+        console.log(`[WS-${id}] [${exchange}] Tentando reconectar em ${delay / 1000} segundos... (Tentativa ${retryCount + 1})`);
+
         reconnectTimers.current[id] = setTimeout(() => {
           connect(currentConfig);
         }, delay);
@@ -322,7 +321,7 @@ export function useMultiExchangeWS() {
 
   const handleSubscriptionAndAuth = (config: ApiCredentials, ws: WebSocket, data: any) => {
     const { id, exchange } = config;
-    
+
     if (exchange === 'bitget') {
       if (data.event === 'login' && data.code === 0) {
         console.log(`[WS-${id}][Auth] Bitget login realizado com sucesso!`);
