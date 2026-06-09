@@ -399,7 +399,35 @@ export class BybitAdapter implements IExchangeAdapter {
 
         const margin = parseFloat(pos.positionIM || '0');
         const unrealizedPnl = parseFloat(pos.unrealisedPnl || '0');
-        const side = mapPositionSide('bybit', pos.side);
+        
+        let side = mapPositionSide('bybit', pos.side);
+        const positionIdx = parseInt(pos.positionIdx || '0', 10);
+        
+        if (positionIdx === 1) side = 'long';
+        else if (positionIdx === 2) side = 'short';
+        else if (positionIdx === 0 && side === 'net') {
+          // If it's a one-way mode position and side is omitted or 'None', 
+          // find the existing open position for this symbol to determine its original side.
+          if (store.positions[`${cid}-bybit-${pos.symbol}-long`]) side = 'long';
+          else if (store.positions[`${cid}-bybit-${pos.symbol}-short`]) side = 'short';
+          else {
+             // If we can't find it, we can push to both to ensure it gets cleared if it was a close event
+             side = 'long'; // We'll push long here.
+             
+             if (parseFloat(pos.size || '0') <= 0) {
+               // Also push the short side being closed to ensure both are cleared
+               positions.push({
+                 id: `${cid}-bybit-${pos.symbol}-short`,
+                 connectionId: cid,
+                 exchange: 'bybit',
+                 label,
+                 symbol: pos.symbol,
+                 side: 'short',
+                 size: 0,
+               } as any);
+             }
+          }
+        }
 
         positions.push({
           id: `${cid}-bybit-${pos.symbol}-${side}`,
@@ -410,7 +438,7 @@ export class BybitAdapter implements IExchangeAdapter {
           baseCoin: extractBaseCoin('bybit', pos.symbol),
           quoteCoin: extractQuoteCoin('bybit', pos.symbol),
           ccy: extractCcy('bybit', pos.settleCoin, undefined, pos.coin, pos.symbol),
-          side: mapPositionSide('bybit', pos.side),
+          side: side,
           size,
           entryPrice,
           markPrice,
