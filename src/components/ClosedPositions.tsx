@@ -20,7 +20,7 @@ export function ClosedPositions() {
   const [filterText, setFilterText] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
   const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
-  
+
   const [period, setPeriod] = useState<'today' | '7d' | '30d' | '90d' | 'custom'>('7d');
   const [customStartDate, setCustomStartDate] = useState(format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'));
   const [customEndDate, setCustomEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -35,15 +35,15 @@ export function ClosedPositions() {
 
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
-    
+
     if (exchangeFilter !== 'all') {
       filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchangeFilter.toLowerCase());
     }
 
     if (filterText) {
       const lowerFilter = filterText.toLowerCase();
-      filtered = filtered.filter(pos => 
-        pos.symbol.toLowerCase().includes(lowerFilter) || 
+      filtered = filtered.filter(pos =>
+        pos.symbol.toLowerCase().includes(lowerFilter) ||
         pos.label.toLowerCase().includes(lowerFilter) ||
         pos.exchange.toLowerCase().includes(lowerFilter)
       );
@@ -54,7 +54,7 @@ export function ClosedPositions() {
 
   const closedStats = useMemo(() => {
     if (!filteredClosedPositions.length) return null;
-    
+
     let totalPnl = 0;
     let wins = 0;
     let losses = 0;
@@ -128,132 +128,130 @@ export function ClosedPositions() {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Filters Header */}
       <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
-          {/* Exchange Filter */}
-          <div className="relative z-20">
-            <button
-              type="button"
-              onClick={() => setIsExchangeDropdownOpen(!isExchangeDropdownOpen)}
-              className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between min-w-[160px]"
-            >
-              <div className="flex items-center gap-2">
-                {exchangeFilter !== 'all' && (
-                  <ExchangeIcon exchange={exchangeFilter} className="w-4 h-4" />
-                )}
-                <span>
-                  {exchangeFilter === 'all' 
-                    ? 'Todas Exchanges' 
-                    : exchangeFilter.charAt(0).toUpperCase() + exchangeFilter.slice(1)}
-                </span>
-              </div>
-              <svg className={`h-4 w-4 ml-2 text-gray-400 transition-transform ${isExchangeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+        {/* Exchange Filter */}
+        <div className="relative z-20">
+          <button
+            type="button"
+            onClick={() => setIsExchangeDropdownOpen(!isExchangeDropdownOpen)}
+            className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between min-w-[160px]"
+          >
+            <div className="flex items-center gap-2">
+              {exchangeFilter !== 'all' && (
+                <ExchangeIcon exchange={exchangeFilter} className="w-4 h-4" />
+              )}
+              <span>
+                {exchangeFilter === 'all'
+                  ? 'Todas Exchanges'
+                  : exchangeFilter.charAt(0).toUpperCase() + exchangeFilter.slice(1)}
+              </span>
+            </div>
+            <svg className={`h-4 w-4 ml-2 text-gray-400 transition-transform ${isExchangeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
 
-            {isExchangeDropdownOpen && (
-              <>
-                <div 
-                  className="fixed inset-0 z-10" 
-                  onClick={() => setIsExchangeDropdownOpen(false)}
-                />
-                <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
+          {isExchangeDropdownOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setIsExchangeDropdownOpen(false)}
+              />
+              <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExchangeFilter('all');
+                    setIsExchangeDropdownOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === 'all' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                    }`}
+                >
+                  <span>Todas Exchanges</span>
+                </button>
+                {Array.from(new Set(keys.filter((apiKey: any) => apiKey.isActive).map((apiKey: any) => apiKey.exchange))).map(exchange => (
                   <button
+                    key={exchange}
                     type="button"
                     onClick={() => {
-                      setExchangeFilter('all');
+                      setExchangeFilter(exchange);
                       setIsExchangeDropdownOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
-                      exchangeFilter === 'all' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
-                    }`}
-                  >
-                    <span>Todas Exchanges</span>
-                  </button>
-                  {Array.from(new Set(keys.filter((apiKey: any) => apiKey.isActive).map((apiKey: any) => apiKey.exchange))).map(exchange => (
-                    <button
-                      key={exchange}
-                      type="button"
-                      onClick={() => {
-                        setExchangeFilter(exchange);
-                        setIsExchangeDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${
-                        exchangeFilter === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
                       }`}
-                    >
-                      <ExchangeIcon exchange={exchange} className="w-4 h-4" />
-                      <span>{exchange.charAt(0).toUpperCase() + exchange.slice(1)}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as any)}
-            className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
-          >
-            <option value="today">Hoje</option>
-            <option value="7d">7 Days</option>
-            <option value="30d">30 Days</option>
-            <option value="90d">90 Days</option>
-            <option value="custom">Personalizado</option>
-          </select>
-          
-          {period === 'custom' && (
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-[#8E9299] focus:outline-none focus:border-[#2F6BFF]"
-              />
-              <span className="text-[#8E9299]">até</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-[#8E9299] focus:outline-none focus:border-[#2F6BFF]"
-              />
-              <button
-                onClick={handleCustomDateSearch}
-                className="bg-[#2a2b30] hover:bg-[#323339] text-white p-2 rounded-lg transition-colors border border-[#2a2b30] focus:outline-none focus:border-[#2F6BFF]"
-              >
-                <Search className="w-4 h-4" />
-              </button>
-            </div>
+                  >
+                    <ExchangeIcon exchange={exchange} className="w-4 h-4" />
+                    <span>{exchange.charAt(0).toUpperCase() + exchange.slice(1)}</span>
+                  </button>
+                ))}
+              </div>
+            </>
           )}
+        </div>
 
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-[#8E9299]" />
-            </div>
+        <select
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as any)}
+          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
+        >
+          <option value="today">Hoje</option>
+          <option value="7d">7 Days</option>
+          <option value="30d">30 Days</option>
+          <option value="90d">90 Days</option>
+          <option value="custom">Personalizado</option>
+        </select>
+
+        {period === 'custom' && (
+          <div className="flex items-center gap-2">
             <input
-              type="text"
-              placeholder="Search..."
-              className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-64"
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
+              type="date"
+              value={customStartDate}
+              onChange={(e) => setCustomStartDate(e.target.value)}
+              className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-[#8E9299] focus:outline-none focus:border-[#2F6BFF]"
             />
-            {filterText && (
-              <button 
-                onClick={() => setFilterText('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
-                title="Clear filter"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+            <span className="text-[#8E9299]">até</span>
+            <input
+              type="date"
+              value={customEndDate}
+              onChange={(e) => setCustomEndDate(e.target.value)}
+              className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-[#8E9299] focus:outline-none focus:border-[#2F6BFF]"
+            />
+            <button
+              onClick={handleCustomDateSearch}
+              className="bg-[#2a2b30] hover:bg-[#323339] text-white p-2 rounded-lg transition-colors border border-[#2a2b30] focus:outline-none focus:border-[#2F6BFF]"
+            >
+              <Search className="w-4 h-4" />
+            </button>
           </div>
+        )}
+
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-[#8E9299]" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search..."
+            className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-50"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+          />
+          {filterText && (
+            <button
+              onClick={() => setFilterText('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
+              title="Clear filter"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <HistoryLimitWarning period={period} customStartDate={customStartDate} customEndDate={customEndDate} />
-      
+
       {closedStats && (() => {
         const POSITIONS_DONUT = [
           { name: 'Long', value: closedStats.longs, color: '#00C853' },
@@ -261,77 +259,80 @@ export function ClosedPositions() {
         ];
 
         return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-            <span className="text-xs text-[#8E9299] mb-1">Total PnL</span>
-            <span className={`text-xl font-medium ${closedStats.totalPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-              {isPrivateMode ? '$••••' : `${closedStats.totalPnl >= 0 ? '+' : ''}${formatCurrency(closedStats.totalPnl, 'usd')}`}
-            </span>
-          </div>
-
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-xs text-[#8E9299]">Total Trades</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-xl font-medium text-white">{closedStats.totalTrades}</span>
-                {closedStats.totalTrades > 0 && (
-                  <div className="flex text-[10px] gap-2 font-mono">
-                    <span className="text-[#00C853]">{closedStats.longs}L ({((closedStats.longs / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
-                    <span className="text-[#FF4444]">{closedStats.shorts}S ({((closedStats.shorts / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
-                  </div>
-                )}
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+              <span className="text-2xl text-[#8E9299] mb-1">Total PnL</span>
+              <span className={`text-xl font-medium ${closedStats.totalPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                {isPrivateMode ? '$••••' : `${closedStats.totalPnl >= 0 ? '+' : ''}${formatCurrency(closedStats.totalPnl, 'usd')}`}
+              </span>
             </div>
-            {closedStats.totalTrades > 0 && (
-              <div className="w-12 h-12">
-               <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '12px' }}
-                      itemStyle={{ color: '#fff' }}
-                    />
-                    <Pie data={POSITIONS_DONUT} cx="50%" cy="50%" innerRadius="60%" outerRadius="100%" dataKey="value" stroke="none">
-                       {POSITIONS_DONUT.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                    </Pie>
-                  </PieChart>
-               </ResponsiveContainer>
-              </div>
-            )}
-          </div>
 
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-            <div className="flex justify-between items-center mb-2">
+            <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-xs text-[#8E9299]">Win Rate</span>
-                <span className="text-lg font-medium text-white">{closedStats.winRate.toFixed(2)}%</span>
+                <div className='flex items-center gap-2'>
+                  <span className="text-2xl text-[#8E9299]">Total Trades:</span>
+                  <span className="text-xl font-medium text-white">{closedStats.totalTrades}</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  {closedStats.totalTrades > 0 && (
+                    <div className="flex text-xm gap-2 font-mono">
+                      <span className="text-[#00C853]">{closedStats.longs} Longs ({((closedStats.longs / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
+                      <span className="text-[#8E9299]">|</span>
+                      <span className="text-[#FF4444]">{closedStats.shorts} Shorts ({((closedStats.shorts / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2 text-xs font-mono">
-                <span className="text-[#00C853]">{closedStats.wins}W</span>
-                <span className="text-[#3f4046]">/</span>
-                <span className="text-[#FF4444]">{closedStats.losses}L</span>
-              </div>
+              {closedStats.totalTrades > 0 && (
+                <div className="w-12 h-12">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '12px' }}
+                        itemStyle={{ color: '#fff' }}
+                      />
+                      <Pie data={POSITIONS_DONUT} cx="50%" cy="50%" innerRadius="60%" outerRadius="100%" dataKey="value" stroke="none">
+                        {POSITIONS_DONUT.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
-            
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex flex-col bg-[#111216] p-2 rounded justify-center items-center">
-                 <span className="text-[10px] text-[#8E9299]">Avg W/L</span>
-                 <div className="font-mono mt-0.5 whitespace-nowrap">
-                   <span className="text-[#00C853]">+{formatCurrency(closedStats.avgWin, 'crypto', 2)}</span>
-                   <span className="text-[#3f4046] mx-0.5">/</span>
-                   <span className="text-[#FF4444]">{formatCurrency(closedStats.avgLoss, 'crypto', 2)}</span>
-                 </div>
+
+            <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex gap-2 items-center">
+                  <span className="text-2xl text-[#8E9299]">Win Rate: </span>
+                  <span className="text-xl font-medium text-white">{closedStats.winRate.toFixed(2)}%</span>
+                </div>
+                <div className="flex gap-2 text-xl font-mono">
+                  <span className="text-[#00C853]">{closedStats.wins} Wins</span>
+                  <span className="text-[#3f4046]">|</span>
+                  <span className="text-[#FF4444]">{closedStats.losses} Losses</span>
+                </div>
               </div>
-              <div className="flex flex-col bg-[#111216] p-2 rounded justify-center items-center">
-                 <span className="text-[10px] text-[#8E9299]">Largest W/L</span>
-                 <div className="font-mono mt-0.5 whitespace-nowrap">
-                   <span className="text-[#00C853]">+{formatCurrency(closedStats.largestWin, 'crypto', 2)}</span>
-                   <span className="text-[#3f4046] mx-0.5">/</span>
-                   <span className="text-[#FF4444]">{formatCurrency(closedStats.largestLoss, 'crypto', 2)}</span>
-                 </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex flex-col bg-[#111216] p-2 rounded justify-center items-center">
+                  <span className="text-xl text-[#8E9299]">Avg W/L</span>
+                  <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
+                    <span className="text-[#00C853]">+{formatCurrency(closedStats.avgWin, 'crypto', 2)}</span>
+                    <span className="text-[#3f4046] mx-0.5">/</span>
+                    <span className="text-[#FF4444]">{formatCurrency(closedStats.avgLoss, 'crypto', 2)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col bg-[#111216] p-2 rounded justify-center items-center">
+                  <span className="text-xl text-[#8E9299]">Largest W/L</span>
+                  <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
+                    <span className="text-[#00C853]">+{formatCurrency(closedStats.largestWin, 'crypto', 2)}</span>
+                    <span className="text-[#3f4046] mx-0.5">/</span>
+                    <span className="text-[#FF4444]">{formatCurrency(closedStats.largestLoss, 'crypto', 2)}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         );
       })()}
 
@@ -346,9 +347,9 @@ export function ClosedPositions() {
             const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
             const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
             const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
-            
+
             const pnlClass = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
-            
+
             const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
             const marginModeLabel = (pos.raw?.marginMode || pos.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
             const symbolSuffix = pos.symbol.replace(/USDT|USDC|USD|-|SWAP/g, '');
@@ -356,12 +357,12 @@ export function ClosedPositions() {
             let roiStr = '--';
             let roiValue = 0;
             let hasRoi = false;
-            
+
             const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
             const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
             const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
             const formatCcy = (v: number | undefined | null) => formatCurrency(v, 'crypto', isFiatCcy ? 2 : 8);
-            
+
             const isInverse = pos.instrumentType === 'INVERSE';
 
             let positionValueUsd = 0;
@@ -386,17 +387,17 @@ export function ClosedPositions() {
               positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
               actualCoinSize = pos.size || 0;
             }
-            
+
             if (pos.raw?.roi !== undefined && pos.raw?.roi !== null) {
-               roiValue = parseFloat(pos.raw.roi) * 100;
-               hasRoi = true;
+              roiValue = parseFloat(pos.raw.roi) * 100;
+              hasRoi = true;
             } else if (pos.entryPrice && pos.closePrice && pos.size && leverage) {
               const numLeverage = parseFloat(leverage);
               const initialMargin = positionValueUsd / numLeverage;
-              
+
               if (initialMargin > 0) {
-                 roiValue = (pos.realizedPnl / initialMargin) * 100;
-                 hasRoi = true;
+                roiValue = (pos.realizedPnl / initialMargin) * 100;
+                hasRoi = true;
               }
             }
 
@@ -421,11 +422,11 @@ export function ClosedPositions() {
               displaySecondaryQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
               displaySecondaryUnit = 'USD';
             }
-            
+
             if (hasRoi && isFinite(roiValue)) {
-               roiStr = `${roiValue > 0 ? '+' : ''}${formatCurrency(roiValue, 'crypto', 2)}%`;
+              roiStr = `${roiValue > 0 ? '+' : ''}${formatCurrency(roiValue, 'crypto', 2)}%`;
             }
-            
+
             const roiClass = hasRoi ? (roiValue >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]') : 'text-[#8E9299]';
             const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
@@ -455,7 +456,7 @@ export function ClosedPositions() {
                         <span className="font-bold text-white text-sm">{pos.symbol}</span>
                       </div>
                       <span className={`text-xs mt-0.5 font-medium ${sideColor}`}>
-                         {sideLabel} <span className="mx-0.5 text-[#8E9299]">·</span> {leverage}x <span className="mx-0.5 text-[#8E9299]">·</span> {marginModeLabel}
+                        {sideLabel} <span className="mx-0.5 text-[#8E9299]">·</span> {leverage}x <span className="mx-0.5 text-[#8E9299]">·</span> {marginModeLabel}
                       </span>
                       <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
                         {pos.label}
