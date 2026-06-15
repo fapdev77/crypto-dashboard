@@ -156,7 +156,7 @@ export function OpenPositions() {
           <input
             type="text"
             placeholder="Search..."
-            className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-64"
+            className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-50"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
           />
@@ -187,18 +187,18 @@ export function OpenPositions() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                 <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-xs text-[#8E9299]">Total Positions</span>
+                    <span className="text-2xl text-[#8E9299]">Total Positions</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-xl font-medium text-white">{activePositions.length}</span>
                       {activePositions.length > 0 && (
-                        <div className="flex text-[10px] gap-2 font-mono">
+                        <div className="flex text-xl gap-2 font-mono">
                           <span className="text-[#00C853]">{longs}L ({((longs / activePositions.length) * 100).toFixed(0)}%)</span>
                           <span className="text-[#FF4444]">{shorts}S ({((shorts / activePositions.length) * 100).toFixed(0)}%)</span>
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="w-12 h-12">
+                  <div className="w-24 h-24">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Tooltip
@@ -214,15 +214,15 @@ export function OpenPositions() {
                 </div>
 
                 <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-                  <span className="text-xs text-[#8E9299] mb-1">Unrealized PnL</span>
-                  <span className={`text-lg font-medium ${totalUnrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                  <span className="text-2xl text-[#8E9299] mb-1">Unrealized PnL</span>
+                  <span className={`text-xl font-medium ${totalUnrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                     {isPrivateMode ? '$••••' : `${totalUnrealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalUnrealizedPnl, 'usd')}`}
                   </span>
                 </div>
 
                 <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-                  <span className="text-xs text-[#8E9299] mb-1">Realized PnL</span>
-                  <span className={`text-lg font-medium ${totalRealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                  <span className="text-2xl text-[#8E9299] mb-1">Realized PnL</span>
+                  <span className={`text-xl font-medium ${totalRealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                     {isPrivateMode ? '$••••' : `${totalRealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalRealizedPnl, 'usd')}`}
                   </span>
                 </div>
