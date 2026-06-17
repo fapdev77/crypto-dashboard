@@ -124,10 +124,6 @@ export function ApiKeys() {
                     <div className="overflow-hidden">
                       {groupKeys.map((apiKey, idx) => {
                         const status = statuses[apiKey.id] || 'disconnected';
-                        const tel = telemetry[apiKey.id] || { latencyHistory: [], throughputHistory: [], lastPingMs: 0, bytesPerSecond: 0 };
-                        const isConnected = status === 'connected';
-
-                        const tKB = (tel.bytesPerSecond / 1024).toFixed(1);
 
                         return (
                           <div key={apiKey.id} className={`p-4 ${idx > 0 ? 'border-t border-[#2a2b30]/50' : ''} hover:bg-[#202125]/50 transition-colors flex flex-col gap-3`}>
