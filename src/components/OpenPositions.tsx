@@ -186,14 +186,18 @@ export function OpenPositions() {
             return (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                 <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-2xl text-[#8E9299]">Total Positions</span>
-                    <div className="flex items-baseline gap-2">
+                  <div className='flex flex-col'>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl text-[#8E9299]">Total Positions: </span>
                       <span className="text-xl font-medium text-white">{activePositions.length}</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xl font-medium text-white"></span>
                       {activePositions.length > 0 && (
                         <div className="flex text-xl gap-2 font-mono">
-                          <span className="text-[#00C853]">{longs}L ({((longs / activePositions.length) * 100).toFixed(0)}%)</span>
-                          <span className="text-[#FF4444]">{shorts}S ({((shorts / activePositions.length) * 100).toFixed(0)}%)</span>
+                          <span className="text-[#00C853]">{longs} Longs ({((longs / activePositions.length) * 100).toFixed(0)}%)</span>
+                          <span className="text-[#00C853]"> | </span>
+                          <span className="text-[#FF4444]">{shorts} Shorts ({((shorts / activePositions.length) * 100).toFixed(0)}%)</span>
                         </div>
                       )}
                     </div>
