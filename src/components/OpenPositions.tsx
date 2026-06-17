@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Search, X } from 'lucide-react';
+import { Search, X, AlertTriangle } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
@@ -266,15 +266,19 @@ export function OpenPositions() {
 
               let protectedPct = 0;
               let exposedPct = 100;
+              let protectedAmount = 0;
+              let exposedAmount = totalAssetBal > 0 ? totalAssetBal : openPosSize;
               
               if (pos.instrumentType === 'INVERSE' && totalAssetBal > 0) {
                  if (isShort) {
-                   const protectedAmount = Math.min(openPosSize, totalAssetBal);
-                   const exposedAmount = Math.max(0, totalAssetBal - openPosSize);
+                   protectedAmount = Math.min(openPosSize, totalAssetBal);
+                   exposedAmount = Math.max(0, totalAssetBal - openPosSize);
                    protectedPct = (protectedAmount / totalAssetBal) * 100;
                    exposedPct = (exposedAmount / totalAssetBal) * 100;
                  } else {
                    const totalExposureAmount = totalAssetBal + openPosSize;
+                   protectedAmount = 0;
+                   exposedAmount = totalExposureAmount;
                    protectedPct = 0;
                    exposedPct = (totalExposureAmount / totalAssetBal) * 100;
                  }
@@ -429,12 +433,49 @@ export function OpenPositions() {
                             ) : null}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
-                          <span className="font-mono text-white">
-                            {pos.tp ? formatPrice(pos.tp, isFiatPair) : '--'} / {pos.sl ? formatPrice(pos.sl, isFiatPair) : '--'}
-                          </span>
-                        </div>
+                        
+                        {pos.instrumentType === 'INVERSE' ? (
+                          <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col justify-start bg-[#16171b] border border-[#2a2b30] rounded-lg p-3 gap-2">
+                            <span className="text-[#8E9299] text-xs font-semibold mb-1">Hedge Pro Details:</span>
+                            
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-[#8E9299]">Balanço Total:</span>
+                              <span className="text-xs font-mono text-white">
+                                {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299]">/ ${formatCurrency(totalAssetBal * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col border-t border-[#2a2b30] pt-1">
+                              <span className="text-[10px] text-[#00C853]">Protegido: {protectedPct.toFixed(2)}%</span>
+                              <span className="text-xs font-mono text-white">
+                                {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299]">/ ${formatCurrency(protectedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col border-t border-[#2a2b30] pt-1">
+                              <span className="text-[10px] text-[#FF4444]">Exposto: {exposedPct.toFixed(2)}%</span>
+                              <span className="text-xs font-mono text-white">
+                                {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299]">/ ${formatCurrency(exposedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                              </span>
+                            </div>
+
+                            {!isShort && (
+                              <div className="bg-orange-500/10 border border-orange-500/30 rounded px-2 py-1 mt-1 relative overflow-hidden">
+                                <div className="flex items-start gap-1 z-10 relative">
+                                  <AlertTriangle className="w-3 h-3 text-orange-400 shrink-0 mt-0.5" />
+                                  <span className="text-[9px] text-orange-300 font-medium leading-tight">Posição alavancada! Foco no gerenciamento de risco!</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
+                            <span className="font-mono text-white">
+                              {pos.tp ? formatPrice(pos.tp, isFiatPair) : '--'} / {pos.sl ? formatPrice(pos.sl, isFiatPair) : '--'}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Linha 2 */}
                         <div className="flex flex-col gap-1">
@@ -458,10 +499,12 @@ export function OpenPositions() {
                           <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Breakeven price</span>
                           <span className="font-mono text-white">{formatPrice(pos.breakEvenPrice, isFiatPair)}</span>
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
-                          <span className="font-mono text-[#8E9299]">--</span>
-                        </div>
+                        {pos.instrumentType !== 'INVERSE' && (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
+                            <span className="font-mono text-[#8E9299]">--</span>
+                          </div>
+                        )}
 
                         {/* Linha 3 */}
                         <div className="flex flex-col gap-1">
@@ -479,10 +522,12 @@ export function OpenPositions() {
                           <span className="font-mono text-[#8E9299]">--/--</span>
                         </div>
                         <div className="hidden md:block"></div> {/* Espaço vazio na coluna 4 */}
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Trailing TP/SL/ MMR SL</span>
-                          <span className="font-mono text-[#8E9299]">--/--</span>
-                        </div>
+                        {pos.instrumentType !== 'INVERSE' && (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Trailing TP/SL/ MMR SL</span>
+                            <span className="font-mono text-[#8E9299]">--/--</span>
+                          </div>
+                        )}
 
                       </div>
                     </div>
