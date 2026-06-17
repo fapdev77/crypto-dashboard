@@ -274,8 +274,9 @@ export function OpenPositions() {
                    protectedPct = (protectedAmount / totalAssetBal) * 100;
                    exposedPct = (exposedAmount / totalAssetBal) * 100;
                  } else {
+                   const totalExposureAmount = totalAssetBal + openPosSize;
                    protectedPct = 0;
-                   exposedPct = 100;
+                   exposedPct = (totalExposureAmount / totalAssetBal) * 100;
                  }
               }
 
@@ -376,8 +377,8 @@ export function OpenPositions() {
                             <span className={exposedPct > 0 ? "text-[#FF4444]" : "text-[#8E9299]"}>{exposedPct.toFixed(1)}%</span>
                           </div>
                           <div className="flex h-1.5 rounded-full overflow-hidden w-full bg-[#2a2b30] mt-0.5 mb-0.5">
-                            <div className="bg-[#00C853] h-full transition-all duration-300" style={{ width: `${protectedPct}%` }} />
-                            <div className="bg-[#FF4444] h-full transition-all duration-300" style={{ width: `${exposedPct}%` }} />
+                            <div className="bg-[#00C853] h-full transition-all duration-300" style={{ width: `${Math.min(100, protectedPct)}%` }} />
+                            <div className="bg-[#FF4444] h-full transition-all duration-300" style={{ width: `${Math.min(100, exposedPct)}%` }} />
                           </div>
                           <div className="flex justify-between text-[9px] font-mono text-[#8E9299] leading-none text-opacity-80">
                             <span>Bal: {formatCcy(totalAssetBal)}</span>
