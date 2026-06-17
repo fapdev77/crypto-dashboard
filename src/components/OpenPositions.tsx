@@ -13,7 +13,7 @@ import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 
 export function OpenPositions() {
-  const { positions } = useDashboardStore();
+  const { positions, balances } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
@@ -257,11 +257,33 @@ export function OpenPositions() {
 
               const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
+              // Inverse Protection / Exposure logic
+              const matchingBalance = Object.values(balances).find(
+                b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy.toUpperCase()
+              );
+              const totalAssetBal = matchingBalance ? matchingBalance.amount : 0;
+              const openPosSize = pos.markPrice > 0 ? (sizeValUsd / pos.markPrice) : Math.abs(pos.size);
+
+              let protectedPct = 0;
+              let exposedPct = 100;
+              
+              if (pos.instrumentType === 'INVERSE' && totalAssetBal > 0) {
+                 if (isShort) {
+                   const protectedAmount = Math.min(openPosSize, totalAssetBal);
+                   const exposedAmount = Math.max(0, totalAssetBal - openPosSize);
+                   protectedPct = (protectedAmount / totalAssetBal) * 100;
+                   exposedPct = (exposedAmount / totalAssetBal) * 100;
+                 } else {
+                   protectedPct = 0;
+                   exposedPct = 100;
+                 }
+              }
+
               return (
                 <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]" onClick={() => toggleRow(pos.id)}>
 
                   {/* Main Row / Lite Info */}
-                  <div className="p-4 grid grid-cols-2 lg:grid-cols-6 gap-4">
+                  <div className="p-4 grid grid-cols-2 lg:grid-cols-7 gap-4">
 
                     {/* Asset info */}
                     <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
@@ -341,6 +363,31 @@ export function OpenPositions() {
                         </span>
                       ) : (
                         <span className="text-[10px] opacity-0">-</span>
+                      )}
+                    </div>
+
+                    {/* Inverse - Protected / Exposed */}
+                    <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                      <span className="text-[10px] text-[#8E9299] uppercase">Hedge / Exposure</span>
+                      {pos.instrumentType === 'INVERSE' ? (
+                        <>
+                          <div className="flex items-center justify-between text-[10px] font-mono leading-none">
+                            <span className="text-[#00C853]">{protectedPct.toFixed(1)}%</span>
+                            <span className={exposedPct > 0 ? "text-[#FF4444]" : "text-[#8E9299]"}>{exposedPct.toFixed(1)}%</span>
+                          </div>
+                          <div className="flex h-1.5 rounded-full overflow-hidden w-full bg-[#2a2b30] mt-0.5 mb-0.5">
+                            <div className="bg-[#00C853] h-full transition-all duration-300" style={{ width: `${protectedPct}%` }} />
+                            <div className="bg-[#FF4444] h-full transition-all duration-300" style={{ width: `${exposedPct}%` }} />
+                          </div>
+                          <div className="flex justify-between text-[9px] font-mono text-[#8E9299] leading-none text-opacity-80">
+                            <span>Bal: {formatCcy(totalAssetBal)}</span>
+                            <span>Pos: {formatCcy(openPosSize)}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-1 items-center h-full">
+                          <span className="text-[#8E9299] font-mono">—</span>
+                        </div>
                       )}
                     </div>
 
