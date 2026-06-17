@@ -435,36 +435,38 @@ export function OpenPositions() {
                         </div>
                         
                         {pos.instrumentType === 'INVERSE' ? (
-                          <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col justify-start bg-[#16171b] border border-[#2a2b30] rounded-lg p-3 gap-2">
-                            <span className="text-[#8E9299] text-xs font-semibold mb-1">Hedge Pro Details:</span>
-                            
-                            <div className="flex flex-col">
-                              <span className="text-[10px] text-[#8E9299]">Balanço Total:</span>
-                              <span className="text-xs font-mono text-white">
-                                {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299]">/ ${formatCurrency(totalAssetBal * (pos.markPrice || 0), 'usd', 2)} USD</span>
-                              </span>
-                            </div>
+                          <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-4">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Hedge Pro Details</span>
+                              
+                              <div className="flex flex-col gap-3 mt-1">
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] text-[#8E9299]">Balanço Total:</span>
+                                  <span className="font-mono text-white text-[13px]">
+                                    {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ ${formatCurrency(totalAssetBal * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                                  </span>
+                                </div>
 
-                            <div className="flex flex-col border-t border-[#2a2b30] pt-1">
-                              <span className="text-[10px] text-[#00C853]">Protegido: {protectedPct.toFixed(2)}%</span>
-                              <span className="text-xs font-mono text-white">
-                                {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299]">/ ${formatCurrency(protectedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
-                              </span>
-                            </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] text-[#00C853]">Protegido: {protectedPct.toFixed(2)}%</span>
+                                  <span className="font-mono text-white text-[13px]">
+                                    {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ ${formatCurrency(protectedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                                  </span>
+                                </div>
 
-                            <div className="flex flex-col border-t border-[#2a2b30] pt-1">
-                              <span className="text-[10px] text-[#FF4444]">Exposto: {exposedPct.toFixed(2)}%</span>
-                              <span className="text-xs font-mono text-white">
-                                {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299]">/ ${formatCurrency(exposedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
-                              </span>
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] text-[#FF4444]">Exposto: {exposedPct.toFixed(2)}%</span>
+                                  <span className="font-mono text-white text-[13px]">
+                                    {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ ${formatCurrency(exposedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                                  </span>
+                                </div>
+                              </div>
                             </div>
 
                             {!isShort && (
-                              <div className="bg-orange-500/10 border border-orange-500/30 rounded px-2 py-1 mt-1 relative overflow-hidden">
-                                <div className="flex items-start gap-1 z-10 relative">
-                                  <AlertTriangle className="w-3 h-3 text-orange-400 shrink-0 mt-0.5" />
-                                  <span className="text-[9px] text-orange-300 font-medium leading-tight">Posição alavancada! Foco no gerenciamento de risco!</span>
-                                </div>
+                              <div className="flex items-start gap-1 py-1.5 px-2 bg-orange-500/10 border border-orange-500/20 rounded">
+                                <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+                                <span className="text-[9.5px] text-orange-300 font-medium leading-tight">Posição alavancada! Foco no gerenciamento de risco!</span>
                               </div>
                             )}
                           </div>
