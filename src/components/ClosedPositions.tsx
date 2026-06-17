@@ -8,6 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
+import { AppTooltip } from './ui/Tooltip';
 import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
@@ -482,7 +483,17 @@ export function ClosedPositions() {
 
                   {/* Realized PnL (ROE) */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase">Realized PnL (ROE)</span>
+                    <AppTooltip
+                      side="top"
+                      rows={[
+                        { label: 'Realized PnL', value: `${pos.realizedPnl > 0 ? '+' : ''}${formatCcy(pos.realizedPnl)} ${pnlCurrency}`, valueClassName: pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]' },
+                        { label: 'Closed PnL', value: `${formatCcy((pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0))} ${pnlCurrency}` },
+                        { label: 'Funding fee', value: `${formatCcy(-(Math.abs(pos.fundingFee || 0)))} ${pnlCurrency}`, valueClassName: 'text-[#FF4444]' },
+                        { label: 'Trading fee', value: `${formatCcy(-(Math.abs(pos.tradingFee || 0)))} ${pnlCurrency}`, valueClassName: 'text-[#FF4444]' }
+                      ]}
+                    >
+                      <span className="text-[10px] text-[#8E9299] uppercase cursor-help border-b border-dashed border-[#8E9299]/50 w-max mb-1 focus:outline-none">Realized PnL (ROE)</span>
+                    </AppTooltip>
                     <span className={`font-mono text-sm ${pnlClass}`}>
                       {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{pnlCurrency}</span>
                     </span>

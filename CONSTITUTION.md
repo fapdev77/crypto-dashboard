@@ -50,6 +50,10 @@ When developing in this project, enforce the following rules:
 
 3. **No Unsolicited SDKs**: Matenha a stack em React/Vite/Tailwind e sempre confirme quando houver necessidade de mudanças na stack ou versões antes de qualquer alteração no código.
 
+4. **Asset Classificação e Logo.dev Strategy (UI/UX)**: Quando lidar ou exibir listagens de ativos ou posições de corretoras na camada de visual, garanta que seja invocada a `AssetClassifierAggregator` para categorizar globalmente o ativo subjacente (e.g. `STOCK` ou `CRYPTO`). A renderização e injeções de imagens devem usar uniformemente o componente `<CoinIcon />`, que oculta a mecânica complexa anti-gap de fallbacks (endpoints `/crypto`, `/ticker`, `/name` via param `fallback=404`). Não recrie `<img>` nativas com regras expostas espalhadas pelas Views.
+
+5. **Interface Hover e Tooltips Unificados:** SEMPRE utilize o componente `<AppTooltip />` encapsulado para exibir informações adicionais, explicações ou popovers no hover de elementos interativos (como Status, Marquees, células de tabelas). NUNCA crie novos componentes absolutos gerados no hover via Tailwind, nem utilize atributos nativos do DOM como `title="..."`. Utilize a estrutura modular `description` e `rows` nativa do componente.
+
 
 
 

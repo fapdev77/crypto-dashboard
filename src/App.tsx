@@ -25,6 +25,7 @@ import { AssetMetadataPlayground } from './components/AssetMetadataPlayground';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 import { PrivacyProvider } from './context/PrivacyContext';
 import { PrivacyToggleButton } from './components/PrivacyToggleButton';
+import { TooltipProvider } from './components/ui/Tooltip';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -43,6 +44,7 @@ export default function App() {
 
   return (
     <PrivacyProvider>
+    <TooltipProvider>
     <WorkSpace>
       <Toaster
         position="top-right"
@@ -123,6 +125,7 @@ export default function App() {
         <StatusBar />
       </div>
     </WorkSpace>
+    </TooltipProvider>
     </PrivacyProvider>
   );
 }

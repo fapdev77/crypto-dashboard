@@ -11,6 +11,7 @@ import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
+import { AppTooltip } from './ui/Tooltip';
 
 export function OpenPositions() {
   const { positions, balances } = useDashboardStore();
@@ -424,15 +425,25 @@ export function OpenPositions() {
                             ) : null}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs">Realized PnL</span>
-                          <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                            {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
-                            {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
-                              <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(Math.abs(pos.realizedPnl) * pos.markPrice, 'crypto', 2)} USD</span>
-                            ) : null}
-                          </span>
-                        </div>
+                        <AppTooltip
+                          side="top"
+                          rows={[
+                            { label: 'Realized PnL', value: `${pos.realizedPnl > 0 ? '+' : ''}${formatCcy(pos.realizedPnl)} ${posCcy}`, valueClassName: pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]' },
+                            { label: 'Closed PnL', value: `${formatCcy((pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0))} ${posCcy}` },
+                            { label: 'Funding fee', value: `${formatCcy(-(Math.abs(pos.fundingFee || 0)))} ${posCcy}`, valueClassName: 'text-[#FF4444]' },
+                            { label: 'Trading fee', value: `${formatCcy(-(Math.abs(pos.tradingFee || 0)))} ${posCcy}`, valueClassName: 'text-[#FF4444]' }
+                          ]}
+                        >
+                          <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
+                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Realized PnL</span>
+                            <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                              {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
+                              {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
+                                <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(Math.abs(pos.realizedPnl) * pos.markPrice, 'crypto', 2)} USD</span>
+                              ) : null}
+                            </span>
+                          </div>
+                        </AppTooltip>
                         
                         {pos.instrumentType === 'INVERSE' ? (
                           <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-4">
@@ -497,10 +508,21 @@ export function OpenPositions() {
                           <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Tiered maintenance margin rate</span>
                           <span className="font-mono text-white">{pos.marginRatio ? formatValue(pos.marginRatio, 2) + '%' : '--'}</span>
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Breakeven price</span>
-                          <span className="font-mono text-white">{formatPrice(pos.breakEvenPrice, isFiatPair)}</span>
-                        </div>
+                        <AppTooltip
+                          description="At the breakeven price, your total PnL will be zero if you close your remaining position. Note that the breakeven price, which includes the trading fee and funding fee, is updated every second. Your realized PnL is displayed with fixed decimal places."
+                          side="top"
+                          rows={[
+                            { label: 'Realized PnL', value: `${pos.realizedPnl > 0 ? '+' : ''}${formatCcy(pos.realizedPnl)} ${posCcy}`, valueClassName: pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]' },
+                            { label: 'Closed PnL', value: `${formatCcy((pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0))} ${posCcy}` },
+                            { label: 'Funding fee', value: `${formatCcy(-(Math.abs(pos.fundingFee || 0)))} ${posCcy}`, valueClassName: 'text-[#FF4444]' },
+                            { label: 'Trading fee', value: `${formatCcy(-(Math.abs(pos.tradingFee || 0)))} ${posCcy}`, valueClassName: 'text-[#FF4444]' }
+                          ]}
+                        >
+                          <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
+                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Breakeven price</span>
+                            <span className="font-mono text-white">{formatPrice(pos.breakEvenPrice, isFiatPair)}</span>
+                          </div>
+                        </AppTooltip>
                         {pos.instrumentType !== 'INVERSE' && (
                           <div className="flex flex-col gap-1">
                             <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>

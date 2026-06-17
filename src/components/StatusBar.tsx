@@ -4,6 +4,7 @@ import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { Activity } from 'lucide-react';
 import { ExchangeIcon } from './ui/ExchangeIcon';
+import { AppTooltip } from './ui/Tooltip';
 
 export function StatusBar() {
   const { keys } = useApiKeysStore();
@@ -97,24 +98,21 @@ export function StatusBar() {
                     }
 
                     return (
-                      <div 
+                      <AppTooltip
                         key={key.id}
-                        className="group relative cursor-help flex items-center gap-1.5"
+                        description={<>
+                          <p className="font-semibold text-white text-sm">{key.label}</p>
+                          <p className={`mt-0.5 text-[11px] capitalize ${status === 'connected' ? 'text-[#00C853]' : status === 'error' ? 'text-rose-400' : 'text-amber-400'}`}>{status}</p>
+                          {error && <p className="mt-1 text-rose-400 max-w-[200px] text-[11px] whitespace-normal leading-tight">{error}</p>}
+                        </>}
                       >
-                        <div className={`w-2 h-2 rounded-full ${bgColorClass} ${shadowClass} transition-colors`} />
-                        <span className="text-[10px] text-gray-300 font-medium whitespace-nowrap">
-                          {key.label}
-                        </span>
-                        
-                        {/* Tooltip */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
-                          <div className="bg-[#1a1b1e] text-white text-xs py-1.5 px-3 rounded shadow-lg border border-[#2a2b30] whitespace-nowrap">
-                            <p className="font-semibold">{key.label}</p>
-                            <p className="mt-0.5 text-gray-400 text-[10px] capitalize">{status}</p>
-                            {error && <p className="mt-1 text-rose-400 max-w-[200px] text-[10px] whitespace-normal leading-tight">{error}</p>}
-                          </div>
+                        <div className="cursor-help flex items-center gap-1.5 focus:outline-none">
+                          <div className={`w-2 h-2 rounded-full ${bgColorClass} ${shadowClass} transition-colors`} />
+                          <span className="text-[10px] text-gray-300 font-medium whitespace-nowrap">
+                            {key.label}
+                          </span>
                         </div>
-                      </div>
+                      </AppTooltip>
                     );
                   })}
                 </div>
