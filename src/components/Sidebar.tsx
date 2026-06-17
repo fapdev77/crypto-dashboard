@@ -38,9 +38,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       { id: 'positions-history', label: 'Histórico' }
     ]},
     { id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
-      { id: 'analytics-overview', label: 'Overview' },
-      { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
-      { id: 'analytics-hedge-pro', label: 'Hedge Pro (Inverse)' }
+      { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' }
     ]},
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'testes-mvp', label: 'Testes MVP', icon: Beaker, subItems: [

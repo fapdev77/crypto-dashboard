@@ -16,10 +16,8 @@ import { ApiTester } from './components/ApiTester';
 import { StatusBar } from './components/StatusBar';
 import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
-import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard';
 import { PnLBySymbol } from './components/analytics/PnLBySymbol';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
-import { HedgeProDashboard } from './components/analytics/HedgeProDashboard';
 import { MvpTestsDashboard } from './components/MvpTestsDashboard';
 import { AssetMetadataPlayground } from './components/AssetMetadataPlayground';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
@@ -39,7 +37,6 @@ export default function App() {
   if (activeTab === 'testes-mvp') activeTabName = 'Testes MVP';
   if (activeTab === 'api-tester') activeTabName = 'Execução de Testes';
   if (activeTab === 'analytics-pnl-symbol') activeTabName = 'PnL by Symbol';
-  if (activeTab === 'analytics-hedge-pro') activeTabName = 'Hedge Pro';
   if (activeTab === 'mvp-asset-metadata') activeTabName = 'Informações de Ativos';
 
   return (
@@ -101,9 +98,7 @@ export default function App() {
               {activeTab === 'dashboard' && <Dashboard />}
               {activeTab === 'positions-open' && <OpenPositions />}
               {activeTab === 'positions-history' && <ClosedPositions />}
-              {(activeTab === 'analytics' || activeTab === 'analytics-overview') && <AnalyticsDashboard />}
               {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
-              {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
               {activeTab === 'reports' && <ReportsDashboard />}
               {(activeTab === 'testes-mvp' || activeTab === 'testes-mvp-main') && <MvpTestsDashboard />}
               {activeTab === 'mvp-asset-metadata' && <AssetMetadataPlayground />}

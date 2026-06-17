@@ -29,6 +29,7 @@ export interface TooltipRowProps {
 }
 
 export interface AppTooltipProps {
+  key?: React.Key;
   children: React.ReactNode;
   description?: React.ReactNode;
   rows?: TooltipRowProps[];

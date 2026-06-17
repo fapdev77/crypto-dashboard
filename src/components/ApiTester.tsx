@@ -118,17 +118,14 @@ export function ApiTester() {
       // Attempt login
       try {
         let exchangeCredentials: any = null;
-        if (activeKey.exchange === 'okx') {
-          exchangeCredentials = await OkxAdapter.getWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
-        } else if (activeKey.exchange === 'bitget') {
-          exchangeCredentials = await BitgetAdapter.getWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
-        } else if (activeKey.exchange === 'bybit') {
-          exchangeCredentials = await BybitAdapter.getWsAuth(activeKey.apiKey, activeKey.apiSecret);
-        }
-
+        // WsAuth is now handled directly inside the core WebSockets engine or removed.
+        // If ApiTester needs auth, it should hit a proxy or implement header generation here.
+        
         if (exchangeCredentials) {
           logWs('Sending authentication payload...');
           ws.send(JSON.stringify(exchangeCredentials));
+        } else {
+           logWs('No WS auth payload generated via frontend. Public WS connected.');
         }
       } catch (err: any) {
          logWs(`Auth Error: ${err.message}`);
