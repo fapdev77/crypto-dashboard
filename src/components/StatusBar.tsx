@@ -8,27 +8,11 @@ import { AppTooltip } from './ui/Tooltip';
 
 export function StatusBar() {
   const { keys } = useApiKeysStore();
-  const { statuses, errors, telemetry } = useDashboardStore();
+  const { statuses, errors } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
 
   const activeKeys = keys.filter(apiKey => apiKey.isActive);
   const activeCount = activeKeys.length;
-
-  let sumLatency = 0;
-  let latencyCount = 0;
-  let totalThroughput = 0;
-  activeKeys.forEach(k => {
-    if (telemetry[k.id]) {
-       const ping = telemetry[k.id].lastPingMs;
-       if (ping > 0) {
-         sumLatency += ping;
-         latencyCount++;
-       }
-       totalThroughput += telemetry[k.id].bytesPerSecond || 0;
-    }
-  });
-  const avgLatency = latencyCount > 0 ? Math.round(sumLatency / latencyCount) : 0;
-  const throughputKB = (totalThroughput / 1024).toFixed(1);
 
   const exchangeGroups = useMemo(() => {
     const groups: Record<string, typeof keys> = {};
@@ -42,7 +26,7 @@ export function StatusBar() {
   if (activeKeys.length === 0 && !useMockData) {
     return (
       <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 text-xs text-gray-500 shrink-0 select-none">
-        Nenhuma conexão API ativa.
+        Nenhuma conta conectada.
       </div>
     );
   }
@@ -54,7 +38,7 @@ export function StatusBar() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
               <Activity className="w-3.5 h-3.5" />
-              <span>Status das Conexões</span>
+              <span>Contas conectadas:</span>
             </div>
             {useMockData && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-500 text-[10px] font-bold uppercase tracking-widest shrink-0">
@@ -124,10 +108,6 @@ export function StatusBar() {
 
         <span className="text-xs font-mono text-[#8E9299] flex items-center gap-2 pr-2">
             <span>Connections: <span className="text-[#00C853]">{activeCount} Active</span></span>
-            <span>|</span>
-            <span>Throughput: <span className="text-[#2F6BFF]">{throughputKB} KB/s</span></span>
-            <span>|</span>
-            <span>Latency: <span className="text-[#00C853]">{avgLatency}ms</span></span>
         </span>
       </div>
     </div>

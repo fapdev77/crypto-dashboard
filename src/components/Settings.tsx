@@ -205,7 +205,6 @@ export function Settings() {
               <span className="text-[#00C853] font-mono text-sm">{pollingInterval}s</span>
             </div>
             <p className="text-[#8E9299] text-sm mt-1 mb-4">
-              Private WebSockets usually push data only upon order execution or active balance changes. 
               To ensure Mark Price, PnL, and Total Balance update smoothly across all exchanges (Bybit, Bitget, OKX) when the market moves without transactions, 
               we periodically poll the REST API in the background. Choose the refresh rate (1 to 60 seconds). 
               Lower values provide faster updates but increase network consumption.

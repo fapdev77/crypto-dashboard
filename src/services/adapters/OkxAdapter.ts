@@ -57,16 +57,6 @@ export class OkxAdapter implements IExchangeAdapter {
     };
   }
 
-  public static async getWsAuth(apiKey: string, apiSecret: string, passphrase: string) {
-    await this.syncTime();
-    const timestamp = Math.floor((Date.now() + this.timeOffset) / 1000).toString();
-    const prehash = timestamp + 'GET' + '/users/self/verify';
-    const signature = await hmacSha256(prehash, apiSecret, 'base64');
-    return {
-      op: 'login',
-      args: [{ apiKey, passphrase, timestamp, sign: signature }]
-    };
-  }
 
   // REST Balances
   public async getBalance(key: any): Promise<UnifiedBalance[]> {
@@ -347,74 +337,4 @@ export class OkxAdapter implements IExchangeAdapter {
     return 'NOT_FOUND';
   }
 
-  // WSS private channel parser
-  public static parse(cid: string, exchange: string, label: string, data: any) {
-    if (!data.arg || !data.data) return;
-    const store = useDashboardStore.getState();
-
-    if (data.arg.channel === 'account') {
-      const acc = data.data[0];
-      const totalEquity = parseFloat(acc.totalEq || '0');
-      const walletBalance = parseFloat(acc.adjEq || '0');
-      const availableMargin = parseFloat(acc.availEq || '0');
-      const unrealizedPnl = parseFloat(acc.upl || '0');
-
-      const balances: Partial<UnifiedBalance>[] = acc.details.map((item: any) => ({
-        id: `${cid}-${item.ccy}`,
-        connectionId: cid,
-        exchange: 'okx',
-        label,
-        ccy: item.ccy.toUpperCase(),
-        amount: parseFloat(item.cashBal || '0'),
-        usdValue: parseFloat(item.eqUsd || '0'),
-        totalEquity,
-        walletBalance,
-        availableMargin,
-        unrealizedPnl
-      }));
-      if (balances.length > 0) store.updateBalancesDelta(cid, balances as any);
-    }
-
-    if (data.arg.channel === 'positions') {
-      const positions: Partial<UnifiedPosition>[] = data.data.map((pos: any) => {
-        const margin = parseFloat(pos.margin || '0');
-        const unrealizedPnl = parseFloat(pos.upl || '0');
-        const markPx = pos.markPx ? parseFloat(pos.markPx) : 0;
-        const notionalUsd = pos.notionalUsd ? parseFloat(pos.notionalUsd) : 0;
-        let size = parseFloat(pos.pos || '0');
-        if (notionalUsd > 0 && markPx > 0) {
-          size = notionalUsd / markPx;
-        }
-
-        const side = mapPositionSide('okx', pos.posSide);
-
-        return {
-          id: `${cid}-okx-${pos.instId}-${side}`,
-          connectionId: cid,
-          exchange: 'okx',
-          label,
-          symbol: pos.instId,
-          baseCoin: extractBaseCoin('okx', pos.instId),
-          quoteCoin: extractQuoteCoin('okx', pos.instId),
-          ccy: extractCcy('okx', pos.ccy, undefined, pos.marginCoin, pos.instId),
-          side,
-          size,
-          entryPrice: parseFloat(pos.avgPx || '0'),
-          markPrice: markPx,
-          unrealizedPnl,
-          realizedPnl: parseFloat(pos.realizedPnl || '0'),
-          leverage: parseFloat(pos.lever || '0'),
-          marginMode: mapMarginMode('okx', pos.mgnMode),
-          margin,
-          notionalUsd,
-          liquidationPrice: parseFloat(pos.liqPx || '0'),
-          breakEvenPrice: parseFloat(pos.bePx || '0'),
-          roe: pos.uplRatio ? parseFloat(pos.uplRatio) * 100 : (margin > 0 ? (unrealizedPnl / margin) * 100 : undefined),
-          instrumentType: mapInstrumentType('okx', pos.instType || 'SWAP', pos.ccy || pos.marginCoin || 'USDT'),
-          raw: pos
-        };
-      });
-      if (positions.length > 0) store.updatePositionsDelta(cid, positions as any);
-    }
-  }
 }

@@ -11,9 +11,12 @@ export function PositionsTicker() {
 
   const activePositions = useMemo(() => {
     const list = Object.values(positions);
-    return useMockData
+    const filtered = useMockData
       ? list.filter(pos => pos.connectionId.startsWith('mocked-data'))
       : list.filter(pos => !pos.connectionId.startsWith('mocked-data'));
+      
+    // Sort to ensure stable element order for CSS animation
+    return filtered.sort((a, b) => a.id.localeCompare(b.id));
   }, [positions, useMockData]);
 
   // Se nao há posicoes abertas, retorne null

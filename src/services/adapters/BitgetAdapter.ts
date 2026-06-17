@@ -57,16 +57,6 @@ export class BitgetAdapter implements IExchangeAdapter {
     };
   }
 
-  public static async getWsAuth(apiKey: string, apiSecret: string, passphrase: string) {
-    await this.syncTime();
-    const timestamp = (Date.now() + this.timeOffset).toString();
-    const prehash = timestamp + 'GET' + '/user/verify';
-    const signature = await hmacSha256(prehash, apiSecret, 'base64');
-    return {
-      op: 'login',
-      args: [{ apiKey, passphrase, timestamp, sign: signature }]
-    };
-  }
 
   // REST Balances
   public async getBalance(key: any): Promise<UnifiedBalance[]> {
@@ -157,10 +147,8 @@ export class BitgetAdapter implements IExchangeAdapter {
       return (res.data || []).map((item: any) => ({ ...item, productType: pType }));
     });
 
-    const results = await Promise.allSettled(requests);
-    const rawList = results
-      .filter((r): r is PromiseFulfilledResult<any[]> => r.status === 'fulfilled')
-      .flatMap(r => r.value);
+    const results = await Promise.all(requests);
+    const rawList = results.flat();
 
     return rawList
       .filter(pos => parseFloat(pos.total || '0') > 0)
@@ -353,104 +341,4 @@ export class BitgetAdapter implements IExchangeAdapter {
     return 'NOT_FOUND';
   }
 
-  // WSS private channel parser
-  public static parse(cid: string, exchange: string, label: string, data: any) {
-    if (data.action !== 'snapshot' && data.action !== 'update') return;
-    const store = useDashboardStore.getState();
-
-    if (data.arg.channel === 'account' || data.arg.channel === 'equity' || data.arg.channel === 'account-crossed' || data.arg.channel === 'account-isolated') {
-      const balances: UnifiedBalance[] = [];
-      const instType = data.arg.instType;
-
-      if (instType === 'SPOT' || instType === 'MARGIN') {
-        data.data.forEach((item: any) => {
-          const coin = item.coin || item.marginCoin;
-          const available = parseFloat(item.available || '0');
-          const amount = available + parseFloat(item.frozen || '0');
-          if (coin && amount > 0) {
-            let labelSuffix = 'Spot';
-            if (data.arg.channel === 'account-crossed') labelSuffix = 'Margin Cross';
-            if (data.arg.channel === 'account-isolated') labelSuffix = 'Margin Isolated';
-
-            balances.push({
-              id: `${cid}-${labelSuffix.toUpperCase().replace(' ', '_')}-${coin}`,
-              connectionId: cid,
-              exchange: 'bitget',
-              label: `${label} (${labelSuffix})`,
-              ccy: coin.toUpperCase(),
-              amount,
-              usdValue: amount,
-              walletBalance: amount,
-              availableMargin: available
-            });
-          }
-        });
-      } else {
-        data.data.forEach((item: any) => {
-          const coin = item.marginCoin || 'USDT';
-          const totalEquity = parseFloat(item.equity || item.available || '0');
-          balances.push({
-            id: `${cid}-${instType}-${coin}`,
-            connectionId: cid,
-            exchange: 'bitget',
-            label: `${label} (${instType})`,
-            ccy: coin.toUpperCase(),
-            amount: totalEquity,
-            usdValue: parseFloat(item.usdtEquity || item.equity || '0'),
-            totalEquity,
-            walletBalance: parseFloat(item.crossedMaxAvailable || '0'),
-            availableMargin: parseFloat(item.crossedMaxAvailable || '0'),
-            unrealizedPnl: parseFloat(item.unrealizedPL || '0')
-          });
-        });
-      }
-      if (balances.length > 0) store.updateBalances(cid, balances as any);
-    }
-
-    if (data.arg.channel === 'positions') {
-      const positions: Partial<UnifiedPosition>[] = [];
-      data.data.forEach((pos: any) => {
-        const margin = parseFloat(pos.marginSize || '0');
-        const markPrice = parseFloat(pos.markPrice || pos.markPx || '0');
-        let unrealizedPnl = parseFloat(pos.unrealizedPL || pos.upl || '0');
-
-        const instrumentType = mapInstrumentType('bitget', data.arg.instType || 'USDT-FUTURES');
-        const isInverse = instrumentType === 'INVERSE';
-
-        // Bitget inverse returns unrealized PnL in USD/Quote value, we need it in base coin (crypto) value
-        if (isInverse && markPrice > 0) {
-          unrealizedPnl = unrealizedPnl / markPrice;
-        }
-
-        const side = mapPositionSide('bitget', pos.holdSide, pos.posSide);
-
-        positions.push({
-          id: `${cid}-bitget-${pos.instId || pos.symbol}-${side}`,
-          connectionId: cid,
-          exchange: 'bitget',
-          label,
-          symbol: pos.instId,
-          baseCoin: extractBaseCoin('bitget', pos.instId),
-          quoteCoin: extractQuoteCoin('bitget', pos.instId),
-          ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.instId),
-          side,
-          size: parseFloat(pos.total || pos.pos || '0'),
-          entryPrice: parseFloat(pos.openPriceAvg || pos.avgPx || '0'),
-          markPrice,
-          unrealizedPnl,
-          realizedPnl: parseFloat(pos.achievedProfits || '0'),
-          leverage: parseFloat(pos.leverage || pos.lever || '0'),
-          marginMode: mapMarginMode('bitget', pos.marginMode),
-          margin,
-          notionalUsd: parseFloat(pos.total || pos.pos || '0') * parseFloat(pos.markPrice || pos.markPx || '0'),
-          liquidationPrice: parseFloat(pos.liquidationPrice || '0'),
-          breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
-          roe: margin > 0 ? (unrealizedPnl / margin) * 100 : undefined,
-          instrumentType: mapInstrumentType('bitget', data.arg.instType || 'USDT-FUTURES'),
-          raw: pos
-        });
-      });
-      if (positions.length > 0) store.updatePositionsDelta(cid, positions as any);
-    }
-  }
 }

@@ -63,14 +63,23 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   balances: {},
   updateBalances: (connectionId, newBalances) => set((state) => {
     const nextBalances = { ...state.balances };
-    newBalances.forEach(b => {
-      nextBalances[b.id] = b;
-    });
+    
+    const newIds = new Set(newBalances.map(b => b.id));
+    
+    // Remove only stale balances that are no longer present on this connection
     for (const key in nextBalances) {
-      if (nextBalances[key].amount <= 0) {
+      if (nextBalances[key].connectionId === connectionId && !newIds.has(key)) {
         delete nextBalances[key];
       }
     }
+    
+    // Add or update balances in-place preserving key iteration order
+    newBalances.forEach(b => {
+      if (b.amount > 0) {
+        nextBalances[b.id] = b;
+      }
+    });
+
     return { balances: nextBalances };
   }),
 
@@ -95,14 +104,23 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   positions: {},
   updatePositions: (connectionId, newPositions) => set((state) => {
     const nextPositions = { ...state.positions };
-    newPositions.forEach(pos => {
-      nextPositions[pos.id] = pos;
-    });
+    
+    const newIds = new Set(newPositions.map(p => p.id));
+    
+    // Remove only stale positions that are no longer present on this connection
     for (const key in nextPositions) {
-      if (Math.abs(nextPositions[key].size) <= 0) {
+      if (nextPositions[key].connectionId === connectionId && !newIds.has(key)) {
         delete nextPositions[key];
       }
     }
+
+    // Add or update positions in-place preserving key iteration order
+    newPositions.forEach(pos => {
+      if (Math.abs(pos.size) > 0) {
+        nextPositions[pos.id] = pos;
+      }
+    });
+
     return { positions: nextPositions };
   }),
 

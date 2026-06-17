@@ -5,7 +5,6 @@ import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { ApiKeyModal } from './ApiKeyModal';
-import { Sparkline } from './ui/Sparkline';
 
 const EXCHANGES: { id: Exchange; name: string }[] = [
   { id: 'bitget', name: 'Bitget' },
@@ -15,7 +14,7 @@ const EXCHANGES: { id: Exchange; name: string }[] = [
 
 export function ApiKeys() {
   const { keys, toggleKey, removeKey } = useApiKeysStore();
-  const { clearConnectionData, statuses, telemetry } = useDashboardStore(state => state);
+  const { clearConnectionData, statuses } = useDashboardStore(state => state);
   const useMockData = useSettingsStore(state => state.useMockData);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -151,39 +150,6 @@ export function ApiKeys() {
                               </span>
                             </div>
 
-                            {/* Metrics Area */}
-                            <div className="grid grid-cols-2 gap-4 bg-[#111216]/50 p-3 rounded-lg border border-[#2a2b30]/35">
-                              {/* Latency */}
-                              <div className="flex flex-col gap-1.5">
-                                <span className="text-[10px] text-[#8E9299] font-medium uppercase tracking-wider font-mono">Latency</span>
-                                <div className="flex items-center min-h-[20px]">
-                                  {isConnected ? (
-                                    <div className="flex items-center justify-between w-full">
-                                      <Sparkline data={tel.latencyHistory} color="emerald" width={80} height={16} />
-                                      <span className="text-xs font-mono text-white shrink-0">{tel.lastPingMs || '--'}ms</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-xs font-mono text-[#8E9299]">-- ms</span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Throughput */}
-                              <div className="flex flex-col gap-1.5">
-                                <span className="text-[10px] text-[#8E9299] font-medium uppercase tracking-wider font-mono">Throughput</span>
-                                <div className="flex items-center min-h-[20px]">
-                                  {isConnected ? (
-                                    <div className="flex items-center justify-between w-full">
-                                      <ThroughputBars history={tel.throughputHistory} />
-                                      <span className="text-xs font-mono text-white shrink-0">{tKB} KB/s</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-xs font-mono text-[#8E9299]">-- KB/s</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
                             {/* Actions bar */}
                             <div className="flex items-center justify-end gap-2.5 pt-1">
                               {keyToDelete === apiKey.id ? (
@@ -258,29 +224,6 @@ export function ApiKeys() {
         mode={modalMode}
         existingKey={selectedKey}
       />
-    </div>
-  );
-}
-
-function ThroughputBars({ history }: { history: number[] }) {
-  if (!history || history.length === 0) return <div className="w-[60px] h-[16px]" />;
-  const max = Math.max(...history) || 1;
-
-  // Show max 15 bars
-  const slice = history.slice(-15);
-
-  return (
-    <div className="flex items-end gap-[1.5px] h-[16px] w-[60px]">
-      {slice.map((val, i) => {
-        const heightPct = Math.max((val / max) * 100, 10); // Minimum 10% height for visibility
-        return (
-          <div
-            key={i}
-            className="w-[3px] bg-[#2F6BFF] opacity-80"
-            style={{ height: `${heightPct}%` }}
-          />
-        );
-      })}
     </div>
   );
 }

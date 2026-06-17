@@ -52,13 +52,6 @@ export class BybitAdapter implements IExchangeAdapter {
     };
   }
 
-  public static async getWsAuth(apiKey: string, apiSecret: string) {
-    await this.syncTime();
-    const expires = Date.now() + this.timeOffset + 10000;
-    const prehash = 'GET/realtime' + expires;
-    const signature = await hmacSha256(prehash, apiSecret, 'hex');
-    return { op: 'auth', args: [apiKey, expires, signature] };
-  }
 
   // REST Balances
   public async getBalance(key: any): Promise<UnifiedBalance[]> {
@@ -124,10 +117,8 @@ export class BybitAdapter implements IExchangeAdapter {
       }));
     });
 
-    const results = await Promise.allSettled(requests);
-    const rawList = results
-      .filter((r): r is PromiseFulfilledResult<any[]> => r.status === 'fulfilled')
-      .flatMap(r => r.value);
+    const results = await Promise.all(requests);
+    const rawList = results.flat();
 
     return rawList
       .filter(pos => parseFloat(pos.size || '0') > 0)
@@ -350,114 +341,4 @@ export class BybitAdapter implements IExchangeAdapter {
     return 'NOT_FOUND';
   }
 
-  // WSS private channel parser
-  public static parse(cid: string, exchange: string, label: string, data: any) {
-    if (!data.topic) return;
-    const store = useDashboardStore.getState();
-
-    if (data.topic === 'wallet') {
-      const balances: Partial<UnifiedBalance>[] = [];
-      data.data.forEach((acc: any) => {
-        if (acc.coin) {
-          acc.coin.forEach((item: any) => {
-            const amount = parseFloat(item.equity || item.walletBalance || '0');
-            balances.push({
-              id: `${cid}-${acc.accountType || 'UNIFIED'}-${item.coin}`,
-              connectionId: cid,
-              exchange: 'bybit',
-              label: `${label} (${acc.accountType || 'UNIFIED'})`,
-              ccy: item.coin,
-              amount,
-              usdValue: parseFloat(item.usdValue || amount.toString()),
-              totalEquity: parseFloat(acc.totalEquity || '0'),
-              walletBalance: parseFloat(acc.totalWalletBalance || '0'),
-              availableMargin: parseFloat(acc.totalAvailableBalance || '0'),
-              unrealizedPnl: parseFloat(acc.totalPerpUPL || '0')
-            });
-          });
-        }
-      });
-      if (balances.length > 0) store.updateBalancesDelta(cid, balances as any);
-    }
-
-    if (data.topic === 'position') {
-      const positions: Partial<UnifiedPosition>[] = [];
-      data.data.forEach((pos: any) => {
-        const rawSize = parseFloat(pos.size || '0');
-        const entryPrice = parseFloat(pos.avgPrice || pos.entryPrice || '0');
-        const markPrice = parseFloat(pos.markPrice || '0');
-        let size = rawSize;
-        let notionalUsd = parseFloat(pos.positionValue || '0');
-
-        const isInverse = pos.symbol?.endsWith('USD') && !pos.symbol.includes('USDT') && !pos.symbol.includes('USDC');
-        if (isInverse) {
-          size = parseFloat(pos.positionValue || '0');
-          notionalUsd = rawSize;
-        } else if (notionalUsd > 0 && entryPrice > 0) {
-          size = notionalUsd / entryPrice;
-        }
-
-        const margin = parseFloat(pos.positionIM || '0');
-        const unrealizedPnl = parseFloat(pos.unrealisedPnl || '0');
-        
-        let side = mapPositionSide('bybit', pos.side);
-        const positionIdx = parseInt(pos.positionIdx || '0', 10);
-        
-        if (positionIdx === 1) side = 'long';
-        else if (positionIdx === 2) side = 'short';
-        else if (positionIdx === 0 && side === 'net') {
-          // If it's a one-way mode position and side is omitted or 'None', 
-          // find the existing open position for this symbol to determine its original side.
-          if (store.positions[`${cid}-bybit-${pos.symbol}-long`]) side = 'long';
-          else if (store.positions[`${cid}-bybit-${pos.symbol}-short`]) side = 'short';
-          else {
-             // If we can't find it, we can push to both to ensure it gets cleared if it was a close event
-             side = 'long'; // We'll push long here.
-             
-             if (parseFloat(pos.size || '0') <= 0) {
-               // Also push the short side being closed to ensure both are cleared
-               positions.push({
-                 id: `${cid}-bybit-${pos.symbol}-short`,
-                 connectionId: cid,
-                 exchange: 'bybit',
-                 label,
-                 symbol: pos.symbol,
-                 side: 'short',
-                 size: 0,
-               } as any);
-             }
-          }
-        }
-
-        positions.push({
-          id: `${cid}-bybit-${pos.symbol}-${side}`,
-          connectionId: cid,
-          exchange: 'bybit',
-          label,
-          symbol: pos.symbol,
-          baseCoin: extractBaseCoin('bybit', pos.symbol),
-          quoteCoin: extractQuoteCoin('bybit', pos.symbol),
-          ccy: extractCcy('bybit', pos.settleCoin, undefined, pos.coin, pos.symbol),
-          side: side,
-          size,
-          entryPrice,
-          markPrice,
-          unrealizedPnl,
-          realizedPnl: parseFloat(pos.curRealisedPnl || '0'),
-          leverage: parseFloat(pos.leverage || '0'),
-          marginMode: mapMarginMode('bybit', pos.tradeMode),
-          margin,
-          notionalUsd,
-          liquidationPrice: parseFloat(pos.liqPrice || '0'),
-          breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
-          tp: parseFloat(pos.takeProfit || '0'),
-          sl: parseFloat(pos.stopLoss || '0'),
-          roe: margin > 0 ? (unrealizedPnl / margin) * 100 : undefined,
-          instrumentType: mapInstrumentType('bybit', pos.category || 'linear'),
-          raw: pos
-        });
-      });
-      if (positions.length > 0) store.updatePositionsDelta(cid, positions as any);
-    }
-  }
 }

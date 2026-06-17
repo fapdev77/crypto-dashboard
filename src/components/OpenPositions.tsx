@@ -53,7 +53,7 @@ export function OpenPositions() {
       );
     }
 
-    return filtered;
+    return filtered.sort((a, b) => a.id.localeCompare(b.id));
   }, [positionsList, filterText, exchangeFilter, useMockData]);
 
   const { longs, shorts } = useMemo(() => {
