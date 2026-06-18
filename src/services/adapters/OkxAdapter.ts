@@ -184,8 +184,9 @@ export class OkxAdapter implements IExchangeAdapter {
           }
           list = [...list, ...filtered];
           
+          // OKX positions-history pages backward via 'after=<uTime>' of the last record
           if (rows.length === 100) {
-            after = rows[rows.length - 1].depId || rows[rows.length - 1].wdId || rows[rows.length - 1].ts || '';
+            after = rows[rows.length - 1].uTime || rows[rows.length - 1].cTime || '';
           } else {
             after = '';
           }
