@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { OrderFilters as FilterState } from '../../../hooks/useOrderReports';
 import { Search } from 'lucide-react';
+import { useApiKeysStore } from '../../../store/apiKeysStore';
 
 interface Props {
   filters: FilterState;
@@ -17,20 +18,28 @@ const TIME_PERIODS = [
 ];
 
 export function OrderFilters({ filters, setFilters }: Props) {
+  const { keys } = useApiKeysStore();
   
   const instrumentsAvailable = useMemo(() => {
-    if (filters.exchange === 'bitget') return ['All', 'USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+    if (filters.exchange === 'bitget') return ['All', 'USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'spot'];
     if (filters.exchange === 'bybit') return ['All', 'linear', 'inverse', 'spot'];
     if (filters.exchange === 'okx') return ['All', 'SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
     return ['All'];
   }, [filters.exchange]);
+
+  const activeKeys = useMemo(() => {
+    return keys.filter(k => filters.exchange === 'All' || k.exchange === filters.exchange);
+  }, [keys, filters.exchange]);
 
   // Handle cross-exchange instrument reset
   React.useEffect(() => {
     if (filters.instrument !== 'All' && !instrumentsAvailable.includes(filters.instrument)) {
       setFilters(p => ({ ...p, instrument: 'All' }));
     }
-  }, [filters.exchange, filters.instrument, instrumentsAvailable, setFilters]);
+    if (filters.accountId !== 'All' && !activeKeys.some(k => k.id === filters.accountId)) {
+      setFilters(p => ({ ...p, accountId: 'All' }));
+    }
+  }, [filters.exchange, filters.instrument, filters.accountId, instrumentsAvailable, activeKeys, setFilters]);
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -74,6 +83,21 @@ export function OrderFilters({ filters, setFilters }: Props) {
           </select>
         </div>
 
+        {/* Account */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-500 whitespace-nowrap">Account:</label>
+          <select
+            value={filters.accountId}
+            onChange={(e) => setFilters(p => ({ ...p, accountId: e.target.value }))}
+            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer max-w-[150px] truncate"
+          >
+            <option value="All">All Accounts</option>
+            {activeKeys.map(k => (
+              <option key={k.id} value={k.id}>{k.label || k.exchange}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Instrument */}
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-500 whitespace-nowrap">Instrument:</label>
@@ -100,6 +124,20 @@ export function OrderFilters({ filters, setFilters }: Props) {
             {ORDER_TYPES.map(t => (
               <option key={t} value={t}>{t === 'All' ? 'All Types' : t}</option>
             ))}
+          </select>
+        </div>
+
+        {/* Side */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-500 whitespace-nowrap">Side:</label>
+          <select
+            value={filters.side}
+            onChange={(e) => setFilters(p => ({ ...p, side: e.target.value }))}
+            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
+          >
+            <option value="All">All Sides</option>
+            <option value="buy">Buy / Long</option>
+            <option value="sell">Sell / Short</option>
           </select>
         </div>
 

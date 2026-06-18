@@ -26,6 +26,7 @@ export function OrdersTable({ orders, loading }: Props) {
           <tr>
             <th className="py-3 font-normal px-4">Symbol</th>
             <th className="py-3 font-normal px-4">Exchange</th>
+            <th className="py-3 font-normal px-4">Account</th>
             <th className="py-3 font-normal px-4">Type</th>
             <th className="py-3 font-normal px-4">Side</th>
             <th className="py-3 font-normal px-4 text-right">Price</th>

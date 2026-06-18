@@ -5,6 +5,7 @@ import Big from 'big.js';
 import { AppTooltip } from '../../ui/Tooltip';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { CoinIcon } from '../../ui/CoinIcon';
+import { useApiKeysStore } from '../../../store/apiKeysStore';
 
 interface Props {
   key?: React.Key;
@@ -15,6 +16,8 @@ interface Props {
 
 export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const formatCurrency = useFormatCurrency();
+  const { keys } = useApiKeysStore();
+  const connectionLabel = keys.find(k => k.id === order.connectionId)?.label || order.connectionId;
 
   const isBuy = order.side === 'buy';
   const sideColor = isBuy ? 'text-green-600 dark:text-green-500' : 'text-red-500 dark:text-pink-500';
@@ -59,6 +62,11 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
              <ExchangeIcon exchange={order.exchange} className="w-4 h-4 rounded-sm" />
              <span className="capitalize">{order.exchange}</span>
           </div>
+        </td>
+        <td className="px-4 py-4">
+          <span className="text-gray-800 dark:text-gray-300 font-medium truncate max-w-[120px] block">
+            {connectionLabel}
+          </span>
         </td>
         <td className="px-4 py-4 text-gray-600 dark:text-gray-300">
            {order.type}
@@ -113,7 +121,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
       
       {isExpanded && (
         <tr>
-          <td colSpan={9} className="p-0 border-b border-gray-50 dark:border-[#2a2b30]/50">
+          <td colSpan={10} className="p-0 border-b border-gray-50 dark:border-[#2a2b30]/50">
             <div className="bg-gray-50/80 dark:bg-[#111216]/50 px-6 py-5 flex flex-wrap gap-x-12 gap-y-4 shadow-inner">
                 
                 <div className="flex flex-col gap-1">

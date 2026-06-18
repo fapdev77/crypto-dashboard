@@ -9,8 +9,10 @@ export interface OrderFilters {
   instrument: string;   // 'All' | 'SPOT' | 'PERP' | 'FUTURES' etc
   symbols: string;
   type: string;         // 'All' | 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL'
+  side: string;         // 'All' | 'buy' | 'sell'
   status: 'OPEN' | 'CLOSED';
   timePeriod: number;
+  accountId: string;    // 'All' | connectionId
 }
 
 export function useOrderReports() {
@@ -29,9 +31,11 @@ export function useOrderReports() {
     const endTime = filters.status === 'CLOSED' ? now : undefined;
 
     // Filter keys by selected exchanges
-    const activeKeys = keys.filter(k => 
-      filters.exchange === 'All' || filters.exchange === k.exchange
-    );
+    const activeKeys = keys.filter(k => {
+      if (filters.exchange !== 'All' && filters.exchange !== k.exchange) return false;
+      if (filters.accountId !== 'All' && filters.accountId !== k.id) return false;
+      return true;
+    });
 
     try {
       const promises = activeKeys.map(async (key) => {
@@ -66,6 +70,9 @@ export function useOrderReports() {
           return false;
         }
         if (filters.type !== 'All' && filters.type !== order.type) {
+          return false;
+        }
+        if (filters.side !== 'All' && order.side !== filters.side) {
           return false;
         }
         if (filters.instrument !== 'All' && order.category.toUpperCase() !== filters.instrument.toUpperCase()) {

@@ -11,8 +11,10 @@ export function OrderReportsDashboard() {
     instrument: 'All',
     symbols: '',
     type: 'All',
+    side: 'All',
     status: 'OPEN',
-    timePeriod: 14 * 24 * 60 * 60 * 1000 // default 14 days for history
+    timePeriod: 14 * 24 * 60 * 60 * 1000, // default 14 days for history
+    accountId: 'All'
   });
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -23,7 +25,7 @@ export function OrderReportsDashboard() {
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
-    let content = "Symbol,Exchange,Instrument,Type,Side,Price,Amount,Filled,Status,Time\n";
+    let content = "Symbol,Exchange,Connection ID,Instrument,Type,Side,Price,Amount,Filled,Status,Time\n";
     orders.forEach(o => {
       const isBuy = o.side === 'buy';
       const sideText = isBuy 
@@ -33,7 +35,7 @@ export function OrderReportsDashboard() {
       const d = new Date(o.createdTime);
       const timeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
 
-      content += `${o.symbol},${o.exchange},${o.category},${o.type},${sideText},${o.price},${o.qty},${o.filledQty},${o.status},${timeStr}\n`;
+      content += `${o.symbol},${o.exchange},${o.connectionId},${o.category},${o.type},${sideText},${o.price},${o.qty},${o.filledQty},${o.status},${timeStr}\n`;
     });
 
     const extension = format === 'csv' ? 'csv' : format === 'excel' ? 'xls' : 'pdf';

@@ -311,18 +311,24 @@ export class BybitAdapter implements IExchangeAdapter {
 
   // Orders
   public async getOpenOrders(key: any): Promise<import('../../types').UnifiedOrder[]> {
-    const categories = ['linear', 'spot'];
+    const categories = ['spot', 'inverse', 'linear-usdt', 'linear-usdc'];
     let allOrders: any[] = [];
     
     for (const cat of categories) {
-      const query = `category=${cat}`;
+      let query = '';
+      if (cat === 'spot') query = 'category=spot';
+      else if (cat === 'inverse') query = 'category=inverse';
+      else if (cat === 'linear-usdt') query = 'category=linear&settleCoin=USDT';
+      else if (cat === 'linear-usdc') query = 'category=linear&settleCoin=USDC';
+
       const targetUrl = `https://api.bybit.com/v5/order/realtime?${query}`;
       const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
       
       try {
-        const res = await proxyFetch({ targetUrl, method: 'GET', headers });
+        const res = await hybridFetch(targetUrl, 'GET', headers);
         if (res.retCode === 0 && res.result?.list) {
-          allOrders = allOrders.concat(res.result.list);
+          const listCat = cat.startsWith('linear') ? 'linear' : cat;
+          allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: listCat })));
         }
       } catch (err) {
         console.warn(`[Bybit-OpenOrders] Error fetching ${cat}:`, err);
@@ -332,26 +338,39 @@ export class BybitAdapter implements IExchangeAdapter {
   }
 
   public async getHistoryOrders(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
-    const categories = ['linear', 'spot'];
+    const categories = ['linear', 'spot', 'inverse'];
     let allOrders: any[] = [];
 
+    const now = Date.now();
+    const endTimeObj = end ? end : now;
+    const startTimeObj = start ? start : (endTimeObj - 7 * 24 * 60 * 60 * 1000); // default 7 days 
+    
+    // Bybit history max 7 days per request. We might need to chunk if period > 7 days.
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
     for (const cat of categories) {
-      let queryUrl = `category=${cat}&limit=50`;
-      if (start) queryUrl += `&startTime=${start}`;
-      if (end) queryUrl += `&endTime=${end}`;
-      
-      // We will only do a single page fetch for the MVP report context to prevent slow loading
-      // For deeper pagination, a cursor logic is needed
-      const targetUrl = `https://api.bybit.com/v5/order/history?${queryUrl}`;
-      const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
-      
-      try {
-        const res = await proxyFetch({ targetUrl, method: 'GET', headers });
-        if (res.retCode === 0 && res.result?.list) {
-          allOrders = allOrders.concat(res.result.list);
+      let currentEnd = endTimeObj;
+      let currentStart = Math.max(startTimeObj, currentEnd - SEVEN_DAYS_MS + 1000);
+
+      while (currentStart >= startTimeObj && currentStart < currentEnd) {
+        let queryUrl = `category=${cat}&limit=50&startTime=${currentStart}&endTime=${currentEnd}`;
+        
+        const targetUrl = `https://api.bybit.com/v5/order/history?${queryUrl}`;
+        const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+        
+        try {
+          const res = await hybridFetch(targetUrl, 'GET', headers);
+          if (res.retCode === 0 && res.result?.list) {
+            allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: cat })));
+          }
+        } catch (err) {
+          console.warn(`[Bybit-HistoryOrders] Error fetching ${cat}:`, err);
         }
-      } catch (err) {
-        console.warn(`[Bybit-HistoryOrders] Error fetching ${cat}:`, err);
+
+        if (currentStart <= startTimeObj) break;
+
+        currentEnd = currentStart - 1;
+        currentStart = Math.max(startTimeObj, currentEnd - SEVEN_DAYS_MS + 1000);
       }
     }
     return this.normalizeOrders(allOrders, key);
@@ -387,7 +406,7 @@ export class BybitAdapter implements IExchangeAdapter {
         connectionId: key.id,
         exchange: 'bybit',
         symbol: o.symbol,
-        category: o.category || mapInstrumentType('bybit', o.symbol),
+        category: o.category || o._category || mapInstrumentType('bybit', o.symbol),
         side: o.side?.toLowerCase() === 'sell' ? 'sell' : 'buy',
         positionSide: o.positionIdx === 1 ? 'long' : o.positionIdx === 2 ? 'short' : 'net',
         type,

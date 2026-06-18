@@ -325,6 +325,7 @@ export class BitgetAdapter implements IExchangeAdapter {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     let allOrders: any[] = [];
     
+    // Futures
     for (const pType of productTypes) {
       const query = `productType=${pType}`;
       const path = `/api/v2/mix/order/orders-pending?${query}`;
@@ -332,13 +333,28 @@ export class BitgetAdapter implements IExchangeAdapter {
       
       try {
         const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
-        if (res.code === '00000' && res.data?.entList) {
-          allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: pType })));
+        if (res.code === '00000' && res.data?.entrustedList) {
+          allOrders = allOrders.concat(res.data.entrustedList.map((o: any) => ({ ...o, productType: pType })));
         }
       } catch (err) {
         console.warn(`[Bitget-OpenOrders] Error fetching ${pType}:`, err);
       }
     }
+
+    // Spot
+    try {
+      const path = `/api/v2/spot/trade/unfilled-orders`;
+      const headers = await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+      if (res.code === '00000' && Array.isArray(res.data)) {
+        allOrders = allOrders.concat(res.data.map((o: any) => ({ ...o, productType: 'spot' })));
+      } else if (res.code === '00000' && res.data?.entList) {
+        allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: 'spot' })));
+      }
+    } catch (err) {
+      console.warn(`[Bitget-OpenOrders] Error fetching spot:`, err);
+    }
+
     return this.normalizeOrders(allOrders, key);
   }
 
@@ -346,6 +362,7 @@ export class BitgetAdapter implements IExchangeAdapter {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     let allOrders: any[] = [];
 
+    // Futures History
     for (const pType of productTypes) {
       let queryUrl = `productType=${pType}&limit=100`;
       if (start) queryUrl += `&startTime=${start}`;
@@ -363,17 +380,35 @@ export class BitgetAdapter implements IExchangeAdapter {
         console.warn(`[Bitget-HistoryOrders] Error fetching ${pType}:`, err);
       }
     }
+
+    // Spot History
+    try {
+      let spotQuery = `limit=100`;
+      if (start) spotQuery += `&startTime=${start}`;
+      if (end) spotQuery += `&endTime=${end}`;
+      const path = `/api/v2/spot/trade/history-orders?${spotQuery}`;
+      const headers = await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+      if (res.code === '00000' && Array.isArray(res.data)) {
+        allOrders = allOrders.concat(res.data.map((o: any) => ({ ...o, productType: 'spot' })));
+      } else if (res.code === '00000' && res.data?.entList) { // just in case
+        allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: 'spot' })));
+      }
+    } catch (err) {
+      console.warn(`[Bitget-HistoryOrders] Error fetching spot:`, err);
+    }
+
     return this.normalizeOrders(allOrders, key);
   }
 
   private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {
     return rawOrders.map(o => {
       let status: import('../../types').UnifiedOrderStatus = 'NEW';
-      const state = o.state?.toLowerCase() || '';
+      const state = o.state?.toLowerCase() || o.status?.toLowerCase() || '';
       if (state === 'filled') status = 'FILLED';
       else if (state === 'canceled' || state === 'cancelled') status = 'CANCELLED';
       else if (state === 'partially_filled') status = 'PARTIALLY_FILLED';
-      else if (state === 'new' || state === 'init') status = 'NEW';
+      else if (state === 'new' || state === 'init' || state === 'live') status = 'NEW';
       // fallback for others or if they use different strings
 
       let type: import('../../types').UnifiedOrderType = 'LIMIT';
@@ -392,7 +427,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         connectionId: key.id,
         exchange: 'bitget',
         symbol: o.symbol || o.instId,
-        category: mapInstrumentType('bitget', o.productType),
+        category: o.productType || 'UNKNOWN',
         side: o.side?.toLowerCase().includes('buy') ? 'buy' : 'sell',
         positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
         type,
