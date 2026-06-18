@@ -320,6 +320,98 @@ export class BitgetAdapter implements IExchangeAdapter {
     });
   }
 
+  // Orders
+  public async getOpenOrders(key: any): Promise<import('../../types').UnifiedOrder[]> {
+    const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+    let allOrders: any[] = [];
+    
+    for (const pType of productTypes) {
+      const query = `productType=${pType}`;
+      const path = `/api/v2/mix/order/orders-pending?${query}`;
+      const headers = await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      
+      try {
+        const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+        if (res.code === '00000' && res.data?.entList) {
+          allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: pType })));
+        }
+      } catch (err) {
+        console.warn(`[Bitget-OpenOrders] Error fetching ${pType}:`, err);
+      }
+    }
+    return this.normalizeOrders(allOrders, key);
+  }
+
+  public async getHistoryOrders(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
+    const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+    let allOrders: any[] = [];
+
+    for (const pType of productTypes) {
+      let queryUrl = `productType=${pType}&limit=100`;
+      if (start) queryUrl += `&startTime=${start}`;
+      if (end) queryUrl += `&endTime=${end}`;
+      
+      const path = `/api/v2/mix/order/orders-history?${queryUrl}`;
+      const headers = await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      
+      try {
+        const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+        if (res.code === '00000' && res.data?.entList) {
+          allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: pType })));
+        }
+      } catch (err) {
+        console.warn(`[Bitget-HistoryOrders] Error fetching ${pType}:`, err);
+      }
+    }
+    return this.normalizeOrders(allOrders, key);
+  }
+
+  private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {
+    return rawOrders.map(o => {
+      let status: import('../../types').UnifiedOrderStatus = 'NEW';
+      const state = o.state?.toLowerCase() || '';
+      if (state === 'filled') status = 'FILLED';
+      else if (state === 'canceled' || state === 'cancelled') status = 'CANCELLED';
+      else if (state === 'partially_filled') status = 'PARTIALLY_FILLED';
+      else if (state === 'new' || state === 'init') status = 'NEW';
+      // fallback for others or if they use different strings
+
+      let type: import('../../types').UnifiedOrderType = 'LIMIT';
+      const ot = o.orderType?.toLowerCase() || o.planType?.toLowerCase() || '';
+      if (ot === 'market') type = 'MARKET';
+      else if (ot.includes('stop') || ot.includes('loss')) type = 'SL';
+      else if (ot.includes('take') || ot.includes('profit')) type = 'TP';
+      else if (ot.includes('plan') || ot.includes('conditional')) type = 'CONDITIONAL';
+
+      const pSize = parseFloat(o.size || '0');
+      const pFil = parseFloat(o.filledQty || o.baseVolume || '0');
+      
+      return {
+        id: `${key.id}-${o.orderId}`,
+        exchangeOrderId: o.orderId,
+        connectionId: key.id,
+        exchange: 'bitget',
+        symbol: o.symbol || o.instId,
+        category: mapInstrumentType('bitget', o.productType),
+        side: o.side?.toLowerCase().includes('buy') ? 'buy' : 'sell',
+        positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
+        type,
+        status,
+        price: parseFloat(o.price || '0'),
+        avgPrice: parseFloat(o.priceAvg || o.avgPrice || '0'),
+        qty: pSize,
+        filledQty: pFil,
+        value: parseFloat(o.totalProfits || '0'), // simplified
+        triggerPrice: o.triggerPrice ? parseFloat(o.triggerPrice) : undefined,
+        timeInForce: o.timeInForce || o.force,
+        createdTime: parseInt(o.cTime || '0', 10),
+        updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
+        fees: parseFloat(o.fee || '0'),
+        raw: o
+      };
+    });
+  }
+
   // Instrument Metadata (Public)
   public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
     try {

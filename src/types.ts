@@ -24,6 +24,34 @@ export interface UnifiedBalance {
 export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
 export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
 
+export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+
+export interface UnifiedOrder {
+  id: string;
+  exchangeOrderId: string;
+  connectionId: string;
+  exchange: ExchangeName;
+  symbol: string;
+  category: UnifiedInstrumentType | string;
+  side: 'buy' | 'sell';
+  positionSide?: PositionSide;
+  type: UnifiedOrderType;
+  status: UnifiedOrderStatus;
+  price: number;
+  avgPrice: number;
+  qty: number;
+  filledQty: number;
+  value?: number;
+  triggerPrice?: number;
+  reduceOnly?: boolean;
+  timeInForce?: string;
+  createdTime: number;
+  updatedTime: number;
+  fees?: number;
+  raw?: any;
+}
+
 export interface UnifiedPosition {
   id: string; // Ex: 'connId-okx-BTC-USDT-long'
   connectionId: string;

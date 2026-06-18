@@ -22,6 +22,18 @@ export interface IExchangeAdapter {
   fetchBills?(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedBillRecord[]>;
 
   /**
+   * Fetches open (pending) orders and normalizes them into UnifiedOrder.
+   */
+  getOpenOrders?(key: any): Promise<import('../../types').UnifiedOrder[]>;
+
+  /**
+   * Fetches history (closed) orders and normalizes them into UnifiedOrder.
+   * @param start Optional start timestamp
+   * @param end Optional end timestamp
+   */
+  getHistoryOrders?(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]>;
+
+  /**
    * Fetches public metadata for a specific instrument to determine its category.
    * Does NOT require authentication.
    */

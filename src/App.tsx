@@ -24,6 +24,7 @@ import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 import { PrivacyProvider } from './context/PrivacyContext';
 import { PrivacyToggleButton } from './components/PrivacyToggleButton';
 import { TooltipProvider } from './components/ui/Tooltip';
+import { OrderReportsDashboard } from './components/analytics/OrderReports/OrderReportsDashboard';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -38,6 +39,7 @@ export default function App() {
   if (activeTab === 'api-tester') activeTabName = 'Execução de Testes';
   if (activeTab === 'analytics-pnl-symbol') activeTabName = 'PnL by Symbol';
   if (activeTab === 'mvp-asset-metadata') activeTabName = 'Informações de Ativos';
+  if (activeTab === 'mvp-order-reports') activeTabName = 'Relatórios de Ordens MVP';
 
   return (
     <PrivacyProvider>
@@ -102,6 +104,7 @@ export default function App() {
               {activeTab === 'reports' && <ReportsDashboard />}
               {(activeTab === 'testes-mvp' || activeTab === 'testes-mvp-main') && <MvpTestsDashboard />}
               {activeTab === 'mvp-asset-metadata' && <AssetMetadataPlayground />}
+              {activeTab === 'mvp-order-reports' && <OrderReportsDashboard />}
               {activeTab === 'api-keys' && <ApiKeys />}
               {activeTab === 'logs' && <ConnectionLogTerminal />}
               {activeTab === 'settings' && <Settings />}

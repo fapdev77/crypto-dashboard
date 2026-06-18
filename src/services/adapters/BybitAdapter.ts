@@ -309,6 +309,105 @@ export class BybitAdapter implements IExchangeAdapter {
     });
   }
 
+  // Orders
+  public async getOpenOrders(key: any): Promise<import('../../types').UnifiedOrder[]> {
+    const categories = ['linear', 'spot'];
+    let allOrders: any[] = [];
+    
+    for (const cat of categories) {
+      const query = `category=${cat}`;
+      const targetUrl = `https://api.bybit.com/v5/order/realtime?${query}`;
+      const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+      
+      try {
+        const res = await proxyFetch({ targetUrl, method: 'GET', headers });
+        if (res.retCode === 0 && res.result?.list) {
+          allOrders = allOrders.concat(res.result.list);
+        }
+      } catch (err) {
+        console.warn(`[Bybit-OpenOrders] Error fetching ${cat}:`, err);
+      }
+    }
+    return this.normalizeOrders(allOrders, key);
+  }
+
+  public async getHistoryOrders(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
+    const categories = ['linear', 'spot'];
+    let allOrders: any[] = [];
+
+    for (const cat of categories) {
+      let queryUrl = `category=${cat}&limit=50`;
+      if (start) queryUrl += `&startTime=${start}`;
+      if (end) queryUrl += `&endTime=${end}`;
+      
+      // We will only do a single page fetch for the MVP report context to prevent slow loading
+      // For deeper pagination, a cursor logic is needed
+      const targetUrl = `https://api.bybit.com/v5/order/history?${queryUrl}`;
+      const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+      
+      try {
+        const res = await proxyFetch({ targetUrl, method: 'GET', headers });
+        if (res.retCode === 0 && res.result?.list) {
+          allOrders = allOrders.concat(res.result.list);
+        }
+      } catch (err) {
+        console.warn(`[Bybit-HistoryOrders] Error fetching ${cat}:`, err);
+      }
+    }
+    return this.normalizeOrders(allOrders, key);
+  }
+
+  private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {
+    return rawOrders.map(o => {
+      let status: import('../../types').UnifiedOrderStatus = 'NEW';
+      const bs = o.orderStatus?.toUpperCase() || '';
+      if (bs === 'FILLED') status = 'FILLED';
+      else if (bs === 'CANCELLED' || bs === 'DEACTIVATED' || bs === 'PENDINGCANCEL') status = 'CANCELLED';
+      else if (bs === 'PARTIALLYFILLED') status = 'PARTIALLY_FILLED';
+      else if (bs === 'UNTRIGGERED') status = 'UNTRIGGERED';
+      else if (bs === 'TRIGGERED') status = 'TRIGGERED';
+      else if (bs === 'REJECTED') status = 'REJECTED';
+
+      let type: import('../../types').UnifiedOrderType = 'LIMIT';
+      const ot = o.orderType?.toUpperCase() || '';
+      if (ot === 'MARKET') type = 'MARKET';
+      // simple handling for TP/SL if needed based on trigger parameters, Bybit usually has stopOrderType
+      if (o.stopOrderType) {
+         if (o.stopOrderType.toUpperCase() === 'TAKEPROFIT') type = 'TP';
+         else if (o.stopOrderType.toUpperCase() === 'STOPLOSS') type = 'SL';
+         else type = 'CONDITIONAL';
+      }
+
+      const pSize = parseFloat(o.qty || '0');
+      const pFil = parseFloat(o.cumExecQty || '0');
+      
+      return {
+        id: `${key.id}-${o.orderId}`,
+        exchangeOrderId: o.orderId,
+        connectionId: key.id,
+        exchange: 'bybit',
+        symbol: o.symbol,
+        category: o.category || mapInstrumentType('bybit', o.symbol),
+        side: o.side?.toLowerCase() === 'sell' ? 'sell' : 'buy',
+        positionSide: o.positionIdx === 1 ? 'long' : o.positionIdx === 2 ? 'short' : 'net',
+        type,
+        status,
+        price: parseFloat(o.price || '0'),
+        avgPrice: parseFloat(o.avgPrice || '0'),
+        qty: pSize,
+        filledQty: pFil,
+        value: parseFloat(o.cumExecValue || '0'),
+        triggerPrice: o.triggerPrice ? parseFloat(o.triggerPrice) : undefined,
+        reduceOnly: o.reduceOnly === true || o.reduceOnly === 'true',
+        timeInForce: o.timeInForce,
+        createdTime: parseInt(o.createdTime, 10),
+        updatedTime: parseInt(o.updatedTime, 10),
+        fees: parseFloat(o.cumExecFee || '0'),
+        raw: o
+      };
+    });
+  }
+
   // Instrument Metadata (Public)
   public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
     try {

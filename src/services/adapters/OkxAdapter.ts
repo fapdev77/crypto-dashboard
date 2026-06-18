@@ -293,6 +293,106 @@ export class OkxAdapter implements IExchangeAdapter {
     });
   }
 
+  // Orders
+  public async getOpenOrders(key: any): Promise<import('../../types').UnifiedOrder[]> {
+    const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
+    let allOrders: any[] = [];
+    
+    for (const instType of instTypes) {
+      const query = `instType=${instType}`;
+      const path = `/api/v5/trade/orders-pending?${query}`;
+      const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      
+      try {
+        const res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+        if (res.code === '0' && res.data) {
+          allOrders = allOrders.concat(res.data);
+        }
+      } catch (err) {
+        console.warn(`[Okx-OpenOrders] Error fetching ${instType}:`, err);
+      }
+    }
+    return this.normalizeOrders(allOrders, key);
+  }
+
+  public async getHistoryOrders(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
+    const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
+    let allOrders: any[] = [];
+
+    // "orders-history-archive" allows 3 months. "orders-history" goes back 7 days.
+    // For MVP 90 days requirement, archive is preferred.
+    for (const instType of instTypes) {
+      let queryUrl = `instType=${instType}&limit=100`;
+      
+      const path = `/api/v5/trade/orders-history-archive?${queryUrl}`;
+      const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      
+      try {
+        const res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+        if (res.code === '0' && res.data) {
+          // Filter out manually because OKX API for archive might not perfectly respect begin/end without cursor logic
+          let filtered = res.data;
+          if (start && end) {
+            filtered = filtered.filter((o: any) => {
+              const uTime = parseInt(o.uTime || '0', 10);
+              return uTime >= start && uTime <= end;
+            });
+          }
+          allOrders = allOrders.concat(filtered);
+        }
+      } catch (err) {
+        console.warn(`[Okx-HistoryOrders] Error fetching ${instType}:`, err);
+      }
+    }
+    return this.normalizeOrders(allOrders, key);
+  }
+
+  private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {
+    return rawOrders.map(o => {
+      let status: import('../../types').UnifiedOrderStatus = 'NEW';
+      const state = o.state?.toLowerCase() || '';
+      if (state === 'filled') status = 'FILLED';
+      else if (state === 'canceled' || state === 'cancelled') status = 'CANCELLED';
+      else if (state === 'partially_filled') status = 'PARTIALLY_FILLED';
+      else if (state === 'live') status = 'NEW';
+      
+
+      let type: import('../../types').UnifiedOrderType = 'LIMIT';
+      const ot = o.ordType?.toLowerCase() || '';
+      if (ot === 'market') type = 'MARKET';
+      else if (ot.includes('stop') || ot.includes('loss')) type = 'SL';
+      else if (ot.includes('take') || ot.includes('profit')) type = 'TP';
+      else if (ot.includes('conditional')) type = 'CONDITIONAL';
+
+      const pSize = parseFloat(o.sz || '0');
+      const pFil = parseFloat(o.accFillSz || '0');
+      
+      return {
+        id: `${key.id}-${o.ordId}`,
+        exchangeOrderId: o.ordId,
+        connectionId: key.id,
+        exchange: 'okx',
+        symbol: o.instId,
+        category: mapInstrumentType('okx', o.instType || 'SWAP', o.ccy || 'USDT'),
+        side: o.side?.toLowerCase() === 'sell' ? 'sell' : 'buy',
+        positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
+        type,
+        status,
+        price: parseFloat(o.px || '0'),
+        avgPrice: parseFloat(o.avgPx || '0'),
+        qty: pSize,
+        filledQty: pFil,
+        value: pSize * (parseFloat(o.px || o.avgPx || '0')), // Fallback approx value
+        triggerPrice: o.tpTriggerPx ? parseFloat(o.tpTriggerPx) : o.slTriggerPx ? parseFloat(o.slTriggerPx) : undefined,
+        timeInForce: o.notionalUsd || undefined, // OKX specific fallback, they don't always expose timeInForce directly here 
+        createdTime: parseInt(o.cTime || '0', 10),
+        updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
+        fees: parseFloat(o.fee || '0'),
+        raw: o
+      };
+    });
+  }
+
   private static cachedSwapInstruments: any[] | null = null;
   private static cachedSwapInstrumentsTime: number = 0;
 
