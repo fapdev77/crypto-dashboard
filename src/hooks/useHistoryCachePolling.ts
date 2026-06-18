@@ -5,7 +5,7 @@ import { PositionHistoryService } from '../services/positions/PositionHistorySer
 
 export function useHistoryCachePolling() {
   const keys = useApiKeysStore(state => state.keys);
-  const { useMockData, historyCacheInterval } = useSettingsStore();
+  const { useMockData, historyCacheInterval, bumpHistoryCacheVersion } = useSettingsStore();
 
   useEffect(() => {
     if (useMockData || keys.length === 0) return;
@@ -17,15 +17,16 @@ export function useHistoryCachePolling() {
       const service = new PositionHistoryService();
       try {
         await Promise.all(keys.map(apiKey => service.fetchWithCache(apiKey)));
+        bumpHistoryCacheVersion();
         console.log('[HistoryCachePolling] Background update complete.');
       } catch (err) {
         console.error('[HistoryCachePolling] Error during background update:', err);
       }
     };
 
-    // Note: Do not run immediately, let on-demand trigger handles it, 
-    // unless we haven't loaded yet. Since the user can visit closed positions immediately,
-    // we just schedule the first run.
+    // Run immediately on mount to pick up any trades closed since the last poll cycle,
+    // then keep refreshing on the configured interval.
+    poll();
     const intervalId = setInterval(poll, intervalMs);
 
     return () => clearInterval(intervalId);

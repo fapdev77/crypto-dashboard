@@ -11,13 +11,21 @@ export function usePnLBySymbol(
   exchangeFilter: string,
   instrumentFilter: string
 ) {
-  const mappedPeriod = period === 'all' || period === '3m' || period === 'today' ? 'custom' : period;
-  const mappedStart = period === 'all' ? new Date(0).toISOString().split('T')[0] : 
-                      period === '3m' ? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
-                      period === 'today' ? new Date().toISOString().split('T')[0] : customStart;
-  const mappedEnd = period === 'all' || period === '3m' || period === 'today' ? new Date().toISOString().split('T')[0] : customEnd;
+  // Map PnLBySymbol periods to the usePositionHistory period enum.
+  // 'today' is passed directly so the hook uses local-time boundaries (avoids UTC offset bug).
+  // 'all' and '3m' are converted to 'custom' with epoch/offset-based ISO strings.
+  const mappedPeriod: 'today' | '7d' | '30d' | '90d' | 'custom' =
+    period === 'today' ? 'today' :
+    period === '1w'    ? '7d' :
+    period === '2w'    ? '7d' :
+    period === '1m'    ? '30d' :
+    period === '3m'    ? '90d' :
+    'custom'; // 'all'
 
-  const { positions, isLoading } = usePositionHistory(mappedPeriod as any, mappedStart, mappedEnd, triggerSearch);
+  const mappedStart = period === 'all' ? new Date(0).toISOString().split('T')[0] : customStart;
+  const mappedEnd   = period === 'all' ? new Date().toISOString().split('T')[0]  : customEnd;
+
+  const { positions, isLoading } = usePositionHistory(mappedPeriod, mappedStart, mappedEnd, triggerSearch);
 
   const pnlData = useMemo(() => {
     if (!positions || positions.length === 0) return [];

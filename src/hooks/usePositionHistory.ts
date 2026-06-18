@@ -8,6 +8,7 @@ import { useSettingsStore } from '../store/settingsStore';
 export function usePositionHistory(period: 'today' | '7d' | '30d' | '90d' | 'custom', customStart: string, customEnd: string, triggerSearch: boolean) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -74,7 +75,7 @@ export function usePositionHistory(period: 'today' | '7d' | '30d' | '90d' | 'cus
     return () => {
       isMounted = false;
     };
-  }, [keys, period, customStart, customEnd, triggerSearch, useMockData]);
+  }, [keys, period, customStart, customEnd, triggerSearch, useMockData, historyCacheVersion]);
 
   return { positions, setPositions, isLoading };
 }
