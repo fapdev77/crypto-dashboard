@@ -1,27 +1,40 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOrderReports, OrderFilters } from '../../../hooks/useOrderReports';
 import { OrderFilters as OrderFiltersUI } from './OrderFilters';
 import { OrdersTable } from './OrdersTable';
-import { Download, ChevronDown, ArrowLeftRight } from 'lucide-react';
+import { Download, ChevronDown, History } from 'lucide-react';
+import { useSettingsStore } from '../../../store/settingsStore';
 
-export function OrderReportsDashboard() {
-  const { fetchOrders, orders, loading, error } = useOrderReports();
+export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
     exchange: 'All',
     instrument: 'All',
     symbols: '',
     type: 'All',
     side: 'All',
-    status: 'OPEN',
-    timePeriod: 14 * 24 * 60 * 60 * 1000, // default 14 days for history
+    status: 'CLOSED',
+    timePeriod: 14 * 24 * 60 * 60 * 1000, // default 14 days
     accountId: 'All'
   });
 
+  const { fetchOrders, orders, loading, error } = useOrderReports(filters);
+  const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
+
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
+  // Busca inicial
   useEffect(() => {
-    fetchOrders(filters);
-  }, [filters, fetchOrders]);
+    fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchOrders]);
+
+  // Polling silencioso
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOrders(true); // silent refresh
+    }, historyCacheInterval * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [historyCacheInterval, fetchOrders]);
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
@@ -45,7 +58,7 @@ export function OrderReportsDashboard() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Order_Reports_${filters.status}_${Date.now()}.${extension}`);
+    link.setAttribute('download', `Order_History_${Date.now()}.${extension}`);
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -55,8 +68,8 @@ export function OrderReportsDashboard() {
     <div className="w-full flex flex-col gap-6 pb-8 h-full bg-white dark:bg-[#0b0c10] text-gray-900 dark:text-white rounded-xl">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 pb-2">
          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-           <ArrowLeftRight className="w-5 h-5 text-indigo-500" />
-           Order Reports
+           <History className="w-5 h-5 text-indigo-500" />
+           Order History
          </h2>
          <div className="relative">
             <button
@@ -77,7 +90,7 @@ export function OrderReportsDashboard() {
       </div>
 
       <div className="px-4 md:px-6">
-        <OrderFiltersUI filters={filters} setFilters={setFilters} />
+        <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} />
       </div>
 
       {error && (

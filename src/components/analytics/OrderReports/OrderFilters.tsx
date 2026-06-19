@@ -6,6 +6,7 @@ import { useApiKeysStore } from '../../../store/apiKeysStore';
 interface Props {
   filters: FilterState;
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
+  showPeriod?: boolean;
 }
 
 const ORDER_TYPES = ['All', 'LIMIT', 'MARKET', 'TP', 'SL', 'CONDITIONAL'];
@@ -17,7 +18,7 @@ const TIME_PERIODS = [
   { label: '90 Days', ms: 90 * 24 * 60 * 60 * 1000 },
 ];
 
-export function OrderFilters({ filters, setFilters }: Props) {
+export function OrderFilters({ filters, setFilters, showPeriod = false }: Props) {
   const { keys } = useApiKeysStore();
   
   const instrumentsAvailable = useMemo(() => {
@@ -36,7 +37,9 @@ export function OrderFilters({ filters, setFilters }: Props) {
     if (filters.instrument !== 'All' && !instrumentsAvailable.includes(filters.instrument)) {
       setFilters(p => ({ ...p, instrument: 'All' }));
     }
-    if (filters.accountId !== 'All' && !activeKeys.some(k => k.id === filters.accountId)) {
+    if (filters.exchange === 'All' && filters.accountId !== 'All') {
+      setFilters(p => ({ ...p, accountId: 'All' }));
+    } else if (filters.accountId !== 'All' && !activeKeys.some(k => k.id === filters.accountId)) {
       setFilters(p => ({ ...p, accountId: 'All' }));
     }
   }, [filters.exchange, filters.instrument, filters.accountId, instrumentsAvailable, activeKeys, setFilters]);
@@ -53,19 +56,6 @@ export function OrderFilters({ filters, setFilters }: Props) {
             value={filters.symbols}
             onChange={(e) => setFilters(p => ({ ...p, symbols: e.target.value }))}
           />
-        </div>
-
-        {/* Status Toggle */}
-        <div className="flex items-center gap-2 ml-1">
-          <label className="text-sm text-gray-500 whitespace-nowrap">Status:</label>
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters(p => ({ ...p, status: e.target.value as 'OPEN' | 'CLOSED' }))}
-            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
-          >
-            <option value="OPEN">Open Orders</option>
-            <option value="CLOSED">Order History</option>
-          </select>
         </div>
 
         {/* Exchanges */}
@@ -89,7 +79,8 @@ export function OrderFilters({ filters, setFilters }: Props) {
           <select
             value={filters.accountId}
             onChange={(e) => setFilters(p => ({ ...p, accountId: e.target.value }))}
-            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer max-w-[150px] truncate"
+            disabled={filters.exchange === 'All'}
+            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer max-w-[150px] truncate disabled:opacity-50"
           >
             <option value="All">All Accounts</option>
             {activeKeys.map(k => (
@@ -142,7 +133,7 @@ export function OrderFilters({ filters, setFilters }: Props) {
         </div>
 
         {/* Time Period (Only for History) */}
-        {filters.status === 'CLOSED' && (
+        {showPeriod && (
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-500 whitespace-nowrap">Period:</label>
             <select

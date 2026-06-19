@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useApiKeysStore, ApiCredentials } from '../store/apiKeysStore';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useOrdersStore } from '../store/ordersStore';
 import mockAccountsData from '../mock/accounts.json';
 import mockBalancesData from '../mock/balances.json';
 import mockPositionsData from '../mock/positions.json';
@@ -19,7 +20,10 @@ export function useMultiExchangeWS() {
   useEffect(() => {
     if (useMockData) {
       Object.keys(intervalsRef.current).forEach(id => disconnect(id));
-      keys.forEach(k => useDashboardStore.getState().clearConnectionData(k.id));
+      keys.forEach(k => {
+        useDashboardStore.getState().clearConnectionData(k.id);
+        useOrdersStore.getState().clearConnectionOrders(k.id);
+      });
 
       const currentState = useDashboardStore.getState();
       mockAccountsData.forEach((acc: any) => {
@@ -28,6 +32,8 @@ export function useMultiExchangeWS() {
         currentState.updateBalances(connectionId, accountBalances as any);
         const accountPositions = mockPositionsData.filter((pos: any) => pos.connectionId === connectionId);
         currentState.updatePositions(connectionId, accountPositions as any);
+        // Mock data does not include open orders — clear to keep store consistent
+        useOrdersStore.getState().clearConnectionOrders(connectionId);
       });
       return;
     }
@@ -82,6 +88,7 @@ export function useMultiExchangeWS() {
       delete intervalsRef.current[id + '-poll'];
     }
 
+    useOrdersStore.getState().clearConnectionOrders(id);
     setConnectionStatus(id, 'disconnected', null);
     setConnectionError(id, null);
   };
@@ -89,13 +96,16 @@ export function useMultiExchangeWS() {
   const syncRestData = async (config: ApiCredentials) => {
     try {
       const adapter = ExchangeAggregator.getAdapter(config.exchange);
-      const [balances, positions] = await Promise.all([
+      const openOrdersPromise = adapter.getOpenOrders ? adapter.getOpenOrders(config) : Promise.resolve([]);
+      const [balances, positions, openOrders] = await Promise.all([
         adapter.getBalance(config),
-        adapter.getOpenPositions(config)
+        adapter.getOpenPositions(config),
+        openOrdersPromise
       ]);
-      const currentState = useDashboardStore.getState();
-      currentState.updateBalances(config.id, balances as any);
-      currentState.updatePositions(config.id, positions);
+      const dashState = useDashboardStore.getState();
+      dashState.updateBalances(config.id, balances as any);
+      dashState.updatePositions(config.id, positions);
+      useOrdersStore.getState().updateOpenOrders(config.id, openOrders);
     } catch (err) {
       console.error(`[REST-${config.id}] ${config.exchange} REST polling failed:`, err);
     }
@@ -138,8 +148,10 @@ export function useMultiExchangeWS() {
     // REST Bootloader
     (async () => {
       try {
-        console.log(`[REST-${id}] Bootloading initial balances and positions...`);
+        console.log(`[REST-${id}] Bootloading initial balances, positions and open orders...`);
         await ExchangeAggregator.bootloadConnection(config);
+        // Fetch open orders as part of the initial bootload
+        await syncRestData(config);
         console.log(`[REST-${id}] REST Bootload completed.`);
 
         setConnectionStatus(id, 'connected', null);

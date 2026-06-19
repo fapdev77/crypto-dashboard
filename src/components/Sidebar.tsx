@@ -1,7 +1,8 @@
 import React, { useMemo, useEffect } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker, AlignLeft } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker, AlignLeft, ClipboardList } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useOrdersStore } from '../store/ordersStore';
 import logo1 from '../assets/CriptoDashboard-logo1.PNG';
 
 interface SidebarProps {
@@ -16,6 +17,7 @@ interface SidebarProps {
 export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
   const { positions } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
+  const openOrdersCount = useOrdersStore(state => state.openOrders.length);
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
@@ -37,14 +39,17 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       { id: 'positions-open', label: 'Abertas', badge: openCount },
       { id: 'positions-history', label: 'Histórico' }
     ]},
+    { id: 'orders', label: 'Ordens', icon: ClipboardList, subItems: [
+      { id: 'orders-open', label: 'Open Orders', badge: openOrdersCount },
+      { id: 'orders-history', label: 'Order History' }
+    ]},
     { id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
       { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' }
     ]},
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'testes-mvp', label: 'Testes MVP', icon: Beaker, subItems: [
       { id: 'testes-mvp-main', label: 'Playground Principal' },
-      { id: 'mvp-asset-metadata', label: 'Informações de Ativos' },
-      { id: 'mvp-order-reports', label: 'Relatórios de Ordens' }
+      { id: 'mvp-asset-metadata', label: 'Informações de Ativos' }
     ]},
   ];
 

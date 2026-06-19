@@ -364,18 +364,31 @@ export class BitgetAdapter implements IExchangeAdapter {
 
     // Futures History
     for (const pType of productTypes) {
-      let queryUrl = `productType=${pType}&limit=100`;
-      if (start) queryUrl += `&startTime=${start}`;
-      if (end) queryUrl += `&endTime=${end}`;
-      
-      const path = `/api/v2/mix/order/orders-history?${queryUrl}`;
-      const headers = await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      let list: any[] = [];
+      let lastId = '';
+      let pages = 0;
       
       try {
-        const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
-        if (res.code === '00000' && res.data?.entList) {
-          allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: pType })));
-        }
+        do {
+          let queryUrl = `productType=${pType}&limit=100`;
+          if (start) queryUrl += `&startTime=${start}`;
+          if (end) queryUrl += `&endTime=${end}`;
+          if (lastId) queryUrl += `&idLessThan=${lastId}`;
+          
+          const path = `/api/v2/mix/order/orders-history?${queryUrl}`;
+          const headers = await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+          
+          const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+          if (res.code === '00000') {
+             const rows = Array.isArray(res.data) ? res.data : (res.data?.entrustedList || res.data?.entList || res.data?.list || []);
+             list = [...list, ...rows.map((o: any) => ({ ...o, productType: pType }))];
+             lastId = res.data?.endId || '';
+          } else {
+             break;
+          }
+          pages++;
+        } while (lastId && pages < MAX_DEEP_PAGES);
+        allOrders = allOrders.concat(list);
       } catch (err) {
         console.warn(`[Bitget-HistoryOrders] Error fetching ${pType}:`, err);
       }
@@ -383,17 +396,30 @@ export class BitgetAdapter implements IExchangeAdapter {
 
     // Spot History
     try {
-      let spotQuery = `limit=100`;
-      if (start) spotQuery += `&startTime=${start}`;
-      if (end) spotQuery += `&endTime=${end}`;
-      const path = `/api/v2/spot/trade/history-orders?${spotQuery}`;
-      const headers = await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
-      const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
-      if (res.code === '00000' && Array.isArray(res.data)) {
-        allOrders = allOrders.concat(res.data.map((o: any) => ({ ...o, productType: 'spot' })));
-      } else if (res.code === '00000' && res.data?.entList) { // just in case
-        allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: 'spot' })));
-      }
+      let list: any[] = [];
+      let lastId = '';
+      let pages = 0;
+
+      do {
+        let spotQuery = `limit=100`;
+        if (start) spotQuery += `&startTime=${start}`;
+        if (end) spotQuery += `&endTime=${end}`;
+        if (lastId) spotQuery += `&idLessThan=${lastId}`;
+
+        const path = `/api/v2/spot/trade/history-orders?${spotQuery}`;
+        const headers = await BitgetAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+        const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+        
+        if (res.code === '00000') {
+           const rows = Array.isArray(res.data) ? res.data : (res.data?.entrustedList || res.data?.entList || res.data?.list || []);
+           list = [...list, ...rows.map((o: any) => ({ ...o, productType: 'spot' }))];
+           lastId = res.data?.endId || '';
+        } else {
+           break;
+        }
+        pages++;
+      } while (lastId && pages < MAX_DEEP_PAGES);
+      allOrders = allOrders.concat(list);
     } catch (err) {
       console.warn(`[Bitget-HistoryOrders] Error fetching spot:`, err);
     }

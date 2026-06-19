@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { useDashboardStore } from '../store/dashboardStore';
 import { ExchangeAggregator } from '../services/adapters/ExchangeAggregator';
 import { UnifiedOrder } from '../types';
+import { useOrdersStore } from '../store/ordersStore';
 
 export interface OrderFilters {
   exchange: string;     // 'All' | 'bybit' | 'bitget' | 'okx'
@@ -15,82 +15,86 @@ export interface OrderFilters {
   accountId: string;    // 'All' | connectionId
 }
 
-export function useOrderReports() {
+export function useOrderReports(filters: OrderFilters) {
   const { keys } = useApiKeysStore();
-  const [orders, setOrders] = useState<UnifiedOrder[]>([]);
+  const cachedOpenOrders = useOrdersStore(state => state.openOrders);
+
+  // Local state used only for CLOSED (history) orders
+  const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOrders = useCallback(async (filters: OrderFilters) => {
-    setLoading(true);
+  // fetchOrders is only meaningful for CLOSED orders now.
+  // Open orders are hydrated continuously by the global background polling.
+  const fetchOrders = useCallback(async (silent: boolean = false) => {
+    if (filters.status === 'OPEN') return;
+
+    if (!silent) setLoading(true);
     setError(null);
     let allOrders: UnifiedOrder[] = [];
 
     const now = Date.now();
-    const startTime = filters.status === 'CLOSED' ? now - filters.timePeriod : undefined;
-    const endTime = filters.status === 'CLOSED' ? now : undefined;
-
-    // Filter keys by selected exchanges
-    const activeKeys = keys.filter(k => {
-      if (filters.exchange !== 'All' && filters.exchange !== k.exchange) return false;
-      if (filters.accountId !== 'All' && filters.accountId !== k.id) return false;
-      return true;
-    });
+    // Fetch maximum of 90 days for CLOSED orders to allow in-memory time filtering
+    const startTime = now - (90 * 24 * 60 * 60 * 1000);
+    const endTime = now;
 
     try {
-      const promises = activeKeys.map(async (key) => {
+      const promises = keys.map(async (key) => {
         const adapter = ExchangeAggregator.getAdapter(key.exchange);
-        if (filters.status === 'OPEN') {
-           if (adapter.getOpenOrders) {
-             return await adapter.getOpenOrders(key);
-           }
-        } else {
-           if (adapter.getHistoryOrders) {
-             return await adapter.getHistoryOrders(key, startTime, endTime);
-           }
+        if (adapter.getHistoryOrders) {
+          return await adapter.getHistoryOrders(key, startTime, endTime);
         }
         return [];
       });
 
       const results = await Promise.allSettled(promises);
-      
+
       results.forEach((res) => {
         if (res.status === 'fulfilled') {
           allOrders = allOrders.concat(res.value);
         } else {
-          console.error('[useOrderReports] error fetching orders:', res.reason);
+          console.error('[useOrderReports] error fetching closed orders:', res.reason);
         }
       });
 
-      // Post fetch UI Filtering
-      const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
-
-      allOrders = allOrders.filter(order => {
-        if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) {
-          return false;
+      // Deduplicate
+      const uniqueOrdersMap = new Map<string, UnifiedOrder>();
+      allOrders.forEach(o => {
+        if (!uniqueOrdersMap.has(o.id)) {
+          uniqueOrdersMap.set(o.id, o);
         }
-        if (filters.type !== 'All' && filters.type !== order.type) {
-          return false;
-        }
-        if (filters.side !== 'All' && order.side !== filters.side) {
-          return false;
-        }
-        if (filters.instrument !== 'All' && order.category.toUpperCase() !== filters.instrument.toUpperCase()) {
-          return false;
-        }
-        return true;
       });
+      allOrders = Array.from(uniqueOrdersMap.values());
 
-      // Sort by createdTime descending
       allOrders.sort((a, b) => b.createdTime - a.createdTime);
-
-      setOrders(allOrders);
+      setClosedRawOrders(allOrders);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch orders');
+      if (!silent) setError(err.message || 'Failed to fetch order history');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }, [keys]);
+  }, [keys, filters.status]);
+
+  const orders = useMemo(() => {
+    // Source: global in-memory cache for open orders, local state for closed
+    const rawOrders: UnifiedOrder[] = filters.status === 'OPEN'
+      ? Object.values(cachedOpenOrders)
+      : closedRawOrders;
+
+    const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
+    const now = Date.now();
+
+    return rawOrders.filter(order => {
+      if (filters.exchange !== 'All' && order.exchange !== filters.exchange) return false;
+      if (filters.status === 'CLOSED' && order.createdTime < now - filters.timePeriod) return false;
+      if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
+      if (filters.type !== 'All' && filters.type !== order.type) return false;
+      if (filters.side !== 'All' && order.side !== filters.side) return false;
+      if (filters.instrument !== 'All' && order.category.toUpperCase() !== filters.instrument.toUpperCase()) return false;
+      if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
+      return true;
+    });
+  }, [cachedOpenOrders, closedRawOrders, filters]);
 
   return { fetchOrders, orders, loading, error };
 }
