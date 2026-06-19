@@ -374,7 +374,7 @@ export class OkxAdapter implements IExchangeAdapter {
         connectionId: key.id,
         exchange: 'okx',
         symbol: o.instId,
-        category: o.instType || 'UNKNOWN',
+        category: mapInstrumentType('okx', o.instType || 'SWAP', o.ccy || 'USDT'),
         side: o.side?.toLowerCase() === 'sell' ? 'sell' : 'buy',
         positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
         type,

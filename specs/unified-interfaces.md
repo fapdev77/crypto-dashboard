@@ -202,3 +202,53 @@ export interface SymbolPnLRecord {
   lastActivity: number;
 }
 ```
+
+## 6. Unified Order Interface (`UnifiedOrder`)
+
+Captures exchange orders (open and historical) with normalized fields for uniform display.
+
+```typescript
+export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+
+export interface UnifiedOrder {
+  id: string;
+  exchangeOrderId: string;
+  connectionId: string;
+  exchange: ExchangeName;
+  symbol: string;
+  category: UnifiedInstrumentType | string;
+  side: 'buy' | 'sell';
+  positionSide?: PositionSide;
+  type: UnifiedOrderType;
+  status: UnifiedOrderStatus;
+  price: number;
+  avgPrice: number;
+  qty: number;
+  filledQty: number;
+  value?: number;
+  triggerPrice?: number;
+  reduceOnly?: boolean;
+  timeInForce?: string;
+  createdTime: number;
+  updatedTime: number;
+  fees?: number;
+  raw?: any;
+}
+```
+
+### Mappings Table
+| Field | Bybit (V5) | Bitget (V2) | OKX (V5) | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | Computed | Computed | Computed | Synthesized connection+orderId |
+| `category` | Mapped (`category`) | Mapped (`productType`) | Mapped (`instType`) | Mapped to `UnifiedInstrumentType` |
+| `type` | `orderType` | `orderType` / `planType` | `ordType` | LIMIT, MARKET, TP, SL, CONDITIONAL |
+| `status` | `orderStatus` | `state` / `status` | `state` | Unified order execution state |
+| `qty` | `qty` | `size` | `sz` | Total ordered quantity |
+| `filledQty` | `cumExecQty` | `filledQty` / `baseVolume`| `accFillSz` | Accumulated filled quantity |
+| `price` | `price` | `price` | `px` | Target order price |
+| `avgPrice` | `avgPrice` | `priceAvg` / `avgPrice` | `avgPx` | Average execution fill price |
+| `createdTime`| `createdTime` | `cTime` | `cTime` | Milliseconds timestamp of creation |
+| `updatedTime`| `updatedTime` | `uTime` / `cTime` | `uTime` / `cTime` | Milliseconds timestamp of last update |
+| `timeInForce`| `timeInForce` | `timeInForce` / `force` | `notionalUsd` (fallback) | Order duration constraints |
+

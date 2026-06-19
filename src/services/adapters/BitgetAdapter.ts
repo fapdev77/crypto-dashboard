@@ -453,7 +453,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         connectionId: key.id,
         exchange: 'bitget',
         symbol: o.symbol || o.instId,
-        category: o.productType || 'UNKNOWN',
+        category: mapInstrumentType('bitget', o.productType || 'UNKNOWN'),
         side: o.side?.toLowerCase().includes('buy') ? 'buy' : 'sell',
         positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
         type,

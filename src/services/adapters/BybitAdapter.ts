@@ -406,7 +406,7 @@ export class BybitAdapter implements IExchangeAdapter {
         connectionId: key.id,
         exchange: 'bybit',
         symbol: o.symbol,
-        category: o.category || o._category || mapInstrumentType('bybit', o.symbol),
+        category: mapInstrumentType('bybit', o.category || o._category || 'UNKNOWN'),
         side: o.side?.toLowerCase() === 'sell' ? 'sell' : 'buy',
         positionSide: o.positionIdx === 1 ? 'long' : o.positionIdx === 2 ? 'short' : 'net',
         type,

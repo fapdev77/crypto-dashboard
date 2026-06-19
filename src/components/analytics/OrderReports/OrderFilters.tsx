@@ -22,11 +22,8 @@ export function OrderFilters({ filters, setFilters, showPeriod = false }: Props)
   const { keys } = useApiKeysStore();
   
   const instrumentsAvailable = useMemo(() => {
-    if (filters.exchange === 'bitget') return ['All', 'USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'spot'];
-    if (filters.exchange === 'bybit') return ['All', 'linear', 'inverse', 'spot'];
-    if (filters.exchange === 'okx') return ['All', 'SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
-    return ['All'];
-  }, [filters.exchange]);
+    return ['All', 'PERP', 'INVERSE', 'SPOT', 'FUTURES', 'OPTION'];
+  }, []);
 
   const activeKeys = useMemo(() => {
     return keys.filter(k => filters.exchange === 'All' || k.exchange === filters.exchange);
@@ -95,8 +92,7 @@ export function OrderFilters({ filters, setFilters, showPeriod = false }: Props)
           <select
             value={filters.instrument}
             onChange={(e) => setFilters(p => ({ ...p, instrument: e.target.value }))}
-            disabled={filters.exchange === 'All'}
-            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer disabled:opacity-50"
+            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
           >
             {instrumentsAvailable.map(inst => (
               <option key={inst} value={inst}>{inst}</option>

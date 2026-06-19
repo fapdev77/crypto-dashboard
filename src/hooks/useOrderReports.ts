@@ -90,7 +90,7 @@ export function useOrderReports(filters: OrderFilters) {
       if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
       if (filters.type !== 'All' && filters.type !== order.type) return false;
       if (filters.side !== 'All' && order.side !== filters.side) return false;
-      if (filters.instrument !== 'All' && order.category.toUpperCase() !== filters.instrument.toUpperCase()) return false;
+      if (filters.instrument !== 'All' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
       if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
       return true;
     });
