@@ -17,7 +17,7 @@ interface SidebarProps {
 export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
   const { positions } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
-  const openOrdersCount = useOrdersStore(state => state.openOrders.length);
+  const openOrdersCount = useOrdersStore(state => Object.keys(state.openOrders).length);
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
