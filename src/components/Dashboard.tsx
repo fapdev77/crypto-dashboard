@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import Big from 'big.js';
 import { useDashboardStore, BalanceItem } from '../store/dashboardStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -39,11 +40,11 @@ export function Dashboard() {
   }, [positionsList, useMockData]);
 
   const totalEquity = useMemo(() => {
-    return activeBalances.reduce((acc, curr) => acc + (curr.usdValue || 0), 0);
+    return Number(activeBalances.reduce((acc, curr) => acc.plus(curr.usdValue || 0), new Big(0)));
   }, [activeBalances]);
 
   const dailyPnL = useMemo(() => {
-    return activePositions.reduce((acc, curr) => acc + (curr.unrealizedPnl || 0), 0);
+    return Number(activePositions.reduce((acc, curr) => acc.plus(curr.unrealizedPnl || 0), new Big(0)));
   }, [activePositions]);
 
   const dailyPnLPercent = totalEquity > 0 ? (dailyPnL / totalEquity) * 100 : 0;
@@ -60,12 +61,12 @@ export function Dashboard() {
   const inverseLongCount = inversePositions.filter(pos => pos.side === 'long' || pos.side === 'buy').length;
   const inverseShortCount = inversePositions.filter(pos => pos.side === 'short' || pos.side === 'sell').length;
 
-  const totalProtected = inversePositions.reduce((acc, pos) => {
+  const totalProtected = Number(inversePositions.reduce((acc, pos) => {
     if (pos.side === 'short' || pos.side === 'sell') {
-      return acc + (pos.margin || 0) * (pos.markPrice || 0);
+      return acc.plus(new Big(pos.margin || 0).times(pos.markPrice || 0));
     }
     return acc;
-  }, 0);
+  }, new Big(0)));
   const totalExposed = totalEquity - totalProtected;
   
   const protectedPercent = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
@@ -91,47 +92,61 @@ export function Dashboard() {
 
   // Hierarchical Data: Exchange -> Account -> Balances
   const hierarchy = useMemo(() => {
-    const acc: Record<string, { total: number; accounts: Record<string, { label: string; total: number; balances: BalanceItem[] }> }> = {};
+    const acc: Record<string, { total: Big; accounts: Record<string, { label: string; total: Big; balances: BalanceItem[] }> }> = {};
 
     filteredBalances.forEach(b => {
       if (!acc[b.exchange]) {
-        acc[b.exchange] = { total: 0, accounts: {} };
+        acc[b.exchange] = { total: new Big(0), accounts: {} };
       }
       if (!acc[b.exchange].accounts[b.connectionId]) {
-        acc[b.exchange].accounts[b.connectionId] = { label: b.label, total: 0, balances: [] };
+        acc[b.exchange].accounts[b.connectionId] = { label: b.label, total: new Big(0), balances: [] };
       }
       acc[b.exchange].accounts[b.connectionId].balances.push(b);
-      acc[b.exchange].accounts[b.connectionId].total += (b.usdValue || 0);
-      acc[b.exchange].total += (b.usdValue || 0);
+      acc[b.exchange].accounts[b.connectionId].total = acc[b.exchange].accounts[b.connectionId].total.plus(b.usdValue || 0);
+      acc[b.exchange].total = acc[b.exchange].total.plus(b.usdValue || 0);
     });
 
-    return acc;
+    const result: Record<string, { total: number; accounts: Record<string, { label: string; total: number; balances: BalanceItem[] }> }> = {};
+    for (const ex in acc) {
+      result[ex] = { total: Number(acc[ex].total), accounts: {} };
+      for (const conn in acc[ex].accounts) {
+        result[ex].accounts[conn] = {
+          label: acc[ex].accounts[conn].label,
+          total: Number(acc[ex].accounts[conn].total),
+          balances: acc[ex].accounts[conn].balances
+        };
+      }
+    }
+
+    return result;
   }, [filteredBalances]);
 
   const donutData = useMemo(() => {
-    const dataMap: Record<string, number> = {};
+    const dataMap: Record<string, Big> = {};
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
       if (val > 1) { // Ignore dust
-        dataMap[b.exchange] = (dataMap[b.exchange] || 0) + val;
+        if (!dataMap[b.exchange]) dataMap[b.exchange] = new Big(0);
+        dataMap[b.exchange] = dataMap[b.exchange].plus(val);
       }
     });
     return Object.entries(dataMap)
-      .map(([name, value]) => ({ name, value }))
+      .map(([name, value]) => ({ name, value: Number(value) }))
       .sort((a, b) => b.value - a.value);
   }, [activeBalances]);
 
   const crossExchangeAssets = useMemo(() => {
-    const exchangesMap: Record<string, { total: number, assetsMap: Record<string, number> }> = {};
-    let globalTotal = 0;
+    const exchangesMap: Record<string, { total: Big, assetsMap: Record<string, Big> }> = {};
+    let globalTotal = new Big(0);
 
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
       if (val > 1) { // ignore dust
-        if (!exchangesMap[b.exchange]) exchangesMap[b.exchange] = { total: 0, assetsMap: {} };
-        exchangesMap[b.exchange].total += val;
-        exchangesMap[b.exchange].assetsMap[b.ccy] = (exchangesMap[b.exchange].assetsMap[b.ccy] || 0) + val;
-        globalTotal += val;
+        if (!exchangesMap[b.exchange]) exchangesMap[b.exchange] = { total: new Big(0), assetsMap: {} };
+        exchangesMap[b.exchange].total = exchangesMap[b.exchange].total.plus(val);
+        if (!exchangesMap[b.exchange].assetsMap[b.ccy]) exchangesMap[b.exchange].assetsMap[b.ccy] = new Big(0);
+        exchangesMap[b.exchange].assetsMap[b.ccy] = exchangesMap[b.exchange].assetsMap[b.ccy].plus(val);
+        globalTotal = globalTotal.plus(val);
       }
     });
 
@@ -139,8 +154,11 @@ export function Dashboard() {
     let maxSegments = 0;
 
     for (const [exchange, data] of Object.entries(exchangesMap)) {
+      const totalNum = Number(data.total);
+      const globalTotalNum = Number(globalTotal);
+      
       const sorted = Object.entries(data.assetsMap)
-        .map(([ccy, val]) => ({ ccy, val }))
+        .map(([ccy, val]) => ({ ccy, val: Number(val) }))
         .sort((a, b) => b.val - a.val);
 
       let outrosVal = 0;
@@ -148,8 +166,8 @@ export function Dashboard() {
       const rawAssets: any[] = [];
 
       sorted.forEach(asset => {
-        const percent = data.total > 0 ? (asset.val / data.total) * 100 : 0;
-        const percentOfGlobal = globalTotal > 0 ? (asset.val / globalTotal) * 100 : 0;
+        const percent = totalNum > 0 ? (asset.val / totalNum) * 100 : 0;
+        const percentOfGlobal = globalTotalNum > 0 ? (asset.val / globalTotalNum) * 100 : 0;
 
         rawAssets.push({ name: asset.ccy, value: asset.val, percent, percentOfGlobal });
 
@@ -164,8 +182,8 @@ export function Dashboard() {
         segments.push({
           name: 'Outros',
           value: outrosVal,
-          percent: data.total > 0 ? (outrosVal / data.total) * 100 : 0,
-          percentOfGlobal: globalTotal > 0 ? (outrosVal / globalTotal) * 100 : 0
+          percent: totalNum > 0 ? (outrosVal / totalNum) * 100 : 0,
+          percentOfGlobal: globalTotalNum > 0 ? (outrosVal / globalTotalNum) * 100 : 0
         });
       }
 
@@ -173,7 +191,7 @@ export function Dashboard() {
         maxSegments = segments.length;
       }
 
-      const rowData: any = { exchange: exchange.toLowerCase(), total: data.total, rawAssets };
+      const rowData: any = { exchange: exchange.toLowerCase(), total: totalNum, rawAssets };
       segments.forEach((seg: any, idx: number) => {
         rowData[`segment${idx}`] = seg.value;
         rowData[`_meta${idx}`] = { name: seg.name, percent: seg.percent, percentOfGlobal: seg.percentOfGlobal };

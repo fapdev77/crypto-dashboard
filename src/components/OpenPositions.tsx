@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import Big from 'big.js';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Search, X, AlertTriangle } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
@@ -73,16 +74,20 @@ export function OpenPositions() {
   }, [activePositions]);
 
   const { totalUnrealizedPnl, totalRealizedPnl } = useMemo(() => {
-    let uPnl = 0;
-    let rPnl = 0;
+    let uPnl = new Big(0);
+    let rPnl = new Big(0);
     activePositions.forEach(pos => {
       const posCcy = pos.ccy || pos.baseCoin || 'USDT';
       const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
       const multiplier = isFiatCcy ? 1 : (pos.markPrice || 1);
-      uPnl += ((pos.unrealizedPnl || 0) * multiplier);
-      rPnl += ((pos.realizedPnl || 0) * multiplier);
+      
+      const uVal = new Big(pos.unrealizedPnl || 0).times(multiplier);
+      const rVal = new Big(pos.realizedPnl || 0).times(multiplier);
+      
+      uPnl = uPnl.plus(uVal);
+      rPnl = rPnl.plus(rVal);
     });
-    return { totalUnrealizedPnl: uPnl, totalRealizedPnl: rPnl };
+    return { totalUnrealizedPnl: Number(uPnl), totalRealizedPnl: Number(rPnl) };
   }, [activePositions]);
 
   return (
