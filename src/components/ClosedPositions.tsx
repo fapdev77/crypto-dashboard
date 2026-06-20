@@ -12,6 +12,7 @@ import { AppTooltip } from './ui/Tooltip';
 import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
+import { SyncBadge } from './ui/SyncBadge';
 
 export function ClosedPositions() {
   const keys = useApiKeysStore(state => state.keys);
@@ -31,7 +32,7 @@ export function ClosedPositions() {
     setTriggerSearch(!triggerSearch);
   };
 
-  const { positions: closedPositions, isLoading } = usePositionHistory(period, customStartDate, customEndDate, triggerSearch);
+  const { positions: closedPositions, isLoading, isSyncing } = usePositionHistory(period, customStartDate, customEndDate, triggerSearch);
   const [error, setError] = useState<string | null>(null);
 
   const filteredClosedPositions = useMemo(() => {
@@ -131,7 +132,11 @@ export function ClosedPositions() {
     <div className="space-y-6">
 
       {/* Filters Header */}
-      <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div className="flex items-center">
+          <SyncBadge isSyncing={isSyncing} />
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2">
         {/* Exchange Filter */}
         <div className="relative z-20">
           <button
@@ -248,6 +253,7 @@ export function ClosedPositions() {
               <X className="h-4 w-4" />
             </button>
           )}
+        </div>
         </div>
       </div>
 

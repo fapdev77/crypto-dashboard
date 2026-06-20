@@ -1,11 +1,13 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { UnifiedHistoryPosition, UnifiedAssetCategory } from '../types';
+import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder } from '../types';
 
 const DB_NAME = 'crypto-dashboard-cache';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const HISTORY_STORE = 'positionHistory';
 const META_STORE = 'cacheMeta';
 const ASSET_META_STORE = 'assetMetadata';
+const ORDER_HISTORY_STORE = 'orderHistory';
+const ORDER_META_STORE = 'orderCacheMeta';
 
 interface CacheDB extends DBSchema {
   positionHistory: {
@@ -30,6 +32,22 @@ interface CacheDB extends DBSchema {
       id: string; // same as key
       category: UnifiedAssetCategory;
       updatedAt: number; // timestamp of fetch
+    };
+  };
+  orderHistory: {
+    key: string;
+    value: UnifiedOrder;
+    indexes: {
+      'by-connectionId': string;
+      'by-createdTime': number;
+    };
+  };
+  orderCacheMeta: {
+    key: string;
+    value: {
+      connectionId: string;
+      lastFetchTimestamp: number;
+      updatedAt: number;
     };
   };
 }
@@ -65,6 +83,17 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
       if (oldVersion < 3) {
          if (!db.objectStoreNames.contains(ASSET_META_STORE)) {
             db.createObjectStore(ASSET_META_STORE, { keyPath: 'id' });
+         }
+      }
+      
+      if (oldVersion < 4) {
+         if (!db.objectStoreNames.contains(ORDER_HISTORY_STORE)) {
+           const orderStore = db.createObjectStore(ORDER_HISTORY_STORE, { keyPath: 'id' });
+           orderStore.createIndex('by-connectionId', 'connectionId');
+           orderStore.createIndex('by-createdTime', 'createdTime');
+         }
+         if (!db.objectStoreNames.contains(ORDER_META_STORE)) {
+           db.createObjectStore(ORDER_META_STORE, { keyPath: 'connectionId' });
          }
       }
     },
@@ -183,4 +212,40 @@ export async function clearAllCache(): Promise<void> {
 export async function getCacheSize(): Promise<number> {
   const db = await getDB();
   return db.count(HISTORY_STORE);
+}
+
+// ------------------------------------------------------------------
+// ORDER HISTORY
+// ------------------------------------------------------------------
+
+export async function getCachedOrders(connectionId: string): Promise<UnifiedOrder[]> {
+  const db = await getDB();
+  const all = await db.getAllFromIndex(ORDER_HISTORY_STORE, 'by-connectionId', connectionId);
+  return all.sort((a, b) => b.createdTime - a.createdTime);
+}
+
+export async function saveCachedOrders(orders: UnifiedOrder[]): Promise<void> {
+  if (orders.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction(ORDER_HISTORY_STORE, 'readwrite');
+  const store = tx.objectStore(ORDER_HISTORY_STORE);
+  for (const ord of orders) {
+    await store.put(ord);
+  }
+  await tx.done;
+}
+
+export async function getLastOrderFetchTimestamp(connectionId: string): Promise<number> {
+  const db = await getDB();
+  const meta = await db.get(ORDER_META_STORE, connectionId);
+  return meta?.lastFetchTimestamp || 0;
+}
+
+export async function updateOrderCacheMeta(connectionId: string, latestCreatedTime: number): Promise<void> {
+  const db = await getDB();
+  await db.put(ORDER_META_STORE, {
+    connectionId,
+    lastFetchTimestamp: latestCreatedTime,
+    updatedAt: Date.now(),
+  });
 }

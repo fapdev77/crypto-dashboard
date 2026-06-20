@@ -25,7 +25,7 @@ export function usePnLBySymbol(
   const mappedStart = period === 'all' ? new Date(0).toISOString().split('T')[0] : customStart;
   const mappedEnd   = period === 'all' ? new Date().toISOString().split('T')[0]  : customEnd;
 
-  const { positions, isLoading } = usePositionHistory(mappedPeriod, mappedStart, mappedEnd, triggerSearch);
+  const { positions, isLoading, isSyncing } = usePositionHistory(mappedPeriod, mappedStart, mappedEnd, triggerSearch);
 
   const pnlData = useMemo(() => {
     if (!positions || positions.length === 0) return [];
@@ -98,5 +98,5 @@ export function usePnLBySymbol(
     return Array.from(symbolMap.values());
   }, [positions, exchangeFilter, instrumentFilter]);
 
-  return { pnlData, isLoading };
+  return { pnlData, isLoading, isSyncing };
 }

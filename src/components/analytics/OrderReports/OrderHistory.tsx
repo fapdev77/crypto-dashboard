@@ -4,6 +4,7 @@ import { OrderFilters as OrderFiltersUI } from './OrderFilters';
 import { OrdersTable } from './OrdersTable';
 import { Download, ChevronDown, History } from 'lucide-react';
 import { useSettingsStore } from '../../../store/settingsStore';
+import { SyncBadge } from '../../ui/SyncBadge';
 
 export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -13,11 +14,11 @@ export function OrderHistory() {
     type: 'All',
     side: 'All',
     status: 'CLOSED',
-    timePeriod: 14 * 24 * 60 * 60 * 1000, // default 14 days
+    timePeriod: 7 * 24 * 60 * 60 * 1000, // default 7 days
     accountId: 'All'
   });
 
-  const { fetchOrders, orders, loading, error } = useOrderReports(filters);
+  const { fetchOrders, orders, loading, isSyncing, error } = useOrderReports(filters);
   const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -41,7 +42,7 @@ export function OrderHistory() {
     let content = "Symbol,Exchange,Connection ID,Instrument,Type,Side,Price,Amount,Filled,Status,Time\n";
     orders.forEach(o => {
       const isBuy = o.side === 'buy';
-      const sideText = isBuy 
+      const sideText = isBuy
         ? (o.positionSide === 'long' ? 'Open Long' : o.positionSide === 'short' ? 'Close Short' : 'Buy')
         : (o.positionSide === 'short' ? 'Open Short' : o.positionSide === 'long' ? 'Close Long' : 'Sell');
 
@@ -67,26 +68,29 @@ export function OrderHistory() {
   return (
     <div className="w-full flex flex-col gap-6 pb-8 h-full bg-white dark:bg-[#0b0c10] text-gray-900 dark:text-white rounded-xl">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 pb-2">
-         <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-           <History className="w-5 h-5 text-indigo-500" />
-           Order History
-         </h2>
-         <div className="relative">
-            <button
-              onClick={() => setExportMenuOpen(!exportMenuOpen)}
-              className="p-2 ml-2 bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] flex items-center gap-2 rounded-lg hover:bg-gray-200 dark:hover:bg-[#2a2b30] transition-colors text-sm font-medium"
-            >
-              <Download className="w-4 h-4" />
-              Export <ChevronDown className="w-3 h-3" />
-            </button>
-            {exportMenuOpen && (
-              <div className="absolute top-11 right-0 w-32 bg-white dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm">
-                <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export CSV</button>
-                <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export Excel</button>
-                <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export PDF</button>
-              </div>
-            )}
+        <h2 className="text-xl font-bold tracking-tight flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <History className="w-5 h-5 text-indigo-500" />
+            Order History
           </div>
+          <SyncBadge isSyncing={isSyncing} />
+        </h2>
+        <div className="relative">
+          <button
+            onClick={() => setExportMenuOpen(!exportMenuOpen)}
+            className="p-2 ml-2 bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] flex items-center gap-2 rounded-lg hover:bg-gray-200 dark:hover:bg-[#2a2b30] transition-colors text-sm font-medium"
+          >
+            <Download className="w-4 h-4" />
+            Export <ChevronDown className="w-3 h-3" />
+          </button>
+          {exportMenuOpen && (
+            <div className="absolute top-11 right-0 w-32 bg-white dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm">
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export CSV</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export Excel</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export PDF</button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="px-4 md:px-6">

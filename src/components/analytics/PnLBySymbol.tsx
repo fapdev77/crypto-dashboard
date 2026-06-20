@@ -10,6 +10,7 @@ import { formatValue, formatCrypto } from '../../utils/formatters';
 import { useTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { usePrivacy } from '../../context/PrivacyContext';
+import { SyncBadge } from '../ui/SyncBadge';
 
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
@@ -23,7 +24,7 @@ export function PnLBySymbol() {
   const [sortField, setSortField] = useState<SortField>('totalPnL');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const { pnlData, isLoading } = usePnLBySymbol(period, '', '', true, exchange, instrument);
+  const { pnlData, isLoading, isSyncing } = usePnLBySymbol(period, '', '', true, exchange, instrument);
 
   const instrumentsAvailable = useMemo(() => {
     if (exchange === 'bitget') return ['All', 'USDT-M', 'Coin-M', 'USDC-M'];
@@ -125,7 +126,10 @@ export function PnLBySymbol() {
   return (
     <div className="w-full flex flex-col gap-6 pb-8 h-full bg-white dark:bg-[#0b0c10] text-gray-900 dark:text-white rounded-xl">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 pb-2">
-        <h2 className="text-xl font-bold tracking-tight">PnL by symbol</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold tracking-tight">PnL by symbol</h2>
+          <SyncBadge isSyncing={isSyncing} />
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

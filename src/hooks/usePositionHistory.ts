@@ -4,6 +4,7 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { UnifiedHistoryPosition } from '../types';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { useSettingsStore } from '../store/settingsStore';
+import { getCachedHistory } from '../services/historyCache';
 
 export function usePositionHistory(period: 'today' | '7d' | '30d' | '90d' | 'custom', customStart: string, customEnd: string, triggerSearch: boolean) {
   const keys = useApiKeysStore(state => state.keys);
@@ -11,10 +12,12 @@ export function usePositionHistory(period: 'today' | '7d' | '30d' | '90d' | 'cus
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    const fetchHistory = async () => {
+    
+    const execute = async () => {
       if (useMockData) {
         const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime);
         setPositions(sortedHistory as UnifiedHistoryPosition[]);
@@ -25,7 +28,6 @@ export function usePositionHistory(period: 'today' | '7d' | '30d' | '90d' | 'cus
         setPositions([]);
         return;
       }
-      setIsLoading(true);
       
       let start: number | undefined;
       let end: number | undefined;
@@ -48,34 +50,72 @@ export function usePositionHistory(period: 'today' | '7d' | '30d' | '90d' | 'cus
         end = now;
       }
 
-      const service = new PositionHistoryService();
-      let allHistory: UnifiedHistoryPosition[] = [];
+      // Step 1: Instant cache load (SWR)
+      let cachedTotal: UnifiedHistoryPosition[] = [];
+      try {
+        const cachePromises = keys.map(apiKey => getCachedHistory(apiKey.id));
+        const cacheResults = await Promise.all(cachePromises);
+        for (const res of cacheResults) {
+          cachedTotal = [...cachedTotal, ...res];
+        }
+        
+        if (start !== undefined && end !== undefined) {
+          cachedTotal = cachedTotal.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
+        }
+        cachedTotal.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
+        
+        if (isMounted) {
+          if (cachedTotal.length > 0) {
+            setPositions(cachedTotal);
+            setIsLoading(false); // fast render
+          } else {
+            setIsLoading(true); // initial load
+          }
+        }
+      } catch (e) {
+        console.error("Error reading cache for SWR", e);
+        if (isMounted) setIsLoading(true);
+      }
 
-      const promises = keys.map(apiKey => service.fetchWithCache(apiKey));
-      const results = await Promise.all(promises);
+      // Step 2: Background sync
+      if (isMounted) setIsSyncing(true);
       
-      for (const result of results) {
-        allHistory = [...allHistory, ...result];
-      }
+      try {
+        const service = new PositionHistoryService();
+        let allHistory: UnifiedHistoryPosition[] = [];
+        
+        const promises = keys.map(apiKey => service.fetchWithCache(apiKey));
+        const results = await Promise.all(promises);
+        
+        for (const result of results) {
+          allHistory = [...allHistory, ...result];
+        }
 
-      if (start !== undefined && end !== undefined) {
-        allHistory = allHistory.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
-      }
+        if (start !== undefined && end !== undefined) {
+          allHistory = allHistory.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
+        }
+        allHistory.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
 
-      allHistory.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
-
-      if (isMounted) {
-        setPositions(allHistory);
-        setIsLoading(false);
+        if (isMounted) {
+          setPositions(allHistory);
+          setIsLoading(false);
+          setIsSyncing(false);
+        }
+      } catch (err) {
+        console.error("Error background syncing position history", err);
+        if (isMounted) {
+          setIsLoading(false);
+          setIsSyncing(false);
+        }
       }
     };
 
-    fetchHistory();
+    execute();
 
     return () => {
       isMounted = false;
     };
   }, [keys, period, customStart, customEnd, triggerSearch, useMockData, historyCacheVersion]);
 
-  return { positions, setPositions, isLoading };
+  return { positions, setPositions, isLoading, isSyncing };
 }

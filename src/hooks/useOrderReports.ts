@@ -3,6 +3,7 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { ExchangeAggregator } from '../services/adapters/ExchangeAggregator';
 import { UnifiedOrder } from '../types';
 import { useOrdersStore } from '../store/ordersStore';
+import { getCachedOrders, saveCachedOrders, getLastOrderFetchTimestamp, updateOrderCacheMeta } from '../services/historyCache';
 
 export interface OrderFilters {
   exchange: string;     // 'All' | 'bybit' | 'bitget' | 'okx'
@@ -22,56 +23,93 @@ export function useOrderReports(filters: OrderFilters) {
   // Local state used only for CLOSED (history) orders
   const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // fetchOrders is only meaningful for CLOSED orders now.
-  // Open orders are hydrated continuously by the global background polling.
   const fetchOrders = useCallback(async (silent: boolean = false) => {
     if (filters.status === 'OPEN') return;
 
     if (!silent) setLoading(true);
     setError(null);
-    let allOrders: UnifiedOrder[] = [];
 
     const now = Date.now();
-    // Fetch maximum of 90 days for CLOSED orders to allow in-memory time filtering
-    const startTime = now - (90 * 24 * 60 * 60 * 1000);
-    const endTime = now;
+    let isMounted = true; // In a real setup we might want an abort controller
 
     try {
-      const promises = keys.map(async (key) => {
+      // Step 1: SWR Instant Load from IndexedDB
+      let cachedTotal: UnifiedOrder[] = [];
+      const cachePromises = keys.map(apiKey => getCachedOrders(apiKey.id));
+      const cacheResults = await Promise.all(cachePromises);
+      for (const res of cacheResults) {
+        cachedTotal = [...cachedTotal, ...res];
+      }
+
+      cachedTotal.sort((a, b) => b.createdTime - a.createdTime);
+      
+      if (cachedTotal.length > 0) {
+        setClosedRawOrders(cachedTotal);
+        if (!silent) setLoading(false); // Instant render
+      }
+
+      // Step 2: Background Sync (Incremental)
+      setIsSyncing(true);
+      
+      let allNewOrders: UnifiedOrder[] = [];
+      
+      const fetchPromises = keys.map(async (key) => {
         const adapter = ExchangeAggregator.getAdapter(key.exchange);
         if (adapter.getHistoryOrders) {
-          return await adapter.getHistoryOrders(key, startTime, endTime);
+          const lastFetch = await getLastOrderFetchTimestamp(key.id);
+          const startTime = lastFetch > 0 ? lastFetch : now - (90 * 24 * 60 * 60 * 1000);
+          const endTime = now;
+          
+          const newOrders = await adapter.getHistoryOrders(key, startTime, endTime);
+          
+          if (newOrders.length > 0) {
+            await saveCachedOrders(newOrders);
+            // find the latest createdTime to update cache meta
+            const maxCreatedTime = Math.max(...newOrders.map(o => o.createdTime || 0));
+            if (maxCreatedTime > lastFetch) {
+              await updateOrderCacheMeta(key.id, maxCreatedTime);
+            }
+          }
+          return newOrders;
         }
         return [];
       });
 
-      const results = await Promise.allSettled(promises);
+      const results = await Promise.allSettled(fetchPromises);
+      let hasNewOrders = false;
 
       results.forEach((res) => {
         if (res.status === 'fulfilled') {
-          allOrders = allOrders.concat(res.value);
+          if (res.value.length > 0) hasNewOrders = true;
         } else {
           console.error('[useOrderReports] error fetching closed orders:', res.reason);
         }
       });
 
-      // Deduplicate
-      const uniqueOrdersMap = new Map<string, UnifiedOrder>();
-      allOrders.forEach(o => {
-        if (!uniqueOrdersMap.has(o.id)) {
-          uniqueOrdersMap.set(o.id, o);
+      // If we fetched new orders, we should reload from cache to get the fully merged set
+      if (hasNewOrders) {
+        let updatedTotal: UnifiedOrder[] = [];
+        const newCachePromises = keys.map(apiKey => getCachedOrders(apiKey.id));
+        const newCacheResults = await Promise.all(newCachePromises);
+        for (const res of newCacheResults) {
+          updatedTotal = [...updatedTotal, ...res];
         }
-      });
-      allOrders = Array.from(uniqueOrdersMap.values());
+        updatedTotal.sort((a, b) => b.createdTime - a.createdTime);
+        setClosedRawOrders(updatedTotal);
+      } else if (cachedTotal.length === 0) {
+        // If we had no cache, and no new orders, set empty array
+        setClosedRawOrders([]);
+      }
 
-      allOrders.sort((a, b) => b.createdTime - a.createdTime);
-      setClosedRawOrders(allOrders);
     } catch (err: any) {
       if (!silent) setError(err.message || 'Failed to fetch order history');
     } finally {
       if (!silent) setLoading(false);
+      setIsSyncing(false);
     }
   }, [keys, filters.status]);
 
@@ -96,5 +134,5 @@ export function useOrderReports(filters: OrderFilters) {
     });
   }, [cachedOpenOrders, closedRawOrders, filters]);
 
-  return { fetchOrders, orders, loading, error };
+  return { fetchOrders, orders, loading, isSyncing, error };
 }
