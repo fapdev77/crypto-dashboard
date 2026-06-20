@@ -44,7 +44,7 @@ export function PositionsTicker() {
     const priceVariation = pos.entryPrice ? ((pos.markPrice - pos.entryPrice) / pos.entryPrice) * 100 : 0;
     const isPriceUp = priceVariation > 0;
     const isPriceDown = priceVariation < 0;
-    const priceColor = isPriceUp ? 'text-emerald-500' : isPriceDown ? 'text-red-500' : 'text-gray-400';
+    const priceColor = isPriceUp ? 'text-[#00C853]' : isPriceDown ? 'text-[#FF4444]' : 'text-gray-400';
 
     const isPositive = variation > 0;
     const isNegative = variation < 0;
@@ -56,17 +56,22 @@ export function PositionsTicker() {
       <AppTooltip
         key={pos.id}
         description={
-          <div className="flex flex-col text-[11px] uppercase tracking-wide font-medium">
-            <span className="text-[#8E9299]">Exchange: {pos.exchange}</span>
-            <span className="text-white mt-0.5">{pos.symbol} • {pos.side.toUpperCase()} {pos.leverage}x</span>
+          <div className="flex flex-col gap-1 w-full min-w-[160px]">
+             <span className="text-[12px] font-medium text-[#8E9299]">Exchange: {pos.exchange.toUpperCase()}</span>
+             <span className="text-[14px] font-bold text-white leading-none">
+                {pos.symbol}
+             </span>
+             <span className="text-[11px] font-bold text-white/80 bg-[#2a2b30] px-1.5 py-0.5 rounded w-max mt-1">
+                {pos.side.toUpperCase()} {pos.leverage}x
+             </span>
           </div>
         }
         side="bottom"
         rows={[
-          { label: 'Current Price', value: `$${formatPrice(pos.markPrice, isFiatPair)}` },
-          { label: 'Entry Price', value: pos.entryPrice ? `$${formatPrice(pos.entryPrice, isFiatPair)}` : 'N/A' },
-          { label: 'Price Variation', value: `${priceVariation > 0 ? '+' : ''}${formatValue(priceVariation, 2)}%`, valueClassName: priceVariation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]' },
-          { label: 'ROE', value: `${variation > 0 ? '+' : ''}${formatValue(variation, 2)}%`, valueClassName: variation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]' }
+          { label: 'Current Price', value: `$${formatPrice(pos.markPrice, isFiatPair)}`, labelClassName: 'text-[11px] text-[#8E9299]', valueClassName: 'text-[11px]' },
+          { label: 'Entry Price', value: pos.entryPrice ? `$${formatPrice(pos.entryPrice, isFiatPair)}` : 'N/A', labelClassName: 'text-[11px] text-[#8E9299]', valueClassName: 'text-[11px]' },
+          { label: 'Price Variation', value: `${priceVariation > 0 ? '+' : ''}${formatValue(priceVariation, 2)}%`, labelClassName: 'text-[11px] text-[#8E9299]', valueClassName: `text-[11px] ${priceVariation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` },
+          { label: 'ROE', value: `${variation > 0 ? '+' : ''}${formatValue(variation, 2)}%`, labelClassName: 'text-[11px] text-[#8E9299]', valueClassName: `text-[11px] ${variation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` }
         ]}
       >
         <div
@@ -93,7 +98,7 @@ export function PositionsTicker() {
             </span>
           </div>
 
-          <div className={`flex items-center gap-1 text-sm font-medium ml-1 ${isPositive ? 'text-emerald-500' : isNegative ? 'text-red-500' : 'text-gray-400'}`}>
+          <div className={`flex items-center gap-1 text-sm font-medium ml-1 ${isPositive ? 'text-[#00C853]' : isNegative ? 'text-[#FF4444]' : 'text-gray-400'}`}>
             {isPositive && <TrendingUp className="w-4 h-4" />}
             {isNegative && <TrendingDown className="w-4 h-4" />}
             {isNeutral && <Minus className="w-4 h-4" />}

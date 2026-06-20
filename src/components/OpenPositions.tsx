@@ -432,11 +432,33 @@ export function OpenPositions() {
                         </div>
                         <AppTooltip
                           side="top"
+                          description={
+                            <div className="flex flex-col gap-1 w-full min-w-[180px]">
+                               <span className="text-[12px] font-medium text-[#8E9299]">Realized PnL</span>
+                               <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                  {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
+                               </span>
+                            </div>
+                          }
                           rows={[
-                            { label: 'Realized PnL', value: `${pos.realizedPnl > 0 ? '+' : ''}${formatCcy(pos.realizedPnl)} ${posCcy}`, valueClassName: pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]' },
-                            { label: 'Closed PnL', value: `${formatCcy((pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0))} ${posCcy}` },
-                            { label: 'Funding fee', value: `${formatCcy(-(Math.abs(pos.fundingFee || 0)))} ${posCcy}`, valueClassName: 'text-[#FF4444]' },
-                            { label: 'Trading fee', value: `${formatCcy(-(Math.abs(pos.tradingFee || 0)))} ${posCcy}`, valueClassName: 'text-[#FF4444]' }
+                            { 
+                              label: 'Closed PnL', 
+                              value: `${(pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0))} ${posCcy}`, 
+                              labelClassName: 'text-[11px] text-[#8E9299]', 
+                              valueClassName: `text-[11px] ${(pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                            },
+                            { 
+                              label: 'Funding fee', 
+                              value: `${formatCcy(-(Math.abs(pos.fundingFee || 0)))} ${posCcy}`, 
+                              labelClassName: 'text-[11px] text-[#8E9299]', 
+                              valueClassName: 'text-[11px] text-[#FF4444]' 
+                            },
+                            { 
+                              label: 'Trading fee', 
+                              value: `${formatCcy(-(Math.abs(pos.tradingFee || 0)))} ${posCcy}`, 
+                              labelClassName: 'text-[11px] text-[#8E9299]', 
+                              valueClassName: 'text-[11px] text-[#FF4444]' 
+                            }
                           ]}
                         >
                           <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
@@ -514,13 +536,39 @@ export function OpenPositions() {
                           <span className="font-mono text-white">{pos.marginRatio ? formatValue(pos.marginRatio, 2) + '%' : '--'}</span>
                         </div>
                         <AppTooltip
-                          description="At the breakeven price, your total PnL will be zero if you close your remaining position. Note that the breakeven price, which includes the trading fee and funding fee, is updated every second. Your realized PnL is displayed with fixed decimal places."
+                          description={
+                            <div className="flex flex-col gap-2 w-full">
+                              <div className="text-[12px] leading-relaxed text-[#c9cbcf] whitespace-normal border-b border-dashed border-[#8E9299]/50 pb-2">
+                                At the breakeven price, your total PnL will be zero if you close your remaining position. Note that the breakeven price, which includes the trading fee and funding fee, is updated every second.
+                              </div>
+                              <div className="flex flex-col gap-1 w-full min-w-[180px] pt-1">
+                                 <span className="text-[12px] font-medium text-[#8E9299]">Realized PnL</span>
+                                 <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                    {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
+                                 </span>
+                              </div>
+                            </div>
+                          }
                           side="top"
                           rows={[
-                            { label: 'Realized PnL', value: `${pos.realizedPnl > 0 ? '+' : ''}${formatCcy(pos.realizedPnl)} ${posCcy}`, valueClassName: pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]' },
-                            { label: 'Closed PnL', value: `${formatCcy((pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0))} ${posCcy}` },
-                            { label: 'Funding fee', value: `${formatCcy(-(Math.abs(pos.fundingFee || 0)))} ${posCcy}`, valueClassName: 'text-[#FF4444]' },
-                            { label: 'Trading fee', value: `${formatCcy(-(Math.abs(pos.tradingFee || 0)))} ${posCcy}`, valueClassName: 'text-[#FF4444]' }
+                            { 
+                              label: 'Closed PnL', 
+                              value: `${(pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0))} ${posCcy}`, 
+                              labelClassName: 'text-[11px] text-[#8E9299]', 
+                              valueClassName: `text-[11px] ${(pos.realizedPnl || 0) + Math.abs(pos.fundingFee || 0) + Math.abs(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                            },
+                            { 
+                              label: 'Funding fee', 
+                              value: `${formatCcy(-(Math.abs(pos.fundingFee || 0)))} ${posCcy}`, 
+                              labelClassName: 'text-[11px] text-[#8E9299]', 
+                              valueClassName: 'text-[11px] text-[#FF4444]' 
+                            },
+                            { 
+                              label: 'Trading fee', 
+                              value: `${formatCcy(-(Math.abs(pos.tradingFee || 0)))} ${posCcy}`, 
+                              labelClassName: 'text-[11px] text-[#8E9299]', 
+                              valueClassName: 'text-[11px] text-[#FF4444]' 
+                            }
                           ]}
                         >
                           <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
