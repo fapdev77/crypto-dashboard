@@ -47,7 +47,7 @@ export function AppTooltip({ children, description, rows, isLoading, side = 'top
       <TooltipContent side={side} align={align}>
         {isLoading ? (
           <div className="flex items-center justify-center p-2 min-w-[120px]">
-             <Loader2 className="w-5 h-5 animate-spin text-[#8E9299]" />
+            <Loader2 className="w-5 h-5 animate-spin text-[#8E9299]" />
           </div>
         ) : (
           <div className="flex flex-col min-w-[200px] max-w-[320px]">
@@ -57,18 +57,18 @@ export function AppTooltip({ children, description, rows, isLoading, side = 'top
                   {description}
                 </div>
                 {rows && rows.length > 0 && (
-                   <div className="my-2.5 border-b border-dashed border-[#43464d]" />
+                  <div className="my-2.5 border-b border-dashed border-[#43464d]" />
                 )}
               </>
             )}
             {rows && rows.length > 0 && (
               <div className="flex flex-col gap-2">
-                 {rows.map((row, i) => (
-                    <div key={i} className="flex items-center justify-between gap-6">
-                       <span className={`text-[13px] font-medium text-[#c9cbcf] ${row.labelClassName || ''}`}>{row.label}</span>
-                       <span className={`text-[13px] font-mono text-white ${row.valueClassName || ''}`}>{row.value}</span>
-                    </div>
-                 ))}
+                {rows.map((row, i) => (
+                  <div key={i} className="flex items-center justify-between gap-6">
+                    <span className={row.labelClassName || 'text-[13px] font-medium text-[#c9cbcf]'}>{row.label}</span>
+                    <span className={row.valueClassName || 'text-[13px] font-mono text-white'}>  {row.value}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>

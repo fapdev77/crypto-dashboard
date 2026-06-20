@@ -14,7 +14,7 @@ export function PositionsTicker() {
     const filtered = useMockData
       ? list.filter(pos => pos.connectionId.startsWith('mocked-data'))
       : list.filter(pos => !pos.connectionId.startsWith('mocked-data'));
-      
+
     // Sort by largest absolute PnL to show the most relevant positions first
     filtered.sort((a, b) => {
       const pnlA = Math.abs(a.unrealizedPnl || 0);
@@ -57,21 +57,18 @@ export function PositionsTicker() {
         key={pos.id}
         description={
           <div className="flex flex-col gap-1 w-full min-w-[160px]">
-             <span className="text-[12px] font-medium text-[#8E9299]">Exchange: {pos.exchange.toUpperCase()}</span>
-             <span className="text-[14px] font-bold text-white leading-none">
-                {pos.symbol}
-             </span>
-             <span className="text-[11px] font-bold text-white/80 bg-[#2a2b30] px-1.5 py-0.5 rounded w-max mt-1">
-                {pos.side.toUpperCase()} {pos.leverage}x
-             </span>
+            <span className="text-[14px] font-bold text-white leading-none">
+              {pos.symbol}
+            </span>
+            <span className="text-[12px] font-medium text-[#8E9299]">Exchange: {pos.exchange.toUpperCase()}</span>
           </div>
         }
         side="bottom"
         rows={[
-          { label: 'Current Price', value: `$${formatPrice(pos.markPrice, isFiatPair)}`, labelClassName: 'text-[11px] text-[#8E9299]', valueClassName: 'text-[11px]' },
-          { label: 'Entry Price', value: pos.entryPrice ? `$${formatPrice(pos.entryPrice, isFiatPair)}` : 'N/A', labelClassName: 'text-[11px] text-[#8E9299]', valueClassName: 'text-[11px]' },
-          { label: 'Price Variation', value: `${priceVariation > 0 ? '+' : ''}${formatValue(priceVariation, 2)}%`, labelClassName: 'text-[11px] text-[#8E9299]', valueClassName: `text-[11px] ${priceVariation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` },
-          { label: 'ROE', value: `${variation > 0 ? '+' : ''}${formatValue(variation, 2)}%`, labelClassName: 'text-[11px] text-[#8E9299]', valueClassName: `text-[11px] ${variation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` }
+          { label: 'Current Price', value: `$${formatPrice(pos.markPrice, isFiatPair)}`, labelClassName: 'text-[13px] text-[#8E9299]', valueClassName: 'text-[13px] text-white font-mono' },
+          { label: 'Entry Price', value: pos.entryPrice ? `$${formatPrice(pos.entryPrice, isFiatPair)}` : 'N/A', labelClassName: 'text-[13px] text-[#8E9299]', valueClassName: 'text-[13px] text-white font-mono' },
+          { label: 'Price Variation', value: `${priceVariation > 0 ? '+' : ''}${formatValue(priceVariation, 2)}%`, labelClassName: 'text-[13px] text-[#8E9299]', valueClassName: `text-[13px] font-mono font-bold ${priceVariation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` },
+          { label: 'ROE', value: `${variation > 0 ? '+' : ''}${formatValue(variation, 2)}%`, labelClassName: 'text-[13px] text-[#8E9299]', valueClassName: `text-[13px] font-mono font-bold ${variation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` }
         ]}
       >
         <div
