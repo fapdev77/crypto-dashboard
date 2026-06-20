@@ -444,20 +444,20 @@ export function OpenPositions() {
                             { 
                               label: 'Closed PnL', 
                               value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${posCcy}`, 
-                              labelClassName: 'text-[11px] text-[#8E9299]', 
-                              valueClassName: `text-[11px] ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
+                              valueClassName: `text-[11px] font-mono font-bold ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                             },
                             { 
                               label: 'Funding fee', 
                               value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${posCcy}`, 
-                              labelClassName: 'text-[11px] text-[#8E9299]', 
-                              valueClassName: `text-[11px] ${(pos.fundingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
+                              valueClassName: `text-[11px] font-mono font-bold ${(pos.fundingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                             },
                             { 
                               label: 'Trading fee', 
                               value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${posCcy}`, 
-                              labelClassName: 'text-[11px] text-[#8E9299]', 
-                              valueClassName: `text-[11px] ${(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
+                              valueClassName: `text-[11px] font-mono font-bold ${(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                             }
                           ]}
                         >
@@ -554,20 +554,20 @@ export function OpenPositions() {
                             { 
                               label: 'Closed PnL', 
                               value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${posCcy}`, 
-                              labelClassName: 'text-[11px] text-[#8E9299]', 
-                              valueClassName: `text-[11px] ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
+                              valueClassName: `text-[11px] font-mono font-bold ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                             },
                             { 
                               label: 'Funding fee', 
                               value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${posCcy}`, 
-                              labelClassName: 'text-[11px] text-[#8E9299]', 
-                              valueClassName: `text-[11px] ${(pos.fundingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
+                              valueClassName: `text-[11px] font-mono font-bold ${(pos.fundingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                             },
                             { 
                               label: 'Trading fee', 
                               value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${posCcy}`, 
-                              labelClassName: 'text-[11px] text-[#8E9299]', 
-                              valueClassName: `text-[11px] ${(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
+                              valueClassName: `text-[11px] font-mono font-bold ${(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                             }
                           ]}
                         >
