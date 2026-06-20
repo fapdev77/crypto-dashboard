@@ -51,65 +51,6 @@ export function OrderFilters({ filters, setFilters, showPeriod = false }: Props)
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 w-full">
       
-      {/* Type */}
-      <select
-        value={filters.type}
-        onChange={(e) => setFilters(p => ({ ...p, type: e.target.value }))}
-        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
-      >
-        {ORDER_TYPES.map(t => (
-          <option key={t} value={t}>{t === 'All' ? 'All Types' : t}</option>
-        ))}
-      </select>
-
-      {/* Side */}
-      <select
-        value={filters.side}
-        onChange={(e) => setFilters(p => ({ ...p, side: e.target.value }))}
-        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
-      >
-        <option value="All">All Sides</option>
-        <option value="buy">Buy / Long</option>
-        <option value="sell">Sell / Short</option>
-      </select>
-
-      {/* Instrument */}
-      <select
-        value={filters.instrument}
-        onChange={(e) => setFilters(p => ({ ...p, instrument: e.target.value }))}
-        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
-      >
-        {instrumentsAvailable.map(inst => (
-          <option key={inst} value={inst}>{inst === 'All' ? 'All Instruments' : inst}</option>
-        ))}
-      </select>
-
-      {/* Account */}
-      <select
-        value={filters.accountId}
-        onChange={(e) => setFilters(p => ({ ...p, accountId: e.target.value }))}
-        disabled={filters.exchange === 'All'}
-        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer max-w-[150px] truncate disabled:opacity-50"
-      >
-        <option value="All">All Accounts</option>
-        {activeKeys.map(k => (
-          <option key={k.id} value={k.id}>{k.label || k.exchange}</option>
-        ))}
-      </select>
-
-      {/* Time Period (Only for History) */}
-      {showPeriod && (
-        <select
-          value={filters.timePeriod}
-          onChange={(e) => setFilters(p => ({ ...p, timePeriod: Number(e.target.value) }))}
-          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
-        >
-          {TIME_PERIODS.map(tp => (
-            <option key={tp.label} value={tp.ms}>{tp.label}</option>
-          ))}
-        </select>
-      )}
-
       {/* Exchange Filter Custom Dropdown */}
       <div className="relative z-20">
         <button
@@ -169,6 +110,65 @@ export function OrderFilters({ filters, setFilters, showPeriod = false }: Props)
           </>
         )}
       </div>
+
+      {/* Account */}
+      <select
+        value={filters.accountId}
+        onChange={(e) => setFilters(p => ({ ...p, accountId: e.target.value }))}
+        disabled={filters.exchange === 'All'}
+        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer max-w-[150px] truncate disabled:opacity-50"
+      >
+        <option value="All">All Accounts</option>
+        {activeKeys.map(k => (
+          <option key={k.id} value={k.id}>{k.label || k.exchange}</option>
+        ))}
+      </select>
+
+      {/* Instrument */}
+      <select
+        value={filters.instrument}
+        onChange={(e) => setFilters(p => ({ ...p, instrument: e.target.value }))}
+        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
+      >
+        {instrumentsAvailable.map(inst => (
+          <option key={inst} value={inst}>{inst === 'All' ? 'All Instruments' : inst}</option>
+        ))}
+      </select>
+
+      {/* Side */}
+      <select
+        value={filters.side}
+        onChange={(e) => setFilters(p => ({ ...p, side: e.target.value }))}
+        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
+      >
+        <option value="All">All Sides</option>
+        <option value="buy">Buy / Long</option>
+        <option value="sell">Sell / Short</option>
+      </select>
+
+      {/* Type */}
+      <select
+        value={filters.type}
+        onChange={(e) => setFilters(p => ({ ...p, type: e.target.value }))}
+        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
+      >
+        {ORDER_TYPES.map(t => (
+          <option key={t} value={t}>{t === 'All' ? 'All Types' : t}</option>
+        ))}
+      </select>
+
+      {/* Time Period (Only for History) */}
+      {showPeriod && (
+        <select
+          value={filters.timePeriod}
+          onChange={(e) => setFilters(p => ({ ...p, timePeriod: Number(e.target.value) }))}
+          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
+        >
+          {TIME_PERIODS.map(tp => (
+            <option key={tp.label} value={tp.ms}>{tp.label}</option>
+          ))}
+        </select>
+      )}
 
       {/* Symbol Search */}
       <div className="relative">
