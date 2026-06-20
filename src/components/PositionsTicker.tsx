@@ -15,8 +15,18 @@ export function PositionsTicker() {
       ? list.filter(pos => pos.connectionId.startsWith('mocked-data'))
       : list.filter(pos => !pos.connectionId.startsWith('mocked-data'));
       
-    // Sort to ensure stable element order for CSS animation
-    return filtered.sort((a, b) => a.id.localeCompare(b.id));
+    // Sort by largest absolute PnL to show the most relevant positions first
+    filtered.sort((a, b) => {
+      const pnlA = Math.abs(a.unrealizedPnl || 0);
+      const pnlB = Math.abs(b.unrealizedPnl || 0);
+      return pnlB - pnlA;
+    });
+
+    // Limit to top 20 to improve performance and reduce DOM node count
+    const top20 = filtered.slice(0, 20);
+
+    // Sort to ensure stable element order for CSS animation caching
+    return top20.sort((a, b) => a.id.localeCompare(b.id));
   }, [positions, useMockData]);
 
   // Se nao há posicoes abertas, retorne null
@@ -103,7 +113,7 @@ export function PositionsTicker() {
   return (
     <div className="bg-[#151619] border-b border-[#2a2b30] flex items-center overflow-hidden shrink-0 h-10 w-full relative z-10 group">
       <div
-        className="flex w-max animate-marquee hover:[animation-play-state:paused]"
+        className="flex w-max animate-marquee hover:[animation-play-state:paused] will-change-transform"
         style={{ animationDuration: `${duration}s` }}
       >
         <div className="flex shrink-0">
