@@ -204,6 +204,8 @@ export async function clearAllCache(): Promise<void> {
   const db = await getDB();
   await db.clear(HISTORY_STORE);
   await db.clear(META_STORE);
+  await db.clear(ORDER_HISTORY_STORE);
+  await db.clear(ORDER_META_STORE);
 }
 
 /**

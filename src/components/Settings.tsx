@@ -4,7 +4,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { clearAllCache, getCacheSize, getAssetMetadataCacheSize, clearAssetMetadataCache } from '../services/historyCache';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
-import { Database, Trash2, CheckCircle2, Loader2, RefreshCw, Briefcase } from 'lucide-react';
+import { Database, Trash2, CheckCircle2, Loader2, RefreshCw, Briefcase, AlertTriangle } from 'lucide-react';
 
 export function Settings() {
   const { 
@@ -284,6 +284,47 @@ export function Settings() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-[#151619] border border-[#2a2b30] border-t-red-500/30 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-red-500 mb-4 flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5" />
+          Danger Zone
+        </h3>
+        
+        <div className="flex flex-col gap-4">
+          <div>
+            <h4 className="text-red-400 font-medium mb-1">Factory Reset</h4>
+            <p className="text-[#8E9299] text-sm mb-4">
+              Permanently erase all local data from this browser. This will immediately wipe all API keys, stored settings, 
+              historical cache, metadata, and mock preferences. Use this if you are using a shared computer, want to ensure 
+              no local trace of your connections remain, or want to restore the application back to its factory defaults.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              if (window.confirm("Are you absolutely sure you want to erase all data? This will remove all API keys and clear all caches.\n\nThis action cannot be undone.")) {
+                try {
+                  window.indexedDB.deleteDatabase('crypto-dashboard-cache');
+                  if (window.indexedDB.databases) {
+                    window.indexedDB.databases().then((dbs) => {
+                      for (const db of dbs) {
+                        if (db.name) window.indexedDB.deleteDatabase(db.name);
+                      }
+                    }).catch(() => {});
+                  }
+                } catch (e) {}
+
+                window.localStorage.clear();
+                window.location.reload();
+              }
+            }}
+            className="self-start flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Wipe All Local Client Data
+          </button>
         </div>
       </div>
 
