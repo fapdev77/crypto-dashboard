@@ -23,6 +23,7 @@ export function Settings() {
   const [cacheSize, setCacheSize] = useState<number | null>(null);
   const [metaCacheSize, setMetaCacheSize] = useState<number | null>(null);
   const [isClearingMeta, setIsClearingMeta] = useState(false);
+  const [showWipeConfirm, setShowWipeConfirm] = useState(false);
 
   useEffect(() => {
     getCacheSize().then(setCacheSize).catch(console.error);
@@ -302,29 +303,48 @@ export function Settings() {
               no local trace of your connections remain, or want to restore the application back to its factory defaults.
             </p>
           </div>
-          <button
-            onClick={() => {
-              if (window.confirm("Are you absolutely sure you want to erase all data? This will remove all API keys and clear all caches.\n\nThis action cannot be undone.")) {
-                try {
-                  window.indexedDB.deleteDatabase('crypto-dashboard-cache');
-                  if (window.indexedDB.databases) {
-                    window.indexedDB.databases().then((dbs) => {
-                      for (const db of dbs) {
-                        if (db.name) window.indexedDB.deleteDatabase(db.name);
+          
+          {showWipeConfirm ? (
+            <div className="flex flex-col sm:flex-row items-center gap-3 bg-red-500/10 border border-red-500/20 p-3 rounded-lg w-fit">
+              <span className="text-[15px] font-medium text-red-500">Are you sure? This cannot be undone.</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    try {
+                      window.indexedDB.deleteDatabase('crypto-dashboard-cache');
+                      if (window.indexedDB.databases) {
+                        window.indexedDB.databases().then((dbs) => {
+                          for (const db of dbs) {
+                            if (db.name) window.indexedDB.deleteDatabase(db.name);
+                          }
+                        }).catch(() => {});
                       }
-                    }).catch(() => {});
-                  }
-                } catch (e) {}
+                    } catch (e) {}
 
-                window.localStorage.clear();
-                window.location.reload();
-              }
-            }}
-            className="self-start flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            Wipe All Local Client Data
-          </button>
+                    window.localStorage.clear();
+                    window.location.reload();
+                  }}
+                  className="px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded text-sm font-medium transition-colors"
+                >
+                  Yes, Wipe Everything
+                </button>
+                <button
+                  onClick={() => setShowWipeConfirm(false)}
+                  className="px-4 py-1.5 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowWipeConfirm(true)}
+              className="self-start flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Wipe All Local Client Data
+            </button>
+          )}
         </div>
       </div>
 
