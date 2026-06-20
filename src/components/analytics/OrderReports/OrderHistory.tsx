@@ -66,44 +66,44 @@ export function OrderHistory() {
   };
 
   return (
-    <div className="w-full flex flex-col gap-6 pb-8 h-full bg-white dark:bg-[#0b0c10] text-gray-900 dark:text-white rounded-xl">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 pb-2">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
         <h2 className="text-xl font-bold tracking-tight flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-indigo-500" />
+            <History className="w-5 h-5 text-[#2F6BFF]" />
             Order History
           </div>
           <SyncBadge isSyncing={isSyncing} />
         </h2>
-        <div className="relative">
+                <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}
-            className="p-2 ml-2 bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] flex items-center gap-2 rounded-lg hover:bg-gray-200 dark:hover:bg-[#2a2b30] transition-colors text-sm font-medium"
+            className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
           >
             <Download className="w-4 h-4" />
-            Export <ChevronDown className="w-3 h-3" />
+            <span className="hidden sm:inline">Export</span> <ChevronDown className="w-3 h-3" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute top-11 right-0 w-32 bg-white dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm">
-              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export CSV</button>
-              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export Excel</button>
-              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export PDF</button>
+            <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export CSV</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export Excel</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export PDF</button>
             </div>
           )}
         </div>
       </div>
 
-      <div className="px-4 md:px-6">
+      <div className="px-0">
         <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} />
       </div>
 
       {error && (
-        <div className="mx-4 md:mx-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-200 rounded text-sm">
+        <div className="p-4 bg-red-900/30 border border-red-800 text-red-200 rounded text-sm">
           {error}
         </div>
       )}
 
-      <div className="flex-1 overflow-auto hide-scrollbar px-4 md:px-6">
+      <div className="flex-1 overflow-auto hide-scrollbar">
         <OrdersTable orders={orders} loading={loading} />
       </div>
     </div>

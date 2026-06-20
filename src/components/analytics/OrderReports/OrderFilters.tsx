@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { OrderFilters as FilterState } from '../../../hooks/useOrderReports';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
+import { ExchangeIcon } from '../../ui/ExchangeIcon';
 
 interface Props {
   filters: FilterState;
@@ -20,6 +21,7 @@ const TIME_PERIODS = [
 
 export function OrderFilters({ filters, setFilters, showPeriod = false }: Props) {
   const { keys } = useApiKeysStore();
+  const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
   
   const instrumentsAvailable = useMemo(() => {
     return ['All', 'PERP', 'INVERSE', 'SPOT', 'FUTURES', 'OPTION'];
@@ -41,108 +43,156 @@ export function OrderFilters({ filters, setFilters, showPeriod = false }: Props)
     }
   }, [filters.exchange, filters.instrument, filters.accountId, instrumentsAvailable, activeKeys, setFilters]);
 
+  // Handle empty text cleaning
+  const clearFilterText = () => {
+    setFilters(p => ({ ...p, symbols: '' }));
+  };
+
   return (
-    <div className="flex flex-wrap items-center gap-3">
-        {/* Symbol Search */}
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search symbol..."
-            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg pl-9 pr-3 py-1.5 focus:outline-none w-36 focus:w-48 transition-all"
-            value={filters.symbols}
-            onChange={(e) => setFilters(p => ({ ...p, symbols: e.target.value }))}
-          />
-        </div>
+    <div className="flex flex-wrap items-center justify-end gap-2 w-full">
+      
+      {/* Type */}
+      <select
+        value={filters.type}
+        onChange={(e) => setFilters(p => ({ ...p, type: e.target.value }))}
+        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
+      >
+        {ORDER_TYPES.map(t => (
+          <option key={t} value={t}>{t === 'All' ? 'All Types' : t}</option>
+        ))}
+      </select>
 
-        {/* Exchanges */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-500 whitespace-nowrap">Exchange:</label>
-          <select
-            value={filters.exchange}
-            onChange={(e) => setFilters(p => ({ ...p, exchange: e.target.value }))}
-            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
-          >
-            <option value="All">All Exchanges</option>
-            <option value="bitget">Bitget</option>
-            <option value="bybit">Bybit</option>
-            <option value="okx">OKX</option>
-          </select>
-        </div>
+      {/* Side */}
+      <select
+        value={filters.side}
+        onChange={(e) => setFilters(p => ({ ...p, side: e.target.value }))}
+        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
+      >
+        <option value="All">All Sides</option>
+        <option value="buy">Buy / Long</option>
+        <option value="sell">Sell / Short</option>
+      </select>
 
-        {/* Account */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-500 whitespace-nowrap">Account:</label>
-          <select
-            value={filters.accountId}
-            onChange={(e) => setFilters(p => ({ ...p, accountId: e.target.value }))}
-            disabled={filters.exchange === 'All'}
-            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer max-w-[150px] truncate disabled:opacity-50"
-          >
-            <option value="All">All Accounts</option>
-            {activeKeys.map(k => (
-              <option key={k.id} value={k.id}>{k.label || k.exchange}</option>
-            ))}
-          </select>
-        </div>
+      {/* Instrument */}
+      <select
+        value={filters.instrument}
+        onChange={(e) => setFilters(p => ({ ...p, instrument: e.target.value }))}
+        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
+      >
+        {instrumentsAvailable.map(inst => (
+          <option key={inst} value={inst}>{inst === 'All' ? 'All Instruments' : inst}</option>
+        ))}
+      </select>
 
-        {/* Instrument */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-500 whitespace-nowrap">Instrument:</label>
-          <select
-            value={filters.instrument}
-            onChange={(e) => setFilters(p => ({ ...p, instrument: e.target.value }))}
-            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
-          >
-            {instrumentsAvailable.map(inst => (
-              <option key={inst} value={inst}>{inst}</option>
-            ))}
-          </select>
-        </div>
+      {/* Account */}
+      <select
+        value={filters.accountId}
+        onChange={(e) => setFilters(p => ({ ...p, accountId: e.target.value }))}
+        disabled={filters.exchange === 'All'}
+        className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer max-w-[150px] truncate disabled:opacity-50"
+      >
+        <option value="All">All Accounts</option>
+        {activeKeys.map(k => (
+          <option key={k.id} value={k.id}>{k.label || k.exchange}</option>
+        ))}
+      </select>
 
-        {/* Type */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-500 whitespace-nowrap">Type:</label>
-          <select
-            value={filters.type}
-            onChange={(e) => setFilters(p => ({ ...p, type: e.target.value }))}
-            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
-          >
-            {ORDER_TYPES.map(t => (
-              <option key={t} value={t}>{t === 'All' ? 'All Types' : t}</option>
-            ))}
-          </select>
-        </div>
+      {/* Time Period (Only for History) */}
+      {showPeriod && (
+        <select
+          value={filters.timePeriod}
+          onChange={(e) => setFilters(p => ({ ...p, timePeriod: Number(e.target.value) }))}
+          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
+        >
+          {TIME_PERIODS.map(tp => (
+            <option key={tp.label} value={tp.ms}>{tp.label}</option>
+          ))}
+        </select>
+      )}
 
-        {/* Side */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-500 whitespace-nowrap">Side:</label>
-          <select
-            value={filters.side}
-            onChange={(e) => setFilters(p => ({ ...p, side: e.target.value }))}
-            className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
-          >
-            <option value="All">All Sides</option>
-            <option value="buy">Buy / Long</option>
-            <option value="sell">Sell / Short</option>
-          </select>
-        </div>
-
-        {/* Time Period (Only for History) */}
-        {showPeriod && (
+      {/* Exchange Filter Custom Dropdown */}
+      <div className="relative z-20">
+        <button
+          type="button"
+          onClick={() => setIsExchangeDropdownOpen(!isExchangeDropdownOpen)}
+          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between min-w-[160px]"
+        >
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-500 whitespace-nowrap">Period:</label>
-            <select
-              value={filters.timePeriod}
-              onChange={(e) => setFilters(p => ({ ...p, timePeriod: Number(e.target.value) }))}
-              className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
-            >
-              {TIME_PERIODS.map(tp => (
-                <option key={tp.label} value={tp.ms}>{tp.label}</option>
-              ))}
-            </select>
+            {filters.exchange !== 'All' && (
+              <ExchangeIcon exchange={filters.exchange} className="w-4 h-4" />
+            )}
+            <span>
+              {filters.exchange === 'All'
+                ? 'Todas Exchanges'
+                : filters.exchange.charAt(0).toUpperCase() + filters.exchange.slice(1)}
+            </span>
           </div>
+          <svg className={`h-4 w-4 ml-2 text-gray-400 transition-transform ${isExchangeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {isExchangeDropdownOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setIsExchangeDropdownOpen(false)}
+            />
+            <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilters(p => ({ ...p, exchange: 'All' }));
+                  setIsExchangeDropdownOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${filters.exchange === 'All' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                  }`}
+              >
+                <span>Todas Exchanges</span>
+              </button>
+              {Array.from(new Set(keys.filter(apiKey => apiKey.isActive).map(apiKey => apiKey.exchange))).map(exchange => (
+                <button
+                  key={exchange}
+                  type="button"
+                  onClick={() => {
+                    setFilters(p => ({ ...p, exchange }));
+                    setIsExchangeDropdownOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${filters.exchange === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                    }`}
+                >
+                  <ExchangeIcon exchange={exchange} className="w-4 h-4" />
+                  <span>{exchange.charAt(0).toUpperCase() + exchange.slice(1)}</span>
+                </button>
+              ))}
+            </div>
+          </>
         )}
+      </div>
+
+      {/* Symbol Search */}
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 text-[#8E9299]" />
+        </div>
+        <input
+          type="text"
+          placeholder="Search..."
+          className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-48"
+          value={filters.symbols}
+          onChange={(e) => setFilters(p => ({ ...p, symbols: e.target.value }))}
+        />
+        {filters.symbols && (
+          <button
+            onClick={clearFilterText}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
+            title="Clear filter"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
     </div>
   );
 }
