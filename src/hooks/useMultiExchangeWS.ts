@@ -7,6 +7,7 @@ import { useOrdersStore } from '../store/ordersStore';
 import mockAccountsData from '../mock/accounts.json';
 import mockBalancesData from '../mock/balances.json';
 import mockPositionsData from '../mock/positions.json';
+import mockOrdersData from '../mock/orders.json';
 import { ExchangeAggregator } from '../services/adapters/ExchangeAggregator';
 
 export function useMultiExchangeWS() {
@@ -32,8 +33,9 @@ export function useMultiExchangeWS() {
         currentState.updateBalances(connectionId, accountBalances as any);
         const accountPositions = mockPositionsData.filter((pos: any) => pos.connectionId === connectionId);
         currentState.updatePositions(connectionId, accountPositions as any);
-        // Mock data does not include open orders — clear to keep store consistent
-        useOrdersStore.getState().clearConnectionOrders(connectionId);
+        
+        const openOrders = mockOrdersData.filter((o: any) => o.connectionId === connectionId && ['NEW', 'PARTIALLY_FILLED'].includes(o.status));
+        useOrdersStore.getState().updateOpenOrders(connectionId, openOrders as any);
       });
       return;
     }

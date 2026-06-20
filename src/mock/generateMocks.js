@@ -5,6 +5,7 @@ const exchanges = ['bitget', 'bybit', 'okx'];
 const ACCOUNTS_PER_EXCHANGE = 4;
 const POSITIONS_PER_ACCOUNT = 40;
 const HISTORY_PER_ACCOUNT = 40;
+const ORDERS_PER_ACCOUNT = 30;
 
 const coins = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'BNB', 'AVAX', 'LINK', 'MATIC'];
 const symbols = [
@@ -24,10 +25,12 @@ function generate() {
   const balances = [];
   const positions = [];
   const history = [];
+  const orders = [];
 
   let posIdCounter = 1;
   let histIdCounter = 1;
   let balIdCounter = 1;
+  let orderIdCounter = 1;
 
   exchanges.forEach(exchange => {
     for (let i = 1; i <= ACCOUNTS_PER_EXCHANGE; i++) {
@@ -181,6 +184,66 @@ function generate() {
           }
         });
       }
+
+      // Generate Orders (Open & Closed)
+      for (let j = 0; j < ORDERS_PER_ACCOUNT; j++) {
+        const symbol = randomItem(symbols);
+        const isOpen = Math.random() > 0.5;
+        const side = randomItem(['buy', 'sell']);
+        
+        let instType = 'USDT-FUTURES';
+        const isInverseOrder = randomItem([true, false]);
+        const ccyOrder = isInverseOrder ? symbol.replace('USD', '') : randomItem(['USDT', 'USDC']);
+
+        if (exchange === 'bitget') instType = isInverseOrder ? 'COIN-FUTURES' : randomItem(['USDT-FUTURES', 'USDC-FUTURES', 'SPOT']);
+        else if (exchange === 'okx') instType = randomItem(['SWAP', 'FUTURES', 'MARGIN', 'SPOT', 'OPTION']);
+        else if (exchange === 'bybit') instType = isInverseOrder ? 'inverse' : randomItem(['linear', 'spot', 'option']);
+
+        let instrumentType = 'PERP';
+        if (instType === 'COIN-FUTURES' || instType === 'inverse' || (instType === 'SWAP' && !['USDT', 'USDC'].includes(ccyOrder))) {
+          instrumentType = 'INVERSE';
+        } else if (instType === 'SPOT' || instType === 'MARGIN' || instType === 'spot') {
+          instrumentType = 'SPOT';
+        } else if (instType === 'OPTION' || instType === 'option') {
+          instrumentType = 'OPTION';
+        } else if (instType === 'FUTURES') {
+          instrumentType = ['USDT', 'USDC'].includes(ccyOrder) ? 'FUTURES' : 'INVERSE';
+        }
+
+        const price = randomNum(1, 60000);
+        const avgPrice = isOpen ? 0 : price * randomNum(0.99, 1.01);
+        const qty = randomNum(0.01, 100);
+        const filledQty = isOpen ? 0 : qty;
+        
+        const nowMs = Date.now();
+        const updatedTime = nowMs - randomNum(0, isOpen ? 10 * 24 * 60 * 60 * 1000 : 90 * 24 * 60 * 60 * 1000);
+        const createdTime = updatedTime - randomNum(1000, 24 * 60 * 60 * 1000);
+        
+        orders.push({
+          id: `ord-${orderIdCounter++}`,
+          exchangeOrderId: `ext-ord-${orderIdCounter}`,
+          connectionId,
+          exchange,
+          label, // although UnfiedOrder doesn't require label, adding it doesn't hurt, but wait UnifiedOrder doesn't have label, let's omit if not needed
+          symbol,
+          category: instrumentType,
+          side,
+          positionSide: randomItem(['long', 'short', 'net']),
+          type: randomItem(['LIMIT', 'MARKET', 'TP', 'SL']),
+          status: isOpen ? randomItem(['NEW', 'PARTIALLY_FILLED']) : randomItem(['FILLED', 'CANCELLED']),
+          price,
+          avgPrice,
+          qty,
+          filledQty,
+          value: price * qty,
+          triggerPrice: Math.random() > 0.8 ? price * randomNum(0.9, 1.1) : undefined,
+          reduceOnly: Math.random() > 0.8,
+          timeInForce: randomItem(['GTC', 'IOC', 'FOK']),
+          createdTime,
+          updatedTime,
+          raw: { mockData: true }
+        });
+      }
     }
   });
 
@@ -224,6 +287,7 @@ function generate() {
   fs.writeFileSync(path.join(outDir, 'balances.json'), JSON.stringify(balances, null, 2));
   fs.writeFileSync(path.join(outDir, 'positions.json'), JSON.stringify(positions, null, 2));
   fs.writeFileSync(path.join(outDir, 'history.json'), JSON.stringify(history, null, 2));
+  fs.writeFileSync(path.join(outDir, 'orders.json'), JSON.stringify(orders, null, 2));
   fs.writeFileSync(path.join(outDir, 'bills.json'), JSON.stringify(bills, null, 2));
 
   console.log('Mock files generated successfully.');
