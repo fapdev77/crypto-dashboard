@@ -1,31 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import Big from 'big.js';
-import { usePositionHistory } from './usePositionHistory';
+import { usePositionHistory, PositionHistoryPeriod } from './usePositionHistory';
 import { SymbolPnLRecord } from '../types';
 
 export function usePnLBySymbol(
-  period: 'today' | '1w' | '2w' | '1m' | '3m' | 'all' | 'custom',
-  customStart: string,
-  customEnd: string,
-  triggerSearch: boolean,
+  period: PositionHistoryPeriod,
   exchangeFilter: string,
   instrumentFilter: string
 ) {
-  // Map PnLBySymbol periods to the usePositionHistory period enum.
-  // 'today' is passed directly so the hook uses local-time boundaries (avoids UTC offset bug).
-  // 'all' and '3m' are converted to 'custom' with epoch/offset-based ISO strings.
-  const mappedPeriod: 'today' | '7d' | '30d' | '90d' | 'custom' =
-    period === 'today' ? 'today' :
-    period === '1w'    ? '7d' :
-    period === '2w'    ? '7d' :
-    period === '1m'    ? '30d' :
-    period === '3m'    ? '90d' :
-    'custom'; // 'all'
-
-  const mappedStart = period === 'all' ? new Date(0).toISOString().split('T')[0] : customStart;
-  const mappedEnd   = period === 'all' ? new Date().toISOString().split('T')[0]  : customEnd;
-
-  const { positions, isLoading, isSyncing } = usePositionHistory(mappedPeriod, mappedStart, mappedEnd, triggerSearch);
+  const { positions, isLoading, isSyncing } = usePositionHistory(period);
 
   const pnlData = useMemo(() => {
     if (!positions || positions.length === 0) return [];

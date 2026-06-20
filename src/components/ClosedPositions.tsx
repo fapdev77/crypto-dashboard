@@ -23,16 +23,9 @@ export function ClosedPositions() {
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
   const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
 
-  const [period, setPeriod] = useState<'today' | '7d' | '30d' | '90d' | 'custom'>('7d');
-  const [customStartDate, setCustomStartDate] = useState(format(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'));
-  const [customEndDate, setCustomEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [triggerSearch, setTriggerSearch] = useState(false);
+  const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
 
-  const handleCustomDateSearch = () => {
-    setTriggerSearch(!triggerSearch);
-  };
-
-  const { positions: closedPositions, isLoading, isSyncing } = usePositionHistory(period, customStartDate, customEndDate, triggerSearch);
+  const { positions: closedPositions, isLoading, isSyncing } = usePositionHistory(period);
   const [error, setError] = useState<string | null>(null);
 
   const filteredClosedPositions = useMemo(() => {
@@ -204,34 +197,10 @@ export function ClosedPositions() {
         >
           <option value="today">Hoje</option>
           <option value="7d">7 Days</option>
+          <option value="14d">14 Days</option>
           <option value="30d">30 Days</option>
           <option value="90d">90 Days</option>
-          <option value="custom">Personalizado</option>
         </select>
-
-        {period === 'custom' && (
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={customStartDate}
-              onChange={(e) => setCustomStartDate(e.target.value)}
-              className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-[#8E9299] focus:outline-none focus:border-[#2F6BFF]"
-            />
-            <span className="text-[#8E9299]">até</span>
-            <input
-              type="date"
-              value={customEndDate}
-              onChange={(e) => setCustomEndDate(e.target.value)}
-              className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-[#8E9299] focus:outline-none focus:border-[#2F6BFF]"
-            />
-            <button
-              onClick={handleCustomDateSearch}
-              className="bg-[#2a2b30] hover:bg-[#323339] text-white p-2 rounded-lg transition-colors border border-[#2a2b30] focus:outline-none focus:border-[#2F6BFF]"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-          </div>
-        )}
 
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -257,7 +226,7 @@ export function ClosedPositions() {
         </div>
       </div>
 
-      <HistoryLimitWarning period={period} customStartDate={customStartDate} customEndDate={customEndDate} />
+      <HistoryLimitWarning period={period} />
 
       {closedStats && (() => {
         const POSITIONS_DONUT = [

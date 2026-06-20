@@ -10,35 +10,23 @@ const LIMITS: Record<string, { days: number, label: string }> = {
 
 interface HistoryLimitWarningProps {
   period: string;
-  customStartDate?: string;
-  customEndDate?: string;
   className?: string;
 }
 
-export function HistoryLimitWarning({ period, customStartDate, customEndDate, className = '' }: HistoryLimitWarningProps) {
+export function HistoryLimitWarning({ period, className = '' }: HistoryLimitWarningProps) {
   const keys = useApiKeysStore(state => state.keys);
 
   const warnings = useMemo(() => {
     if (keys.length === 0) return [];
     
     let daysRequested = 0;
-    const now = Date.now();
     
-    if (period === 'custom' && customStartDate && customEndDate) {
-      const start = new Date(customStartDate).getTime();
-      const end = new Date(customEndDate).getTime();
-      
-      // Compute the length of the selected range itself
-      const rangeLength = (end - start) / (1000 * 60 * 60 * 24);
-      
-      // Also compute how far back the start date is from today
-      const daysFromNow = (now - start) / (1000 * 60 * 60 * 24);
-      
-      daysRequested = Math.max(rangeLength, daysFromNow);
-    } else if (period === 'today') {
+    if (period === 'today') {
       daysRequested = 1;
     } else if (period === '7d') {
       daysRequested = 7;
+    } else if (period === '14d') {
+      daysRequested = 14;
     } else if (period === '30d') {
       daysRequested = 30;
     } else if (period === '90d') {
@@ -56,7 +44,7 @@ export function HistoryLimitWarning({ period, customStartDate, customEndDate, cl
     });
 
     return warnedExchanges.map(ex => ({ exchange: ex, max: LIMITS[ex].label }));
-  }, [keys, period, customStartDate, customEndDate]);
+  }, [keys, period]);
 
   if (warnings.length === 0) return null;
 

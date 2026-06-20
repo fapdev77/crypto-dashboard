@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { usePositionHistory } from '../../hooks/usePositionHistory';
+import { usePositionHistory, PositionHistoryPeriod } from '../../hooks/usePositionHistory';
 import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportUtils';
 import { DownloadCloud, FileText, Table } from 'lucide-react';
 import { format } from 'date-fns';
@@ -7,8 +7,8 @@ import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 
 export function ReportsDashboard() {
-  const [period, setPeriod] = useState<'1w'|'2w'|'1m'|'custom'>('1m');
-  const { positions: history, isLoading } = usePositionHistory(period, '', '', true);
+  const [period, setPeriod] = useState<PositionHistoryPeriod>('30d');
+  const { positions: history, isLoading } = usePositionHistory(period);
   const formatCurrency = useFormatCurrency();
 
   return (
@@ -22,9 +22,10 @@ export function ReportsDashboard() {
             onChange={(e) => setPeriod(e.target.value as any)}
             className="bg-[#151619] border border-[#2a2b30] text-sm text-gray-300 rounded-lg px-3 py-1.5 focus:outline-none"
           >
-            <option value="1w">Last 7 Days</option>
-            <option value="2w">Last 14 Days</option>
-            <option value="1m">Last 30 Days</option>
+            <option value="7d">Last 7 Days</option>
+            <option value="14d">Last 14 Days</option>
+            <option value="30d">Last 30 Days</option>
+            <option value="90d">Last 90 Days</option>
           </select>
 
           <div className="flex gap-2">
