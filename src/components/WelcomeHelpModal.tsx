@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe } from 'lucide-react';
+import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe, ShieldAlert, Compass } from 'lucide-react';
 import { useSettingsStore } from '../store/settingsStore';
 
 interface WelcomeHelpModalProps {
@@ -18,6 +18,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       title: "Welcome to Crypto Dashboard",
       subtitle: "Onboarding & Quick Start Guide",
       intro: "Monitor trading performance, balances, active positions, and order history across Bitget, Bybit, and OKX in one unified terminal.",
+      privacyWarning: "Your API credentials are saved strictly in your browser's localStorage. Communication with the exchanges occurs directly from your browser (no intermediate servers). Always use READ-ONLY API keys. NEVER use keys that allow trading or withdrawals. You can erase all data instantly using the 'Wipe All Local Client Data' option under Settings.",
+      feature0Title: "Getting Started / Try Mock Mode",
+      feature0Desc: <>Create <strong>read-only</strong> API keys on Bitget, Bybit, or OKX to load your real account data. To test-drive the application without any credentials first, navigate to the <strong>Settings</strong> tab and toggle on the <strong>Use Mock Data</strong> option.</>,
       feature1Title: "Overview & Analytics",
       feature1Desc: "Track unified balances, positions, margin ratios, and view advanced analytics like realized/unrealized PnL charts.",
       feature2Title: "Secure API Connections",
@@ -33,6 +36,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       title: "Bem-vindo ao Crypto Dashboard",
       subtitle: "Guia de Integração e Início Rápido",
       intro: "Monitore seu desempenho de trading, saldos, posições ativas e histórico de ordens na Bitget, Bybit e OKX em um único terminal unificado.",
+      privacyWarning: "Suas chaves de API são salvas estritamente no localStorage do seu navegador. Toda comunicação com as corretoras ocorre de forma direta (sem servidores intermediários). Use apenas chaves de API com permissão de LEITURA (Read-Only). NUNCA use chaves que permitam negociação (Trade) ou saques. Você pode apagar todos os dados do cliente instantaneamente usando a opção 'Wipe All Local Client Data' nas configurações.",
+      feature0Title: "Primeiros Passos / Modo Testes",
+      feature0Desc: <>Crie chaves de API <strong>apenas leitura (Read-only)</strong> na Bitget, Bybit ou OKX para carregar seus dados reais. Caso queira experimentar a plataforma sem fornecer credenciais primeiro, acesse a aba <strong>Settings</strong> e ative a opção <strong>Use Mock Data</strong>.</>,
       feature1Title: "Visão Geral e Analytics",
       feature1Desc: "Acompanhe saldos unificados, posições, taxas de margem e visualize análises avançadas como gráficos de PnL realizado/não realizado.",
       feature2Title: "Conexões Seguras de API",
@@ -57,7 +63,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       />
 
       {/* Modal Content */}
-      <div className="relative bg-[#151619] border border-[#2a2b30] rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-250 max-h-[90vh] overflow-hidden">
+      <div className="relative bg-[#151619] border border-[#2a2b30] rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-250 max-h-[90vh] overflow-hidden">
 
         {/* Top Right Actions */}
         <div className="absolute right-4 top-4 flex items-center gap-3">
@@ -110,10 +116,34 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
             {t.intro}
           </p>
 
+          {/* Privacy & Security Warning Banner */}
+          <div className="flex gap-3.5 items-start bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-xl text-amber-500">
+            <div className="w-8 h-8 rounded-lg bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 flex items-center justify-center shrink-0 mt-0.5">
+              <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5 text-amber-400" />
+            </div>
+            <div className="text-xs leading-relaxed text-gray-300">
+              <strong className="text-amber-400 block mb-0.5">{lang === 'pt' ? 'Aviso de Segurança & Privacidade' : 'Security & Privacy Notice'}</strong>
+              {t.privacyWarning}
+            </div>
+          </div>
+
           <div className="border-t border-[#2a2b30]/50 my-2" />
 
           {/* Features Checklist */}
           <div className="grid grid-cols-1 gap-4">
+
+            {/* Feature 0 (Getting Started) */}
+            <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
+              <div className="w-8 h-8 rounded-lg bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 flex items-center justify-center shrink-0 mt-0.5">
+                <Compass className="w-4 h-4 text-[#2F6BFF]" />
+              </div>
+              <div>
+                <h4 className="text-white font-medium text-sm">{t.feature0Title}</h4>
+                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
+                  {t.feature0Desc}
+                </p>
+              </div>
+            </div>
 
             {/* Feature 1 */}
             <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
