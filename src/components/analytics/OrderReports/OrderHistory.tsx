@@ -9,6 +9,7 @@ import { SyncBadge } from '../../ui/SyncBadge';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
+import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 
 export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -170,8 +171,9 @@ export function OrderHistory() {
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
-    let content = "Symbol,Exchange,Connection ID,Instrument,Type,Side,Price,Amount,Filled,Status,Time\n";
-    orders.forEach(o => {
+    
+    const headers = ['Symbol', 'Exchange', 'Connection ID', 'Instrument', 'Type', 'Side', 'Price', 'Amount', 'Filled', 'Status', 'Time'];
+    const rows = orders.map(o => {
       const isBuy = o.side === 'buy';
       const sideText = isBuy
         ? (o.positionSide === 'long' ? 'Open Long' : o.positionSide === 'short' ? 'Close Short' : 'Buy')
@@ -180,20 +182,19 @@ export function OrderHistory() {
       const d = new Date(o.createdTime);
       const timeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
 
-      content += `${o.symbol},${o.exchange},${o.connectionId},${o.category},${o.type},${sideText},${o.price},${o.qty},${o.filledQty},${o.status},${timeStr}\n`;
+      return [o.symbol, o.exchange, o.connectionId, o.category, o.type, sideText, o.price, o.qty, o.filledQty, o.status, timeStr];
     });
 
-    const extension = format === 'csv' ? 'csv' : format === 'excel' ? 'xls' : 'pdf';
-    const mimeType = format === 'csv' ? 'text/csv' : format === 'excel' ? 'application/vnd.ms-excel' : 'application/pdf';
+    const config: ExportConfig = {
+      title: 'Order History Report',
+      filename: `Order_History_${Date.now()}`,
+      headers,
+      rows
+    };
 
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Order_History_${Date.now()}.${extension}`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    if (format === 'csv') exportToCSV(config);
+    if (format === 'excel') exportToExcel(config);
+    if (format === 'pdf') exportToPDF(config);
   };
 
   return (

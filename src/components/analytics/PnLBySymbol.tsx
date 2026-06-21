@@ -5,6 +5,7 @@ import { Download, ArrowUpDown, ChevronDown, Search } from 'lucide-react';
 import { SymbolPnLRecord } from '../../types';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
+import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../utils/exportUtils';
 
 import { formatValue, formatCrypto } from '../../utils/formatters';
 import { useTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
@@ -103,24 +104,27 @@ export function PnLBySymbol() {
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
-    let content = "Symbol,Instrument,Exchange,Total PnL,Long PnL,Short PnL\n";
-    sortedData.forEach(r => {
-      content += `${r.symbol},${r.instrument},${r.exchange},${r.totalPnL.toString()},${r.longPnL.toString()},${r.shortPnL.toString()}\n`;
-    });
+    
+    const headers = ['Symbol', 'Instrument', 'Exchange', 'Total PnL', 'Long PnL', 'Short PnL'];
+    const rows = sortedData.map(r => [
+      r.symbol,
+      r.instrument,
+      r.exchange,
+      r.totalPnL.toString(),
+      r.longPnL.toString(),
+      r.shortPnL.toString()
+    ]);
 
-    // Simplification: all formats download CSV for now.
-    // In a real prod environment we'd use unirest/xlsx for Excel and jsPDF for PDF
-    const extension = format === 'csv' ? 'csv' : format === 'excel' ? 'xls' : 'pdf';
-    const mimeType = format === 'csv' ? 'text/csv' : format === 'excel' ? 'application/vnd.ms-excel' : 'application/pdf';
+    const config: ExportConfig = {
+      title: 'PnL By Symbol Report',
+      filename: `PnL_by_Symbol_${period}_${Date.now()}`,
+      headers,
+      rows
+    };
 
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `PnL_by_Symbol_${period}_${Date.now()}.${extension}`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    if (format === 'csv') exportToCSV(config);
+    if (format === 'excel') exportToExcel(config);
+    if (format === 'pdf') exportToPDF(config);
   };
 
   return (

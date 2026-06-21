@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { usePositionHistory, PositionHistoryPeriod } from '../../hooks/usePositionHistory';
-import { exportToCSV, exportToExcel, exportToPDF } from '../../utils/exportUtils';
+import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../utils/exportUtils';
 import { DownloadCloud, FileText, Table } from 'lucide-react';
 import { format } from 'date-fns';
 import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
@@ -10,6 +10,28 @@ export function ReportsDashboard() {
   const [period, setPeriod] = useState<PositionHistoryPeriod>('30d');
   const { positions: history, isLoading } = usePositionHistory(period);
   const formatCurrency = useFormatCurrency();
+
+  const getExportConfig = (): ExportConfig => {
+    const headers = ['Date', 'Exchange', 'Symbol', 'Side', 'Size', 'Entry Price', 'Close Price', 'Trading Fee', 'Funding Fee', 'Net PnL'];
+    const rows = history.map(pos => [
+      format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm'),
+      pos.exchange,
+      pos.symbol,
+      pos.side.toUpperCase(),
+      pos.size || 0,
+      pos.entryPrice || 0,
+      pos.closePrice || 0,
+      pos.tradingFee || 0,
+      pos.fundingFee || 0,
+      pos.realizedPnl + (pos.fundingFee || 0) + (pos.tradingFee || 0)
+    ]);
+    return {
+      title: 'Trading Performance Report',
+      filename: `trading_report_${format(new Date(), 'yyyy-MM-dd')}`,
+      headers,
+      rows
+    };
+  };
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -30,21 +52,21 @@ export function ReportsDashboard() {
 
           <div className="flex gap-2">
             <button 
-              onClick={() => exportToCSV(history)}
+              onClick={() => exportToCSV(getExportConfig())}
               disabled={isLoading || history.length === 0}
               className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-[#2a2b30] hover:bg-[#3a3b40] disabled:opacity-50 text-white rounded-lg transition-colors"
             >
               <Table className="w-4 h-4" /> CSV
             </button>
             <button 
-              onClick={() => exportToExcel(history)}
+              onClick={() => exportToExcel(getExportConfig())}
               disabled={isLoading || history.length === 0}
               className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-[#10B981]/20 text-[#10B981] hover:bg-[#10B981]/30 disabled:opacity-50 rounded-lg transition-colors"
             >
               <DownloadCloud className="w-4 h-4" /> Excel
             </button>
             <button 
-              onClick={() => exportToPDF(history)}
+              onClick={() => exportToPDF(getExportConfig())}
               disabled={isLoading || history.length === 0}
               className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-[#EF4444]/20 text-[#EF4444] hover:bg-[#EF4444]/30 disabled:opacity-50 rounded-lg transition-colors"
             >
