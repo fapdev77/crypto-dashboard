@@ -6,6 +6,7 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
+import { AssetClassifierAggregator } from '../../../services/AssetClassifierAggregator';
 
 interface Props {
   key?: React.Key;
@@ -20,141 +21,210 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const connectionLabel = keys.find(k => k.id === order.connectionId)?.label || order.connectionId;
 
   const isBuy = order.side === 'buy';
-  const sideColor = isBuy ? 'text-green-600 dark:text-green-500' : 'text-red-500 dark:text-pink-500';
+  const sideColor = isBuy ? 'text-[#00C853]' : 'text-[#FF4444]';
   const sideText = isBuy 
     ? (order.positionSide === 'long' ? 'Open Long' : order.positionSide === 'short' ? 'Close Short' : 'Buy')
     : (order.positionSide === 'short' ? 'Open Short' : order.positionSide === 'long' ? 'Close Long' : 'Sell');
 
   const statusColorMap: Record<string, string> = {
-    NEW: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-400/10 border-indigo-200 dark:border-indigo-400/20',
-    FILLED: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-400/10 border-emerald-200 dark:border-emerald-400/20',
-    CANCELLED: 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700',
-    PARTIALLY_FILLED: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-200 dark:border-yellow-400/20',
-    REJECTED: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-400/10 border-red-200 dark:border-red-400/20',
-    TRIGGERED: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-400/10 border-blue-200 dark:border-blue-400/20',
-    UNTRIGGERED: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-400/10 border-orange-200 dark:border-orange-400/20'
+    NEW: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20',
+    FILLED: 'text-[#00C853] bg-[#00C853]/10 border-[#00C853]/20',
+    CANCELLED: 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]',
+    PARTIALLY_FILLED: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+    REJECTED: 'text-[#FF4444] bg-[#FF4444]/10 border-[#FF4444]/20',
+    TRIGGERED: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+    UNTRIGGERED: 'text-orange-400 bg-orange-400/10 border-orange-400/20'
   };
-  const statusClass = statusColorMap[order.status] || 'text-gray-500 bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
+  const statusClass = statusColorMap[order.status] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
 
   const progress = order.qty > 0 ? new Big(order.filledQty).div(new Big(order.qty)).times(100).toNumber() : 0;
   
   const d = new Date(order.createdTime);
   const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  
+  const category = AssetClassifierAggregator.getGlobalCategorySync(order.symbol);
+  
+  const isInverse = order.category === 'INVERSE';
+  const symbolSuffix = order.symbol.replace(/USDT|USDC|USD|PERP|-[0-9]+$/g, '');
+
+  let valUsd = 0;
+  let actualCoinSize = order.qty || 0;
+  let filledValUsd = 0;
+  let actualFilledCoinSize = order.filledQty || 0;
+
+  if (isInverse) {
+    valUsd = order.qty;
+    actualCoinSize = order.price > 0 ? order.qty / order.price : 0;
+    filledValUsd = order.filledQty;
+    actualFilledCoinSize = (order.avgPrice || order.price) > 0 ? order.filledQty / (order.avgPrice || order.price) : 0;
+  } else {
+    valUsd = order.value || (order.price > 0 ? order.qty * order.price : 0);
+    actualCoinSize = order.qty;
+    filledValUsd = order.filledQty > 0 ? (order.filledQty * (order.avgPrice || order.price)) : 0;
+    actualFilledCoinSize = order.filledQty;
+  }
 
   return (
-    <React.Fragment>
-      <tr 
-        onClick={onToggle}
-        className={`border-b border-gray-50 dark:border-[#2a2b30]/50 hover:bg-gray-50 dark:hover:bg-[#2a2b30]/20 transition-colors cursor-pointer ${isExpanded ? 'bg-gray-50 dark:bg-[#2a2b30]/10' : ''}`}
-      >
-        <td className="px-4 py-4 font-bold text-[15px]">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <CoinIcon symbol={order.symbol} className="w-5 h-5 rounded-full" />
-              <span className="text-gray-900 dark:text-gray-200">{order.symbol}</span>
+    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]" onClick={onToggle}>
+      {/* Main Row */}
+      <div className="p-4 grid grid-cols-2 lg:grid-cols-7 gap-4">
+        
+        {/* Col 1: Asset info */}
+        <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
+          <div className="flex flex-col items-center gap-1.5 shrink-0">
+            <div className="flex items-center relative">
+              <CoinIcon symbol={order.symbol} size={28} className="w-7 h-7" category={category} />
+              <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
+                <ExchangeIcon exchange={order.exchange} className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <span className="text-[10px] text-gray-500 ml-7 tracking-tight">{order.category}</span>
-          </div>
-        </td>
-        <td className="px-4 py-4">
-          <div data-theme={order.exchange.toLowerCase()} className="flex items-center gap-2 text-brand-normal font-medium">
-             <ExchangeIcon exchange={order.exchange} className="w-4 h-4 rounded-sm" />
-             <span className="capitalize">{order.exchange}</span>
-          </div>
-        </td>
-        <td className="px-4 py-4">
-          <span className="text-gray-800 dark:text-gray-300 font-medium truncate max-w-[120px] block">
-            {connectionLabel}
-          </span>
-        </td>
-        <td className="px-4 py-4 text-gray-600 dark:text-gray-300">
-           {order.type}
-           {order.reduceOnly && (
-              <AppTooltip description="This order will only reduce your position size.">
-                <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded cursor-help font-medium">Reduce</span>
-              </AppTooltip>
-           )}
-        </td>
-        <td className={`px-4 py-4 font-medium ${sideColor}`}>
-          {sideText}
-        </td>
-        <td className="px-4 py-4 text-right">
-          <div className="flex flex-col items-end">
-            <span className="text-gray-900 dark:text-gray-200 font-mono text-sm tracking-tight">
-              {order.price > 0 ? formatCurrency(order.price, 'crypto', 8) : 'Market'}
+            {(order.category && order.category !== 'All') && (
+              <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                {order.category === 'linear' ? 'FUTURES' : order.category === 'spot' ? 'SPOT' : order.category}
+              </span>
+            )}
+            <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+              {category}
             </span>
-            {order.triggerPrice ? (
-              <AppTooltip description="Price at which this order is triggered on the exchange.">
-                <span className="text-[10px] text-orange-600 dark:text-orange-400 font-mono cursor-help">
-                  Trig: {formatCurrency(order.triggerPrice, 'crypto', 8)}
-                </span>
-              </AppTooltip>
-            ) : null}
           </div>
-        </td>
-        <td className="px-4 py-4 text-right text-gray-900 dark:text-gray-200 font-mono text-sm tracking-tight">
-          {formatCurrency(order.qty, 'crypto', 8)}
-        </td>
-        <td className="px-4 py-4 text-right">
-          <div className="flex flex-col items-end gap-1">
-             <div className="flex items-center gap-2">
-               <span className="text-gray-600 dark:text-gray-400 font-mono text-xs">{progress.toFixed(1)}%</span>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1">
+              <span className="font-bold text-white text-sm">{order.symbol}</span>
+            </div>
+            <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
+              {order.exchange}
+            </span>
+          </div>
+        </div>
+
+        {/* Col 2: Side & Type */}
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+          <span className="text-[10px] text-[#8E9299] uppercase">Side & Type</span>
+          <span className={`font-mono text-sm ${sideColor}`}>{sideText}</span>
+          <div className="flex flex-wrap items-center gap-2 mt-0.5 max-w-[120px]">
+            <span className="text-xs text-[#8E9299] font-mono">{order.type}</span>
+            {order.reduceOnly && (
+               <AppTooltip description="This order will only reduce your position size.">
+                 <span className="text-[9px] px-1 py-0.5 bg-[#2a2b30] text-[#8E9299] rounded cursor-help font-medium border border-[#3a3b40]">Reduce</span>
+               </AppTooltip>
+            )}
+            {order.timeInForce && (
+               <AppTooltip description="Time in Force">
+                 <span className="text-[9px] px-1 py-0.5 bg-[#2a2b30]/50 text-[#8E9299] rounded-sm font-medium border border-[#3a3b40]/50">{order.timeInForce}</span>
+               </AppTooltip>
+            )}
+          </div>
+        </div>
+
+        {/* Col 3: Quantity */}
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+          <span className="text-[10px] text-[#8E9299] uppercase">Order Qty / Value</span>
+          {isInverse ? (
+            <>
+              <span className="font-mono text-white text-sm">{formatCurrency(valUsd, 'crypto', 2)} USD</span>
+              <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(actualCoinSize, 'crypto', 8)} {symbolSuffix}</span>
+            </>
+          ) : (
+            <>
+              <span className="font-mono text-white text-sm">{formatCurrency(actualCoinSize, 'crypto')}</span>
+              <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(valUsd, 'crypto', 2)} USD</span>
+            </>
+          )}
+        </div>
+
+        {/* Col 4: Price & Trigger */}
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+          <span className="text-[10px] text-[#8E9299] uppercase">Order Price / Trig</span>
+          <span className="font-mono text-white text-sm">
+             {order.price > 0 ? formatCurrency(order.price, 'crypto', 8) : 'Market'}
+          </span>
+          {order.triggerPrice ? (
+            <span className="font-mono text-orange-400 text-xs">
+              Trig: {formatCurrency(order.triggerPrice, 'crypto', 8)}
+            </span>
+          ) : (
+            <span className="font-mono text-[#8E9299] text-xs opacity-0">-</span>
+          )}
+        </div>
+
+        {/* Col 5: Filled Progress */}
+        <div className="flex flex-col justify-center gap-1.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+          <span className="text-[10px] text-[#8E9299] uppercase">Filled Progress</span>
+          <div className="flex flex-col gap-1 w-full max-w-[120px]">
+             <div className="flex justify-between items-center text-[10px] font-mono text-[#8E9299]">
+               {isInverse ? (
+                 <span>{formatCurrency(filledValUsd, 'crypto', 2)} USD</span>
+               ) : (
+                 <span>{formatCurrency(actualFilledCoinSize, 'crypto')}</span>
+               )}
+               <span className="text-white">{progress.toFixed(1)}%</span>
              </div>
-             <div className="w-16 h-1.5 bg-gray-200 dark:bg-[#1a1c23] rounded-full overflow-hidden border border-gray-300 dark:border-gray-800">
-                <div className="h-full bg-indigo-500" style={{ width: `${progress}%` }} />
+             <div className="h-1.5 bg-[#2a2b30] rounded-full overflow-hidden w-full">
+                <div className={`h-full transition-all duration-300 ${progress === 100 ? 'bg-[#00C853]' : 'bg-[#2F6BFF]'}`} style={{ width: `${progress}%` }} />
              </div>
           </div>
-        </td>
-        <td className="px-4 py-4 text-right">
-          <span className={`px-2 py-1 text-[11px] rounded font-semibold border ${statusClass}`}>
+        </div>
+
+        {/* Col 6: Status */}
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+          <span className="text-[10px] text-[#8E9299] uppercase">Status</span>
+          <span className={`w-max px-2 py-0.5 text-[10px] rounded font-semibold border ${statusClass}`}>
             {order.status}
           </span>
-        </td>
-        <td className="px-4 py-4 text-center">
-          <div className="flex flex-col text-xs text-gray-500 dark:text-gray-400">
-            <span>{dateStr}</span>
-            <span className="font-mono">{timeStr}</span>
-          </div>
-        </td>
-      </tr>
-      
+        </div>
+
+        {/* Col 7: Time */}
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+          <span className="text-[10px] text-[#8E9299] uppercase">Created Time</span>
+          <span className="font-sans text-white text-sm">{dateStr}</span>
+          <span className="font-mono text-[#8E9299] text-xs">{timeStr}</span>
+        </div>
+
+      </div>
+
+      {/* Expanded details */}
       {isExpanded && (
-        <tr>
-          <td colSpan={10} className="p-0 border-b border-gray-50 dark:border-[#2a2b30]/50">
-            <div className="bg-gray-50/80 dark:bg-[#111216]/50 px-6 py-5 flex flex-wrap gap-x-12 gap-y-4 shadow-inner">
-                
-                <div className="flex flex-col gap-1">
-                  <span className="text-gray-500 text-xs tracking-wider uppercase font-medium">Order ID</span>
-                  <AppTooltip description="Original Order ID from Exchange">
-                    <span className="text-gray-800 dark:text-gray-300 font-mono text-sm truncate max-w-[150px] cursor-help">
-                       {order.exchangeOrderId}
-                    </span>
-                  </AppTooltip>
-                </div>
+        <div className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-[#2a2b30] animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+           <div className="grid grid-cols-2 lg:grid-cols-5 gap-y-5 gap-x-4 text-sm mt-4">
+               
+               <div className="flex flex-col gap-1">
+                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Order ID</span>
+                 <AppTooltip description="Original Order ID from Exchange">
+                   <div className="text-white font-mono text-sm cursor-help truncate w-max max-w-[200px]">
+                      {order.exchangeOrderId}
+                   </div>
+                 </AppTooltip>
+               </div>
 
-                <div className="flex flex-col gap-1">
-                  <span className="text-gray-500 text-xs tracking-wider uppercase font-medium">Connection ID</span>
-                  <span className="text-gray-800 dark:text-gray-300 font-mono text-sm truncate max-w-[150px]">{order.connectionId}</span>
-                </div>
+               <div className="flex flex-col gap-1">
+                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Connection</span>
+                 <span className="text-white font-mono text-sm truncate w-max max-w-[200px]">{connectionLabel}</span>
+               </div>
 
-                <div className="flex flex-col gap-1">
-                  <span className="text-gray-500 text-xs tracking-wider uppercase font-medium">Avg Fill Price</span>
-                  <span className="text-gray-800 dark:text-gray-300 font-mono text-sm">{order.avgPrice > 0 ? formatCurrency(order.avgPrice, 'crypto', 8) : '--'}</span>
-                </div>
+               <div className="flex flex-col gap-1">
+                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Avg Fill Price</span>
+                 <span className="text-white font-mono text-sm">{order.avgPrice > 0 ? formatCurrency(order.avgPrice, 'crypto', 8) : '--'}</span>
+               </div>
 
-                <div className="flex flex-col gap-1">
-                  <span className="text-gray-500 text-xs tracking-wider uppercase font-medium">Value / Fees</span>
-                  <div className="flex flex-col">
-                    <span className="text-gray-800 dark:text-gray-300 font-mono text-sm">Val: {order.value ? formatCurrency(order.value, 'usd') : '--'}</span>
-                    <span className="text-gray-500 dark:text-gray-400 font-mono text-xs mt-0.5">Fee: {order.fees ? formatCurrency(order.fees, 'usd') : '--'}</span>
-                  </div>
-                </div>
+               <div className="flex flex-col gap-1">
+                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Total Value</span>
+                 <span className="text-white font-mono text-sm">{valUsd > 0 ? formatCurrency(valUsd, 'usd') + ' USD' : '--'}</span>
+               </div>
 
-            </div>
-          </td>
-        </tr>
+               <div className="flex flex-col gap-1">
+                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Trading Fees</span>
+                 <span className="text-white font-mono text-sm">{order.fees ? (isInverse ? `${formatCurrency(order.fees, 'crypto', 8)} ${symbolSuffix}` : `${formatCurrency(order.fees, 'usd')} USD`) : '--'}</span>
+               </div>
+
+               <div className="flex flex-col gap-1">
+                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Updated Time</span>
+                 <span className="text-white font-mono text-sm">{new Date(order.updatedTime).toLocaleString()}</span>
+               </div>
+           </div>
+        </div>
       )}
-    </React.Fragment>
+    </div>
   );
 }
+

@@ -19,41 +19,25 @@ export function OrdersTable({ orders, loading }: Props) {
     );
   }
 
+  if (orders.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl flex-1">
+        <p className="text-[#8E9299]">Nenhuma ordem encontrada para os filtros selecionados.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1">
-      <table className="w-full text-sm text-left">
-        <thead className="text-xs text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-[#2a2b30] sticky top-0 bg-white dark:bg-[#0b0c10] z-10">
-          <tr>
-            <th className="py-3 font-normal px-4">Symbol</th>
-            <th className="py-3 font-normal px-4">Exchange</th>
-            <th className="py-3 font-normal px-4">Account</th>
-            <th className="py-3 font-normal px-4">Type</th>
-            <th className="py-3 font-normal px-4">Side</th>
-            <th className="py-3 font-normal px-4 text-right">Price</th>
-            <th className="py-3 font-normal px-4 text-right">Amount</th>
-            <th className="py-3 font-normal px-4 text-right">Filled</th>
-            <th className="py-3 font-normal px-4 text-right">Status</th>
-            <th className="py-3 font-normal px-4 text-center">Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map(order => (
-            <OrderRow 
-              key={order.id} 
-              order={order} 
-              isExpanded={expandedId === order.id}
-              onToggle={() => setExpandedId(expandedId === order.id ? null : order.id)}
-            />
-          ))}
-          {orders.length === 0 && (
-            <tr>
-              <td colSpan={9} className="py-10 text-center text-gray-500">
-                Nenhum dado encontrado para os filtros selecionados.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <div className="flex flex-col gap-3 flex-1 pb-4">
+      {orders.map(order => (
+        <OrderRow 
+          key={order.id} 
+          order={order} 
+          isExpanded={expandedId === order.id}
+          onToggle={() => setExpandedId(expandedId === order.id ? null : order.id)}
+        />
+      ))}
     </div>
   );
 }
+
