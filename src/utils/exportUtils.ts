@@ -1,7 +1,7 @@
 import { UnifiedHistoryPosition } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { format } from 'date-fns';
 
 const formatCurrency = (val: number) => `$${Math.abs(val).toFixed(2)}${val < 0 ? '-' : ''}`; // simplified for export
@@ -36,15 +36,26 @@ export const exportToCSV = (history: UnifiedHistoryPosition[]) => {
   link.click();
 };
 
-export const exportToExcel = (history: UnifiedHistoryPosition[]) => {
+export const exportToExcel = async (history: UnifiedHistoryPosition[]) => {
   const data = getExportData(history);
   if (data.length === 0) return;
 
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
-  
-  XLSX.writeFile(workbook, `trading_report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Report');
+
+  const headers = Object.keys(data[0]);
+  worksheet.addRow(headers);
+
+  data.forEach((obj) => {
+    worksheet.addRow(Object.values(obj));
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `trading_report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
+  link.click();
 };
 
 export const exportToPDF = (history: UnifiedHistoryPosition[]) => {
