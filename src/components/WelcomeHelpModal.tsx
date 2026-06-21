@@ -9,7 +9,7 @@ interface WelcomeHelpModalProps {
 
 export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
   const { showWelcomeOnStartup, setShowWelcomeOnStartup } = useSettingsStore();
-  const [lang, setLang] = useState<'en' | 'pt'>('en');
+  const [lang, setLang] = useState<'en' | 'pt'>('pt');
 
   if (!isOpen) return null;
 
@@ -51,29 +51,41 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity duration-300"
-        onClick={onClose} 
+        onClick={onClose}
       />
-      
+
       {/* Modal Content */}
-      <div className="relative bg-[#151619] border border-[#2a2b30] rounded-2xl shadow-2xl w-full max-w-lg flex flex-col p-6 animate-in fade-in zoom-in-95 duration-250 max-h-[90vh] overflow-hidden">
-        
+      <div className="relative bg-[#151619] border border-[#2a2b30] rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-250 max-h-[90vh] overflow-hidden">
+
         {/* Top Right Actions */}
-        <div className="absolute right-4 top-4 flex items-center gap-2">
-          {/* Language Toggle */}
-          <button
-            onClick={() => setLang(lang === 'en' ? 'pt' : 'en')}
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50 transition-colors border border-transparent"
-            aria-label="Toggle language"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            {lang === 'en' ? 'PT-BR' : 'EN-US'}
-          </button>
-          
+        <div className="absolute right-4 top-4 flex items-center gap-3">
+          {/* Segmented Language Selector */}
+          <div className="flex items-center bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-0.5 shadow-inner">
+            <button
+              onClick={() => setLang('pt')}
+              className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'pt'
+                ? 'bg-[#2F6BFF] text-white shadow-md'
+                : 'text-[#8E9299] hover:text-white'
+                }`}
+            >
+              PT-BR
+            </button>
+            <button
+              onClick={() => setLang('en')}
+              className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'en'
+                ? 'bg-[#2F6BFF] text-white shadow-md'
+                : 'text-[#8E9299] hover:text-white'
+                }`}
+            >
+              EN-US
+            </button>
+          </div>
+
           {/* Close Button */}
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-1 rounded-lg text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50 transition-colors"
             aria-label="Close modal"
           >
@@ -86,7 +98,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
           <div className="w-10 h-10 rounded-xl bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 flex items-center justify-center">
             <HelpCircle className="w-6 h-6 text-[#2F6BFF]" />
           </div>
-          <div className="pr-20">
+          <div className="pr-40">
             <h3 className="text-lg font-semibold text-white truncate">{t.title}</h3>
             <p className="text-xs text-[#8E9299] mt-0.5">{t.subtitle}</p>
           </div>
@@ -102,7 +114,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
 
           {/* Features Checklist */}
           <div className="grid grid-cols-1 gap-4">
-            
+
             {/* Feature 1 */}
             <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
               <div className="w-8 h-8 rounded-lg bg-[#00C853]/10 border border-[#00C853]/20 flex items-center justify-center shrink-0 mt-0.5">
