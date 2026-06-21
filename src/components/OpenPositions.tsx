@@ -290,6 +290,78 @@ export function OpenPositions() {
                  }
               }
 
+              const posTypeStr = pos.instrumentType === 'INVERSE' ? 'CM Perpetual Inverse' : 
+                                 (pos.instrumentType && pos.instrumentType !== 'SWAP' && pos.instrumentType !== 'PERPETUAL') ? 
+                                 pos.instrumentType.charAt(0).toUpperCase() + pos.instrumentType.slice(1).toLowerCase() :
+                                 'Perpetual';
+              const posTitle = `${pos.symbol} ${posTypeStr}`;
+              const baseCoinClean = pos.baseCoin || pos.symbol.replace(/USDT|USDC|USD|EUR|BUSD|BTC$/i, '');
+
+              const entryPriceTooltipProps = {
+                side: "top" as const,
+                description: (
+                  <div className="flex flex-col gap-1 w-full max-w-[250px]">
+                    <span className="text-[13px] font-medium text-white tracking-wide font-sans">
+                      Entry Price
+                    </span>
+                    <p className="text-[12px] text-[#8E9299] leading-snug">
+                      Current position average price.
+                    </p>
+                  </div>
+                )
+              };
+
+              const markPriceTooltipProps = {
+                side: "top" as const,
+                description: (
+                  <div className="flex flex-col gap-1 w-full max-w-[280px]">
+                    <span className="text-[13px] font-medium text-white tracking-wide font-sans">
+                      Mark Price
+                    </span>
+                    <p className="text-[12px] text-[#8E9299] leading-snug">
+                      The mark price is determined by the real-time index price and the upcoming funding rate, reflecting the current fair price of the futures. The mark price is used to calculate the unrealized PnL of the position and trigger liquidations.
+                    </p>
+                  </div>
+                )
+              };
+
+              const sizeTooltipProps = {
+                side: "top" as const,
+                description: (
+                  <div className="flex flex-col gap-2 w-full min-w-[220px]">
+                    <div className="text-[13px] font-medium text-white border-b border-[#2a2b30] pb-2 tracking-wide font-sans">
+                      {posTitle}
+                    </div>
+                  </div>
+                ),
+                rows: [
+                  {
+                    label: 'Side',
+                    value: sideLabel,
+                    labelClassName: 'text-[12px] text-[#8E9299]',
+                    valueClassName: `text-[12px] font-medium ${sideColor}`
+                  },
+                  {
+                    label: 'Number of contracts',
+                    value: `${formatCurrency(Math.abs(pos.size), 'crypto')} contracts`,
+                    labelClassName: 'text-[12px] text-[#8E9299]',
+                    valueClassName: 'text-[12px] font-mono text-white'
+                  },
+                  {
+                    label: 'Total crypto',
+                    value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(openPosSize, 'crypto', 8) : formatCurrency(Math.abs(pos.size), 'crypto')} ${baseCoinClean}`,
+                    labelClassName: 'text-[12px] text-[#8E9299]',
+                    valueClassName: 'text-[12px] font-mono text-white'
+                  },
+                  {
+                    label: 'Total value',
+                    value: `${formatCurrency(sizeValUsd, 'usd', 2)} USD`,
+                    labelClassName: 'text-[12px] text-[#8E9299]',
+                    valueClassName: 'text-[12px] font-mono text-white'
+                  }
+                ]
+              };
+
               return (
                 <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]" onClick={() => toggleRow(pos.id)}>
 
@@ -329,14 +401,26 @@ export function OpenPositions() {
 
                     {/* Size / Value */}
                     <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                      <span className="text-[10px] text-[#8E9299] uppercase">Pos Size / Value</span>
-                      <span className="font-mono text-white text-sm">{formatCurrency(pos.size, 'crypto')}</span>
-                      <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
+                      <AppTooltip {...sizeTooltipProps}>
+                        <div className="flex flex-col gap-0.5 cursor-help w-max focus:outline-none">
+                          <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max">Pos Size / Value</span>
+                          <span className="font-mono text-white text-sm">{formatCurrency(pos.size, 'crypto')}</span>
+                          <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
+                        </div>
+                      </AppTooltip>
                     </div>
 
                     {/* Prices */}
                     <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                      <span className="text-[10px] text-[#8E9299] uppercase">Entry / Mark Price</span>
+                      <div className="flex items-center gap-1">
+                        <AppTooltip {...entryPriceTooltipProps}>
+                          <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Entry</span>
+                        </AppTooltip>
+                        <span className="text-[10px] text-[#8E9299] uppercase">/</span>
+                        <AppTooltip {...markPriceTooltipProps}>
+                          <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Mark</span>
+                        </AppTooltip>
+                      </div>
                       <span className="font-mono text-white text-sm">{formatPrice(pos.entryPrice, isFiatPair)}</span>
                       <span className="font-mono text-white text-xs">{formatPrice(pos.markPrice, isFiatPair)}</span>
                     </div>
@@ -411,14 +495,20 @@ export function OpenPositions() {
 
                         {/* Linha 1 */}
                         <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs">Position</span>
-                          <div className="flex items-baseline gap-1">
-                            <span className="font-mono text-white">{formatCurrency(pos.size, 'crypto')}</span>
-                            <span className="text-[#8E9299] text-xs">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
-                          </div>
+                          <AppTooltip {...sizeTooltipProps}>
+                            <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
+                              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Position</span>
+                              <div className="flex items-baseline gap-1">
+                                <span className="font-mono text-white">{formatCurrency(pos.size, 'crypto')}</span>
+                                <span className="text-[#8E9299] text-xs">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
+                              </div>
+                            </div>
+                          </AppTooltip>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs">Entry price</span>
+                          <AppTooltip {...entryPriceTooltipProps}>
+                            <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Entry price</span>
+                          </AppTooltip>
                           <span className="font-mono text-white">{formatPrice(pos.entryPrice, isFiatPair)}</span>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -528,7 +618,9 @@ export function OpenPositions() {
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Mark price</span>
+                          <AppTooltip {...markPriceTooltipProps}>
+                            <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Mark price</span>
+                          </AppTooltip>
                           <span className="font-mono text-white">{formatPrice(pos.markPrice, isFiatPair)}</span>
                         </div>
                         <div className="flex flex-col gap-1">
