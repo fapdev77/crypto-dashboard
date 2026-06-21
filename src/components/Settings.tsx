@@ -14,7 +14,8 @@ export function Settings() {
     useMockData, setUseMockData,
     pollingInterval, setPollingInterval,
     historyCacheInterval, setHistoryCacheInterval,
-    metadataCacheTtlHours, setMetadataCacheTtlHours
+    metadataCacheTtlHours, setMetadataCacheTtlHours,
+    showWelcomeOnStartup, setShowWelcomeOnStartup
   } = useSettingsStore();
 
   const keys = useApiKeysStore(state => state.keys);
@@ -122,34 +123,59 @@ export function Settings() {
       {/* Responsive Card Grid: 1 col mobile, 2 col tablet, 3 col desktop */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
 
-        {/* Card 1: Development & Testing */}
+        {/* Card 1: Preferences & Testing */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
             <FlaskConical className="w-4 h-4 text-[#00C853]" />
-            Development & Testing
+            Preferences & Testing
           </h3>
-          <p className="text-[#8E9299] text-xs mb-5">Simulation and UI testing tools</p>
+          <p className="text-[#8E9299] text-xs mb-5">User preferences and testing tools</p>
 
-          <div className="flex items-start justify-between gap-4 flex-1">
-            <div className="flex-1">
-              <h4 className="text-white font-medium text-sm">Use Mock Data</h4>
-              <p className="text-[#8E9299] text-xs mt-1.5 leading-relaxed">
-                Enable to test the interface with dummy data instead of real API connections.
-                Real balances and positions will be hidden while active.
-              </p>
+          <div className="space-y-5 flex-1 flex flex-col">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h4 className="text-white font-medium text-sm">Use Mock Data</h4>
+                <p className="text-[#8E9299] text-xs mt-1.5 leading-relaxed">
+                  Enable to test the interface with dummy data instead of real API connections.
+                  Real balances and positions will be hidden while active.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={useMockData}
+                  onChange={(e) => {
+                    setUseMockData(e.target.checked);
+                    toast.success(`Mock Data ${e.target.checked ? 'Enabled' : 'Disabled'}`, { id: 'mock-toggle' });
+                  }}
+                />
+                <div className="w-11 h-6 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00C853]"></div>
+              </label>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={useMockData}
-                onChange={(e) => {
-                  setUseMockData(e.target.checked);
-                  toast.success(`Mock Data ${e.target.checked ? 'Enabled' : 'Disabled'}`, { id: 'mock-toggle' });
-                }}
-              />
-              <div className="w-11 h-6 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00C853]"></div>
-            </label>
+
+            <div className="border-t border-[#2a2b30]/50 pt-4" />
+
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h4 className="text-white font-medium text-sm">Show Onboarding Guide</h4>
+                <p className="text-[#8E9299] text-xs mt-1.5 leading-relaxed">
+                  Show the welcome and help guide modal automatically when the application is launched.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={showWelcomeOnStartup}
+                  onChange={(e) => {
+                    setShowWelcomeOnStartup(e.target.checked);
+                    toast.success(`Onboarding Guide ${e.target.checked ? 'Enabled' : 'Disabled'} on Startup`, { id: 'welcome-toggle' });
+                  }}
+                />
+                <div className="w-11 h-6 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00C853]"></div>
+              </label>
+            </div>
           </div>
         </div>
 

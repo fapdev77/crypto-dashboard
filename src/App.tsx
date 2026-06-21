@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ApiKeys } from './components/ApiKeys';
@@ -26,11 +26,23 @@ import { PrivacyToggleButton } from './components/PrivacyToggleButton';
 import { TooltipProvider } from './components/ui/Tooltip';
 import { OpenOrders } from './components/analytics/OrderReports/OpenOrders';
 import { OrderHistory } from './components/analytics/OrderReports/OrderHistory';
+import { useSettingsStore } from './store/settingsStore';
+import { HelpToggleButton } from './components/HelpToggleButton';
+import { WelcomeHelpModal } from './components/WelcomeHelpModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+
+  // Trigger welcome modal on app load if enabled
+  useEffect(() => {
+    const shouldShow = useSettingsStore.getState().showWelcomeOnStartup;
+    if (shouldShow) {
+      setIsWelcomeOpen(true);
+    }
+  }, []);
 
   let activeTabName = activeTab.replace('analytics-', '').replace('-', ' ');
   if (activeTab === 'api-keys') activeTabName = 'API Keys Manager';
@@ -95,7 +107,10 @@ export default function App() {
                   {activeTabName}
                 </h2>
               </div>
-              <PrivacyToggleButton />
+              <div className="flex items-center gap-2">
+                <HelpToggleButton isOpen={isWelcomeOpen} onClick={() => setIsWelcomeOpen(!isWelcomeOpen)} />
+                <PrivacyToggleButton />
+              </div>
             </header>
 
             <div className="flex-1 overflow-auto hide-scrollbar relative">
@@ -125,6 +140,7 @@ export default function App() {
         </div>
         <StatusBar />
       </div>
+      <WelcomeHelpModal isOpen={isWelcomeOpen} onClose={() => setIsWelcomeOpen(false)} />
     </WorkSpace>
     </TooltipProvider>
     </PrivacyProvider>
