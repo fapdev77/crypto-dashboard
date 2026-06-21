@@ -325,6 +325,34 @@ export function OpenPositions() {
                 )
               };
 
+              const liqPriceTooltipProps = {
+                side: "top" as const,
+                description: (
+                  <div className="flex flex-col gap-1 w-full max-w-[280px]">
+                    <span className="text-[13px] font-medium text-white tracking-wide font-sans">
+                      Est. Liq. Price
+                    </span>
+                    <p className="text-[12px] text-[#8E9299] leading-snug">
+                      The estimated price at which an open position will be liquidated. This price is for reference only. The actual liquidation price is determined when your maintenance margin ratio drops to 100% or lower and your position is liquidated or reduced.
+                    </p>
+                  </div>
+                )
+              };
+
+              const marginTooltipProps = {
+                side: "top" as const,
+                description: (
+                  <div className="flex flex-col gap-1 w-full max-w-[280px]">
+                    <span className="text-[13px] font-medium text-white tracking-wide font-sans">
+                      Margin
+                    </span>
+                    <p className="text-[12px] text-[#8E9299] leading-snug">
+                      The margin allocated to your open position.
+                    </p>
+                  </div>
+                )
+              };
+
               const sizeTooltipProps = {
                 side: "top" as const,
                 description: (
@@ -427,7 +455,15 @@ export function OpenPositions() {
 
                     {/* Margin & Liq Price */}
                     <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                      <span className="text-[10px] text-[#8E9299] uppercase">Liq Price / Margin</span>
+                      <div className="flex items-center gap-1">
+                        <AppTooltip {...liqPriceTooltipProps}>
+                          <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Liq Price</span>
+                        </AppTooltip>
+                        <span className="text-[10px] text-[#8E9299] uppercase">/</span>
+                        <AppTooltip {...marginTooltipProps}>
+                          <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Margin</span>
+                        </AppTooltip>
+                      </div>
                       <span className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
                       <span className="font-mono text-white text-xs">
                         {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
@@ -512,7 +548,9 @@ export function OpenPositions() {
                           <span className="font-mono text-white">{formatPrice(pos.entryPrice, isFiatPair)}</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs">Margin</span>
+                          <AppTooltip {...marginTooltipProps}>
+                            <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Margin</span>
+                          </AppTooltip>
                           <span className="font-mono text-white">
                             {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
                             {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
@@ -683,7 +721,9 @@ export function OpenPositions() {
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Est. liq. price</span>
+                          <AppTooltip {...liqPriceTooltipProps}>
+                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">Est. liq. price</span>
+                          </AppTooltip>
                           <span className="font-mono text-orange-400">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
                         </div>
                         <div className="flex flex-col gap-1">
