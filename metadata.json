@@ -1,6 +1,8 @@
 {
-  "name": "crypto-dashboard",
-  "description": "Crypto Dashboard",
+  "name": "Crypto Portfolio Manager",
+  "description": "Gerenciador e painel unificado de portfólios para corretoras de criptomoedas, suportando Bitget, Bybit e OKX.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

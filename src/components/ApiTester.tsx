@@ -1,22 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApiKeysStore, Exchange } from '../store/apiKeysStore';
-import { ExchangeAuth } from '../services/ExchangeAuth';
+import { OkxAdapter } from '../services/adapters/OkxAdapter';
+import { BitgetAdapter } from '../services/adapters/BitgetAdapter';
+import { BybitAdapter } from '../services/adapters/BybitAdapter';
+import { proxyFetch } from '../utils/proxyFetch';
 import { Send, Play, Square, Wifi, WifiOff, Terminal, ListCollapse } from 'lucide-react';
 
-const proxyFetch = async (targetUrl: string, method: string, headers: any, body?: any) => {
-  const reqBody: any = { targetUrl, method, headers };
-  if (body) reqBody.body = body;
-  
-  const response = await fetch('/api/proxy', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(reqBody),
-  });
-  if (!response.ok) {
-    throw new Error(`Proxy Error: ${response.status} ${response.statusText}`);
-  }
-  return response.json();
-};
+/* 
+ * [TODO: TECHNICAL DEBT - PERMITTED EXCEPTION]
+ * This component intentionally violates the Normalization Layer rule (consuming raw API responses directly in the UI).
+ * It is marked as an official exception for DevTools diagnostic purposes.
+ * In a future audit, this logic should be abstracted into an isolated DiagnosticService to keep the React tree pure.
+ */
 
 export function ApiTester() {
   const { keys } = useApiKeysStore();
@@ -80,20 +75,20 @@ export function ApiTester() {
       let headers: Record<string, string> = {};
       
       if (activeKey.exchange === 'okx') {
-         headers = ExchangeAuth.getOkxHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
+         headers = await OkxAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
       } else if (activeKey.exchange === 'bitget') {
-         headers = ExchangeAuth.getBitgetHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
+         headers = await BitgetAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
       } else if (activeKey.exchange === 'bybit') {
          // Bybit auth usually takes the payload string or query string.
          // If GET, query is everything after `?`.
          const queryStr = restPath.includes('?') ? restPath.split('?')[1] : '';
          const authPayload = restMethod === 'POST' ? restBody : queryStr;
-         headers = ExchangeAuth.getBybitHeaders(activeKey.apiKey, activeKey.apiSecret, authPayload);
+         headers = await BybitAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, authPayload) as Record<string, string>;
       }
       
       const payloadObj = restMethod === 'POST' && restBody ? JSON.parse(restBody) : undefined;
-      const data = await proxyFetch(targetUrl, restMethod, headers, payloadObj);
-      setRestResponse(JSON.stringify(data, null, 2));
+      const proxyResponse = await proxyFetch({ targetUrl, method: restMethod, headers, body: payloadObj });
+      setRestResponse(JSON.stringify(proxyResponse, null, 2));
     } catch (err: any) {
       setRestResponse(`Error:\n${err.message || String(err)}`);
     }
@@ -116,24 +111,21 @@ export function ApiTester() {
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
-    ws.onopen = () => {
+    ws.onopen = async () => {
       setWsConnected(true);
       logWs('Connected.');
       
       // Attempt login
       try {
-        let authPayload: any = null;
-        if (activeKey.exchange === 'okx') {
-          authPayload = ExchangeAuth.getOkxWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
-        } else if (activeKey.exchange === 'bitget') {
-          authPayload = ExchangeAuth.getBitgetWsAuth(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '');
-        } else if (activeKey.exchange === 'bybit') {
-          authPayload = ExchangeAuth.getBybitWsAuth(activeKey.apiKey, activeKey.apiSecret);
-        }
-
-        if (authPayload) {
+        let exchangeCredentials: any = null;
+        // WsAuth is now handled directly inside the core WebSockets engine or removed.
+        // If ApiTester needs auth, it should hit a proxy or implement header generation here.
+        
+        if (exchangeCredentials) {
           logWs('Sending authentication payload...');
-          ws.send(JSON.stringify(authPayload));
+          ws.send(JSON.stringify(exchangeCredentials));
+        } else {
+           logWs('No WS auth payload generated via frontend. Public WS connected.');
         }
       } catch (err: any) {
          logWs(`Auth Error: ${err.message}`);
@@ -191,9 +183,9 @@ export function ApiTester() {
               className="w-full bg-[#0b0c10] border border-[#2a2b30] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#2F6BFF]"
             >
               {keys.length === 0 && <option value="" disabled>No API Keys found</option>}
-              {keys.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.label} ({k.exchange})
+              {keys.map((apiKey) => (
+                <option key={apiKey.id} value={apiKey.id}>
+                  {apiKey.label} ({apiKey.exchange})
                 </option>
               ))}
             </select>

@@ -1,51 +1,89 @@
-import { UnifiedPosition } from '../../types/positions';
-import { OkxPositionMapper } from './OkxPositionMapper';
-import { BitgetPositionMapper } from './BitgetPositionMapper';
-import { BybitPositionMapper } from './BybitPositionMapper';
-import { RestClient } from '../RestClient';
-import { ExchangeAuth } from '../ExchangeAuth';
+import { UnifiedHistoryPosition } from '../../types';
+import { OkxAdapter } from '../adapters/OkxAdapter';
+import { BitgetAdapter } from '../adapters/BitgetAdapter';
+import { BybitAdapter } from '../adapters/BybitAdapter';
+import { IExchangeAdapter } from '../adapters/IExchangeAdapter';
+import {
+  getCachedHistory,
+  saveCachedHistory,
+  getLastFetchTimestamp,
+  updateCacheMeta,
+} from '../historyCache';
 
 export class PositionHistoryService {
-  private okxMapper = new OkxPositionMapper();
-  private bitgetMapper = new BitgetPositionMapper();
-  private bybitMapper = new BybitPositionMapper();
+  
+  private getAdapter(exchange: string): IExchangeAdapter {
+    switch (exchange) {
+      case 'okx':
+        return new OkxAdapter();
+      case 'bitget':
+        return new BitgetAdapter();
+      case 'bybit':
+        return new BybitAdapter();
+      default:
+        throw new Error(`[PositionHistoryService] No adapter found for exchange: ${exchange}`);
+    }
+  }
 
-  public async fetchExchangeHistory(key: any, start?: number, end?: number): Promise<UnifiedPosition[]> {
+  /**
+   * Standard fetch: hits the exchange API directly for the requested period.
+   */
+  public async fetchExchangeHistory(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     try {
       console.log(`[PositionHistoryService] Fetching history for ${key.exchange} (${key.label})`);
-      if (key.exchange === 'okx') {
-        let allRaw: any[] = [];
-        const instTypes = ['SWAP', 'FUTURES', 'MARGIN'];
-        for (const type of instTypes) {
-           const raw = await RestClient.getHistoryOkx(type, key.apiKey, key.apiSecret, key.passphrase || '', start, end);
-           allRaw = [...allRaw, ...raw];
-        }
-        console.log(`[PositionHistoryService] OKX raw records: ${allRaw.length}`);
-        return this.okxMapper.mapHistory(allRaw, key.id, key.label);
-      } else if (key.exchange === 'bitget') {
-        const raw = await this.fetchBitgetPaginated(key, start, end);
-        console.log(`[PositionHistoryService] Bitget raw records: ${raw.length}`);
-        return this.bitgetMapper.mapHistory(raw, key.id, key.label);
-      } else if (key.exchange === 'bybit') {
-        await ExchangeAuth.syncBybitTime();
-        const raw = await RestClient.getHistoryBybit(key.apiKey, key.apiSecret, start, end);
-        console.log(`[PositionHistoryService] Bybit raw records: ${raw.length}`);
-        return this.bybitMapper.mapHistory(raw, key.id, key.label);
-      }
+      const adapter = this.getAdapter(key.exchange);
+      return await adapter.fetchAndNormalize(key, start, end);
     } catch (error) {
       console.error(`Error fetching history for ${key.exchange} (${key.label}):`, error);
     }
     return [];
   }
 
-  private async fetchBitgetPaginated(key: any, start?: number, end?: number): Promise<any[]> {
-    const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
-    let allRaw: any[] = [];
-    for (const pType of productTypes) {
-       // Paginação simplificada para o teste
-       const raw = await RestClient.getHistoryBitget(pType, key.apiKey, key.apiSecret, key.passphrase || '', start, end, '');
-       allRaw = [...allRaw, ...raw];
+  /**
+   * Incremental fetch with IndexedDB caching.
+   * 1. Loads cached history immediately.
+   * 2. Determines the latest cached timestamp.
+   * 3. Fetches only NEW records from the exchange (start = lastCachedTime + 1).
+   * 4. Merges and persists the new data into IndexedDB.
+   */
+  public async fetchWithCache(key: any): Promise<UnifiedHistoryPosition[]> {
+    const connectionId = key.id;
+
+    // Step 1: Load existing cache
+    const cachedPositions = await getCachedHistory(connectionId);
+    console.log(`[HistoryCache] ${connectionId}: ${cachedPositions.length} records in cache`);
+
+    // Step 2: Determine incremental start
+    const lastTimestamp = await getLastFetchTimestamp(connectionId);
+    const incrementalStart = lastTimestamp > 0 ? lastTimestamp + 1 : undefined;
+    const now = Date.now();
+
+    // Step 3: Fetch only new records
+    let newPositions: UnifiedHistoryPosition[] = [];
+    try {
+      newPositions = await this.fetchExchangeHistory(key, incrementalStart, now);
+      console.log(`[HistoryCache] ${connectionId}: ${newPositions.length} new records fetched`);
+    } catch (err) {
+      console.warn(`[HistoryCache] Incremental fetch failed for ${connectionId}, returning stale cache`, err);
+      return cachedPositions; // Graceful fallback to stale data (AGENTS.md §5)
     }
-    return allRaw;
+
+    // Step 4: Persist new records and update metadata
+    if (newPositions.length > 0) {
+      await saveCachedHistory(newPositions);
+
+      const latestCloseTime = Math.max(...newPositions.map(r => r.closeUpdateTime));
+      await updateCacheMeta(connectionId, latestCloseTime);
+    }
+
+    // Step 5: Merge and deduplicate (by id)
+    const mergedMap = new Map<string, UnifiedHistoryPosition>();
+    for (const pos of cachedPositions) mergedMap.set(pos.id, pos);
+    for (const pos of newPositions) mergedMap.set(pos.id, pos); // new overrides old
+
+    const merged = Array.from(mergedMap.values());
+    merged.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
+
+    return merged;
   }
 }

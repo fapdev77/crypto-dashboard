@@ -16,14 +16,14 @@ Build a real-time terminal that connects via WebSocket (primary) and REST (secon
 
 ### Architectural Constraints (Zero-Trust Security Focus)
 1. **API Secrets**: Must NEVER be dispatched to a backend or database as plain text constraints. They stay locked in the browser's `localStorage` and are resolved exclusively in memory.
-2. **WebSockets First**: The React frontend must connect directly to the Exchange WebSockets. You will construct the login signatures in the browser dynamically using `crypto-js` (HMAC SHA256).
+2. **WebSockets First**: The React frontend must connect directly to the Exchange WebSockets. You will construct the login signatures in the browser dynamically using the native Web Crypto API (HMAC SHA256).
 3. **Dumb CORS Proxy**: Because REST APIs heavily block direct browser requests via CORS, you MUST implement a local Express (`server.ts`) proxy. The React app will securely generate the Authorization Headers (timestamp, signatures) on the frontend, and pass them safely to the proxy. The proxy acts as a dumb pipe, simply forwarding the header request to the Exchange.
 
 ### Tech Stack Details
 - React 19, TypeScript, Vite.
 - Tailwind CSS v4 (incorporating Dark mode natively, and `font-mono` exclusively for numeric financial displays).
-- Zustand for immutable state management (`apiKeysStore`, `dashboardStore`).
-- `crypto-js` native module for HMAC hashing.
+- Zustand for immutable state management (`apiKeysStore`, `dashboardStore`, `settingsStore`).
+- `window.crypto.subtle` utilized natively for HMAC hashing.
 - `lucide-react` for semantic icon UI.
 
 ### Implementation Specifics
@@ -31,7 +31,9 @@ Build a real-time terminal that connects via WebSocket (primary) and REST (secon
 - **WebSocket Specs & Rules**: 
   - Manage auto-reconnection and send required heartbeats (`ping` or `{"op": "ping"}`). 
   - Grasp the different cryptographic payload constraints: OKX uses ISO 8601 formatting and Base64 signatures, Bitget uses Unix Nano Time strings and Base64, Bybit uses Milliseconds Unix Time and Hexadecimals.
-- **Data Table Features**: The Balances table must include functional interactive columns to filter (regex localized text search) and directionally sort by asset, name, amount, or USD value.
+- **Data Table Features**: The Balances table must include functional interactive columns to filter (regex localized text search) and directionally sort by asset, name, amount, or USD value. Implement a masonry grid layout (e.g. using CSS `columns` or manual chunking) for the Exchange cards so expanding nested accounts doesn't break adjacency vertically. Include Sparkline UI components for visual aesthetics. Use a collapsible Sidebar navigation pattern.
+- **Closed Positions History**: Include a dedicated module/page tab filtering up to 90 days of closed position history via REST. Must align all timezone logic and harmonize the PnL definitions per exchange.
+- **Mock Data**: Support a Developer 'Mock Data' feature that overrides WS streams to dump UI-placeholder values safely for testing.
 - **Special Edge Case (Bybit)**: Bybit's WSS mechanism generally only pushes *delta* (changes) updates for Accounts. Therefore, implement a one-off REST fetch on Dashboard Mount (utilizing the CORS proxy) to fetch the initial snapshot for Wallet/Positions, before falling back strictly to WSS streams.
 
 Assume you are working in an environment running Vite with an active setup. Execute the development following strict Clean Code paradigms.

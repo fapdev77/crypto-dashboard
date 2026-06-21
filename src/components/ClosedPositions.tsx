@@ -1,37 +1,46 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { formatValue } from '../types';
+import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { CoinIcon } from './ui/CoinIcon';
+import { ExchangeIcon } from './ui/ExchangeIcon';
+import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
+import { AppTooltip } from './ui/Tooltip';
+import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
+import { useFormatCurrency } from '../hooks/useFormatCurrency';
+import { usePrivacy } from '../context/PrivacyContext';
+import { SyncBadge } from './ui/SyncBadge';
 
-interface ClosedPositionsProps {
-  filterText: string;
-  exchangeFilter: string;
-  period: '1w' | '2w' | '1m' | 'custom';
-  customStartDate: string;
-  customEndDate: string;
-  onCustomDateSearch: () => void;
-  triggerSearch: boolean; // Just a dummy prop if needed to re-trigger
-}
+export function ClosedPositions() {
+  const keys = useApiKeysStore(state => state.keys);
+  const formatCurrency = useFormatCurrency();
+  const { isPrivateMode } = usePrivacy();
 
-export function ClosedPositions({ filterText, exchangeFilter, period, customStartDate, customEndDate, triggerSearch }: ClosedPositionsProps) {
-  const { positions: closedPositions, isLoading } = usePositionHistory(period, customStartDate, customEndDate, triggerSearch);
+  const [filterText, setFilterText] = useState('');
+  const [exchangeFilter, setExchangeFilter] = useState<string>('all');
+  const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
+
+  const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
+
+  const { positions: closedPositions, isLoading, isSyncing } = usePositionHistory(period);
   const [error, setError] = useState<string | null>(null);
 
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
-    
+
     if (exchangeFilter !== 'all') {
-      filtered = filtered.filter(p => p.exchange.toLowerCase() === exchangeFilter.toLowerCase());
+      filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchangeFilter.toLowerCase());
     }
 
     if (filterText) {
       const lowerFilter = filterText.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.symbol.toLowerCase().includes(lowerFilter) || 
-        p.label.toLowerCase().includes(lowerFilter) ||
-        p.exchange.toLowerCase().includes(lowerFilter)
+      filtered = filtered.filter(pos =>
+        pos.symbol.toLowerCase().includes(lowerFilter) ||
+        pos.label.toLowerCase().includes(lowerFilter) ||
+        pos.exchange.toLowerCase().includes(lowerFilter)
       );
     }
 
@@ -40,7 +49,7 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
 
   const closedStats = useMemo(() => {
     if (!filteredClosedPositions.length) return null;
-    
+
     let totalPnl = 0;
     let wins = 0;
     let losses = 0;
@@ -48,16 +57,21 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
     let largestLoss = 0;
     let sumWin = 0;
     let sumLoss = 0;
+    let longs = 0;
+    let shorts = 0;
 
-    filteredClosedPositions.forEach(p => {
-      const isUSDT = p.symbol.includes('USDT');
-      const isUSDC = p.symbol.includes('USDC');
-      const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD'));
+    filteredClosedPositions.forEach(pos => {
+      const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
       const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
-      let pnlInUsd = p.realizedPnl;
-      if (!isFiatCcy && p.closePrice) {
-        pnlInUsd = p.realizedPnl * p.closePrice;
+      let pnlInUsd = pos.realizedPnl;
+      if (!isFiatCcy && pos.closePrice) {
+        pnlInUsd = pos.realizedPnl * pos.closePrice;
       }
+
+      const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
+      const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
+      if (isLong) longs++;
+      if (isShort) shorts++;
 
       totalPnl += pnlInUsd;
       if (pnlInUsd > 0) {
@@ -85,7 +99,9 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
       largestWin,
       largestLoss,
       avgWin,
-      avgLoss
+      avgLoss,
+      longs,
+      shorts
     };
   }, [filteredClosedPositions]);
 
@@ -107,190 +123,413 @@ export function ClosedPositions({ filterText, exchangeFilter, period, customStar
 
   return (
     <div className="space-y-6">
-      {closedStats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
-            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Total PnL</span>
-            <div className={`text-xl font-bold mt-1 ${closedStats.totalPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-              {closedStats.totalPnl >= 0 ? '+' : ''}{closedStats.totalPnl.toFixed(2)} USDT
-            </div>
-          </div>
-          
-          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
-            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Win Rate</span>
-            <div className="text-xl font-bold mt-1 text-white">
-              {closedStats.winRate.toFixed(2)}%
-            </div>
-            <div className="text-xs text-[#8E9299] mt-1">
-              {closedStats.wins} W / {closedStats.losses} L
-            </div>
-          </div>
 
-          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
-            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Trades</span>
-            <div className="text-xl font-bold mt-1 text-white">
-              {closedStats.totalTrades}
-            </div>
-          </div>
-
-          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
-            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Avg Win / Loss</span>
-            <div className="text-sm font-medium mt-1">
-              <span className="text-[#00C853]">+{closedStats.avgWin.toFixed(2)}</span>
-              <span className="text-[#8E9299] mx-1">/</span>
-              <span className="text-[#FF4444]">{closedStats.avgLoss.toFixed(2)}</span>
-            </div>
-          </div>
-
-          <div className="bg-[#151619] border border-[#2a2b30] p-4 rounded-xl">
-            <span className="text-[#8E9299] text-xs font-medium uppercase tracking-wider">Largest W/L</span>
-            <div className="text-sm font-medium mt-1">
-              <span className="text-[#00C853]">+{closedStats.largestWin.toFixed(2)}</span>
-              <span className="text-[#8E9299] mx-1">/</span>
-              <span className="text-[#FF4444]">{closedStats.largestLoss.toFixed(2)}</span>
-            </div>
-          </div>
+      {/* Filters Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div className="flex items-center">
+          <SyncBadge isSyncing={isSyncing} />
         </div>
-      )}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+        {/* Exchange Filter */}
+        <div className="relative z-20">
+          <button
+            type="button"
+            onClick={() => setIsExchangeDropdownOpen(!isExchangeDropdownOpen)}
+            className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between min-w-[160px]"
+          >
+            <div className="flex items-center gap-2">
+              {exchangeFilter !== 'all' && (
+                <ExchangeIcon exchange={exchangeFilter} className="w-4 h-4" />
+              )}
+              <span>
+                {exchangeFilter === 'all'
+                  ? 'Todas Exchanges'
+                  : exchangeFilter.charAt(0).toUpperCase() + exchangeFilter.slice(1)}
+              </span>
+            </div>
+            <svg className={`h-4 w-4 ml-2 text-gray-400 transition-transform ${isExchangeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isExchangeDropdownOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setIsExchangeDropdownOpen(false)}
+              />
+              <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExchangeFilter('all');
+                    setIsExchangeDropdownOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === 'all' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                    }`}
+                >
+                  <span>Todas Exchanges</span>
+                </button>
+                {Array.from(new Set(keys.filter((apiKey: any) => apiKey.isActive).map((apiKey: any) => apiKey.exchange))).map(exchange => (
+                  <button
+                    key={exchange}
+                    type="button"
+                    onClick={() => {
+                      setExchangeFilter(exchange);
+                      setIsExchangeDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                      }`}
+                  >
+                    <ExchangeIcon exchange={exchange} className="w-4 h-4" />
+                    <span>{exchange.charAt(0).toUpperCase() + exchange.slice(1)}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        <select
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as any)}
+          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
+        >
+          <option value="today">Hoje</option>
+          <option value="7d">7 Days</option>
+          <option value="14d">14 Days</option>
+          <option value="30d">30 Days</option>
+          <option value="90d">90 Days</option>
+        </select>
+
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-[#8E9299]" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search..."
+            className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-50"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+          />
+          {filterText && (
+            <button
+              onClick={() => setFilterText('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
+              title="Clear filter"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        </div>
+      </div>
+
+      <HistoryLimitWarning period={period} />
+
+      {closedStats && (() => {
+        const POSITIONS_DONUT = [
+          { name: 'Long', value: closedStats.longs, color: '#00C853' },
+          { name: 'Short', value: closedStats.shorts, color: '#FF4444' }
+        ];
+
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+              <span className="text-2xl text-[#8E9299] mb-1">Total PnL</span>
+              <span className={`text-xl font-medium ${closedStats.totalPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                {isPrivateMode ? '$••••' : `${closedStats.totalPnl >= 0 ? '+' : ''}${formatCurrency(closedStats.totalPnl, 'usd')}`}
+              </span>
+            </div>
+
+            <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+              <div className="flex flex-col">
+                <div className='flex items-center gap-2'>
+                  <span className="text-2xl text-[#8E9299]">Total Trades:</span>
+                  <span className="text-xl font-medium text-white">{closedStats.totalTrades}</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  {closedStats.totalTrades > 0 && (
+                    <div className="flex text-xm gap-2 font-mono">
+                      <span className="text-[#00C853]">{closedStats.longs} Longs ({((closedStats.longs / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
+                      <span className="text-[#8E9299]">|</span>
+                      <span className="text-[#FF4444]">{closedStats.shorts} Shorts ({((closedStats.shorts / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {closedStats.totalTrades > 0 && (
+                <div className="w-12 h-12">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '12px' }}
+                        itemStyle={{ color: '#fff' }}
+                      />
+                      <Pie data={POSITIONS_DONUT} cx="50%" cy="50%" innerRadius="60%" outerRadius="100%" dataKey="value" stroke="none">
+                        {POSITIONS_DONUT.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex gap-2 items-center">
+                  <span className="text-2xl text-[#8E9299]">Win Rate: </span>
+                  <span className="text-xl font-medium text-white">{closedStats.winRate.toFixed(2)}%</span>
+                </div>
+                <div className="flex gap-2 text-xl font-mono">
+                  <span className="text-[#00C853]">{closedStats.wins} Wins</span>
+                  <span className="text-[#3f4046]">|</span>
+                  <span className="text-[#FF4444]">{closedStats.losses} Losses</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex flex-col bg-[#111216] p-2 rounded justify-center items-center">
+                  <span className="text-xl text-[#8E9299]">Avg W/L</span>
+                  <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
+                    <span className="text-[#00C853]">+{formatCurrency(closedStats.avgWin, 'crypto', 2)}</span>
+                    <span className="text-[#3f4046] mx-0.5">/</span>
+                    <span className="text-[#FF4444]">{formatCurrency(closedStats.avgLoss, 'crypto', 2)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col bg-[#111216] p-2 rounded justify-center items-center">
+                  <span className="text-xl text-[#8E9299]">Largest W/L</span>
+                  <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
+                    <span className="text-[#00C853]">+{formatCurrency(closedStats.largestWin, 'crypto', 2)}</span>
+                    <span className="text-[#3f4046] mx-0.5">/</span>
+                    <span className="text-[#FF4444]">{formatCurrency(closedStats.largestLoss, 'crypto', 2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {filteredClosedPositions.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
           <p className="text-[#8E9299]">Nenhum histórico encontrado para as APIs ativas no período.</p>
         </div>
       ) : (
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-x-auto">
-          <table className="w-full text-left whitespace-nowrap min-w-[900px]">
-            <thead>
-              <tr className="border-b border-[#2a2b30] text-xs text-[#8E9299]">
-                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Futures</th>
-                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Open time</th>
-                <th className="px-4 py-3 font-normal">
-                  <div className="w-max border-b border-dashed border-[#8E9299]/50">Avg. entry price</div>
-                  <div className="w-max border-b border-dashed border-[#8E9299]/50 mt-1">Avg. exit price</div>
-                </th>
-                <th className="px-4 py-3 font-normal">
-                  <div className="w-max border-b border-dashed border-[#8E9299]/50">Closed quantity</div>
-                  <div className="w-max border-b border-dashed border-[#8E9299]/50 mt-1">Max position size</div>
-                </th>
-                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Position PnL</th>
-                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Position ROI</th>
-                <th className="px-4 py-3 font-normal w-max border-b border-dashed border-[#8E9299]/50">Closed time</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#2a2b30]">
-              {filteredClosedPositions.map((p) => {
-                const isLong = p.side?.toLowerCase() === 'long' || p.side?.toLowerCase() === 'buy';
-                const isShort = p.side?.toLowerCase() === 'short' || p.side?.toLowerCase() === 'sell';
-                const sideLabel = isLong ? 'Long' : isShort ? 'Short' : p.side || 'Net';
-                const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
-                
-                const pnlClass = p.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
-                
-                const leverage = p.raw?.leverage || p.raw?.lever || '1';
-                const marginModeLabel = (p.raw?.marginMode || p.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
-                const symbolSuffix = p.symbol.replace(/USDT|USDC|USD|-|SWAP/g, '');
+        <div className="flex flex-col gap-3">
+          {filteredClosedPositions.map((pos) => {
+            const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
+            const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
+            const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
+            const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
 
-                let roiStr = '--';
-                let roiValue = 0;
-                let hasRoi = false;
-                
-                // Identify the quote currency for the PnL (e.g. USDT)
-                const isUSDT = p.symbol.includes('USDT');
-                const isUSDC = p.symbol.includes('USDC');
-                const pnlCurrency = p.ccy || (isUSDT ? 'USDT' : (isUSDC ? 'USDC' : 'USD'));
-                const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
-                
-                if (p.raw?.roi !== undefined && p.raw?.roi !== null) {
-                   roiValue = parseFloat(p.raw.roi) * 100;
-                   hasRoi = true;
-                } else if (p.entryPrice && p.closePrice && p.size && leverage) {
-                  const numLeverage = parseFloat(leverage);
-                  
-                  let positionValueUsd = 0;
-                  
-                  // For OKX, size is in contracts. We can deduce actual coin size from 'pnl' and price diff
-                  if (p.exchange === 'okx' && p.raw?.pnl) {
-                    const priceDiff = Math.abs(p.closePrice - p.entryPrice);
-                    const purePnl = Math.abs(parseFloat(p.raw.pnl));
-                    if (priceDiff > 0) {
-                      const actualCoinSize = purePnl / priceDiff;
-                      positionValueUsd = actualCoinSize * p.entryPrice;
-                    } else {
-                      // Fallback if price diff is 0 (ROI is 0 anyway)
-                      positionValueUsd = p.entryPrice * p.size;
-                    }
-                  } else if (p.exchange === 'bybit' && p.raw?.cumEntryValue) {
-                    positionValueUsd = parseFloat(p.raw.cumEntryValue);
-                  } else {
-                    // For Bitget and others where size is in base coin
-                    positionValueUsd = p.entryPrice * p.size;
-                  }
-                  
-                  const initialMargin = positionValueUsd / numLeverage;
-                  
-                  if (initialMargin > 0) {
-                     roiValue = (p.realizedPnl / initialMargin) * 100;
-                     hasRoi = true;
-                  }
-                }
-                
-                if (hasRoi && isFinite(roiValue)) {
-                   roiStr = `${roiValue > 0 ? '+' : ''}${formatValue(roiValue, 2)}%`;
-                }
-                
-                const roiClass = hasRoi ? (roiValue >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]') : 'text-[#8E9299]';
+            const pnlClass = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
 
-                return (
-                  <tr key={p.id} className="hover:bg-[#2a2b30]/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-sm">{p.symbol}</span>
-                        <span className="text-[10px] font-medium text-[#8E9299] bg-[#1a1b1e] border border-[#2a2b30] px-1.5 py-0.5 rounded capitalize">
-                          {p.exchange} ({p.label})
-                        </span>
-                      </div>
-                      <div className={`text-xs mt-1 flex items-center gap-1 ${sideColor}`}>
-                        {sideLabel} · {leverage}x · {marginModeLabel}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-[#8E9299]">
-                      <div className="text-sm font-mono text-white">--</div>
-                      <div className="text-sm font-mono text-white mt-1">--</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-mono text-white text-sm truncate">{formatValue(p.entryPrice, 4)}</div>
-                      <div className="font-mono text-white text-sm truncate mt-1">{formatValue(p.closePrice, 4)}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-mono text-white text-sm">{p.size ? formatValue(p.size, 4) : '--'} <span className="font-sans text-xs text-[#8E9299]">{p.exchange === 'okx' ? 'Cont.' : symbolSuffix}</span></div>
-                      <div className="font-mono text-[#8E9299] text-xs mt-1">{p.size ? formatValue(p.size, 4) : '--'} <span className="font-sans text-xs text-[#8E9299]">{p.exchange === 'okx' ? 'Cont.' : symbolSuffix}</span></div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className={`font-mono text-sm ${pnlClass}`}>
-                        {p.realizedPnl > 0 ? '+' : ''}{formatValue(p.realizedPnl, 4)} <span className="font-sans text-xs text-[#8E9299]">{pnlCurrency}</span>
-                      </div>
-                      {!isFiatCcy && p.closePrice ? (
-                        <div className={`font-mono text-xs mt-1 ${pnlClass}`}>
-                          ≈ {p.realizedPnl > 0 ? '+' : ''}{formatValue(Math.abs(p.realizedPnl) * p.closePrice, 2)} USD
+            const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
+            const marginModeLabel = (pos.raw?.marginMode || pos.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
+            const symbolSuffix = pos.symbol.replace(/USDT|USDC|USD|-|SWAP/g, '');
+
+            let roiStr = '--';
+            let roiValue = 0;
+            let hasRoi = false;
+
+            const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
+            const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
+            const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
+            const formatCcy = (v: number | undefined | null) => formatCurrency(v, 'crypto', isFiatCcy ? 2 : 8);
+
+            const isInverse = pos.instrumentType === 'INVERSE';
+
+            let positionValueUsd = 0;
+            let actualCoinSize = pos.size || 0;
+
+            if (pos.exchange === 'okx' && pos.raw?.pnl) {
+              const priceDiff = Math.abs((pos.closePrice || 0) - (pos.entryPrice || 0));
+              const purePnl = Math.abs(parseFloat(pos.raw.pnl));
+              if (priceDiff > 0) {
+                actualCoinSize = purePnl / priceDiff;
+                positionValueUsd = actualCoinSize * (pos.entryPrice || 0);
+              } else {
+                positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
+              }
+            } else if (pos.exchange === 'bybit' && pos.raw?.cumEntryValue) {
+              positionValueUsd = parseFloat(pos.raw.cumEntryValue);
+              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
+            } else if (isInverse) {
+              positionValueUsd = pos.size || 0;
+              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
+            } else {
+              positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
+              actualCoinSize = pos.size || 0;
+            }
+
+            if (pos.raw?.roi !== undefined && pos.raw?.roi !== null) {
+              roiValue = parseFloat(pos.raw.roi) * 100;
+              hasRoi = true;
+            } else if (pos.entryPrice && pos.closePrice && pos.size && leverage) {
+              const numLeverage = parseFloat(leverage);
+              const initialMargin = positionValueUsd / numLeverage;
+
+              if (initialMargin > 0) {
+                roiValue = (pos.realizedPnl / initialMargin) * 100;
+                hasRoi = true;
+              }
+            }
+
+            let displayQuantity = '--';
+            let displayUnit = '';
+            let displaySecondaryQuantity = '--';
+            let displaySecondaryUnit = '';
+
+            if (isInverse) {
+              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 2) : '--';
+              displayUnit = 'USD';
+              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
+              displaySecondaryUnit = symbolSuffix;
+            } else if (pos.exchange === 'okx') {
+              displayQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
+              displayUnit = 'USD';
+              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
+              displaySecondaryUnit = symbolSuffix;
+            } else {
+              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 8) : '--';
+              displayUnit = symbolSuffix;
+              displaySecondaryQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
+              displaySecondaryUnit = 'USD';
+            }
+
+            if (hasRoi && isFinite(roiValue)) {
+              roiStr = `${roiValue > 0 ? '+' : ''}${formatCurrency(roiValue, 'crypto', 2)}%`;
+            }
+
+            const roiClass = hasRoi ? (roiValue >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]') : 'text-[#8E9299]';
+            const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
+
+            return (
+              <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col transition-colors hover:border-[#3a3b40]">
+                <div className="p-4 grid grid-cols-2 lg:grid-cols-6 gap-4">
+                  {/* Asset info */}
+                  <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                      <div className="flex items-center relative pr-1">
+                        <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" category={category} />
+                        <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
+                          <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
                         </div>
+                      </div>
+                      {pos.instrumentType && (
+                        <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                          {pos.instrumentType}
+                        </span>
+                      )}
+                      <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                        {category}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-white text-sm">{pos.symbol}</span>
+                      </div>
+                      <span className={`text-xs mt-0.5 font-medium ${sideColor}`}>
+                        {sideLabel} <span className="mx-0.5 text-[#8E9299]">·</span> {leverage}x <span className="mx-0.5 text-[#8E9299]">·</span> {marginModeLabel}
+                      </span>
+                      <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
+                        {pos.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Size / Value */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                    <span className="text-[10px] text-[#8E9299] uppercase">Pos Size / Value</span>
+                    <span className="font-mono text-white text-sm">{displayQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displayUnit}</span></span>
+                    {displaySecondaryQuantity !== '--' && (
+                      <span className="text-xs text-[#8E9299] font-mono">{displaySecondaryQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displaySecondaryUnit}</span></span>
+                    )}
+                  </div>
+
+                  {/* Entry / Exit Price */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                    <span className="text-[10px] text-[#8E9299] uppercase">Entry / Exit Price</span>
+                    <span className="font-mono text-white text-sm truncate">{formatPrice(pos.entryPrice, isFiatPair)}</span>
+                    <span className="font-mono text-white text-xs truncate">{formatPrice(pos.closePrice, isFiatPair)}</span>
+                  </div>
+
+                  {/* Realized PnL (ROE) */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                    <AppTooltip
+                      side="top"
+                      description={
+                        <div className="flex flex-col gap-1 w-full min-w-[180px]">
+                           <span className="text-[12px] font-medium text-[#8E9299]">Realized PnL</span>
+                           <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                              {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{pnlCurrency}</span>
+                           </span>
+                        </div>
+                      }
+                      rows={[
+                        { 
+                          label: 'Closed PnL', 
+                          value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${pnlCurrency}`, 
+                          labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
+                          valueClassName: `text-[11px] font-mono font-bold ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                        },
+                        { 
+                          label: 'Funding fee', 
+                          value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${pnlCurrency}`, 
+                          labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
+                          valueClassName: `text-[11px] font-mono font-bold ${(pos.fundingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                        },
+                        { 
+                          label: 'Trading fee', 
+                          value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${pnlCurrency}`, 
+                          labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
+                          valueClassName: `text-[11px] font-mono font-bold ${(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                        }
+                      ]}
+                    >
+                      <span className="text-[10px] text-[#8E9299] uppercase cursor-help border-b border-dashed border-[#8E9299]/50 w-max mb-1 focus:outline-none">Realized PnL (ROE)</span>
+                    </AppTooltip>
+                    <span className={`font-mono text-sm ${pnlClass}`}>
+                      {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{pnlCurrency}</span>
+                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`font-mono text-xs ${roiClass}`}>{roiStr}</span>
+                      {!isFiatCcy && pos.closePrice ? (
+                        <span className={`font-mono text-[10px] ${pnlClass} opacity-80`}>
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(pos.realizedPnl) * pos.closePrice, 'crypto', 2)} USD
+                        </span>
                       ) : null}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`font-mono text-sm ${roiClass}`}>{roiStr}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-mono text-white text-sm">
-                        {p.closeTime && !isNaN(p.closeTime) ? format(new Date(p.closeTime), 'yyyy-MM-dd') : '--'}
-                      </div>
-                      <div className="font-mono text-white text-sm mt-1">
-                        {p.closeTime && !isNaN(p.closeTime) ? format(new Date(p.closeTime), 'HH:mm:ss') : '--'}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+
+                  {/* Open Time */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                    <span className="text-[10px] text-[#8E9299] uppercase">Open Time</span>
+                    <span className="font-mono text-white text-sm">
+                      {pos.createdTime && !isNaN(pos.createdTime) ? format(new Date(pos.createdTime), 'yyyy-MM-dd') : '--'}
+                    </span>
+                    <span className="font-mono text-[#8E9299] text-xs">
+                      {pos.createdTime && !isNaN(pos.createdTime) ? format(new Date(pos.createdTime), 'HH:mm:ss') : '--'}
+                    </span>
+                  </div>
+
+                  {/* Close Time */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                    <span className="text-[10px] text-[#8E9299] uppercase">Closed Time</span>
+                    <span className="font-mono text-white text-sm">
+                      {pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd') : '--'}
+                    </span>
+                    <span className="font-mono text-[#8E9299] text-xs">
+                      {pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) ? format(new Date(pos.closeUpdateTime), 'HH:mm:ss') : '--'}
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -4,6 +4,68 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  /* Definir as propriedades para o Tailwind v4 criar as classes text-brand-*, bg-brand-* */
+  --color-brand-normal: var(--brand-normal);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-pressed: var(--brand-pressed);
+  --color-brand-focus: var(--brand-focus);
+  
+  --color-bitget: #03aac7;
+  --color-okx: #fafafa;
+  --color-bybit: #ff9c2e;
+}
+
+/* Tema Padrão / Bitget */
+:root, [data-theme="bitget"] {
+  --brand-normal: #03aac7;
+  --brand-hover: #35ccfa;
+  --brand-pressed: #0293ad;
+  --brand-focus: #02869e;
+  
+  --color-brand-normal: #03aac7;
+  --color-brand-hover: #35ccfa;
+  --color-brand-pressed: #0293ad;
+  --color-brand-focus: #02869e;
+}
+
+/* Tema OKX */
+[data-theme="okx"] {
+  --brand-normal: #fafafa;
+  --brand-hover: #ffffff;
+  --brand-pressed: #e5e5e5;
+  --brand-focus: #dbdbdb;
+  
+  --color-brand-normal: #fafafa;
+  --color-brand-hover: #ffffff;
+  --color-brand-pressed: #e5e5e5;
+  --color-brand-focus: #dbdbdb;
+}
+
+/* Tema Bybit */
+[data-theme="bybit"] {
+  --brand-normal: #ff9c2e;
+  --brand-hover: #ffc35c;
+  --brand-pressed: #f0960e;
+  --brand-focus: #eb8d13;
+  
+  --color-brand-normal: #ff9c2e;
+  --color-brand-hover: #ffc35c;
+  --color-brand-pressed: #f0960e;
+  --color-brand-focus: #eb8d13;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 120s linear infinite;
+}
+/* Pausar ao passar o mouse no marquee*/
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
 
 :root {
@@ -24,11 +86,41 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Remove a barra visualmente mantendo o funcionamento do scroll */
-.hide-scrollbar::-webkit-scrollbar {
+/* Custom Scrollbar Global - Estilos Dark Mode */
+::-webkit-scrollbar {
+  width: 8px; /* Largura da barra vertical, se houver noutros componentes */
+  height: 8px; /* Altura da barra horizontal */
+}
+
+::-webkit-scrollbar-track {
+  background: var(--panel-bg); 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-secondary);
+}
+
+/* Estilo global para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) var(--panel-bg);
+}
+
+/* Remove a barra vertical visualmente mantendo o funcionamento do scroll */
+.hide-scrollbar::-webkit-scrollbar:vertical {
+  width: 0px;
   display: none;
 }
+
 .hide-scrollbar {
+  /* Firefox e Edge/IE - Nota: isso oculta ambas as barras nestes browsers. 
+     Para Firefox exibir apenas a horizontal não é possível via CSS puro com scrollbar-width, então priorizamos a beleza. */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }

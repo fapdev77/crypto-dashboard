@@ -1,63 +1,28 @@
 import { useState, useEffect } from 'react';
+import mockHistoryData from '../mock/history.json';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { UnifiedPosition } from '../types/positions';
+import { UnifiedHistoryPosition } from '../types';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { useSettingsStore } from '../store/settingsStore';
+import { getCachedHistory } from '../services/historyCache';
 
-export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', customStart: string, customEnd: string, triggerSearch: boolean) {
+export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d';
+
+export function usePositionHistory(period: PositionHistoryPeriod) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
-  const [positions, setPositions] = useState<UnifiedPosition[]>([]);
+  const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
+  const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-    const fetchHistory = async () => {
+    
+    const execute = async () => {
       if (useMockData) {
-        setPositions([
-          {
-            id: 'mock-hist-1',
-            connectionId: 'mock',
-            exchange: 'BYBIT',
-            label: 'Mock Account',
-            symbol: 'BTCUSDT',
-            side: 'long',
-            realizedPnl: 150.25,
-            closeTime: Date.now() - 3600000,
-            entryPrice: 60100.5,
-            closePrice: 60500.0,
-            size: 0.375,
-            raw: { leverage: 10, marginMode: 'cross' }
-          },
-          {
-            id: 'mock-hist-2',
-            connectionId: 'mock',
-            exchange: 'OKX',
-            label: 'Mock Account',
-            symbol: 'ETH-USDT-SWAP',
-            side: 'short',
-            realizedPnl: -45.50,
-            closeTime: Date.now() - 86400000,
-            entryPrice: 3100.25,
-            closePrice: 3150.75,
-            size: 0.9,
-            raw: { leverage: 5, marginMode: 'isolated' }
-          },
-          {
-            id: 'mock-hist-3',
-            connectionId: 'mock',
-            exchange: 'BITGET',
-            label: 'Mock Account',
-            symbol: 'SOLUSDT',
-            side: 'long',
-            realizedPnl: 320.75,
-            closeTime: Date.now() - 172800000,
-            entryPrice: 140.5,
-            closePrice: 152.0,
-            size: 27.8,
-            raw: { leverage: 20, marginMode: 'cross' }
-          }
-        ]);
+        const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime);
+        setPositions(sortedHistory as UnifiedHistoryPosition[]);
         return;
       }
 
@@ -65,52 +30,94 @@ export function usePositionHistory(period: '1w' | '2w' | '1m' | 'custom', custom
         setPositions([]);
         return;
       }
-      setIsLoading(true);
       
       let start: number | undefined;
       let end: number | undefined;
       const now = Date.now();
       
-      if (period === 'custom' && customStart && customEnd) {
-        start = new Date(customStart).setHours(0, 0, 0, 0);
-        end = new Date(customEnd).setHours(23, 59, 59, 999);
-      } else if (period === '1w') {
+      if (period === 'today') {
+        start = new Date(now).setHours(0, 0, 0, 0);
+        end = now;
+      } else if (period === '7d') {
         start = now - 7 * 24 * 60 * 60 * 1000;
         end = now;
-      } else if (period === '2w') {
+      } else if (period === '14d') {
         start = now - 14 * 24 * 60 * 60 * 1000;
         end = now;
-      } else if (period === '1m') {
+      } else if (period === '30d') {
         start = now - 30 * 24 * 60 * 60 * 1000;
+        end = now;
+      } else if (period === '90d') {
+        start = now - 90 * 24 * 60 * 60 * 1000;
         end = now;
       }
 
-      const service = new PositionHistoryService();
-      let allHistory: UnifiedPosition[] = [];
-
-      // Parallell connection requests for speed
-      const promises = keys.map(k => service.fetchExchangeHistory(k, start, end));
-      const results = await Promise.all(promises);
-      
-      for (const result of results) {
-        allHistory = [...allHistory, ...result];
+      // Step 1: Instant cache load (SWR)
+      let cachedTotal: UnifiedHistoryPosition[] = [];
+      try {
+        const cachePromises = keys.map(apiKey => getCachedHistory(apiKey.id));
+        const cacheResults = await Promise.all(cachePromises);
+        for (const res of cacheResults) {
+          cachedTotal = [...cachedTotal, ...res];
+        }
+        
+        if (start !== undefined && end !== undefined) {
+          cachedTotal = cachedTotal.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
+        }
+        cachedTotal.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
+        
+        if (isMounted) {
+          if (cachedTotal.length > 0) {
+            setPositions(cachedTotal);
+            setIsLoading(false); // fast render
+          } else {
+            setIsLoading(true); // initial load
+          }
+        }
+      } catch (e) {
+        console.error("Error reading cache for SWR", e);
+        if (isMounted) setIsLoading(true);
       }
 
-      // Order by close time descending
-      allHistory.sort((a, b) => b.closeTime - a.closeTime);
+      // Step 2: Background sync
+      if (isMounted) setIsSyncing(true);
+      
+      try {
+        const service = new PositionHistoryService();
+        let allHistory: UnifiedHistoryPosition[] = [];
+        
+        const promises = keys.map(apiKey => service.fetchWithCache(apiKey));
+        const results = await Promise.all(promises);
+        
+        for (const result of results) {
+          allHistory = [...allHistory, ...result];
+        }
 
-      if (isMounted) {
-        setPositions(allHistory);
-        setIsLoading(false);
+        if (start !== undefined && end !== undefined) {
+          allHistory = allHistory.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
+        }
+        allHistory.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
+
+        if (isMounted) {
+          setPositions(allHistory);
+          setIsLoading(false);
+          setIsSyncing(false);
+        }
+      } catch (err) {
+        console.error("Error background syncing position history", err);
+        if (isMounted) {
+          setIsLoading(false);
+          setIsSyncing(false);
+        }
       }
     };
 
-    fetchHistory();
+    execute();
 
     return () => {
       isMounted = false;
     };
-  }, [keys, period, customStart, customEnd, triggerSearch, useMockData]);
+  }, [keys, period, useMockData, historyCacheVersion]);
 
-  return { positions, setPositions, isLoading };
+  return { positions, setPositions, isLoading, isSyncing };
 }

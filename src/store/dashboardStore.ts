@@ -13,6 +13,15 @@ export interface BalanceItem {
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
+export interface ConnectionTelemetry {
+  latencyHistory: number[];
+  throughputHistory: number[];
+  lastPingMs: number;
+  bytesPerSecond: number;
+  accumulatingBytes: number;
+  lastThroughputUpdate: number;
+}
+
 interface DashboardState {
   // Connection statuses tracking (keyed by connectionId)
   statuses: Record<string, ConnectionStatus>;
@@ -30,6 +39,12 @@ interface DashboardState {
   updatePositions: (connectionId: string, newPositions: UnifiedPosition[]) => void;
   updatePositionsDelta: (connectionId: string, deltaPositions: Partial<UnifiedPosition>[]) => void;
   
+  // Telemetry
+  telemetry: Record<string, ConnectionTelemetry>;
+  updateLatency: (connectionId: string, ms: number) => void;
+  addBytesReceived: (connectionId: string, bytes: number) => void;
+  tickThroughput: () => void;
+
   // Clear all data for a specific connection
   clearConnectionData: (connectionId: string) => void;
 }
@@ -48,15 +63,23 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   balances: {},
   updateBalances: (connectionId, newBalances) => set((state) => {
     const nextBalances = { ...state.balances };
-    newBalances.forEach(b => {
-      nextBalances[b.id] = b;
-    });
-    // Remove zero balances
+    
+    const newIds = new Set(newBalances.map(b => b.id));
+    
+    // Remove only stale balances that are no longer present on this connection
     for (const key in nextBalances) {
-      if (nextBalances[key].amount <= 0) {
+      if (nextBalances[key].connectionId === connectionId && !newIds.has(key)) {
         delete nextBalances[key];
       }
     }
+    
+    // Add or update balances in-place preserving key iteration order
+    newBalances.forEach(b => {
+      if (b.amount > 0) {
+        nextBalances[b.id] = b;
+      }
+    });
+
     return { balances: nextBalances };
   }),
 
@@ -81,10 +104,36 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   positions: {},
   updatePositions: (connectionId, newPositions) => set((state) => {
     const nextPositions = { ...state.positions };
-    newPositions.forEach(p => {
-      nextPositions[p.id] = p;
+    
+    const newIds = new Set(newPositions.map(p => p.id));
+    
+    // Remove only stale positions that are no longer present on this connection
+    for (const key in nextPositions) {
+      if (nextPositions[key].connectionId === connectionId && !newIds.has(key)) {
+        delete nextPositions[key];
+      }
+    }
+
+    // Add or update positions in-place preserving key iteration order
+    newPositions.forEach(pos => {
+      if (Math.abs(pos.size) > 0) {
+        nextPositions[pos.id] = pos;
+      }
     });
-    // Remove zero size positions
+
+    return { positions: nextPositions };
+  }),
+
+  updatePositionsDelta: (connectionId, deltaPositions) => set((state) => {
+    const nextPositions = { ...state.positions };
+    deltaPositions.forEach(pos => {
+      if (!pos.id) return;
+      if (nextPositions[pos.id]) {
+        nextPositions[pos.id] = { ...nextPositions[pos.id], ...pos };
+      } else {
+        nextPositions[pos.id] = pos as UnifiedPosition;
+      }
+    });
     for (const key in nextPositions) {
       if (Math.abs(nextPositions[key].size) <= 0) {
         delete nextPositions[key];
@@ -93,22 +142,58 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     return { positions: nextPositions };
   }),
 
-  updatePositionsDelta: (connectionId, deltaPositions) => set((state) => {
-    const nextPositions = { ...state.positions };
-    deltaPositions.forEach(p => {
-      if (!p.id) return;
-      if (nextPositions[p.id]) {
-        nextPositions[p.id] = { ...nextPositions[p.id], ...p };
-      } else {
-        nextPositions[p.id] = p as UnifiedPosition;
+  // Telemetry
+  telemetry: {},
+  updateLatency: (connectionId, ms) => set((state) => {
+    const current = state.telemetry[connectionId] || {
+      latencyHistory: [], throughputHistory: [], lastPingMs: 0, bytesPerSecond: 0, accumulatingBytes: 0, lastThroughputUpdate: Date.now()
+    };
+    const newHistory = [...current.latencyHistory, ms].slice(-20);
+    return {
+      telemetry: {
+        ...state.telemetry,
+        [connectionId]: {
+          ...current,
+          lastPingMs: ms,
+          latencyHistory: newHistory
+        }
+      }
+    };
+  }),
+  addBytesReceived: (connectionId, bytes) => set((state) => {
+    const current = state.telemetry[connectionId] || {
+      latencyHistory: [], throughputHistory: [], lastPingMs: 0, bytesPerSecond: 0, accumulatingBytes: 0, lastThroughputUpdate: Date.now()
+    };
+    return {
+      telemetry: {
+        ...state.telemetry,
+        [connectionId]: {
+          ...current,
+          accumulatingBytes: current.accumulatingBytes + bytes
+        }
+      }
+    };
+  }),
+  tickThroughput: () => set((state) => {
+    const now = Date.now();
+    const nextTelemetry = { ...state.telemetry };
+    Object.keys(nextTelemetry).forEach(id => {
+      const current = nextTelemetry[id];
+      const deltaMs = now - current.lastThroughputUpdate;
+      if (deltaMs >= 1000) {
+        const bytesPerSec = (current.accumulatingBytes / deltaMs) * 1000;
+        const newHistory = [...current.throughputHistory, bytesPerSec].slice(-20);
+        
+        nextTelemetry[id] = {
+          ...current,
+          bytesPerSecond: bytesPerSec,
+          throughputHistory: newHistory,
+          accumulatingBytes: 0,
+          lastThroughputUpdate: now
+        };
       }
     });
-    for (const key in nextPositions) {
-      if (Math.abs(nextPositions[key].size) <= 0) {
-        delete nextPositions[key];
-      }
-    }
-    return { positions: nextPositions };
+    return { telemetry: nextTelemetry };
   }),
 
   clearConnectionData: (connectionId) => set((state) => {
@@ -116,6 +201,7 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     const nextPositions = { ...state.positions };
     const nextStatuses = { ...state.statuses };
     const nextErrors = { ...state.errors };
+    const nextTelemetry = { ...state.telemetry };
     
     for (const key in nextBalances) {
       if (nextBalances[key].connectionId === connectionId) {
@@ -131,8 +217,9 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     
     delete nextStatuses[connectionId];
     delete nextErrors[connectionId];
+    delete nextTelemetry[connectionId];
 
-    return { balances: nextBalances, positions: nextPositions, statuses: nextStatuses, errors: nextErrors };
+    return { balances: nextBalances, positions: nextPositions, statuses: nextStatuses, errors: nextErrors, telemetry: nextTelemetry };
   })
 }));
 
