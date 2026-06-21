@@ -68,7 +68,7 @@ export function Dashboard() {
     return acc;
   }, new Big(0)));
   const totalExposed = totalEquity - totalProtected;
-  
+
   const protectedPercent = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
   const exposedPercent = totalEquity > 0 ? (totalExposed / totalEquity) * 100 : 0;
 
@@ -156,7 +156,7 @@ export function Dashboard() {
     for (const [exchange, data] of Object.entries(exchangesMap)) {
       const totalNum = Number(data.total);
       const globalTotalNum = Number(globalTotal);
-      
+
       const sorted = Object.entries(data.assetsMap)
         .map(([ccy, val]) => ({ ccy, val: Number(val) }))
         .sort((a, b) => b.val - a.val);
@@ -295,16 +295,16 @@ export function Dashboard() {
                 {isPrivateMode ? '(••••%)' : `(${dailyPnL >= 0 ? '+' : ''}${dailyPnLPercent.toFixed(2)}%)`}
               </span>
             </div>
-            <div className="mt-4 text-[10px] text-[#8E9299]/80 font-medium">
+            <div className="mt-4 text-xs text-[#8E9299]/80 font-medium">
               Unrealized P&L from active positions
             </div>
           </div>
         </div>
 
         {/* Card 2: Posições e Hedge Mode */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-6 md:divide-x divide-[#2a2b30]">
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-1 md:divide-x divide-[#2a2b30]">
           {/* Lado Esquerdo: Posições Ativas */}
-          <div className="flex-1 flex flex-col justify-between">
+          <div className="flex-1 flex flex-col justify-between pr-5">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Active Positions</span>
@@ -320,12 +320,12 @@ export function Dashboard() {
 
             {/* Long vs Short Bar */}
             <div className="space-y-2 mt-4">
-              <div className="flex justify-between text-[11px] font-semibold">
+              <div className="flex justify-between text-[15px] font-semibold">
                 <span className="text-emerald-500 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" /> Longs: {longPositions} ({longPercent.toFixed(0)}%)
+                  <TrendingUp className="w-3 h-3" /> Longs: {longPositions}
                 </span>
                 <span className="text-red-500 flex items-center gap-1">
-                  <TrendingDown className="w-3 h-3" /> Shorts: {shortPositions} ({shortPercent.toFixed(0)}%)
+                  <TrendingDown className="w-3 h-3" /> Shorts: {shortPositions}
                 </span>
               </div>
               <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
@@ -338,6 +338,14 @@ export function Dashboard() {
                   <div className="h-full w-full bg-[#2a2b30]" />
                 )}
               </div>
+              <div className="flex justify-between text-[15px] font-semibold">
+                <span className="text-emerald-500 flex items-center gap-1">
+                  {longPercent.toFixed(0)}%
+                </span>
+                <span className="text-red-500 flex items-center gap-1">
+                  {shortPercent.toFixed(0)}%
+                </span>
+              </div>
             </div>
           </div>
 
@@ -347,34 +355,40 @@ export function Dashboard() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Hedge Mode (Inverse)</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-500">L:{inverseLongCount}</span>
-                  <span className="text-[10px] font-bold text-red-500">S:{inverseShortCount}</span>
+                  <span className="text-xs font-semibold text-emerald-500">Longs: {inverseLongCount}</span>
+                  <span className="text-xs font-bold ">|</span>
+                  <span className="text-xs font-semibold text-red-500">Shorts: {inverseShortCount}</span>
                 </div>
               </div>
               <div className="flex items-baseline gap-1.5">
                 <p className="text-xl font-bold text-white font-mono">
                   {inverseOpenCount}
                 </p>
-                <span className="text-xs text-[#8E9299] font-medium">Active Contracts</span>
+                <span className="text-xs text-[#8E9299] font-medium">Active Positions</span>
               </div>
             </div>
 
             {/* Protected vs Exposed Bar */}
             <div className="space-y-2 mt-4">
-              <div className="flex justify-between text-[11px] font-semibold font-mono">
-                <span className="text-emerald-500/90">Prot: {formatCurrency(totalProtected, 'usd', 0)} ({protectedPercent.toFixed(1)}%)</span>
-                <span className="text-[#8E9299]">Exp: {formatCurrency(totalExposed, 'usd', 0)} ({exposedPercent.toFixed(1)}%)</span>
+              <div className="flex justify-between text-[15px] font-semibold font-mono">
+                <span className="text-emerald-500/90">Prot: {formatCurrency(totalProtected, 'usd', 2)} </span>
+                <span className="text-white font-semibold">Exp: {formatCurrency(totalExposed, 'usd', 2)} </span>
               </div>
               <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
                 {totalEquity > 0 ? (
                   <>
                     <div className="h-full bg-emerald-500/80 transition-all duration-300" style={{ width: `${protectedPercent}%` }} />
-                    <div className="h-full bg-[#2a2b30] transition-all duration-300" style={{ width: `${exposedPercent}%` }} />
+                    <div className="h-full bg-white transition-all duration-300" style={{ width: `${exposedPercent}%` }} />
                   </>
                 ) : (
                   <div className="h-full w-full bg-[#2a2b30]" />
                 )}
               </div>
+              <div className="flex justify-between text-[15px] font-semibold font-mono">
+                <span className="text-emerald-500/90"> {protectedPercent.toFixed(2)}%</span>
+                <span className="text-white font-semibold"> {exposedPercent.toFixed(2)}%</span>
+              </div>
+
             </div>
           </div>
         </div>
