@@ -43,17 +43,25 @@ export function Dashboard() {
     return Number(activeBalances.reduce((acc, curr) => acc.plus(curr.usdValue || 0), new Big(0)));
   }, [activeBalances]);
 
-  const openPositionsTotalPnL = useMemo(() => {
-    return Number(activePositions.reduce((acc, curr) => acc.plus(curr.unrealizedPnl || 0).plus(curr.realizedPnl || 0), new Big(0)));
-  }, [activePositions]);
-
   const openPositionsRealizedPnL = useMemo(() => {
-    return Number(activePositions.reduce((acc, curr) => acc.plus(curr.realizedPnl || 0), new Big(0)));
+    return Number(activePositions.reduce((acc, curr) => {
+      const pnl = curr.realizedPnl || 0;
+      const usdPnl = curr.instrumentType === 'INVERSE' ? pnl * (curr.markPrice || 0) : pnl;
+      return acc.plus(usdPnl);
+    }, new Big(0)));
   }, [activePositions]);
 
   const openPositionsUnrealizedPnL = useMemo(() => {
-    return Number(activePositions.reduce((acc, curr) => acc.plus(curr.unrealizedPnl || 0), new Big(0)));
+    return Number(activePositions.reduce((acc, curr) => {
+      const pnl = curr.unrealizedPnl || 0;
+      const usdPnl = curr.instrumentType === 'INVERSE' ? pnl * (curr.markPrice || 0) : pnl;
+      return acc.plus(usdPnl);
+    }, new Big(0)));
   }, [activePositions]);
+
+  const openPositionsTotalPnL = useMemo(() => {
+    return openPositionsRealizedPnL + openPositionsUnrealizedPnL;
+  }, [openPositionsRealizedPnL, openPositionsUnrealizedPnL]);
 
   const openPositionsTotalPnLPercent = totalEquity > 0 ? (openPositionsTotalPnL / totalEquity) * 100 : 0;
   const realizedPnLPercent = totalEquity > 0 ? (openPositionsRealizedPnL / totalEquity) * 100 : 0;
