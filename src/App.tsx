@@ -18,7 +18,6 @@ import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
 import { PnLBySymbol } from './components/analytics/PnLBySymbol';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
-import { MvpTestsDashboard } from './components/MvpTestsDashboard';
 import { AssetMetadataPlayground } from './components/AssetMetadataPlayground';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 import { PrivacyProvider } from './context/PrivacyContext';
@@ -120,7 +119,6 @@ export default function App() {
               {activeTab === 'positions-history' && <ClosedPositions />}
               {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
               {activeTab === 'reports' && <ReportsDashboard />}
-              {(activeTab === 'testes-mvp' || activeTab === 'testes-mvp-main') && <MvpTestsDashboard />}
               {activeTab === 'mvp-asset-metadata' && <AssetMetadataPlayground />}
               {activeTab === 'orders-open' && <OpenOrders />}
               {activeTab === 'orders-history' && <OrderHistory />}
