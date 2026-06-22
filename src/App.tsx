@@ -29,6 +29,7 @@ import { OrderHistory } from './components/analytics/OrderReports/OrderHistory';
 import { useSettingsStore } from './store/settingsStore';
 import { HelpToggleButton } from './components/HelpToggleButton';
 import { WelcomeHelpModal } from './components/WelcomeHelpModal';
+import { UpdateNotification } from './components/UpdateNotification';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -141,6 +142,7 @@ export default function App() {
         <StatusBar />
       </div>
       <WelcomeHelpModal isOpen={isWelcomeOpen} onClose={() => setIsWelcomeOpen(false)} />
+      <UpdateNotification />
     </WorkSpace>
     </TooltipProvider>
     </PrivacyProvider>
