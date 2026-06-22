@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe, ShieldAlert, Compass } from 'lucide-react';
+import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe, ShieldAlert, Compass, AlertTriangle } from 'lucide-react';
 import { useSettingsStore } from '../store/settingsStore';
 
 interface WelcomeHelpModalProps {
@@ -30,7 +30,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       feature4Title: "Automatic Syncing & Cache",
       feature4Desc: <>Position history runs on a background cache. Customize update intervals or trigger a manual sync under the <strong>Settings</strong> page.</>,
       showOnStartup: "Show on startup",
-      getStarted: "Get Started"
+      getStarted: "Get Started",
+      disclaimerTitle: "Beta Phase & Data Accuracy Disclaimer",
+      disclaimerDesc: "This application is currently in its testing phase. Our initial idea is to simplify the lives of traders by unifying balances from various exchanges in one place to facilitate asset and trade tracking. However, each exchange has different calculation methods and data availability, so the presented data may contain errors or inconsistencies and might not be exactly equal to what is displayed directly by the exchange. If you do not agree with this, we do not recommend using the application."
     },
     pt: {
       title: "Bem-vindo ao Crypto Dashboard",
@@ -48,7 +50,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       feature4Title: "Sincronização Automática e Cache",
       feature4Desc: <>O histórico de posições é executado em um cache em segundo plano. Personalize os intervalos de atualização ou acione uma sincronização manual na página <strong>Settings</strong>.</>,
       showOnStartup: "Mostrar ao iniciar",
-      getStarted: "Começar"
+      getStarted: "Começar",
+      disclaimerTitle: "Fase Beta e Aviso sobre Precisão de Dados",
+      disclaimerDesc: "Este aplicativo ainda está em fase de testes. Nossa ideia inicial é facilitar a vida dos traders unificando os saldos de várias corretoras no mesmo local para facilitar o controle dos ativos e trades. No entanto, cada corretora tem formas diferentes de cálculos e disponibilização dos dados, então os dados apresentados podem conter erros ou inconsistências e não ser exatos aos que são exibidos diretamente pela corretora. Se você não concordar com isso, não recomendamos que use o aplicativo."
     }
   };
 
@@ -124,6 +128,17 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
             <div className="text-xs leading-relaxed text-gray-300">
               <strong className="text-amber-400 block mb-0.5">{lang === 'pt' ? 'Aviso de Segurança & Privacidade' : 'Security & Privacy Notice'}</strong>
               {t.privacyWarning}
+            </div>
+          </div>
+
+          {/* Disclaimer Banner */}
+          <div className="flex gap-3.5 items-start bg-rose-500/10 border border-rose-500/20 p-3.5 rounded-xl text-rose-500">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-rose-400" />
+            </div>
+            <div className="text-xs leading-relaxed text-gray-300">
+              <strong className="text-rose-400 block mb-0.5">{t.disclaimerTitle}</strong>
+              {t.disclaimerDesc}
             </div>
           </div>
 
