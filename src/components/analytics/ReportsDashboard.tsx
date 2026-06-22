@@ -5,6 +5,7 @@ import { DownloadCloud, FileText, Table } from 'lucide-react';
 import { format } from 'date-fns';
 import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
+import { getHistoryInverseUsdValues } from '../../utils/inverseUtils';
 
 export function ReportsDashboard() {
   const [period, setPeriod] = useState<PositionHistoryPeriod>('30d');
@@ -12,19 +13,22 @@ export function ReportsDashboard() {
   const formatCurrency = useFormatCurrency();
 
   const getExportConfig = (): ExportConfig => {
-    const headers = ['Date', 'Exchange', 'Symbol', 'Side', 'Size', 'Entry Price', 'Close Price', 'Trading Fee', 'Funding Fee', 'Net PnL'];
-    const rows = history.map(pos => [
-      format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm'),
-      pos.exchange,
-      pos.symbol,
-      pos.side.toUpperCase(),
-      pos.size || 0,
-      pos.entryPrice || 0,
-      pos.closePrice || 0,
-      pos.tradingFee || 0,
-      pos.fundingFee || 0,
-      pos.realizedPnl + (pos.fundingFee || 0) + (pos.tradingFee || 0)
-    ]);
+    const headers = ['Date', 'Exchange', 'Symbol', 'Side', 'Size', 'Entry Price', 'Close Price', 'Trading Fee (USD)', 'Funding Fee (USD)', 'Net PnL (USD)'];
+    const rows = history.map(pos => {
+      const { realizedPnl, fundingFee, tradingFee } = getHistoryInverseUsdValues(pos);
+      return [
+        format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm'),
+        pos.exchange,
+        pos.symbol,
+        pos.side.toUpperCase(),
+        pos.size || 0,
+        pos.entryPrice || 0,
+        pos.closePrice || 0,
+        tradingFee || 0,
+        fundingFee || 0,
+        realizedPnl + (fundingFee || 0) + (tradingFee || 0)
+      ];
+    });
     return {
       title: 'Trading Performance Report',
       filename: `trading_report_${format(new Date(), 'yyyy-MM-dd')}`,
@@ -99,7 +103,8 @@ export function ReportsDashboard() {
                 </tr>
               ) : (
                 history.map((pos) => {
-                  const net = pos.realizedPnl + (pos.fundingFee || 0) + (pos.tradingFee || 0);
+                  const { realizedPnl, fundingFee, tradingFee } = getHistoryInverseUsdValues(pos);
+                  const net = realizedPnl + (fundingFee || 0) + (tradingFee || 0);
                   return (
                     <tr key={pos.id} className="border-b border-[#2a2b30]/50 hover:bg-[#2a2b30]/20 transition-colors">
                       <td className="px-4 py-3 text-gray-300">{format(new Date(pos.closeUpdateTime), 'MMM dd, HH:mm')}</td>

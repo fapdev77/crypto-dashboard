@@ -13,6 +13,7 @@ import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
+import { getInverseUsdValues } from '../utils/inverseUtils';
 
 export function OpenPositions() {
   const { positions, balances } = useDashboardStore();
@@ -77,12 +78,10 @@ export function OpenPositions() {
     let uPnl = new Big(0);
     let rPnl = new Big(0);
     activePositions.forEach(pos => {
-      const posCcy = pos.ccy || pos.baseCoin || 'USDT';
-      const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
-      const multiplier = isFiatCcy ? 1 : (pos.markPrice || 1);
+      const { unrealizedPnl, realizedPnl } = getInverseUsdValues(pos);
       
-      const uVal = new Big(pos.unrealizedPnl || 0).times(multiplier);
-      const rVal = new Big(pos.realizedPnl || 0).times(multiplier);
+      const uVal = new Big(unrealizedPnl || 0);
+      const rVal = new Big(realizedPnl || 0);
       
       uPnl = uPnl.plus(uVal);
       rPnl = rPnl.plus(rVal);
@@ -253,8 +252,11 @@ export function OpenPositions() {
               const roeColor = (pos.roe || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
               const realizedPnlColor = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
 
-              // Approximations
-              const sizeValUsd = pos.notionalUsd || (pos.size * pos.markPrice);
+              // Normalize inverse PnL to USD values
+              const inverseVals = getInverseUsdValues(pos);
+
+              // Approximations using normalized USD values where helpful
+              const sizeValUsd = pos.notionalUsd || inverseVals.positionValue || (pos.size * pos.markPrice);
               const posCcy = pos.ccy || pos.baseCoin || 'USDT';
 
               const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
@@ -477,7 +479,7 @@ export function OpenPositions() {
                         {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                       </span>
                       <span className={`font-mono text-xs ${roeColor}`}>
-                        {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl !== undefined && pos.markPrice ? (pos.unrealizedPnl > 0 ? '+' : '') + formatCurrency(Math.abs(pos.unrealizedPnl) * pos.markPrice, 'crypto', 2) + ' USD / ' : ''}
+                        {inverseVals.isInverse && pos.unrealizedPnl !== undefined ? (pos.unrealizedPnl > 0 ? '+' : '') + formatCurrency(Math.abs(inverseVals.unrealizedPnl), 'usd', 2) + ' / ' : ''}
                         {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
                       </span>
                     </div>
@@ -488,9 +490,9 @@ export function OpenPositions() {
                       <span className={`font-mono text-sm ${realizedPnlColor}`}>
                         {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                       </span>
-                      {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
+                      {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
                         <span className={`font-mono text-xs ${realizedPnlColor} opacity-80`}>
-                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(pos.realizedPnl) * pos.markPrice, 'crypto', 2)} USD
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)}
                         </span>
                       ) : (
                         <span className="text-[10px] opacity-0">-</span>
@@ -571,19 +573,19 @@ export function OpenPositions() {
                           rows={[
                             { 
                               label: 'Closed PnL', 
-                              value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${posCcy}`, 
+                              value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                               labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                               valueClassName: `text-[11px] font-mono font-bold ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                             },
                             { 
                               label: 'Funding fee', 
-                              value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${posCcy}`, 
+                              value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`, 
                               labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                               valueClassName: `text-[11px] font-mono font-bold ${(pos.fundingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                             },
                             { 
                               label: 'Trading fee', 
-                              value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${posCcy}`, 
+                              value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                               labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                               valueClassName: `text-[11px] font-mono font-bold ${(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                             }
@@ -593,8 +595,8 @@ export function OpenPositions() {
                             <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Realized PnL</span>
                             <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                               {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
-                              {posCcy && !posCcy.includes('USD') && pos.realizedPnl && pos.markPrice ? (
-                                <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(Math.abs(pos.realizedPnl) * pos.markPrice, 'crypto', 2)} USD</span>
+                              {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
+                                <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)}</span>
                               ) : null}
                             </span>
                           </div>

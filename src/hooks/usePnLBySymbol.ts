@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Big from 'big.js';
 import { usePositionHistory, PositionHistoryPeriod } from './usePositionHistory';
+import { getHistoryInverseUsdValues } from '../utils/inverseUtils';
 import { SymbolPnLRecord } from '../types';
 
 export function usePnLBySymbol(
@@ -49,7 +50,8 @@ export function usePnLBySymbol(
 
       const key = `${pos.exchange}-${pos.symbol}-${instrument}-${ccy}`;
       
-      const realizedPnl = new Big(pos.realizedPnl || 0);
+      const { realizedPnl: normalizedRealizedPnl } = getHistoryInverseUsdValues(pos);
+      const realizedPnl = new Big(normalizedRealizedPnl || 0);
 
       if (!symbolMap.has(key)) {
         symbolMap.set(key, {
