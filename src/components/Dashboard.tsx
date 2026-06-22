@@ -3,7 +3,7 @@ import Big from 'big.js';
 import { useDashboardStore, BalanceItem } from '../store/dashboardStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { DollarSign, Wallet, Search, X, TrendingUp, TrendingDown, ChevronDown, ChevronRight, BarChart2, Eye, EyeOff } from 'lucide-react';
+import { DollarSign, Wallet, Search, X, TrendingUp, TrendingDown, ChevronDown, ChevronRight, BarChart2, Eye, EyeOff, Activity } from 'lucide-react';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { Sparkline } from './ui/Sparkline';
@@ -43,11 +43,21 @@ export function Dashboard() {
     return Number(activeBalances.reduce((acc, curr) => acc.plus(curr.usdValue || 0), new Big(0)));
   }, [activeBalances]);
 
-  const dailyPnL = useMemo(() => {
+  const openPositionsTotalPnL = useMemo(() => {
+    return Number(activePositions.reduce((acc, curr) => acc.plus(curr.unrealizedPnl || 0).plus(curr.realizedPnl || 0), new Big(0)));
+  }, [activePositions]);
+
+  const openPositionsRealizedPnL = useMemo(() => {
+    return Number(activePositions.reduce((acc, curr) => acc.plus(curr.realizedPnl || 0), new Big(0)));
+  }, [activePositions]);
+
+  const openPositionsUnrealizedPnL = useMemo(() => {
     return Number(activePositions.reduce((acc, curr) => acc.plus(curr.unrealizedPnl || 0), new Big(0)));
   }, [activePositions]);
 
-  const dailyPnLPercent = totalEquity > 0 ? (dailyPnL / totalEquity) * 100 : 0;
+  const openPositionsTotalPnLPercent = totalEquity > 0 ? (openPositionsTotalPnL / totalEquity) * 100 : 0;
+  const realizedPnLPercent = totalEquity > 0 ? (openPositionsRealizedPnL / totalEquity) * 100 : 0;
+  const unrealizedPnLPercent = totalEquity > 0 ? (openPositionsUnrealizedPnL / totalEquity) * 100 : 0;
   const openPositionsCount = activePositions.length;
 
   const longPositions = activePositions.filter(pos => pos.side === 'long' || pos.side === 'buy').length;
@@ -256,13 +266,13 @@ export function Dashboard() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Total Equity (USD)</span>
-                <span className={`inline-block w-2 h-2 rounded-full ${dailyPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
+                <span className={`inline-block w-2 h-2 rounded-full ${openPositionsTotalPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
               </div>
               <div className="flex items-baseline gap-2 mt-1">
                 <p className="text-3xl font-bold text-white font-mono tracking-tight">
                   {formatCurrency(totalEquity, 'usd')}
                 </p>
-                {dailyPnL >= 0 ? (
+                {openPositionsTotalPnL >= 0 ? (
                   <TrendingUp className="w-4 h-4 text-emerald-500/70" />
                 ) : (
                   <TrendingDown className="w-4 h-4 text-red-500/70" />
@@ -274,29 +284,59 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Lado Direito: Daily P&L */}
+          {/* Lado Direito: Open Positions P&L */}
           <div className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Daily P&L</span>
-              <div className="w-[80px] h-[30px] opacity-90">
-                <Sparkline
-                  data={[10, 25, 15, 40, 30, 50, 45, 60, dailyPnL >= 0 ? 80 : 20]}
-                  color={dailyPnL >= 0 ? 'emerald' : 'red'}
-                  width={80}
-                  height={30}
-                />
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Open Positions P&L</span>
+              <Activity className="w-5 h-5 text-[#8E9299]/70" />
+            </div>
+
+            <div className="space-y-4">
+              {/* Unrealized */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-1">Unrealized P&L</div>
+                  <div className="flex items-baseline gap-2">
+                    <p className={`text-xl font-bold font-mono tracking-tight ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {isPrivateMode ? '$••••' : `${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsUnrealizedPnL, 'usd')}`}
+                    </p>
+                    <span className={`text-xs font-semibold font-mono ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {isPrivateMode ? '(••••%)' : `(${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${unrealizedPnLPercent.toFixed(2)}%)`}
+                    </span>
+                  </div>
+                </div>
+                <div className="w-[60px] h-[24px] opacity-90 hidden sm:block">
+                  <Sparkline
+                    data={[10, 20, 15, 30, 25, 40, 35, 50, openPositionsUnrealizedPnL >= 0 ? 70 : 20]}
+                    color={openPositionsUnrealizedPnL >= 0 ? 'emerald' : 'red'}
+                    width={60}
+                    height={24}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className={`text-2xl font-bold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                {isPrivateMode ? '$••••' : `${dailyPnL >= 0 ? '+' : ''}${formatCurrency(dailyPnL, 'usd')}`}
-              </p>
-              <span className={`text-sm font-semibold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                {isPrivateMode ? '(••••%)' : `(${dailyPnL >= 0 ? '+' : ''}${dailyPnLPercent.toFixed(2)}%)`}
-              </span>
-            </div>
-            <div className="mt-4 text-xs text-[#8E9299]/80 font-medium">
-              Unrealized P&L from active positions
+
+              {/* Realized */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-1">Realized P&L</div>
+                  <div className="flex items-baseline gap-2">
+                    <p className={`text-xl font-bold font-mono tracking-tight ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {isPrivateMode ? '$••••' : `${openPositionsRealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsRealizedPnL, 'usd')}`}
+                    </p>
+                    <span className={`text-xs font-semibold font-mono ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {isPrivateMode ? '(••••%)' : `(${openPositionsRealizedPnL >= 0 ? '+' : ''}${realizedPnLPercent.toFixed(2)}%)`}
+                    </span>
+                  </div>
+                </div>
+                <div className="w-[60px] h-[24px] opacity-90 hidden sm:block">
+                  <Sparkline
+                    data={[15, 10, 25, 20, 35, 30, 45, 40, openPositionsRealizedPnL >= 0 ? 60 : 30]}
+                    color={openPositionsRealizedPnL >= 0 ? 'emerald' : 'red'}
+                    width={60}
+                    height={24}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
