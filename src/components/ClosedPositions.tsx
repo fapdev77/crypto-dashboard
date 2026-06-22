@@ -13,6 +13,7 @@ import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { SyncBadge } from './ui/SyncBadge';
+import { getHistoryInverseUsdValues } from '../utils/inverseUtils';
 
 export function ClosedPositions() {
   const keys = useApiKeysStore(state => state.keys);
@@ -61,12 +62,7 @@ export function ClosedPositions() {
     let shorts = 0;
 
     filteredClosedPositions.forEach(pos => {
-      const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
-      const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
-      let pnlInUsd = pos.realizedPnl;
-      if (!isFiatCcy && pos.closePrice) {
-        pnlInUsd = pos.realizedPnl * pos.closePrice;
-      }
+      const { realizedPnl: pnlInUsd } = getHistoryInverseUsdValues(pos);
 
       const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
       const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
@@ -406,6 +402,8 @@ export function ClosedPositions() {
             const roiClass = hasRoi ? (roiValue >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]') : 'text-[#8E9299]';
             const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
+            const inverseVals = getHistoryInverseUsdValues(pos);
+
             return (
               <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col transition-colors hover:border-[#3a3b40]">
                 <div className="p-4 grid grid-cols-2 lg:grid-cols-6 gap-4">
@@ -471,19 +469,19 @@ export function ClosedPositions() {
                       rows={[
                         { 
                           label: 'Closed PnL', 
-                          value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${pnlCurrency}`, 
+                          value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                           valueClassName: `text-[11px] font-mono font-bold ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         },
                         { 
                           label: 'Funding fee', 
-                          value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${pnlCurrency}`, 
+                          value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                           valueClassName: `text-[11px] font-mono font-bold ${(pos.fundingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         },
                         { 
                           label: 'Trading fee', 
-                          value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${pnlCurrency}`, 
+                          value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                           valueClassName: `text-[11px] font-mono font-bold ${(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         }
@@ -496,9 +494,9 @@ export function ClosedPositions() {
                     </span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className={`font-mono text-xs ${roiClass}`}>{roiStr}</span>
-                      {!isFiatCcy && pos.closePrice ? (
+                      {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
                         <span className={`font-mono text-[10px] ${pnlClass} opacity-80`}>
-                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(pos.realizedPnl) * pos.closePrice, 'crypto', 2)} USD
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)}
                         </span>
                       ) : null}
                     </div>

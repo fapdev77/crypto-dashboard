@@ -11,6 +11,7 @@ import { MacroCapitalChart } from './analytics/MacroCapitalChart';
 import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
+import { getInverseUsdValues } from '../utils/inverseUtils';
 
 export function Dashboard() {
   const { balances, positions } = useDashboardStore();
@@ -45,17 +46,15 @@ export function Dashboard() {
 
   const openPositionsRealizedPnL = useMemo(() => {
     return Number(activePositions.reduce((acc, curr) => {
-      const pnl = curr.realizedPnl || 0;
-      const usdPnl = curr.instrumentType === 'INVERSE' ? pnl * (curr.markPrice || 0) : pnl;
-      return acc.plus(usdPnl);
+      const { realizedPnl } = getInverseUsdValues(curr, curr.markPrice);
+      return acc.plus(realizedPnl || 0);
     }, new Big(0)));
   }, [activePositions]);
 
   const openPositionsUnrealizedPnL = useMemo(() => {
     return Number(activePositions.reduce((acc, curr) => {
-      const pnl = curr.unrealizedPnl || 0;
-      const usdPnl = curr.instrumentType === 'INVERSE' ? pnl * (curr.markPrice || 0) : pnl;
-      return acc.plus(usdPnl);
+      const { unrealizedPnl } = getInverseUsdValues(curr, curr.markPrice);
+      return acc.plus(unrealizedPnl || 0);
     }, new Big(0)));
   }, [activePositions]);
 
