@@ -48,7 +48,6 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     ]},
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'testes-mvp', label: 'Testes MVP', icon: Beaker, subItems: [
-      { id: 'testes-mvp-main', label: 'Playground Principal' },
       { id: 'mvp-asset-metadata', label: 'Informações de Ativos' }
     ]},
   ];
