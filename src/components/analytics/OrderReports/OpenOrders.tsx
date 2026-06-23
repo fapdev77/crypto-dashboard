@@ -6,6 +6,7 @@ import { ArrowLeftRight } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
+import { AppTooltip } from '../../ui/Tooltip';
 
 export function OpenOrders() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -134,7 +135,9 @@ export function OpenOrders() {
 
           {/* Total Value */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-            <span className="text-2xl text-[#8E9299]">Total Est. Value</span>
+            <AppTooltip description="The total estimated USD value of all open orders, calculated based on their limit trigger prices.">
+              <span className="text-2xl text-[#8E9299] w-max cursor-help border-b border-dashed border-[#8E9299]/50">Total Est. Value</span>
+            </AppTooltip>
             <span className="text-xl font-medium text-white mt-1">
               {formatCurrency(stats.totalVolume, 'usd')}
             </span>

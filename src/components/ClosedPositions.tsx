@@ -440,7 +440,9 @@ export function ClosedPositions() {
 
                   {/* Size / Value */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase">Pos Size / Value</span>
+                    <AppTooltip description="The peak size and USD value of this position before it was closed.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Pos Size / Value</span>
+                    </AppTooltip>
                     <span className="font-mono text-white text-sm">{displayQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displayUnit}</span></span>
                     {displaySecondaryQuantity !== '--' && (
                       <span className="text-xs text-[#8E9299] font-mono">{displaySecondaryQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displaySecondaryUnit}</span></span>
@@ -449,7 +451,9 @@ export function ClosedPositions() {
 
                   {/* Entry / Exit Price */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase">Entry / Exit Price</span>
+                    <AppTooltip description="Average entry price and average exit price of the position.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Entry / Exit Price</span>
+                    </AppTooltip>
                     <span className="font-mono text-white text-sm truncate">{formatPrice(pos.entryPrice, isFiatPair)}</span>
                     <span className="font-mono text-white text-xs truncate">{formatPrice(pos.closePrice, isFiatPair)}</span>
                   </div>
@@ -504,7 +508,9 @@ export function ClosedPositions() {
 
                   {/* Open Time */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase">Open Time</span>
+                    <AppTooltip description="When the position was first opened.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Open Time</span>
+                    </AppTooltip>
                     <span className="font-mono text-white text-sm">
                       {pos.createdTime && !isNaN(pos.createdTime) ? format(new Date(pos.createdTime), 'yyyy-MM-dd') : '--'}
                     </span>
@@ -515,7 +521,9 @@ export function ClosedPositions() {
 
                   {/* Close Time */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase">Closed Time</span>
+                    <AppTooltip description="When the position was completely closed.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Closed Time</span>
+                    </AppTooltip>
                     <span className="font-mono text-white text-sm">
                       {pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd') : '--'}
                     </span>

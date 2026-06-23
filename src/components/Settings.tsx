@@ -8,6 +8,7 @@ import {
   Database, Trash2, CheckCircle2, Loader2, RefreshCw,
   Briefcase, AlertTriangle, FlaskConical, Gauge, Settings as SettingsIcon
 } from 'lucide-react';
+import { AppTooltip } from './ui/Tooltip';
 
 export function Settings() {
   const {
@@ -134,7 +135,9 @@ export function Settings() {
           <div className="space-y-5 flex-1 flex flex-col">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h4 className="text-white font-medium text-sm">Use Mock Data</h4>
+                <AppTooltip description="Enables testing mode with offline, mock data across all exchanges. API limits won't be hit while this is active. Real balances and positions will be hidden.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Use Mock Data</h4>
+                </AppTooltip>
                 <p className="text-[#8E9299] text-xs mt-1.5 leading-relaxed">
                   Enable to test the interface with dummy data instead of real API connections.
                   Real balances and positions will be hidden while active.
@@ -158,7 +161,9 @@ export function Settings() {
 
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h4 className="text-white font-medium text-sm">Show Onboarding Guide</h4>
+                <AppTooltip description="If enabled, the Welcome Guide modal (containing tutorials and usage tips) will automatically open every time you start the app.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Show Onboarding Guide</h4>
+                </AppTooltip>
                 <p className="text-[#8E9299] text-xs mt-1.5 leading-relaxed">
                   Show the welcome and help guide modal automatically when the application is launched.
                 </p>
@@ -191,7 +196,9 @@ export function Settings() {
             {/* Background Update Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <h4 className="text-white font-medium text-sm">Background Update Interval</h4>
+                <AppTooltip description="Sets the interval for the background service that syncs your historic PnL. A longer interval saves API calls and data usage, but delays historical charts updates.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Background Update Interval</h4>
+                </AppTooltip>
                 <span className="text-[#00C853] font-mono text-xs bg-[#00C853]/10 px-2 py-0.5 rounded-md">{historyCacheInterval}m</span>
               </div>
               <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
@@ -217,19 +224,21 @@ export function Settings() {
 
             {/* Force Sync */}
             <div>
-              <button
-                onClick={handleForceSync}
-                disabled={isSyncing || synced || isClearing || keys.length === 0}
-                className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                {isSyncing
-                  ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
-                  : synced
-                    ? <CheckCircle2 className="w-4 h-4 text-green-400" />
-                    : <RefreshCw className="w-4 h-4 text-blue-400" />
-                }
-                {isSyncing ? 'Syncing Now...' : synced ? 'Synced!' : 'Force Sync Now'}
-              </button>
+              <AppTooltip description="Instantly triggers a manual synchronization of your entire position history from all connected exchanges.">
+                <button
+                  onClick={handleForceSync}
+                  disabled={isSyncing || synced || isClearing || keys.length === 0}
+                  className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {isSyncing
+                    ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                    : synced
+                      ? <CheckCircle2 className="w-4 h-4 text-green-400" />
+                      : <RefreshCw className="w-4 h-4 text-blue-400" />
+                  }
+                  {isSyncing ? 'Syncing Now...' : synced ? 'Synced!' : 'Force Sync Now'}
+                </button>
+              </AppTooltip>
             </div>
 
             <div className="border-t border-[#2a2b30]" />
@@ -237,7 +246,9 @@ export function Settings() {
             {/* Clear Cache */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <h4 className="text-white font-medium text-sm">Clear Local Cache</h4>
+                <AppTooltip description="Deletes your locally stored history records and triggers a fresh download from all connected exchanges. Useful if data appears corrupted or missing.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Clear Local Cache</h4>
+                </AppTooltip>
                 {cacheSize !== null && (
                   <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
                     <span className="text-[#8E9299] text-[10px]">Records:</span>
@@ -275,7 +286,9 @@ export function Settings() {
 
           <div className="flex flex-col flex-1">
             <div className="flex justify-between items-center mb-1">
-              <h4 className="text-white font-medium text-sm">Background Refresh Interval</h4>
+              <AppTooltip description="Controls how often the application fetches live data like mark prices, open positions, and account balances. Faster updates consume more API limits.">
+                <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Background Refresh Interval</h4>
+              </AppTooltip>
               <span className="text-[#00C853] font-mono text-xs bg-[#00C853]/10 px-2 py-0.5 rounded-md">{pollingInterval}s</span>
             </div>
             <p className="text-[#8E9299] text-xs mt-1 mb-4 leading-relaxed">
@@ -310,7 +323,9 @@ export function Settings() {
             {/* TTL Slider */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <h4 className="text-white font-medium text-sm">Metadata TTL</h4>
+                <AppTooltip description="Time To Live (TTL) sets how long asset metadata (like whether a coin is CRYPTO or a STOCK) stays in your browser memory before being updated again.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Metadata TTL</h4>
+                </AppTooltip>
                 <span className="text-purple-400 font-mono text-xs bg-purple-400/10 px-2 py-0.5 rounded-md">{metadataCacheTtlHours}h</span>
               </div>
               <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
@@ -337,7 +352,9 @@ export function Settings() {
             {/* Clear Metadata Cache */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <h4 className="text-white font-medium text-sm">Clear Metadata Cache</h4>
+                <AppTooltip description="Deletes the locally cached asset classes (CRYPTO, STOCK, FOREX, etc.) causing the app to query for updated classifications on the next load.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Clear Metadata Cache</h4>
+                </AppTooltip>
                 {metaCacheSize !== null && (
                   <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
                     <span className="text-[#8E9299] text-[10px]">Records:</span>
@@ -372,7 +389,9 @@ export function Settings() {
           <p className="text-[#8E9299] text-xs mb-5">Irreversible local data actions</p>
 
           <div className="flex flex-col flex-1">
-            <h4 className="text-red-400 font-medium text-sm mb-1.5">Factory Reset</h4>
+            <AppTooltip description="WARNING: This action is permanent. It wipes all IndexedDB, LocalStorage data, settings, API Keys, and caches. The app will immediately reload as if newly installed.">
+              <h4 className="text-red-400 font-medium text-sm mb-1.5 w-fit cursor-help border-b border-dashed border-red-400/50">Factory Reset</h4>
+            </AppTooltip>
             <p className="text-[#8E9299] text-xs mb-4 leading-relaxed">
               Permanently erase all local data from this browser — API keys, settings, historical cache,
               metadata, and mock preferences. Use this on shared computers or to restore factory defaults.

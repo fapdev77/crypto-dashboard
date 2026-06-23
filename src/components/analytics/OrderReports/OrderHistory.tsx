@@ -10,6 +10,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
+import { AppTooltip } from '../../ui/Tooltip';
 
 export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -287,21 +288,27 @@ export function OrderHistory() {
           {/* Volume and Fees */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-3">
             <div className="flex flex-col">
-              <span className="text-[13px] text-[#8E9299] uppercase tracking-wider">Traded Volume</span>
-              <span className="text-xl font-medium text-white">
+              <AppTooltip description="The total estimated USD value of all executed trades in the selected period.">
+                <span className="text-[13px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Traded Volume</span>
+              </AppTooltip>
+              <span className="text-xl font-medium text-white mt-1">
                 {formatCurrency(stats.totalTradedVolume, 'usd')}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-4 border-t border-[#2a2b30] pt-3">
               <div className="flex flex-col">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider">Trading Fees</span>
-                <span className="text-[13px] font-medium text-[#FF4444]">
+                <AppTooltip description="The total estimated USD value of trading fees paid for these orders.">
+                  <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Trading Fees</span>
+                </AppTooltip>
+                <span className="text-[13px] font-medium text-[#FF4444] mt-1">
                   {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider">Funding Fees</span>
-                <span className={`text-[13px] font-medium ${totalFundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                <AppTooltip description="The total estimated USD value of funding fees paid or received in the selected period.">
+                  <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Funding Fees</span>
+                </AppTooltip>
+                <span className={`text-[13px] font-medium mt-1 ${totalFundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                   {totalFundingFee > 0 ? '+' : ''}{totalFundingFee !== 0 ? formatCurrency(totalFundingFee, 'usd') : '0.00 USD'}
                 </span>
               </div>
