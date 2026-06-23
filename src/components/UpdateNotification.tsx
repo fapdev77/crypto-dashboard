@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function UpdateNotification() {
   const {
@@ -14,6 +15,26 @@ export function UpdateNotification() {
       console.error('SW registration error', error);
     },
   });
+
+  useEffect(() => {
+    if (localStorage.getItem('app-updated') === 'true') {
+      toast.success('Aplicativo atualizado com sucesso!', {
+        duration: 5000,
+        position: 'bottom-center',
+        style: {
+          background: '#1a1b1e',
+          color: '#e5e7eb',
+          border: '1px solid #2a2b30',
+        },
+      });
+      localStorage.removeItem('app-updated');
+    }
+  }, []);
+
+  const handleUpdate = () => {
+    localStorage.setItem('app-updated', 'true');
+    updateServiceWorker(true);
+  };
 
   if (!needRefresh) return null;
 
@@ -45,7 +66,7 @@ export function UpdateNotification() {
           Agora Não
         </button>
         <button
-          onClick={() => updateServiceWorker(true)}
+          onClick={handleUpdate}
           className="flex-1 py-3 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-[#2a2b30]/50 transition-colors border-l border-[#2a2b30]"
         >
           Atualizar Agora
