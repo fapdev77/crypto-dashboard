@@ -19,9 +19,7 @@ export function ApiTester() {
   const [mode, setMode] = useState<'REST' | 'WS'>('REST');
 
   // REST State
-  const [restMethod, setRestMethod] = useState<'GET' | 'POST'>('GET');
   const [restPath, setRestPath] = useState('');
-  const [restBody, setRestBody] = useState('');
   const [restResponse, setRestResponse] = useState('');
 
   // WS State
@@ -48,11 +46,11 @@ export function ApiTester() {
   const getWsUrl = (exchange: Exchange) => {
     if (exchange === 'bitget') {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      return `${protocol}//${window.location.host}/ws-proxy/bitget/v2/ws/private`;
+      return `${protocol}//${window.location.host}/ws-proxy/bitget/v2/ws/public`;
     } else if (exchange === 'okx') {
-      return 'wss://ws.okx.com:8443/ws/v5/private';
+      return 'wss://ws.okx.com:8443/ws/v5/public';
     } else if (exchange === 'bybit') {
-      return 'wss://stream.bybit.com/v5/private';
+      return 'wss://stream.bybit.com/v5/public/linear';
     }
     return '';
   };
@@ -75,19 +73,17 @@ export function ApiTester() {
       let headers: Record<string, string> = {};
       
       if (activeKey.exchange === 'okx') {
-         headers = await OkxAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
+         headers = await OkxAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', 'GET', restPath);
       } else if (activeKey.exchange === 'bitget') {
-         headers = await BitgetAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', restMethod, restPath, restMethod === 'POST' ? restBody : undefined);
+         headers = await BitgetAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, activeKey.passphrase || '', 'GET', restPath);
       } else if (activeKey.exchange === 'bybit') {
          // Bybit auth usually takes the payload string or query string.
          // If GET, query is everything after `?`.
          const queryStr = restPath.includes('?') ? restPath.split('?')[1] : '';
-         const authPayload = restMethod === 'POST' ? restBody : queryStr;
-         headers = await BybitAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, authPayload) as Record<string, string>;
+         headers = await BybitAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, queryStr) as Record<string, string>;
       }
       
-      const payloadObj = restMethod === 'POST' && restBody ? JSON.parse(restBody) : undefined;
-      const proxyResponse = await proxyFetch({ targetUrl, method: restMethod, headers, body: payloadObj });
+      const proxyResponse = await proxyFetch({ targetUrl, method: 'GET', headers });
       setRestResponse(JSON.stringify(proxyResponse, null, 2));
     } catch (err: any) {
       setRestResponse(`Error:\n${err.message || String(err)}`);
@@ -125,7 +121,7 @@ export function ApiTester() {
           logWs('Sending authentication payload...');
           ws.send(JSON.stringify(exchangeCredentials));
         } else {
-           logWs('No WS auth payload generated via frontend. Public WS connected.');
+           logWs('WS connected (Public channels only). Submit a subscribe payload to test.');
         }
       } catch (err: any) {
          logWs(`Auth Error: ${err.message}`);
@@ -216,14 +212,9 @@ export function ApiTester() {
         <div className="flex-1 flex flex-col gap-4 min-h-0">
           <div className="bg-[#151619] border border-[#2a2b30] p-6 rounded-xl flex flex-col gap-4">
              <div className="flex gap-2">
-               <select
-                  value={restMethod}
-                  onChange={(e) => setRestMethod(e.target.value as any)}
-                  className="bg-[#0b0c10] border border-[#2a2b30] rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-[#2F6BFF] w-24 shrink-0"
-               >
-                 <option value="GET">GET</option>
-                 <option value="POST">POST</option>
-               </select>
+               <div className="bg-[#0b0c10] border border-[#2a2b30] rounded-lg px-3 py-2 text-white font-mono flex items-center shrink-0">
+                 GET
+               </div>
                <input
                   type="text"
                   placeholder="/api/v5/account/positions?instType=SWAP"
@@ -239,17 +230,6 @@ export function ApiTester() {
                  <Send className="w-4 h-4" /> Send
                </button>
              </div>
-             {restMethod === 'POST' && (
-               <div>
-                  <label className="block text-sm font-medium text-[#8E9299] mb-1">Body (JSON)</label>
-                  <textarea
-                    value={restBody}
-                    onChange={(e) => setRestBody(e.target.value)}
-                    className="w-full h-32 bg-[#0b0c10] border border-[#2a2b30] rounded-lg p-3 text-white font-mono text-sm focus:outline-none focus:border-[#2F6BFF] resize-none"
-                    placeholder='{"key": "value"}'
-                  />
-               </div>
-             )}
           </div>
           
           <div className="flex-1 bg-[#0b0c10] border border-[#2a2b30] rounded-xl flex flex-col overflow-hidden min-h-0 relative group">
@@ -299,7 +279,12 @@ export function ApiTester() {
                     value={wsPayload}
                     onChange={(e) => setWsPayload(e.target.value)}
                     className="flex-1 h-24 bg-[#0b0c10] border border-[#2a2b30] rounded-lg p-3 text-white font-mono text-sm focus:outline-none focus:border-[#2F6BFF] resize-none"
-                    placeholder='{"op": "subscribe", "args": [{"channel": "positions", "instType": "SWAP"}]}'
+                    placeholder={
+                      !activeKey ? 'Select an API Key...' :
+                      activeKey.exchange === 'okx' ? '{"op": "subscribe", "args": [{"channel": "tickers", "instId": "BTC-USDT"}]}' :
+                      activeKey.exchange === 'bybit' ? '{"op": "subscribe", "args": ["tickers.BTCUSDT"]}' :
+                      '{"op": "subscribe", "args": [{"instType": "USDT-FUTURES", "channel": "ticker", "instId": "BTCUSDT"}]}'
+                    }
                   />
                   <button
                     onClick={handleWsSend}
