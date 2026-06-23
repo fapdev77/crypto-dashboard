@@ -28,28 +28,36 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
 
   const openCount = useMemo(() => {
     const list = Object.values(positions);
-    return list.filter(pos => 
+    return list.filter(pos =>
       (useMockData ? pos.connectionId.startsWith('mocked-data') : !pos.connectionId.startsWith('mocked-data')) && Math.abs(pos.size) > 0
     ).length;
   }, [positions, useMockData]);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'positions', label: 'Positions', icon: Activity, subItems: [
-      { id: 'positions-open', label: 'Abertas', badge: openCount },
-      { id: 'positions-history', label: 'Histórico' }
-    ]},
-    { id: 'orders', label: 'Ordens', icon: ClipboardList, subItems: [
-      { id: 'orders-open', label: 'Open Orders', badge: openOrdersCount },
-      { id: 'orders-history', label: 'Order History' }
-    ]},
-    { id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
-      { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' }
-    ]},
+    {
+      id: 'positions', label: 'Positions', icon: Activity, subItems: [
+        { id: 'positions-open', label: 'Abertas', badge: openCount },
+        { id: 'positions-history', label: 'Histórico' }
+      ]
+    },
+    {
+      id: 'orders', label: 'Ordens', icon: ClipboardList, subItems: [
+        { id: 'orders-open', label: 'Open Orders', badge: openOrdersCount },
+        { id: 'orders-history', label: 'Order History' }
+      ]
+    },
+    {
+      id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
+        { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' }
+      ]
+    },
     { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'testes-mvp', label: 'Testes MVP', icon: Beaker, subItems: [
-      { id: 'mvp-asset-metadata', label: 'Informações de Ativos' }
-    ]},
+    {
+      id: 'testes-mvp', label: 'Tests Playground', icon: Beaker, subItems: [
+        { id: 'mvp-asset-metadata', label: 'Informações de Ativos' }
+      ]
+    },
   ];
 
   return (
@@ -70,9 +78,9 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         ) : (
           <img src={logo1} alt="Logo" className="w-8 h-8 object-contain shrink-0 mt-1" />
         )}
-        
+
         {/* Mobile Close Button */}
-        <button 
+        <button
           onClick={() => setIsMobileMenuOpen?.(false)}
           className="md:hidden p-1 text-gray-400 hover:text-white rounded-lg hover:bg-[#2a2b30] transition-colors"
         >
@@ -102,20 +110,18 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                 }
               }}
               title={item.label}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} rounded-lg text-sm font-medium transition-colors ${
-                activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab))
+              className={`w-full flex items-center ${isCollapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} rounded-lg text-sm font-medium transition-colors ${activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab))
                   ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
                   : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
-              }`}
+                }`}
             >
               <item.icon className={`w-5 h-5 shrink-0 ${(activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab))) ? 'text-[#2F6BFF]' : 'text-gray-400'}`} />
               {!isCollapsed && (
                 <>
                   <span className="flex-1 text-left">{item.label}</span>
                   {'badge' in item && item.badge !== undefined && (item.badge as number) > 0 && (
-                    <span className={`px-2 py-0.5 text-xs rounded-full ${
-                      (activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab))) ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
-                    }`}>
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${(activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab))) ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+                      }`}>
                       {item.badge as number}
                     </span>
                   )}
@@ -130,17 +136,15 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                   <button
                     key={sub.id}
                     onClick={() => handleTabClick(sub.id)}
-                    className={`flex items-center justify-between text-left text-sm py-2 px-3 rounded-md transition-colors ${
-                      activeTab === sub.id 
-                        ? 'text-white bg-[#2a2b30]/60 font-medium' 
+                    className={`flex items-center justify-between text-left text-sm py-2 px-3 rounded-md transition-colors ${activeTab === sub.id
+                        ? 'text-white bg-[#2a2b30]/60 font-medium'
                         : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/40'
-                    }`}
+                      }`}
                   >
                     <span>{sub.label}</span>
                     {sub.badge !== undefined && sub.badge > 0 && (
-                      <span className={`px-2 py-0.5 text-xs rounded-full ${
-                        activeTab === sub.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
-                      }`}>
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === sub.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+                        }`}>
                         {sub.badge}
                       </span>
                     )}
@@ -159,17 +163,15 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                   <button
                     key={sub.id}
                     onClick={() => handleTabClick(sub.id)}
-                    className={`w-full text-left text-sm py-2 px-3 transition-colors flex items-center justify-between ${
-                      activeTab === sub.id
+                    className={`w-full text-left text-sm py-2 px-3 transition-colors flex items-center justify-between ${activeTab === sub.id
                         ? 'text-[#2F6BFF] bg-[#2F6BFF]/10 font-semibold'
                         : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/50'
-                    }`}
+                      }`}
                   >
                     <span>{sub.label}</span>
                     {sub.badge !== undefined && sub.badge > 0 && (
-                      <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${
-                        activeTab === sub.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
-                      }`}>
+                      <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${activeTab === sub.id ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+                        }`}>
                         {sub.badge}
                       </span>
                     )}
@@ -192,11 +194,10 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
             key={item.id}
             onClick={() => handleTabClick(item.id)}
             title={item.label}
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} text-sm font-medium rounded-lg transition-colors mt-1 ${
-              activeTab === item.id
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} text-sm font-medium rounded-lg transition-colors mt-1 ${activeTab === item.id
                 ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
                 : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
-            }`}
+              }`}
           >
             <item.icon className="w-5 h-5 shrink-0" />
             {!isCollapsed && <span>{item.label}</span>}

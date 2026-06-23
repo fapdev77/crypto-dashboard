@@ -79,10 +79,10 @@ export function OpenPositions() {
     let rPnl = new Big(0);
     activePositions.forEach(pos => {
       const { unrealizedPnl, realizedPnl } = getInverseUsdValues(pos);
-      
+
       const uVal = new Big(unrealizedPnl || 0);
       const rVal = new Big(realizedPnl || 0);
-      
+
       uPnl = uPnl.plus(uVal);
       rPnl = rPnl.plus(rVal);
     });
@@ -280,26 +280,26 @@ export function OpenPositions() {
               let exposedPct = 100;
               let protectedAmount = 0;
               let exposedAmount = totalAssetBal > 0 ? totalAssetBal : openPosSize;
-              
+
               if (pos.instrumentType === 'INVERSE' && totalAssetBal > 0) {
-                 if (isShort) {
-                   protectedAmount = Math.min(openPosSize, totalAssetBal);
-                   exposedAmount = Math.max(0, totalAssetBal - openPosSize);
-                   protectedPct = (protectedAmount / totalAssetBal) * 100;
-                   exposedPct = (exposedAmount / totalAssetBal) * 100;
-                 } else {
-                   const totalExposureAmount = totalAssetBal + openPosSize;
-                   protectedAmount = 0;
-                   exposedAmount = totalExposureAmount;
-                   protectedPct = 0;
-                   exposedPct = (totalExposureAmount / totalAssetBal) * 100;
-                 }
+                if (isShort) {
+                  protectedAmount = Math.min(openPosSize, totalAssetBal);
+                  exposedAmount = Math.max(0, totalAssetBal - openPosSize);
+                  protectedPct = (protectedAmount / totalAssetBal) * 100;
+                  exposedPct = (exposedAmount / totalAssetBal) * 100;
+                } else {
+                  const totalExposureAmount = totalAssetBal + openPosSize;
+                  protectedAmount = 0;
+                  exposedAmount = totalExposureAmount;
+                  protectedPct = 0;
+                  exposedPct = (totalExposureAmount / totalAssetBal) * 100;
+                }
               }
 
-              const posTypeStr = pos.instrumentType === 'INVERSE' ? 'CM Perpetual Inverse' : 
-                                 (pos.instrumentType && pos.instrumentType !== 'SWAP' && pos.instrumentType !== 'PERPETUAL') ? 
-                                 pos.instrumentType.charAt(0).toUpperCase() + pos.instrumentType.slice(1).toLowerCase() :
-                                 'Perpetual';
+              const posTypeStr = pos.instrumentType === 'INVERSE' ? 'CM Perpetual Inverse' :
+                (pos.instrumentType && pos.instrumentType !== 'SWAP' && pos.instrumentType !== 'PERPETUAL') ?
+                  pos.instrumentType.charAt(0).toUpperCase() + pos.instrumentType.slice(1).toLowerCase() :
+                  'Perpetual';
               const posTitle = `${pos.symbol} ${posTypeStr}`;
               const baseCoinClean = pos.baseCoin || pos.symbol.replace(/USDT|USDC|USD|EUR|BUSD|BTC$/i, '');
 
@@ -568,30 +568,30 @@ export function OpenPositions() {
                           side="top"
                           description={
                             <div className="flex flex-col gap-1 w-full min-w-[180px]">
-                               <span className="text-[12px] font-medium text-[#8E9299]">Realized PnL</span>
-                               <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                                  {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
-                               </span>
+                              <span className="text-[12px] font-medium text-[#8E9299]">Realized PnL</span>
+                              <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
+                              </span>
                             </div>
                           }
                           rows={[
-                            { 
-                              label: 'Closed PnL', 
-                              value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
-                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
-                              valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                            {
+                              label: 'Closed PnL',
+                              value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`,
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]',
+                              valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                             },
-                            { 
-                              label: 'Funding fee', 
-                              value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`, 
-                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
-                              valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                            {
+                              label: 'Funding fee',
+                              value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`,
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]',
+                              valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                             },
-                            { 
-                              label: 'Trading fee + Closed PnL', 
-                              value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
-                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
-                              valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                            {
+                              label: 'Trading fee + Closed PnL',
+                              value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`,
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]',
+                              valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                             }
                           ]}
                         >
@@ -605,31 +605,31 @@ export function OpenPositions() {
                             </span>
                           </div>
                         </AppTooltip>
-                        
+
                         {pos.instrumentType === 'INVERSE' ? (
                           <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-4">
                             <div className="flex flex-col gap-1">
                               <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Hedge Pro Details</span>
-                              
+
                               <div className="flex flex-col gap-3 mt-1">
                                 <div className="flex flex-col">
                                   <span className="text-[10px] text-[#8E9299]">Balanço Total:</span>
                                   <span className="font-mono text-white text-[13px]">
-                                    {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ ${formatCurrency(totalAssetBal * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                                    {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(totalAssetBal * (pos.markPrice || 0), 'usd', 2)} USD</span>
                                   </span>
                                 </div>
 
                                 <div className="flex flex-col">
                                   <span className="text-[10px] text-[#00C853]">Protegido: {protectedPct.toFixed(2)}%</span>
                                   <span className="font-mono text-white text-[13px]">
-                                    {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ ${formatCurrency(protectedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                                    {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(protectedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
                                   </span>
                                 </div>
 
                                 <div className="flex flex-col">
                                   <span className="text-[10px] text-[#FF4444]">Exposto: {exposedPct.toFixed(2)}%</span>
                                   <span className="font-mono text-white text-[13px]">
-                                    {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ ${formatCurrency(exposedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                                    {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(exposedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
                                   </span>
                                 </div>
                               </div>
@@ -678,32 +678,32 @@ export function OpenPositions() {
                                 At the breakeven price, your total PnL will be zero if you close your remaining position. Note that the breakeven price, which includes the trading fee and funding fee, is updated every second.
                               </div>
                               <div className="flex flex-col gap-1 w-full min-w-[180px] pt-1">
-                                 <span className="text-[12px] font-medium text-[#8E9299]">Realized PnL</span>
-                                 <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                                    {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
-                                 </span>
+                                <span className="text-[12px] font-medium text-[#8E9299]">Realized PnL</span>
+                                <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                  {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
+                                </span>
                               </div>
                             </div>
                           }
                           side="top"
                           rows={[
-                            { 
-                              label: 'Closed PnL', 
-                              value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}`, 
-                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
-                              valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                            {
+                              label: 'Closed PnL',
+                              value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}`,
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]',
+                              valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                             },
-                            { 
-                              label: 'Funding fee', 
-                              value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}`, 
-                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
-                              valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                            {
+                              label: 'Funding fee',
+                              value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}`,
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]',
+                              valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                             },
-                            { 
-                              label: 'Trading fee + Closed PnL', 
-                              value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}`, 
-                              labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
-                              valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                            {
+                              label: 'Trading fee + Closed PnL',
+                              value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}`,
+                              labelClassName: 'text-[11px] font-medium text-[#8E9299]',
+                              valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                             }
                           ]}
                         >
