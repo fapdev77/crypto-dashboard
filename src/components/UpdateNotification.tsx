@@ -1,5 +1,4 @@
 import React from 'react';
-// @ts-expect-error PWA virtual module
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';
 
