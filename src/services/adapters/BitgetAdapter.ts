@@ -1,3 +1,4 @@
+import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
 import { proxyFetch } from '../../utils/proxyFetch';
@@ -166,6 +167,10 @@ export class BitgetAdapter implements IExchangeAdapter {
         
         const side = mapPositionSide('bitget', pos.holdSide);
 
+        const accumulatedFunding = pos.totalFee ? new Big(pos.totalFee || 0).toString() : "0";
+        const realizedPnl = parseFloat(pos.achievedProfits || '0');
+        const accumulatedTradingFee = new Big(realizedPnl).minus(accumulatedFunding).toString();
+
         return {
           id: `${key.id}-bitget-${pos.symbol || pos.instId}-${side}`,
           connectionId: key.id,
@@ -180,7 +185,9 @@ export class BitgetAdapter implements IExchangeAdapter {
           entryPrice: parseFloat(pos.openPriceAvg || pos.avgPx || '0'),
           markPrice: parseFloat(pos.markPrice || '0'),
           unrealizedPnl,
-          realizedPnl: parseFloat(pos.achievedProfits || '0'),
+          realizedPnl,
+          accumulatedFunding,
+          accumulatedTradingFee,
           leverage: parseFloat(pos.leverage || '0'),
           marginMode: mapMarginMode('bitget', pos.marginMode),
           margin,

@@ -69,6 +69,8 @@ export interface UnifiedPosition {
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
   instrumentType?: UnifiedInstrumentType; // 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN'
+  accumulatedFunding?: string;
+  accumulatedTradingFee?: string;
   raw?: any; // To store the original broker data if needed
 }
 ```

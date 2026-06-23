@@ -1,3 +1,4 @@
+import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
 import { proxyFetch } from '../../utils/proxyFetch';
@@ -122,6 +123,10 @@ export class OkxAdapter implements IExchangeAdapter {
       }
 
       const side = mapPositionSide('okx', pos.posSide);
+      
+      const accumulatedFunding = pos.fundingFee ? new Big(pos.fundingFee || 0).toString() : "0";
+      const realizedPnl = parseFloat(pos.realizedPnl || '0');
+      const accumulatedTradingFee = new Big(realizedPnl).minus(accumulatedFunding).toString();
 
       return {
         id: `${key.id}-okx-${pos.instId}-${side}`,
@@ -137,7 +142,9 @@ export class OkxAdapter implements IExchangeAdapter {
         entryPrice: parseFloat(pos.avgPx || '0'),
         markPrice: markPx,
         unrealizedPnl,
-        realizedPnl: parseFloat(pos.realizedPnl || '0'),
+        realizedPnl,
+        accumulatedFunding,
+        accumulatedTradingFee,
         leverage: parseFloat(pos.lever || '0'),
         marginMode: mapMarginMode('okx', pos.mgnMode),
         margin,

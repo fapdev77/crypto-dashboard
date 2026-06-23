@@ -114,6 +114,8 @@ function generate() {
           breakEvenPrice: entryPrice * 1.001,
           roe,
           instrumentType,
+          accumulatedFunding: randomNum(-10, 10).toString(),
+          accumulatedTradingFee: randomNum(-5, 0).toString(),
           raw: {
             mockData: true,
             instType

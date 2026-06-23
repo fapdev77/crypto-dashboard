@@ -4,10 +4,10 @@
     "connectionId": "mocked-data-bitget-1",
     "exchange": "bitget",
     "label": "Mock BITGET 1",
-    "type": "deposit",
-    "amount": 2.295933091552232,
-    "ccy": "ETH",
-    "timestamp": 1775146363854.4893,
+    "type": "withdrawal",
+    "amount": -0.5205902686060394,
+    "ccy": "BTC",
+    "timestamp": 1780670471793.6428,
     "raw": {
       "mockData": true
     }
@@ -17,10 +17,10 @@
     "connectionId": "mocked-data-bitget-1",
     "exchange": "bitget",
     "label": "Mock BITGET 1",
-    "type": "deposit",
-    "amount": 18938.83315764106,
-    "ccy": "USDC",
-    "timestamp": 1775410134654.2034,
+    "type": "withdrawal",
+    "amount": -6246.773449719223,
+    "ccy": "USDT",
+    "timestamp": 1775976020139.2097,
     "raw": {
       "mockData": true
     }
@@ -31,48 +31,48 @@
     "exchange": "bitget",
     "label": "Mock BITGET 1",
     "type": "deposit",
-    "amount": 1.1223854623231553,
-    "ccy": "ETH",
-    "timestamp": 1775314593803.1184,
+    "amount": 8015.248626987739,
+    "ccy": "USDC",
+    "timestamp": 1779437732035.8486,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-4",
-    "connectionId": "mocked-data-bitget-2",
+    "connectionId": "mocked-data-bitget-1",
     "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "type": "deposit",
-    "amount": 4.07987968268458,
-    "ccy": "BTC",
-    "timestamp": 1775083622583.586,
+    "label": "Mock BITGET 1",
+    "type": "withdrawal",
+    "amount": -4004.756668616048,
+    "ccy": "USDC",
+    "timestamp": 1779527594396.9382,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-5",
-    "connectionId": "mocked-data-bitget-2",
+    "connectionId": "mocked-data-bitget-1",
     "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "type": "withdrawal",
-    "amount": -1.7965602259440465,
-    "ccy": "ETH",
-    "timestamp": 1774908550906.1648,
+    "label": "Mock BITGET 1",
+    "type": "deposit",
+    "amount": 1796.3527127360603,
+    "ccy": "USDT",
+    "timestamp": 1781879648339.2832,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-6",
-    "connectionId": "mocked-data-bitget-2",
+    "connectionId": "mocked-data-bitget-1",
     "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "type": "withdrawal",
-    "amount": -0.983059942564711,
-    "ccy": "ETH",
-    "timestamp": 1778867378794.7136,
+    "label": "Mock BITGET 1",
+    "type": "deposit",
+    "amount": 4.86601462769961,
+    "ccy": "BTC",
+    "timestamp": 1776919090764.437,
     "raw": {
       "mockData": true
     }
@@ -83,9 +83,9 @@
     "exchange": "bitget",
     "label": "Mock BITGET 2",
     "type": "deposit",
-    "amount": 3.6435040746906178,
-    "ccy": "ETH",
-    "timestamp": 1776566753475.045,
+    "amount": 3669.2402180711797,
+    "ccy": "USDT",
+    "timestamp": 1777961582459.32,
     "raw": {
       "mockData": true
     }
@@ -95,10 +95,10 @@
     "connectionId": "mocked-data-bitget-2",
     "exchange": "bitget",
     "label": "Mock BITGET 2",
-    "type": "withdrawal",
-    "amount": -0.7037307547540125,
-    "ccy": "ETH",
-    "timestamp": 1780114744177.581,
+    "type": "deposit",
+    "amount": 3.481417952744206,
+    "ccy": "BTC",
+    "timestamp": 1777626307073.4714,
     "raw": {
       "mockData": true
     }
@@ -109,9 +109,9 @@
     "exchange": "bitget",
     "label": "Mock BITGET 2",
     "type": "withdrawal",
-    "amount": -3488.7197667816686,
-    "ccy": "USDT",
-    "timestamp": 1781082099460.2278,
+    "amount": -1.209039362601911,
+    "ccy": "ETH",
+    "timestamp": 1776863272365.3298,
     "raw": {
       "mockData": true
     }
@@ -122,48 +122,48 @@
     "exchange": "bitget",
     "label": "Mock BITGET 2",
     "type": "deposit",
-    "amount": 23124.51235254606,
-    "ccy": "USDC",
-    "timestamp": 1781491836374.2246,
+    "amount": 0.6066309272095349,
+    "ccy": "ETH",
+    "timestamp": 1780691349115.7605,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-11",
-    "connectionId": "mocked-data-bitget-3",
+    "connectionId": "mocked-data-bitget-2",
     "exchange": "bitget",
-    "label": "Mock BITGET 3",
+    "label": "Mock BITGET 2",
     "type": "withdrawal",
-    "amount": -0.7106382716188884,
+    "amount": -0.24185459646576515,
     "ccy": "BTC",
-    "timestamp": 1779859981831.7842,
+    "timestamp": 1775601590486.928,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-12",
-    "connectionId": "mocked-data-bitget-3",
+    "connectionId": "mocked-data-bitget-2",
     "exchange": "bitget",
-    "label": "Mock BITGET 3",
+    "label": "Mock BITGET 2",
     "type": "withdrawal",
-    "amount": -0.028068597853292084,
+    "amount": -1.6502073696074209,
     "ccy": "ETH",
-    "timestamp": 1774568239998.3591,
+    "timestamp": 1774801239163.262,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-13",
-    "connectionId": "mocked-data-bitget-3",
+    "connectionId": "mocked-data-bitget-2",
     "exchange": "bitget",
-    "label": "Mock BITGET 3",
+    "label": "Mock BITGET 2",
     "type": "withdrawal",
-    "amount": -9717.253340154095,
-    "ccy": "USDT",
-    "timestamp": 1778421372407.182,
+    "amount": -0.592401521710134,
+    "ccy": "BTC",
+    "timestamp": 1775195806185.1238,
     "raw": {
       "mockData": true
     }
@@ -173,10 +173,10 @@
     "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
     "label": "Mock BITGET 3",
-    "type": "deposit",
-    "amount": 0.24557149743798606,
-    "ccy": "ETH",
-    "timestamp": 1781767474887.2993,
+    "type": "withdrawal",
+    "amount": -9350.844358409282,
+    "ccy": "USDC",
+    "timestamp": 1781695694207.8806,
     "raw": {
       "mockData": true
     }
@@ -186,36 +186,36 @@
     "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
     "label": "Mock BITGET 3",
-    "type": "deposit",
-    "amount": 3.287300920978539,
-    "ccy": "ETH",
-    "timestamp": 1781359460549.5754,
+    "type": "withdrawal",
+    "amount": -0.03381527718281628,
+    "ccy": "BTC",
+    "timestamp": 1775626733565.913,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-16",
-    "connectionId": "mocked-data-bitget-4",
+    "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
-    "label": "Mock BITGET 4",
-    "type": "withdrawal",
-    "amount": -3420.957421522019,
-    "ccy": "USDT",
-    "timestamp": 1775913252669.1611,
+    "label": "Mock BITGET 3",
+    "type": "deposit",
+    "amount": 4.457276196958961,
+    "ccy": "ETH",
+    "timestamp": 1778740916358.247,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-17",
-    "connectionId": "mocked-data-bitget-4",
+    "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
-    "label": "Mock BITGET 4",
-    "type": "withdrawal",
-    "amount": -0.638623212418607,
+    "label": "Mock BITGET 3",
+    "type": "deposit",
+    "amount": 3.1452183427488483,
     "ccy": "ETH",
-    "timestamp": 1776311609061.243,
+    "timestamp": 1776041276776.9438,
     "raw": {
       "mockData": true
     }
@@ -225,10 +225,10 @@
     "connectionId": "mocked-data-bitget-4",
     "exchange": "bitget",
     "label": "Mock BITGET 4",
-    "type": "deposit",
-    "amount": 23536.651472562156,
-    "ccy": "USDT",
-    "timestamp": 1780359307965.192,
+    "type": "withdrawal",
+    "amount": -0.7074957673298274,
+    "ccy": "BTC",
+    "timestamp": 1775563392971.3337,
     "raw": {
       "mockData": true
     }
@@ -239,9 +239,9 @@
     "exchange": "bitget",
     "label": "Mock BITGET 4",
     "type": "withdrawal",
-    "amount": -0.1752110378224924,
-    "ccy": "ETH",
-    "timestamp": 1775964196687.4165,
+    "amount": -9162.191227294603,
+    "ccy": "USDT",
+    "timestamp": 1777332141383.091,
     "raw": {
       "mockData": true
     }
@@ -252,35 +252,35 @@
     "exchange": "bitget",
     "label": "Mock BITGET 4",
     "type": "deposit",
-    "amount": 21873.216180802498,
+    "amount": 18313.543965837773,
     "ccy": "USDT",
-    "timestamp": 1774240528596.1206,
+    "timestamp": 1774597597816.2444,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-21",
-    "connectionId": "mocked-data-bitget-4",
-    "exchange": "bitget",
-    "label": "Mock BITGET 4",
-    "type": "withdrawal",
-    "amount": -0.45951478322429007,
-    "ccy": "ETH",
-    "timestamp": 1777353630368.4492,
+    "connectionId": "mocked-data-bybit-1",
+    "exchange": "bybit",
+    "label": "Mock BYBIT 1",
+    "type": "deposit",
+    "amount": 0.5704809380929265,
+    "ccy": "BTC",
+    "timestamp": 1781595542305.547,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-22",
-    "connectionId": "mocked-data-bitget-4",
-    "exchange": "bitget",
-    "label": "Mock BITGET 4",
+    "connectionId": "mocked-data-bybit-1",
+    "exchange": "bybit",
+    "label": "Mock BYBIT 1",
     "type": "deposit",
-    "amount": 7936.380017072663,
-    "ccy": "USDC",
-    "timestamp": 1775023726953.4365,
+    "amount": 2067.969280475044,
+    "ccy": "USDT",
+    "timestamp": 1776813766552.966,
     "raw": {
       "mockData": true
     }
@@ -291,9 +291,9 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "type": "deposit",
-    "amount": 23549.578029540025,
-    "ccy": "USDC",
-    "timestamp": 1779404579139.7947,
+    "amount": 13939.611795651077,
+    "ccy": "USDT",
+    "timestamp": 1779884841225.218,
     "raw": {
       "mockData": true
     }
@@ -304,9 +304,9 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "type": "deposit",
-    "amount": 19640.00731188214,
-    "ccy": "USDC",
-    "timestamp": 1776058624228.1807,
+    "amount": 2.7656543845409463,
+    "ccy": "BTC",
+    "timestamp": 1780343073776.9346,
     "raw": {
       "mockData": true
     }
@@ -317,9 +317,9 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "type": "withdrawal",
-    "amount": -1.9129831141168683,
-    "ccy": "ETH",
-    "timestamp": 1776896035248.697,
+    "amount": -8535.353536145827,
+    "ccy": "USDT",
+    "timestamp": 1781402699699.031,
     "raw": {
       "mockData": true
     }
@@ -330,9 +330,9 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "type": "withdrawal",
-    "amount": -6247.419123537048,
+    "amount": -6173.773037231608,
     "ccy": "USDC",
-    "timestamp": 1779355627881.1348,
+    "timestamp": 1776066646721.1086,
     "raw": {
       "mockData": true
     }
@@ -343,22 +343,22 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "type": "withdrawal",
-    "amount": -1534.6110213878703,
+    "amount": -8823.218286613142,
     "ccy": "USDC",
-    "timestamp": 1775986241546.1948,
+    "timestamp": 1781382184012.066,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-28",
-    "connectionId": "mocked-data-bybit-1",
+    "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
-    "label": "Mock BYBIT 1",
-    "type": "withdrawal",
-    "amount": -5287.337402254817,
-    "ccy": "USDT",
-    "timestamp": 1780909628765.173,
+    "label": "Mock BYBIT 2",
+    "type": "deposit",
+    "amount": 14547.108177864251,
+    "ccy": "USDC",
+    "timestamp": 1776969301542.8105,
     "raw": {
       "mockData": true
     }
@@ -368,10 +368,10 @@
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
-    "type": "deposit",
-    "amount": 0.20018806627845614,
-    "ccy": "BTC",
-    "timestamp": 1779577657737.5457,
+    "type": "withdrawal",
+    "amount": -4807.706671263113,
+    "ccy": "USDT",
+    "timestamp": 1774546027382.6545,
     "raw": {
       "mockData": true
     }
@@ -382,9 +382,9 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
     "type": "withdrawal",
-    "amount": -3515.410009464237,
-    "ccy": "USDC",
-    "timestamp": 1777812996451.659,
+    "amount": -1.022933509854693,
+    "ccy": "BTC",
+    "timestamp": 1780791480437.0186,
     "raw": {
       "mockData": true
     }
@@ -395,9 +395,9 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
     "type": "withdrawal",
-    "amount": -5643.00982042319,
-    "ccy": "USDC",
-    "timestamp": 1778761328951.3127,
+    "amount": -0.4627651038991227,
+    "ccy": "BTC",
+    "timestamp": 1779302331525.1892,
     "raw": {
       "mockData": true
     }
@@ -408,9 +408,9 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
     "type": "withdrawal",
-    "amount": -0.12968694886530954,
+    "amount": -1.3292275367601676,
     "ccy": "BTC",
-    "timestamp": 1781225497103.1326,
+    "timestamp": 1779742874165.0771,
     "raw": {
       "mockData": true
     }
@@ -420,10 +420,10 @@
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
-    "type": "deposit",
-    "amount": 10424.780734663587,
-    "ccy": "USDC",
-    "timestamp": 1775373092365.6902,
+    "type": "withdrawal",
+    "amount": -1.1614987047951177,
+    "ccy": "BTC",
+    "timestamp": 1779236396534.8215,
     "raw": {
       "mockData": true
     }
@@ -433,23 +433,23 @@
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
-    "type": "deposit",
-    "amount": 0.31514202027519933,
+    "type": "withdrawal",
+    "amount": -0.17391126080853636,
     "ccy": "ETH",
-    "timestamp": 1775747452303.0967,
+    "timestamp": 1780068347722.2026,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-35",
-    "connectionId": "mocked-data-bybit-2",
+    "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
-    "label": "Mock BYBIT 2",
+    "label": "Mock BYBIT 3",
     "type": "withdrawal",
-    "amount": -1826.0168419834108,
-    "ccy": "USDT",
-    "timestamp": 1776122376236.2444,
+    "amount": -0.8082175724071086,
+    "ccy": "ETH",
+    "timestamp": 1780867672384.8933,
     "raw": {
       "mockData": true
     }
@@ -460,9 +460,9 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
     "type": "deposit",
-    "amount": 6267.8076183484145,
-    "ccy": "USDT",
-    "timestamp": 1781702104638.5947,
+    "amount": 2.209449623416508,
+    "ccy": "BTC",
+    "timestamp": 1778386574871.4004,
     "raw": {
       "mockData": true
     }
@@ -473,61 +473,61 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
     "type": "deposit",
-    "amount": 2113.346728385157,
-    "ccy": "USDT",
-    "timestamp": 1779844015885.9111,
+    "amount": 9850.888834699666,
+    "ccy": "USDC",
+    "timestamp": 1781422849794.6816,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-38",
-    "connectionId": "mocked-data-bybit-3",
+    "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
-    "label": "Mock BYBIT 3",
+    "label": "Mock BYBIT 4",
     "type": "withdrawal",
-    "amount": -8891.722331764055,
+    "amount": -4494.255528493498,
     "ccy": "USDC",
-    "timestamp": 1780164282519.551,
+    "timestamp": 1778232280549.2688,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-39",
-    "connectionId": "mocked-data-bybit-3",
+    "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
-    "label": "Mock BYBIT 3",
+    "label": "Mock BYBIT 4",
     "type": "withdrawal",
-    "amount": -1865.0096230566571,
+    "amount": -4229.092140635354,
     "ccy": "USDC",
-    "timestamp": 1777581505499.8877,
+    "timestamp": 1778991552833.2913,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-40",
-    "connectionId": "mocked-data-bybit-3",
+    "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
-    "label": "Mock BYBIT 3",
-    "type": "withdrawal",
-    "amount": -3290.983175213896,
+    "label": "Mock BYBIT 4",
+    "type": "deposit",
+    "amount": 2829.554452913598,
     "ccy": "USDC",
-    "timestamp": 1775020836763.0806,
+    "timestamp": 1777316714200.4421,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-41",
-    "connectionId": "mocked-data-bybit-3",
+    "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
-    "label": "Mock BYBIT 3",
+    "label": "Mock BYBIT 4",
     "type": "deposit",
-    "amount": 3.801569847621221,
-    "ccy": "ETH",
-    "timestamp": 1779140521541.5295,
+    "amount": 2.6492711931611685,
+    "ccy": "BTC",
+    "timestamp": 1781700685334.953,
     "raw": {
       "mockData": true
     }
@@ -538,9 +538,9 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 4",
     "type": "deposit",
-    "amount": 14343.490446839669,
-    "ccy": "USDC",
-    "timestamp": 1778457603993.7112,
+    "amount": 2.0729968911934424,
+    "ccy": "ETH",
+    "timestamp": 1779069657863.0415,
     "raw": {
       "mockData": true
     }
@@ -550,10 +550,10 @@
     "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
     "label": "Mock BYBIT 4",
-    "type": "withdrawal",
-    "amount": -9051.622173985055,
-    "ccy": "USDT",
-    "timestamp": 1778172055881.3801,
+    "type": "deposit",
+    "amount": 1.8942114009209814,
+    "ccy": "BTC",
+    "timestamp": 1776044464302.8777,
     "raw": {
       "mockData": true
     }
@@ -564,113 +564,113 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 4",
     "type": "deposit",
-    "amount": 1637.9186998922778,
-    "ccy": "USDT",
-    "timestamp": 1780321113705.829,
+    "amount": 11335.512178015042,
+    "ccy": "USDC",
+    "timestamp": 1776855828977.0747,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-45",
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4",
+    "connectionId": "mocked-data-okx-1",
+    "exchange": "okx",
+    "label": "Mock OKX 1",
     "type": "deposit",
-    "amount": 23820.418723408173,
+    "amount": 17717.224529817744,
     "ccy": "USDC",
-    "timestamp": 1778797205210.5183,
+    "timestamp": 1780949520920.599,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-46",
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4",
+    "connectionId": "mocked-data-okx-1",
+    "exchange": "okx",
+    "label": "Mock OKX 1",
     "type": "withdrawal",
-    "amount": -5922.852110803501,
+    "amount": -1056.9444248676891,
     "ccy": "USDT",
-    "timestamp": 1779930070884.16,
+    "timestamp": 1781202996261.305,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-47",
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4",
-    "type": "withdrawal",
-    "amount": -1.54820142133968,
-    "ccy": "BTC",
-    "timestamp": 1776586426675.6873,
+    "connectionId": "mocked-data-okx-1",
+    "exchange": "okx",
+    "label": "Mock OKX 1",
+    "type": "deposit",
+    "amount": 11217.579582901055,
+    "ccy": "USDC",
+    "timestamp": 1779016229805.2969,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-48",
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4",
+    "connectionId": "mocked-data-okx-1",
+    "exchange": "okx",
+    "label": "Mock OKX 1",
     "type": "deposit",
-    "amount": 2.401177303805977,
-    "ccy": "ETH",
-    "timestamp": 1777772759812.0188,
+    "amount": 4.443242131685888,
+    "ccy": "BTC",
+    "timestamp": 1781590573148.8352,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-49",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
+    "label": "Mock OKX 2",
     "type": "deposit",
-    "amount": 8778.268603551083,
+    "amount": 5104.782503065254,
     "ccy": "USDC",
-    "timestamp": 1779887585486.4531,
+    "timestamp": 1774609891990.3428,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-50",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
+    "label": "Mock OKX 2",
     "type": "withdrawal",
-    "amount": -8451.835651398955,
-    "ccy": "USDC",
-    "timestamp": 1779275947019.6199,
+    "amount": -1.8014684153118832,
+    "ccy": "ETH",
+    "timestamp": 1777997516609.5771,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-51",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
+    "label": "Mock OKX 2",
     "type": "deposit",
-    "amount": 3618.545029297907,
-    "ccy": "USDT",
-    "timestamp": 1779763218291.675,
+    "amount": 3.6969989101507115,
+    "ccy": "BTC",
+    "timestamp": 1778915187958.3462,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-52",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
-    "type": "withdrawal",
-    "amount": -4003.914408770068,
+    "label": "Mock OKX 2",
+    "type": "deposit",
+    "amount": 3161.918460045803,
     "ccy": "USDC",
-    "timestamp": 1780302626164.3184,
+    "timestamp": 1779731530269.5469,
     "raw": {
       "mockData": true
     }
@@ -681,9 +681,9 @@
     "exchange": "okx",
     "label": "Mock OKX 2",
     "type": "deposit",
-    "amount": 4.789417367955047,
+    "amount": 2.803089491154841,
     "ccy": "BTC",
-    "timestamp": 1781494206010.6362,
+    "timestamp": 1781554930315.7222,
     "raw": {
       "mockData": true
     }
@@ -694,9 +694,9 @@
     "exchange": "okx",
     "label": "Mock OKX 2",
     "type": "deposit",
-    "amount": 4.384525745178834,
+    "amount": 4.70495714677522,
     "ccy": "BTC",
-    "timestamp": 1775965856584.9202,
+    "timestamp": 1775379961488.6763,
     "raw": {
       "mockData": true
     }
@@ -707,22 +707,22 @@
     "exchange": "okx",
     "label": "Mock OKX 2",
     "type": "withdrawal",
-    "amount": -1.807082826419504,
-    "ccy": "BTC",
-    "timestamp": 1776636084429.4998,
+    "amount": -9106.071760227422,
+    "ccy": "USDT",
+    "timestamp": 1778444160993.167,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-56",
-    "connectionId": "mocked-data-okx-2",
+    "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
-    "label": "Mock OKX 2",
-    "type": "deposit",
-    "amount": 3.7413655569660866,
+    "label": "Mock OKX 3",
+    "type": "withdrawal",
+    "amount": -1.7273922674171898,
     "ccy": "ETH",
-    "timestamp": 1777272189898.1873,
+    "timestamp": 1777400566511.5688,
     "raw": {
       "mockData": true
     }
@@ -733,9 +733,9 @@
     "exchange": "okx",
     "label": "Mock OKX 3",
     "type": "deposit",
-    "amount": 2.249963036578298,
-    "ccy": "BTC",
-    "timestamp": 1776449887839.5415,
+    "amount": 0.10738406901338654,
+    "ccy": "ETH",
+    "timestamp": 1776215273766.041,
     "raw": {
       "mockData": true
     }
@@ -745,166 +745,49 @@
     "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
     "label": "Mock OKX 3",
-    "type": "withdrawal",
-    "amount": -0.21198186033783972,
-    "ccy": "BTC",
-    "timestamp": 1775662762181.538,
+    "type": "deposit",
+    "amount": 3514.5877790380914,
+    "ccy": "USDT",
+    "timestamp": 1781899796013.0254,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-59",
-    "connectionId": "mocked-data-okx-3",
+    "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
-    "label": "Mock OKX 3",
-    "type": "withdrawal",
-    "amount": -0.48730234674394884,
-    "ccy": "ETH",
-    "timestamp": 1781660077827.1826,
+    "label": "Mock OKX 4",
+    "type": "deposit",
+    "amount": 12454.897903016958,
+    "ccy": "USDT",
+    "timestamp": 1779208167780.149,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-60",
-    "connectionId": "mocked-data-okx-3",
+    "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
-    "label": "Mock OKX 3",
+    "label": "Mock OKX 4",
     "type": "deposit",
-    "amount": 14286.98787300034,
-    "ccy": "USDT",
-    "timestamp": 1776194154219.5364,
+    "amount": 18254.248537372157,
+    "ccy": "USDC",
+    "timestamp": 1779244308100.1926,
     "raw": {
       "mockData": true
     }
   },
   {
     "id": "bill-61",
-    "connectionId": "mocked-data-okx-3",
-    "exchange": "okx",
-    "label": "Mock OKX 3",
-    "type": "withdrawal",
-    "amount": -0.8813936531907391,
-    "ccy": "BTC",
-    "timestamp": 1781255418494.0312,
-    "raw": {
-      "mockData": true
-    }
-  },
-  {
-    "id": "bill-62",
-    "connectionId": "mocked-data-okx-3",
-    "exchange": "okx",
-    "label": "Mock OKX 3",
-    "type": "deposit",
-    "amount": 1.4909916444903566,
-    "ccy": "ETH",
-    "timestamp": 1775334132252.341,
-    "raw": {
-      "mockData": true
-    }
-  },
-  {
-    "id": "bill-63",
-    "connectionId": "mocked-data-okx-3",
-    "exchange": "okx",
-    "label": "Mock OKX 3",
-    "type": "withdrawal",
-    "amount": -2992.9542317184114,
-    "ccy": "USDT",
-    "timestamp": 1775261929166.2217,
-    "raw": {
-      "mockData": true
-    }
-  },
-  {
-    "id": "bill-64",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "type": "withdrawal",
-    "amount": -3987.3480721549704,
-    "ccy": "USDT",
-    "timestamp": 1775733426721.0562,
-    "raw": {
-      "mockData": true
-    }
-  },
-  {
-    "id": "bill-65",
     "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
     "label": "Mock OKX 4",
     "type": "deposit",
-    "amount": 4.690126431001955,
+    "amount": 1.8172253171415225,
     "ccy": "ETH",
-    "timestamp": 1777879215499.3735,
-    "raw": {
-      "mockData": true
-    }
-  },
-  {
-    "id": "bill-66",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "type": "withdrawal",
-    "amount": -1.268459204589255,
-    "ccy": "ETH",
-    "timestamp": 1780300556975.3574,
-    "raw": {
-      "mockData": true
-    }
-  },
-  {
-    "id": "bill-67",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "type": "withdrawal",
-    "amount": -0.34884823736152165,
-    "ccy": "ETH",
-    "timestamp": 1780774572504.393,
-    "raw": {
-      "mockData": true
-    }
-  },
-  {
-    "id": "bill-68",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "type": "deposit",
-    "amount": 2.540446404007728,
-    "ccy": "BTC",
-    "timestamp": 1777745851098.888,
-    "raw": {
-      "mockData": true
-    }
-  },
-  {
-    "id": "bill-69",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "type": "withdrawal",
-    "amount": -9310.50592913514,
-    "ccy": "USDC",
-    "timestamp": 1776653984012.56,
-    "raw": {
-      "mockData": true
-    }
-  },
-  {
-    "id": "bill-70",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "type": "withdrawal",
-    "amount": -1.2598929051809267,
-    "ccy": "BTC",
-    "timestamp": 1774452635680.7573,
+    "timestamp": 1780113260976.2556,
     "raw": {
       "mockData": true
     }
