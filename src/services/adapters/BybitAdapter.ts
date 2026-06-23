@@ -120,12 +120,65 @@ export class BybitAdapter implements IExchangeAdapter {
     const results = await Promise.all(requests);
     const rawList = results.flat();
 
-    return rawList
-      .filter(pos => parseFloat(pos.size || '0') > 0)
-      .map(pos => this.mapPosition(pos, key.id, key.label, accountMarginMode));
+    const mappedPositions = await Promise.all(
+      rawList
+        .filter(pos => parseFloat(pos.size || '0') > 0)
+        .map(pos => this.mapPosition(pos, key, accountMarginMode))
+    );
+
+    return mappedPositions;
   }
 
-  private mapPosition(pos: any, connectionId: string, label: string, accountMarginMode: 'cross' | 'isolated' | 'unknown' = 'unknown'): UnifiedPosition {
+  private async fetchBybitAccumulatedFunding(key: any, symbol: string, startTime: number): Promise<string> {
+    let accumulatedFunding = new Big(0);
+    let currentStart = startTime;
+    const now = Date.now();
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const isInverse = symbol.endsWith('USD') && !symbol.includes('USDT') && !symbol.includes('USDC');
+    const targetCategory = isInverse ? 'inverse' : 'linear';
+
+    try {
+      while (currentStart < now) {
+        let currentEnd = currentStart + SEVEN_DAYS_MS;
+        if (currentEnd > now) currentEnd = now;
+
+        const queryUrl = `limit=50&category=${targetCategory}&symbol=${symbol}&type=SETTLEMENT&startTime=${currentStart}&endTime=${currentEnd}`;
+        const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${queryUrl}`;
+        const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+        
+        let cursor = '';
+        let pages = 0;
+        const MAX_PAGES = 10;
+        do {
+           let thisQuery = queryUrl;
+           if (cursor) thisQuery += `&cursor=${cursor}`;
+           const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
+           const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
+           
+           const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
+           if (res.retCode !== 0) break;
+
+           const list = res.result?.list || [];
+           for (const item of list) {
+              if (item.symbol === symbol && item.type === 'SETTLEMENT') {
+                 if (item.funding) {
+                    accumulatedFunding = accumulatedFunding.plus(new Big(item.funding || '0'));
+                 }
+              }
+           }
+           cursor = res.result?.nextPageCursor || '';
+           pages++;
+        } while (cursor && pages < MAX_PAGES);
+
+        currentStart = currentEnd + 1;
+      }
+    } catch (e) {
+      console.warn(`[Bybit-AccumulatedFunding] Error fetching for ${symbol}:`, e);
+    }
+    return accumulatedFunding.toString();
+  }
+
+  private async mapPosition(pos: any, key: any, accountMarginMode: 'cross' | 'isolated' | 'unknown' = 'unknown'): Promise<UnifiedPosition> {
     const rawSize = parseFloat(pos.size || '0');
     const entryPrice = parseFloat(pos.avgPrice || pos.entryPrice || '0');
     const markPrice = parseFloat(pos.markPrice || '0');
@@ -157,11 +210,18 @@ export class BybitAdapter implements IExchangeAdapter {
       ccy = extractBaseCoin('bybit', pos.symbol);
     }
     
+    // We only fetch funding from transaction log for linear or inverse futures, mostly linear.
+    const createdTime = parseInt(pos.createdTime || Date.now().toString(), 10);
+    const accumulatedFunding = await this.fetchBybitAccumulatedFunding(key, pos.symbol, createdTime);
+    
+    const realizedPnl = parseFloat(pos.curRealisedPnl || '0');
+    const accumulatedTradingFee = new Big(realizedPnl).minus(accumulatedFunding).toString();
+    
     return {
-      id: `${connectionId}-bybit-${pos.symbol}-${side}`,
-      connectionId,
+      id: `${key.id}-bybit-${pos.symbol}-${side}`,
+      connectionId: key.id,
       exchange: 'bybit',
-      label,
+      label: key.label,
       symbol: pos.symbol,
       baseCoin: extractBaseCoin('bybit', pos.symbol),
       quoteCoin: extractQuoteCoin('bybit', pos.symbol),
@@ -171,7 +231,9 @@ export class BybitAdapter implements IExchangeAdapter {
       entryPrice,
       markPrice,
       unrealizedPnl,
-      realizedPnl: parseFloat(pos.curRealisedPnl || '0'),
+      realizedPnl,
+      accumulatedFunding,
+      accumulatedTradingFee,
       leverage: parseFloat(pos.leverage || '0'),
       marginMode: accountMarginMode !== 'unknown' ? accountMarginMode : mapMarginMode('bybit', pos.tradeMode),
       positionMode,

@@ -7,9 +7,9 @@ export function getInverseUsdValues(pos: UnifiedPosition, forceConversionRate?: 
   return {
     unrealizedPnl: (pos.unrealizedPnl || 0) * conversionRate,
     realizedPnl: (pos.realizedPnl || 0) * conversionRate,
-    fundingFee: (pos.fundingFee || 0) * conversionRate,
-    tradingFee: (pos.tradingFee || 0) * conversionRate,
-    positionValue: (pos.positionValue || 0) * conversionRate,
+    fundingFee: (pos.accumulatedFunding ? parseFloat(pos.accumulatedFunding) : 0) * conversionRate,
+    tradingFee: (pos.accumulatedTradingFee ? parseFloat(pos.accumulatedTradingFee) : 0) * conversionRate,
+    positionValue: (pos.notionalUsd || 0) * conversionRate,
     conversionRate,
     isInverse
   };
