@@ -100,7 +100,9 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
         {/* Col 2: Side & Type */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <span className="text-[10px] text-[#8E9299] uppercase">Side & Type</span>
+          <AppTooltip description="Indicates if the order is to buy or sell, and its type (e.g., limit, market, conditional).">
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Side & Type</span>
+          </AppTooltip>
           <span className={`font-mono text-sm ${sideColor}`}>{sideText}</span>
           <div className="flex flex-wrap items-center gap-2 mt-0.5 max-w-[120px]">
             <span className="text-xs text-[#8E9299] font-mono">{order.type}</span>
@@ -119,7 +121,9 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
         {/* Col 3: Quantity */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <span className="text-[10px] text-[#8E9299] uppercase">Order Qty / Value</span>
+          <AppTooltip description="The original quantity and estimated total value of the order.">
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Order Qty / Value</span>
+          </AppTooltip>
           {isInverse ? (
             <>
               <span className="font-mono text-white text-sm">{formatCurrency(valUsd, 'crypto', 2)} USD</span>
@@ -135,7 +139,9 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
         {/* Col 4: Price & Trigger */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <span className="text-[10px] text-[#8E9299] uppercase">Order Price / Trig</span>
+          <AppTooltip description="The limit price of the order, and the trigger price (if conditional).">
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Order Price / Trig</span>
+          </AppTooltip>
           <span className="font-mono text-white text-sm">
              {order.price > 0 ? formatCurrency(order.price, 'crypto', 8) : 'Market'}
           </span>
@@ -150,7 +156,9 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
         {/* Col 5: Filled Progress */}
         <div className="flex flex-col justify-center gap-1.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <span className="text-[10px] text-[#8E9299] uppercase">Filled Progress</span>
+          <AppTooltip description="Shows how much of the order has been executed by the exchange so far.">
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Filled Progress</span>
+          </AppTooltip>
           <div className="flex flex-col gap-1 w-full max-w-[120px]">
              <div className="flex justify-between items-center text-[10px] font-mono text-[#8E9299]">
                {isInverse ? (
@@ -168,7 +176,9 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
         {/* Col 6: Status */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <span className="text-[10px] text-[#8E9299] uppercase">Status</span>
+          <AppTooltip description="Current execution status of the order.">
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Status</span>
+          </AppTooltip>
           <span className={`w-max px-2 py-0.5 text-[10px] rounded font-semibold border ${statusClass}`}>
             {order.status}
           </span>
@@ -176,7 +186,9 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
         {/* Col 7: Time */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <span className="text-[10px] text-[#8E9299] uppercase">Created Time</span>
+          <AppTooltip description="When the order was created on the exchange.">
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Created Time</span>
+          </AppTooltip>
           <span className="font-sans text-white text-sm">{dateStr}</span>
           <span className="font-mono text-[#8E9299] text-xs">{timeStr}</span>
         </div>
@@ -203,17 +215,23 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
                </div>
 
                <div className="flex flex-col gap-1">
-                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Avg Fill Price</span>
+                 <AppTooltip description="The actual average price at which the order was executed.">
+                   <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">Avg Fill Price</span>
+                 </AppTooltip>
                  <span className="text-white font-mono text-sm">{order.avgPrice > 0 ? formatCurrency(order.avgPrice, 'crypto', 8) : '--'}</span>
                </div>
 
                <div className="flex flex-col gap-1">
-                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Total Value</span>
+                 <AppTooltip description="The total executed value of the order in USD.">
+                   <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">Total Value</span>
+                 </AppTooltip>
                  <span className="text-white font-mono text-sm">{valUsd > 0 ? formatCurrency(valUsd, 'usd') + ' USD' : '--'}</span>
                </div>
 
                <div className="flex flex-col gap-1">
-                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Trading Fees</span>
+                 <AppTooltip description="Trading fees charged by the exchange for this order execution.">
+                   <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">Trading Fees</span>
+                 </AppTooltip>
                  <span className="text-white font-mono text-sm">{order.fees ? (isInverse ? `${formatCurrency(order.fees, 'crypto', 8)} ${symbolSuffix}` : `${formatCurrency(order.fees, 'usd')} USD`) : '--'}</span>
                </div>
 
