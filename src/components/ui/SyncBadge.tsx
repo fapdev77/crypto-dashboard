@@ -3,9 +3,10 @@ import { RefreshCw, CheckCircle2 } from 'lucide-react';
 
 interface SyncBadgeProps {
   isSyncing: boolean;
+  syncMessage?: string | null;
 }
 
-export function SyncBadge({ isSyncing }: SyncBadgeProps) {
+export function SyncBadge({ isSyncing, syncMessage }: SyncBadgeProps) {
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
@@ -30,12 +31,12 @@ export function SyncBadge({ isSyncing }: SyncBadgeProps) {
     }`}>
       {isSyncing ? (
         <>
-          <RefreshCw className="w-3 h-3 animate-spin" />
-          <span>Syncing...</span>
+          <RefreshCw className="w-3 h-3 animate-spin shrink-0" />
+          <span className="truncate max-w-[280px]">{syncMessage || 'Syncing...'}</span>
         </>
       ) : (
         <>
-          <CheckCircle2 className="w-3 h-3" />
+          <CheckCircle2 className="w-3 h-3 shrink-0" />
           <span>Up to date</span>
         </>
       )}

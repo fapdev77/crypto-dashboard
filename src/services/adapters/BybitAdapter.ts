@@ -129,6 +129,71 @@ export class BybitAdapter implements IExchangeAdapter {
     return mappedPositions;
   }
 
+  public async fetchBybitRealPnLBySymbol(
+    key: any, 
+    startTime: number, 
+    endTime: number,
+    onProgress?: (msg: string) => void
+  ): Promise<Record<string, string>> {
+    const symbolPnL: Record<string, Big> = {};
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const categories = ['linear', 'inverse'];
+
+    try {
+      for (const category of categories) {
+        let catStart = startTime;
+        while (catStart < endTime) {
+          let catEnd = catStart + SEVEN_DAYS_MS;
+          if (catEnd > endTime) catEnd = endTime;
+
+          if (onProgress) {
+            onProgress(`Aguarde: sincronizando Bybit ${category} (${key.label})...`);
+          }
+
+          const queryUrl = `limit=50&category=${category}&startTime=${catStart}&endTime=${catEnd}`;
+          const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${queryUrl}`;
+          const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+          
+          let cursor = '';
+          let pages = 0;
+          const MAX_PAGES = 20; // 1000 tx per 7-day chunk max
+          do {
+             let thisQuery = queryUrl;
+             if (cursor) thisQuery += `&cursor=${cursor}`;
+             const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
+             const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
+             
+             const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
+             if (res.retCode !== 0) break;
+
+             const list = res.result?.list || [];
+             for (const item of list) {
+                if (!item.symbol) continue;
+                if (['TRADE', 'SETTLEMENT', 'LIQUIDATION', 'DELIVERY'].includes(item.type)) {
+                   if (!symbolPnL[item.symbol]) symbolPnL[item.symbol] = new Big(0);
+                   if (item.cashFlow) {
+                      symbolPnL[item.symbol] = symbolPnL[item.symbol].plus(new Big(item.cashFlow || '0'));
+                   }
+                }
+             }
+             cursor = res.result?.nextPageCursor || '';
+             pages++;
+          } while (cursor && pages < MAX_PAGES);
+
+          catStart = catEnd + 1;
+        }
+      }
+    } catch (e) {
+      console.warn(`[Bybit-RealPnL] Error fetching real PnL for ${key.label}:`, e);
+    }
+    
+    const result: Record<string, string> = {};
+    for (const [sym, val] of Object.entries(symbolPnL)) {
+      result[sym] = val.toString();
+    }
+    return result;
+  }
+
   private async fetchBybitAccumulatedFunding(key: any, symbol: string, startTime: number): Promise<string> {
     let accumulatedFunding = new Big(0);
     let currentStart = startTime;

@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker, AlignLeft, ClipboardList } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -18,6 +18,19 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   const { positions } = useDashboardStore();
   const useMockData = useSettingsStore(state => state.useMockData);
   const openOrdersCount = useOrdersStore(state => Object.keys(state.openOrders).length);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const collapsed = isMobile ? false : isCollapsed;
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
@@ -61,9 +74,9 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   ];
 
   return (
-    <aside className={`fixed md:static inset-y-0 left-0 z-40 ${isCollapsed ? 'w-20' : 'w-64'} bg-[#151619] border-r border-[#2a2b30] flex flex-col h-full transform transition-all duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className={`p-4 md:p-6 border-b border-[#2a2b30] flex items-start ${isCollapsed ? 'justify-center' : 'justify-between'} relative`}>
-        {!isCollapsed ? (
+    <aside className={`fixed md:static inset-y-0 left-0 z-40 ${collapsed ? 'w-20' : 'w-64'} bg-[#151619] border-r border-[#2a2b30] flex flex-col h-full transform transition-all duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`p-4 md:p-6 border-b border-[#2a2b30] flex items-start ${collapsed ? 'justify-center' : 'justify-between'} relative`}>
+        {!collapsed ? (
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-white flex flex-col gap-1">
               <div className="flex items-center gap-3">
@@ -96,7 +109,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         </button>
       </div>
 
-      <nav className={`flex-1 p-4 space-y-2 ${isCollapsed ? 'px-3 overflow-visible' : 'overflow-y-auto'} hide-scrollbar`}>
+      <nav className={`flex-1 p-4 space-y-2 ${collapsed ? 'px-3 overflow-visible' : 'overflow-y-auto'} hide-scrollbar`}>
         {navItems.map((item) => (
           <div key={item.id} className="flex flex-col gap-1 relative group">
             <button
@@ -110,13 +123,13 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                 }
               }}
               title={item.label}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} rounded-lg text-sm font-medium transition-colors ${activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab))
+              className={`w-full flex items-center ${collapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} rounded-lg text-sm font-medium transition-colors ${activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab))
                   ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
                   : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
                 }`}
             >
               <item.icon className={`w-5 h-5 shrink-0 ${(activeTab === item.id || (item.subItems && item.subItems.some(sub => sub.id === activeTab))) ? 'text-[#2F6BFF]' : 'text-gray-400'}`} />
-              {!isCollapsed && (
+              {!collapsed && (
                 <>
                   <span className="flex-1 text-left">{item.label}</span>
                   {'badge' in item && item.badge !== undefined && (item.badge as number) > 0 && (
@@ -130,7 +143,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
             </button>
 
             {/* Submenu inline when expanded */}
-            {!isCollapsed && item.subItems && item.subItems.some(sub => sub.id === activeTab || item.subItems?.some(s => s.id === activeTab)) && (
+            {!collapsed && item.subItems && item.subItems.some(sub => sub.id === activeTab || item.subItems?.some(s => s.id === activeTab)) && (
               <div className="pl-11 pr-2 flex flex-col gap-1 mt-1 transition-all">
                 {item.subItems.map((sub) => (
                   <button
@@ -154,7 +167,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
             )}
 
             {/* Submenu flyout when collapsed */}
-            {isCollapsed && item.subItems && (
+            {collapsed && item.subItems && (
               <div className="absolute left-full top-0 ml-2 w-48 bg-[#151619] border border-[#2a2b30] rounded-lg shadow-xl hidden group-hover:flex flex-col py-2 z-50 transition-all duration-200">
                 <div className="px-3 py-1 text-[11px] font-bold text-[#8E9299] uppercase tracking-wider border-b border-[#2a2b30]/65 mb-1.5">
                   {item.label}
@@ -183,7 +196,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         ))}
       </nav>
 
-      <div className={`p-4 border-t border-[#2a2b30] ${isCollapsed ? 'px-3' : ''}`}>
+      <div className={`p-4 border-t border-[#2a2b30] ${collapsed ? 'px-3' : ''}`}>
         {[
           { id: 'api-keys', label: 'API Keys', icon: KeyRound },
           { id: 'logs', label: 'Logs', icon: AlignLeft },
@@ -194,13 +207,13 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
             key={item.id}
             onClick={() => handleTabClick(item.id)}
             title={item.label}
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} text-sm font-medium rounded-lg transition-colors mt-1 ${activeTab === item.id
+            className={`w-full flex items-center ${collapsed ? 'justify-center py-4' : 'gap-3 px-4 py-3'} text-sm font-medium rounded-lg transition-colors mt-1 ${activeTab === item.id
                 ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
                 : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
               }`}
           >
             <item.icon className="w-5 h-5 shrink-0" />
-            {!isCollapsed && <span>{item.label}</span>}
+            {!collapsed && <span>{item.label}</span>}
           </button>
         ))}
       </div>
