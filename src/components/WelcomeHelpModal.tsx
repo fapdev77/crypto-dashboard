@@ -69,48 +69,54 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       {/* Modal Content */}
       <div className="relative bg-[#151619] border border-[#2a2b30] rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-250 max-h-[90vh] overflow-hidden">
 
-        {/* Top Right Actions */}
-        <div className="absolute right-4 top-4 flex items-center gap-3">
-          {/* Segmented Language Selector */}
-          <div className="flex items-center bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-0.5 shadow-inner">
+        {/* Header Area */}
+        <div className="flex flex-col gap-4 mb-6">
+          {/* Top Row: Language Selector and Close Button */}
+          <div className="flex items-center justify-between">
+            {/* Premium Language Selector with Globe Icon */}
+            <div className="flex items-center gap-2 bg-[#1c1d21] border border-[#2d2f34] rounded-xl p-1 pl-2.5 pr-1 shadow-sm">
+              <Globe className="w-3.5 h-3.5 text-[#2F6BFF] animate-pulse" style={{ animationDuration: '3s' }} />
+              <div className="flex items-center bg-[#111215] border border-[#222327] rounded-lg p-0.5 shadow-inner">
+                <button
+                  onClick={() => setLang('pt')}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'pt'
+                    ? 'bg-[#2F6BFF] text-white shadow-sm'
+                    : 'text-[#8E9299] hover:text-white'
+                    }`}
+                >
+                  PT-BR
+                </button>
+                <button
+                  onClick={() => setLang('en')}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'en'
+                    ? 'bg-[#2F6BFF] text-white shadow-sm'
+                    : 'text-[#8E9299] hover:text-white'
+                    }`}
+                >
+                  EN-US
+                </button>
+              </div>
+            </div>
+
+            {/* Close Button */}
             <button
-              onClick={() => setLang('pt')}
-              className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'pt'
-                ? 'bg-[#2F6BFF] text-white shadow-md'
-                : 'text-[#8E9299] hover:text-white'
-                }`}
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50 transition-colors"
+              aria-label="Close modal"
             >
-              PT-BR
-            </button>
-            <button
-              onClick={() => setLang('en')}
-              className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'en'
-                ? 'bg-[#2F6BFF] text-white shadow-md'
-                : 'text-[#8E9299] hover:text-white'
-                }`}
-            >
-              EN-US
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50 transition-colors"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 flex items-center justify-center">
-            <HelpCircle className="w-6 h-6 text-[#2F6BFF]" />
-          </div>
-          <div className="pr-40">
-            <h3 className="text-lg font-semibold text-white truncate">{t.title}</h3>
-            <p className="text-xs text-[#8E9299] mt-0.5">{t.subtitle}</p>
+          {/* Main Title Row with Icon */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 flex items-center justify-center shrink-0">
+              <HelpCircle className="w-6 h-6 text-[#2F6BFF]" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white">{t.title}</h3>
+              <p className="text-xs text-[#8E9299] mt-0.5">{t.subtitle}</p>
+            </div>
           </div>
         </div>
 

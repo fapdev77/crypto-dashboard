@@ -15,6 +15,7 @@ export function usePositionHistory(period: PositionHistoryPeriod) {
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -80,17 +81,19 @@ export function usePositionHistory(period: PositionHistoryPeriod) {
       }
 
       // Step 2: Background sync
-      if (isMounted) setIsSyncing(true);
+      if (isMounted) {
+        setIsSyncing(true);
+        setSyncMessage('Iniciando sincronização...');
+      }
       
       try {
         const service = new PositionHistoryService();
         let allHistory: UnifiedHistoryPosition[] = [];
         
-        const promises = keys.map(apiKey => service.fetchWithCache(apiKey));
-        const results = await Promise.all(promises);
-        
-        for (const result of results) {
-          allHistory = [...allHistory, ...result];
+        for (const key of keys) {
+           if (isMounted) setSyncMessage(`Aguarde: sincronizando ${key.exchange} (${key.label})...`);
+           const result = await service.fetchWithCache(key);
+           allHistory = [...allHistory, ...result];
         }
 
         if (start !== undefined && end !== undefined) {
@@ -102,12 +105,14 @@ export function usePositionHistory(period: PositionHistoryPeriod) {
           setPositions(allHistory);
           setIsLoading(false);
           setIsSyncing(false);
+          setSyncMessage(null);
         }
       } catch (err) {
         console.error("Error background syncing position history", err);
         if (isMounted) {
           setIsLoading(false);
           setIsSyncing(false);
+          setSyncMessage(null);
         }
       }
     };
@@ -119,5 +124,5 @@ export function usePositionHistory(period: PositionHistoryPeriod) {
     };
   }, [keys, period, useMockData, historyCacheVersion]);
 
-  return { positions, setPositions, isLoading, isSyncing };
+  return { positions, setPositions, isLoading, isSyncing, syncMessage };
 }
