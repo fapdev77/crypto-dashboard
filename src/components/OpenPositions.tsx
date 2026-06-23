@@ -331,6 +331,20 @@ export function OpenPositions() {
                 )
               };
 
+              const unrealizedPnlTooltipProps = {
+                side: "top" as const,
+                description: (
+                  <div className="flex flex-col gap-1 w-full max-w-[280px]">
+                    <span className="text-[13px] font-medium text-white tracking-wide font-sans">
+                      Unrealized PnL
+                    </span>
+                    <p className="text-[12px] text-[#8E9299] leading-snug">
+                      Unrealized PnL calculation.
+                    </p>
+                  </div>
+                )
+              };
+
               const liqPriceTooltipProps = {
                 side: "top" as const,
                 description: (
@@ -478,7 +492,9 @@ export function OpenPositions() {
 
                     {/* Unrealized PnL (ROE) */}
                     <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                      <span className="text-[10px] text-[#8E9299] uppercase">Unrealized PnL (ROE)</span>
+                      <AppTooltip {...unrealizedPnlTooltipProps}>
+                        <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Unrealized PnL (ROE)</span>
+                      </AppTooltip>
                       <span className={`font-mono text-sm ${uplColor}`}>
                         {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                       </span>
@@ -653,7 +669,9 @@ export function OpenPositions() {
 
                         {/* Linha 2 */}
                         <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Unrealized PnL</span>
+                          <AppTooltip {...unrealizedPnlTooltipProps}>
+                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">Unrealized PnL</span>
+                          </AppTooltip>
                           <span className={`font-mono ${uplColor}`}>
                             {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{posCcy}</span>
                             {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
