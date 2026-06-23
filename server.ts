@@ -10,7 +10,7 @@ async function startServer() {
 
   // Local Proxy para WebSockets da Bitget e outras exchanges que possam bloquear navegadores
   // Como navegadores não podem alterar o Origin header de um WebSocket, usamos esse proxy intermediário.
-  app.use('/ws-proxy/bitget', createProxyMiddleware({ 
+  const wsProxy = createProxyMiddleware({ 
     target: 'wss://ws.bitget.com', 
     changeOrigin: true, 
     ws: true,
@@ -23,7 +23,9 @@ async function startServer() {
         proxyReq.removeHeader('origin');
       }
     }
-  }) as any);
+  }) as any;
+  
+  app.use('/ws-proxy/bitget', wsProxy);
 
   // We need express.text or raw to parse arbitrary body formats, but json is also good
   // ONLY for non-websocket proxy routes
@@ -110,8 +112,14 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
+  });
+
+  server.on('upgrade', (req, socket, head) => {
+    if (req.url && req.url.startsWith('/ws-proxy/bitget')) {
+      wsProxy.upgrade(req, socket, head);
+    }
   });
 }
 
