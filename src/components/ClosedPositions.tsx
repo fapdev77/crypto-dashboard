@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
-import { Loader2, History } from 'lucide-react';
+import { Loader2, History, Download, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
@@ -15,6 +15,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { SyncBadge } from './ui/SyncBadge';
 import { getHistoryInverseUsdValues } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
+import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../utils/exportUtils';
 
 export function ClosedPositions() {
   const keys = useApiKeysStore(state => state.keys);
@@ -28,6 +29,7 @@ export function ClosedPositions() {
 
   const { positions: closedPositions, isLoading, isSyncing } = usePositionHistory(period);
   const [error, setError] = useState<string | null>(null);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
@@ -47,6 +49,71 @@ export function ClosedPositions() {
 
     return filtered;
   }, [closedPositions, filterText, exchangeFilter]);
+
+  const handleExport = (formatType: 'csv' | 'excel' | 'pdf') => {
+    setExportMenuOpen(false);
+    
+    const headers = [
+      'Symbol',
+      'Exchange',
+      'Connection Name',
+      'Side',
+      'Leverage',
+      'Size',
+      'Entry Price',
+      'Exit Price',
+      'Realized PnL',
+      'Currency',
+      'Funding Fee',
+      'Trading Fee',
+      'Open Time',
+      'Closed Time'
+    ];
+    
+    const rows = filteredClosedPositions.map(pos => {
+      const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
+      const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
+      const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
+      const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
+      
+      const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
+      
+      const openTimeStr = pos.createdTime && !isNaN(pos.createdTime) 
+        ? format(new Date(pos.createdTime), 'yyyy-MM-dd HH:mm:ss') 
+        : '--';
+      const closeTimeStr = pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) 
+        ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm:ss') 
+        : '--';
+
+      return [
+        pos.symbol,
+        pos.exchange.toUpperCase(),
+        pos.label,
+        sideLabel,
+        `${leverage}x`,
+        pos.size || 0,
+        pos.entryPrice || 0,
+        pos.closePrice || 0,
+        pos.realizedPnl || 0,
+        pnlCurrency,
+        pos.fundingFee || 0,
+        pos.tradingFee || 0,
+        openTimeStr,
+        closeTimeStr
+      ];
+    });
+
+    const config: ExportConfig = {
+      title: 'Positions History Report',
+      filename: `Positions_History_${Date.now()}`,
+      headers,
+      rows
+    };
+
+    if (formatType === 'csv') exportToCSV(config);
+    if (formatType === 'excel') exportToExcel(config);
+    if (formatType === 'pdf') exportToPDF(config);
+  };
 
   const closedStats = useMemo(() => {
     if (!filteredClosedPositions.length) return null;
@@ -127,6 +194,22 @@ export function ClosedPositions() {
           </div>
           <SyncBadge isSyncing={isSyncing} />
         </h2>
+        <div className="relative">
+          <button
+            onClick={() => setExportMenuOpen(!exportMenuOpen)}
+            className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Export</span> <ChevronDown className="w-3 h-3" />
+          </button>
+          {exportMenuOpen && (
+            <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export CSV</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export Excel</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export PDF</button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filters Header */}
@@ -246,7 +329,7 @@ export function ClosedPositions() {
 
       {filteredClosedPositions.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-          <p className="text-[#8E9299]">Nenhum histórico encontrado para as APIs ativas no período.</p>
+          <p className="text-[#8E9299]">No history found for active APIs in the selected period.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
