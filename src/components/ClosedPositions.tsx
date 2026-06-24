@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
-import { Loader2 } from 'lucide-react';
+import { Loader2, History } from 'lucide-react';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
@@ -119,12 +119,18 @@ export function ClosedPositions() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
+        <h2 className="text-xl font-bold tracking-tight flex items-center gap-3 text-white">
+          <div className="flex items-center gap-2">
+            <History className="w-5 h-5 text-[#2F6BFF]" />
+            Positions History
+          </div>
+          <SyncBadge isSyncing={isSyncing} />
+        </h2>
+      </div>
 
       {/* Filters Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <div className="flex items-center">
-          <SyncBadge isSyncing={isSyncing} />
-        </div>
         <div className="flex flex-wrap items-center justify-end gap-2 flex-1">
           <FilterBar
             exchange={{

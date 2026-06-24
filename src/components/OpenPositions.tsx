@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import Big from 'big.js';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Activity } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
@@ -91,6 +91,13 @@ export function OpenPositions() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
+         <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+           <Activity className="w-5 h-5 text-[#2F6BFF]" />
+           Open Positions
+         </h2>
+      </div>
+
       {/* Header Controls */}
       <FilterBar
         exchange={{
@@ -107,7 +114,7 @@ export function OpenPositions() {
 
       {activePositions.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-          <p className="text-[#8E9299]">Nenhuma posição aberta encontrada.</p>
+          <p className="text-[#8E9299]">No open positions found.</p>
         </div>
       ) : (
         <>

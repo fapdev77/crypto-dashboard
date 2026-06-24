@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { usePositionHistory, PositionHistoryPeriod } from '../../hooks/usePositionHistory';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../utils/exportUtils';
-import { Download, ChevronDown } from 'lucide-react';
+import { Download, ChevronDown, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
@@ -51,7 +51,10 @@ export function ReportsDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-        <h2 className="text-xl font-bold tracking-tight">Reports & Exports</h2>
+        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+          <FileText className="w-5 h-5 text-[#2F6BFF]" />
+          Reports & Exports
+        </h2>
         <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}

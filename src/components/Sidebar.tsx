@@ -50,14 +50,14 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     {
       id: 'positions', label: 'Positions', icon: Activity, subItems: [
-        { id: 'positions-open', label: 'Abertas', badge: openCount },
-        { id: 'positions-history', label: 'Histórico' }
+        { id: 'positions-open', label: 'Open Positions', badge: openCount },
+        { id: 'positions-history', label: 'Positions History' }
       ]
     },
     {
-      id: 'orders', label: 'Ordens', icon: ClipboardList, subItems: [
+      id: 'orders', label: 'Orders', icon: ClipboardList, subItems: [
         { id: 'orders-open', label: 'Open Orders', badge: openOrdersCount },
-        { id: 'orders-history', label: 'Order History' }
+        { id: 'orders-history', label: 'Orders History' }
       ]
     },
     {
@@ -68,7 +68,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     { id: 'reports', label: 'Reports', icon: FileText },
     {
       id: 'testes-mvp', label: 'Tests Playground', icon: Beaker, subItems: [
-        { id: 'mvp-asset-metadata', label: 'Informações de Ativos' }
+        { id: 'mvp-asset-metadata', label: 'Asset Metadata' }
       ]
     },
   ];
@@ -82,8 +82,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
               <div className="flex items-center gap-3">
                 <img src={logo1} alt="Logo" className="w-8 h-8 object-contain shrink-0" />
                 <span className="text-[15px] font-bold leading-tight">
-                  Gerenciador de Portfólio
-                  <span className="block text-[11px] text-[#8E9299] font-normal tracking-wide mt-0.5">Crypto Mult-Exchange</span>
+                  Portfolio Manager
+                  <span className="block text-[11px] text-[#8E9299] font-normal tracking-wide mt-0.5">Crypto Multi-Exchange</span>
                 </span>
               </div>
             </h1>
@@ -200,7 +200,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         {[
           { id: 'api-keys', label: 'API Keys', icon: KeyRound },
           { id: 'logs', label: 'Logs', icon: AlignLeft },
-          { id: 'api-tester', label: 'Execução de Testes', icon: Terminal },
+          { id: 'api-tester', label: 'API Tester', icon: Terminal },
           { id: 'settings', label: 'Settings', icon: Settings },
         ].map((item) => (
           <button

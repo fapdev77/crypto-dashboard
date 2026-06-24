@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Big from 'big.js';
 import { usePnLBySymbol } from '../../hooks/usePnLBySymbol';
-import { Download, ArrowUpDown, ChevronDown, RefreshCw } from 'lucide-react';
+import { Download, ArrowUpDown, ChevronDown, RefreshCw, BarChart2 } from 'lucide-react';
 import { SymbolPnLRecord } from '../../types';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
@@ -132,8 +132,9 @@ export function PnLBySymbol() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-            PnL by symbol
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+            <BarChart2 className="w-5 h-5 text-[#2F6BFF]" />
+            PnL by Symbol
           </h2>
           <SyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
         </div>

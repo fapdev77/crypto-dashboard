@@ -49,11 +49,12 @@ export default function App() {
   if (activeTab === 'logs') activeTabName = 'Live Connection Logs';
   if (activeTab === 'settings') activeTabName = 'Settings';
   if (activeTab === 'testes-mvp') activeTabName = 'Tests Playground';
-  if (activeTab === 'api-tester') activeTabName = 'Execução de Testes';
-  if (activeTab === 'analytics-pnl-symbol') activeTabName = 'PnL by Symbol';
-  if (activeTab === 'mvp-asset-metadata') activeTabName = 'Informações de Ativos';
-  if (activeTab === 'orders-open') activeTabName = 'Open Orders';
-  if (activeTab === 'orders-history') activeTabName = 'Order History';
+  if (activeTab === 'api-tester') activeTabName = 'API Tester';
+  if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
+  if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
+  if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
+  if (activeTab === 'reports') activeTabName = 'Reports';
+  if (activeTab === 'mvp-asset-metadata') activeTabName = 'Asset Metadata Playground';
 
   return (
     <PrivacyProvider>
