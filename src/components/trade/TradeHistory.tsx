@@ -311,81 +311,103 @@ export function TradeHistory() {
             // Price calculation
             const filledPrice = trade.avgPrice > 0 ? trade.avgPrice : trade.price || 0;
 
-            // Filled Value and Qty calculations
+            // Filled Value and Qty calculations using big.js and formatCurrency
             let filledValueStr = '';
             let filledQtyStr = '';
             if (isInverse) {
-              const coinVal = filledPrice > 0 ? trade.filledQty / filledPrice : 0;
-              filledValueStr = `${coinVal.toFixed(8)} ${symbolSuffix}`;
-              filledQtyStr = `${trade.filledQty} USD`;
+              const coinVal = filledPrice > 0 ? Number(new Big(trade.filledQty).div(filledPrice)) : 0;
+              filledValueStr = `${formatCurrency(coinVal, 'crypto', 8)} ${symbolSuffix}`;
+              filledQtyStr = `${formatCurrency(trade.filledQty, 'crypto', 2)} USD`;
             } else {
-              const usdVal = trade.filledQty * filledPrice;
+              const usdVal = Number(new Big(trade.filledQty).times(filledPrice));
               filledValueStr = `${formatCurrency(usdVal, 'usd')} USD`;
-              filledQtyStr = `${trade.filledQty} ${symbolSuffix}`;
+              filledQtyStr = `${formatCurrency(trade.filledQty, 'crypto')} ${symbolSuffix}`;
             }
 
             const feeStr = trade.fees 
-              ? (isInverse ? `${Math.abs(trade.fees).toFixed(8)} ${symbolSuffix}` : `${Math.abs(trade.fees).toFixed(6)} USDT`)
+              ? (isInverse ? `${formatCurrency(Math.abs(trade.fees), 'crypto', 8)} ${symbolSuffix}` : `${formatCurrency(Math.abs(trade.fees), 'crypto', 6)} USDT`)
               : '--';
 
-            const timeStr = format(new Date(trade.updatedTime || trade.createdTime), 'yyyy-MM-dd HH:mm:ss');
+            const d = new Date(trade.updatedTime || trade.createdTime);
+            const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
             return (
               <div 
                 key={trade.id} 
-                className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-all hover:border-[#3a3b40] overflow-hidden"
+                className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40] overflow-hidden"
                 onClick={() => setExpandedId(isExpanded ? null : trade.id)}
               >
                 {/* Compact Row */}
-                <div className="p-4 grid grid-cols-2 lg:grid-cols-6 gap-4 items-center">
-                  {/* Market & Exchange */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center relative shrink-0">
-                      <CoinIcon symbol={trade.symbol} size={28} className="w-7 h-7" category={globalCategory} />
-                      <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
-                        <ExchangeIcon exchange={trade.exchange} className="w-3.5 h-3.5" />
+                <div className="p-4 grid grid-cols-2 lg:grid-cols-7 gap-4">
+                  {/* Col 1: Asset Info & Badges */}
+                  <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] lg:border-none pb-3 lg:pb-0 col-span-2 lg:col-span-1">
+                    <div className="flex flex-col items-center gap-1.5 shrink-0">
+                      <div className="flex items-center relative">
+                        <CoinIcon symbol={trade.symbol} size={28} className="w-7 h-7" category={globalCategory} />
+                        <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
+                          <ExchangeIcon exchange={trade.exchange} className="w-3.5 h-3.5" />
+                        </div>
                       </div>
+                      <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                        {instrumentLabel}
+                      </span>
+                      <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                        {globalCategory}
+                      </span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-white text-sm">{trade.symbol}</span>
-                      <span className="text-[10px] text-[#8E9299] font-mono capitalize">{trade.exchange}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-white text-sm">{trade.symbol}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Instrument & Type */}
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-[#8E9299] uppercase tracking-wider">Instrument</span>
-                    <span className="text-white text-xs font-semibold mt-0.5">{instrumentLabel}</span>
-                    <span className="text-[10px] text-gray-500 font-mono mt-0.5">{trade.type}</span>
-                  </div>
-
-                  {/* Direction badge */}
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-1">Direction</span>
-                    <span className={`px-2 py-0.5 text-[10px] rounded font-semibold border w-max ${directionColorClass}`}>
+                  {/* Col 2: Direction & Type */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                    <AppTooltip description="Indicates trade direction and order type.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Direction & Type</span>
+                    </AppTooltip>
+                    <span className={`font-mono text-sm ${isBuy ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                       {directionLabel}
                     </span>
+                    <span className="text-xs text-[#8E9299] font-mono mt-0.5">{trade.type}</span>
                   </div>
 
-                  {/* Filled Price */}
-                  <div className="flex flex-col">
-                    <span className="text-[10px] text-[#8E9299] uppercase tracking-wider">Filled Price</span>
-                    <span className="text-white font-mono text-sm mt-0.5">
+                  {/* Col 3: Filled Qty / Value */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                    <AppTooltip description="Quantity filled and total USD value of this trade.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Filled Qty / Value</span>
+                    </AppTooltip>
+                    <span className="font-mono text-white text-sm">{filledQtyStr}</span>
+                    <span className="text-xs text-[#8E9299] font-mono">≈ {filledValueStr}</span>
+                  </div>
+
+                  {/* Col 4: Filled Price */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                    <AppTooltip description="The price at which the trade was executed.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Filled Price</span>
+                    </AppTooltip>
+                    <span className="font-mono text-white text-sm">
                       {filledPrice > 0 ? formatCurrency(filledPrice, 'crypto', 8) : '--'}
                     </span>
                   </div>
 
-                  {/* Filled Quantity & Value */}
-                  <div className="flex flex-col col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase tracking-wider">Filled Qty / Value</span>
-                    <span className="text-white font-mono text-sm mt-0.5">{filledQtyStr}</span>
-                    <span className="text-xs text-[#8E9299] font-mono mt-0.5">≈ {filledValueStr}</span>
+                  {/* Col 5: Trading Fees */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                    <AppTooltip description="Trading fees charged for this trade.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Trading Fees</span>
+                    </AppTooltip>
+                    <span className="font-mono text-sm text-[#FF4444]">{feeStr !== '--' ? `-${feeStr}` : feeStr}</span>
                   </div>
 
-                  {/* Transaction Time */}
-                  <div className="flex flex-col lg:items-end">
-                    <span className="text-[10px] text-[#8E9299] uppercase tracking-wider">Transaction Time</span>
-                    <span className="text-white text-xs font-mono mt-0.5">{timeStr}</span>
+                  {/* Col 6: Transaction Time */}
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-2">
+                    <AppTooltip description="The timestamp when this transaction took place.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Transaction Time</span>
+                    </AppTooltip>
+                    <span className="text-white text-sm font-sans mt-0.5">{dateStr}</span>
+                    <span className="text-xs text-[#8E9299] font-mono">{timeStr}</span>
                   </div>
                 </div>
 
@@ -400,7 +422,7 @@ export function TradeHistory() {
                         <Clock className="w-4 h-4 text-[#2F6BFF]" />
                         <div className="flex flex-col">
                           <span className="text-[#8E9299] font-semibold">Transaction Time</span>
-                          <span className="text-white font-mono mt-0.5">{timeStr}</span>
+                          <span className="text-white font-mono mt-0.5">{dateStr} {timeStr}</span>
                         </div>
                       </div>
 
