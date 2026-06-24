@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker, AlignLeft, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker, AlignLeft, ClipboardList, ArrowLeftRight } from 'lucide-react';
 import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
@@ -58,6 +58,11 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       id: 'orders', label: 'Orders', icon: ClipboardList, subItems: [
         { id: 'orders-open', label: 'Open Orders', badge: openOrdersCount },
         { id: 'orders-history', label: 'Orders History' }
+      ]
+    },
+    {
+      id: 'trade', label: 'Trade', icon: ArrowLeftRight, subItems: [
+        { id: 'trade-history', label: 'Trade History' }
       ]
     },
     {
