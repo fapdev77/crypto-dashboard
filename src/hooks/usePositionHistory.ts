@@ -8,7 +8,7 @@ import { getCachedHistory } from '../services/historyCache';
 
 export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d';
 
-export function usePositionHistory(period: PositionHistoryPeriod) {
+export function usePositionHistory(period: PositionHistoryPeriod, exchange?: string, searchTerm?: string) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
@@ -17,13 +17,34 @@ export function usePositionHistory(period: PositionHistoryPeriod) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
+  // Apply filters to any position list
+  const applyFilters = (positionsList: UnifiedHistoryPosition[]) => {
+    let filtered = [...positionsList];
+    
+    // Filter by exchange
+    if (exchange && exchange !== 'All') {
+      filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchange.toLowerCase());
+    }
+    
+    // Filter by search term
+    if (searchTerm && searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(pos => 
+        pos.symbol.toLowerCase().includes(term) || 
+        pos.exchange.toLowerCase().includes(term)
+      );
+    }
+    
+    return filtered;
+  };
+
   useEffect(() => {
     let isMounted = true;
     
     const execute = async () => {
       if (useMockData) {
         const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime);
-        setPositions(sortedHistory as UnifiedHistoryPosition[]);
+        setPositions(applyFilters(sortedHistory as UnifiedHistoryPosition[]));
         return;
       }
 
@@ -68,8 +89,9 @@ export function usePositionHistory(period: PositionHistoryPeriod) {
         cachedTotal.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
         
         if (isMounted) {
-          if (cachedTotal.length > 0) {
-            setPositions(cachedTotal);
+          const filteredCached = applyFilters(cachedTotal);
+          if (filteredCached.length > 0) {
+            setPositions(filteredCached);
             setIsLoading(false); // fast render
           } else {
             setIsLoading(true); // initial load
@@ -102,7 +124,7 @@ export function usePositionHistory(period: PositionHistoryPeriod) {
         allHistory.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
 
         if (isMounted) {
-          setPositions(allHistory);
+          setPositions(applyFilters(allHistory));
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
@@ -122,7 +144,7 @@ export function usePositionHistory(period: PositionHistoryPeriod) {
     return () => {
       isMounted = false;
     };
-  }, [keys, period, useMockData, historyCacheVersion]);
+  }, [keys, period, useMockData, historyCacheVersion, exchange, searchTerm]);
 
   return { positions, setPositions, isLoading, isSyncing, syncMessage };
 }

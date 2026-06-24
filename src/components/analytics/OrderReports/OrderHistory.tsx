@@ -201,10 +201,10 @@ export function OrderHistory() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-        <h2 className="text-xl font-bold tracking-tight flex items-center gap-3">
+        <h2 className="text-xl font-bold tracking-tight flex items-center gap-3 text-white">
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-[#2F6BFF]" />
-            Order History
+            Orders History
           </div>
           <SyncBadge isSyncing={isSyncing} />
         </h2>

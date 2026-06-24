@@ -25,6 +25,7 @@ import { PrivacyToggleButton } from './components/PrivacyToggleButton';
 import { TooltipProvider } from './components/ui/Tooltip';
 import { OpenOrders } from './components/analytics/OrderReports/OpenOrders';
 import { OrderHistory } from './components/analytics/OrderReports/OrderHistory';
+import { TradeHistory } from './components/trade/TradeHistory';
 import { useSettingsStore } from './store/settingsStore';
 import { HelpToggleButton } from './components/HelpToggleButton';
 import { WelcomeHelpModal } from './components/WelcomeHelpModal';
@@ -49,11 +50,13 @@ export default function App() {
   if (activeTab === 'logs') activeTabName = 'Live Connection Logs';
   if (activeTab === 'settings') activeTabName = 'Settings';
   if (activeTab === 'testes-mvp') activeTabName = 'Tests Playground';
-  if (activeTab === 'api-tester') activeTabName = 'Execução de Testes';
-  if (activeTab === 'analytics-pnl-symbol') activeTabName = 'PnL by Symbol';
-  if (activeTab === 'mvp-asset-metadata') activeTabName = 'Informações de Ativos';
-  if (activeTab === 'orders-open') activeTabName = 'Open Orders';
-  if (activeTab === 'orders-history') activeTabName = 'Order History';
+  if (activeTab === 'api-tester') activeTabName = 'API Tester';
+  if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
+  if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
+  if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
+  if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
+  if (activeTab === 'reports') activeTabName = 'Reports';
+  if (activeTab === 'mvp-asset-metadata') activeTabName = 'Asset Metadata Playground';
 
   return (
     <PrivacyProvider>
@@ -122,6 +125,7 @@ export default function App() {
                   {activeTab === 'mvp-asset-metadata' && <AssetMetadataPlayground />}
                   {activeTab === 'orders-open' && <OpenOrders />}
                   {activeTab === 'orders-history' && <OrderHistory />}
+                  {activeTab === 'trade-history' && <TradeHistory />}
                   {activeTab === 'api-keys' && <ApiKeys />}
                   {activeTab === 'logs' && <ConnectionLogTerminal />}
                   {activeTab === 'settings' && <Settings />}
