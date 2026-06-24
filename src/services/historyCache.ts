@@ -2,12 +2,13 @@ import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder } from '../types';
 
 const DB_NAME = 'crypto-dashboard-cache';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const HISTORY_STORE = 'positionHistory';
 const META_STORE = 'cacheMeta';
 const ASSET_META_STORE = 'assetMetadata';
 const ORDER_HISTORY_STORE = 'orderHistory';
 const ORDER_META_STORE = 'orderCacheMeta';
+const BYBIT_REAL_PNL_STORE = 'bybitRealPnL';
 
 interface CacheDB extends DBSchema {
   positionHistory: {
@@ -47,6 +48,16 @@ interface CacheDB extends DBSchema {
     value: {
       connectionId: string;
       lastFetchTimestamp: number;
+      updatedAt: number;
+    };
+  };
+  bybitRealPnL: {
+    key: string;       // "connectionId-period"
+    value: {
+      id: string;      // "connectionId-period"
+      connectionId: string;
+      period: string;
+      pnlData: Record<string, string>;
       updatedAt: number;
     };
   };
@@ -94,6 +105,12 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
          }
          if (!db.objectStoreNames.contains(ORDER_META_STORE)) {
            db.createObjectStore(ORDER_META_STORE, { keyPath: 'connectionId' });
+         }
+      }
+
+      if (oldVersion < 5) {
+         if (!db.objectStoreNames.contains(BYBIT_REAL_PNL_STORE)) {
+            db.createObjectStore(BYBIT_REAL_PNL_STORE, { keyPath: 'id' });
          }
       }
     },
@@ -206,6 +223,9 @@ export async function clearAllCache(): Promise<void> {
   await db.clear(META_STORE);
   await db.clear(ORDER_HISTORY_STORE);
   await db.clear(ORDER_META_STORE);
+  if (db.objectStoreNames.contains(BYBIT_REAL_PNL_STORE)) {
+    await db.clear(BYBIT_REAL_PNL_STORE);
+  }
 }
 
 /**
@@ -250,4 +270,44 @@ export async function updateOrderCacheMeta(connectionId: string, latestCreatedTi
     lastFetchTimestamp: latestCreatedTime,
     updatedAt: Date.now(),
   });
+}
+
+// ------------------------------------------------------------------
+// BYBIT REAL PNL CACHE
+// ------------------------------------------------------------------
+
+export async function saveBybitRealPnLCache(
+  connectionId: string,
+  period: string,
+  pnlData: Record<string, string>
+): Promise<void> {
+  const db = await getDB();
+  const id = `${connectionId}-${period}`;
+  await db.put(BYBIT_REAL_PNL_STORE, {
+    id,
+    connectionId,
+    period,
+    pnlData,
+    updatedAt: Date.now(),
+  });
+}
+
+export async function getBybitRealPnLCache(
+  connectionId: string,
+  period: string
+): Promise<Record<string, string> | undefined> {
+  const db = await getDB();
+  const id = `${connectionId}-${period}`;
+  try {
+    const record = await db.get(BYBIT_REAL_PNL_STORE, id);
+    return record?.pnlData;
+  } catch (err) {
+    console.warn('Error reading Bybit Real PnL cache:', err);
+    return undefined;
+  }
+}
+
+export async function clearBybitRealPnLCache(): Promise<void> {
+  const db = await getDB();
+  await db.clear(BYBIT_REAL_PNL_STORE);
 }

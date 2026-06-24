@@ -277,7 +277,10 @@ export class BybitAdapter implements IExchangeAdapter {
     
     // We only fetch funding from transaction log for linear or inverse futures, mostly linear.
     const createdTime = parseInt(pos.createdTime || Date.now().toString(), 10);
-    const accumulatedFunding = await this.fetchBybitAccumulatedFunding(key, pos.symbol, createdTime);
+    // Limit lookback of funding queries to at most the last 7 days to avoid rate-limiting / slow connections
+    const maxLookbackMs = 7 * 24 * 60 * 60 * 1000;
+    const effectiveStartTime = Math.max(createdTime, Date.now() - maxLookbackMs);
+    const accumulatedFunding = await this.fetchBybitAccumulatedFunding(key, pos.symbol, effectiveStartTime);
     
     const realizedPnl = parseFloat(pos.curRealisedPnl || '0');
     const accumulatedTradingFee = new Big(realizedPnl).minus(accumulatedFunding).toString();

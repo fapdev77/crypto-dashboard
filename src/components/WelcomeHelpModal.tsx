@@ -32,7 +32,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       showOnStartup: "Show on startup",
       getStarted: "Get Started",
       disclaimerTitle: "Beta Phase & Data Accuracy Disclaimer",
-      disclaimerDesc: "This application is currently in its testing phase. Our initial idea is to simplify the lives of traders by unifying balances from various exchanges in one place to facilitate asset and trade tracking. However, each exchange has different calculation methods and data availability, so the presented data may contain errors or inconsistencies and might not be exactly equal to what is displayed directly by the exchange. If you do not agree with this, we do not recommend using the application."
+      disclaimerDesc: "This application is currently in its testing phase. The focus is to simplify the lives of traders by unifying balances from various exchanges in one place to facilitate asset and trade tracking. However, each exchange has different calculation methods and data availability, so the presented data may contain errors or inconsistencies and might not be exactly equal to what is displayed directly by the exchange. If you do not agree with this, we do not recommend using the application."
     },
     pt: {
       title: "Bem-vindo ao Crypto Dashboard",
@@ -52,7 +52,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       showOnStartup: "Mostrar ao iniciar",
       getStarted: "Começar",
       disclaimerTitle: "Fase Beta e Aviso sobre Precisão de Dados",
-      disclaimerDesc: "Este aplicativo ainda está em fase de testes. Nossa ideia inicial é facilitar a vida dos traders unificando os saldos de várias corretoras no mesmo local para facilitar o controle dos ativos e trades. No entanto, cada corretora tem formas diferentes de cálculos e disponibilização dos dados, então os dados apresentados podem conter erros ou inconsistências e não ser exatos aos que são exibidos diretamente pela corretora. Se você não concordar com isso, não recomendamos que use o aplicativo."
+      disclaimerDesc: "Este aplicativo ainda está em fase de testes. O foco é facilitar a vida dos traders unificando os saldos de várias corretoras no mesmo local para facilitar o controle dos ativos e trades. No entanto, cada corretora tem formas diferentes de cálculos e disponibilização dos dados, então os dados apresentados podem conter erros ou inconsistências e não ser exatos aos que são exibidos diretamente pela corretora. Se você não concordar com isso, não recomendamos que use o aplicativo."
     }
   };
 

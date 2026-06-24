@@ -4,6 +4,8 @@ import { usePositionHistory, PositionHistoryPeriod } from './usePositionHistory'
 import { SymbolPnLRecord } from '../types';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { BybitAdapter } from '../services/adapters/BybitAdapter';
+import { useSettingsStore } from '../store/settingsStore';
+import { getBybitRealPnLCache, saveBybitRealPnLCache } from '../services/historyCache';
 
 export function usePnLBySymbol(
   period: PositionHistoryPeriod,
@@ -12,6 +14,8 @@ export function usePnLBySymbol(
 ) {
   const { positions, isLoading, isSyncing, syncMessage: historySyncMessage } = usePositionHistory(period);
   const keys = useApiKeysStore(state => state.keys);
+  const useMockData = useSettingsStore(state => state.useMockData);
+  const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
   
   const [bybitRealPnL, setBybitRealPnL] = useState<Record<string, string>>({});
   const [isBybitLoading, setIsBybitLoading] = useState(false);
@@ -21,11 +25,65 @@ export function usePnLBySymbol(
     let isMounted = true;
     
     const fetchBybitRealPnL = async () => {
-      const bybitKeys = keys.filter(k => k.exchange === 'bybit');
-      if (bybitKeys.length === 0) return;
-      if (exchangeFilter !== 'All' && exchangeFilter.toLowerCase() !== 'bybit') return;
+      if (useMockData) {
+        setBybitRealPnL({});
+        setIsBybitLoading(false);
+        setBybitSyncMessage(null);
+        return;
+      }
 
-      setIsBybitLoading(true);
+      const bybitKeys = keys.filter(k => k.exchange === 'bybit');
+      if (bybitKeys.length === 0) {
+        setBybitRealPnL({});
+        setIsBybitLoading(false);
+        setBybitSyncMessage(null);
+        return;
+      }
+
+      if (exchangeFilter !== 'All' && exchangeFilter.toLowerCase() !== 'bybit') {
+        setBybitRealPnL({});
+        setIsBybitLoading(false);
+        setBybitSyncMessage(null);
+        return;
+      }
+
+      // Step 1: SWR - instant cache load
+      try {
+        const cachedCombined: Record<string, Big> = {};
+        let hasAnyCache = false;
+
+        const cachePromises = bybitKeys.map(key => getBybitRealPnLCache(key.id, period));
+        const cacheResults = await Promise.all(cachePromises);
+
+        cacheResults.forEach((res) => {
+          if (res) {
+            hasAnyCache = true;
+            for (const [sym, val] of Object.entries(res)) {
+              if (!cachedCombined[sym]) cachedCombined[sym] = new Big(0);
+              cachedCombined[sym] = cachedCombined[sym].plus(new Big(val));
+            }
+          }
+        });
+
+        if (isMounted) {
+          if (hasAnyCache) {
+            const finalCached: Record<string, string> = {};
+            for (const [sym, val] of Object.entries(cachedCombined)) {
+              finalCached[sym] = val.toString();
+            }
+            setBybitRealPnL(finalCached);
+            setIsBybitLoading(false); // Quick render of cached data
+          } else {
+            setIsBybitLoading(true); // Spinner on first load
+          }
+        }
+      } catch (err) {
+        console.error('Error reading Bybit Real PnL cache for SWR:', err);
+        if (isMounted) setIsBybitLoading(true);
+      }
+
+      // Step 2: Background sync
+      if (isMounted) setBybitSyncMessage('Iniciando sincronização...');
 
       const now = Date.now();
       let startTime = now - 90 * 24 * 60 * 60 * 1000; // default 90d
@@ -43,6 +101,9 @@ export function usePnLBySymbol(
           const res = await adapter.fetchBybitRealPnLBySymbol(key, startTime, now, (msg) => {
             if (isMounted) setBybitSyncMessage(msg);
           });
+          
+          await saveBybitRealPnLCache(key.id, period, res);
+
           for (const [sym, val] of Object.entries(res)) {
             if (!combinedPnL[sym]) combinedPnL[sym] = new Big(0);
             combinedPnL[sym] = combinedPnL[sym].plus(new Big(val));
@@ -68,7 +129,7 @@ export function usePnLBySymbol(
     return () => {
       isMounted = false;
     };
-  }, [keys, period, exchangeFilter]);
+  }, [keys, period, exchangeFilter, useMockData, historyCacheVersion]);
 
   const pnlData = useMemo(() => {
     if (!positions || positions.length === 0) return [];
