@@ -8,7 +8,7 @@ import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { getHistoryInverseUsdValues } from '../../utils/inverseUtils';
 
 export function ReportsDashboard() {
-  const [period, setPeriod] = useState<PositionHistoryPeriod>('30d');
+  const [period, setPeriod] = useState<PositionHistoryPeriod>('7d');
   const { positions: history, isLoading } = usePositionHistory(period);
   const formatCurrency = useFormatCurrency();
 
@@ -41,35 +41,35 @@ export function ReportsDashboard() {
     <div className="w-full flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-white tracking-tight">Reports & Exports</h2>
-        
+
         <div className="flex items-center gap-4">
-          <select 
+          <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as any)}
             className="bg-[#151619] border border-[#2a2b30] text-sm text-gray-300 rounded-lg px-3 py-1.5 focus:outline-none"
           >
-            <option value="7d">Last 7 Days</option>
-            <option value="14d">Last 14 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="90d">Last 90 Days</option>
+            <option value="7d">7 Days</option>
+            <option value="14d">14 Days</option>
+            <option value="30d">30 Days</option>
+            <option value="90d">90 Days</option>
           </select>
 
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={() => exportToCSV(getExportConfig())}
               disabled={isLoading || history.length === 0}
               className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-[#2a2b30] hover:bg-[#3a3b40] disabled:opacity-50 text-white rounded-lg transition-colors"
             >
               <Table className="w-4 h-4" /> CSV
             </button>
-            <button 
+            <button
               onClick={() => exportToExcel(getExportConfig())}
               disabled={isLoading || history.length === 0}
               className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-[#10B981]/20 text-[#10B981] hover:bg-[#10B981]/30 disabled:opacity-50 rounded-lg transition-colors"
             >
               <DownloadCloud className="w-4 h-4" /> Excel
             </button>
-            <button 
+            <button
               onClick={() => exportToPDF(getExportConfig())}
               disabled={isLoading || history.length === 0}
               className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-[#EF4444]/20 text-[#EF4444] hover:bg-[#EF4444]/30 disabled:opacity-50 rounded-lg transition-colors"
@@ -79,7 +79,7 @@ export function ReportsDashboard() {
           </div>
         </div>
       </div>
-      
+
       <HistoryLimitWarning period={period} />
 
       <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">

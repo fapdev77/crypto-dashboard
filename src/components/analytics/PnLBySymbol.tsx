@@ -17,7 +17,7 @@ type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' |
 type SortDir = 'asc' | 'desc';
 
 export function PnLBySymbol() {
-  const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('30d');
+  const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
   const [exchange, setExchange] = useState<string>('All');
   const [instrument, setInstrument] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -104,7 +104,7 @@ export function PnLBySymbol() {
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
-    
+
     const headers = ['Symbol', 'Instrument', 'Exchange', 'Total PnL', 'Long PnL', 'Short PnL'];
     const rows = sortedData.map(r => [
       r.symbol,
@@ -181,10 +181,10 @@ export function PnLBySymbol() {
               className="bg-[#1a1b1e] border border-[#2a2b30] text-sm text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#2F6BFF] transition-colors"
             >
               <option value="today">Today</option>
-              <option value="7d">Last 7 days</option>
-              <option value="14d">Last 14 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
+              <option value="7d">7 days</option>
+              <option value="14d">14 days</option>
+              <option value="30d">30 days</option>
+              <option value="90d">90 days</option>
             </select>
           </div>
 
@@ -297,7 +297,7 @@ function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string 
 
   const isFiatCcy = ccy.includes('USD') || ccy === 'EUR' || ccy === 'BRL';
   const displayCcy = ccy || 'USDT';
-  
+
   const tokenUsdPrice = useTokenUsdPrice(ccy);
   const usdValue = tokenUsdPrice ? valNum * tokenUsdPrice : null;
 
