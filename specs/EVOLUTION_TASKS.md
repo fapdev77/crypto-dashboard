@@ -52,3 +52,19 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 
 **6. PnL By Symbol Report com Dynamic Intensity Bars e Margin Mapping** [✓]
 *   **Ação Aplicada:** Adicionada métrica *PnL by Symbol* sob o menu Analytics contendo um mapeamento cross-change impecável de Margin Types: `USDT-M/USDC-M/Coin-M` de Bitget e correlatos de Bybit/OKX (Linear, Inverse). Essa estrutura renderiza tabelas enriquecidas com Dynamic Intensity Progress Bars indicando a agressividade da posição perante as maiores posições (High Watermarks), incluindo um robusto filtro multi-corretora e tipo de derivativo transacionado interagindo ativamente com a Store nativa.
+
+---
+
+## Sprint Recente: Refinamento de UI/UX e Inteligência Visual [CONCLUÍDO]
+
+**1. Classificador Dinâmico de Ativos e Identidade Visual (Logo.dev)** [✓]
+*   **Ação Aplicada:** Implementação do `AssetClassifierAggregator` e do componente universal `<CoinIcon />`. O sistema agora classifica automaticamente ativos (CRYPTO vs STOCK) e consome a API da Logo.dev e OKX CDN com fallbacks inteligentes (`/crypto`, `/ticker`, `/name`) para exibir ícones de moedas e marcas de forma consistente.
+
+**2. Modo de Privacidade Global (Privacy Mode)** [✓]
+*   **Ação Aplicada:** Criação do `PrivacyContext` e botão global no cabeçalho (Toggle). Oculte valores monetários absolutos (saldos, PnL) em toda a interface com um clique (exibindo `$••••` ou `••••%`), protegendo a exibição do dashboard em ambientes públicos.
+
+**3. Hedge Mode e Indicador de Proteção de Capital** [✓]
+*   **Ação Aplicada:** Cálculo automático da exposição do patrimônio vs proteção alocada em contratos Inversos (Coin-M). O painel central (Dashboard) agora exibe a porcentagem do capital total protegido por posições "Short" inversas frente ao capital livre ("Exposed"), apresentando barras de progresso visuais.
+
+**4. Paletas e Theming por Corretora** [✓]
+*   **Ação Aplicada:** Definição de cores de identidade de marca para cada corretora (Bitget `#03aac7`, Bybit `#ff9c2e`, OKX `#fafafa`) sendo injetadas via CSS vars/data-themes nas expansões das subcontas do painel, garantindo reconhecimento instantâneo.
