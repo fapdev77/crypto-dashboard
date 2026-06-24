@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Big from 'big.js';
 import { usePnLBySymbol } from '../../hooks/usePnLBySymbol';
-import { Download, ArrowUpDown, ChevronDown, Search, RefreshCw } from 'lucide-react';
+import { Download, ArrowUpDown, ChevronDown, RefreshCw } from 'lucide-react';
 import { SymbolPnLRecord } from '../../types';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
@@ -12,6 +12,7 @@ import { useTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { SyncBadge } from '../ui/SyncBadge';
+import { FilterBar } from '../ui/FilterBar';
 
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
@@ -155,56 +156,36 @@ export function PnLBySymbol() {
       </div>
 
       <div className="px-0">
-        <div className="flex flex-wrap items-center justify-end gap-2 w-full">
-          {/* Exchange */}
-          <select
-            value={exchange}
-            onChange={(e) => setExchange(e.target.value)}
-            className="bg-[#1a1b1e] border border-[#2a2b30] text-sm text-white rounded-lg px-3 py-2 focus:outline-none focus:border-[#2F6BFF] transition-colors"
-          >
-            <option value="All">All Exchanges</option>
-            <option value="bitget">Bitget</option>
-            <option value="bybit">Bybit</option>
-            <option value="okx">OKX</option>
-          </select>
-
-          {/* Instrument */}
-          <select
-            value={instrument}
-            onChange={(e) => setInstrument(e.target.value)}
-            disabled={exchange === 'All'}
-            className="bg-[#1a1b1e] border border-[#2a2b30] text-sm text-white rounded-lg px-3 py-2 focus:outline-none focus:border-[#2F6BFF] transition-colors disabled:opacity-50"
-          >
-            {instrumentsAvailable.map(inst => (
-              <option key={inst} value={inst}>{inst === 'All' ? 'All Instruments' : inst}</option>
-            ))}
-          </select>
-
-          {/* Period */}
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as any)}
-            className="bg-[#1a1b1e] border border-[#2a2b30] text-sm text-white rounded-lg px-3 py-2 focus:outline-none focus:border-[#2F6BFF] transition-colors"
-          >
-            <option value="today">Today</option>
-            <option value="7d">7 Days</option>
-            <option value="14d">14 Days</option>
-            <option value="30d">30 Days</option>
-            <option value="90d">90 Days</option>
-          </select>
-
-          {/* Search (rightmost) */}
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9299]" />
-            <input
-              type="text"
-              placeholder="Search symbol..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-[#1a1b1e] border border-[#2a2b30] text-sm text-white rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:border-[#2F6BFF] w-full sm:w-48 transition-all"
-            />
-          </div>
-        </div>
+        <FilterBar
+          exchange={{
+            value: exchange,
+            onChange: setExchange,
+            labelAll: 'All Exchanges',
+          }}
+          instrument={{
+            value: instrument,
+            onChange: setInstrument,
+            options: instrumentsAvailable,
+            disabled: exchange === 'All',
+            labelAll: 'All Instruments',
+          }}
+          period={{
+            value: period,
+            onChange: setPeriod,
+            options: [
+              { value: 'today', label: 'Today' },
+              { value: '7d', label: '7 Days' },
+              { value: '14d', label: '14 Days' },
+              { value: '30d', label: '30 Days' },
+              { value: '90d', label: '90 Days' },
+            ],
+          }}
+          search={{
+            value: searchTerm,
+            onChange: setSearchTerm,
+            placeholder: 'Search symbol...',
+          }}
+        />
       </div>
 
       <div className="flex-1 overflow-auto hide-scrollbar">

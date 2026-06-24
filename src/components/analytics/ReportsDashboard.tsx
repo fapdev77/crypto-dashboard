@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { usePositionHistory, PositionHistoryPeriod } from '../../hooks/usePositionHistory';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../utils/exportUtils';
-import { Download, ChevronDown, Search } from 'lucide-react';
+import { Download, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { getHistoryInverseUsdValues } from '../../utils/inverseUtils';
+import { FilterBar } from '../ui/FilterBar';
 
 export function ReportsDashboard() {
   const [period, setPeriod] = useState<PositionHistoryPeriod>('7d');
@@ -71,43 +72,28 @@ export function ReportsDashboard() {
       </div>
 
       <div className="px-0">
-        <div className="flex flex-wrap items-center justify-end gap-2 w-full">
-          {/* Exchange filter (first from left) */}
-          <select
-            value={exchange}
-            onChange={(e) => setExchange(e.target.value)}
-            className="bg-[#1a1b1e] border border-[#2a2b30] text-sm text-white rounded-lg px-3 py-2 focus:outline-none focus:border-[#2F6BFF] transition-colors"
-          >
-            <option value="All">All Exchanges</option>
-            <option value="bitget">Bitget</option>
-            <option value="bybit">Bybit</option>
-            <option value="okx">OKX</option>
-          </select>
-
-          {/* Period filter */}
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as any)}
-            className="bg-[#1a1b1e] border border-[#2a2b30] text-sm text-white rounded-lg px-3 py-2 focus:outline-none focus:border-[#2F6BFF] transition-colors"
-          >
-            <option value="7d">7 Days</option>
-            <option value="14d">14 Days</option>
-            <option value="30d">30 Days</option>
-            <option value="90d">90 Days</option>
-          </select>
-
-          {/* Search filter (last from left) */}
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9299]" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-[#1a1b1e] border border-[#2a2b30] text-sm text-white rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:border-[#2F6BFF] w-full sm:w-48 transition-all"
-            />
-          </div>
-        </div>
+        <FilterBar
+          exchange={{
+            value: exchange,
+            onChange: setExchange,
+            labelAll: 'All Exchanges',
+          }}
+          period={{
+            value: period,
+            onChange: setPeriod,
+            options: [
+              { value: '7d', label: '7 Days' },
+              { value: '14d', label: '14 Days' },
+              { value: '30d', label: '30 Days' },
+              { value: '90d', label: '90 Days' },
+            ],
+          }}
+          search={{
+            value: searchTerm,
+            onChange: setSearchTerm,
+            placeholder: 'Search...',
+          }}
+        />
       </div>
 
       <HistoryLimitWarning period={period} />

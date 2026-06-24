@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
-import { Search, Loader2, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
@@ -14,6 +14,7 @@ import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { SyncBadge } from './ui/SyncBadge';
 import { getHistoryInverseUsdValues } from '../utils/inverseUtils';
+import { FilterBar } from './ui/FilterBar';
 
 export function ClosedPositions() {
   const keys = useApiKeysStore(state => state.keys);
@@ -22,7 +23,6 @@ export function ClosedPositions() {
 
   const [filterText, setFilterText] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
-  const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
 
   const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
 
@@ -125,100 +125,30 @@ export function ClosedPositions() {
         <div className="flex items-center">
           <SyncBadge isSyncing={isSyncing} />
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-        {/* Exchange Filter */}
-        <div className="relative z-20">
-          <button
-            type="button"
-            onClick={() => setIsExchangeDropdownOpen(!isExchangeDropdownOpen)}
-            className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between min-w-[160px]"
-          >
-            <div className="flex items-center gap-2">
-              {exchangeFilter !== 'all' && (
-                <ExchangeIcon exchange={exchangeFilter} className="w-4 h-4" />
-              )}
-              <span>
-                {exchangeFilter === 'all'
-                  ? 'Todas Exchanges'
-                  : exchangeFilter.charAt(0).toUpperCase() + exchangeFilter.slice(1)}
-              </span>
-            </div>
-            <svg className={`h-4 w-4 ml-2 text-gray-400 transition-transform ${isExchangeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {isExchangeDropdownOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setIsExchangeDropdownOpen(false)}
-              />
-              <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setExchangeFilter('all');
-                    setIsExchangeDropdownOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === 'all' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
-                    }`}
-                >
-                  <span>Todas Exchanges</span>
-                </button>
-                {Array.from(new Set(keys.filter((apiKey: any) => apiKey.isActive).map((apiKey: any) => apiKey.exchange))).map(exchange => (
-                  <button
-                    key={exchange}
-                    type="button"
-                    onClick={() => {
-                      setExchangeFilter(exchange);
-                      setIsExchangeDropdownOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
-                      }`}
-                  >
-                    <ExchangeIcon exchange={exchange} className="w-4 h-4" />
-                    <span>{exchange.charAt(0).toUpperCase() + exchange.slice(1)}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as any)}
-          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
-        >
-          <option value="today">Hoje</option>
-          <option value="7d">7 Days</option>
-          <option value="14d">14 Days</option>
-          <option value="30d">30 Days</option>
-          <option value="90d">90 Days</option>
-        </select>
-
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-[#8E9299]" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search..."
-            className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-50"
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
+        <div className="flex flex-wrap items-center justify-end gap-2 flex-1">
+          <FilterBar
+            exchange={{
+              value: exchangeFilter,
+              onChange: setExchangeFilter,
+              labelAll: 'All Exchanges',
+            }}
+            period={{
+              value: period,
+              onChange: setPeriod,
+              options: [
+                { value: 'today', label: 'Today' },
+                { value: '7d', label: '7 Days' },
+                { value: '14d', label: '14 Days' },
+                { value: '30d', label: '30 Days' },
+                { value: '90d', label: '90 Days' },
+              ],
+            }}
+            search={{
+              value: filterText,
+              onChange: setFilterText,
+              placeholder: 'Search...',
+            }}
           />
-          {filterText && (
-            <button
-              onClick={() => setFilterText('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
-              title="Clear filter"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
         </div>
       </div>
 
