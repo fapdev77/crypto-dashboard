@@ -52,6 +52,11 @@ As regras propostas no SDD (2 casas para Stables, 8 para Assets) foram consolida
 - **`formatPrice`**: Identifica dinamicamente via parâmetro se o par é Fiat/Stable (`true` = 2 a 4 casas dependendo do valor) ou Cripto Baseado (onde o preço precisa ir a 8 dígitos caso se trate de pares micro como SHIBUSDT).
 - **`formatValue`**: Resolve totais financeiros (`realizedPnl`, Total Equity, etc) impondo estaticamente 2 a 4 casas de precisão (USD Defaults).
 
+### Classificação e Injeção de Identidade Visual
+Para unificar as apresentações, a camada de normalização foi expandida visualmente:
+- **`AssetClassifierAggregator`**: Um orquestrador que identifica automaticamente (a partir dos metadados extraídos de exchanges base como OKX e das strings de nomes) se um ativo trata-se de Criptomoeda, Ação (Stock), ou Par Forex.
+- **Integração Logo.dev (`CoinIcon`)**: Trabalha de forma autônoma para resolver logotipos com suporte a fallbacks inteligentes. Roteia ativamente requisições para APIs da Logo.dev (endpoints `/crypto/`, `/ticker/`, ou `/name/`) e CDN da OKX, garantindo consistência visual limpa e elegante em tabelas e modais para cada Asset listado.
+
 ## 5. Data Flow and Synchronization
 ### WebSockets (Real-Time Streams)
 1. Browser opens WebSockets: 
@@ -69,7 +74,10 @@ As regras propostas no SDD (2 casas para Stables, 8 para Assets) foram consolida
 4. The adapter sends requests to the local backend proxy at `/api/proxy` via `hybridFetch`.
 5. Express Proxy forwards to the authentic endpoint (`api.bitget.com`, `api.bybit.com`, etc.) and streams the data back.
 6. The adapter parses and normalizes the Raw API response into the unified format (`UnifiedHistoryPosition`, `UnifiedBillRecord`).
-7. **Local Caching (Position History):** To bypass aggressive exchange rate limits and decouple UI analytics delays from network latency, historical operations query a robust **IndexedDB Database** (`crypto-dashboard-cache`). The caching mechanism includes a periodic background synchronization task (controlled via setting intervals) that seamlessly pulls delta records using exchange cursors, rendering historic views (PnL charts, Analytics) instantaneously from the local store.
+7. **Local Caching & SWR (Stale-While-Revalidate):** To bypass aggressive exchange rate limits and decouple UI analytics delays from network latency, historical operations query a robust **IndexedDB Database** (`crypto-dashboard-cache`).
+   - Hooks like `usePositionHistory` and `useOrderReports` implement a strict **SWR (Stale-While-Revalidate)** pattern: they immediately load and render stale cached data from IndexedDB (Step 1), then trigger a background incremental fetch to exchanges (Step 2) that seamlessly pulls delta records, updates the cache, and re-renders the UI with the freshest data.
+   - A periodic background synchronization task (`useHistoryCachePolling`) continuously keeps the cache warm based on user-defined intervals.
+   - *Note:* `useBillsHistory` handles highly mutable deposit/withdrawal/transfer logs and thus bypasses IndexedDB, fetching directly from the Live APIs to ensure transactional accuracy.
 
 ## 5. State Management Models
 - **`useApiKeysStore`:** 
@@ -78,6 +86,9 @@ As regras propostas no SDD (2 casas para Stables, 8 para Assets) foram consolida
 - **`useDashboardStore`:** 
   - Subscribes to UI flows. Aggregates positions, balances.
   - Dynamically computes UI values on mapping loops (e.g. Total USD Equity).
+- **`PrivacyContext`:** 
+  - Global Context API wrapping the application.
+  - Controls visibility (`isPrivateMode`) of sensitive monetary values across all tables and cards via a native toggle. Persists to localStorage.
 - **`useSettingsStore`:** 
   - Manages application-wide config (e.g. `useMockData`, visibility toggles).
   - Handles network heuristics configurations like `pollingInterval` (for static REST calls) and `historyCacheInterval` (for background PnL sync limits).

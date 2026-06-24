@@ -111,9 +111,12 @@ Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWs
 | Store | Key | Índices | Uso |
 |-------|-----|---------|-----|
 | `positionHistory` | `id` (UnifiedHistoryPosition.id) | `by-connectionId`, `by-closeTime` | Cache incremental de trades encerrados |
-| `cacheMeta` | `connectionId` | — | Rastreia `lastFetchTimestamp` para fetches incrementais |
+| `orderCacheMeta` e afins | `connectionId` | — | Rastreia `lastFetchTimestamp` para fetches incrementais de ordens fechadas |
 
-**Fluxo incremental**: Load cache → detecta `lastFetchTimestamp` → fetch apenas novos → merge dedup por ID → persist.
+**Fluxo Incremental (SWR - Stale-While-Revalidate)**:
+1. React Hook (`usePositionHistory`, `useOrderReports`) carrega os dados estáticos do cache via SWR e renderiza a tela instantaneamente.
+2. Hook dispara fetch em background para as exchanges a partir do `lastFetchTimestamp`.
+3. Novos deltas recebidos atualizam o banco IndexedDB e disparam re-render automático para a UI.
 
 ---
 
@@ -122,8 +125,9 @@ Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWs
 | Hook | Arquivo | Responsabilidade |
 |------|---------|-----------------|
 | `useMultiExchangeWS` | [useMultiExchangeWS.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useMultiExchangeWS.ts) (349 LOC) | Gerencia ciclo de vida completo dos WebSockets. Exponential backoff (cap 60s). Ping/Pong a cada 20s. Short-Polling REST universal (todas exchanges) configurável. Mock data injection. |
-| `usePositionHistory` | [usePositionHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePositionHistory.ts) | Orquestra `PositionHistoryService.fetchWithCache()` em paralelo para todas as keys. Filtra por período in-memory. |
-| `useBillsHistory` | [useBillsHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useBillsHistory.ts) | Orquestra `BillsHistoryService.fetchBills()` em paralelo. Live + Mock mode. |
+| `usePositionHistory` | [usePositionHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePositionHistory.ts) | Padrão SWR. Carrega rápido via IndexedDB, faz fetch incremental com `PositionHistoryService` em background. Filtra por período in-memory. |
+| `useOrderReports` | [useOrderReports.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useOrderReports.ts) | Padrão SWR para ordens fechadas. Filtros combinados e sincronia assíncrona. |
+| `useBillsHistory` | [useBillsHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useBillsHistory.ts) | Orquestra `BillsHistoryService.fetchBills()` em paralelo. Live + Mock mode (Sem cache IndexedDB, consulta viva). |
 | `useHistoryCachePolling` | [useHistoryCachePolling.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useHistoryCachePolling.ts) | Background polling configurável (default 15 min) para manter cache IndexedDB atualizado. |
 | `usePnLBySymbol` | [usePnLBySymbol.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePnLBySymbol.ts) | Agregação PnL por símbolo usando `Big.js`. |
 
