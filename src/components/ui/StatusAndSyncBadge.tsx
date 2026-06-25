@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { RefreshCw, CheckCircle2, Clock, Play } from 'lucide-react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { AppTooltip } from './Tooltip';
@@ -22,6 +22,7 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
   } = useSettingsStore();
 
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const wasSyncingRef = useRef(isSyncing);
 
   // Keep current time updated every second for accurate timers
   useEffect(() => {
@@ -31,16 +32,13 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
     return () => clearInterval(timer);
   }, []);
 
-  // Update last sync time when isSyncing transitions from true to false
+  // Update last sync time ONLY when isSyncing actually transitions from true to false
   useEffect(() => {
-    if (!isSyncing) {
-      // Don't override if the difference is tiny, but ensure we stay current
-      const diff = Date.now() - lastSyncTime;
-      if (diff > 5000) {
-        setLastSyncTime(Date.now());
-      }
+    if (wasSyncingRef.current && !isSyncing) {
+      setLastSyncTime(Date.now());
     }
-  }, [isSyncing, lastSyncTime, setLastSyncTime]);
+    wasSyncingRef.current = isSyncing;
+  }, [isSyncing, setLastSyncTime]);
 
   const now = currentTime;
   
