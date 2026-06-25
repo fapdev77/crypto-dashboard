@@ -113,6 +113,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
       try {
         const service = new PositionHistoryService();
         for (const key of keys) {
+          if (!key.isActive) continue;
           if (isMounted) setSyncMessage(`Aguarde: sincronizando ${key.exchange} (${key.label})...`);
           await service.fetchWithCache(key);
         }
