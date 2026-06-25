@@ -25,9 +25,13 @@ export function useHistoryCachePolling() {
       }
     };
 
-    // Run immediately on mount to pick up any trades closed since the last poll cycle,
+    // Run immediately on mount ONLY if the last sync was longer than the interval ago,
     // then keep refreshing on the configured interval.
-    poll();
+    const lastSync = useSettingsStore.getState().lastSyncTime;
+    const now = Date.now();
+    if (now - lastSync >= intervalMs) {
+      poll();
+    }
     const intervalId = setInterval(poll, intervalMs);
 
     return () => clearInterval(intervalId);

@@ -18,6 +18,8 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   const useMockData = useSettingsStore(state => state.useMockData);
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
   const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
+  const lastSyncTime = useSettingsStore(state => state.lastSyncTime);
+  const setLastSyncTime = useSettingsStore(state => state.setLastSyncTime);
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>(globalCachedPositions);
   const [isLoading, setIsLoading] = useState(() => {
@@ -88,7 +90,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
     };
   }, [keys, useMockData, historyCacheVersion]);
 
-  // 2. Background REST API Sync Effect (Runs ONLY on keys, useMockData, historyCacheVersion change)
+  // 2. Background REST API Sync Effect (Runs ONLY on keys, useMockData, historyCacheVersion, lastSyncTime change)
   useEffect(() => {
     let isMounted = true;
     if (useMockData || keys.length === 0) return;
@@ -96,13 +98,10 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
     const syncNetwork = async () => {
       const now = Date.now();
       const intervalMs = (historyCacheInterval || 5) * 60 * 1000;
-      const hasRecentSync = (now - globalLastPositionsSyncTimestamp) < intervalMs;
+      const hasRecentSync = (now - lastSyncTime) < intervalMs;
 
-      // Skip network fetch if already done recently for the current version
-      if (
-        globalLastPositionsSyncedVersion === historyCacheVersion &&
-        hasRecentSync
-      ) {
+      // Skip network fetch if already done recently
+      if (hasRecentSync && lastSyncTime > 0) {
         return;
       }
 
@@ -133,8 +132,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           setIsSyncing(false);
           setSyncMessage(null);
           
-          globalLastPositionsSyncedVersion = historyCacheVersion;
-          globalLastPositionsSyncTimestamp = Date.now();
+          setLastSyncTime(Date.now());
         }
       } catch (err) {
         console.error('[usePositionHistory] Error syncing network positions:', err);
@@ -151,7 +149,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
     return () => {
       isMounted = false;
     };
-  }, [keys, useMockData, historyCacheVersion]);
+  }, [keys, useMockData, historyCacheVersion, lastSyncTime, historyCacheInterval, setLastSyncTime]);
 
   // 3. Sync positions calculation based on local in-memory cache and current filters
   useEffect(() => {
