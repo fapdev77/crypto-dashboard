@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Big from 'big.js';
 import { usePositionHistory, PositionHistoryPeriod } from './usePositionHistory';
 import { SymbolPnLRecord } from '../types';
@@ -21,33 +21,36 @@ export function usePnLBySymbol(
   const [isBybitLoading, setIsBybitLoading] = useState(false);
   const [bybitSyncMessage, setBybitSyncMessage] = useState<string | null>(null);
 
+  const periodRef = useRef(period);
+  const exchangeFilterRef = useRef(exchangeFilter);
+
+  useEffect(() => {
+    periodRef.current = period;
+  }, [period]);
+
+  useEffect(() => {
+    exchangeFilterRef.current = exchangeFilter;
+  }, [exchangeFilter]);
+
+  // 1. Load Local Cache Effect (Runs on keys, period, exchangeFilter, useMockData, or historyCacheVersion change)
   useEffect(() => {
     let isMounted = true;
-    
-    const fetchBybitRealPnL = async () => {
-      if (useMockData) {
-        setBybitRealPnL({});
-        setIsBybitLoading(false);
-        setBybitSyncMessage(null);
-        return;
-      }
+    if (useMockData) {
+      setBybitRealPnL({});
+      setIsBybitLoading(false);
+      setBybitSyncMessage(null);
+      return;
+    }
 
-      const bybitKeys = keys.filter(k => k.exchange === 'bybit');
-      if (bybitKeys.length === 0) {
-        setBybitRealPnL({});
-        setIsBybitLoading(false);
-        setBybitSyncMessage(null);
-        return;
-      }
+    const bybitKeys = keys.filter(k => k.exchange === 'bybit');
+    if (bybitKeys.length === 0 || (exchangeFilter !== 'All' && exchangeFilter.toLowerCase() !== 'bybit')) {
+      setBybitRealPnL({});
+      setIsBybitLoading(false);
+      setBybitSyncMessage(null);
+      return;
+    }
 
-      if (exchangeFilter !== 'All' && exchangeFilter.toLowerCase() !== 'bybit') {
-        setBybitRealPnL({});
-        setIsBybitLoading(false);
-        setBybitSyncMessage(null);
-        return;
-      }
-
-      // Step 1: SWR - instant cache load
+    const loadCache = async () => {
       try {
         const cachedCombined: Record<string, Big> = {};
         let hasAnyCache = false;
@@ -72,25 +75,50 @@ export function usePnLBySymbol(
               finalCached[sym] = val.toString();
             }
             setBybitRealPnL(finalCached);
-            setIsBybitLoading(false); // Quick render of cached data
+            setIsBybitLoading(false);
           } else {
-            setIsBybitLoading(true); // Spinner on first load
+            setIsBybitLoading(true);
           }
         }
       } catch (err) {
-        console.error('Error reading Bybit Real PnL cache for SWR:', err);
+        console.error('[usePnLBySymbol] Error reading Bybit Real PnL cache for SWR:', err);
         if (isMounted) setIsBybitLoading(true);
       }
+    };
 
-      // Step 2: Background sync
-      if (isMounted) setBybitSyncMessage('Iniciando sincronização...');
+    loadCache();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [keys, period, exchangeFilter, useMockData, historyCacheVersion]);
+
+  // 2. Background REST API Sync Effect (Runs ONLY on keys, useMockData, or historyCacheVersion change)
+  useEffect(() => {
+    let isMounted = true;
+    if (useMockData || keys.length === 0) return;
+
+    const syncNetwork = async () => {
+      const bybitKeys = keys.filter(k => k.exchange === 'bybit');
+      if (bybitKeys.length === 0) return;
+
+      const currentExchangeFilter = exchangeFilterRef.current;
+      if (currentExchangeFilter !== 'All' && currentExchangeFilter.toLowerCase() !== 'bybit') {
+        return;
+      }
+
+      if (isMounted) {
+        setIsBybitLoading(true);
+        setBybitSyncMessage('Iniciando sincronização...');
+      }
 
       const now = Date.now();
+      const currentPeriod = periodRef.current;
       let startTime = now - 90 * 24 * 60 * 60 * 1000; // default 90d
-      if (period === 'today') startTime = new Date(now).setHours(0, 0, 0, 0);
-      else if (period === '7d') startTime = now - 7 * 24 * 60 * 60 * 1000;
-      else if (period === '14d') startTime = now - 14 * 24 * 60 * 60 * 1000;
-      else if (period === '30d') startTime = now - 30 * 24 * 60 * 60 * 1000;
+      if (currentPeriod === 'today') startTime = new Date(now).setHours(0, 0, 0, 0);
+      else if (currentPeriod === '7d') startTime = now - 7 * 24 * 60 * 60 * 1000;
+      else if (currentPeriod === '14d') startTime = now - 14 * 24 * 60 * 60 * 1000;
+      else if (currentPeriod === '30d') startTime = now - 30 * 24 * 60 * 60 * 1000;
 
       const adapter = new BybitAdapter();
       const combinedPnL: Record<string, Big> = {};
@@ -102,18 +130,18 @@ export function usePnLBySymbol(
             if (isMounted) setBybitSyncMessage(msg);
           });
           
-          await saveBybitRealPnLCache(key.id, period, res);
+          await saveBybitRealPnLCache(key.id, currentPeriod, res);
 
           for (const [sym, val] of Object.entries(res)) {
             if (!combinedPnL[sym]) combinedPnL[sym] = new Big(0);
             combinedPnL[sym] = combinedPnL[sym].plus(new Big(val));
           }
         } catch (err) {
-          console.warn('Failed to fetch Bybit Real PnL for key', key.label, err);
+          console.warn('[usePnLBySymbol] Failed to fetch Bybit Real PnL for key', key.label, err);
         }
       }
 
-      if (isMounted) {
+      if (isMounted && periodRef.current === currentPeriod) {
         const finalObj: Record<string, string> = {};
         for (const [sym, val] of Object.entries(combinedPnL)) {
           finalObj[sym] = val.toString();
@@ -124,12 +152,12 @@ export function usePnLBySymbol(
       }
     };
 
-    fetchBybitRealPnL();
+    syncNetwork();
 
     return () => {
       isMounted = false;
     };
-  }, [keys, period, exchangeFilter, useMockData, historyCacheVersion]);
+  }, [keys, useMockData, historyCacheVersion]);
 
   const pnlData = useMemo(() => {
     if (!positions || positions.length === 0) return [];

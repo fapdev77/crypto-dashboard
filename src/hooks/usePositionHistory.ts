@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import mockHistoryData from '../mock/history.json';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { UnifiedHistoryPosition } from '../types';
@@ -13,6 +13,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   const useMockData = useSettingsStore(state => state.useMockData);
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
+  const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -38,99 +39,75 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
     return filtered;
   };
 
+  // 1. Load Local Cache Effect (Runs ONLY on Keys, useMockData or historyCacheVersion change)
   useEffect(() => {
     let isMounted = true;
-    
-    const execute = async () => {
-      if (useMockData) {
-        const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime);
-        setPositions(applyFilters(sortedHistory as UnifiedHistoryPosition[]));
-        return;
-      }
+    if (useMockData) {
+      return;
+    }
 
-      if (keys.length === 0) {
-        setPositions([]);
-        return;
-      }
-      
-      let start: number | undefined;
-      let end: number | undefined;
-      const now = Date.now();
-      
-      if (period === 'today') {
-        start = new Date(now).setHours(0, 0, 0, 0);
-        end = now;
-      } else if (period === '7d') {
-        start = now - 7 * 24 * 60 * 60 * 1000;
-        end = now;
-      } else if (period === '14d') {
-        start = now - 14 * 24 * 60 * 60 * 1000;
-        end = now;
-      } else if (period === '30d') {
-        start = now - 30 * 24 * 60 * 60 * 1000;
-        end = now;
-      } else if (period === '90d') {
-        start = now - 90 * 24 * 60 * 60 * 1000;
-        end = now;
-      }
+    if (keys.length === 0) {
+      setRawCachedPositions([]);
+      return;
+    }
 
-      // Step 1: Instant cache load (SWR)
-      let cachedTotal: UnifiedHistoryPosition[] = [];
+    const loadCache = async () => {
       try {
+        let cachedTotal: UnifiedHistoryPosition[] = [];
         const cachePromises = keys.map(apiKey => getCachedHistory(apiKey.id));
         const cacheResults = await Promise.all(cachePromises);
         for (const res of cacheResults) {
           cachedTotal = [...cachedTotal, ...res];
         }
-        
-        if (start !== undefined && end !== undefined) {
-          cachedTotal = cachedTotal.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
-        }
-        cachedTotal.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
-        
         if (isMounted) {
-          const filteredCached = applyFilters(cachedTotal);
-          if (filteredCached.length > 0) {
-            setPositions(filteredCached);
-            setIsLoading(false); // fast render
-          } else {
-            setIsLoading(true); // initial load
-          }
+          setRawCachedPositions(cachedTotal);
         }
-      } catch (e) {
-        console.error("Error reading cache for SWR", e);
-        if (isMounted) setIsLoading(true);
+      } catch (err) {
+        console.error('[usePositionHistory] Error loading cache:', err);
       }
+    };
 
-      // Step 2: Background sync
+    loadCache();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [keys, useMockData, historyCacheVersion]);
+
+  // 2. Background REST API Sync Effect (Runs ONLY on keys, useMockData, historyCacheVersion change)
+  useEffect(() => {
+    let isMounted = true;
+    if (useMockData || keys.length === 0) return;
+
+    const syncNetwork = async () => {
       if (isMounted) {
         setIsSyncing(true);
         setSyncMessage('Iniciando sincronização...');
       }
-      
+
       try {
         const service = new PositionHistoryService();
-        let allHistory: UnifiedHistoryPosition[] = [];
-        
         for (const key of keys) {
-           if (isMounted) setSyncMessage(`Aguarde: sincronizando ${key.exchange} (${key.label})...`);
-           const result = await service.fetchWithCache(key);
-           allHistory = [...allHistory, ...result];
+          if (isMounted) setSyncMessage(`Aguarde: sincronizando ${key.exchange} (${key.label})...`);
+          await service.fetchWithCache(key);
         }
 
-        if (start !== undefined && end !== undefined) {
-          allHistory = allHistory.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
+        // Fetch complete updated list from cache
+        let cachedTotal: UnifiedHistoryPosition[] = [];
+        const cachePromises = keys.map(apiKey => getCachedHistory(apiKey.id));
+        const cacheResults = await Promise.all(cachePromises);
+        for (const res of cacheResults) {
+          cachedTotal = [...cachedTotal, ...res];
         }
-        allHistory.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
 
         if (isMounted) {
-          setPositions(applyFilters(allHistory));
+          setRawCachedPositions(cachedTotal);
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
         }
       } catch (err) {
-        console.error("Error background syncing position history", err);
+        console.error('[usePositionHistory] Error syncing network positions:', err);
         if (isMounted) {
           setIsLoading(false);
           setIsSyncing(false);
@@ -139,12 +116,55 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
       }
     };
 
-    execute();
+    syncNetwork();
 
     return () => {
       isMounted = false;
     };
-  }, [keys, period, useMockData, historyCacheVersion, exchange, searchTerm]);
+  }, [keys, useMockData, historyCacheVersion]);
+
+  // 3. Sync positions calculation based on local in-memory cache and current filters
+  useEffect(() => {
+    if (useMockData) {
+      const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime);
+      setPositions(applyFilters(sortedHistory as UnifiedHistoryPosition[]));
+      return;
+    }
+
+    if (keys.length === 0) {
+      setPositions([]);
+      return;
+    }
+
+    let start: number | undefined;
+    let end: number | undefined;
+    const now = Date.now();
+
+    if (period === 'today') {
+      start = new Date(now).setHours(0, 0, 0, 0);
+      end = now;
+    } else if (period === '7d') {
+      start = now - 7 * 24 * 60 * 60 * 1000;
+      end = now;
+    } else if (period === '14d') {
+      start = now - 14 * 24 * 60 * 60 * 1000;
+      end = now;
+    } else if (period === '30d') {
+      start = now - 30 * 24 * 60 * 60 * 1000;
+      end = now;
+    } else if (period === '90d') {
+      start = now - 90 * 24 * 60 * 60 * 1000;
+      end = now;
+    }
+
+    let filtered = [...rawCachedPositions];
+    if (start !== undefined && end !== undefined) {
+      filtered = filtered.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
+    }
+    filtered.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
+
+    setPositions(applyFilters(filtered));
+  }, [rawCachedPositions, keys, period, exchange, searchTerm, useMockData]);
 
   return { positions, setPositions, isLoading, isSyncing, syncMessage };
 }
