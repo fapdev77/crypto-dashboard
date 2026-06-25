@@ -53,6 +53,13 @@ export function useOrderReports(filters: OrderFilters) {
        return;
     }
 
+    if (keys.length === 0) {
+      setClosedRawOrders([]);
+      globalCachedClosedOrders = [];
+      if (!silent) setLoading(false);
+      return;
+    }
+
     // Only trigger loading state on non-silent runs if we don't have any cached orders yet
     if (!silent) {
       if (globalCachedClosedOrders.length === 0) {
