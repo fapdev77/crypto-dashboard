@@ -54,6 +54,8 @@ When developing in this project, enforce the following rules:
 
 5. **Interface Hover e Tooltips Unificados:** SEMPRE utilize o componente `<AppTooltip />` encapsulado para exibir informações adicionais, explicações ou popovers no hover de elementos interativos (como Status, Marquees, células de tabelas). NUNCA crie novos componentes absolutos gerados no hover via Tailwind, nem utilize atributos nativos do DOM como `title="..."`. Utilize a estrutura modular `description` e `rows` nativa do componente.
 
+6. **Coordinated History Sync Engine**: Always use the global `lastSyncTime` from `useSettingsStore` to coordinate sync states across multiple historical views. Never create separate or individual local sync state timestamps for historical tabs (Orders, Closed Positions, Trade History, PnL by Symbol) as this causes duplicate requests and rate-limiting issues. Always disable manual synchronization buttons and provide clear visual alerts (e.g. amber Simulation Mode badge) when the user activates `useMockData` (Simulation Mode).
+
 
 
 
