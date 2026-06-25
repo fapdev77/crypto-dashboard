@@ -8,6 +8,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import mockOrdersData from '../mock/orders.json';
 
 // Module-level state to persist across unmounts/remounts of different views
+let globalCachedClosedOrders: UnifiedOrder[] = [];
 let globalLastOrdersSyncedVersion: number | null = null;
 let globalLastOrdersSyncTimestamp: number = 0;
 
@@ -28,8 +29,11 @@ export function useOrderReports(filters: OrderFilters) {
   const { useMockData, historyCacheVersion, historyCacheInterval } = useSettingsStore();
 
   // Local state used only for CLOSED (history) orders
-  const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>(globalCachedClosedOrders);
+  const [loading, setLoading] = useState(() => {
+    if (useMockData || keys.length === 0) return false;
+    return globalCachedClosedOrders.length === 0;
+  });
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,8 +53,13 @@ export function useOrderReports(filters: OrderFilters) {
        return;
     }
 
-    if (!silent) setLoading(true);
-    setError(null);
+    // Only trigger loading state on non-silent runs if we don't have any cached orders yet
+    if (!silent) {
+      if (globalCachedClosedOrders.length === 0) {
+        setLoading(true);
+      }
+      setError(null);
+    }
 
     const now = Date.now();
     let isMounted = true; // In a real setup we might want an abort controller
@@ -68,6 +77,7 @@ export function useOrderReports(filters: OrderFilters) {
       
       if (cachedTotal.length > 0) {
         setClosedRawOrders(cachedTotal);
+        globalCachedClosedOrders = cachedTotal;
         if (!silent) setLoading(false); // Instant render
       }
 
@@ -134,9 +144,11 @@ export function useOrderReports(filters: OrderFilters) {
         }
         updatedTotal.sort((a, b) => b.createdTime - a.createdTime);
         setClosedRawOrders(updatedTotal);
+        globalCachedClosedOrders = updatedTotal;
       } else if (cachedTotal.length === 0) {
         // If we had no cache, and no new orders, set empty array
         setClosedRawOrders([]);
+        globalCachedClosedOrders = [];
       }
 
       // Mark as fully synchronized

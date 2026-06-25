@@ -9,6 +9,7 @@ import { getCachedHistory } from '../services/historyCache';
 export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d';
 
 // Module-level state to persist across unmounts/remounts of different views
+let globalCachedPositions: UnifiedHistoryPosition[] = [];
 let globalLastPositionsSyncedVersion: number | null = null;
 let globalLastPositionsSyncTimestamp: number = 0;
 
@@ -18,8 +19,11 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
   const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
-  const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>(globalCachedPositions);
+  const [isLoading, setIsLoading] = useState(() => {
+    if (useMockData || keys.length === 0) return false;
+    return globalCachedPositions.length === 0;
+  });
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
@@ -66,9 +70,14 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
         }
         if (isMounted) {
           setRawCachedPositions(cachedTotal);
+          globalCachedPositions = cachedTotal;
+          setIsLoading(false);
         }
       } catch (err) {
         console.error('[usePositionHistory] Error loading cache:', err);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -119,6 +128,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
         if (isMounted) {
           setRawCachedPositions(cachedTotal);
+          globalCachedPositions = cachedTotal;
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);

@@ -8,6 +8,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { getBybitRealPnLCache, saveBybitRealPnLCache } from '../services/historyCache';
 
 // Module-level state to persist across unmounts/remounts of different views
+let globalCachedPnLRecord: Record<string, string> = {};
 let globalLastPnlSyncedVersion: number | null = null;
 let globalLastPnlSyncTimestamp: number = 0;
 
@@ -22,8 +23,13 @@ export function usePnLBySymbol(
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
   const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
   
-  const [bybitRealPnL, setBybitRealPnL] = useState<Record<string, string>>({});
-  const [isBybitLoading, setIsBybitLoading] = useState(false);
+  const [bybitRealPnL, setBybitRealPnL] = useState<Record<string, string>>(globalCachedPnLRecord);
+  const [isBybitLoading, setIsBybitLoading] = useState(() => {
+    if (useMockData || keys.length === 0) return false;
+    const bybitKeys = keys.filter(k => k.exchange === 'bybit');
+    if (bybitKeys.length === 0) return false;
+    return Object.keys(globalCachedPnLRecord).length === 0;
+  });
   const [bybitSyncMessage, setBybitSyncMessage] = useState<string | null>(null);
 
   const periodRef = useRef(period);
@@ -80,9 +86,12 @@ export function usePnLBySymbol(
               finalCached[sym] = val.toString();
             }
             setBybitRealPnL(finalCached);
+            globalCachedPnLRecord = finalCached;
             setIsBybitLoading(false);
           } else {
-            setIsBybitLoading(true);
+            if (Object.keys(globalCachedPnLRecord).length === 0) {
+              setIsBybitLoading(true);
+            }
           }
         }
       } catch (err) {
@@ -163,6 +172,7 @@ export function usePnLBySymbol(
           finalObj[sym] = val.toString();
         }
         setBybitRealPnL(finalObj);
+        globalCachedPnLRecord = finalObj;
         setIsBybitLoading(false);
         setBybitSyncMessage(null);
 
