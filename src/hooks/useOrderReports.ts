@@ -7,6 +7,10 @@ import { getCachedOrders, saveCachedOrders, getLastOrderFetchTimestamp, updateOr
 import { useSettingsStore } from '../store/settingsStore';
 import mockOrdersData from '../mock/orders.json';
 
+// Module-level state to persist across unmounts/remounts of different views
+let globalLastOrdersSyncedVersion: number | null = null;
+let globalLastOrdersSyncTimestamp: number = 0;
+
 export interface OrderFilters {
   exchange: string;     // 'All' | 'bybit' | 'bitget' | 'okx'
   instrument: string;   // 'All' | 'SPOT' | 'PERP' | 'FUTURES' etc
@@ -21,7 +25,7 @@ export interface OrderFilters {
 export function useOrderReports(filters: OrderFilters) {
   const { keys } = useApiKeysStore();
   const cachedOpenOrders = useOrdersStore(state => state.openOrders);
-  const { useMockData, historyCacheVersion } = useSettingsStore();
+  const { useMockData, historyCacheVersion, historyCacheInterval } = useSettingsStore();
 
   // Local state used only for CLOSED (history) orders
   const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>([]);
@@ -38,7 +42,7 @@ export function useOrderReports(filters: OrderFilters) {
   }, [useMockData, filters.status]);
 
   // fetchOrders is only meaningful for CLOSED orders now.
-  const fetchOrders = useCallback(async (silent: boolean = false) => {
+  const fetchOrders = useCallback(async (silent: boolean = false, force: boolean = false) => {
     if (filters.status === 'OPEN') return;
     if (useMockData) {
        // Mock data is handled by the useEffect above
@@ -67,6 +71,21 @@ export function useOrderReports(filters: OrderFilters) {
         if (!silent) setLoading(false); // Instant render
       }
 
+      // Smart Check: Should we skip network fetch?
+      const intervalMs = (historyCacheInterval || 5) * 60 * 1000;
+      const timeSinceLastSync = now - globalLastOrdersSyncTimestamp;
+      const hasRecentSync = timeSinceLastSync < intervalMs;
+
+      if (
+        !force &&
+        cachedTotal.length > 0 &&
+        globalLastOrdersSyncedVersion === historyCacheVersion &&
+        hasRecentSync
+      ) {
+        // Already loaded from cache and synced recently. Skip network request!
+        return;
+      }
+
       // Step 2: Background Sync (Incremental)
       setIsSyncing(true);
       
@@ -86,7 +105,7 @@ export function useOrderReports(filters: OrderFilters) {
             // find the latest createdTime to update cache meta
             const maxCreatedTime = Math.max(...newOrders.map(o => o.createdTime || 0));
             if (maxCreatedTime > lastFetch) {
-              await updateOrderCacheMeta(key.id, maxCreatedTime);
+               await updateOrderCacheMeta(key.id, maxCreatedTime);
             }
           }
           return newOrders;
@@ -120,13 +139,17 @@ export function useOrderReports(filters: OrderFilters) {
         setClosedRawOrders([]);
       }
 
+      // Mark as fully synchronized
+      globalLastOrdersSyncedVersion = historyCacheVersion;
+      globalLastOrdersSyncTimestamp = Date.now();
+
     } catch (err: any) {
       if (!silent) setError(err.message || 'Failed to fetch order history');
     } finally {
       if (!silent) setLoading(false);
       setIsSyncing(false);
     }
-  }, [keys, filters.status, useMockData, historyCacheVersion]);
+  }, [keys, filters.status, useMockData, historyCacheVersion, historyCacheInterval]);
 
   const orders = useMemo(() => {
     // Source: global in-memory cache for open orders, local state for closed

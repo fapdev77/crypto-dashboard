@@ -8,10 +8,15 @@ import { getCachedHistory } from '../services/historyCache';
 
 export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d';
 
+// Module-level state to persist across unmounts/remounts of different views
+let globalLastPositionsSyncedVersion: number | null = null;
+let globalLastPositionsSyncTimestamp: number = 0;
+
 export function usePositionHistory(period: PositionHistoryPeriod, exchange?: string, searchTerm?: string) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
+  const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,6 +85,18 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
     if (useMockData || keys.length === 0) return;
 
     const syncNetwork = async () => {
+      const now = Date.now();
+      const intervalMs = (historyCacheInterval || 5) * 60 * 1000;
+      const hasRecentSync = (now - globalLastPositionsSyncTimestamp) < intervalMs;
+
+      // Skip network fetch if already done recently for the current version
+      if (
+        globalLastPositionsSyncedVersion === historyCacheVersion &&
+        hasRecentSync
+      ) {
+        return;
+      }
+
       if (isMounted) {
         setIsSyncing(true);
         setSyncMessage('Iniciando sincronização...');
@@ -105,6 +122,9 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
+          
+          globalLastPositionsSyncedVersion = historyCacheVersion;
+          globalLastPositionsSyncTimestamp = Date.now();
         }
       } catch (err) {
         console.error('[usePositionHistory] Error syncing network positions:', err);

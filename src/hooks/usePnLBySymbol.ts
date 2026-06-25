@@ -7,6 +7,10 @@ import { BybitAdapter } from '../services/adapters/BybitAdapter';
 import { useSettingsStore } from '../store/settingsStore';
 import { getBybitRealPnLCache, saveBybitRealPnLCache } from '../services/historyCache';
 
+// Module-level state to persist across unmounts/remounts of different views
+let globalLastPnlSyncedVersion: number | null = null;
+let globalLastPnlSyncTimestamp: number = 0;
+
 export function usePnLBySymbol(
   period: PositionHistoryPeriod,
   exchangeFilter: string,
@@ -16,6 +20,7 @@ export function usePnLBySymbol(
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
+  const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
   
   const [bybitRealPnL, setBybitRealPnL] = useState<Record<string, string>>({});
   const [isBybitLoading, setIsBybitLoading] = useState(false);
@@ -107,12 +112,23 @@ export function usePnLBySymbol(
         return;
       }
 
+      const now = Date.now();
+      const intervalMs = (historyCacheInterval || 5) * 60 * 1000;
+      const hasRecentSync = (now - globalLastPnlSyncTimestamp) < intervalMs;
+
+      // Skip network fetch if already done recently for the current version
+      if (
+        globalLastPnlSyncedVersion === historyCacheVersion &&
+        hasRecentSync
+      ) {
+        return;
+      }
+
       if (isMounted) {
         setIsBybitLoading(true);
         setBybitSyncMessage('Iniciando sincronização...');
       }
 
-      const now = Date.now();
       const currentPeriod = periodRef.current;
       let startTime = now - 90 * 24 * 60 * 60 * 1000; // default 90d
       if (currentPeriod === 'today') startTime = new Date(now).setHours(0, 0, 0, 0);
@@ -149,6 +165,9 @@ export function usePnLBySymbol(
         setBybitRealPnL(finalObj);
         setIsBybitLoading(false);
         setBybitSyncMessage(null);
+
+        globalLastPnlSyncedVersion = historyCacheVersion;
+        globalLastPnlSyncTimestamp = Date.now();
       }
     };
 
