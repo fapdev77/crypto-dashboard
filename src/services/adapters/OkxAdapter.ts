@@ -320,6 +320,7 @@ export class OkxAdapter implements IExchangeAdapter {
         console.warn(`[Okx-OpenOrders] Error fetching ${instType}:`, err);
       }
     }
+    await OkxAdapter.ensureInstrumentsLoaded();
     return this.normalizeOrders(allOrders, key);
   }
 
@@ -352,6 +353,7 @@ export class OkxAdapter implements IExchangeAdapter {
         console.warn(`[Okx-HistoryOrders] Error fetching ${instType}:`, err);
       }
     }
+    await OkxAdapter.ensureInstrumentsLoaded();
     return this.normalizeOrders(allOrders, key);
   }
 
@@ -372,8 +374,31 @@ export class OkxAdapter implements IExchangeAdapter {
       else if (ot.includes('take') || ot.includes('profit')) type = 'TP';
       else if (ot.includes('conditional')) type = 'CONDITIONAL';
 
-      const pSize = parseFloat(o.sz || '0');
-      const pFil = parseFloat(o.accFillSz || '0');
+      const sz = parseFloat(o.sz || '0');
+      const accFillSz = parseFloat(o.accFillSz || '0');
+      const px = parseFloat(o.px || o.avgPx || '0');
+
+      let qty = sz;
+      let filledQty = accFillSz;
+      let value = sz * px;
+
+      const isDerivative = o.instType === 'SWAP' || o.instType === 'FUTURES' || o.instId?.includes('-SWAP') || o.instId?.split('-').length >= 3;
+      if (isDerivative) {
+        const instInfo = OkxAdapter.cachedInstruments[o.instId];
+        if (instInfo) {
+          const ctVal = parseFloat(instInfo.ctVal || '1');
+          const ctType = instInfo.ctType || 'linear';
+          if (ctType === 'inverse') {
+            qty = px > 0 ? (sz * ctVal) / px : 0;
+            filledQty = px > 0 ? (accFillSz * ctVal) / px : 0;
+            value = sz * ctVal;
+          } else {
+            qty = sz * ctVal;
+            filledQty = accFillSz * ctVal;
+            value = qty * px;
+          }
+        }
+      }
       
       return {
         id: `${key.id}-${o.ordId}`,
@@ -388,9 +413,9 @@ export class OkxAdapter implements IExchangeAdapter {
         status,
         price: parseFloat(o.px || '0'),
         avgPrice: parseFloat(o.avgPx || '0'),
-        qty: pSize,
-        filledQty: pFil,
-        value: pSize * (parseFloat(o.px || o.avgPx || '0')), // Fallback approx value
+        qty,
+        filledQty,
+        value,
         triggerPrice: o.tpTriggerPx ? parseFloat(o.tpTriggerPx) : o.slTriggerPx ? parseFloat(o.slTriggerPx) : undefined,
         timeInForce: o.notionalUsd || undefined, // OKX specific fallback, they don't always expose timeInForce directly here 
         createdTime: parseInt(o.cTime || '0', 10),
@@ -399,6 +424,38 @@ export class OkxAdapter implements IExchangeAdapter {
         raw: o
       };
     });
+  }
+
+  private static cachedInstruments: Record<string, any> = {};
+  private static cachedInstrumentsTime: number = 0;
+
+  private static async ensureInstrumentsLoaded() {
+    if (Object.keys(this.cachedInstruments).length > 0 && Date.now() - this.cachedInstrumentsTime < 1000 * 60 * 60) {
+      return;
+    }
+    try {
+      const types = ['SWAP', 'FUTURES'];
+      const allInsts: Record<string, any> = {};
+      await Promise.all(types.map(async (instType) => {
+        const res = await proxyFetch({
+          targetUrl: `https://www.okx.com/api/v5/public/instruments?instType=${instType}`,
+          method: 'GET',
+          headers: {}
+        });
+        if (res && res.code === '0' && res.data) {
+          res.data.forEach((inst: any) => {
+            if (inst.instId) {
+              allInsts[inst.instId] = inst;
+            }
+          });
+        }
+      }));
+      this.cachedInstruments = allInsts;
+      this.cachedInstrumentsTime = Date.now();
+      console.log(`[OKX-Adapter] Loaded ${Object.keys(allInsts).length} SWAP & FUTURES instruments into cache.`);
+    } catch (err) {
+      console.warn('[OKX-Adapter] Error caching instruments:', err);
+    }
   }
 
   private static cachedSwapInstruments: any[] | null = null;
