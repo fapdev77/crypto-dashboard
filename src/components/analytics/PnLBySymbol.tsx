@@ -6,6 +6,7 @@ import { SymbolPnLRecord } from '../../types';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../utils/exportUtils';
+import { Pagination } from '../ui/Pagination';
 
 import { formatValue, formatCrypto } from '../../utils/formatters';
 import { useTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
@@ -103,6 +104,18 @@ export function PnLBySymbol() {
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [pnlData, exchange, instrument, searchTerm]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedData.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedData, currentPage]);
+
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
 
@@ -196,8 +209,18 @@ export function PnLBySymbol() {
             <div className="text-sm font-medium">{syncMessage || 'Carregando dados...'}</div>
           </div>
         ) : (
-          <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
-            <table className="w-full text-sm text-left">
+          <div className="space-y-4">
+            {sortedData.length > 5 && (
+              <Pagination
+                id="pnl-symbol-pagination-top"
+                currentPage={currentPage}
+                totalItems={sortedData.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            )}
+            <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
+              <table className="w-full text-sm text-left">
               <thead className="text-xs text-[#8E9299] border-b border-[#2a2b30] sticky top-0 bg-[#151619] z-10">
                 <tr>
                   <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('exchange')}>
@@ -221,7 +244,7 @@ export function PnLBySymbol() {
                 </tr>
               </thead>
               <tbody>
-                {sortedData.map((row) => (
+                {paginatedData.map((row) => (
                   <tr key={`${row.exchange}-${row.symbol}-${row.instrument}`} className="border-b border-[#2a2b30]/30 hover:bg-[#2a2b30]/10 transition-colors">
                     <td className="px-4 py-4">
                       <div data-theme={row.exchange.toLowerCase()} className="flex items-center gap-2 font-medium">
@@ -252,7 +275,7 @@ export function PnLBySymbol() {
                     </td>
                   </tr>
                 ))}
-                {sortedData.length === 0 && (
+                {paginatedData.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-10 text-center text-[#8E9299]">Nenhum dado encontrado para os filtros selecionados.</td>
                   </tr>
@@ -260,7 +283,17 @@ export function PnLBySymbol() {
               </tbody>
             </table>
           </div>
-        )}
+          {sortedData.length > 0 && (
+            <Pagination
+              id="pnl-symbol-pagination-bottom"
+              currentPage={currentPage}
+              totalItems={sortedData.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </div>
+      )}
       </div>
     </div>
   );

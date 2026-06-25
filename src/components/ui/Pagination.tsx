@@ -1,0 +1,167 @@
+import React from 'react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+
+interface PaginationProps {
+  id?: string;
+  currentPage: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+}
+
+export function Pagination({
+  id = 'pagination',
+  currentPage,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+}: PaginationProps) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+  if (totalItems === 0) return null;
+
+  // Calculate slice coordinates for status text
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  // Generate page numbers array with ellipsis
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      if (start > 2) {
+        pages.push('...');
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < totalPages - 1) {
+        pages.push('...');
+      }
+
+      // Always show last page
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  const pages = getPageNumbers();
+
+  const handlePrev = () => {
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
+    }
+  };
+
+  return (
+    <div
+      id={id}
+      className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-[#111216] border border-[#2a2b30] rounded-xl text-sm"
+    >
+      {/* Items Count Summary */}
+      <div id={`${id}-summary`} className="text-gray-400 font-medium">
+        Showing <span className="text-white font-mono">{startItem}</span> to{' '}
+        <span className="text-white font-mono">{endItem}</span> of{' '}
+        <span className="text-white font-mono">{totalItems}</span> records
+      </div>
+
+      {/* Pagination Controls */}
+      <div id={`${id}-controls`} className="flex items-center gap-1.5 flex-wrap">
+        {/* First Page */}
+        <button
+          id={`${id}-btn-first`}
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          title="First Page"
+        >
+          <ChevronsLeft className="w-4 h-4" />
+        </button>
+
+        {/* Previous Page */}
+        <button
+          id={`${id}-btn-prev`}
+          onClick={handlePrev}
+          disabled={currentPage === 1}
+          className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          title="Previous Page"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+
+        {/* Page Buttons */}
+        <div id={`${id}-pages`} className="flex items-center gap-1">
+          {pages.map((p, idx) => {
+            if (p === '...') {
+              return (
+                <span
+                  key={`ellipsis-${idx}`}
+                  className="px-2 py-1 text-gray-500 font-mono select-none"
+                >
+                  ...
+                </span>
+              );
+            }
+
+            const isCurrent = p === currentPage;
+            return (
+              <button
+                key={`page-${p}`}
+                id={`${id}-btn-page-${p}`}
+                onClick={() => onPageChange(p as number)}
+                className={`min-w-[28px] px-2 py-1 rounded text-center font-mono font-medium transition-colors cursor-pointer select-none ${
+                  isCurrent
+                    ? 'bg-[#2F6BFF] text-white font-bold'
+                    : 'bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white'
+                }`}
+              >
+                {p}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Next Page */}
+        <button
+          id={`${id}-btn-next`}
+          onClick={handleNext}
+          disabled={currentPage === totalPages}
+          className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          title="Next Page"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+
+        {/* Last Page */}
+        <button
+          id={`${id}-btn-last`}
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          title="Last Page"
+        >
+          <ChevronsRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
