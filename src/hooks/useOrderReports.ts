@@ -26,7 +26,7 @@ export interface OrderFilters {
 export function useOrderReports(filters: OrderFilters) {
   const { keys } = useApiKeysStore();
   const cachedOpenOrders = useOrdersStore(state => state.openOrders);
-  const { useMockData, historyCacheVersion, historyCacheInterval } = useSettingsStore();
+  const { useMockData, historyCacheVersion, historyCacheInterval, lastSyncTime, setLastSyncTime } = useSettingsStore();
 
   // Local state used only for CLOSED (history) orders
   const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>(globalCachedClosedOrders);
@@ -83,14 +83,14 @@ export function useOrderReports(filters: OrderFilters) {
 
       // Smart Check: Should we skip network fetch?
       const intervalMs = (historyCacheInterval || 5) * 60 * 1000;
-      const timeSinceLastSync = now - globalLastOrdersSyncTimestamp;
+      const timeSinceLastSync = now - lastSyncTime;
       const hasRecentSync = timeSinceLastSync < intervalMs;
 
       if (
         !force &&
         cachedTotal.length > 0 &&
-        globalLastOrdersSyncedVersion === historyCacheVersion &&
-        hasRecentSync
+        hasRecentSync &&
+        lastSyncTime > 0
       ) {
         // Already loaded from cache and synced recently. Skip network request!
         return;
@@ -152,8 +152,7 @@ export function useOrderReports(filters: OrderFilters) {
       }
 
       // Mark as fully synchronized
-      globalLastOrdersSyncedVersion = historyCacheVersion;
-      globalLastOrdersSyncTimestamp = Date.now();
+      setLastSyncTime(Date.now());
 
     } catch (err: any) {
       if (!silent) setError(err.message || 'Failed to fetch order history');
@@ -161,7 +160,7 @@ export function useOrderReports(filters: OrderFilters) {
       if (!silent) setLoading(false);
       setIsSyncing(false);
     }
-  }, [keys, filters.status, useMockData, historyCacheVersion, historyCacheInterval]);
+  }, [keys, filters.status, useMockData, historyCacheVersion, historyCacheInterval, lastSyncTime, setLastSyncTime]);
 
   const orders = useMemo(() => {
     // Source: global in-memory cache for open orders, local state for closed

@@ -22,6 +22,8 @@ export function usePnLBySymbol(
   const useMockData = useSettingsStore(state => state.useMockData);
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
   const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
+  const lastSyncTime = useSettingsStore(state => state.lastSyncTime);
+  const setLastSyncTime = useSettingsStore(state => state.setLastSyncTime);
   
   const [bybitRealPnL, setBybitRealPnL] = useState<Record<string, string>>(globalCachedPnLRecord);
   const [isBybitLoading, setIsBybitLoading] = useState(() => {
@@ -121,14 +123,19 @@ export function usePnLBySymbol(
         return;
       }
 
+      // If a force sync is requested globally, reset local sync timestamp to force fetch
+      if (lastSyncTime === 0) {
+        globalLastPnlSyncTimestamp = 0;
+      }
+
       const now = Date.now();
       const intervalMs = (historyCacheInterval || 5) * 60 * 1000;
       const hasRecentSync = (now - globalLastPnlSyncTimestamp) < intervalMs;
 
-      // Skip network fetch if already done recently for the current version
+      // Skip network fetch if already done recently
       if (
-        globalLastPnlSyncedVersion === historyCacheVersion &&
-        hasRecentSync
+        hasRecentSync &&
+        globalLastPnlSyncTimestamp > 0
       ) {
         return;
       }
@@ -178,6 +185,11 @@ export function usePnLBySymbol(
 
         globalLastPnlSyncedVersion = historyCacheVersion;
         globalLastPnlSyncTimestamp = Date.now();
+
+        // If we were the one that finished a manual force sync, we restore the global lastSyncTime
+        if (lastSyncTime === 0) {
+          setLastSyncTime(Date.now());
+        }
       }
     };
 
@@ -186,7 +198,7 @@ export function usePnLBySymbol(
     return () => {
       isMounted = false;
     };
-  }, [keys, useMockData, historyCacheVersion]);
+  }, [keys, useMockData, historyCacheVersion, lastSyncTime, historyCacheInterval, setLastSyncTime]);
 
   const pnlData = useMemo(() => {
     if (!positions || positions.length === 0) return [];

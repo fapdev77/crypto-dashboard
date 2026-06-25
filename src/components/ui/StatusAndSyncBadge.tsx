@@ -18,7 +18,8 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
     lastSyncTime,
     setLastSyncTime,
     cooldownEnd,
-    setCooldownEnd
+    setCooldownEnd,
+    useMockData
   } = useSettingsStore();
 
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -119,29 +120,56 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
         </div>
       </AppTooltip>
 
+      {/* 2b. Simulation Mode Badge */}
+      {useMockData && (
+        <AppTooltip
+          description="The application is currently running in Simulation Mode using offline mock data. Real-time API calls are offline."
+          rows={[
+            { label: 'Mode', value: 'Simulation' },
+            { label: 'Engine', value: 'Mock Data' }
+          ]}
+        >
+          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-500 font-medium select-none animate-pulse">
+            <Play className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+            <span>Simulation Mode</span>
+          </div>
+        </AppTooltip>
+      )}
+
       {/* 3. Manual Sync Trigger Button with 1-min Cooldown */}
       <AppTooltip
         description={
-          cooldownLeft > 0 
-            ? `Manual sync is locked to protect exchange API rate-limits. Please wait ${cooldownLeft}s.`
-            : "Force-sync historical orders, position records, and PnL metrics immediately."
+          useMockData
+            ? "Manual synchronization is disabled while running in Simulation Mode."
+            : cooldownLeft > 0 
+              ? `Manual sync is locked to protect exchange API rate-limits. Please wait ${cooldownLeft}s.`
+              : "Force-sync historical orders, position records, and PnL metrics immediately."
         }
-        rows={[
-          { label: 'Global Cooldown', value: '60 seconds' },
-          { label: 'Status', value: cooldownLeft > 0 ? 'Locked' : 'Ready' }
-        ]}
+        rows={
+          useMockData
+            ? [
+                { label: 'Sync Status', value: 'Disabled' },
+                { label: 'Reason', value: 'Simulation Mode' }
+              ]
+            : [
+                { label: 'Global Cooldown', value: '60 seconds' },
+                { label: 'Status', value: cooldownLeft > 0 ? 'Locked' : 'Ready' }
+              ]
+        }
       >
         <button
           onClick={handleManualSync}
-          disabled={cooldownLeft > 0 || isSyncing}
+          disabled={cooldownLeft > 0 || isSyncing || useMockData}
           className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-200 select-none ${
-            cooldownLeft > 0 || isSyncing
+            cooldownLeft > 0 || isSyncing || useMockData
               ? 'bg-[#151619] text-gray-500 border-[#2a2b30] cursor-not-allowed opacity-60'
               : 'bg-[#1a1b1e] border-[#2a2b30] text-gray-300 hover:bg-[#2a2b30] hover:text-white cursor-pointer active:scale-95'
           }`}
         >
           <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin' : ''}`} />
-          {cooldownLeft > 0 ? (
+          {useMockData ? (
+            <span>Sync Disabled</span>
+          ) : cooldownLeft > 0 ? (
             <span>Cooldown: <strong className="font-mono">{cooldownLeft}s</strong></span>
           ) : (
             <span>Sync Now</span>
