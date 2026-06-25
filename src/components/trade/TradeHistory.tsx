@@ -369,11 +369,11 @@ export function TradeHistory() {
 
                   {/* Col 2: Direction & Type */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <AppTooltip description="Indicates trade direction and order type.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Direction & Type</span>
+                    <AppTooltip description="Indicates trade direction, margin mode and order type.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Direction / Margin Mode & Type</span>
                     </AppTooltip>
                     <span className={`font-mono text-sm ${isBuy ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                      {directionLabel}
+                      {directionLabel}·{trade.positionSide !== 'net' ? `${trade.raw?.leverage || trade.raw?.lever || '1'}x` : '1x'}
                     </span>
                     <span className="text-xs text-[#8E9299] font-mono mt-0.5">{trade.type}</span>
                   </div>
