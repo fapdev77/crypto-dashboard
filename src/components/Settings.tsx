@@ -196,26 +196,26 @@ export function Settings() {
             {/* Background Update Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <AppTooltip description="Sets the interval for the background service that syncs your historic PnL. A longer interval saves API calls and data usage, but delays historical charts updates.">
+                <AppTooltip description="Mainly used in History Views and PnL by Symbol. Sets the interval for the background service that syncs your historic data. A longer interval saves API calls and data usage, but delays historical charts updates.">
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Background Update Interval</h4>
                 </AppTooltip>
                 <span className="text-[#00C853] font-mono text-xs bg-[#00C853]/10 px-2 py-0.5 rounded-md">{historyCacheInterval}m</span>
               </div>
               <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Keeps historical PnL sync running periodically in the background. Adjust between 5 and 60 minutes.
+                Keeps historical PnL sync running periodically in the background. Adjust between 1 and 60 minutes.  Lower values provide faster updates but increase network consumption and Exchanges can temporarily block API calls.
               </p>
               <input
                 type="range"
-                min="5"
+                min="1"
                 max="60"
-                step="5"
+                step="1"
                 value={historyCacheInterval}
                 onChange={(e) => setHistoryCacheInterval(Number(e.target.value))}
                 onPointerUp={() => toast.success(`Background Update Interval set to ${historyCacheInterval}m\n(Effective next background run)`, { id: 'cache-interval' })}
                 className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-[#00C853]"
               />
               <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
-                <span>5m</span>
+                <span>1m</span>
                 <span>60m</span>
               </div>
             </div>
@@ -286,7 +286,7 @@ export function Settings() {
 
           <div className="flex flex-col flex-1">
             <div className="flex justify-between items-center mb-1">
-              <AppTooltip description="Controls how often the application fetches live data like mark prices, open positions, and account balances. Faster updates consume more API limits.">
+              <AppTooltip description="Mainly used in Dashboard, Open Positions and Open Orders. Controls how often the application fetches live data like mark prices, open positions, and account balances. Faster updates consume more API limits.">
                 <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Background Refresh Interval</h4>
               </AppTooltip>
               <span className="text-[#00C853] font-mono text-xs bg-[#00C853]/10 px-2 py-0.5 rounded-md">{pollingInterval}s</span>
