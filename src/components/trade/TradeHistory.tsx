@@ -14,6 +14,7 @@ import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { AssetClassifierAggregator } from '../../services/AssetClassifierAggregator';
 import { format } from 'date-fns';
+import { Pagination } from '../ui/Pagination';
 
 export function TradeHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -34,6 +35,9 @@ export function TradeHistory() {
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
   // Initial Fetch
   useEffect(() => {
     fetchOrders();
@@ -52,6 +56,15 @@ export function TradeHistory() {
   const trades = useMemo(() => {
     return orders.filter(o => o.filledQty > 0);
   }, [orders]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, trades]);
+
+  const paginatedTrades = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return trades.slice(startIndex, startIndex + itemsPerPage);
+  }, [trades, currentPage]);
 
   // Stats
   const stats = useMemo(() => {
@@ -275,7 +288,20 @@ export function TradeHistory() {
         </div>
       ) : (
         <div className="flex flex-col gap-3 pb-4">
-          {trades.map(trade => {
+          {/* Top Pagination if trades.length > 5 */}
+          {trades.length > 5 && (
+            <div className="mb-2">
+              <Pagination
+                id="trades-pagination-top"
+                currentPage={currentPage}
+                totalItems={trades.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+
+          {paginatedTrades.map(trade => {
             const isBuy = trade.side === 'buy';
             const isInverse = trade.category === 'INVERSE';
             const symbolSuffix = trade.symbol.replace(/USDT|USDC|USD|PERP|-[0-9]+$/g, '');
@@ -421,6 +447,17 @@ export function TradeHistory() {
               </div>
             );
           })}
+
+          {/* Bottom Pagination */}
+          <div className="mt-3">
+            <Pagination
+              id="trades-pagination-bottom"
+              currentPage={currentPage}
+              totalItems={trades.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -16,6 +16,7 @@ import { StatusAndSyncBadge } from './ui/StatusAndSyncBadge';
 import { getHistoryInverseUsdValues } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../utils/exportUtils';
+import { Pagination } from './ui/Pagination';
 
 export function ClosedPositions() {
   const keys = useApiKeysStore(state => state.keys);
@@ -30,6 +31,13 @@ export function ClosedPositions() {
   const { positions: closedPositions, isLoading, isSyncing, syncMessage } = usePositionHistory(period);
   const [error, setError] = useState<string | null>(null);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterText, exchangeFilter, period, closedPositions]);
 
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
@@ -49,6 +57,11 @@ export function ClosedPositions() {
 
     return filtered;
   }, [closedPositions, filterText, exchangeFilter]);
+
+  const paginatedClosedPositions = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredClosedPositions.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredClosedPositions, currentPage]);
 
   const handleExport = (formatType: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
@@ -333,7 +346,20 @@ export function ClosedPositions() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {filteredClosedPositions.map((pos) => {
+          {/* Top Pagination if filteredClosedPositions.length > 5 */}
+          {filteredClosedPositions.length > 5 && (
+            <div className="mb-2">
+              <Pagination
+                id="closed-positions-pagination-top"
+                currentPage={currentPage}
+                totalItems={filteredClosedPositions.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+
+          {paginatedClosedPositions.map((pos) => {
             const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
             const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
             const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
@@ -555,6 +581,17 @@ export function ClosedPositions() {
               </div>
             );
           })}
+
+          {/* Bottom Pagination */}
+          <div className="mt-3">
+            <Pagination
+              id="closed-positions-pagination-bottom"
+              currentPage={currentPage}
+              totalItems={filteredClosedPositions.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
       )}
     </div>

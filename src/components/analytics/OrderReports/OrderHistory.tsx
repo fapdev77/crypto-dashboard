@@ -11,6 +11,7 @@ import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { AppTooltip } from '../../ui/Tooltip';
+import { Pagination } from '../../ui/Pagination';
 
 export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -29,6 +30,13 @@ export function OrderHistory() {
   const formatCurrency = useFormatCurrency();
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, orders]);
 
   // Busca inicial
   useEffect(() => {
@@ -158,6 +166,11 @@ export function OrderHistory() {
 
     return { buyCount, sellCount, filledCount, cancelledCount, rejectedCount, totalTradedVolume, totalFees };
   }, [orders]);
+
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return orders.slice(startIndex, startIndex + itemsPerPage);
+  }, [orders, currentPage]);
 
   const SIDE_DONUT = [
     { name: 'Buy', value: stats.buyCount, color: '#00C853' },
@@ -324,7 +337,29 @@ export function OrderHistory() {
       )}
 
       <div className="flex-1 overflow-auto hide-scrollbar">
-        <OrdersTable orders={orders} loading={loading} />
+        {orders.length > 5 && (
+          <div className="mb-4">
+            <Pagination
+              id="orders-pagination-top"
+              currentPage={currentPage}
+              totalItems={orders.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
+        <OrdersTable orders={paginatedOrders} loading={loading} />
+        {orders.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              id="orders-pagination-bottom"
+              currentPage={currentPage}
+              totalItems={orders.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
