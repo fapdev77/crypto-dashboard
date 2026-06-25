@@ -277,7 +277,7 @@ export function PnLBySymbol() {
                 ))}
                 {paginatedData.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-[#8E9299]">Nenhum dado encontrado para os filtros selecionados.</td>
+                    <td colSpan={6} className="px-4 py-10 text-center text-[#8E9299]">No data or nothing found for selected filters.</td>
                   </tr>
                 )}
               </tbody>
