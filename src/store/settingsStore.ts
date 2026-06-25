@@ -15,6 +15,10 @@ interface SettingsState {
   /** In-memory counter bumped after every background cache refresh. Consumers use it as a useEffect dep. */
   historyCacheVersion: number;
   bumpHistoryCacheVersion: () => void;
+  lastSyncTime: number;
+  setLastSyncTime: (time: number) => void;
+  cooldownEnd: number;
+  setCooldownEnd: (time: number) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -32,6 +36,10 @@ export const useSettingsStore = create<SettingsState>()(
       setShowWelcomeOnStartup: (showWelcomeOnStartup: boolean) => set({ showWelcomeOnStartup }),
       historyCacheVersion: 0,
       bumpHistoryCacheVersion: () => set(state => ({ historyCacheVersion: state.historyCacheVersion + 1 })),
+      lastSyncTime: Date.now(),
+      setLastSyncTime: (lastSyncTime: number) => set({ lastSyncTime }),
+      cooldownEnd: 0,
+      setCooldownEnd: (cooldownEnd: number) => set({ cooldownEnd }),
     }),
     {
       name: 'terminal-settings',

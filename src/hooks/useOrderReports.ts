@@ -21,7 +21,7 @@ export interface OrderFilters {
 export function useOrderReports(filters: OrderFilters) {
   const { keys } = useApiKeysStore();
   const cachedOpenOrders = useOrdersStore(state => state.openOrders);
-  const useMockData = useSettingsStore(state => state.useMockData);
+  const { useMockData, historyCacheVersion } = useSettingsStore();
 
   // Local state used only for CLOSED (history) orders
   const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>([]);
@@ -126,7 +126,7 @@ export function useOrderReports(filters: OrderFilters) {
       if (!silent) setLoading(false);
       setIsSyncing(false);
     }
-  }, [keys, filters.status, useMockData]);
+  }, [keys, filters.status, useMockData, historyCacheVersion]);
 
   const orders = useMemo(() => {
     // Source: global in-memory cache for open orders, local state for closed
