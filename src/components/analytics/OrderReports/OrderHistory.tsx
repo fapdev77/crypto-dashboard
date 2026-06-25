@@ -5,7 +5,7 @@ import { OrdersTable } from './OrdersTable';
 import { Download, ChevronDown, History } from 'lucide-react';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
-import { SyncBadge } from '../../ui/SyncBadge';
+import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
@@ -201,13 +201,13 @@ export function OrderHistory() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-        <h2 className="text-xl font-bold tracking-tight flex items-center gap-3 text-white">
-          <div className="flex items-center gap-2">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <History className="w-5 h-5 text-[#2F6BFF]" />
             Orders History
-          </div>
-          <SyncBadge isSyncing={isSyncing} />
-        </h2>
+          </h2>
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} />
+        </div>
         <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}

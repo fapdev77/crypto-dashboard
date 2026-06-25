@@ -12,7 +12,7 @@ import { AppTooltip } from './ui/Tooltip';
 import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
-import { SyncBadge } from './ui/SyncBadge';
+import { StatusAndSyncBadge } from './ui/StatusAndSyncBadge';
 import { getHistoryInverseUsdValues } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../utils/exportUtils';
@@ -27,7 +27,7 @@ export function ClosedPositions() {
 
   const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
 
-  const { positions: closedPositions, isLoading, isSyncing } = usePositionHistory(period);
+  const { positions: closedPositions, isLoading, isSyncing, syncMessage } = usePositionHistory(period);
   const [error, setError] = useState<string | null>(null);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
@@ -187,13 +187,13 @@ export function ClosedPositions() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-        <h2 className="text-xl font-bold tracking-tight flex items-center gap-3 text-white">
-          <div className="flex items-center gap-2">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <History className="w-5 h-5 text-[#2F6BFF]" />
             Positions History
-          </div>
-          <SyncBadge isSyncing={isSyncing} />
-        </h2>
+          </h2>
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
+        </div>
         <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}

@@ -5,7 +5,7 @@ import { PositionHistoryService } from '../services/positions/PositionHistorySer
 
 export function useHistoryCachePolling() {
   const keys = useApiKeysStore(state => state.keys);
-  const { useMockData, historyCacheInterval, bumpHistoryCacheVersion } = useSettingsStore();
+  const { useMockData, historyCacheInterval, bumpHistoryCacheVersion, setLastSyncTime } = useSettingsStore();
 
   useEffect(() => {
     if (useMockData || keys.length === 0) return;
@@ -18,6 +18,7 @@ export function useHistoryCachePolling() {
       try {
         await Promise.all(keys.map(apiKey => service.fetchWithCache(apiKey)));
         bumpHistoryCacheVersion();
+        setLastSyncTime(Date.now());
         console.log('[HistoryCachePolling] Background update complete.');
       } catch (err) {
         console.error('[HistoryCachePolling] Error during background update:', err);

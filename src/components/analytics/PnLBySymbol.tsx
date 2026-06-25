@@ -11,7 +11,7 @@ import { formatValue, formatCrypto } from '../../utils/formatters';
 import { useTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { usePrivacy } from '../../context/PrivacyContext';
-import { SyncBadge } from '../ui/SyncBadge';
+import { StatusAndSyncBadge } from '../ui/StatusAndSyncBadge';
 import { FilterBar } from '../ui/FilterBar';
 
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
@@ -131,12 +131,12 @@ export function PnLBySymbol() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-        <div className="flex items-center gap-3">
+        <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <BarChart2 className="w-5 h-5 text-[#2F6BFF]" />
             PnL by Symbol
           </h2>
-          <SyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
         </div>
         <div className="relative">
           <button
