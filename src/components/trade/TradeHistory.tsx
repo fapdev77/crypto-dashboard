@@ -148,7 +148,7 @@ export function TradeHistory() {
       }
 
       // Fees
-      const feeStr = t.fees 
+      const feeStr = t.fees
         ? (isInverse ? `${Math.abs(t.fees).toFixed(8)} ${symbolSuffix}` : `${Math.abs(t.fees).toFixed(6)} USDT`)
         : '0.00';
 
@@ -286,8 +286,8 @@ export function TradeHistory() {
             const connectionLabel = keys.find(k => k.id === trade.connectionId)?.label || trade.connectionId;
 
             // Instrument mapping
-            let instrumentLabel = 'Linear Perpetuals';
-            if (trade.category === 'INVERSE') instrumentLabel = 'Inverse Perpetuals';
+            let instrumentLabel = 'Linear';
+            if (trade.category === 'INVERSE') instrumentLabel = 'Inverse';
             else if (trade.category === 'SPOT') instrumentLabel = 'Spot';
             else if (trade.category === 'FUTURES') instrumentLabel = 'Futures';
             else if (trade.category === 'OPTION') instrumentLabel = 'Option';
@@ -295,7 +295,7 @@ export function TradeHistory() {
             // Direction Label and style
             let directionLabel = isBuy ? 'Buy' : 'Sell';
             let directionColorClass = isBuy ? 'text-[#00C853] bg-[#00C853]/10 border-[#00C853]/20' : 'text-[#FF4444] bg-[#FF4444]/10 border-[#FF4444]/20';
-            
+
             if (trade.category !== 'SPOT') {
               if (isBuy) {
                 const isClose = trade.positionSide === 'short';
@@ -324,7 +324,7 @@ export function TradeHistory() {
               filledQtyStr = `${formatCurrency(trade.filledQty, 'crypto')} ${symbolSuffix}`;
             }
 
-            const feeStr = trade.fees 
+            const feeStr = trade.fees
               ? (isInverse ? `${formatCurrency(Math.abs(trade.fees), 'crypto', 8)} ${symbolSuffix}` : `${formatCurrency(Math.abs(trade.fees), 'crypto', 6)} USDT`)
               : '--';
 
@@ -333,8 +333,8 @@ export function TradeHistory() {
             const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
             return (
-              <div 
-                key={trade.id} 
+              <div
+                key={trade.id}
                 className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40] overflow-hidden"
                 onClick={() => setExpandedId(isExpanded ? null : trade.id)}
               >
@@ -360,6 +360,10 @@ export function TradeHistory() {
                       <div className="flex items-center gap-1">
                         <span className="font-bold text-white text-sm">{trade.symbol}</span>
                       </div>
+                      <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
+                        {trade.exchange}
+                      </span>
+
                     </div>
                   </div>
 
@@ -413,7 +417,7 @@ export function TradeHistory() {
 
                 {/* Collapsible Details - Grid representation of all keys exactly as listed */}
                 {isExpanded && (
-                  <div 
+                  <div
                     className="px-6 py-4 bg-[#12131a] border-t border-[#2a2b30] animate-in slide-in-from-top-2 duration-150"
                     onClick={(e) => e.stopPropagation()}
                   >
