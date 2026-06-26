@@ -40,18 +40,33 @@ export function useMultiExchangeWS() {
       return;
     }
 
+    const activeKeys = keys.filter(k => k.isActive);
+    if (activeKeys.length === 0) {
+      Object.keys(intervalsRef.current).forEach(id => {
+        const realId = id.replace('-poll', '');
+        disconnect(realId);
+      });
+      const currentState = useDashboardStore.getState();
+      keys.forEach(k => {
+        currentState.clearConnectionData(k.id);
+        useOrdersStore.getState().clearConnectionOrders(k.id);
+      });
+      mockAccountsData.forEach((acc: any) => {
+        currentState.clearConnectionData(acc.connectionId);
+      });
+      return;
+    }
+
     const activeIds = new Set<string>();
     const currentState = useDashboardStore.getState();
     mockAccountsData.forEach((acc: any) => {
       currentState.clearConnectionData(acc.connectionId);
     });
 
-    keys.forEach((config) => {
-      if (config.isActive) {
-        activeIds.add(config.id);
-        if (!intervalsRef.current[config.id + '-poll']) {
-          connect(config);
-        }
+    activeKeys.forEach((config) => {
+      activeIds.add(config.id);
+      if (!intervalsRef.current[config.id + '-poll']) {
+        connect(config);
       }
     });
 

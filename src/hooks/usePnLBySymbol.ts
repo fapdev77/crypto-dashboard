@@ -28,11 +28,22 @@ export function usePnLBySymbol(
   const [bybitRealPnL, setBybitRealPnL] = useState<Record<string, string>>(globalCachedPnLRecord);
   const [isBybitLoading, setIsBybitLoading] = useState(() => {
     if (useMockData || keys.length === 0) return false;
-    const bybitKeys = keys.filter(k => k.exchange === 'bybit');
-    if (bybitKeys.length === 0) return false;
+    const activeBybitKeys = keys.filter(k => k.exchange === 'bybit' && k.isActive);
+    if (activeBybitKeys.length === 0) return false;
     return Object.keys(globalCachedPnLRecord).length === 0;
   });
   const [bybitSyncMessage, setBybitSyncMessage] = useState<string | null>(null);
+
+  // Turn off loading if active Bybit keys count goes to 0
+  useEffect(() => {
+    if (!useMockData) {
+      const activeBybitKeys = keys.filter(k => k.exchange === 'bybit' && k.isActive);
+      if (activeBybitKeys.length === 0) {
+        setIsBybitLoading(false);
+        setBybitSyncMessage(null);
+      }
+    }
+  }, [keys, useMockData]);
 
   const periodRef = useRef(period);
   const exchangeFilterRef = useRef(exchangeFilter);
@@ -55,8 +66,8 @@ export function usePnLBySymbol(
       return;
     }
 
-    const bybitKeys = keys.filter(k => k.exchange === 'bybit');
-    if (bybitKeys.length === 0 || (exchangeFilter !== 'All' && exchangeFilter.toLowerCase() !== 'bybit')) {
+    const activeBybitKeys = keys.filter(k => k.exchange === 'bybit' && k.isActive);
+    if (activeBybitKeys.length === 0 || (exchangeFilter !== 'All' && exchangeFilter.toLowerCase() !== 'bybit')) {
       setBybitRealPnL({});
       setIsBybitLoading(false);
       setBybitSyncMessage(null);
@@ -68,7 +79,7 @@ export function usePnLBySymbol(
         const cachedCombined: Record<string, Big> = {};
         let hasAnyCache = false;
 
-        const cachePromises = bybitKeys.map(key => getBybitRealPnLCache(key.id, period));
+        const cachePromises = activeBybitKeys.map(key => getBybitRealPnLCache(key.id, period));
         const cacheResults = await Promise.all(cachePromises);
 
         cacheResults.forEach((res) => {

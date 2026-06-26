@@ -28,14 +28,23 @@ export function useOrderReports(filters: OrderFilters) {
   const cachedOpenOrders = useOrdersStore(state => state.openOrders);
   const { useMockData, historyCacheVersion, historyCacheInterval, lastSyncTime, setLastSyncTime } = useSettingsStore();
 
+  const activeKeys = useMemo(() => keys.filter(k => k.isActive), [keys]);
+
   // Local state used only for CLOSED (history) orders
   const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>(globalCachedClosedOrders);
   const [loading, setLoading] = useState(() => {
-    if (useMockData || keys.length === 0) return false;
+    if (useMockData || keys.filter(k => k.isActive).length === 0) return false;
     return globalCachedClosedOrders.length === 0;
   });
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Turn off loading if active keys count goes to 0
+  useEffect(() => {
+    if (!useMockData && keys.filter(k => k.isActive).length === 0) {
+      setLoading(false);
+    }
+  }, [keys, useMockData]);
 
   // Use a useEffect to handle useMockData changing purely so we update immediately
   useEffect(() => {
@@ -53,7 +62,8 @@ export function useOrderReports(filters: OrderFilters) {
        return;
     }
 
-    if (keys.length === 0) {
+    const activeKeys = keys.filter(k => k.isActive);
+    if (activeKeys.length === 0) {
       setClosedRawOrders([]);
       globalCachedClosedOrders = [];
       if (!silent) setLoading(false);
@@ -74,7 +84,7 @@ export function useOrderReports(filters: OrderFilters) {
     try {
       // Step 1: SWR Instant Load from IndexedDB
       let cachedTotal: UnifiedOrder[] = [];
-      const cachePromises = keys.map(apiKey => getCachedOrders(apiKey.id));
+      const cachePromises = activeKeys.map(apiKey => getCachedOrders(apiKey.id));
       const cacheResults = await Promise.all(cachePromises);
       for (const res of cacheResults) {
         cachedTotal = [...cachedTotal, ...res];
@@ -108,10 +118,7 @@ export function useOrderReports(filters: OrderFilters) {
       
       let allNewOrders: UnifiedOrder[] = [];
       
-      const fetchPromises = keys.map(async (key) => {
-        if (!key.isActive) {
-          return [];
-        }
+      const fetchPromises = activeKeys.map(async (key) => {
         const adapter = ExchangeAggregator.getAdapter(key.exchange);
         if (adapter.getHistoryOrders) {
           const lastFetch = await getLastOrderFetchTimestamp(key.id);
@@ -147,7 +154,7 @@ export function useOrderReports(filters: OrderFilters) {
       // If we fetched new orders, we should reload from cache to get the fully merged set
       if (hasNewOrders) {
         let updatedTotal: UnifiedOrder[] = [];
-        const newCachePromises = keys.map(apiKey => getCachedOrders(apiKey.id));
+        const newCachePromises = activeKeys.map(apiKey => getCachedOrders(apiKey.id));
         const newCacheResults = await Promise.all(newCachePromises);
         for (const res of newCacheResults) {
           updatedTotal = [...updatedTotal, ...res];
@@ -173,6 +180,32 @@ export function useOrderReports(filters: OrderFilters) {
   }, [keys, filters.status, useMockData, historyCacheVersion, historyCacheInterval, lastSyncTime, setLastSyncTime]);
 
   const orders = useMemo(() => {
+    if (useMockData) {
+      // Source: global in-memory cache for open orders, local state for closed
+      const rawOrders: UnifiedOrder[] = filters.status === 'OPEN'
+        ? Object.values(cachedOpenOrders)
+        : closedRawOrders;
+
+      const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
+      const now = Date.now();
+
+      return rawOrders.filter(order => {
+        if (filters.exchange !== 'All' && order.exchange !== filters.exchange) return false;
+        if (filters.status === 'CLOSED' && order.createdTime < now - filters.timePeriod) return false;
+        if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
+        if (filters.type !== 'All' && filters.type !== order.type) return false;
+        if (filters.side !== 'All' && order.side !== filters.side) return false;
+        if (filters.instrument !== 'All' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
+        if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
+        return true;
+      });
+    }
+
+    const activeKeyIds = new Set(keys.filter(k => k.isActive).map(k => k.id));
+    if (activeKeyIds.size === 0) {
+      return [];
+    }
+
     // Source: global in-memory cache for open orders, local state for closed
     const rawOrders: UnifiedOrder[] = filters.status === 'OPEN'
       ? Object.values(cachedOpenOrders)
@@ -182,6 +215,9 @@ export function useOrderReports(filters: OrderFilters) {
     const now = Date.now();
 
     return rawOrders.filter(order => {
+      // Rule: Do not display orders for inactive/deactivated API keys
+      if (!activeKeyIds.has(order.connectionId)) return false;
+
       if (filters.exchange !== 'All' && order.exchange !== filters.exchange) return false;
       if (filters.status === 'CLOSED' && order.createdTime < now - filters.timePeriod) return false;
       if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
@@ -191,7 +227,7 @@ export function useOrderReports(filters: OrderFilters) {
       if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
       return true;
     });
-  }, [cachedOpenOrders, closedRawOrders, filters]);
+  }, [cachedOpenOrders, closedRawOrders, filters, keys, useMockData]);
 
-  return { fetchOrders, orders, loading, isSyncing, error };
+  return { fetchOrders, orders, loading: filters.status === 'OPEN' ? false : loading, isSyncing, error };
 }
