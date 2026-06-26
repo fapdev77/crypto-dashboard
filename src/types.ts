@@ -1,11 +1,17 @@
 import Big from 'big.js';
 
+// Types
 export type ExchangeName = 'bybit' | 'bitget' | 'okx';
-
 export type PositionSide = 'long' | 'short' | 'net';
 export type UnifiedMarginMode = 'cross' | 'isolated' | 'unknown';
 export type UnifiedPositionMode = 'hedge' | 'one_way' | 'unknown';
+export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
+export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
+export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
 
+// Interfaces
 export interface UnifiedBalance {
   id: string; // e.g., 'connId-ccy'
   connectionId: string;
@@ -20,12 +26,6 @@ export interface UnifiedBalance {
   unrealizedPnl?: number;
   raw?: any;
 }
-
-export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
-export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
-
-export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
-export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
 
 export interface UnifiedOrder {
   id: string;
@@ -111,8 +111,6 @@ export interface UnifiedHistoryPosition {
   raw?: any;
 }
 
-export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
-
 export interface UnifiedBillRecord {
   id: string;
   connectionId: string;
@@ -135,4 +133,3 @@ export interface SymbolPnLRecord {
   exchange: ExchangeName;
   lastActivity: number;
 }
-
