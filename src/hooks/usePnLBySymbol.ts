@@ -115,7 +115,7 @@ export function usePnLBySymbol(
     if (useMockData || keys.length === 0) return;
 
     const syncNetwork = async () => {
-      const bybitKeys = keys.filter(k => k.exchange === 'bybit');
+      const bybitKeys = keys.filter(k => k.exchange === 'bybit' && k.isActive);
       if (bybitKeys.length === 0) return;
 
       const currentExchangeFilter = exchangeFilterRef.current;

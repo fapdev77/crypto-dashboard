@@ -109,6 +109,9 @@ export function useOrderReports(filters: OrderFilters) {
       let allNewOrders: UnifiedOrder[] = [];
       
       const fetchPromises = keys.map(async (key) => {
+        if (!key.isActive) {
+          return [];
+        }
         const adapter = ExchangeAggregator.getAdapter(key.exchange);
         if (adapter.getHistoryOrders) {
           const lastFetch = await getLastOrderFetchTimestamp(key.id);

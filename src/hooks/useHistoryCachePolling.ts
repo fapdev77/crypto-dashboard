@@ -8,7 +8,8 @@ export function useHistoryCachePolling() {
   const { useMockData, historyCacheInterval, bumpHistoryCacheVersion, setLastSyncTime } = useSettingsStore();
 
   useEffect(() => {
-    if (useMockData || keys.length === 0) return;
+    const activeKeys = keys.filter(k => k.isActive);
+    if (useMockData || activeKeys.length === 0) return;
 
     const intervalMs = historyCacheInterval * 60 * 1000;
 
@@ -16,7 +17,7 @@ export function useHistoryCachePolling() {
       console.log('[HistoryCachePolling] Executing background update...');
       const service = new PositionHistoryService();
       try {
-        await Promise.all(keys.map(apiKey => service.fetchWithCache(apiKey)));
+        await Promise.all(activeKeys.map(apiKey => service.fetchWithCache(apiKey)));
         bumpHistoryCacheVersion();
         setLastSyncTime(Date.now());
         console.log('[HistoryCachePolling] Background update complete.');
