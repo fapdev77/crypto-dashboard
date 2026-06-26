@@ -23,30 +23,37 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
   const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>(globalCachedPositions);
   const [isLoading, setIsLoading] = useState(() => {
-    if (useMockData || keys.length === 0) return false;
+    if (useMockData || keys.filter(k => k.isActive).length === 0) return false;
     return globalCachedPositions.length === 0;
   });
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
+  // Turn off loading if active keys count goes to 0
+  useEffect(() => {
+    if (!useMockData && keys.filter(k => k.isActive).length === 0) {
+      setIsLoading(false);
+    }
+  }, [keys, useMockData]);
+
   // Apply filters to any position list
   const applyFilters = (positionsList: UnifiedHistoryPosition[]) => {
     let filtered = [...positionsList];
-    
+
     // Filter by exchange
     if (exchange && exchange !== 'All') {
       filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchange.toLowerCase());
     }
-    
+
     // Filter by search term
     if (searchTerm && searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(pos => 
-        pos.symbol.toLowerCase().includes(term) || 
+      filtered = filtered.filter(pos =>
+        pos.symbol.toLowerCase().includes(term) ||
         pos.exchange.toLowerCase().includes(term)
       );
     }
-    
+
     return filtered;
   };
 
@@ -57,7 +64,8 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
       return;
     }
 
-    if (keys.length === 0) {
+    const activeKeys = keys.filter(k => k.isActive);
+    if (activeKeys.length === 0) {
       setRawCachedPositions([]);
       return;
     }
@@ -65,7 +73,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
     const loadCache = async () => {
       try {
         let cachedTotal: UnifiedHistoryPosition[] = [];
-        const cachePromises = keys.map(apiKey => getCachedHistory(apiKey.id));
+        const cachePromises = activeKeys.map(apiKey => getCachedHistory(apiKey.id));
         const cacheResults = await Promise.all(cachePromises);
         for (const res of cacheResults) {
           cachedTotal = [...cachedTotal, ...res];
@@ -93,7 +101,8 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   // 2. Background REST API Sync Effect (Runs ONLY on keys, useMockData, historyCacheVersion, lastSyncTime change)
   useEffect(() => {
     let isMounted = true;
-    if (useMockData || keys.length === 0) return;
+    const activeKeys = keys.filter(k => k.isActive);
+    if (useMockData || activeKeys.length === 0) return;
 
     const syncNetwork = async () => {
       const now = Date.now();
@@ -112,7 +121,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
       try {
         const service = new PositionHistoryService();
-        for (const key of keys) {
+        for (const key of activeKeys) {
           if (!key.isActive) continue;
           if (isMounted) setSyncMessage(`Aguarde: sincronizando ${key.exchange} (${key.label})...`);
           await service.fetchWithCache(key);
@@ -120,7 +129,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
         // Fetch complete updated list from cache
         let cachedTotal: UnifiedHistoryPosition[] = [];
-        const cachePromises = keys.map(apiKey => getCachedHistory(apiKey.id));
+        const cachePromises = activeKeys.map(apiKey => getCachedHistory(apiKey.id));
         const cacheResults = await Promise.all(cachePromises);
         for (const res of cacheResults) {
           cachedTotal = [...cachedTotal, ...res];
@@ -132,7 +141,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
-          
+
           setLastSyncTime(Date.now());
         }
       } catch (err) {
@@ -160,7 +169,8 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
       return;
     }
 
-    if (keys.length === 0) {
+    const activeKeys = keys.filter(k => k.isActive);
+    if (activeKeys.length === 0) {
       setPositions([]);
       return;
     }
@@ -186,7 +196,9 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
       end = now;
     }
 
-    let filtered = [...rawCachedPositions];
+    const activeKeyIds = new Set(activeKeys.map(k => k.id));
+    let filtered = rawCachedPositions.filter(pos => activeKeyIds.has(pos.connectionId));
+
     if (start !== undefined && end !== undefined) {
       filtered = filtered.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
     }

@@ -16,7 +16,7 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
       let start: number | undefined;
       let end: number | undefined;
       const now = Date.now();
-      
+
       if (period === 'custom' && customStart && customEnd) {
         start = new Date(customStart).setHours(0, 0, 0, 0);
         end = new Date(customEnd).setHours(23, 59, 59, 999);
@@ -40,7 +40,8 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
         return;
       }
 
-      if (keys.length === 0) {
+      const activeKeys = keys.filter(k => k.isActive);
+      if (activeKeys.length === 0) {
         setBills([]);
         return;
       }
@@ -49,9 +50,8 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
       // LIVE API LOGIC
       const service = new BillsHistoryService();
       let allBills: UnifiedBillRecord[] = [];
-      
-      const promises = keys.map(apiKey => {
-        if (!apiKey.isActive) return Promise.resolve([]);
+
+      const promises = activeKeys.map(apiKey => {
         return service.fetchBills(apiKey, start, end);
       });
       const results = await Promise.all(promises);
