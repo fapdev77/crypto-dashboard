@@ -24,7 +24,7 @@ export function usePnLBySymbol(
   const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
   const lastSyncTime = useSettingsStore(state => state.lastSyncTime);
   const setLastSyncTime = useSettingsStore(state => state.setLastSyncTime);
-
+  
   const [bybitRealPnL, setBybitRealPnL] = useState<Record<string, string>>(globalCachedPnLRecord);
   const [isBybitLoading, setIsBybitLoading] = useState(() => {
     if (useMockData || keys.length === 0) return false;
@@ -172,7 +172,7 @@ export function usePnLBySymbol(
           const res = await adapter.fetchBybitRealPnLBySymbol(key, startTime, now, (msg) => {
             if (isMounted) setBybitSyncMessage(msg);
           });
-
+          
           await saveBybitRealPnLCache(key.id, currentPeriod, res);
 
           for (const [sym, val] of Object.entries(res)) {
@@ -249,7 +249,7 @@ export function usePnLBySymbol(
       const ccy = pos.ccy || pos.baseCoin || 'USDT';
 
       const key = `${pos.exchange}-${pos.symbol}-${instrument}-${ccy}`;
-
+      
       const realizedPnl = new Big(pos.realizedPnl || 0);
 
       if (!symbolMap.has(key)) {
@@ -268,7 +268,7 @@ export function usePnLBySymbol(
       const record = symbolMap.get(key)!;
       // Note: Bybit total PnL is replaced below using transaction log
       record.totalPnL = record.totalPnL.plus(realizedPnl);
-
+      
       if (pos.side === 'long') {
         record.longPnL = record.longPnL.plus(realizedPnl);
       } else if (pos.side === 'short') {
@@ -284,17 +284,17 @@ export function usePnLBySymbol(
     for (const [key, record] of symbolMap.entries()) {
       if (record.exchange === 'bybit') {
         if (bybitRealPnL[record.symbol]) {
-          record.totalPnL = new Big(bybitRealPnL[record.symbol]);
-          // Overwrite long/short just to match the total visually (transaction-log doesn't have side)
-          // If we don't zero them, the UI will show mismatch. We can just set longPnL to total and short to 0 
-          // if positive, or vice versa, to avoid confusion.
-          if (record.totalPnL.gte(0)) {
-            record.longPnL = record.totalPnL;
-            record.shortPnL = new Big(0);
-          } else {
-            record.shortPnL = record.totalPnL;
-            record.longPnL = new Big(0);
-          }
+           record.totalPnL = new Big(bybitRealPnL[record.symbol]);
+           // Overwrite long/short just to match the total visually (transaction-log doesn't have side)
+           // If we don't zero them, the UI will show mismatch. We can just set longPnL to total and short to 0 
+           // if positive, or vice versa, to avoid confusion.
+           if (record.totalPnL.gte(0)) {
+             record.longPnL = record.totalPnL;
+             record.shortPnL = new Big(0);
+           } else {
+             record.shortPnL = record.totalPnL;
+             record.longPnL = new Big(0);
+           }
         }
       }
     }
@@ -304,9 +304,9 @@ export function usePnLBySymbol(
 
   const currentSyncMessage = bybitSyncMessage || historySyncMessage || null;
 
-  return {
-    pnlData,
-    isLoading: isLoading || isBybitLoading,
+  return { 
+    pnlData, 
+    isLoading: isLoading || isBybitLoading, 
     isSyncing: isSyncing || isBybitLoading,
     syncMessage: currentSyncMessage
   };

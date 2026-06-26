@@ -16,7 +16,7 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
       let start: number | undefined;
       let end: number | undefined;
       const now = Date.now();
-
+      
       if (period === 'custom' && customStart && customEnd) {
         start = new Date(customStart).setHours(0, 0, 0, 0);
         end = new Date(customEnd).setHours(23, 59, 59, 999);
@@ -50,7 +50,7 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
       // LIVE API LOGIC
       const service = new BillsHistoryService();
       let allBills: UnifiedBillRecord[] = [];
-
+      
       const promises = activeKeys.map(apiKey => {
         return service.fetchBills(apiKey, start, end);
       });

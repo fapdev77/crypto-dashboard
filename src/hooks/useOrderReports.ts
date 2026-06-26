@@ -49,8 +49,8 @@ export function useOrderReports(filters: OrderFilters) {
   // Use a useEffect to handle useMockData changing purely so we update immediately
   useEffect(() => {
     if (useMockData && filters.status === 'CLOSED') {
-      const mockClosed = mockOrdersData.filter((o: any) => !['NEW', 'PARTIALLY_FILLED'].includes(o.status));
-      setClosedRawOrders(mockClosed as UnifiedOrder[]);
+       const mockClosed = mockOrdersData.filter((o: any) => !['NEW', 'PARTIALLY_FILLED'].includes(o.status));
+       setClosedRawOrders(mockClosed as UnifiedOrder[]);
     }
   }, [useMockData, filters.status]);
 
@@ -58,8 +58,8 @@ export function useOrderReports(filters: OrderFilters) {
   const fetchOrders = useCallback(async (silent: boolean = false, force: boolean = false) => {
     if (filters.status === 'OPEN') return;
     if (useMockData) {
-      // Mock data is handled by the useEffect above
-      return;
+       // Mock data is handled by the useEffect above
+       return;
     }
 
     const activeKeys = keys.filter(k => k.isActive);
@@ -91,7 +91,7 @@ export function useOrderReports(filters: OrderFilters) {
       }
 
       cachedTotal.sort((a, b) => b.createdTime - a.createdTime);
-
+      
       if (cachedTotal.length > 0) {
         setClosedRawOrders(cachedTotal);
         globalCachedClosedOrders = cachedTotal;
@@ -115,24 +115,24 @@ export function useOrderReports(filters: OrderFilters) {
 
       // Step 2: Background Sync (Incremental)
       setIsSyncing(true);
-
+      
       let allNewOrders: UnifiedOrder[] = [];
-
+      
       const fetchPromises = activeKeys.map(async (key) => {
         const adapter = ExchangeAggregator.getAdapter(key.exchange);
         if (adapter.getHistoryOrders) {
           const lastFetch = await getLastOrderFetchTimestamp(key.id);
           const startTime = lastFetch > 0 ? lastFetch : now - (90 * 24 * 60 * 60 * 1000);
           const endTime = now;
-
+          
           const newOrders = await adapter.getHistoryOrders(key, startTime, endTime);
-
+          
           if (newOrders.length > 0) {
             await saveCachedOrders(newOrders);
             // find the latest createdTime to update cache meta
             const maxCreatedTime = Math.max(...newOrders.map(o => o.createdTime || 0));
             if (maxCreatedTime > lastFetch) {
-              await updateOrderCacheMeta(key.id, maxCreatedTime);
+               await updateOrderCacheMeta(key.id, maxCreatedTime);
             }
           }
           return newOrders;

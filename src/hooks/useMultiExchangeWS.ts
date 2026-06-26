@@ -33,7 +33,7 @@ export function useMultiExchangeWS() {
         currentState.updateBalances(connectionId, accountBalances as any);
         const accountPositions = mockPositionsData.filter((pos: any) => pos.connectionId === connectionId);
         currentState.updatePositions(connectionId, accountPositions as any);
-
+        
         const openOrders = mockOrdersData.filter((o: any) => o.connectionId === connectionId && ['NEW', 'PARTIALLY_FILLED'].includes(o.status));
         useOrdersStore.getState().updateOpenOrders(connectionId, openOrders as any);
       });
@@ -158,9 +158,9 @@ export function useMultiExchangeWS() {
 
     setConnectionStatus(id, 'connecting', null);
     setConnectionError(id, null);
-
+    
     // Set a dummy timeout to indicate it's active initially until the poll starts
-    intervalsRef.current[id + '-poll'] = setTimeout(() => { }, 100000);
+    intervalsRef.current[id + '-poll'] = setTimeout(() => {}, 100000);
 
     // REST Bootloader
     (async () => {
@@ -183,14 +183,14 @@ export function useMultiExchangeWS() {
         setConnectionStatus(id, 'error', `REST Bootload Error: ${error.message}`);
         setConnectionError(id, `REST Bootload Error: ${error.message}`);
         toast.error(`${exchange.toUpperCase()} initial sync failed: ${error.message}`, { id: `rest-err-${id}` });
-
+        
         // Retry logic for bootload on error
         const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
         if (currentConfig && currentConfig.isActive && !useSettingsStore.getState().useMockData) {
-          console.log(`[REST-${id}] Retrying connection in 5 seconds...`);
-          intervalsRef.current[id + '-poll'] = setTimeout(() => {
-            connect(currentConfig);
-          }, 5000);
+           console.log(`[REST-${id}] Retrying connection in 5 seconds...`);
+           intervalsRef.current[id + '-poll'] = setTimeout(() => {
+              connect(currentConfig);
+           }, 5000);
         }
       }
     })();

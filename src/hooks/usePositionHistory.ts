@@ -39,21 +39,21 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   // Apply filters to any position list
   const applyFilters = (positionsList: UnifiedHistoryPosition[]) => {
     let filtered = [...positionsList];
-
+    
     // Filter by exchange
     if (exchange && exchange !== 'All') {
       filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchange.toLowerCase());
     }
-
+    
     // Filter by search term
     if (searchTerm && searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(pos =>
-        pos.symbol.toLowerCase().includes(term) ||
+      filtered = filtered.filter(pos => 
+        pos.symbol.toLowerCase().includes(term) || 
         pos.exchange.toLowerCase().includes(term)
       );
     }
-
+    
     return filtered;
   };
 
@@ -141,7 +141,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
-
+          
           setLastSyncTime(Date.now());
         }
       } catch (err) {
@@ -198,7 +198,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
     const activeKeyIds = new Set(activeKeys.map(k => k.id));
     let filtered = rawCachedPositions.filter(pos => activeKeyIds.has(pos.connectionId));
-
+    
     if (start !== undefined && end !== undefined) {
       filtered = filtered.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
     }
