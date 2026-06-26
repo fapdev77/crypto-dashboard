@@ -94,7 +94,8 @@ export interface UnifiedPosition {
 | `leverage` | `leverage` | `leverage` | `lever` | Active position leverage |
 | `marginMode` | `tradeMode` / `marginMode`| `marginMode` | `mgnMode` | `cross` \| `isolated` |
 | `positionMode` | `positionIdx` | N/A (One Way fallback) | N/A | `hedge` \| `one_way` |
-| `margin` | `positionIM` | `marginSize` | `margin` | Active margin assigned |
+| `margin` | `positionIMByMp` / `positionIM`| `marginSize` | `margin` | Active margin assigned |
+| `marginRatio`| Computed (`MM / IM * 100`) | `keepMarginRate * 100` | `mgnRatio * 100` | Tiered MMR or Margin Ratio (%) |
 | `liquidationPrice`| `liqPrice` | `liquidationPrice`| `liqPx` | Liquidation reference |
 | `breakEvenPrice` | `breakEvenPrice` | `breakEvenPrice` | `bePx` | The 0 profit reference price |
 | `tp` | `takeProfit` | `takeProfit` | N/A | Take profit reference |
@@ -200,7 +201,7 @@ export interface SymbolPnLRecord {
   totalPnL: Big;
   longPnL: Big;
   shortPnL: Big;
-  exchange: 'bitget' | 'bybit' | 'okx';
+  exchange: ExchangeName;
   lastActivity: number;
 }
 ```

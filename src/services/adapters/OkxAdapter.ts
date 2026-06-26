@@ -148,6 +148,7 @@ export class OkxAdapter implements IExchangeAdapter {
         leverage: parseFloat(pos.lever || '0'),
         marginMode: mapMarginMode('okx', pos.mgnMode),
         margin,
+        marginRatio: pos.mgnRatio ? parseFloat(pos.mgnRatio) * 100 : undefined,
         notionalUsd,
         liquidationPrice: parseFloat(pos.liqPx || '0'),
         breakEvenPrice: parseFloat(pos.bePx || '0'),

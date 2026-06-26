@@ -258,15 +258,20 @@ export class BybitAdapter implements IExchangeAdapter {
       size = notionalUsd / entryPrice;
     }
 
-    const margin = parseFloat(pos.positionIM || '0');
+    const margin = parseFloat(pos.positionIMByMp || pos.positionIM || '0');
+    const maintenanceMargin = parseFloat(pos.positionMMByMp || pos.positionMM || '0');
     const unrealizedPnl = parseFloat(pos.unrealisedPnl || '0');
 
     const positionIdx = parseInt(pos.positionIdx || '0', 10);
     const positionMode: UnifiedPositionMode = positionIdx === 0 ? 'one_way' : 'hedge';
 
-    const marginObj = new Big(pos.positionIM || '0');
+    const marginObj = new Big(margin);
+    const mmObj = new Big(maintenanceMargin);
     const uPnlObj = new Big(pos.unrealisedPnl || '0');
     const roe = marginObj.gt(0) ? Number(uPnlObj.div(marginObj).times(100)) : undefined;
+
+    // Margin Ratio calculation: Maintenance Margin / Position Margin (Initial Margin) * 100
+    const marginRatio = marginObj.gt(0) ? Number(mmObj.div(marginObj).times(100)) : undefined;
 
     const side = mapPositionSide('bybit', pos.side);
     
@@ -306,6 +311,7 @@ export class BybitAdapter implements IExchangeAdapter {
       marginMode: accountMarginMode !== 'unknown' ? accountMarginMode : mapMarginMode('bybit', pos.tradeMode),
       positionMode,
       margin,
+      marginRatio,
       notionalUsd,
       liquidationPrice: parseFloat(pos.liqPrice || '0'),
       breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),

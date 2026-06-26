@@ -201,6 +201,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           leverage: parseFloat(pos.leverage || '0'),
           marginMode: mapMarginMode('bitget', pos.marginMode),
           margin,
+          marginRatio: pos.keepMarginRate ? parseFloat(pos.keepMarginRate) * 100 : undefined,
           notionalUsd,
           liquidationPrice: parseFloat(pos.liquidationPrice || '0'),
           breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
