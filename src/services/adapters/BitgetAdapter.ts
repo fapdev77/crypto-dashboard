@@ -7,6 +7,7 @@ import { useDashboardStore } from '../../store/dashboardStore';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
+import { getBitgetInverseContractVal } from '../../utils/inverseUtils';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -165,6 +166,15 @@ export class BitgetAdapter implements IExchangeAdapter {
           unrealizedPnl = unrealizedPnl / markPrice;
         }
         
+        let size = parseFloat(pos.total || '0');
+        let notionalUsd = size * markPrice;
+
+        if (isInverse) {
+          const contractVal = getBitgetInverseContractVal(pos.symbol);
+          notionalUsd = size * contractVal;
+          size = markPrice > 0 ? notionalUsd / markPrice : 0;
+        }
+
         const side = mapPositionSide('bitget', pos.holdSide);
 
         const accumulatedFunding = pos.totalFee ? new Big(pos.totalFee || 0).toString() : "0";
@@ -181,7 +191,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           quoteCoin: extractQuoteCoin('bitget', pos.symbol),
           ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.symbol),
           side,
-          size: parseFloat(pos.total || '0'),
+          size,
           entryPrice: parseFloat(pos.openPriceAvg || pos.avgPx || '0'),
           markPrice: parseFloat(pos.markPrice || '0'),
           unrealizedPnl,
@@ -191,7 +201,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           leverage: parseFloat(pos.leverage || '0'),
           marginMode: mapMarginMode('bitget', pos.marginMode),
           margin,
-          notionalUsd: parseFloat(pos.total || '0') * parseFloat(pos.markPrice || '0'),
+          notionalUsd,
           liquidationPrice: parseFloat(pos.liquidationPrice || '0'),
           breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
           tp: parseFloat(pos.takeProfit || '0'),
@@ -262,7 +272,14 @@ export class BitgetAdapter implements IExchangeAdapter {
         createdTime: createdTime,
         entryPrice: parseFloat(pos.openPriceAvg || '0'),
         closePrice: parseFloat(pos.closePriceAvg || '0'),
-        size: parseFloat(pos.closeTotalPos || '0'),
+        size: (() => {
+          const rawSize = parseFloat(pos.closeTotalPos || '0');
+          const isInverse = mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES') === 'INVERSE';
+          if (isInverse) {
+            return rawSize * getBitgetInverseContractVal(pos.instId || pos.symbol);
+          }
+          return rawSize;
+        })(),
         fundingFee: pos.totalFunding ? parseFloat(pos.totalFunding) : undefined,
         tradingFee: totalFee || undefined,
         instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
@@ -451,8 +468,15 @@ export class BitgetAdapter implements IExchangeAdapter {
       else if (ot.includes('take') || ot.includes('profit')) type = 'TP';
       else if (ot.includes('plan') || ot.includes('conditional')) type = 'CONDITIONAL';
 
-      const pSize = parseFloat(o.size || '0');
-      const pFil = parseFloat(o.filledQty || o.baseVolume || '0');
+      const category = mapInstrumentType('bitget', o.productType || 'UNKNOWN');
+      const isInverse = category === 'INVERSE';
+      let qty = parseFloat(o.size || '0');
+      let filledQty = parseFloat(o.filledQty || o.baseVolume || '0');
+      if (isInverse) {
+        const contractVal = getBitgetInverseContractVal(o.symbol || o.instId);
+        qty = qty * contractVal;
+        filledQty = filledQty * contractVal;
+      }
       
       return {
         id: `${key.id}-${o.orderId}`,
@@ -460,16 +484,16 @@ export class BitgetAdapter implements IExchangeAdapter {
         connectionId: key.id,
         exchange: 'bitget',
         symbol: o.symbol || o.instId,
-        category: mapInstrumentType('bitget', o.productType || 'UNKNOWN'),
+        category,
         side: o.side?.toLowerCase().includes('buy') ? 'buy' : 'sell',
         positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
         type,
         status,
         price: parseFloat(o.price || '0'),
         avgPrice: parseFloat(o.priceAvg || o.avgPrice || '0'),
-        qty: pSize,
-        filledQty: pFil,
-        value: parseFloat(o.totalProfits || '0'), // simplified
+        qty,
+        filledQty,
+        value: isInverse ? qty : parseFloat(o.totalProfits || '0'), // simplified
         triggerPrice: o.triggerPrice ? parseFloat(o.triggerPrice) : undefined,
         timeInForce: o.timeInForce || o.force,
         createdTime: parseInt(o.cTime || '0', 10),

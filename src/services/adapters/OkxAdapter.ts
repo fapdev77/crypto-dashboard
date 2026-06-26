@@ -389,8 +389,8 @@ export class OkxAdapter implements IExchangeAdapter {
           const ctVal = parseFloat(instInfo.ctVal || '1');
           const ctType = instInfo.ctType || 'linear';
           if (ctType === 'inverse') {
-            qty = px > 0 ? (sz * ctVal) / px : 0;
-            filledQty = px > 0 ? (accFillSz * ctVal) / px : 0;
+            qty = sz * ctVal;
+            filledQty = accFillSz * ctVal;
             value = sz * ctVal;
           } else {
             qty = sz * ctVal;

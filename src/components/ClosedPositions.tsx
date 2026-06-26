@@ -424,7 +424,7 @@ export function ClosedPositions() {
             let displaySecondaryUnit = '';
 
             if (isInverse) {
-              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 2) : '--';
+              displayQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
               displayUnit = 'USD';
               displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
               displaySecondaryUnit = symbolSuffix;

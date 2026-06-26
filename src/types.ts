@@ -132,7 +132,7 @@ export interface SymbolPnLRecord {
   totalPnL: Big;
   longPnL: Big;
   shortPnL: Big;
-  exchange: 'bitget' | 'bybit' | 'okx';
+  exchange: ExchangeName;
   lastActivity: number;
 }
 

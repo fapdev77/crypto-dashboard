@@ -1,5 +1,5 @@
 import Big from 'big.js';
-import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance, UnifiedPositionMode } from '../../types';
+import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance, UnifiedPositionMode, UnifiedMarginMode } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
 import { proxyFetch, hybridFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
@@ -85,7 +85,7 @@ export class BybitAdapter implements IExchangeAdapter {
 
   // REST Positions
   public async getOpenPositions(key: any): Promise<UnifiedPosition[]> {
-    let accountMarginMode: 'cross' | 'isolated' | 'unknown' = 'unknown';
+    let accountMarginMode: UnifiedMarginMode = 'unknown';
     try {
       const accUrl = `https://api.bybit.com/v5/account/info`;
       const accHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret);
@@ -243,7 +243,7 @@ export class BybitAdapter implements IExchangeAdapter {
     return accumulatedFunding.toString();
   }
 
-  private async mapPosition(pos: any, key: any, accountMarginMode: 'cross' | 'isolated' | 'unknown' = 'unknown'): Promise<UnifiedPosition> {
+  private async mapPosition(pos: any, key: any, accountMarginMode: UnifiedMarginMode = 'unknown'): Promise<UnifiedPosition> {
     const rawSize = parseFloat(pos.size || '0');
     const entryPrice = parseFloat(pos.avgPrice || pos.entryPrice || '0');
     const markPrice = parseFloat(pos.markPrice || '0');
