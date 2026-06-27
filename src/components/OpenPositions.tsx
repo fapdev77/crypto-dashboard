@@ -313,10 +313,12 @@ export function OpenPositions() {
                 description: (
                   <div className="flex flex-col gap-1 w-full max-w-[280px]">
                     <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-                      Maintenance Margin
+                      {pos.exchange === 'okx' ? 'Maintenance Margin Ratio (MMR)' : 'Maintenance Margin'}
                     </span>
                     <p className="text-[12px] text-[#8E9299] leading-snug">
-                      The minimum amount of margin that must be maintained to keep the position open. If the margin drops below this value, the position will be liquidated.
+                      {pos.exchange === 'okx'
+                        ? 'Maintenance margin ratio (MMR) is a risk metric for your positions. The lower the maintenance margin ratio, the higher the risk. When the maintenance margin ratio reaches or drops below 100%, your positions will be reduced or liquidated.'
+                        : 'The minimum amount of margin that must be maintained to keep the position open. If the margin drops below this value, the position will be liquidated.'}
                     </p>
                   </div>
                 )
@@ -674,7 +676,7 @@ export function OpenPositions() {
                         </div>
                         <div className="flex flex-col gap-1">
                           <AppTooltip {...maintenanceMarginTooltipProps}>
-                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">Maintenance Margin</span>
+                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">{pos.exchange === 'okx' ? 'Maint. Margin / MMR' : 'Maintenance Margin'}</span>
                           </AppTooltip>
                           <span className="font-mono text-white">
                             {pos.maintenanceMargin !== undefined ? (
