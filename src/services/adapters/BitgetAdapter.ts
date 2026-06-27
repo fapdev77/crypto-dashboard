@@ -169,12 +169,6 @@ export class BitgetAdapter implements IExchangeAdapter {
         let size = parseFloat(pos.total || '0');
         let notionalUsd = size * markPrice;
 
-        if (isInverse) {
-          const contractVal = getBitgetInverseContractVal(pos.symbol);
-          notionalUsd = size * contractVal;
-          size = markPrice > 0 ? notionalUsd / markPrice : 0;
-        }
-
         const side = mapPositionSide('bitget', pos.holdSide);
 
         const accumulatedFunding = pos.totalFee ? new Big(pos.totalFee || 0).toString() : "0";
