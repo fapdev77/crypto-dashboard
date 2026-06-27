@@ -311,6 +311,7 @@ export class BybitAdapter implements IExchangeAdapter {
       marginMode: accountMarginMode !== 'unknown' ? accountMarginMode : mapMarginMode('bybit', pos.tradeMode),
       positionMode,
       margin,
+      maintenanceMargin,
       marginRatio,
       notionalUsd,
       liquidationPrice: parseFloat(pos.liqPrice || '0'),

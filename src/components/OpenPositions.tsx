@@ -308,6 +308,20 @@ export function OpenPositions() {
                 )
               };
 
+              const maintenanceMarginTooltipProps = {
+                side: "top" as const,
+                description: (
+                  <div className="flex flex-col gap-1 w-full max-w-[280px]">
+                    <span className="text-[13px] font-medium text-white tracking-wide font-sans">
+                      Maintenance Margin
+                    </span>
+                    <p className="text-[12px] text-[#8E9299] leading-snug">
+                      The minimum amount of margin that must be maintained to keep the position open. If the margin drops below this value, the position will be liquidated.
+                    </p>
+                  </div>
+                )
+              };
+
               const sizeTooltipProps = {
                 side: "top" as const,
                 description: (
@@ -659,8 +673,24 @@ export function OpenPositions() {
                           <span className="font-mono text-white">{formatPrice(pos.markPrice, isFiatPair)}</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Tiered maintenance margin rate</span>
-                          <span className="font-mono text-white">{pos.marginRatio ? formatValue(pos.marginRatio, 2) + '%' : '--'}</span>
+                          <AppTooltip {...maintenanceMarginTooltipProps}>
+                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">Maintenance Margin</span>
+                          </AppTooltip>
+                          <span className="font-mono text-white">
+                            {pos.maintenanceMargin !== undefined ? (
+                              <>
+                                {formatCcy(pos.maintenanceMargin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
+                                {posCcy && !posCcy.includes('USD') && pos.maintenanceMargin && pos.markPrice ? (
+                                  <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(pos.maintenanceMargin * pos.markPrice, 'crypto', 2)} USD</span>
+                                ) : null}
+                                {pos.marginRatio !== undefined && (
+                                  <span className="text-orange-400 text-[10px] ml-1">({formatValue(pos.marginRatio, 2)}%)</span>
+                                )}
+                              </>
+                            ) : (
+                              pos.marginRatio !== undefined ? `${formatValue(pos.marginRatio, 2)}%` : '--'
+                            )}
+                          </span>
                         </div>
                         <AppTooltip
                           description={

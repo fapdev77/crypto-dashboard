@@ -72,6 +72,7 @@ export interface UnifiedPosition {
   marginMode?: UnifiedMarginMode;
   positionMode?: UnifiedPositionMode;
   margin?: number; // Position Margin / Isolated Margin
+  maintenanceMargin?: number; // Maintenance Margin value (calculated or fetched directly)
   marginRatio?: number; // Tiered MMR or Margin Ratio (%)
   liquidationPrice?: number;
   breakEvenPrice?: number;
