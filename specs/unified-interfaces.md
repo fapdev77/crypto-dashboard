@@ -94,7 +94,7 @@ export interface UnifiedPosition {
 | `leverage` | `leverage` | `leverage` | `lever` | Active position leverage |
 | `marginMode` | `tradeMode` / `marginMode`| `marginMode` | `mgnMode` | `cross` \| `isolated` |
 | `positionMode` | `positionIdx` | N/A (One Way fallback) | N/A | `hedge` \| `one_way` |
-| `margin` | `positionIMByMp` / `positionIM`| `marginSize` | `margin` | Active margin assigned |
+| `margin` | `positionIMByMp` / `positionIM`| `marginSize` | `imr` (cross) / `margin` (isolated) | Active margin assigned. For OKX, `imr` is mapped if cross-margin, and `margin` if isolated-margin. |
 | `maintenanceMargin`| `positionMMByMp` / `positionMM`| Calculated (`margin * leverage * keepMarginRate`)| `mmr` | Maintenance margin requirement value |
 | `marginRatio`| Computed (`MM / IM * 100`) | `keepMarginRate * 100` | `mgnRatio * 100` | Tiered MMR or Margin Ratio (%) |
 | `liquidationPrice`| `liqPrice` | `liquidationPrice`| `liqPx` | Liquidation reference |
