@@ -6,3 +6,4 @@ bitget: #03aac7
 bybit: #ff9c2e
 okx: #fafafa branco 
 4. implementar open positions e open orders em ordem decrescente (mais recente primeiro) ou inplementar um sorting
+5. verificar logica desnecessaria bitget
