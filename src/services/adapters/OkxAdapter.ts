@@ -112,7 +112,8 @@ export class OkxAdapter implements IExchangeAdapter {
     }
 
     return (response.data || []).map((pos: any) => {
-      const margin = parseFloat(pos.margin || '0');
+      const marginMode = mapMarginMode('okx', pos.mgnMode);
+      const margin = marginMode === 'cross' ? parseFloat(pos.imr || '0') : parseFloat(pos.margin || '0');
       const unrealizedPnl = parseFloat(pos.upl || '0');
       
       const notionalUsd = pos.notionalUsd ? parseFloat(pos.notionalUsd) : 0;
@@ -146,7 +147,7 @@ export class OkxAdapter implements IExchangeAdapter {
         accumulatedFunding,
         accumulatedTradingFee,
         leverage: parseFloat(pos.lever || '0'),
-        marginMode: mapMarginMode('okx', pos.mgnMode),
+        marginMode,
         margin,
         maintenanceMargin: parseFloat(pos.mmr || '0'),
         marginRatio: pos.mgnRatio ? parseFloat(pos.mgnRatio) * 100 : undefined,
