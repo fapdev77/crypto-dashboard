@@ -472,7 +472,7 @@ export function OpenPositions() {
                         rows={[
                           {
                             label: 'Closed PnL',
-                            value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`,
+                            value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.closedPnl, 'usd', 2)})` : ''}`,
                             labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                             valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                           },
@@ -580,7 +580,7 @@ export function OpenPositions() {
                           rows={[
                             {
                               label: 'Closed PnL',
-                              value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`,
+                              value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.closedPnl, 'usd', 2)})` : ''}`,
                               labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                               valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                             },
