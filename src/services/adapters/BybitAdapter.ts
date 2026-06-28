@@ -295,7 +295,7 @@ export class BybitAdapter implements IExchangeAdapter {
     const { accumulatedFunding, accumulatedTradingFee } = await this.fetchBybitAccumulatedFees(key, pos.symbol, effectiveStartTime);
     
     const realizedPnl = parseFloat(pos.curRealisedPnl || '0');
-    const closedPnl = realizedPnl + parseFloat(accumulatedFunding) + parseFloat(accumulatedTradingFee);
+    const closedPnl = realizedPnl - parseFloat(accumulatedFunding) - parseFloat(accumulatedTradingFee);
     
     return {
       id: `${key.id}-bybit-${pos.symbol}-${side}`,
@@ -388,6 +388,7 @@ export class BybitAdapter implements IExchangeAdapter {
         ccy,
         side: mapPositionSide('bybit', pos.side),
         realizedPnl: parseFloat(pos.closedPnl || '0'),
+        closedPnl: parseFloat(pos.closedPnl || '0') - (pos.fundingFee ? parseFloat(pos.fundingFee) : 0) - (pos.execFee ? parseFloat(pos.execFee) : 0),
         closeUpdateTime: closeUpdateTime,
         createdTime: createdTime,
         entryPrice: parseFloat(pos.avgEntryPrice || '0'),

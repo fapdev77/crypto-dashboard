@@ -226,6 +226,7 @@ export class OkxAdapter implements IExchangeAdapter {
         ccy: extractCcy('okx', pos.ccy, undefined, undefined, pos.instId),
         side: mapPositionSide('okx', pos.posSide, pos.direction),
         realizedPnl: parseFloat(pos.realizedPnl || pos.pnl || '0'),
+        closedPnl: parseFloat(pos.realizedPnl || pos.pnl || '0') - (pos.fundingFee ? parseFloat(pos.fundingFee) : 0) - (pos.fee ? parseFloat(pos.fee) : 0),
         closeUpdateTime: closeUpdateTime,
         createdTime: createdTime,
         entryPrice: parseFloat(pos.openAvgPx || '0'),

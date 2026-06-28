@@ -518,9 +518,9 @@ export function ClosedPositions() {
                       rows={[
                         { 
                           label: 'Closed PnL', 
-                          value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
+                          value: `${(pos.closedPnl || 0) > 0 ? '+' : ''}${formatCcy(pos.closedPnl || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
-                          valueClassName: `text-[11px] font-mono font-bold ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                          valueClassName: `text-[11px] font-mono font-bold ${(pos.closedPnl || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         },
                         { 
                           label: 'Funding fee', 

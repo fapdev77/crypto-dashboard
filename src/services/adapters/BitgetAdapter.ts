@@ -266,6 +266,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.instId || pos.symbol),
         side: mapPositionSide('bitget', pos.holdSide, pos.side),
         realizedPnl: parseFloat(pos.netProfit ?? pos.pnl ?? pos.achievedProfits ?? '0'),
+        closedPnl: parseFloat(pos.netProfit ?? pos.pnl ?? pos.achievedProfits ?? '0') - (pos.totalFunding ? parseFloat(pos.totalFunding) : 0) - (totalFee || 0),
         closeUpdateTime: closeUpdateTime,
         createdTime: createdTime,
         entryPrice: parseFloat(pos.openPriceAvg || '0'),
