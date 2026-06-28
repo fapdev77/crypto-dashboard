@@ -189,7 +189,7 @@ export function OpenPositions() {
 
               const fundingFee = pos.accumulatedFunding ? parseFloat(pos.accumulatedFunding) : 0;
               const tradingFee = pos.accumulatedTradingFee ? parseFloat(pos.accumulatedTradingFee) : 0;
-              const closedPnl = (pos.realizedPnl || 0) - fundingFee - tradingFee;
+              const closedPnl = pos.closedPnl !== undefined ? pos.closedPnl : ((pos.realizedPnl || 0) - fundingFee - tradingFee);
 
               // Normalize inverse PnL to USD values
               const inverseVals = getInverseUsdValues(pos);

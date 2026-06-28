@@ -194,8 +194,9 @@ export class BybitAdapter implements IExchangeAdapter {
     return result;
   }
 
-  private async fetchBybitAccumulatedFunding(key: any, symbol: string, startTime: number): Promise<string> {
+  private async fetchBybitAccumulatedFees(key: any, symbol: string, startTime: number): Promise<{ accumulatedFunding: string; accumulatedTradingFee: string }> {
     let accumulatedFunding = new Big(0);
+    let accumulatedTradingFee = new Big(0);
     let currentStart = startTime;
     const now = Date.now();
     const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -207,7 +208,7 @@ export class BybitAdapter implements IExchangeAdapter {
         let currentEnd = currentStart + SEVEN_DAYS_MS;
         if (currentEnd > now) currentEnd = now;
 
-        const queryUrl = `limit=50&category=${targetCategory}&symbol=${symbol}&type=SETTLEMENT&startTime=${currentStart}&endTime=${currentEnd}`;
+        const queryUrl = `limit=50&category=${targetCategory}&symbol=${symbol}&startTime=${currentStart}&endTime=${currentEnd}`;
         const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${queryUrl}`;
         const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
         
@@ -225,9 +226,12 @@ export class BybitAdapter implements IExchangeAdapter {
 
            const list = res.result?.list || [];
            for (const item of list) {
-              if (item.symbol === symbol && item.type === 'SETTLEMENT') {
-                 if (item.funding) {
+              if (item.symbol === symbol) {
+                 if (item.type === 'SETTLEMENT' && item.funding) {
                     accumulatedFunding = accumulatedFunding.plus(new Big(item.funding || '0'));
+                 }
+                 if (item.type === 'TRADE' && item.fee) {
+                    accumulatedTradingFee = accumulatedTradingFee.plus(new Big(item.fee || '0').times(-1));
                  }
               }
            }
@@ -238,9 +242,12 @@ export class BybitAdapter implements IExchangeAdapter {
         currentStart = currentEnd + 1;
       }
     } catch (e) {
-      console.warn(`[Bybit-AccumulatedFunding] Error fetching for ${symbol}:`, e);
+      console.warn(`[Bybit-AccumulatedFees] Error fetching for ${symbol}:`, e);
     }
-    return accumulatedFunding.toString();
+    return {
+      accumulatedFunding: accumulatedFunding.toString(),
+      accumulatedTradingFee: accumulatedTradingFee.toString()
+    };
   }
 
   private async mapPosition(pos: any, key: any, accountMarginMode: UnifiedMarginMode = 'unknown'): Promise<UnifiedPosition> {
@@ -285,10 +292,10 @@ export class BybitAdapter implements IExchangeAdapter {
     // Limit lookback of funding queries to at most the last 7 days to avoid rate-limiting / slow connections
     const maxLookbackMs = 7 * 24 * 60 * 60 * 1000;
     const effectiveStartTime = Math.max(createdTime, Date.now() - maxLookbackMs);
-    const accumulatedFunding = await this.fetchBybitAccumulatedFunding(key, pos.symbol, effectiveStartTime);
+    const { accumulatedFunding, accumulatedTradingFee } = await this.fetchBybitAccumulatedFees(key, pos.symbol, effectiveStartTime);
     
     const realizedPnl = parseFloat(pos.curRealisedPnl || '0');
-    const accumulatedTradingFee = new Big(realizedPnl).minus(accumulatedFunding).toString();
+    const closedPnl = realizedPnl + parseFloat(accumulatedFunding) + parseFloat(accumulatedTradingFee);
     
     return {
       id: `${key.id}-bybit-${pos.symbol}-${side}`,
@@ -305,6 +312,7 @@ export class BybitAdapter implements IExchangeAdapter {
       markPrice,
       unrealizedPnl,
       realizedPnl,
+      closedPnl,
       accumulatedFunding,
       accumulatedTradingFee,
       leverage: parseFloat(pos.leverage || '0'),

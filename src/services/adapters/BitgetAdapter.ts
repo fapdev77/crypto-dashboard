@@ -172,8 +172,9 @@ export class BitgetAdapter implements IExchangeAdapter {
         const side = mapPositionSide('bitget', pos.holdSide);
 
         const accumulatedFunding = pos.totalFee ? new Big(pos.totalFee || 0).toString() : "0";
-        const realizedPnl = parseFloat(pos.achievedProfits || '0');
-        const accumulatedTradingFee = new Big(realizedPnl).minus(accumulatedFunding).toString();
+        const accumulatedTradingFee = pos.deductedFee ? new Big(pos.deductedFee || 0).toString() : "0";
+        const closedPnl = parseFloat(pos.achievedProfits || '0');
+        const realizedPnl = closedPnl + parseFloat(accumulatedFunding) + parseFloat(accumulatedTradingFee);
 
         return {
           id: `${key.id}-bitget-${pos.symbol || pos.instId}-${side}`,
@@ -190,6 +191,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           markPrice: parseFloat(pos.markPrice || '0'),
           unrealizedPnl,
           realizedPnl,
+          closedPnl,
           accumulatedFunding,
           accumulatedTradingFee,
           leverage: parseFloat(pos.leverage || '0'),

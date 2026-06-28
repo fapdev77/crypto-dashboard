@@ -125,9 +125,10 @@ export class OkxAdapter implements IExchangeAdapter {
 
       const side = mapPositionSide('okx', pos.posSide);
       
-      const accumulatedFunding = pos.fundingFee ? new Big(pos.fundingFee || 0).toString() : "0";
       const realizedPnl = parseFloat(pos.realizedPnl || '0');
-      const accumulatedTradingFee = new Big(realizedPnl).minus(accumulatedFunding).toString();
+      const accumulatedFunding = pos.fundingFee ? new Big(pos.fundingFee || 0).toString() : "0";
+      const accumulatedTradingFee = pos.fee ? new Big(pos.fee || 0).toString() : "0";
+      const closedPnl = parseFloat(pos.pnl || '0');
 
       return {
         id: `${key.id}-okx-${pos.instId}-${side}`,
@@ -144,6 +145,7 @@ export class OkxAdapter implements IExchangeAdapter {
         markPrice: markPx,
         unrealizedPnl,
         realizedPnl,
+        closedPnl,
         accumulatedFunding,
         accumulatedTradingFee,
         leverage: parseFloat(pos.lever || '0'),

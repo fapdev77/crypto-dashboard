@@ -68,6 +68,7 @@ export interface UnifiedPosition {
   markPrice: number;
   unrealizedPnl: number;
   realizedPnl: number;
+  closedPnl?: number;
   leverage: number;
   marginMode?: UnifiedMarginMode;
   positionMode?: UnifiedPositionMode;

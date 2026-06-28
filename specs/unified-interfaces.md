@@ -102,6 +102,7 @@ export interface UnifiedPosition {
 | `tp` | `takeProfit` | `takeProfit` | N/A | Take profit reference |
 | `sl` | `stopLoss` | `stopLoss` | N/A | Stop loss reference |
 | `roe` | Calculated (`UPL / IM`) | Calculated / `uplRatio` | `uplRatio * 100` | Normalized ROE % |
+| `closedPnl` | `curRealisedPnl + funding + fee` | `achievedProfits` | `pnl` | Net closed position profit (after all fees) |
 
 ---
 
