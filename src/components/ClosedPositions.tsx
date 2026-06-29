@@ -394,13 +394,25 @@ export function ClosedPositions() {
                 positionValueUsd = actualCoinSize * (pos.entryPrice || 0);
               } else {
                 positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
+                actualCoinSize = pos.size || 0;
               }
             } else if (pos.exchange === 'bybit' && pos.raw?.cumEntryValue) {
               positionValueUsd = parseFloat(pos.raw.cumEntryValue);
               actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
             } else if (isInverse) {
-              positionValueUsd = pos.size || 0;
-              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
+              let sizeIsCoin = false;
+              if (pos.entryPrice > 0) {
+                if (pos.raw?.mockData || (pos.size < 5 && pos.size * pos.entryPrice >= 10)) {
+                  sizeIsCoin = true;
+                }
+              }
+              if (sizeIsCoin) {
+                actualCoinSize = pos.size;
+                positionValueUsd = pos.size * (pos.entryPrice || 0);
+              } else {
+                positionValueUsd = pos.size;
+                actualCoinSize = pos.entryPrice ? pos.size / pos.entryPrice : 0;
+              }
             } else {
               positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
               actualCoinSize = pos.size || 0;
@@ -478,7 +490,7 @@ export function ClosedPositions() {
                     </AppTooltip>
                     <span className="font-mono text-white text-sm">{displayQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displayUnit}</span></span>
                     {displaySecondaryQuantity !== '--' && (
-                      <span className="text-xs text-[#8E9299] font-mono">{displaySecondaryQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displaySecondaryUnit}</span></span>
+                      <span className="text-xs text-[#8E9299] font-mono">≈ {displaySecondaryQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displaySecondaryUnit}</span></span>
                     )}
                   </div>
 
