@@ -618,21 +618,21 @@ export function OpenPositions() {
 
                               <div className="flex flex-col gap-3 mt-1">
                                 <div className="flex flex-col">
-                                  <span className="text-[10px] text-[#8E9299]">Balanço Total:</span>
+                                  <span className="text-[10px] text-[#8E9299]">Balance:</span>
                                   <span className="font-mono text-white text-[13px]">
                                     {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(totalAssetBal * (pos.markPrice || 0), 'usd', 2)} USD</span>
                                   </span>
                                 </div>
 
                                 <div className="flex flex-col">
-                                  <span className="text-[10px] text-[#00C853]">Protegido: {protectedPct.toFixed(2)}%</span>
+                                  <span className="text-[10px] text-[#00C853]">Protected: {protectedPct.toFixed(2)}%</span>
                                   <span className="font-mono text-white text-[13px]">
                                     {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(protectedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
                                   </span>
                                 </div>
 
                                 <div className="flex flex-col">
-                                  <span className="text-[10px] text-[#FF4444]">Exposto: {exposedPct.toFixed(2)}%</span>
+                                  <span className="text-[10px] text-[#FF4444]">Exposed: {exposedPct.toFixed(2)}%</span>
                                   <span className="font-mono text-white text-[13px]">
                                     {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(exposedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
                                   </span>
