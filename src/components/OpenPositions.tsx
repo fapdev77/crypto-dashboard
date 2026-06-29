@@ -13,7 +13,7 @@ import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
-import { getInverseUsdValues } from '../utils/inverseUtils';
+import { getInverseUsdValues, getOpenPositionSizeAndValue } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 
 export function OpenPositions() {
@@ -195,7 +195,7 @@ export function OpenPositions() {
               const inverseVals = getInverseUsdValues(pos);
 
               // Approximations using normalized USD values where helpful
-              const sizeValUsd = pos.notionalUsd || inverseVals.positionValue || (pos.size * pos.markPrice);
+              const { positionValueUsd: sizeValUsd } = getOpenPositionSizeAndValue(pos);
               const posCcy = pos.ccy || pos.baseCoin || 'USDT';
 
               const isFiatPair = pos.symbol.toUpperCase().includes('USD') || pos.symbol.toUpperCase().includes('EUR') || pos.symbol.toUpperCase().includes('BRL');

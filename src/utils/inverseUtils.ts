@@ -35,3 +35,58 @@ export function getHistoryInverseUsdValues(pos: UnifiedHistoryPosition, forceCon
     isInverse
   };
 }
+
+export function getOpenPositionSizeAndValue(pos: UnifiedPosition) {
+  const inverseVals = getInverseUsdValues(pos);
+  const positionValueUsd = pos.notionalUsd || inverseVals.positionValue || ((pos.size || 0) * (pos.markPrice || 0));
+  const actualCoinSize = pos.size || 0;
+
+  return {
+    actualCoinSize,
+    positionValueUsd
+  };
+}
+
+export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
+  const isInverse = pos.instrumentType === 'INVERSE';
+  let positionValueUsd = pos.notionalUsd || 0;
+  let actualCoinSize = pos.size || 0;
+
+  if (pos.exchange === 'okx' && pos.raw?.pnl) {
+    const priceDiff = Math.abs((pos.closePrice || 0) - (pos.entryPrice || 0));
+    const purePnl = Math.abs(parseFloat(pos.raw.pnl));
+    if (priceDiff > 0) {
+      actualCoinSize = purePnl / priceDiff;
+      positionValueUsd = actualCoinSize * (pos.entryPrice || 0);
+    } else {
+      positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
+      actualCoinSize = pos.size || 0;
+    }
+  } else if (pos.exchange === 'bybit' && pos.raw?.cumEntryValue) {
+    positionValueUsd = parseFloat(pos.raw.cumEntryValue);
+    actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
+  } else if (isInverse) {
+    let sizeIsCoin = false;
+    if (pos.entryPrice && pos.entryPrice > 0) {
+      if (pos.raw?.mockData || ((pos.size || 0) < 5 && (pos.size || 0) * pos.entryPrice >= 10)) {
+        sizeIsCoin = true;
+      }
+    }
+    if (sizeIsCoin) {
+      actualCoinSize = pos.size || 0;
+      positionValueUsd = (pos.size || 0) * (pos.entryPrice || 0);
+    } else {
+      positionValueUsd = pos.size || 0;
+      actualCoinSize = pos.entryPrice ? (pos.size || 0) / pos.entryPrice : 0;
+    }
+  } else {
+    positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
+    actualCoinSize = pos.size || 0;
+  }
+
+  return {
+    actualCoinSize,
+    positionValueUsd
+  };
+}
+

@@ -14,7 +14,7 @@ import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { StatusAndSyncBadge } from './ui/StatusAndSyncBadge';
-import { getHistoryInverseUsdValues } from '../utils/inverseUtils';
+import { getHistoryInverseUsdValues, getHistoryPositionSizeAndValue } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../utils/exportUtils';
 import { Pagination } from './ui/Pagination';
@@ -74,6 +74,7 @@ export function ClosedPositions() {
       'Side',
       'Leverage',
       'Size',
+      'Value (USD)',
       'Entry Price',
       'Exit Price',
       'Realized PnL',
@@ -99,13 +100,16 @@ export function ClosedPositions() {
         ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm:ss') 
         : '--';
 
+      const { actualCoinSize, positionValueUsd } = getHistoryPositionSizeAndValue(pos);
+
       return [
         pos.symbol,
         pos.exchange.toUpperCase(),
         pos.label,
         sideLabel,
         `${leverage}x`,
-        pos.size || 0,
+        actualCoinSize,
+        positionValueUsd,
         pos.entryPrice || 0,
         pos.closePrice || 0,
         pos.realizedPnl || 0,
@@ -383,40 +387,7 @@ export function ClosedPositions() {
 
             const isInverse = pos.instrumentType === 'INVERSE';
 
-            let positionValueUsd = 0;
-            let actualCoinSize = pos.size || 0;
-
-            if (pos.exchange === 'okx' && pos.raw?.pnl) {
-              const priceDiff = Math.abs((pos.closePrice || 0) - (pos.entryPrice || 0));
-              const purePnl = Math.abs(parseFloat(pos.raw.pnl));
-              if (priceDiff > 0) {
-                actualCoinSize = purePnl / priceDiff;
-                positionValueUsd = actualCoinSize * (pos.entryPrice || 0);
-              } else {
-                positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
-                actualCoinSize = pos.size || 0;
-              }
-            } else if (pos.exchange === 'bybit' && pos.raw?.cumEntryValue) {
-              positionValueUsd = parseFloat(pos.raw.cumEntryValue);
-              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
-            } else if (isInverse) {
-              let sizeIsCoin = false;
-              if (pos.entryPrice > 0) {
-                if (pos.raw?.mockData || (pos.size < 5 && pos.size * pos.entryPrice >= 10)) {
-                  sizeIsCoin = true;
-                }
-              }
-              if (sizeIsCoin) {
-                actualCoinSize = pos.size;
-                positionValueUsd = pos.size * (pos.entryPrice || 0);
-              } else {
-                positionValueUsd = pos.size;
-                actualCoinSize = pos.entryPrice ? pos.size / pos.entryPrice : 0;
-              }
-            } else {
-              positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
-              actualCoinSize = pos.size || 0;
-            }
+            const { actualCoinSize, positionValueUsd } = getHistoryPositionSizeAndValue(pos);
 
             if (pos.raw?.roi !== undefined && pos.raw?.roi !== null) {
               roiValue = parseFloat(pos.raw.roi) * 100;
