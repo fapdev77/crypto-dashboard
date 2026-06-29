@@ -643,7 +643,7 @@ export function OpenPositions() {
                             {!isShort && (
                               <div className="flex items-start gap-1 py-1.5 px-2 bg-orange-500/10 border border-orange-500/20 rounded">
                                 <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
-                                <span className="text-[9.5px] text-orange-300 font-medium leading-tight">Posição alavancada! Foco no gerenciamento de risco!</span>
+                                <span className="text-[9.5px] text-orange-300 font-medium leading-tight">Overexposed! Focus on risk management! Always have a stop in place!</span>
                               </div>
                             )}
                           </div>
