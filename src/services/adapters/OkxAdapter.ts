@@ -334,33 +334,50 @@ export class OkxAdapter implements IExchangeAdapter {
     const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
     let allOrders: any[] = [];
 
-    // "orders-history-archive" allows 3 months. "orders-history" goes back 7 days.
-    // For MVP 90 days requirement, archive is preferred.
+    // Query both "/api/v5/trade/orders-history" (active last 7 days) and 
+    // "/api/v5/trade/orders-history-archive" (older than 7 days) to ensure
+    // newly closed/canceled orders are immediately fetched, and older history is preserved.
     for (const instType of instTypes) {
-      let queryUrl = `instType=${instType}&limit=100`;
+      const endpoints = ['/api/v5/trade/orders-history', '/api/v5/trade/orders-history-archive'];
       
-      const path = `/api/v5/trade/orders-history-archive?${queryUrl}`;
-      const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
-      
-      try {
-        const res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
-        if (res.code === '0' && res.data) {
-          // Filter out manually because OKX API for archive might not perfectly respect begin/end without cursor logic
-          let filtered = res.data;
-          if (start && end) {
-            filtered = filtered.filter((o: any) => {
-              const uTime = parseInt(o.uTime || '0', 10);
-              return uTime >= start && uTime <= end;
-            });
+      for (const endpoint of endpoints) {
+        let queryUrl = `instType=${instType}&limit=100`;
+        if (start) queryUrl += `&begin=${start}`;
+        if (end) queryUrl += `&end=${end}`;
+        
+        const path = `${endpoint}?${queryUrl}`;
+        
+        try {
+          const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+          const res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+          if (res.code === '0' && res.data) {
+            let filtered = res.data;
+            if (start && end) {
+              filtered = filtered.filter((o: any) => {
+                const uTime = parseInt(o.uTime || '0', 10);
+                return uTime >= start && uTime <= end;
+              });
+            }
+            allOrders = allOrders.concat(filtered);
           }
-          allOrders = allOrders.concat(filtered);
+        } catch (err) {
+          console.warn(`[Okx-HistoryOrders] Error fetching ${instType} from ${endpoint}:`, err);
         }
-      } catch (err) {
-        console.warn(`[Okx-HistoryOrders] Error fetching ${instType}:`, err);
       }
     }
+
+    // De-duplicate orders by unique OKX order ID (ordId)
+    const seenOrdIds = new Set<string>();
+    const uniqueOrders: any[] = [];
+    for (const o of allOrders) {
+      if (!seenOrdIds.has(o.ordId)) {
+        seenOrdIds.add(o.ordId);
+        uniqueOrders.push(o);
+      }
+    }
+
     await OkxAdapter.ensureInstrumentsLoaded();
-    return this.normalizeOrders(allOrders, key);
+    return this.normalizeOrders(uniqueOrders, key);
   }
 
   private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {

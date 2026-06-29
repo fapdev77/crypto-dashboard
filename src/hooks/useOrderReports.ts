@@ -122,7 +122,11 @@ export function useOrderReports(filters: OrderFilters) {
         const adapter = ExchangeAggregator.getAdapter(key.exchange);
         if (adapter.getHistoryOrders) {
           const lastFetch = await getLastOrderFetchTimestamp(key.id);
-          const startTime = lastFetch > 0 ? lastFetch : now - (90 * 24 * 60 * 60 * 1000);
+          // Look back at least 14 days to cover any open orders that were created in the last 14 days and subsequently closed/canceled.
+          const minLookback = 14 * 24 * 60 * 60 * 1000; // 14 days
+          const startTime = lastFetch > 0 
+            ? Math.max(now - (90 * 24 * 60 * 60 * 1000), Math.min(lastFetch, now - minLookback)) 
+            : now - (90 * 24 * 60 * 60 * 1000);
           const endTime = now;
           
           const newOrders = await adapter.getHistoryOrders(key, startTime, endTime);
