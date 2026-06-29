@@ -342,8 +342,10 @@ export class OkxAdapter implements IExchangeAdapter {
       
       for (const endpoint of endpoints) {
         let queryUrl = `instType=${instType}&limit=100`;
-        if (start) queryUrl += `&begin=${start}`;
-        if (end) queryUrl += `&end=${end}`;
+        if (endpoint === '/api/v5/trade/orders-history-archive') {
+          if (start) queryUrl += `&begin=${start}`;
+          if (end) queryUrl += `&end=${end}`;
+        }
         
         const path = `${endpoint}?${queryUrl}`;
         

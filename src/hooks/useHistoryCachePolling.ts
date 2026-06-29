@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
+import { OrderHistoryService } from '../services/orders/OrderHistoryService';
 
 export function useHistoryCachePolling() {
   const keys = useApiKeysStore(state => state.keys);
@@ -15,9 +16,14 @@ export function useHistoryCachePolling() {
 
     const poll = async () => {
       console.log('[HistoryCachePolling] Executing background update...');
-      const service = new PositionHistoryService();
+      const positionService = new PositionHistoryService();
+      const orderService = new OrderHistoryService();
       try {
-        await Promise.all(activeKeys.map(apiKey => service.fetchWithCache(apiKey)));
+        const positionSyncs = activeKeys.map(apiKey => positionService.fetchWithCache(apiKey));
+        const orderSyncs = activeKeys.map(apiKey => orderService.fetchWithCache(apiKey));
+        
+        await Promise.all([...positionSyncs, ...orderSyncs]);
+        
         bumpHistoryCacheVersion();
         setLastSyncTime(Date.now());
         console.log('[HistoryCachePolling] Background update complete.');
