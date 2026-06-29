@@ -62,9 +62,20 @@ export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
       positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
       actualCoinSize = pos.size || 0;
     }
-  } else if (pos.exchange === 'bybit' && pos.raw?.cumEntryValue) {
-    positionValueUsd = parseFloat(pos.raw.cumEntryValue);
-    actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
+  } else if (pos.exchange === 'bybit') {
+    if (isInverse) {
+      // For Bybit Inverse:
+      // - cumEntryValue is in COIN (e.g. 0.00021896 BTC)
+      // - size is the contract value in USD (e.g. 13 USD)
+      actualCoinSize = parseFloat(pos.raw?.cumEntryValue || '0') || (pos.entryPrice ? (pos.size || 0) / pos.entryPrice : 0);
+      positionValueUsd = pos.size || 0;
+    } else {
+      // For Bybit Linear:
+      // - cumEntryValue is in USD/USDT (e.g. 5588.88 USDT)
+      // - size is the coin size (e.g. 0.2 BTC)
+      positionValueUsd = parseFloat(pos.raw?.cumEntryValue || '0') || ((pos.size || 0) * (pos.entryPrice || 0));
+      actualCoinSize = pos.size || 0;
+    }
   } else if (isInverse) {
     let sizeIsCoin = false;
     if (pos.entryPrice && pos.entryPrice > 0) {
