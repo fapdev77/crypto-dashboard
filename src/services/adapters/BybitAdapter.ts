@@ -551,6 +551,7 @@ export class BybitAdapter implements IExchangeAdapter {
         exchangeOrderId: o.orderId,
         connectionId: key.id,
         exchange: 'bybit',
+        label: key.label,
         symbol: o.symbol,
         category: mapInstrumentType('bybit', o.category || o._category || 'UNKNOWN'),
         side: o.side?.toLowerCase() === 'sell' ? 'sell' : 'buy',

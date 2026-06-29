@@ -32,6 +32,7 @@ export interface UnifiedOrder {
   exchangeOrderId: string;
   connectionId: string;
   exchange: ExchangeName;
+  label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
   side: 'buy' | 'sell';
@@ -49,6 +50,8 @@ export interface UnifiedOrder {
   createdTime: number;
   updatedTime: number;
   fees?: number;
+  leverage?: number;
+  marginMode?: UnifiedMarginMode;
   raw?: any;
 }
 

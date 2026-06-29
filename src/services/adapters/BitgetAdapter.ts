@@ -479,6 +479,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         exchangeOrderId: o.orderId,
         connectionId: key.id,
         exchange: 'bitget',
+        label: key.label,
         symbol: o.symbol || o.instId,
         category,
         side: o.side?.toLowerCase().includes('buy') ? 'buy' : 'sell',
@@ -495,6 +496,8 @@ export class BitgetAdapter implements IExchangeAdapter {
         createdTime: parseInt(o.cTime || '0', 10),
         updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
         fees: parseFloat(o.fee || '0'),
+        leverage: o.leverage ? parseFloat(o.leverage) : undefined,
+        marginMode: o.marginMode ? mapMarginMode('bitget', o.marginMode) : undefined,
         raw: o
       };
     });

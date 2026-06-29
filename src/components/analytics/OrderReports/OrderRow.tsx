@@ -8,6 +8,7 @@ import { CoinIcon } from '../../ui/CoinIcon';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { AssetClassifierAggregator } from '../../../services/AssetClassifierAggregator';
 import { extractBaseCoin } from '../../../utils/unifiers';
+import { useDashboardStore } from '../../../store/dashboardStore';
 
 interface Props {
   key?: React.Key;
@@ -19,13 +20,22 @@ interface Props {
 export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const formatCurrency = useFormatCurrency();
   const { keys } = useApiKeysStore();
-  const connectionLabel = keys.find(k => k.id === order.connectionId)?.label || order.connectionId;
+  const connectionLabel = order.label || keys.find(k => k.id === order.connectionId)?.label || order.connectionId;
+
+  const activePositions = Object.values(useDashboardStore.getState().positions);
+  const matchingPos = activePositions.find(p => p.connectionId === order.connectionId && p.symbol === order.symbol);
+  const orderLeverage = order.leverage || matchingPos?.leverage || 1;
+  const orderMarginMode = order.marginMode || matchingPos?.marginMode || 'cross';
+  const capitalizedMarginMode = orderMarginMode === 'cross' ? 'Cross' : orderMarginMode === 'isolated' ? 'Isolated' : 'Cross';
 
   const isBuy = order.side === 'buy';
   const sideColor = isBuy ? 'text-[#00C853]' : 'text-[#FF4444]';
-  const sideText = isBuy 
+  const rawSideText = isBuy 
     ? (order.positionSide === 'long' ? 'Open Long' : order.positionSide === 'short' ? 'Close Short' : 'Buy')
     : (order.positionSide === 'short' ? 'Open Short' : order.positionSide === 'long' ? 'Close Long' : 'Sell');
+
+  const isDerivative = order.category && order.category.toUpperCase() !== 'SPOT';
+  const sideText = isDerivative ? `${rawSideText} (${capitalizedMarginMode} - ${orderLeverage}x)` : rawSideText;
 
   const statusColorMap: Record<string, string> = {
     NEW: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20',
@@ -115,6 +125,9 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
             </div>
             <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
               {order.exchange}
+            </span>
+            <span className="w-max text-[10px] font-semibold text-[#a0a5ad] bg-[#202226] border border-[#34373c] mt-1 py-0.5 px-1.5 rounded-[4px] truncate max-w-[120px]" title={connectionLabel}>
+              ({connectionLabel})
             </span>
           </div>
         </div>
