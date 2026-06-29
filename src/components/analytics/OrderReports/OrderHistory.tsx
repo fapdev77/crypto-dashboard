@@ -22,7 +22,8 @@ export function OrderHistory() {
     side: 'All',
     status: 'CLOSED',
     timePeriod: 7 * 24 * 60 * 60 * 1000, // default 7 days
-    accountId: 'All'
+    accountId: 'All',
+    historyStatus: 'All'
   });
 
   const { fetchOrders, orders, loading, isSyncing, error } = useOrderReports(filters);
@@ -240,7 +241,7 @@ export function OrderHistory() {
       </div>
 
       <div className="px-0">
-        <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} />
+        <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} showStatusFilter={true} />
       </div>
 
       {orders.length > 0 && (

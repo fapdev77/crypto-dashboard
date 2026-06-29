@@ -26,7 +26,8 @@ export function TradeHistory() {
     side: 'All',
     status: 'CLOSED',
     timePeriod: 7 * 24 * 60 * 60 * 1000, // default 7 days
-    accountId: 'All'
+    accountId: 'All',
+    historyStatus: 'All'
   });
 
   const { fetchOrders, orders, loading, isSyncing, error } = useOrderReports(filters);

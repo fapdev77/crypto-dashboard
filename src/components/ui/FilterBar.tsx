@@ -59,6 +59,14 @@ export interface FilterBarProps {
     options: string[];
     labelAll?: string; // Defaults to "All Types"
   };
+
+  // Status Filter
+  statusSelect?: {
+    value: string;
+    onChange: (val: string) => void;
+    options: string[];
+    labelAll?: string; // Defaults to "All Statuses"
+  };
 }
 
 export function FilterBar({
@@ -69,6 +77,7 @@ export function FilterBar({
   period,
   side,
   type,
+  statusSelect,
 }: FilterBarProps) {
   const { keys } = useApiKeysStore();
   const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
@@ -214,6 +223,21 @@ export function FilterBar({
           {type.options.map(t => (
             <option key={t} value={t}>
               {t === 'All' ? (type.labelAll || 'All Types') : t}
+            </option>
+          ))}
+        </select>
+      )}
+
+      {/* Status Select */}
+      {statusSelect && (
+        <select
+          value={statusSelect.value}
+          onChange={(e) => statusSelect.onChange(e.target.value)}
+          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
+        >
+          {statusSelect.options.map(st => (
+            <option key={st} value={st}>
+              {st === 'All' ? (statusSelect.labelAll || 'All Statuses') : st}
             </option>
           ))}
         </select>

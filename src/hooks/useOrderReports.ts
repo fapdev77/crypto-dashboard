@@ -22,6 +22,7 @@ export interface OrderFilters {
   status: 'OPEN' | 'CLOSED';
   timePeriod: number;
   accountId: string;    // 'All' | connectionId
+  historyStatus?: string; // 'All' | 'FILLED' | 'CANCELLED' etc
 }
 
 export function useOrderReports(filters: OrderFilters) {
@@ -159,7 +160,7 @@ export function useOrderReports(filters: OrderFilters) {
       const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
       const now = Date.now();
 
-      return rawOrders.filter(order => {
+      const filtered = rawOrders.filter(order => {
         if (filters.exchange !== 'All' && order.exchange !== filters.exchange) return false;
         if (filters.status === 'CLOSED' && order.createdTime < now - filters.timePeriod) return false;
         if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
@@ -167,8 +168,11 @@ export function useOrderReports(filters: OrderFilters) {
         if (filters.side !== 'All' && order.side !== filters.side) return false;
         if (filters.instrument !== 'All' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
         if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
+        if (filters.status === 'CLOSED' && filters.historyStatus && filters.historyStatus !== 'All' && order.status !== filters.historyStatus) return false;
         return true;
       });
+
+      return [...filtered].sort((a, b) => b.createdTime - a.createdTime);
     }
 
     const activeKeyIds = new Set(keys.filter(k => k.isActive).map(k => k.id));
@@ -184,7 +188,7 @@ export function useOrderReports(filters: OrderFilters) {
     const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
     const now = Date.now();
 
-    return rawOrders.filter(order => {
+    const filtered = rawOrders.filter(order => {
       // Rule: Do not display orders for inactive/deactivated API keys
       if (!activeKeyIds.has(order.connectionId)) return false;
 
@@ -195,8 +199,11 @@ export function useOrderReports(filters: OrderFilters) {
       if (filters.side !== 'All' && order.side !== filters.side) return false;
       if (filters.instrument !== 'All' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
       if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
+      if (filters.status === 'CLOSED' && filters.historyStatus && filters.historyStatus !== 'All' && order.status !== filters.historyStatus) return false;
       return true;
     });
+
+    return [...filtered].sort((a, b) => b.createdTime - a.createdTime);
   }, [cachedOpenOrders, closedRawOrders, filters, keys, useMockData]);
 
   return { fetchOrders, orders, loading: filters.status === 'OPEN' ? false : loading, isSyncing, error };
