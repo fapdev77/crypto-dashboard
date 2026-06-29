@@ -92,10 +92,10 @@ export function OpenPositions() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-         <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-           <Activity className="w-5 h-5 text-[#2F6BFF]" />
-           Open Positions
-         </h2>
+        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+          <Activity className="w-5 h-5 text-[#2F6BFF]" />
+          Open Positions
+        </h2>
       </div>
 
       {/* Header Controls */}
@@ -403,7 +403,7 @@ export function OpenPositions() {
                       <AppTooltip {...sizeTooltipProps}>
                         <div className="flex flex-col gap-0.5 cursor-help w-max focus:outline-none">
                           <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max">Pos Size / Value</span>
-                          <span className="font-mono text-white text-sm">{formatCurrency(pos.size, 'crypto')}</span>
+                          <span className="font-mono text-white text-sm">{formatCurrency(pos.size, 'crypto')} {baseCoinClean}</span>
                           <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
                         </div>
                       </AppTooltip>
@@ -497,7 +497,7 @@ export function OpenPositions() {
                       </span>
                       {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
                         <span className={`font-mono text-xs ${realizedPnlColor} opacity-80`}>
-                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)}
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)} USD
                         </span>
                       ) : (
                         <span className="text-[10px] opacity-0">-</span>

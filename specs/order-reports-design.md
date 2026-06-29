@@ -52,3 +52,25 @@ src/components/analytics/OrderReports/
   - Sell/Short: Subtle Red (`text-red-500` / `text-red-400`).
 - **Typography:** Inter for standard text, JetBrains Mono for transaction IDs, symbol pairs, and numeric values (prices/quantities).
 - **Tooltips:** Use `<AppTooltip />` for any abbreviated statuses or complex values (e.g. `Reduce-only: Yes`).
+
+---
+
+## 5. Final Implementation Details
+
+The Order Reports feature was successfully implemented following the Solid Principles (specifically SRP and Strategy Pattern):
+
+### 5.1 Caching and Sync Engine (`OrderHistoryService`)
+- **Dedicated Orchestration Layer:** The `OrderHistoryService` was established inside `src/services/orders/OrderHistoryService.ts`. It mimics the pattern of `PositionHistoryService` by managing the integration between the exchange adapters and the IndexedDB (`crypto-dashboard-cache`) database.
+- **Background Keep-Warm Polling:** This service is integrated into the universal `useHistoryCachePolling` hook. Every polling cycle (default: 15 minutes) updates both the historical positions and the historical/closed orders in the background, keeping the cache warm across active connections.
+- **SWR (Stale-While-Revalidate) in UI:** The `useOrderReports` hook implements SWR by loading cached orders immediately from IndexedDB for instantaneous UI rendering, then initiating a silent, non-blocking background fetch using `OrderHistoryService` to pull any missing/incremental records and update the UI seamlessly.
+
+### 5.2 Resolution of recently Closed/Canceled Orders Gap
+To guarantee that a recently closed or canceled order (which is instantly removed from the open orders stream) is captured immediately in the historical order report, several technical enhancements were implemented:
+1. **At Least 14-Day Lookback Window:** During incremental updates, the `OrderHistoryService` calculates a query start time looking back at least 14 days prior to the last fetched timestamp (up to a 90-day absolute limit). This safety lookback window covers any open orders that were created recently and closed/canceled in the period between fetches.
+2. **Double-Endpoint Fetching for OKX (V5):**
+   - OKX segregates order history into `/api/v5/trade/orders-history` (last 7 days of recently filled/canceled/active orders) and `/api/v5/trade/orders-history-archive` (older historical orders up to 90 days).
+   - The `OkxAdapter` was updated to perform parallel fetches to both endpoints during historical order retrieval. The results are merged and de-duplicated by their unique exchange order ID (`ordId`) on the client side. This ensures recently canceled or filled orders within the 7-day threshold are immediately captured and cached, eliminating any delay or sync gaps!
+3. **Bypassing Cache Cooldown on Manual Sync:**
+   - When the user clicks the "Force Sync" or "Sync Now" button via the `StatusAndSyncBadge` component, the system sets the global `lastSyncTime` state to `0`.
+   - This signals a complete cache-bypass to all active hooks (`usePnLBySymbol`, `usePositionHistory`, `useOrderReports`). Instead of relying on the cooldown logic, they immediately execute direct REST queries to pull fresh histories from all exchange endpoints and rewrite the local IndexedDB states, guaranteeing instant updates.
+

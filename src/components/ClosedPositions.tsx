@@ -419,27 +419,14 @@ export function ClosedPositions() {
               }
             }
 
-            let displayQuantity = '--';
-            let displayUnit = '';
-            let displaySecondaryQuantity = '--';
-            let displaySecondaryUnit = '';
-
-            if (isInverse) {
-              displayQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
-              displayUnit = 'USD';
-              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
-              displaySecondaryUnit = symbolSuffix;
-            } else if (pos.exchange === 'okx') {
-              displayQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
-              displayUnit = 'USD';
-              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
-              displaySecondaryUnit = symbolSuffix;
-            } else {
-              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 8) : '--';
-              displayUnit = symbolSuffix;
-              displaySecondaryQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
-              displaySecondaryUnit = 'USD';
-            }
+            const displayQuantity = (actualCoinSize !== undefined && actualCoinSize !== null)
+              ? formatCurrency(actualCoinSize, 'crypto', 8)
+              : '--';
+            const displayUnit = symbolSuffix;
+            const displaySecondaryQuantity = (positionValueUsd !== undefined && positionValueUsd !== null)
+              ? formatCurrency(positionValueUsd, 'crypto', 2)
+              : '--';
+            const displaySecondaryUnit = 'USD';
 
             if (hasRoi && isFinite(roiValue)) {
               roiStr = `${roiValue > 0 ? '+' : ''}${formatCurrency(roiValue, 'crypto', 2)}%`;

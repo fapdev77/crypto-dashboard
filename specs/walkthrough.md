@@ -101,18 +101,20 @@ Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWs
 | Serviço | Arquivo | Papel |
 |---------|---------|-------|
 | **PositionHistoryService** | [PositionHistoryService.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/positions/PositionHistoryService.ts) | Factory → Adapter. Dois modos: `fetchExchangeHistory` (direto) e `fetchWithCache` (incremental com IndexedDB). |
+| **OrderHistoryService** | [OrderHistoryService.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/orders/OrderHistoryService.ts) | Factory → Adapter. Dois modos: carrega do cache local e faz fetch incremental de ordens fechadas/canceladas com IndexedDB. |
 | **BillsHistoryService** | [BillsHistoryService.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/bills/BillsHistoryService.ts) | Factory → Adapter. Modo direto (sem cache IndexedDB por enquanto). |
 
 ---
 
 ## 7. Camada de Persistência Local (IndexedDB)
 
-[historyCache.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/historyCache.ts) — DB `crypto-dashboard-cache` com 2 object stores:
+[historyCache.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/historyCache.ts) — DB `crypto-dashboard-cache` com os seguintes object stores:
 
 | Store | Key | Índices | Uso |
 |-------|-----|---------|-----|
 | `positionHistory` | `id` (UnifiedHistoryPosition.id) | `by-connectionId`, `by-closeTime` | Cache incremental de trades encerrados |
-| `orderCacheMeta` e afins | `connectionId` | — | Rastreia `lastFetchTimestamp` para fetches incrementais de ordens fechadas |
+| `orderHistory` | `id` (UnifiedOrder.id) | `by-connectionId` | Cache incremental de ordens históricas/fechadas |
+| `orderCacheMeta` | `connectionId` | — | Rastreia `lastFetchTimestamp` para fetches incrementais de ordens fechadas |
 
 **Fluxo Incremental (SWR - Stale-While-Revalidate)**:
 1. React Hook (`usePositionHistory`, `useOrderReports`) carrega os dados estáticos do cache via SWR e renderiza a tela instantaneamente.
@@ -127,9 +129,9 @@ Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWs
 |------|---------|-----------------|
 | `useMultiExchangeWS` | [useMultiExchangeWS.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useMultiExchangeWS.ts) (349 LOC) | Gerencia ciclo de vida completo dos WebSockets. Exponential backoff (cap 60s). Ping/Pong a cada 20s. Short-Polling REST universal (todas exchanges) configurável. Mock data injection. |
 | `usePositionHistory` | [usePositionHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePositionHistory.ts) | Padrão SWR. Carrega rápido via IndexedDB, faz fetch incremental com `PositionHistoryService` em background. Filtra por período in-memory. |
-| `useOrderReports` | [useOrderReports.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useOrderReports.ts) | Padrão SWR para ordens fechadas. Filtros combinados e sincronia assíncrona. |
+| `useOrderReports` | [useOrderReports.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useOrderReports.ts) | Padrão SWR para ordens fechadas. Usa o `OrderHistoryService` para recuperar os dados e atualizar de modo reativo. |
 | `useBillsHistory` | [useBillsHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useBillsHistory.ts) | Orquestra `BillsHistoryService.fetchBills()` em paralelo. Live + Mock mode (Sem cache IndexedDB, consulta viva). |
-| `useHistoryCachePolling` | [useHistoryCachePolling.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useHistoryCachePolling.ts) | Background polling configurável (default 15 min) para manter cache IndexedDB atualizado. |
+| `useHistoryCachePolling` | [useHistoryCachePolling.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useHistoryCachePolling.ts) | Background polling configurável (default 15 min) para manter cache IndexedDB de posições e de ordens atualizado em segundo plano. |
 | `usePnLBySymbol` | [usePnLBySymbol.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePnLBySymbol.ts) | Agregação PnL por símbolo usando `Big.js`. |
 
 ---
@@ -284,4 +286,12 @@ Abaixo, os refinamentos críticos implementados recentemente para elevar o aplic
 
 ### E. Coordenação de Sincronia Unificada (Sync Engine)
 - **Global Sync Coordination**: Evita estouros de limitação de taxa (Rate-Limits) ao coordenar o tempo de cache das abas históricas do painel analítico (Orders, Trade History, PnL) usando uma propriedade centralizada `lastSyncTime`. Desativa preventivamente botões de recarregamento manual quando o **Simulation Mode (Dados de Mock)** está ativado.
+
+### F. Sincronização e Cache de Ordens Fechadas/Canceladas (Incremental Engine)
+- **OrderHistoryService Dedicado**: Introdução de uma camada de serviço especializada (`OrderHistoryService`) para gerenciar consultas e de-duplicações de ordens finalizadas integrando diretamente ao IndexedDB.
+- **Background Keep-Warm Polling**: Injeção da sincronização de ordens históricas em segundo plano (`useHistoryCachePolling`), mantendo o banco IndexedDB de ordens atualizado periodicamente (default: 15min) sem sobrecarga da UI.
+- **Janela Adaptativa de Lookback**: Implementação de um intervalo mínimo de 14 dias para buscas incrementais de ordens, resolvendo de forma permanente lacunas de sincronização e garantindo que ordens recentemente modificadas sejam salvas e exibidas imediatamente.
+- **OKX Double-Endpoint Integration**: Ajuste fino no adapter da OKX para ler concorrentemente o histórico regular (últimos 7 dias) e os arquivos arquivados (até 90 dias), fundindo-os com eliminação de redundâncias, garantindo exibição instantânea de cancelamentos imediatos de ordens.
+- **Bypass de Cooldown em Forçar Sincronia**: O acionar de sincronização forçada redefine o gatekeeper central `lastSyncTime` para zero, forçando todos os hooks de histórico a ignorar as regras de cooldown e consultar diretamente as REST APIs das exchanges.
+
 
