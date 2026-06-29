@@ -198,8 +198,8 @@ export function OpenPositions() {
               const sizeValUsd = pos.notionalUsd || inverseVals.positionValue || (pos.size * pos.markPrice);
               const posCcy = pos.ccy || pos.baseCoin || 'USDT';
 
-              const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
-              const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
+              const isFiatPair = pos.symbol.toUpperCase().includes('USD') || pos.symbol.toUpperCase().includes('EUR') || pos.symbol.toUpperCase().includes('BRL');
+              const isFiatCcy = posCcy.toUpperCase().includes('USD') || posCcy.toUpperCase() === 'EUR' || posCcy.toUpperCase() === 'BRL';
               const formatCcy = (v: number | undefined | null) => formatCurrency(v, 'crypto', isFiatCcy ? 2 : 8);
 
               const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
