@@ -269,10 +269,10 @@ export class BitgetAdapter implements IExchangeAdapter {
         closedPnl: parseFloat(pos.netProfit ?? pos.pnl ?? pos.achievedProfits ?? '0') - (pos.totalFunding ? parseFloat(pos.totalFunding) : 0) - (totalFee || 0),
         closeUpdateTime: closeUpdateTime,
         createdTime: createdTime,
-        entryPrice: parseFloat(pos.openPriceAvg || '0'),
-        closePrice: parseFloat(pos.closePriceAvg || '0'),
+        entryPrice: parseFloat(pos.openAvgPrice || pos.openPriceAvg || '0'),
+        closePrice: parseFloat(pos.closeAvgPrice || pos.closePriceAvg || '0'),
         size: (() => {
-          const rawSize = parseFloat(pos.closeTotalPos || '0');
+          const rawSize = parseFloat(pos.closeTotalPos || pos.openTotalPos || '0');
           const isInverse = mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES') === 'INVERSE';
           if (isInverse) {
             return rawSize * getBitgetInverseContractVal(pos.instId || pos.symbol);
