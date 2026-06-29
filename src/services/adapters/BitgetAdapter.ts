@@ -469,13 +469,10 @@ export class BitgetAdapter implements IExchangeAdapter {
 
       const category = mapInstrumentType('bitget', o.productType || 'UNKNOWN');
       const isInverse = category === 'INVERSE';
-      let qty = parseFloat(o.size || '0');
-      let filledQty = parseFloat(o.filledQty || o.baseVolume || '0');
-      if (isInverse) {
-        const contractVal = getBitgetInverseContractVal(o.symbol || o.instId);
-        qty = qty * contractVal;
-        filledQty = filledQty * contractVal;
-      }
+      const qty = parseFloat(o.size || '0');
+      const filledQty = parseFloat(o.filledQty || o.baseVolume || '0');
+      const price = parseFloat(o.price || o.priceAvg || o.avgPrice || '0');
+      const value = parseFloat(o.quoteVolume || '0') || (qty * price);
       
       return {
         id: `${key.id}-${o.orderId}`,
@@ -492,7 +489,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         avgPrice: parseFloat(o.priceAvg || o.avgPrice || '0'),
         qty,
         filledQty,
-        value: isInverse ? qty : parseFloat(o.totalProfits || '0'), // simplified
+        value,
         triggerPrice: o.triggerPrice ? parseFloat(o.triggerPrice) : undefined,
         timeInForce: o.timeInForce || o.force,
         createdTime: parseInt(o.cTime || '0', 10),

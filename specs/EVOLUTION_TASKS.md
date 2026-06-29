@@ -87,3 +87,16 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 **4. Integridade de Dados no Painel de Visualização e Relatórios de Exportação** [✓]
 *   **Ação Aplicada:** Adaptação da tabela de posições fechadas (`ClosedPositions.tsx`), visualizações de relatórios e rotinas de exportação para consumir uniformemente os novos campos de tamanho e valor calculados, garantindo dados íntegros e 100% corretos em CSV, PDF e Excel.
 
+---
+
+## Sprint Recente: Padronização de Ordens de Contratos Inversos da Bitget [CONCLUÍDO]
+
+**1. Correção do Tamanho de Ordem para Contratos Inversos da Bitget** [✓]
+*   **Ação Aplicada:** No `BitgetAdapter.ts`, removemos a multiplicação redundante pelo valor de contrato (`getBitgetInverseContractVal`) para ordens ativas (`orders-pending`) e históricas (`orders-history`). As ordens de contratos inversos da Bitget já retornam a quantidade diretamente na unidade do ativo (moeda, e.g. `0.03 ETH`), eliminando valores inflados ou incorretos de tamanho de ordem.
+
+**2. Normalização do Valor de Ordem (Notional USD) da Bitget** [✓]
+*   **Ação Aplicada:** O campo de valor da ordem agora calcula a notionalidade de forma precisa usando `quoteVolume` (volume financeiro preenchido real) ou multiplicando a quantidade total da ordem pelo preço de entrada (`qty * price`), em vez de mapear para `totalProfits` (lucro realizado) ou usar o tamanho sem preço.
+
+**3. Reconhecimento Automático e Visualização no Painel de Ordens** [✓]
+*   **Ação Aplicada:** O componente de linha de ordens (`OrderRow.tsx`) agora utiliza as relações matemáticas corretas (`qtyIsCoin` detectado como `true` para Bitget) para extrair o tamanho real da moeda e o volume estimado em USD. Isso garante uma renderização perfeita da quantidade de moedas (e.g. `0.03 ETH`) e de seu valor nocional em USD nas telas de Ordens Abertas e Histórico de Ordens.
+

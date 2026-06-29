@@ -282,3 +282,18 @@ export interface UnifiedOrder {
 | `updatedTime`| `updatedTime` | `uTime` / `cTime` | `uTime` / `cTime` | Milliseconds timestamp of last update |
 | `timeInForce`| `timeInForce` | `timeInForce` / `force` | `notionalUsd` (fallback) | Order duration constraints |
 
+### Advanced Normalization Logic for Sizing & Value (Inverse vs Linear Orders)
+
+To ensure accurate representation of active and historical orders, each adapter maps quantities and values to the unified interface according to these guidelines:
+
+1. **Bitget (V2)**
+   * **Quantity and Fills:** For both Linear and Inverse (`COIN-FUTURES`) contracts, the Bitget API returns the order size (`o.size`) and filled volume (`o.filledQty || o.baseVolume`) denominated in the underlying coin directly (e.g. `0.03 ETH`). Thus, the values are used without scaling by contract multipliers.
+   * **Order Value:** The total USD value is computed by fetching `o.quoteVolume` when available, or fallbacks to the target quantity multiplied by the order price (or average price), ensuring proper visual display of the USD volume.
+   * **UI Detection:** The `OrderRow` component automatically detects if the order `qty` is denominated in coin (using the price & value relation), rendering the exact coin amount as the actual size and displaying the correct estimated USD value.
+
+2. **Bybit (V5)**
+   * For Inverse contracts, `qty` is mapped to the USD value (contract value), which the UI dynamically parses back into coin size using the order price.
+
+3. **OKX (V5)**
+   * For derivatives, quantities are scaled using the cached instrument contract multiplier (`ctVal`), and values are calculated accordingly to match.
+
