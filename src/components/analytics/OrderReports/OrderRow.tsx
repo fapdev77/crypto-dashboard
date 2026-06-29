@@ -7,6 +7,7 @@ import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { AssetClassifierAggregator } from '../../../services/AssetClassifierAggregator';
+import { extractBaseCoin } from '../../../utils/unifiers';
 
 interface Props {
   key?: React.Key;
@@ -46,7 +47,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const category = AssetClassifierAggregator.getGlobalCategorySync(order.symbol);
   
   const isInverse = order.category === 'INVERSE';
-  const symbolSuffix = order.symbol.replace(/USDT|USDC|USD|PERP|-[0-9]+$/g, '');
+  const symbolSuffix = extractBaseCoin(order.exchange, order.symbol);
 
   let valUsd = 0;
   let actualCoinSize = order.qty || 0;
@@ -144,17 +145,8 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
           <AppTooltip description="The original quantity and estimated total value of the order.">
             <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Order Qty / Value</span>
           </AppTooltip>
-          {(isInverse && !qtyIsCoin) ? (
-            <>
-              <span className="font-mono text-white text-sm">{formatCurrency(valUsd, 'crypto', 2)} USD</span>
-              <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(actualCoinSize, 'crypto', 8)} {symbolSuffix}</span>
-            </>
-          ) : (
-            <>
-              <span className="font-mono text-white text-sm">{formatCurrency(actualCoinSize, 'crypto')} {symbolSuffix}</span>
-              <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(valUsd, 'crypto', 2)} USD</span>
-            </>
-          )}
+          <span className="font-mono text-white text-sm">{formatCurrency(actualCoinSize, 'crypto')} {symbolSuffix}</span>
+          <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(valUsd, 'crypto', 2)} USD</span>
         </div>
 
         {/* Col 4: Price & Trigger */}
@@ -181,11 +173,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
           </AppTooltip>
           <div className="flex flex-col gap-1 w-full max-w-[120px]">
              <div className="flex justify-between items-center text-[10px] font-mono text-[#8E9299]">
-               {(isInverse && !qtyIsCoin) ? (
-                 <span>{formatCurrency(filledValUsd, 'crypto', 2)} USD</span>
-               ) : (
-                 <span>{formatCurrency(actualFilledCoinSize, 'crypto')} {symbolSuffix}</span>
-               )}
+               <span>{formatCurrency(actualFilledCoinSize, 'crypto')} {symbolSuffix}</span>
                <span className="text-white">{progress.toFixed(1)}%</span>
              </div>
              <div className="h-1.5 bg-[#2a2b30] rounded-full overflow-hidden w-full">

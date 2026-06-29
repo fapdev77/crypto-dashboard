@@ -13,6 +13,7 @@ import { AppTooltip } from '../ui/Tooltip';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { AssetClassifierAggregator } from '../../services/AssetClassifierAggregator';
+import { extractBaseCoin } from '../../utils/unifiers';
 import { format } from 'date-fns';
 import { Pagination } from '../ui/Pagination';
 
@@ -124,7 +125,7 @@ export function TradeHistory() {
     const rows = trades.map(t => {
       const isBuy = t.side === 'buy';
       const isInverse = t.category === 'INVERSE';
-      const symbolSuffix = t.symbol.replace(/USDT|USDC|USD|PERP|-[0-9]+$/g, '');
+      const symbolSuffix = extractBaseCoin(t.exchange, t.symbol);
 
       // Instrument mapping
       let instrumentLabel = 'Linear Perpetuals';
@@ -304,7 +305,7 @@ export function TradeHistory() {
           {paginatedTrades.map(trade => {
             const isBuy = trade.side === 'buy';
             const isInverse = trade.category === 'INVERSE';
-            const symbolSuffix = trade.symbol.replace(/USDT|USDC|USD|PERP|-[0-9]+$/g, '');
+            const symbolSuffix = extractBaseCoin(trade.exchange, trade.symbol);
             const globalCategory = AssetClassifierAggregator.getGlobalCategorySync(trade.symbol);
 
             const connectionLabel = keys.find(k => k.id === trade.connectionId)?.label || trade.connectionId;

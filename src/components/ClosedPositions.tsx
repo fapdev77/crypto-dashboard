@@ -8,6 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
+import { extractBaseCoin } from '../utils/unifiers';
 import { AppTooltip } from './ui/Tooltip';
 import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
@@ -369,7 +370,7 @@ export function ClosedPositions() {
 
             const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
             const marginModeLabel = (pos.raw?.marginMode || pos.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
-            const symbolSuffix = pos.symbol.replace(/USDT|USDC|USD|-|SWAP/g, '');
+            const symbolSuffix = extractBaseCoin(pos.exchange, pos.symbol);
 
             let roiStr = '--';
             let roiValue = 0;
