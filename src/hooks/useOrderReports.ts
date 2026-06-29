@@ -3,8 +3,9 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { ExchangeAggregator } from '../services/adapters/ExchangeAggregator';
 import { UnifiedOrder } from '../types';
 import { useOrdersStore } from '../store/ordersStore';
-import { getCachedOrders, saveCachedOrders, getLastOrderFetchTimestamp, updateOrderCacheMeta } from '../services/historyCache';
+import { getCachedOrders } from '../services/historyCache';
 import { useSettingsStore } from '../store/settingsStore';
+import { OrderHistoryService } from '../services/orders/OrderHistoryService';
 import mockOrdersData from '../mock/orders.json';
 
 // Module-level state to persist across unmounts/remounts of different views
@@ -21,6 +22,7 @@ export interface OrderFilters {
   status: 'OPEN' | 'CLOSED';
   timePeriod: number;
   accountId: string;    // 'All' | connectionId
+  historyStatus?: string; // 'All' | 'FILLED' | 'CANCELLED' etc
 }
 
 export function useOrderReports(filters: OrderFilters) {
@@ -116,54 +118,23 @@ export function useOrderReports(filters: OrderFilters) {
       // Step 2: Background Sync (Incremental)
       setIsSyncing(true);
       
-      let allNewOrders: UnifiedOrder[] = [];
-      
-      const fetchPromises = activeKeys.map(async (key) => {
-        const adapter = ExchangeAggregator.getAdapter(key.exchange);
-        if (adapter.getHistoryOrders) {
-          const lastFetch = await getLastOrderFetchTimestamp(key.id);
-          const startTime = lastFetch > 0 ? lastFetch : now - (90 * 24 * 60 * 60 * 1000);
-          const endTime = now;
-          
-          const newOrders = await adapter.getHistoryOrders(key, startTime, endTime);
-          
-          if (newOrders.length > 0) {
-            await saveCachedOrders(newOrders);
-            // find the latest createdTime to update cache meta
-            const maxCreatedTime = Math.max(...newOrders.map(o => o.createdTime || 0));
-            if (maxCreatedTime > lastFetch) {
-               await updateOrderCacheMeta(key.id, maxCreatedTime);
-            }
-          }
-          return newOrders;
-        }
-        return [];
-      });
-
+      const orderService = new OrderHistoryService();
+      const fetchPromises = activeKeys.map(apiKey => orderService.fetchWithCache(apiKey));
       const results = await Promise.allSettled(fetchPromises);
-      let hasNewOrders = false;
 
-      results.forEach((res) => {
-        if (res.status === 'fulfilled') {
-          if (res.value.length > 0) hasNewOrders = true;
-        } else {
-          console.error('[useOrderReports] error fetching closed orders:', res.reason);
-        }
-      });
-
-      // If we fetched new orders, we should reload from cache to get the fully merged set
-      if (hasNewOrders) {
-        let updatedTotal: UnifiedOrder[] = [];
-        const newCachePromises = activeKeys.map(apiKey => getCachedOrders(apiKey.id));
-        const newCacheResults = await Promise.all(newCachePromises);
-        for (const res of newCacheResults) {
-          updatedTotal = [...updatedTotal, ...res];
-        }
-        updatedTotal.sort((a, b) => b.createdTime - a.createdTime);
+      // Reload fully merged set from cache
+      let updatedTotal: UnifiedOrder[] = [];
+      const newCachePromises = activeKeys.map(apiKey => getCachedOrders(apiKey.id));
+      const newCacheResults = await Promise.all(newCachePromises);
+      for (const res of newCacheResults) {
+        updatedTotal = [...updatedTotal, ...res];
+      }
+      updatedTotal.sort((a, b) => b.createdTime - a.createdTime);
+      
+      if (updatedTotal.length > 0) {
         setClosedRawOrders(updatedTotal);
         globalCachedClosedOrders = updatedTotal;
       } else if (cachedTotal.length === 0) {
-        // If we had no cache, and no new orders, set empty array
         setClosedRawOrders([]);
         globalCachedClosedOrders = [];
       }
@@ -189,7 +160,7 @@ export function useOrderReports(filters: OrderFilters) {
       const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
       const now = Date.now();
 
-      return rawOrders.filter(order => {
+      const filtered = rawOrders.filter(order => {
         if (filters.exchange !== 'All' && order.exchange !== filters.exchange) return false;
         if (filters.status === 'CLOSED' && order.createdTime < now - filters.timePeriod) return false;
         if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
@@ -197,8 +168,11 @@ export function useOrderReports(filters: OrderFilters) {
         if (filters.side !== 'All' && order.side !== filters.side) return false;
         if (filters.instrument !== 'All' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
         if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
+        if (filters.status === 'CLOSED' && filters.historyStatus && filters.historyStatus !== 'All' && order.status !== filters.historyStatus) return false;
         return true;
       });
+
+      return [...filtered].sort((a, b) => b.createdTime - a.createdTime);
     }
 
     const activeKeyIds = new Set(keys.filter(k => k.isActive).map(k => k.id));
@@ -214,7 +188,7 @@ export function useOrderReports(filters: OrderFilters) {
     const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
     const now = Date.now();
 
-    return rawOrders.filter(order => {
+    const filtered = rawOrders.filter(order => {
       // Rule: Do not display orders for inactive/deactivated API keys
       if (!activeKeyIds.has(order.connectionId)) return false;
 
@@ -225,8 +199,11 @@ export function useOrderReports(filters: OrderFilters) {
       if (filters.side !== 'All' && order.side !== filters.side) return false;
       if (filters.instrument !== 'All' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
       if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
+      if (filters.status === 'CLOSED' && filters.historyStatus && filters.historyStatus !== 'All' && order.status !== filters.historyStatus) return false;
       return true;
     });
+
+    return [...filtered].sort((a, b) => b.createdTime - a.createdTime);
   }, [cachedOpenOrders, closedRawOrders, filters, keys, useMockData]);
 
   return { fetchOrders, orders, loading: filters.status === 'OPEN' ? false : loading, isSyncing, error };

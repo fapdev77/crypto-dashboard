@@ -72,6 +72,7 @@ Definidos em [types.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/
 |-----------|-----------|
 | `UnifiedPosition` | Posição aberta em tempo real (18 campos: size, entryPrice, markPrice, unrealizedPnl, leverage, liquidationPrice, roe, tp, sl, etc.) |
 | `UnifiedHistoryPosition` | Posição encerrada do histórico (realizedPnl, closeTime, entryPrice, closePrice, fundingFee, tradingFee) |
+| `UnifiedOrder` | Ordens em aberto e históricas unificadas (side, price, qty, filledQty, status, average price, fees, trigger price) |
 | `UnifiedBillRecord` | Depósito/Saque (type: deposit/withdrawal/funding/fee/transfer/other, amount, ccy, timestamp) |
 | `SymbolPnLRecord` | Agregação PnL por símbolo com `Big.js` (totalPnL, longPnL, shortPnL) |
 
@@ -100,18 +101,20 @@ Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWs
 | Serviço | Arquivo | Papel |
 |---------|---------|-------|
 | **PositionHistoryService** | [PositionHistoryService.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/positions/PositionHistoryService.ts) | Factory → Adapter. Dois modos: `fetchExchangeHistory` (direto) e `fetchWithCache` (incremental com IndexedDB). |
+| **OrderHistoryService** | [OrderHistoryService.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/orders/OrderHistoryService.ts) | Factory → Adapter. Dois modos: carrega do cache local e faz fetch incremental de ordens fechadas/canceladas com IndexedDB. |
 | **BillsHistoryService** | [BillsHistoryService.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/bills/BillsHistoryService.ts) | Factory → Adapter. Modo direto (sem cache IndexedDB por enquanto). |
 
 ---
 
 ## 7. Camada de Persistência Local (IndexedDB)
 
-[historyCache.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/historyCache.ts) — DB `crypto-dashboard-cache` com 2 object stores:
+[historyCache.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/services/historyCache.ts) — DB `crypto-dashboard-cache` com os seguintes object stores:
 
 | Store | Key | Índices | Uso |
 |-------|-----|---------|-----|
 | `positionHistory` | `id` (UnifiedHistoryPosition.id) | `by-connectionId`, `by-closeTime` | Cache incremental de trades encerrados |
-| `orderCacheMeta` e afins | `connectionId` | — | Rastreia `lastFetchTimestamp` para fetches incrementais de ordens fechadas |
+| `orderHistory` | `id` (UnifiedOrder.id) | `by-connectionId` | Cache incremental de ordens históricas/fechadas |
+| `orderCacheMeta` | `connectionId` | — | Rastreia `lastFetchTimestamp` para fetches incrementais de ordens fechadas |
 
 **Fluxo Incremental (SWR - Stale-While-Revalidate)**:
 1. React Hook (`usePositionHistory`, `useOrderReports`) carrega os dados estáticos do cache via SWR e renderiza a tela instantaneamente.
@@ -126,20 +129,21 @@ Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWs
 |------|---------|-----------------|
 | `useMultiExchangeWS` | [useMultiExchangeWS.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useMultiExchangeWS.ts) (349 LOC) | Gerencia ciclo de vida completo dos WebSockets. Exponential backoff (cap 60s). Ping/Pong a cada 20s. Short-Polling REST universal (todas exchanges) configurável. Mock data injection. |
 | `usePositionHistory` | [usePositionHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePositionHistory.ts) | Padrão SWR. Carrega rápido via IndexedDB, faz fetch incremental com `PositionHistoryService` em background. Filtra por período in-memory. |
-| `useOrderReports` | [useOrderReports.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useOrderReports.ts) | Padrão SWR para ordens fechadas. Filtros combinados e sincronia assíncrona. |
+| `useOrderReports` | [useOrderReports.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useOrderReports.ts) | Padrão SWR para ordens fechadas. Usa o `OrderHistoryService` para recuperar os dados e atualizar de modo reativo. |
 | `useBillsHistory` | [useBillsHistory.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useBillsHistory.ts) | Orquestra `BillsHistoryService.fetchBills()` em paralelo. Live + Mock mode (Sem cache IndexedDB, consulta viva). |
-| `useHistoryCachePolling` | [useHistoryCachePolling.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useHistoryCachePolling.ts) | Background polling configurável (default 15 min) para manter cache IndexedDB atualizado. |
+| `useHistoryCachePolling` | [useHistoryCachePolling.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/useHistoryCachePolling.ts) | Background polling configurável (default 15 min) para manter cache IndexedDB de posições e de ordens atualizado em segundo plano. |
 | `usePnLBySymbol` | [usePnLBySymbol.ts](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/hooks/usePnLBySymbol.ts) | Agregação PnL por símbolo usando `Big.js`. |
 
 ---
 
 ## 9. Zustand Stores (Estado Global)
 
-| Store | Persistência | Campos-chave |
-|-------|-------------|--------------|
-| [apiKeysStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/apiKeysStore.ts) | `localStorage` (`crypto-dashboard-api-keys-v2`) | `keys[]` (id, label, exchange, apiKey, apiSecret, passphrase, isActive) |
-| [dashboardStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/dashboardStore.ts) | **Memória** (volátil) | `statuses{}`, `errors{}`, `balances{}`, `positions{}` + delta updaters |
-| [settingsStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/settingsStore.ts) | `localStorage` (`terminal-settings`) | `useMockData`, `pollingInterval` (default 5s), `historyCacheInterval` (default 15min) |
+| Store | Persistência | Campos-chave | Papel |
+|-------|-------------|--------------|-------|
+| [apiKeysStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/apiKeysStore.ts) | `localStorage` (`crypto-dashboard-api-keys-v2`) | `keys[]` (id, label, exchange, apiKey, apiSecret, passphrase, isActive) | CRUD de chaves de API locais em formato Zero-Trust. |
+| [dashboardStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/dashboardStore.ts) | **Memória** (volátil) | `statuses{}`, `errors{}`, `balances{}`, `positions{}`, `telemetry{}` | Estado principal do WebSocket real-time, incluindo o histórico de latência e throughput. |
+| [settingsStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/settingsStore.ts) | `localStorage` (`terminal-settings`) | `useMockData`, `pollingInterval` (default 5s), `historyCacheInterval` (default 15min), `lastSyncTime` | Configurações globais e estado unificado de tempo de sincronização para travar timers. |
+| [logStore](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/store/logStore.ts) | **Memória** (volátil) | `logs[]` (id, timestamp, level, source, message) | Armazena um buffer de logs (FIFO de 1000 itens) capturados pelo interceptor global de console. |
 
 ---
 
@@ -148,23 +152,25 @@ Cada `HistoryAdapter` também expõe métodos estáticos `getHeaders()` e `getWs
 ### Páginas Principais
 | Componente | Rota/Tab | Descrição |
 |------------|----------|-----------|
-| [Dashboard.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Dashboard.tsx) (23KB) | `dashboard` | Painel principal: balances masonry, Donut chart (risk by exchange), Treemap (cross-exchange assets). |
-| [Positions.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Positions.tsx) | `positions` | Container com tabs Open/Closed. |
-| [OpenPositions.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/OpenPositions.tsx) (21KB) | — | Tabela real-time com modos Detailed/Lite. PnL, ROE, Margin, Liquidation. |
-| [ClosedPositions.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ClosedPositions.tsx) (15KB) | — | Histórico com filtros de período (1w/2w/1m/custom). |
-| [AnalyticsDashboard.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/AnalyticsDashboard.tsx) (15KB) | `analytics` | Win Rate, Profit Factor, Seasonality (day/hour), External Flow, Milestone Matrix. |
-| [PnLBySymbol.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/PnLBySymbol.tsx) (14KB) | `analytics-pnl-symbol` | Tabela/gráfico PnL agregado por ativo. |
-| [ReportsDashboard.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/ReportsDashboard.tsx) (4.7KB) | `reports` | Exportação PDF/CSV/Excel do histórico. |
-| [ApiKeys.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ApiKeys.tsx) (16KB) | `api-keys` | CRUD de credenciais com Sparklines de PnL. |
-| [Settings.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Settings.tsx) (10KB) | `settings` | Toggle Mock Data, polling intervals, cache management. |
-| [ApiTester.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ApiTester.tsx) (15KB) | `api-tester` | **Dev Tools** — Testes de conectividade REST/WS brutos. ⚠️ Tech Debt Permitido. |
+| [Dashboard.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Dashboard.tsx) (23KB) | `dashboard` | Painel principal estruturado em Masonry: balanços, Donut de alocação de risco por exchange, Treemap de ativos cross-exchange e o painel de **Capital Protection & Hedge**. |
+| [Positions.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Positions.tsx) | `positions` | Abas unificadas de posições em aberto (**Open Positions**) e histórico de trade encerrados (**Positions History**). |
+| [OpenPositions.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/OpenPositions.tsx) (21KB) | — | Grid de tempo real em modo Detailed ou Lite. Monitoramento de ROE %, PnL não realizado, Margem, Stop Loss/Take Profit, preço de liquidação e classificação visual do ativo. |
+| [ClosedPositions.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ClosedPositions.tsx) (15KB) | — | Visão histórica com filtros de SWR por IndexedDB, exibindo métricas robustas (Win Rate, Profit Factor, Médias de W/L e maior Trade). |
+| [AnalyticsDashboard.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/AnalyticsDashboard.tsx) (15KB) | `analytics` | Painel avançado contendo Win Rate Geral, Profit Factor real, Sazonalidade (dia e bloco de 4 horas), Capital Flow (depósitos e saques) e Milestone Matrix. |
+| [PnLBySymbol.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/PnLBySymbol.tsx) (14KB) | `analytics-pnl-symbol` | Agrega e distribui lucros e prejuízos por criptoativos, com filtros precisos por categorias de contratos margined (USDT-M, Coin-Margined, USDC-M, Linear/Inverse). |
+| [OrderReports](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/OrderReports/) | `orders` | Nova seção de relatórios de ordens (**Open Orders** e **Order History**) dividida por corretora com ordenação, buscas regex locais e linhas expansíveis para expor IDs brutos e taxas operacionais. |
+| [ReportsDashboard.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/analytics/ReportsDashboard.tsx) (4.7KB) | `reports` | Geração instantânea e download de relatórios operacionais em PDF (jspdf), Excel (xlsx) e CSV nativo. |
+| [ApiKeys.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ApiKeys.tsx) (16KB) | `api-keys` | Tabela acordeão agrupando conexões ativas por corretora com telemetria visualizada em tempo real (latência sparklines e throughput em KB/s). Integra o `ConnectionLogTerminal`. |
+| [Settings.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Settings.tsx) (10KB) | `settings` | Configurações de intervalos de polling, gerenciamento de limpeza do cache de IndexedDB e o interruptor do **Simulation/Mock Mode**. |
+| [ApiTester.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ApiTester.tsx) (15KB) | `api-tester` | **Dev Tools** — Ferramenta integrada de conectividadeREST e WS bruta. |
 
 ### Componentes Auxiliares
 | Componente | Responsabilidade |
 |------------|-----------------|
-| [Sidebar.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Sidebar.tsx) | Navegação colapsável com badge de posições abertas. |
-| [StatusBar.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/StatusBar.tsx) | Barra inferior com status de conexão por exchange. |
-| [PositionsTicker.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/PositionsTicker.tsx) | Marquee ticker em tempo real no topo. |
+| [ConnectionLogTerminal.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/ConnectionLogTerminal.tsx) | Terminal docked acoplado nas credenciais com drag-to-resize, busca local, logs mascarados sem secrets, filtros semânticos (INFO, SYSTEM, DATA, WARN, ERROR). |
+| [Sidebar.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/Sidebar.tsx) | Navegação colapsável com badge de posições abertas e o botão de **Privacy Mode (Ocultamento Global)**. |
+| [StatusBar.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/StatusBar.tsx) | Barra inferior contendo status e monitor de latência consolidada. |
+| [PositionsTicker.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/PositionsTicker.tsx) | Marquee ticker em tempo real no topo refletindo variação real-time de preços das posições abertas. |
 | [WorkSpace.tsx](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/components/WorkSpace.tsx) | Container wrapper simples. |
 
 ---
@@ -255,3 +261,37 @@ sequenceDiagram
 > - `Dashboard.tsx` com 23KB é o maior componente — candidato a decomposição futura
 > - Todos os adapters seguem o contrato `IExchangeAdapter` (Strategy Pattern ✅)
 > - Zero instâncias de raw API access em componentes React (exceto `ApiTester`)
+
+---
+
+## 16. Últimas Implementações e Marcos Tecnológicos de UI/UX
+
+Abaixo, os refinamentos críticos implementados recentemente para elevar o aplicativo ao nível profissional:
+
+### A. Central de Telemetria e Logs Unificados (DX Core)
+- **Console Interceptor (`logger.ts`)**: Captura as saídas das APIs de REST e WebSocket, expurgando strings sensíveis (secrets/passphrases). Converte UUIDs internos de chaves em rótulos amigáveis ("Bybit - Main") consultando a store do cliente.
+- **Buffer FIFO no Zustand (`logStore.ts`)**: Aloca de forma otimizada até 1000 linhas de logs com paginação em memória local sem prejudicar o render da UI principal.
+- **Connection Telemetry**: O hook do WebSocket monitora ativamente as mensagens de Ping/Pong para rastrear o Round-Trip Time (RTT em milissegundos) e calcula dinamicamente a taxa de transferência em KB/s derivando o tamanho das strings recebidas.
+- **Docked Logs Terminal (`ConnectionLogTerminal.tsx`)**: Console dark em estilo console retrô no rodapé da página de chaves, redimensionável por drag, com busca e filtros coloridos (INFO, SYSTEM, DATA, WARN, ERROR).
+
+### B. Sistema Global de Privacidade (Privacy Mode)
+- **Privacy Mode**: Integrado de forma fluida no sidebar de navegação. Ao ser acionado, mascara instantaneamente todas as quantias patrimoniais, saldos e lucros das tabelas com dots (`••••`) sem desconectar ou interferir nas operações de rede ou computação das lojas do Zustand.
+
+### C. Proteção de Capital & Razão de Hedge (Risk Management)
+- **Hedge Indicator**: O dashboard agora calcula a taxa de Hedge dinâmica contra contratos inversos. Fornece uma visualização instantânea de progresso mostrando o quanto da carteira Spot está sendo protegida por contratos curtos (Shorts) e longos (Longs) cruzados com a equidade global, apresentando cálculos com precisão de alta escala por meio da biblioteca `Big.js`.
+
+### D. Identidade Visual Avançada de Tokens (CoinIcon & logo.dev)
+- **AssetClassifierAggregator**: Classifica ativos dinamicamente entre ações convencionais e moedas cripto, eliminando a dependência de hardcodes e consultando metadados nativos de exchanges (como OKX SWAP instruments).
+- **Roteamento de Fallbacks de Logotipos**: O componente unificado `<CoinIcon />` implementa um roteamento robusto de quatro etapas para recuperar logotipos em SVG/PNG por meio do serviço Logo.dev com fallback nativo para preencher quaisquer gaps visuais ao lidar com milhares de altcoins exóticas.
+
+### E. Coordenação de Sincronia Unificada (Sync Engine)
+- **Global Sync Coordination**: Evita estouros de limitação de taxa (Rate-Limits) ao coordenar o tempo de cache das abas históricas do painel analítico (Orders, Trade History, PnL) usando uma propriedade centralizada `lastSyncTime`. Desativa preventivamente botões de recarregamento manual quando o **Simulation Mode (Dados de Mock)** está ativado.
+
+### F. Sincronização e Cache de Ordens Fechadas/Canceladas (Incremental Engine)
+- **OrderHistoryService Dedicado**: Introdução de uma camada de serviço especializada (`OrderHistoryService`) para gerenciar consultas e de-duplicações de ordens finalizadas integrando diretamente ao IndexedDB.
+- **Background Keep-Warm Polling**: Injeção da sincronização de ordens históricas em segundo plano (`useHistoryCachePolling`), mantendo o banco IndexedDB de ordens atualizado periodicamente (default: 15min) sem sobrecarga da UI.
+- **Janela Adaptativa de Lookback**: Implementação de um intervalo mínimo de 14 dias para buscas incrementais de ordens, resolvendo de forma permanente lacunas de sincronização e garantindo que ordens recentemente modificadas sejam salvas e exibidas imediatamente.
+- **OKX Double-Endpoint Integration**: Ajuste fino no adapter da OKX para ler concorrentemente o histórico regular (últimos 7 dias) e os arquivos arquivados (até 90 dias), fundindo-os com eliminação de redundâncias, garantindo exibição instantânea de cancelamentos imediatos de ordens.
+- **Bypass de Cooldown em Forçar Sincronia**: O acionar de sincronização forçada redefine o gatekeeper central `lastSyncTime` para zero, forçando todos os hooks de histórico a ignorar as regras de cooldown e consultar diretamente as REST APIs das exchanges.
+
+

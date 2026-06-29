@@ -17,18 +17,33 @@ export function formatValue(val: number | undefined | null, decimalsOrSymbol: nu
     decimals = isStablecoin(decimalsOrSymbol) ? 2 : 8;
   }
   
-  return val.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  let numericVal = val;
+  if (Math.abs(numericVal) < Math.pow(10, -decimals) / 2) {
+    numericVal = 0;
+  }
+  
+  return numericVal.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 export function formatCrypto(val: number | undefined | null, decimalsOrSymbol: number | string = 8): string {
   if (val === undefined || val === null || isNaN(val)) return '--';
   
+  let decimals = 8;
+  let minDecimals = 2;
   if (typeof decimalsOrSymbol === 'string') {
-    const decimals = isStablecoin(decimalsOrSymbol) ? 2 : 8;
-    return val.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    decimals = isStablecoin(decimalsOrSymbol) ? 2 : 8;
+    minDecimals = decimals;
+  } else if (typeof decimalsOrSymbol === 'number') {
+    decimals = decimalsOrSymbol;
+    minDecimals = decimalsOrSymbol <= 4 ? decimalsOrSymbol : 2;
+  }
+
+  let numericVal = val;
+  if (Math.abs(numericVal) < Math.pow(10, -decimals) / 2) {
+    numericVal = 0;
   }
   
-  return val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: decimalsOrSymbol });
+  return numericVal.toLocaleString('en-US', { minimumFractionDigits: minDecimals, maximumFractionDigits: decimals });
 }
 
 export function formatPrice(val: number | undefined | null, isFiatPair: boolean = true): string {

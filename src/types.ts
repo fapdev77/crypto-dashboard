@@ -1,11 +1,17 @@
 import Big from 'big.js';
 
+// Types
 export type ExchangeName = 'bybit' | 'bitget' | 'okx';
-
 export type PositionSide = 'long' | 'short' | 'net';
 export type UnifiedMarginMode = 'cross' | 'isolated' | 'unknown';
 export type UnifiedPositionMode = 'hedge' | 'one_way' | 'unknown';
+export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
+export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
+export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
 
+// Interfaces
 export interface UnifiedBalance {
   id: string; // e.g., 'connId-ccy'
   connectionId: string;
@@ -21,17 +27,12 @@ export interface UnifiedBalance {
   raw?: any;
 }
 
-export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
-export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
-
-export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
-export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
-
 export interface UnifiedOrder {
   id: string;
   exchangeOrderId: string;
   connectionId: string;
   exchange: ExchangeName;
+  label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
   side: 'buy' | 'sell';
@@ -49,6 +50,8 @@ export interface UnifiedOrder {
   createdTime: number;
   updatedTime: number;
   fees?: number;
+  leverage?: number;
+  marginMode?: UnifiedMarginMode;
   raw?: any;
 }
 
@@ -68,10 +71,12 @@ export interface UnifiedPosition {
   markPrice: number;
   unrealizedPnl: number;
   realizedPnl: number;
+  closedPnl?: number;
   leverage: number;
   marginMode?: UnifiedMarginMode;
   positionMode?: UnifiedPositionMode;
   margin?: number; // Position Margin / Isolated Margin
+  maintenanceMargin?: number; // Maintenance Margin value (calculated or fetched directly)
   marginRatio?: number; // Tiered MMR or Margin Ratio (%)
   liquidationPrice?: number;
   breakEvenPrice?: number;
@@ -95,6 +100,7 @@ export interface UnifiedHistoryPosition {
   ccy?: string;
   side: PositionSide;
   realizedPnl: number;
+  closedPnl?: number;
   closeUpdateTime: number; // timestamp
   createdTime?: number; // open time timestamp
   entryPrice?: number;
@@ -110,8 +116,6 @@ export interface UnifiedHistoryPosition {
   instrumentType?: UnifiedInstrumentType;
   raw?: any;
 }
-
-export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
 
 export interface UnifiedBillRecord {
   id: string;
@@ -132,7 +136,6 @@ export interface SymbolPnLRecord {
   totalPnL: Big;
   longPnL: Big;
   shortPnL: Big;
-  exchange: 'bitget' | 'bybit' | 'okx';
+  exchange: ExchangeName;
   lastActivity: number;
 }
-

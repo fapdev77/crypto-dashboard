@@ -92,6 +92,11 @@ function generate() {
           instrumentType = ['USDT', 'USDC'].includes(ccy) ? 'FUTURES' : 'INVERSE';
         }
 
+        const realizedPnl = randomNum(-50, 50);
+        const accumulatedFunding = randomNum(-10, 10).toString();
+        const accumulatedTradingFee = randomNum(-5, 0).toString();
+        const closedPnl = realizedPnl - parseFloat(accumulatedFunding) - parseFloat(accumulatedTradingFee);
+
         positions.push({
           id: `pos-${posIdCounter++}`,
           connectionId,
@@ -106,7 +111,8 @@ function generate() {
           entryPrice,
           markPrice,
           unrealizedPnl,
-          realizedPnl: randomNum(-50, 50),
+          realizedPnl,
+          closedPnl,
           leverage: Math.round((entryPrice * size) / margin),
           marginMode: randomItem(marginModes),
           margin,
@@ -114,8 +120,8 @@ function generate() {
           breakEvenPrice: entryPrice * 1.001,
           roe,
           instrumentType,
-          accumulatedFunding: randomNum(-10, 10).toString(),
-          accumulatedTradingFee: randomNum(-5, 0).toString(),
+          accumulatedFunding,
+          accumulatedTradingFee,
           raw: {
             mockData: true,
             instType
@@ -159,6 +165,10 @@ function generate() {
           instrumentType = ['USDT', 'USDC'].includes(ccyHistory) ? 'FUTURES' : 'INVERSE';
         }
 
+        const fundingFee = randomNum(-10, 10);
+        const tradingFee = randomNum(-5, 0);
+        const closedPnl = realizedPnl - fundingFee - tradingFee;
+
         history.push({
           id: `hist-${histIdCounter++}`,
           connectionId,
@@ -169,14 +179,15 @@ function generate() {
           quoteCoin,
           side,
           realizedPnl,
+          closedPnl,
           closeUpdateTime,
           createdTime,
           entryPrice,
           closePrice,
           size,
           ccy: ccyHistory,
-          fundingFee: randomNum(-10, 10),
-          tradingFee: randomNum(-5, 0),
+          fundingFee,
+          tradingFee,
           instrumentType,
           raw: {
             mockData: true,

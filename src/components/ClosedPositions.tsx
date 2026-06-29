@@ -8,12 +8,13 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
+import { extractBaseCoin } from '../utils/unifiers';
 import { AppTooltip } from './ui/Tooltip';
 import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { StatusAndSyncBadge } from './ui/StatusAndSyncBadge';
-import { getHistoryInverseUsdValues } from '../utils/inverseUtils';
+import { getHistoryInverseUsdValues, getHistoryPositionSizeAndValue } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../utils/exportUtils';
 import { Pagination } from './ui/Pagination';
@@ -73,6 +74,7 @@ export function ClosedPositions() {
       'Side',
       'Leverage',
       'Size',
+      'Value (USD)',
       'Entry Price',
       'Exit Price',
       'Realized PnL',
@@ -98,13 +100,16 @@ export function ClosedPositions() {
         ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm:ss') 
         : '--';
 
+      const { actualCoinSize, positionValueUsd } = getHistoryPositionSizeAndValue(pos);
+
       return [
         pos.symbol,
         pos.exchange.toUpperCase(),
         pos.label,
         sideLabel,
         `${leverage}x`,
-        pos.size || 0,
+        actualCoinSize,
+        positionValueUsd,
         pos.entryPrice || 0,
         pos.closePrice || 0,
         pos.realizedPnl || 0,
@@ -369,7 +374,7 @@ export function ClosedPositions() {
 
             const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
             const marginModeLabel = (pos.raw?.marginMode || pos.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
-            const symbolSuffix = pos.symbol.replace(/USDT|USDC|USD|-|SWAP/g, '');
+            const symbolSuffix = extractBaseCoin(pos.exchange, pos.symbol);
 
             let roiStr = '--';
             let roiValue = 0;
@@ -382,28 +387,7 @@ export function ClosedPositions() {
 
             const isInverse = pos.instrumentType === 'INVERSE';
 
-            let positionValueUsd = 0;
-            let actualCoinSize = pos.size || 0;
-
-            if (pos.exchange === 'okx' && pos.raw?.pnl) {
-              const priceDiff = Math.abs((pos.closePrice || 0) - (pos.entryPrice || 0));
-              const purePnl = Math.abs(parseFloat(pos.raw.pnl));
-              if (priceDiff > 0) {
-                actualCoinSize = purePnl / priceDiff;
-                positionValueUsd = actualCoinSize * (pos.entryPrice || 0);
-              } else {
-                positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
-              }
-            } else if (pos.exchange === 'bybit' && pos.raw?.cumEntryValue) {
-              positionValueUsd = parseFloat(pos.raw.cumEntryValue);
-              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
-            } else if (isInverse) {
-              positionValueUsd = pos.size || 0;
-              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
-            } else {
-              positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
-              actualCoinSize = pos.size || 0;
-            }
+            const { actualCoinSize, positionValueUsd } = getHistoryPositionSizeAndValue(pos);
 
             if (pos.raw?.roi !== undefined && pos.raw?.roi !== null) {
               roiValue = parseFloat(pos.raw.roi) * 100;
@@ -418,27 +402,14 @@ export function ClosedPositions() {
               }
             }
 
-            let displayQuantity = '--';
-            let displayUnit = '';
-            let displaySecondaryQuantity = '--';
-            let displaySecondaryUnit = '';
-
-            if (isInverse) {
-              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 2) : '--';
-              displayUnit = 'USD';
-              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
-              displaySecondaryUnit = symbolSuffix;
-            } else if (pos.exchange === 'okx') {
-              displayQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
-              displayUnit = 'USD';
-              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
-              displaySecondaryUnit = symbolSuffix;
-            } else {
-              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 8) : '--';
-              displayUnit = symbolSuffix;
-              displaySecondaryQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
-              displaySecondaryUnit = 'USD';
-            }
+            const displayQuantity = (actualCoinSize !== undefined && actualCoinSize !== null)
+              ? formatCurrency(actualCoinSize, 'crypto', 8)
+              : '--';
+            const displayUnit = symbolSuffix;
+            const displaySecondaryQuantity = (positionValueUsd !== undefined && positionValueUsd !== null)
+              ? formatCurrency(positionValueUsd, 'crypto', 2)
+              : '--';
+            const displaySecondaryUnit = 'USD';
 
             if (hasRoi && isFinite(roiValue)) {
               roiStr = `${roiValue > 0 ? '+' : ''}${formatCurrency(roiValue, 'crypto', 2)}%`;
@@ -490,7 +461,7 @@ export function ClosedPositions() {
                     </AppTooltip>
                     <span className="font-mono text-white text-sm">{displayQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displayUnit}</span></span>
                     {displaySecondaryQuantity !== '--' && (
-                      <span className="text-xs text-[#8E9299] font-mono">{displaySecondaryQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displaySecondaryUnit}</span></span>
+                      <span className="text-xs text-[#8E9299] font-mono">≈ {displaySecondaryQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displaySecondaryUnit}</span></span>
                     )}
                   </div>
 
@@ -518,9 +489,9 @@ export function ClosedPositions() {
                       rows={[
                         { 
                           label: 'Closed PnL', 
-                          value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
+                          value: `${(pos.closedPnl || 0) > 0 ? '+' : ''}${formatCcy(pos.closedPnl || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
-                          valueClassName: `text-[11px] font-mono font-bold ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                          valueClassName: `text-[11px] font-mono font-bold ${(pos.closedPnl || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         },
                         { 
                           label: 'Funding fee', 

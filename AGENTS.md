@@ -56,6 +56,14 @@ When developing in this project, enforce the following rules:
 
 6. **Coordinated History Sync Engine**: Always use the global `lastSyncTime` from `useSettingsStore` to coordinate sync states across multiple historical views. Never create separate or individual local sync state timestamps for historical tabs (Orders, Closed Positions, Trade History, PnL by Symbol) as this causes duplicate requests and rate-limiting issues. Always disable manual synchronization buttons and provide clear visual alerts (e.g. amber Simulation Mode badge) when the user activates `useMockData` (Simulation Mode).
 
+7. **Zero-Leak Logging & UI Masking**: All application telemetry, web socket, and REST events must be piped securely through the global logger interceptor (`logger.ts`). Never output raw secrets (API Secret, Passphrase, API keys) to the console or log terminal. Ensure connection UUIDs are mapped to friendly user labels before display. For financial values, adhere strictly to the global `isPrivateMode` check to mask sensitive figures dynamically in the UI.
+
+8. **Brand Color Consistency**: Ensure brand color variables are applied uniformly across the visual layer:
+   - **Bitget**: `#03aac7` (Cyan)
+   - **Bybit**: `#ff9c2e` (Orange)
+   - **OKX**: `#fafafa` / `#ffffff` (White/Silver)
+   Never hardcode arbitrary palette indices for these exchanges; always tie elements like badges, borders, sparklines, and charts to their respective brand identity classes or style variables.
+
 
 
 

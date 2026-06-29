@@ -14,7 +14,7 @@ Após a primeira rodada de unificação, a arquitetura do projeto evoluiu substa
 
 Este plano deve ser executado para isolar 100% o UI da formatação e da lógica de API das exchanges.
 
-- [ ] **Tarefa 1: Extensão das Interfaces Unificadas (Types)**
+- [x] **Tarefa 1: Extensão das Interfaces Unificadas (Types)**
   - Expandir a interface genérica `UnifiedHistoryPosition` (`/src/types.ts`) adicionando propriedades base que garantem pureza sem recorrer ao "raw":
     - `roi?: number;` (Return on Investment / Equity)
     - `leverage?: number;`
@@ -25,18 +25,18 @@ Este plano deve ser executado para isolar 100% o UI da formatação e da lógica
 - [ ] **Tarefa 2: Refatoração de Formatadores Globais (`formatters.ts`)**
   - Adicionar a função global `formatDate(timestamp: number | undefined | null, formatStr: string = 'MMM dd HH:mm'): string` no de `/src/utils/formatters.ts`. Ela será responsável pelas proteções visuais (`Math.floor`, `isNaN`), tornando os módulos do Dashboard mais enxutos.
 
-- [ ] **Tarefa 3: Preenchimento nos Adapters**
+- [x] **Tarefa 3: Preenchimento nos Adapters**
   - Alterar o `OkxAdapter.ts`, `BybitAdapter.ts`, `BitgetAdapter.ts` para capturar os respectivos valores e normalizados e alocá-los dentro das novas variáveis definidas em `UnifiedHistoryPosition` do Item 1 `(roi, leverage, notionalUsd, marginMode, createdTime)`.
   - Atualizar os *mocks* em `/src/mock/generateMocks.js` correspondentes ao histórico (`history`).
 
-- [ ] **Tarefa 4: Profilaxia Visual no Analytics (UI Layer)**
+- [x] **Tarefa 4: Profilaxia Visual no Analytics (UI Layer)**
   - Limpar a dívida visual em `/src/components/analytics/HedgeProDashboard.tsx` substituindo `.toFixed(2)` e `.toFixed(8)` por `formatValue`, `formatCrypto` e `formatPrice` com fallback implícito.
   - Substituir parses customizados de datas via `date-fns / new Date()` pelas chamadas seguras passando por `formatDate`.
 
 - [ ] **Tarefa 5: Remoção do `raw` em `ClosedPositions.tsx`**
   - Limpar **toda e qualquer** iteração de `p.raw` que acontece próximo à linha 212 de `ClosedPositions.tsx`. Recalcular/aproveitar dados providos de `roi`, e `notionalUsd` previamente populado no Adaptador, removendo todos "ifs" de provedores base (`if exchange === okx`).
 
-- [ ] **Tarefa 6: Documentação**
+- [x] **Tarefa 6: Documentação**
   - Atualizar os esquemas em `/specs/unified-interfaces.md` contemplando o upgrade de base properties para `UnifiedHistoryPosition`.
 
 ## 3. Resultado Esperado

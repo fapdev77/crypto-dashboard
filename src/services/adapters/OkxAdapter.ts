@@ -112,9 +112,10 @@ export class OkxAdapter implements IExchangeAdapter {
     }
 
     return (response.data || []).map((pos: any) => {
-      const margin = parseFloat(pos.margin || '0');
+      const marginMode = mapMarginMode('okx', pos.mgnMode);
+      const margin = marginMode === 'cross' ? parseFloat(pos.imr || '0') : parseFloat(pos.margin || '0');
       const unrealizedPnl = parseFloat(pos.upl || '0');
-      
+
       const notionalUsd = pos.notionalUsd ? parseFloat(pos.notionalUsd) : 0;
       const markPx = pos.markPx ? parseFloat(pos.markPx) : 0;
       let size = parseFloat(pos.pos || '0');
@@ -123,10 +124,11 @@ export class OkxAdapter implements IExchangeAdapter {
       }
 
       const side = mapPositionSide('okx', pos.posSide);
-      
-      const accumulatedFunding = pos.fundingFee ? new Big(pos.fundingFee || 0).toString() : "0";
+
       const realizedPnl = parseFloat(pos.realizedPnl || '0');
-      const accumulatedTradingFee = new Big(realizedPnl).minus(accumulatedFunding).toString();
+      const accumulatedFunding = pos.fundingFee ? new Big(pos.fundingFee || 0).toString() : "0";
+      const accumulatedTradingFee = pos.fee ? new Big(pos.fee || 0).toString() : "0";
+      const closedPnl = parseFloat(pos.pnl || '0');
 
       return {
         id: `${key.id}-okx-${pos.instId}-${side}`,
@@ -143,11 +145,14 @@ export class OkxAdapter implements IExchangeAdapter {
         markPrice: markPx,
         unrealizedPnl,
         realizedPnl,
+        closedPnl,
         accumulatedFunding,
         accumulatedTradingFee,
         leverage: parseFloat(pos.lever || '0'),
-        marginMode: mapMarginMode('okx', pos.mgnMode),
+        marginMode,
         margin,
+        maintenanceMargin: parseFloat(pos.mmr || '0'),
+        marginRatio: pos.mgnRatio ? parseFloat(pos.mgnRatio) * 100 : undefined,
         notionalUsd,
         liquidationPrice: parseFloat(pos.liqPx || '0'),
         breakEvenPrice: parseFloat(pos.bePx || '0'),
@@ -161,7 +166,7 @@ export class OkxAdapter implements IExchangeAdapter {
   // REST Closed PnL History
   public async fetchAndNormalize(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     const instTypes = ['SWAP', 'FUTURES', 'MARGIN'];
-    
+
     const fetchType = async (type: string) => {
       let list: any[] = [];
       let after = '';
@@ -181,7 +186,7 @@ export class OkxAdapter implements IExchangeAdapter {
 
           if (res.code && res.code !== '0') throw new Error(res.msg);
           const rows = res.data || [];
-          
+
           let filtered = rows;
           if (start && end) {
             filtered = rows.filter((pos: any) => {
@@ -190,7 +195,7 @@ export class OkxAdapter implements IExchangeAdapter {
             });
           }
           list = [...list, ...filtered];
-          
+
           // OKX positions-history pages backward via 'after=<uTime>' of the last record
           if (rows.length === 100) {
             after = rows[rows.length - 1].uTime || rows[rows.length - 1].cTime || '';
@@ -221,6 +226,7 @@ export class OkxAdapter implements IExchangeAdapter {
         ccy: extractCcy('okx', pos.ccy, undefined, undefined, pos.instId),
         side: mapPositionSide('okx', pos.posSide, pos.direction),
         realizedPnl: parseFloat(pos.realizedPnl || pos.pnl || '0'),
+        closedPnl: parseFloat(pos.realizedPnl || pos.pnl || '0') - (pos.fundingFee ? parseFloat(pos.fundingFee) : 0) - (pos.fee ? parseFloat(pos.fee) : 0),
         closeUpdateTime: closeUpdateTime,
         createdTime: createdTime,
         entryPrice: parseFloat(pos.openAvgPx || '0'),
@@ -257,7 +263,7 @@ export class OkxAdapter implements IExchangeAdapter {
 
           if (response.code && response.code !== '0') throw new Error(response.msg);
           const rows = response.data || [];
-          
+
           let filtered = rows;
           if (start && end) {
             filtered = rows.filter((pos: any) => {
@@ -266,7 +272,7 @@ export class OkxAdapter implements IExchangeAdapter {
             });
           }
           list = [...list, ...filtered];
-          
+
           if (rows.length === 100) {
             after = rows[rows.length - 1].depId || rows[rows.length - 1].wdId || '';
           } else {
@@ -305,12 +311,12 @@ export class OkxAdapter implements IExchangeAdapter {
   public async getOpenOrders(key: any): Promise<import('../../types').UnifiedOrder[]> {
     const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
     let allOrders: any[] = [];
-    
+
     for (const instType of instTypes) {
       const query = `instType=${instType}`;
       const path = `/api/v5/trade/orders-pending?${query}`;
       const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
-      
+
       try {
         const res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
         if (res.code === '0' && res.data) {
@@ -328,33 +334,52 @@ export class OkxAdapter implements IExchangeAdapter {
     const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
     let allOrders: any[] = [];
 
-    // "orders-history-archive" allows 3 months. "orders-history" goes back 7 days.
-    // For MVP 90 days requirement, archive is preferred.
+    // Query both "/api/v5/trade/orders-history" (active last 7 days) and 
+    // "/api/v5/trade/orders-history-archive" (older than 7 days) to ensure
+    // newly closed/canceled orders are immediately fetched, and older history is preserved.
     for (const instType of instTypes) {
-      let queryUrl = `instType=${instType}&limit=100`;
-      
-      const path = `/api/v5/trade/orders-history-archive?${queryUrl}`;
-      const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
-      
-      try {
-        const res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
-        if (res.code === '0' && res.data) {
-          // Filter out manually because OKX API for archive might not perfectly respect begin/end without cursor logic
-          let filtered = res.data;
-          if (start && end) {
-            filtered = filtered.filter((o: any) => {
-              const uTime = parseInt(o.uTime || '0', 10);
-              return uTime >= start && uTime <= end;
-            });
-          }
-          allOrders = allOrders.concat(filtered);
+      const endpoints = ['/api/v5/trade/orders-history', '/api/v5/trade/orders-history-archive'];
+
+      for (const endpoint of endpoints) {
+        let queryUrl = `instType=${instType}&limit=100`;
+        if (endpoint === '/api/v5/trade/orders-history-archive') {
+          if (start) queryUrl += `&begin=${start}`;
+          if (end) queryUrl += `&end=${end}`;
         }
-      } catch (err) {
-        console.warn(`[Okx-HistoryOrders] Error fetching ${instType}:`, err);
+
+        const path = `${endpoint}?${queryUrl}`;
+
+        try {
+          const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+          const res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+          if (res.code === '0' && res.data) {
+            let filtered = res.data;
+            if (start && end) {
+              filtered = filtered.filter((o: any) => {
+                const uTime = parseInt(o.uTime || '0', 10);
+                return uTime >= start && uTime <= end;
+              });
+            }
+            allOrders = allOrders.concat(filtered);
+          }
+        } catch (err) {
+          console.warn(`[Okx-HistoryOrders] Error fetching ${instType} from ${endpoint}:`, err);
+        }
       }
     }
+
+    // De-duplicate orders by unique OKX order ID (ordId)
+    const seenOrdIds = new Set<string>();
+    const uniqueOrders: any[] = [];
+    for (const o of allOrders) {
+      if (!seenOrdIds.has(o.ordId)) {
+        seenOrdIds.add(o.ordId);
+        uniqueOrders.push(o);
+      }
+    }
+
     await OkxAdapter.ensureInstrumentsLoaded();
-    return this.normalizeOrders(allOrders, key);
+    return this.normalizeOrders(uniqueOrders, key);
   }
 
   private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {
@@ -365,7 +390,7 @@ export class OkxAdapter implements IExchangeAdapter {
       else if (state === 'canceled' || state === 'cancelled') status = 'CANCELLED';
       else if (state === 'partially_filled') status = 'PARTIALLY_FILLED';
       else if (state === 'live') status = 'NEW';
-      
+
 
       let type: import('../../types').UnifiedOrderType = 'LIMIT';
       const ot = o.ordType?.toLowerCase() || '';
@@ -389,8 +414,8 @@ export class OkxAdapter implements IExchangeAdapter {
           const ctVal = parseFloat(instInfo.ctVal || '1');
           const ctType = instInfo.ctType || 'linear';
           if (ctType === 'inverse') {
-            qty = px > 0 ? (sz * ctVal) / px : 0;
-            filledQty = px > 0 ? (accFillSz * ctVal) / px : 0;
+            qty = sz * ctVal;
+            filledQty = accFillSz * ctVal;
             value = sz * ctVal;
           } else {
             qty = sz * ctVal;
@@ -399,12 +424,13 @@ export class OkxAdapter implements IExchangeAdapter {
           }
         }
       }
-      
+
       return {
         id: `${key.id}-${o.ordId}`,
         exchangeOrderId: o.ordId,
         connectionId: key.id,
         exchange: 'okx',
+        label: key.label,
         symbol: o.instId,
         category: mapInstrumentType('okx', o.instType || 'SWAP', o.ccy || 'USDT'),
         side: o.side?.toLowerCase() === 'sell' ? 'sell' : 'buy',
@@ -421,6 +447,7 @@ export class OkxAdapter implements IExchangeAdapter {
         createdTime: parseInt(o.cTime || '0', 10),
         updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
         fees: parseFloat(o.fee || '0'),
+        leverage: parseFloat(o.lever || '0'),
         raw: o
       };
     });
@@ -464,38 +491,38 @@ export class OkxAdapter implements IExchangeAdapter {
   // Instrument Metadata (Public)
   public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
     try {
-       // Cache the full list of OKX SWAP instruments for exactly 1 hour
-       if (!OkxAdapter.cachedSwapInstruments || Date.now() - OkxAdapter.cachedSwapInstrumentsTime > 1000 * 60 * 60) {
-           const res = await proxyFetch({
-               targetUrl: `https://www.okx.com/api/v5/public/instruments?instType=SWAP`,
-               method: 'GET',
-               headers: {}
-           });
-           if (res.code === '0' && res.data) {
-               OkxAdapter.cachedSwapInstruments = res.data;
-               OkxAdapter.cachedSwapInstrumentsTime = Date.now();
-           }
-       }
+      // Cache the full list of OKX SWAP instruments for exactly 1 hour
+      if (!OkxAdapter.cachedSwapInstruments || Date.now() - OkxAdapter.cachedSwapInstrumentsTime > 1000 * 60 * 60) {
+        const res = await proxyFetch({
+          targetUrl: `https://www.okx.com/api/v5/public/instruments?instType=SWAP`,
+          method: 'GET',
+          headers: {}
+        });
+        if (res.code === '0' && res.data) {
+          OkxAdapter.cachedSwapInstruments = res.data;
+          OkxAdapter.cachedSwapInstrumentsTime = Date.now();
+        }
+      }
 
-       if (OkxAdapter.cachedSwapInstruments) {
-           // Replace standard quote coin variations to isolate the base asset
-           // We might receive "NVDA", "NVDA-USDT", "BTC"
-           const normalizedSymbol = symbol.replace(/USDT$|USDC$|USD$|-USDT$|-USD$|-USDC$/, '');
-           
-           const info = OkxAdapter.cachedSwapInstruments.find((inst: any) => {
-               // instFamily is like "NVDA-USDT", "BTC-USD"
-               if (inst.instFamily === `${normalizedSymbol}-USDT` || inst.instFamily === `${normalizedSymbol}-USDC` || inst.instFamily === `${normalizedSymbol}-USD`) return true;
-               if (inst.uly === `${normalizedSymbol}-USDT` || inst.uly === `${normalizedSymbol}-USDC` || inst.uly === `${normalizedSymbol}-USD`) return true;
-               if (inst.instFamily && inst.instFamily.startsWith(normalizedSymbol + '-')) return true;
-               return false;
-           });
+      if (OkxAdapter.cachedSwapInstruments) {
+        // Replace standard quote coin variations to isolate the base asset
+        // We might receive "NVDA", "NVDA-USDT", "BTC"
+        const normalizedSymbol = symbol.replace(/USDT$|USDC$|USD$|-USDT$|-USD$|-USDC$/, '');
 
-           if (info) {
-               if (info.instCategory === '3') return 'STOCK';
-               if (info.instCategory === '1') return 'CRYPTO';
-               return 'CRYPTO'; 
-           }
-       }
+        const info = OkxAdapter.cachedSwapInstruments.find((inst: any) => {
+          // instFamily is like "NVDA-USDT", "BTC-USD"
+          if (inst.instFamily === `${normalizedSymbol}-USDT` || inst.instFamily === `${normalizedSymbol}-USDC` || inst.instFamily === `${normalizedSymbol}-USD`) return true;
+          if (inst.uly === `${normalizedSymbol}-USDT` || inst.uly === `${normalizedSymbol}-USDC` || inst.uly === `${normalizedSymbol}-USD`) return true;
+          if (inst.instFamily && inst.instFamily.startsWith(normalizedSymbol + '-')) return true;
+          return false;
+        });
+
+        if (info) {
+          if (info.instCategory === '3') return 'STOCK';
+          if (info.instCategory === '1') return 'CRYPTO';
+          return 'CRYPTO';
+        }
+      }
     } catch (err) {
       console.warn('[OKX-Metadata] Fetch error:', err);
     }

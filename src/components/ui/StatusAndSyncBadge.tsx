@@ -66,8 +66,8 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
 
     // Set cooldown to 1 minute from now
     setCooldownEnd(Date.now() + 60000);
-    // Set last sync to now (will update again when complete)
-    setLastSyncTime(Date.now());
+    // Set last sync to 0 to signal a force sync across all active views/hooks
+    setLastSyncTime(0);
     // Trigger global historyCacheVersion bump to force all hooks to refresh
     bumpHistoryCacheVersion();
   };

@@ -68,3 +68,35 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 
 **4. Paletas e Theming por Corretora** [✓]
 *   **Ação Aplicada:** Definição de cores de identidade de marca para cada corretora (Bitget `#03aac7`, Bybit `#ff9c2e`, OKX `#fafafa`) sendo injetadas via CSS vars/data-themes nas expansões das subcontas do painel, garantindo reconhecimento instantâneo.
+
+---
+
+## Sprint Recente: Padronização de Contratos Inversos e Correção de Históricos [CONCLUÍDO]
+
+**1. Centralização do Cálculo de Tamanho e Valor de Contratos Inversos** [✓]
+*   **Ação Aplicada:** Criação e consolidação das lógicas unificadas de conversão em `src/utils/inverseUtils.ts` por meio dos métodos `getOpenPositionSizeAndValue` e `getHistoryPositionSizeAndValue`. Isso removeu a duplicação de lógicas de conversão e simplificou o suporte a contratos lineares vs inversos em todas as exchanges.
+
+**2. Correção do Histórico da Bybit (Inverse vs Linear)** [✓]
+*   **Ação Aplicada:** Ajuste no cálculo das posições de histórico fechadas da Bybit no `getHistoryPositionSizeAndValue`. Para contratos Inversos, o campo `cumEntryValue` representa o valor em moedas (e.g. BTC) e `size` representa o volume em USD. Para contratos Lineares, o comportamento é o inverso, onde `cumEntryValue` representa o valor em USD/USDT e `size` representa a quantidade da moeda.
+
+**3. Resolução de Inconsistências de Preço e Quantidade no Histórico da Bitget** [✓]
+*   **Ação Aplicada:** Atualização no mapeamento do `BitgetAdapter.ts` para posições obtidas via `/api/v2/mix/position/history-position`. O adaptador agora mapeia os campos de forma resiliente:
+    *   Usa `openAvgPrice || openPriceAvg` para `entryPrice` e `closeAvgPrice || closePriceAvg` para `closePrice` para sanar a inconsistência de preços de entrada e saída zerados (0.00).
+    *   Usa `closeTotalPos || openTotalPos` como a quantidade base e aplica a respectiva escala do tamanho do contrato inverso (`getBitgetInverseContractVal`), garantindo que a quantidade em moedas (`size`) de posições inversas da Bitget seja calculada com precisão.
+
+**4. Integridade de Dados no Painel de Visualização e Relatórios de Exportação** [✓]
+*   **Ação Aplicada:** Adaptação da tabela de posições fechadas (`ClosedPositions.tsx`), visualizações de relatórios e rotinas de exportação para consumir uniformemente os novos campos de tamanho e valor calculados, garantindo dados íntegros e 100% corretos em CSV, PDF e Excel.
+
+---
+
+## Sprint Recente: Padronização de Ordens de Contratos Inversos da Bitget [CONCLUÍDO]
+
+**1. Correção do Tamanho de Ordem para Contratos Inversos da Bitget** [✓]
+*   **Ação Aplicada:** No `BitgetAdapter.ts`, removemos a multiplicação redundante pelo valor de contrato (`getBitgetInverseContractVal`) para ordens ativas (`orders-pending`) e históricas (`orders-history`). As ordens de contratos inversos da Bitget já retornam a quantidade diretamente na unidade do ativo (moeda, e.g. `0.03 ETH`), eliminando valores inflados ou incorretos de tamanho de ordem.
+
+**2. Normalização do Valor de Ordem (Notional USD) da Bitget** [✓]
+*   **Ação Aplicada:** O campo de valor da ordem agora calcula a notionalidade de forma precisa usando `quoteVolume` (volume financeiro preenchido real) ou multiplicando a quantidade total da ordem pelo preço de entrada (`qty * price`), em vez de mapear para `totalProfits` (lucro realizado) ou usar o tamanho sem preço.
+
+**3. Reconhecimento Automático e Visualização no Painel de Ordens** [✓]
+*   **Ação Aplicada:** O componente de linha de ordens (`OrderRow.tsx`) agora utiliza as relações matemáticas corretas (`qtyIsCoin` detectado como `true` para Bitget) para extrair o tamanho real da moeda e o volume estimado em USD. Isso garante uma renderização perfeita da quantidade de moedas (e.g. `0.03 ETH`) e de seu valor nocional em USD nas telas de Ordens Abertas e Histórico de Ordens.
+

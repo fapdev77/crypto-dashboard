@@ -13,7 +13,7 @@ import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
-import { getInverseUsdValues } from '../utils/inverseUtils';
+import { getInverseUsdValues, getOpenPositionSizeAndValue } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 
 export function OpenPositions() {
@@ -92,10 +92,10 @@ export function OpenPositions() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-         <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-           <Activity className="w-5 h-5 text-[#2F6BFF]" />
-           Open Positions
-         </h2>
+        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+          <Activity className="w-5 h-5 text-[#2F6BFF]" />
+          Open Positions
+        </h2>
       </div>
 
       {/* Header Controls */}
@@ -189,17 +189,17 @@ export function OpenPositions() {
 
               const fundingFee = pos.accumulatedFunding ? parseFloat(pos.accumulatedFunding) : 0;
               const tradingFee = pos.accumulatedTradingFee ? parseFloat(pos.accumulatedTradingFee) : 0;
-              const closedPnl = (pos.realizedPnl || 0) - fundingFee - tradingFee;
+              const closedPnl = pos.closedPnl !== undefined ? pos.closedPnl : 0;
 
               // Normalize inverse PnL to USD values
               const inverseVals = getInverseUsdValues(pos);
 
               // Approximations using normalized USD values where helpful
-              const sizeValUsd = pos.notionalUsd || inverseVals.positionValue || (pos.size * pos.markPrice);
+              const { positionValueUsd: sizeValUsd } = getOpenPositionSizeAndValue(pos);
               const posCcy = pos.ccy || pos.baseCoin || 'USDT';
 
-              const isFiatPair = pos.symbol.includes('USD') || pos.symbol.includes('EUR');
-              const isFiatCcy = posCcy.includes('USD') || posCcy === 'EUR';
+              const isFiatPair = pos.symbol.toUpperCase().includes('USD') || pos.symbol.toUpperCase().includes('EUR') || pos.symbol.toUpperCase().includes('BRL');
+              const isFiatCcy = posCcy.toUpperCase().includes('USD') || posCcy.toUpperCase() === 'EUR' || posCcy.toUpperCase() === 'BRL';
               const formatCcy = (v: number | undefined | null) => formatCurrency(v, 'crypto', isFiatCcy ? 2 : 8);
 
               const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
@@ -308,6 +308,22 @@ export function OpenPositions() {
                 )
               };
 
+              const maintenanceMarginTooltipProps = {
+                side: "top" as const,
+                description: (
+                  <div className="flex flex-col gap-1 w-full max-w-[280px]">
+                    <span className="text-[13px] font-medium text-white tracking-wide font-sans">
+                      {pos.exchange === 'okx' ? 'Maintenance Margin Ratio (MMR)' : 'Maintenance Margin'}
+                    </span>
+                    <p className="text-[12px] text-[#8E9299] leading-snug">
+                      {pos.exchange === 'okx'
+                        ? 'Maintenance margin ratio (MMR) is a risk metric for your positions. The lower the maintenance margin ratio, the higher the risk. When the maintenance margin ratio reaches or drops below 100%, your positions will be reduced or liquidated.'
+                        : 'The minimum amount of margin that must be maintained to keep the position open. If the margin drops below this value, the position will be liquidated.'}
+                    </p>
+                  </div>
+                )
+              };
+
               const sizeTooltipProps = {
                 side: "top" as const,
                 description: (
@@ -387,7 +403,7 @@ export function OpenPositions() {
                       <AppTooltip {...sizeTooltipProps}>
                         <div className="flex flex-col gap-0.5 cursor-help w-max focus:outline-none">
                           <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max">Pos Size / Value</span>
-                          <span className="font-mono text-white text-sm">{formatCurrency(pos.size, 'crypto')}</span>
+                          <span className="font-mono text-white text-sm">{formatCurrency(pos.size, 'crypto')} {baseCoinClean}</span>
                           <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
                         </div>
                       </AppTooltip>
@@ -456,7 +472,7 @@ export function OpenPositions() {
                         rows={[
                           {
                             label: 'Closed PnL',
-                            value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`,
+                            value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.closedPnl, 'usd', 2)})` : ''}`,
                             labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                             valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                           },
@@ -481,7 +497,7 @@ export function OpenPositions() {
                       </span>
                       {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
                         <span className={`font-mono text-xs ${realizedPnlColor} opacity-80`}>
-                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)}
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)} USD
                         </span>
                       ) : (
                         <span className="text-[10px] opacity-0">-</span>
@@ -564,7 +580,7 @@ export function OpenPositions() {
                           rows={[
                             {
                               label: 'Closed PnL',
-                              value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`,
+                              value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.closedPnl, 'usd', 2)})` : ''}`,
                               labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                               valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                             },
@@ -602,21 +618,21 @@ export function OpenPositions() {
 
                               <div className="flex flex-col gap-3 mt-1">
                                 <div className="flex flex-col">
-                                  <span className="text-[10px] text-[#8E9299]">Balanço Total:</span>
+                                  <span className="text-[10px] text-[#8E9299]">Balance:</span>
                                   <span className="font-mono text-white text-[13px]">
                                     {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(totalAssetBal * (pos.markPrice || 0), 'usd', 2)} USD</span>
                                   </span>
                                 </div>
 
                                 <div className="flex flex-col">
-                                  <span className="text-[10px] text-[#00C853]">Protegido: {protectedPct.toFixed(2)}%</span>
+                                  <span className="text-[10px] text-[#00C853]">Protected: {protectedPct.toFixed(2)}%</span>
                                   <span className="font-mono text-white text-[13px]">
                                     {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(protectedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
                                   </span>
                                 </div>
 
                                 <div className="flex flex-col">
-                                  <span className="text-[10px] text-[#FF4444]">Exposto: {exposedPct.toFixed(2)}%</span>
+                                  <span className="text-[10px] text-[#FF4444]">Exposed: {exposedPct.toFixed(2)}%</span>
                                   <span className="font-mono text-white text-[13px]">
                                     {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(exposedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
                                   </span>
@@ -627,7 +643,7 @@ export function OpenPositions() {
                             {!isShort && (
                               <div className="flex items-start gap-1 py-1.5 px-2 bg-orange-500/10 border border-orange-500/20 rounded">
                                 <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
-                                <span className="text-[9.5px] text-orange-300 font-medium leading-tight">Posição alavancada! Foco no gerenciamento de risco!</span>
+                                <span className="text-[9.5px] text-orange-300 font-medium leading-tight">Overexposed! Focus on risk management! Always have a stop in place!</span>
                               </div>
                             )}
                           </div>
@@ -659,8 +675,24 @@ export function OpenPositions() {
                           <span className="font-mono text-white">{formatPrice(pos.markPrice, isFiatPair)}</span>
                         </div>
                         <div className="flex flex-col gap-1">
-                          <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Tiered maintenance margin rate</span>
-                          <span className="font-mono text-white">{pos.marginRatio ? formatValue(pos.marginRatio, 2) + '%' : '--'}</span>
+                          <AppTooltip {...maintenanceMarginTooltipProps}>
+                            <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">{pos.exchange === 'okx' ? 'Maint. Margin / MMR' : 'Maintenance Margin'}</span>
+                          </AppTooltip>
+                          <span className="font-mono text-white">
+                            {pos.maintenanceMargin !== undefined ? (
+                              <>
+                                {formatCcy(pos.maintenanceMargin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
+                                {posCcy && !posCcy.includes('USD') && pos.maintenanceMargin && pos.markPrice ? (
+                                  <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(pos.maintenanceMargin * pos.markPrice, 'crypto', 2)} USD</span>
+                                ) : null}
+                                {pos.marginRatio !== undefined && (
+                                  <span className="text-orange-400 text-[10px] ml-1">({formatValue(pos.marginRatio, 2)}%)</span>
+                                )}
+                              </>
+                            ) : (
+                              pos.marginRatio !== undefined ? `${formatValue(pos.marginRatio, 2)}%` : '--'
+                            )}
+                          </span>
                         </div>
                         <AppTooltip
                           description={

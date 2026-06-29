@@ -7,9 +7,11 @@ interface Props {
   filters: FilterState;
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
   showPeriod?: boolean;
+  showStatusFilter?: boolean;
 }
 
 const ORDER_TYPES = ['All', 'LIMIT', 'MARKET', 'TP', 'SL', 'CONDITIONAL'];
+const STATUS_OPTIONS = ['All', 'FILLED', 'CANCELLED', 'PARTIALLY_FILLED', 'REJECTED'];
 const TIME_PERIODS = [
   { label: 'Today', ms: 24 * 60 * 60 * 1000 },
   { label: '7 Days', ms: 7 * 24 * 60 * 60 * 1000 },
@@ -18,7 +20,7 @@ const TIME_PERIODS = [
   { label: '90 Days', ms: 90 * 24 * 60 * 60 * 1000 },
 ];
 
-export function OrderFilters({ filters, setFilters, showPeriod = false }: Props) {
+export function OrderFilters({ filters, setFilters, showPeriod = false, showStatusFilter = false }: Props) {
   const { keys } = useApiKeysStore();
 
   const instrumentsAvailable = useMemo(() => {
@@ -85,6 +87,15 @@ export function OrderFilters({ filters, setFilters, showPeriod = false }: Props)
     labelAll: 'All Types',
   };
 
+  const statusSelectConfig = showStatusFilter
+    ? {
+        value: filters.historyStatus || 'All',
+        onChange: (val: string) => setFilters(p => ({ ...p, historyStatus: val })),
+        options: STATUS_OPTIONS,
+        labelAll: 'All Statuses',
+      }
+    : undefined;
+
   const periodConfig = showPeriod
     ? {
         value: String(filters.timePeriod),
@@ -101,6 +112,7 @@ export function OrderFilters({ filters, setFilters, showPeriod = false }: Props)
       instrument={instrumentConfig}
       side={sideConfig}
       type={typeConfig}
+      statusSelect={statusSelectConfig}
       period={periodConfig}
     />
   );
