@@ -461,21 +461,35 @@ export class BybitAdapter implements IExchangeAdapter {
     let allOrders: any[] = [];
     
     for (const cat of categories) {
-      let query = '';
-      if (cat === 'spot') query = 'category=spot';
-      else if (cat === 'inverse') query = 'category=inverse';
-      else if (cat === 'linear-usdt') query = 'category=linear&settleCoin=USDT';
-      else if (cat === 'linear-usdc') query = 'category=linear&settleCoin=USDC';
+      let baseQuery = '';
+      if (cat === 'spot') baseQuery = 'category=spot';
+      else if (cat === 'inverse') baseQuery = 'category=inverse';
+      else if (cat === 'linear-usdt') baseQuery = 'category=linear&settleCoin=USDT';
+      else if (cat === 'linear-usdc') baseQuery = 'category=linear&settleCoin=USDC';
 
-      const targetUrl = `https://api.bybit.com/v5/order/realtime?${query}`;
-      const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+      let cursor = '';
+      let pages = 0;
       
       try {
-        const res = await hybridFetch(targetUrl, 'GET', headers);
-        if (res.retCode === 0 && res.result?.list) {
-          const listCat = cat.startsWith('linear') ? 'linear' : cat;
-          allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: listCat })));
-        }
+        do {
+          let query = `${baseQuery}&limit=50`;
+          if (cursor) {
+            query += `&cursor=${cursor}`;
+          }
+
+          const targetUrl = `https://api.bybit.com/v5/order/realtime?${query}`;
+          const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+          
+          const res = await hybridFetch(targetUrl, 'GET', headers);
+          if (res.retCode === 0 && res.result?.list) {
+            const listCat = cat.startsWith('linear') ? 'linear' : cat;
+            allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: listCat })));
+            cursor = res.result.nextPageCursor || '';
+          } else {
+            break;
+          }
+          pages++;
+        } while (cursor && pages < MAX_DEEP_PAGES);
       } catch (err) {
         console.warn(`[Bybit-OpenOrders] Error fetching ${cat}:`, err);
       }
@@ -499,16 +513,28 @@ export class BybitAdapter implements IExchangeAdapter {
       let currentStart = Math.max(startTimeObj, currentEnd - SEVEN_DAYS_MS + 1000);
 
       while (currentStart >= startTimeObj && currentStart < currentEnd) {
-        let queryUrl = `category=${cat}&limit=50&startTime=${currentStart}&endTime=${currentEnd}`;
-        
-        const targetUrl = `https://api.bybit.com/v5/order/history?${queryUrl}`;
-        const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+        let cursor = '';
+        let pages = 0;
         
         try {
-          const res = await hybridFetch(targetUrl, 'GET', headers);
-          if (res.retCode === 0 && res.result?.list) {
-            allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: cat })));
-          }
+          do {
+            let queryUrl = `category=${cat}&limit=50&startTime=${currentStart}&endTime=${currentEnd}`;
+            if (cursor) {
+              queryUrl += `&cursor=${cursor}`;
+            }
+            
+            const targetUrl = `https://api.bybit.com/v5/order/history?${queryUrl}`;
+            const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+            
+            const res = await hybridFetch(targetUrl, 'GET', headers);
+            if (res.retCode === 0 && res.result?.list) {
+              allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: cat })));
+              cursor = res.result.nextPageCursor || '';
+            } else {
+              break;
+            }
+            pages++;
+          } while (cursor && pages < MAX_DEEP_PAGES);
         } catch (err) {
           console.warn(`[Bybit-HistoryOrders] Error fetching ${cat}:`, err);
         }
