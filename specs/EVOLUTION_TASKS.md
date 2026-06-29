@@ -68,3 +68,22 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 
 **4. Paletas e Theming por Corretora** [✓]
 *   **Ação Aplicada:** Definição de cores de identidade de marca para cada corretora (Bitget `#03aac7`, Bybit `#ff9c2e`, OKX `#fafafa`) sendo injetadas via CSS vars/data-themes nas expansões das subcontas do painel, garantindo reconhecimento instantâneo.
+
+---
+
+## Sprint Recente: Padronização de Contratos Inversos e Correção de Históricos [CONCLUÍDO]
+
+**1. Centralização do Cálculo de Tamanho e Valor de Contratos Inversos** [✓]
+*   **Ação Aplicada:** Criação e consolidação das lógicas unificadas de conversão em `src/utils/inverseUtils.ts` por meio dos métodos `getOpenPositionSizeAndValue` e `getHistoryPositionSizeAndValue`. Isso removeu a duplicação de lógicas de conversão e simplificou o suporte a contratos lineares vs inversos em todas as exchanges.
+
+**2. Correção do Histórico da Bybit (Inverse vs Linear)** [✓]
+*   **Ação Aplicada:** Ajuste no cálculo das posições de histórico fechadas da Bybit no `getHistoryPositionSizeAndValue`. Para contratos Inversos, o campo `cumEntryValue` representa o valor em moedas (e.g. BTC) e `size` representa o volume em USD. Para contratos Lineares, o comportamento é o inverso, onde `cumEntryValue` representa o valor em USD/USDT e `size` representa a quantidade da moeda.
+
+**3. Resolução de Inconsistências de Preço e Quantidade no Histórico da Bitget** [✓]
+*   **Ação Aplicada:** Atualização no mapeamento do `BitgetAdapter.ts` para posições obtidas via `/api/v2/mix/position/history-position`. O adaptador agora mapeia os campos de forma resiliente:
+    *   Usa `openAvgPrice || openPriceAvg` para `entryPrice` e `closeAvgPrice || closePriceAvg` para `closePrice` para sanar a inconsistência de preços de entrada e saída zerados (0.00).
+    *   Usa `closeTotalPos || openTotalPos` como a quantidade base e aplica a respectiva escala do tamanho do contrato inverso (`getBitgetInverseContractVal`), garantindo que a quantidade em moedas (`size`) de posições inversas da Bitget seja calculada com precisão.
+
+**4. Integridade de Dados no Painel de Visualização e Relatórios de Exportação** [✓]
+*   **Ação Aplicada:** Adaptação da tabela de posições fechadas (`ClosedPositions.tsx`), visualizações de relatórios e rotinas de exportação para consumir uniformemente os novos campos de tamanho e valor calculados, garantindo dados íntegros e 100% corretos em CSV, PDF e Excel.
+

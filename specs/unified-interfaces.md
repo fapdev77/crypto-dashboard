@@ -159,6 +159,31 @@ export interface UnifiedHistoryPosition {
 | `leverage` | `leverage` | `leverage` | `lever` | Active position leverage upon closing |
 | `instrumentType`| Mapped (`category`) | `instType` / `productType` | `instType` | Mapped `UnifiedInstrumentType` |
 
+### Advanced Normalization Logic for Sizing & Value (Inverse vs Linear)
+
+To guarantee exact consistency across all historical positions, the application uses helper utilities in `src/utils/inverseUtils.ts` (specifically `getHistoryPositionSizeAndValue(pos)`) with the following mapping and conversion rules:
+
+#### 1. Bybit
+*   **Inverse Contracts (e.g., BTCUSD, ETHUSD):**
+    *   The `cumEntryValue` property returned by Bybit API is denominated in the **coin** (e.g., `0.00021896 BTC`).
+    *   The `size` property represents the contract size in **USD** (e.g., `13`).
+    *   *Result:* Mapped `size` (actual coin size) = `cumEntryValue` (e.g. `0.00021896`), and `notionalUsd` (position value USD) = `size` (e.g. `13`).
+*   **Linear/USDT Contracts (e.g., BTCUSDT):**
+    *   The `cumEntryValue` property represents the value in **USD/USDT** (e.g., `5588.88 USDT`).
+    *   The `size` property represents the size in **coin** (e.g., `0.2 BTC`).
+    *   *Result:* Mapped `size` (actual coin size) = `size` (e.g. `0.2`), and `notionalUsd` (position value USD) = `cumEntryValue` (e.g. `5588.88`).
+
+#### 2. Bitget
+*   **API Response Consistency:** Bitget's historical position response (`/api/v2/mix/position/history-position`) exhibits inconsistencies in field names depending on the account setup and market conditions.
+    *   **Prices:** Uses `openAvgPrice || openPriceAvg` for `entryPrice`, and `closeAvgPrice || closePriceAvg` for `closePrice` to prevent zero prices.
+    *   **Quantities:** Uses `closeTotalPos || openTotalPos` as the raw position size.
+*   **Contract Sizing Scaling:**
+    *   For **Inverse Contracts**, the raw size (contracts) is multiplied by the contract unit value (`getBitgetInverseContractVal(symbol)`) to obtain the true actual coin size.
+    *   For **Linear Contracts**, the raw size is used directly as the coin size.
+
+#### 3. OKX
+*   **Contract Sizing Scaling:** Mapped `size` is scaled using the contract multiplier (`ctVal` from instrument info) against the closed volume, ensuring the actual coin quantity is reflected.
+
 ---
 
 ## 4. Unified Bill Record (`UnifiedBillRecord`)
