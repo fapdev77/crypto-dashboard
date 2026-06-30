@@ -357,11 +357,6 @@ export function TradeHistory() {
               filledValueStr = `${formatCurrency(usdVal, 'usd')} USD`;
               filledQtyStr = `${formatCurrency(trade.filledQty, 'crypto')} ${symbolSuffix}`;
             }
-
-            const feeStr = trade.fees
-              ? (isInverse ? `${formatCurrency(Math.abs(trade.fees), 'crypto', 8)} ${symbolSuffix}` : `${formatCurrency(Math.abs(trade.fees), 'crypto', 6)} USDT`)
-              : '--';
-
             const d = new Date(trade.updatedTime || trade.createdTime);
             const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -437,7 +432,41 @@ export function TradeHistory() {
                     <AppTooltip description="Trading fees charged for this trade.">
                       <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Trading Fees</span>
                     </AppTooltip>
-                    <span className="font-mono text-sm text-[#FF4444]">{feeStr !== '--' ? `-${feeStr}` : feeStr}</span>
+                    {(() => {
+                      const hasFees = trade.fees !== undefined && trade.fees !== null && trade.fees !== 0;
+                      let mainFeeStr = '--';
+                      let subFeeStr = null;
+                      let isFeeNegative = false;
+
+                      if (hasFees) {
+                        const rawFee = trade.fees!;
+                        const isCost = trade.exchange === 'okx' ? rawFee < 0 : rawFee > 0;
+                        isFeeNegative = isCost;
+
+                        const absFee = Math.abs(rawFee);
+
+                        if (isInverse) {
+                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 8)} ${symbolSuffix}`;
+                          const feeUsd = absFee * filledPrice;
+                          subFeeStr = `≈ ${isCost ? '-' : ''}${formatCurrency(feeUsd, 'usd')} USD`;
+                        } else {
+                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 6)} USDT`;
+                        }
+                      }
+
+                      return (
+                        <div className="flex flex-col">
+                          <span className={`font-mono text-sm ${isFeeNegative ? 'text-[#FF4444]' : hasFees ? 'text-[#00C853]' : 'text-white'}`}>
+                            {mainFeeStr}
+                          </span>
+                          {subFeeStr && (
+                            <span className={`font-mono text-xs ${isFeeNegative ? 'text-[#FF4444]/80' : 'text-[#00C853]/80'} mt-0.5`}>
+                              {subFeeStr}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Col 6: Transaction Time & ID */}
