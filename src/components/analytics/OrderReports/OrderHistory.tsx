@@ -37,7 +37,15 @@ export function OrderHistory() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters, orders]);
+  }, [filters]);
+
+  // Adjust page if it exceeds the max page available for current orders
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(orders.length / itemsPerPage));
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [orders.length, currentPage]);
 
   // Busca inicial
   useEffect(() => {

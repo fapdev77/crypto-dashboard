@@ -61,7 +61,15 @@ export function TradeHistory() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters, trades]);
+  }, [filters]);
+
+  // Adjust page if it exceeds the max page available for current trades
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(trades.length / itemsPerPage));
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [trades.length, currentPage]);
 
   const paginatedTrades = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;

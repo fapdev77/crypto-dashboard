@@ -38,7 +38,7 @@ export function ClosedPositions() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterText, exchangeFilter, period, closedPositions]);
+  }, [filterText, exchangeFilter, period]);
 
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
@@ -58,6 +58,14 @@ export function ClosedPositions() {
 
     return filtered;
   }, [closedPositions, filterText, exchangeFilter]);
+
+  // Adjust page if it exceeds the max page available for current closed positions
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(filteredClosedPositions.length / itemsPerPage));
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [filteredClosedPositions.length, currentPage]);
 
   const paginatedClosedPositions = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
