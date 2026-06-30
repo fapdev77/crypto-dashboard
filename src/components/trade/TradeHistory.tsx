@@ -440,7 +440,7 @@ export function TradeHistory() {
 
                       if (hasFees) {
                         const rawFee = trade.fees!;
-                        const isCost = trade.exchange === 'okx' ? rawFee < 0 : rawFee > 0;
+                        const isCost = (trade.exchange === 'okx' || trade.exchange === 'bitget') ? rawFee < 0 : rawFee > 0;
                         isFeeNegative = isCost;
 
                         const absFee = Math.abs(rawFee);

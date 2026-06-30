@@ -280,7 +280,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           return rawSize;
         })(),
         fundingFee: pos.totalFunding ? parseFloat(pos.totalFunding) : undefined,
-        tradingFee: totalFee || undefined,
+        tradingFee: totalFee ? totalFee * -1 : undefined,
         instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
         raw: pos,
       };
@@ -495,7 +495,13 @@ export class BitgetAdapter implements IExchangeAdapter {
         timeInForce: o.timeInForce || o.force,
         createdTime: parseInt(o.cTime || '0', 10),
         updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
-        fees: parseFloat(o.fee || '0'),
+        fees: (() => {
+          if (o.deductedFee) {
+            return parseFloat(o.deductedFee) * -1;
+          }
+          const rawFee = parseFloat(o.fee || '0');
+          return rawFee > 0 ? -rawFee : rawFee;
+        })(),
         leverage: o.leverage ? parseFloat(o.leverage) : undefined,
         marginMode: o.marginMode ? mapMarginMode('bitget', o.marginMode) : undefined,
         raw: o

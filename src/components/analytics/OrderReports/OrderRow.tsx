@@ -261,7 +261,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
                 if (hasFees) {
                   const rawFee = order.fees!;
-                  const isCost = order.exchange === 'okx' ? rawFee < 0 : rawFee > 0;
+                  const isCost = (order.exchange === 'okx' || order.exchange === 'bitget') ? rawFee < 0 : rawFee > 0;
                   isFeeNegative = isCost;
 
                   const absFee = Math.abs(rawFee);
