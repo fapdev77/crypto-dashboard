@@ -7,7 +7,6 @@ import { useDashboardStore } from '../../store/dashboardStore';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
-import { getBitgetInverseContractVal } from '../../utils/inverseUtils';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -271,14 +270,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         createdTime: createdTime,
         entryPrice: parseFloat(pos.openAvgPrice || pos.openPriceAvg || '0'),
         closePrice: parseFloat(pos.closeAvgPrice || pos.closePriceAvg || '0'),
-        size: (() => {
-          const rawSize = parseFloat(pos.closeTotalPos || pos.openTotalPos || '0');
-          const isInverse = mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES') === 'INVERSE';
-          if (isInverse) {
-            return rawSize * getBitgetInverseContractVal(pos.instId || pos.symbol);
-          }
-          return rawSize;
-        })(),
+        size: parseFloat(pos.closeTotalPos || pos.openTotalPos || '0'),
         fundingFee: pos.totalFunding ? parseFloat(pos.totalFunding) : undefined,
         tradingFee: totalFee ? totalFee * -1 : undefined,
         instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
