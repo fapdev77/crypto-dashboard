@@ -272,7 +272,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         closePrice: parseFloat(pos.closeAvgPrice || pos.closePriceAvg || '0'),
         size: parseFloat(pos.closeTotalPos || pos.openTotalPos || '0'),
         fundingFee: pos.totalFunding ? parseFloat(pos.totalFunding) : undefined,
-        tradingFee: totalFee || '0',
+        tradingFee: totalFee || 0,
         instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
         raw: pos,
       };

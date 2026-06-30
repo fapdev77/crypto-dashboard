@@ -88,16 +88,38 @@ export function TradeHistory() {
       else if (t.side === 'sell') sellCount++;
 
       const p = t.avgPrice > 0 ? t.avgPrice : t.price || 0;
+      const isInverse = t.category === 'INVERSE';
+
+      // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
+      let qtyIsCoin = false;
+      if (isInverse && p > 0) {
+        const estValIfQtyIsCoin = t.qty * p;
+        const estValIfQtyIsUsd = t.qty;
+        const actualVal = t.value || 0;
+
+        if (actualVal > 0) {
+          const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+          const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+          if (distToCoin < distToUsd) {
+            qtyIsCoin = true;
+          }
+        } else {
+          if (t.qty < 2 && t.qty * p >= 10) {
+            qtyIsCoin = true;
+          }
+        }
+      }
+
       let valUsd = 0;
-      if (t.category === 'INVERSE') {
-        valUsd = t.filledQty; // Qty is in USD for inverse
+      if (isInverse && !qtyIsCoin) {
+        valUsd = t.filledQty;
       } else {
         valUsd = t.value || (p > 0 ? Number(new Big(t.filledQty).times(p)) : 0);
       }
       totalTradedVolume += valUsd;
 
       if (t.fees) {
-        if (t.category === 'INVERSE') {
+        if (isInverse) {
           totalFees += Math.abs(t.fees) * p;
         } else {
           totalFees += Math.abs(t.fees);
@@ -159,15 +181,40 @@ export function TradeHistory() {
       // Filled Value and Qty calculations
       let filledValueStr = '';
       let filledQtyStr = '';
-      if (isInverse) {
-        const coinVal = filledPrice > 0 ? t.filledQty / filledPrice : 0;
-        filledValueStr = `${coinVal.toFixed(8)} ${symbolSuffix}`;
-        filledQtyStr = `${t.filledQty} USD`;
-      } else {
-        const usdVal = t.filledQty * filledPrice;
-        filledValueStr = `${usdVal.toFixed(2)} USD`;
-        filledQtyStr = `${t.filledQty} ${symbolSuffix}`;
+
+      // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
+      let qtyIsCoin = false;
+      if (isInverse && filledPrice > 0) {
+        const estValIfQtyIsCoin = t.qty * filledPrice;
+        const estValIfQtyIsUsd = t.qty;
+        const actualVal = t.value || 0;
+
+        if (actualVal > 0) {
+          const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+          const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+          if (distToCoin < distToUsd) {
+            qtyIsCoin = true;
+          }
+        } else {
+          if (t.qty < 2 && t.qty * filledPrice >= 10) {
+            qtyIsCoin = true;
+          }
+        }
       }
+
+      let actualFilledCoinSize = 0;
+      let filledValUsd = 0;
+
+      if (isInverse && !qtyIsCoin) {
+        filledValUsd = t.filledQty;
+        actualFilledCoinSize = filledPrice > 0 ? t.filledQty / filledPrice : 0;
+      } else {
+        filledValUsd = t.filledQty > 0 ? (t.filledQty * filledPrice) : 0;
+        actualFilledCoinSize = t.filledQty;
+      }
+
+      filledQtyStr = `${actualFilledCoinSize.toFixed(8)} ${symbolSuffix}`;
+      filledValueStr = `${filledValUsd.toFixed(2)} USD`;
 
       // Fees
       const feeStr = t.fees
@@ -348,15 +395,40 @@ export function TradeHistory() {
             // Filled Value and Qty calculations using big.js and formatCurrency
             let filledValueStr = '';
             let filledQtyStr = '';
-            if (isInverse) {
-              const coinVal = filledPrice > 0 ? Number(new Big(trade.filledQty).div(filledPrice)) : 0;
-              filledValueStr = `${formatCurrency(coinVal, 'crypto', 8)} ${symbolSuffix}`;
-              filledQtyStr = `${formatCurrency(trade.filledQty, 'crypto', 2)} USD`;
-            } else {
-              const usdVal = Number(new Big(trade.filledQty).times(filledPrice));
-              filledValueStr = `${formatCurrency(usdVal, 'usd')} USD`;
-              filledQtyStr = `${formatCurrency(trade.filledQty, 'crypto')} ${symbolSuffix}`;
+
+            // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
+            let qtyIsCoin = false;
+            if (isInverse && filledPrice > 0) {
+              const estValIfQtyIsCoin = trade.qty * filledPrice;
+              const estValIfQtyIsUsd = trade.qty;
+              const actualVal = trade.value || 0;
+
+              if (actualVal > 0) {
+                const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+                const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+                if (distToCoin < distToUsd) {
+                  qtyIsCoin = true;
+                }
+              } else {
+                if (trade.qty < 2 && trade.qty * filledPrice >= 10) {
+                  qtyIsCoin = true;
+                }
+              }
             }
+
+            let actualFilledCoinSize = 0;
+            let filledValUsd = 0;
+
+            if (isInverse && !qtyIsCoin) {
+              filledValUsd = trade.filledQty;
+              actualFilledCoinSize = filledPrice > 0 ? trade.filledQty / filledPrice : 0;
+            } else {
+              filledValUsd = trade.filledQty > 0 ? (trade.filledQty * filledPrice) : 0;
+              actualFilledCoinSize = trade.filledQty;
+            }
+
+            filledQtyStr = `${formatCurrency(actualFilledCoinSize, 'crypto')} ${symbolSuffix}`;
+            filledValueStr = `${formatCurrency(filledValUsd, 'usd')} USD`;
             const d = new Date(trade.updatedTime || trade.createdTime);
             const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
