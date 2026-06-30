@@ -21,13 +21,17 @@ export function useTokenUsdPrice(ccy: string) {
 
     const fetchPrice = async () => {
       try {
-        const symbol = `${cleanCcy}USDT`;
-        const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+        const instId = `${cleanCcy}-USDT`;
+        const res = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${instId}`);
         if (res.ok) {
-          const data = await res.json();
-          const p = parseFloat(data.price);
-          cache[cleanCcy] = { price: p, timestamp: Date.now() };
-          setPrice(p);
+          const json = await res.json();
+          if (json.code === '0' && json.data && json.data.length > 0) {
+            const p = parseFloat(json.data[0].last);
+            if (!isNaN(p)) {
+              cache[cleanCcy] = { price: p, timestamp: Date.now() };
+              setPrice(p);
+            }
+          }
         }
       } catch (err) {
         console.warn(`[useTokenUsdPrice] Failed to fetch price for ${cleanCcy}`, err);

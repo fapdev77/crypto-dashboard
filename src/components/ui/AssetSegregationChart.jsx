@@ -4,7 +4,7 @@ const mockData = [
     {
         id: 1,
         name: 'Bybit',
-        exchangePct: 25,
+        exchangePct: 35,
         totalAmount: 4200000,
         assets: [
             { token: 'BTC', pct: 35, color: '#f7931a' },
@@ -17,7 +17,7 @@ const mockData = [
     {
         id: 2,
         name: 'Bitget',
-        exchangePct: 30,
+        exchangePct: 40,
         totalAmount: 4800000,
         assets: [
             { token: 'BTC', pct: 30, color: '#f7931a' },
@@ -40,26 +40,12 @@ const mockData = [
             { token: 'Others', pct: 15, color: '#14b8a6' },
         ],
     },
-    {
-        id: 4,
-        name: 'Binance',
-        exchangePct: 20,
-        totalAmount: 2500000,
-        assets: [
-            { token: 'BTC', pct: 20, color: '#f7931a' },
-            { token: 'ETH', pct: 20, color: '#3b82f6' },
-            { token: 'SOL', pct: 25, color: '#10b981' },
-            { token: 'NVDA', pct: 20, color: '#a855f7' },
-            { token: 'Others', pct: 15, color: '#14b8a6' },
-        ],
-    },
 ];
 
 const exchangeOutline = {
-    Bybit: 'border-[#f7a600] ring-[#f7a600]/20',
-    Bitget: 'border-[#00bcd4] ring-[#00bcd4]/20',
-    Okx: 'border-[#10b981] ring-[#10b981]/20',
-    Binance: 'border-[#f59e0b] ring-[#f59e0b]/20',
+    Bybit: 'border-[#ff9c2e] ring-[#ff9c2e]/20',
+    Bitget: 'border-[#03aac7] ring-[#03aac7]/20',
+    Okx: 'border-[#fafafa] ring-[#fafafa]/20',
 };
 
 export default function AssetSegregationChart() {

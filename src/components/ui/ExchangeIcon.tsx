@@ -15,7 +15,6 @@ export function ExchangeIcon({ exchange, className = "w-4 h-4" }: ExchangeIconPr
   if (ex.includes('bitget')) domain = 'bitget.com';
   else if (ex.includes('bybit')) domain = 'bybit.com';
   else if (ex.includes('okx')) domain = 'okx.com';
-  else if (ex.includes('binance')) domain = 'binance.com';
   else domain = `${ex}.com`; // Tenta adivinhar o domínio para as outras corretoras
 
   const handleError = () => setHasError(true);

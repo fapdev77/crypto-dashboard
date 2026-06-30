@@ -71,11 +71,13 @@ export function OrderHistory() {
         if (ccy.includes('USD') || ccy === 'EUR') return 1;
         if (priceCache[ccy]) return priceCache[ccy];
         try {
-          const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ccy}USDT`);
+          const res = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${ccy}-USDT`);
           if (res.ok) {
-            const data = await res.json();
-            priceCache[ccy] = parseFloat(data.price);
-            return priceCache[ccy];
+            const json = await res.json();
+            if (json.code === '0' && json.data && json.data.length > 0) {
+              priceCache[ccy] = parseFloat(json.data[0].last);
+              return priceCache[ccy];
+            }
           }
         } catch { /* ignore fallback to 0 */ }
         return 0;
