@@ -99,9 +99,15 @@ export function OrderHistory() {
         return;
       }
 
+      const activeKeys = keys.filter(k => k.isActive);
+      if (activeKeys.length === 0) {
+        if (isMounted) setTotalFundingFee(0);
+        return;
+      }
+
       import('../../../services/bills/BillsHistoryService').then(async ({ BillsHistoryService }) => {
         const service = new BillsHistoryService();
-        for (const key of keys) {
+        for (const key of activeKeys) {
            if (filters.exchange !== 'All' && key.exchange !== filters.exchange.toLowerCase()) continue;
            if (filters.accountId !== 'All' && key.id !== filters.accountId) continue;
            
