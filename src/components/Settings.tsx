@@ -36,12 +36,16 @@ export function Settings() {
   }, []);
 
   const handleForceSync = async () => {
-    if (keys.length === 0) return;
+    const activeKeys = keys.filter(k => k.isActive);
+    if (activeKeys.length === 0) {
+      toast.error('No active API keys found to sync', { id: 'cache-sync' });
+      return;
+    }
     setIsSyncing(true);
     setSynced(false);
     try {
       const service = new PositionHistoryService();
-      await Promise.all(keys.map(apiKey => service.fetchWithCache(apiKey)));
+      await Promise.all(activeKeys.map(apiKey => service.fetchWithCache(apiKey)));
       const newSize = await getCacheSize();
       setCacheSize(newSize);
       setSynced(true);
@@ -61,9 +65,10 @@ export function Settings() {
     try {
       await clearAllCache();
       setCacheSize(0);
-      if (keys.length > 0) {
+      const activeKeys = keys.filter(k => k.isActive);
+      if (activeKeys.length > 0) {
         const service = new PositionHistoryService();
-        await Promise.all(keys.map(apiKey => service.fetchWithCache(apiKey)));
+        await Promise.all(activeKeys.map(apiKey => service.fetchWithCache(apiKey)));
         const newSize = await getCacheSize();
         setCacheSize(newSize);
       }
