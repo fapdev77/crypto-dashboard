@@ -25,7 +25,7 @@ export function ClosedPositions() {
   const { isPrivateMode } = usePrivacy();
 
   const [filterText, setFilterText] = useState('');
-  const [exchangeFilter, setExchangeFilter] = useState<string>('all');
+  const [exchangeFilter, setExchangeFilter] = useState<string>('All');
 
   const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
 
@@ -43,7 +43,7 @@ export function ClosedPositions() {
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
 
-    if (exchangeFilter !== 'all') {
+    if (exchangeFilter.toLowerCase() !== 'all') {
       filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchangeFilter.toLowerCase());
     }
 

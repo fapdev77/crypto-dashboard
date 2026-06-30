@@ -25,7 +25,7 @@ export function OpenPositions() {
 
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [filterText, setFilterText] = useState('');
-  const [exchangeFilter, setExchangeFilter] = useState<string>('all');
+  const [exchangeFilter, setExchangeFilter] = useState<string>('All');
 
   const toggleRow = (id: string) => {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
@@ -42,7 +42,7 @@ export function OpenPositions() {
     // Then, apply size filter
     filtered = filtered.filter(pos => Math.abs(pos.size) > 0);
 
-    if (exchangeFilter !== 'all') {
+    if (exchangeFilter.toLowerCase() !== 'all') {
       filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchangeFilter.toLowerCase());
     }
 
