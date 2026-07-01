@@ -297,7 +297,7 @@ export function UserManualModal({ isOpen, onClose, initialLang = 'pt' }: UserMan
                   <Info className="w-4 h-4 text-[#2F6BFF]" />
                   <span>CPM Terminal v1.1.0 • Client-side Zero Trust</span>
                 </div>
-                <span>© {new Date().getFullYear()} Crypto Portfolio Monitor</span>
+                <span>© {new Date().getFullYear()} Crypto Portfolio Manager</span>
               </div>
             </div>
           </div>

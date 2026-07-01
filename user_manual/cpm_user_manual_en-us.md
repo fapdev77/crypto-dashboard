@@ -1,6 +1,6 @@
-# 📘 User Manual - Crypto Portfolio Monitor (CPM)
+# 📘 User Manual - Crypto Portfolio Manager (CPM)
 
-Welcome to the **Crypto Portfolio Monitor (CPM)**! This professional terminal is designed to consolidate and monitor your trading performance, balances, active positions, and order history across **Bitget**, **Bybit**, and **OKX** in one single, unified interface.
+Welcome to the **Crypto Portfolio Manager (CPM)**! This professional terminal is designed to consolidate and monitor your trading performance, balances, active positions, and order history across **Bitget**, **Bybit**, and **OKX** in one single, unified interface.
 
 Our absolute highest priority is **zero-trust client security** and **strict privacy preservation**, ensuring that your credentials and transaction histories remain entirely under your local browser custody.
 
@@ -142,4 +142,4 @@ Yes! CPM's interface is completely responsive, reorganizing charts and complex r
 
 ---
 
-*Crypto Portfolio Monitor — Enterprise Connectivity. Uncompromising Security.*
+*Crypto Portfolio Manager — Enterprise Connectivity. Uncompromising Security.*

@@ -17,7 +17,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
 
   const texts = {
     en: {
-      title: "Welcome to Crypto Dashboard",
+      title: "Welcome to Crypto Portfolio Manager",
       subtitle: "Onboarding & Quick Start Guide",
       intro: "Monitor trading performance, balances, active positions, and order history across Bitget, Bybit, and OKX in one unified terminal.",
       privacyWarning: "Your API credentials are saved strictly in your browser's localStorage. Communication with the exchanges occurs directly from your browser (no intermediate servers). Always use READ-ONLY API keys. NEVER use keys that allow trading or withdrawals. You can erase all data instantly using the 'Wipe All Local Client Data' option under Settings.",
@@ -37,7 +37,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       disclaimerDesc: "This application is currently in its testing phase. The focus is to simplify the lives of traders by unifying balances from various exchanges in one place to facilitate asset and trade tracking. However, each exchange has different calculation methods and data availability, so the presented data may contain errors or inconsistencies and might not be exactly equal to what is displayed directly by the exchange. If you do not agree with this, we do not recommend using the application."
     },
     pt: {
-      title: "Bem-vindo ao Crypto Dashboard",
+      title: "Bem-vindo ao Crypto Portfolio Manager",
       subtitle: "Guia de Integração e Início Rápido",
       intro: "Monitore seu desempenho de trading, saldos, posições ativas e histórico de ordens na Bitget, Bybit e OKX em um único terminal unificado.",
       privacyWarning: "Suas chaves de API são salvas estritamente no localStorage do seu navegador. Toda comunicação com as corretoras ocorre de forma direta (sem servidores intermediários). Use apenas chaves de API com permissão de LEITURA (Read-Only). NUNCA use chaves que permitam negociação (Trade) ou saques. Você pode apagar todos os dados do cliente instantaneamente usando a opção 'Wipe All Local Client Data' nas configurações.",
