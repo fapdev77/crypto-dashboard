@@ -1,6 +1,6 @@
-# 📘 Manual do Usuário - Crypto Portfolio Monitor (CPM)
+# 📘 Manual do Usuário - Crypto Portfolio Manager (CPM)
 
-Bem-vindo ao **Crypto Portfolio Monitor (CPM)**! Este terminal foi desenvolvido para consolidar e monitorar, em tempo real, seu desempenho operacional, saldos, posições ativas e histórico de ordens entre as corretoras **Bitget**, **Bybit** e **OKX**.
+Bem-vindo ao **Crypto Portfolio Manager (CPM)**! Este terminal foi desenvolvido para consolidar e monitorar, em tempo real, seu desempenho operacional, saldos, posições ativas e histórico de ordens entre as corretoras **Bitget**, **Bybit** e **OKX**.
 
 Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preservação de privacidade**, garantindo que seus dados e credenciais de API permaneçam sempre em seu controle local.
 
@@ -10,7 +10,7 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
 1. [Arquitetura de Segurança Zero-Trust](#1-arquitetura-de-segurança-zero-trust)
 2. [Configuração Inicial e Chaves de API](#2-configuração-inicial-e-chaves-de-api)
 3. [Modo Simulação (Mock Data)](#3-modo-simulação-mock-data)
-4. [Análise de Desempenho em Tempo Real (WebSockets & Latência)](#4-análise-de-desempenho-em-tempo-real-websockets--latência)
+4. [Análise de Latência e Desempenho via REST](#4-análise-de-latência-e-desempenho-via-rest)
 5. [Terminal de Logs Integrado (Connection Logs)](#5-terminal-de-logs-integrado-connection-logs)
 6. [Sincronização Avançada com Cache IndexedDB](#6-sincronização-avançada-com-cache-indexeddb)
 7. [Guia de Telas e Navegação Diária](#7-guia-de-telas-e-navegação-diária)
@@ -53,26 +53,26 @@ Se você deseja experimentar a interface e as ferramentas analíticas sem inseri
 1. Acesse a aba **Settings** no menu lateral.
 2. Ative a opção **Use Mock Data (Simulation Mode)**.
 3. **O que acontece ao ativar**:
-   - Os WebSockets reais são desconectados imediatamente.
+   - A sincronização automática com as APIs reais é pausada imediatamente.
    - O aplicativo carrega um banco de dados simulado contendo saldos multi-ativos, ordens abertas e posições históricas ricas em detalhes.
    - Um alerta visual amarelo **"Simulation Mode"** aparecerá no topo da tela.
    - Botões de sincronização manual de histórico serão desativados para evitar chamadas de API inválidas.
 
 ---
 
-## 4. Análise de Desempenho em Tempo Real (WebSockets & Latência)
+## 4. Análise de Latência e Desempenho via REST
 
-O aplicativo utiliza conexões bidirecionais de alta velocidade (WebSockets) diretamente do seu navegador para coletar cotações e alterações no saldo/posições.
+Para maximizar a estabilidade, evitar a complexidade de conexões assíncronas e respeitar as limitações de CORS dos navegadores, o CPM padronizou toda a coleta de dados (saldos, posições e cotações) utilizando consultas de alta performance via **REST Polling** (consultas periódicas HTTP).
 
 No painel **API Keys**, você terá uma visão de telemetria refinada:
-- **Sparklines de Latência**: Um gráfico em linha atualizado a cada poucos segundos que mede o tempo de resposta em milissegundos (ping) entre o seu computador e os servidores de cada corretora.
-- **Throughput (Vazão)**: Medição em tempo real da quantidade de dados (em KB/s) que está sendo trafegada na sua conexão com o feed de dados das corretoras.
+- **Sparklines de Latência**: Um gráfico em linha atualizado que mede o tempo de resposta em milissegundos (ping) das requisições REST entre o seu navegador (através do nosso proxy seguro) e os servidores das corretoras.
+- **Isolamento de WebSockets**: A tecnologia de WebSockets foi mantida e isolada exclusivamente dentro da ferramenta **API Tester** (para fins de testes de conexão e depuração). As telas principais do dashboard utilizam requisições HTTP REST padronizadas de alta confiabilidade.
 
 ---
 
 ## 5. Terminal de Logs Integrado (Connection Logs)
 
-Para que você possa acompanhar cada requisição, autenticação e evento de WebSocket, desenvolvemos um terminal de log profissional acoplado à página de credenciais:
+Para que você possa acompanhar cada requisição, autenticação e evento de comunicação REST (ou diagnósticos de WebSocket do API Tester), desenvolvemos um terminal de log profissional acoplado à página de credenciais:
 
 1. Na página **API Keys**, deslize para a parte inferior para visualizar o terminal docked. Ele também está acessível através do menu lateral na aba **Connection Logs**.
 2. **Máscara de Segredos (Zero-Leak)**: O terminal possui filtros inteligentes para garantir que suas chaves de API, Passphrases ou assinaturas criptográficas **nunca apareçam em texto puro nos logs**.
@@ -142,4 +142,4 @@ Sim! O design do CPM é totalmente responsivo e adapta todas as tabelas e painé
 
 ---
 
-*Crypto Portfolio Monitor — Conectividade Profissional, Segurança Absoluta.*
+*Crypto Portfolio Manager — Conectividade Profissional, Segurança Absoluta.*

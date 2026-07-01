@@ -7,12 +7,12 @@ O **Crypto Portfolio Manager** soluciona o problema de fragmentação de informa
 This project implements a unique Hybrid-Proxy Client Architecture (2-Tier Local) to resolve browser limitation contexts (CORS) while enforcing strict Zero-Trust Data security.
 
 - **Tier 1: Client-Side (React/Vite)** 
-  - **Responsibility:** Handles the UI, continuous WebSocket connections, State handling (Zustand), and all Cryptography (`window.crypto.subtle`). API keys reside solely here in `localStorage`.
-  - **Data Flow:** Maintains direct WebSocket connections to OKX and Bybit. Uses the local Proxy to bypass Origin limitations for REST calls and Bitget WS.
+  - **Responsibility:** Handles the UI, REST Polling synchronization, State handling (Zustand), and all Cryptography (`window.crypto.subtle`). API keys reside solely here in `localStorage`.
+  - **Data Flow:** Maintains direct REST Polling connections to Bitget, OKX, and Bybit. Uses the local Proxy to bypass Origin limitations for CORS-restricted REST calls. Isolates WebSocket feeds exclusively inside the API Tester tool for connection diagnostics.
   - **UI Patterns:** Utilizes an advanced Responsive Masonry chunking algorithm (`flex`/`columns` hybrids) for optimized component rendering to ensure dynamic collapsible UI modules don't displace vertically adjacent objects. Sidebar utilizes collapsible real-time logic.
 
 - **Tier 2: Backend "Dumb" Proxy (Node.js/Express)** 
-  - **Responsibility:** Serves exclusively to bypass CORS blocking for inevitable REST API calls (like fetching 24h history or bootstrapping Bybit's initial balances/positions).
+  - **Responsibility:** Serves exclusively to bypass CORS blocking for inevitable REST API calls (like fetching current balances/positions, 24h history, or bootstrapping).
   - **Security:** Crucially, it remains entirely unaware of sensitive API Secrets. It merely receives pre-signed headers and mirror requests to the target exchanges without tampering.
 
 ## 3. Tech Stack & Dependency Risk Graph
@@ -21,10 +21,10 @@ A stack atual repousa sobre fundações modernas, possuindo os seguintes pontos 
 - **Core Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Lucide React (Icons).
   - *Risk:* Tailwind v4 is in early adoption. Some external component libraries might lack full compatibility, requiring native UI solutions.
 - **State Management:** Zustand 5.0 (Micro-store architecture).
-  - *Risk:* Heavy use of direct state subscriptions in WebSockets hooks (`dashboardStore.getState()`) bypasses React's pure reactive flow. Mitigated by strict separation of concerns in UI components.
+  - *Risk:* Over-frequent REST Polling cycles could cause unnecessary re-renders. Mitigated by memoization and SWR cache-comparison checks in the polling hooks.
 - **Security & Cryptography Engine:** Web Crypto API (`window.crypto.subtle`).
   - *Risk (Mitigated):* Replaced bloated third-party crypto libraries to ensure native cryptographic performance for HMAC-SHA256 and Base64 signatures.
-- **Networking:** Native `fetch` API (`hybridFetch`), Native WebSockets, Express Proxy (`http-proxy-middleware`).
+- **Networking:** Native `fetch` API (`hybridFetch`), Express Proxy (`http-proxy-middleware`), and isolated WebSockets (for API Tester only).
 
 ## 4. Normalization Layer (Unified Interfaces vs Real Implementation)
 Conforme discutido no design técnico (SDD Phase 1 & 2), o projeto implementou o **Padrão Adapter** com subagregadores na camada `src/services/adapters/`. Segue o mapeamento exato executado no código em contraste com a documentação original.
@@ -36,7 +36,7 @@ Conforme discutido no design técnico (SDD Phase 1 & 2), o projeto implementou o
 
 ### UnifiedPosition (Posições Abertas)
 - **Documentação de Design:** Mapear `category`, `productType`, etc.
-- **Implementação Real:** Usamos inferências implícitas. Por exemplo, distinguimos Contratos Inversos Puros (Bybit `BTCUSD`) e pares Standard Fiat (Bybit & OKX `BTCUSDT`, `BTCUSDC`, `BTC-USD`) convertendo o Size para a métrica final durante o runtime do WebSocket e adaptadores REST.
+- **Implementação Real:** Usamos inferências implícitas. Por exemplo, distinguimos Contratos Inversos Puros (Bybit `BTCUSD`) e pares Standard Fiat (Bybit & OKX `BTCUSDT`, `BTCUSDC`, `BTC-USD`) convertendo o Size para a métrica final durante o runtime dos adaptadores REST.
 - Transformações Críticas (Size/Notional): 
   - Na Bybit Inversa, o "size" enviado pela API na verdade é o "Notional USD", e para achar as moedas reais, divide-se por `entryPrice`.
   - Na OKX, o "size" pode vir como "Contratos", sendo convertido pela relação via API `notionalUsd` ou geometria da posição, unificando para Size sempre representar a quantidade de Cripto Básica (Base Coin Size) ou vice-versa, permitindo formatadores visuais consistentes e assertivos na UI.
@@ -68,14 +68,20 @@ Para unificar as apresentações, a camada de normalização foi expandida visua
 - **Integração Logo.dev (`CoinIcon`)**: Trabalha de forma autônoma para resolver logotipos com suporte a fallbacks inteligentes. Roteia ativamente requisições para APIs da Logo.dev (endpoints `/crypto/`, `/ticker/`, ou `/name/`) e CDN da OKX, garantindo consistência visual limpa e elegante em tabelas e modais para cada Asset listado.
 
 ## 5. Data Flow and Synchronization
-### WebSockets (Real-Time Streams)
-1. Browser opens WebSockets: 
+### REST Polling Synchronization (Main Dashboard Engine)
+To secure absolute architectural stability and respect strict API and CORS restrictions across various browsers, CPM implements a highly stable **REST Polling Synchronization Engine** for all core dashboard panels:
+1. **Periodic REST Ingestion:** The client triggers scheduled HTTP REST fetch operations to retrieve real-time Spot/Futures balances, open positions, and current market prices directly.
+2. **Configurable Intervals:** Users can fine-tune polling frequency within the Settings panel.
+3. **Optimized SWR & Local Cache:** To avoid aggressive exchange-side rate limits (HTTP 429), historical logs (closed positions, orders) are cached in browser `IndexedDB`. When screens render, cached records load instantly, while background tasks quietly sync and merge delta updates.
+
+### WebSockets (Isolated Diagnostic API Tester)
+1. WebSocket technology is completely isolated from the main dashboard views and runs strictly within the **API Tester** screen to verify API keys connectivity, latency, and real-time streaming health.
+2. Browser opens WebSockets for diagnostic validation:
    - `wss://ws.okx.com:8443/ws/v5/private`
    - `wss://ws.bitget.com/v2/ws/private`
    - `wss://stream.bybit.com/v5/private`
-2. `src/services/adapters/BybitAdapter.ts`, `OkxAdapter.ts`, and `BitgetAdapter.ts` use Web Crypto APIs/HMAC routines to construct authorization strings in real-time.
-3. Once logged in, WS subscribes to `wallet` and `positions` topics.
-4. Active heartbeat mechanisms (`setInterval`) ping exchanges to keep-alive.
+3. `src/services/adapters/BybitAdapter.ts`, `OkxAdapter.ts`, and `BitgetAdapter.ts` provide static helper routines to sign authorization payloads.
+4. During testing, the WebSocket establishes connection, logs handshakes directly to the local connection log database, and safely tears down on screen exit to prevent memory leaks and redundant threads.
 
 ### REST API (Initial Snapshots & Historical Logs & caching)
 1. Fetching historical data requires specific `GET` requests via the Orchestrator/Factory services (`PositionHistoryService` and `BillsHistoryService`).

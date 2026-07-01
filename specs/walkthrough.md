@@ -14,12 +14,12 @@ graph LR
     UI["React 19 + Zustand"]
     WC["Web Crypto API<br/>(HMAC-SHA256)"]
     IDB["IndexedDB<br/>(Cache Local)"]
-    WSN["WebSocket Nativo<br/>(OKX, Bybit)"]
+    WSN["WebSocket Tester<br/>(Only in API Tester)"]
   end
 
   subgraph Proxy["Tier 2: Node/Express Proxy"]
     REST["/api/proxy<br/>(CORS Bypass)"]
-    WSP["/ws-proxy/bitget<br/>(WS Proxy)"]
+    WSP["/ws-proxy/bitget<br/>(WS Proxy - Tester)"]
   end
 
   subgraph Exchanges["Exchanges"]
@@ -30,10 +30,10 @@ graph LR
 
   UI --> WC
   UI --> IDB
-  UI -->|Direct WS| WSN
+  UI -->|API Tester WS| WSN
   WSN -->|wss://| OKX
   WSN -->|wss://| BYBIT
-  UI -->|hybridFetch| REST
+  UI -->|hybridFetch REST Polling| REST
   UI -->|ws via proxy| WSP
   REST -->|HTTP Forward| BYBIT
   REST -->|HTTP Forward| OKX
@@ -43,8 +43,8 @@ graph LR
 
 | Camada | Responsabilidade |
 |--------|-----------------|
-| **Browser (Tier 1)** | UI, WebSocket direto (OKX/Bybit), criptografia (`window.crypto.subtle`), estado (Zustand), cache (IndexedDB). Chaves API vivem exclusivamente em `localStorage`. |
-| **Express Proxy (Tier 2)** | Bypass CORS para REST APIs. Proxy WebSocket exclusivo para Bitget. **Totalmente agnóstico** a secrets — recebe headers pré-assinados e repassa. Possui allowlist de domínios (`api.bybit.com`, `api.bitget.com`, `www.okx.com`, `api.okx.com`). |
+| **Browser (Tier 1)** | UI, Polling REST sincronizado, criptografia (`window.crypto.subtle`), estado (Zustand), cache (IndexedDB). Chaves API vivem exclusivamente em `localStorage`. Websockets isolados na ferramenta API Tester. |
+| **Express Proxy (Tier 2)** | Bypass CORS para REST APIs. Proxy WebSocket exclusivo de diagnósticos para Bitget. **Totalmente agnóstico** a secrets — recebe headers pré-assinados e repassa. Possui allowlist de domínios (`api.bybit.com`, `api.bitget.com`, `www.okx.com`, `api.okx.com`). |
 
 ---
 
@@ -96,11 +96,11 @@ Para viabilizar a inicialização paralela rápida via REST, cada classe impleme
 
 | Exchange | Arquivo de Classe | Observações |
 |----------|-------------------|-------------|
-| **Bybit** | `BybitAdapter.ts` | Time-sync automático dedicado. Suporta categorização paralela linear e inversa (UTA e Inverse). |
-| **OKX** | `OkxAdapter.ts` | Suporta tipos de instrumentos SWAP, FUTURES e MARGIN. WebSocket direto e consultas REST paginadas retroativas. |
-| **Bitget** | `BitgetAdapter.ts` | Suporta USDT-FUTURES, COIN-FUTURES e USDC-FUTURES. WS direcionado via proxy devido a bloqueios nativos do browser. |
+| **Bybit** | `BybitAdapter.ts` | Time-sync automático dedicado. Suporta categorização paralela linear e inversa (UTA e Inverse) via chamadas REST. |
+| **OKX** | `OkxAdapter.ts` | Suporta tipos de instrumentos SWAP, FUTURES e MARGIN via REST, com paginação retroativa e assinatura segura de headers. |
+| **Bitget** | `BitgetAdapter.ts` | Suporta USDT-FUTURES, COIN-FUTURES e USDC-FUTURES via chamadas REST (com proxy de bypass para CORS). |
 
-Cada adapter expõe também métodos estáticos para assinatura criptográfica de headers (`getHeaders()`) e autenticação de WebSocket (`getWsAuth()`). Os parsers WebSocket em `src/hooks/useMultiExchangeWS.ts` utilizam as regras de mapeamento idênticas para reatividade contínua. Os adapters também processam streams delta e os injetam diretamente no `dashboardStore` via `getState()`.
+Cada adapter expõe também métodos estáticos para assinatura criptográfica de headers (`getHeaders()`) e autenticação de WebSocket (`getWsAuth()`). Enquanto a interface principal funciona inteiramente através de REST Polling de alta confiabilidade para manter o estado unificado em `dashboardStore`, os métodos de autenticação de WebSocket são consumidos exclusivamente pela ferramenta de diagnósticos **API Tester** (`src/components/ApiTester.tsx`) para testes pontuais de latência e recebimento de feeds.
 
 ---
 
@@ -135,7 +135,7 @@ Cada adapter expõe também métodos estáticos para assinatura criptográfica d
 
 | Hook | Arquivo | Responsabilidade |
 |------|---------|-----------------|
-| `useMultiExchangeWS` | `/src/hooks/useMultiExchangeWS.ts` | Gerencia ciclo de vida completo dos WebSockets. Exponential backoff (cap 60s). Ping/Pong a cada 20s. Short-Polling REST universal (todas exchanges) configurável. Mock data injection. |
+| `useMultiExchangeWS` | `/src/hooks/useMultiExchangeWS.ts` | Gerencia ciclo de vida do Polling REST sincronizado para as exchanges. Controla bootload e ciclos baseados em `pollingInterval`. Trata injeção de Mock Data. |
 | `usePositionHistory` | `/src/hooks/usePositionHistory.ts` | Padrão SWR. Carrega rápido via IndexedDB, faz fetch incremental com `PositionHistoryService` em background. Filtra por período in-memory. |
 | `useOrderReports` | `/src/hooks/useOrderReports.ts` | Padrão SWR para ordens fechadas. Usa o `OrderHistoryService` para recuperar os dados e atualizar de modo reativo. |
 | `useBillsHistory` | `/src/hooks/useBillsHistory.ts` | Orquestra `BillsHistoryService.fetchBills()` em paralelo. Live + Mock mode (Sem cache IndexedDB, consulta viva). |
@@ -149,7 +149,7 @@ Cada adapter expõe também métodos estáticos para assinatura criptográfica d
 | Store | Persistência | Campos-chave | Papel |
 |-------|-------------|--------------|-------|
 | `apiKeysStore` | `localStorage` (`crypto-dashboard-api-keys-v2`) | `keys[]` (id, label, exchange, apiKey, apiSecret, passphrase, isActive) | CRUD de chaves de API locais em formato Zero-Trust. `/src/store/apiKeysStore.ts` |
-| `dashboardStore` | **Memória** (volátil) | `statuses{}`, `errors{}`, `balances{}`, `positions{}`, `telemetry{}` | Estado principal do WebSocket real-time, incluindo o histórico de latência e throughput. `/src/store/dashboardStore.ts` |
+| `dashboardStore` | **Memória** (volátil) | `statuses{}`, `errors{}`, `balances{}`, `positions{}`, `telemetry{}` | Estado principal do REST Polling, incluindo o histórico de latência e telemetria de requisições. `/src/store/dashboardStore.ts` |
 | `settingsStore` | `localStorage` (`terminal-settings`) | `useMockData`, `pollingInterval` (default 5s), `historyCacheInterval` (default 15min), `lastSyncTime` | Configurações globais e estado unificado de tempo de sincronização para travar timers. `/src/store/settingsStore.ts` |
 | `logStore` | **Memória** (volátil) | `logs[]` (id, timestamp, level, source, message) | Armazena um buffer de logs (FIFO de 1000 itens) capturados pelo interceptor global de console. `/src/store/logStore.ts` |
 
@@ -208,7 +208,7 @@ Em [src/mock/](file:///x:/Dev/git/CriptoDashboard/crypto-dashboard/src/mock/):
 - `bills.json` (17KB) — ~50 depósitos/saques
 - `generateMocks.js` (6KB) — Script gerador
 
-Toggle via `settingsStore.useMockData`. Quando ativado, desconecta WebSockets reais e injeta JSONs estáticos.
+Toggle via `settingsStore.useMockData`. Quando ativado, a sincronização de rede com APIs reais é pausada e JSONs estáticos são injetados diretamente na store.
 
 ### Testes
 - `/src/utils/analyticsMath.test.ts` — Unit tests com Vitest
@@ -216,26 +216,26 @@ Toggle via `settingsStore.useMockData`. Quando ativado, desconecta WebSockets re
 
 ---
 
-## 13. Fluxo de Dados Completo
+## 13. Fluxo de Dados Completo (REST Polling)
 
 ```mermaid
 sequenceDiagram
     participant User
     participant App as App.tsx
     participant Hook as useMultiExchangeWS
-    participant WS as WebSocket
-    participant Adapter as WsAdapter
+    participant Proxy as Express Proxy
+    participant Exchange as Exchange REST API
     participant Store as dashboardStore
     participant UI as Dashboard/Positions
 
     User->>App: Adiciona API Key
     App->>Hook: keys[] changed
-    Hook->>WS: new WebSocket(wsUrl)
-    Hook->>Adapter: getWsAuth() + getHeaders()
-    WS->>Hook: onopen → send auth
-    WS->>Hook: onmessage (stream)
-    Hook->>Adapter: WsParsers.parseStream()
-    Adapter->>Store: updateBalancesDelta / updatePositionsDelta
+    Hook->>Hook: connect(config)
+    Hook->>Proxy: GET /api/proxy (com headers pré-assinados)
+    Proxy->>Exchange: HTTP Request Forward
+    Exchange->>Proxy: JSON Response
+    Proxy->>Hook: JSON Data payload
+    Hook->>Store: updateBalances / updatePositions
     Store->>UI: Zustand reactive re-render
 ```
 
@@ -277,9 +277,9 @@ sequenceDiagram
 Abaixo, os refinamentos críticos implementados recentemente para elevar o aplicativo ao nível profissional:
 
 ### A. Central de Telemetria e Logs Unificados (DX Core)
-- **Console Interceptor (`logger.ts`)**: Captura as saídas das APIs de REST e WebSocket, expurgando strings sensíveis (secrets/passphrases). Converte UUIDs internos de chaves em rótulos amigáveis ("Bybit - Main") consultando a store do cliente.
+- **Console Interceptor (`logger.ts`)**: Captura as saídas das APIs de REST (e WebSocket quando executado pelo API Tester), expurgando strings sensíveis (secrets/passphrases). Converte UUIDs internos de chaves em rótulos amigáveis ("Bybit - Main") consultando a store do cliente.
 - **Buffer FIFO no Zustand (`logStore.ts`)**: Aloca de forma otimizada até 1000 linhas de logs com paginação em memória local sem prejudicar o render da UI principal.
-- **Connection Telemetry**: O hook do WebSocket monitora ativamente as mensagens de Ping/Pong para rastrear o Round-Trip Time (RTT em milissegundos) e calcula dinamicamente a taxa de transferência em KB/s derivando o tamanho das strings recebidas.
+- **Connection Telemetry**: O sistema monitora ativamente o tempo de resposta (RTT/Ping em milissegundos) das requisições REST para cada exchange, exibindo sparklines de latência em tempo real no dashboard de conexões. Conexões de WebSocket adicionais e suas respectivas estatísticas de taxa de transferência são habilitadas exclusivamente sob demanda na ferramenta API Tester.
 - **Docked Logs Terminal (`ConnectionLogTerminal.tsx`)**: Console dark em estilo console retrô no rodapé da página de chaves, redimensionável por drag, com busca e filtros coloridos (INFO, SYSTEM, DATA, WARN, ERROR).
 
 ### B. Sistema Global de Privacidade (Privacy Mode)
