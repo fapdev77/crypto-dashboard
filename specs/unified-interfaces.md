@@ -58,10 +58,12 @@ export interface UnifiedPosition {
   markPrice: number;
   unrealizedPnl: number;
   realizedPnl: number;
+  closedPnl?: number; // Net closed position profit (after all fees)
   leverage: number;
   marginMode?: UnifiedMarginMode; // 'cross' | 'isolated' | 'unknown'
   positionMode?: UnifiedPositionMode; // 'hedge' | 'one_way' | 'unknown'
   margin?: number; // Position Margin / Isolated Margin
+  maintenanceMargin?: number; // Maintenance Margin value (calculated or fetched directly)
   marginRatio?: number; // Tiered MMR or Margin Ratio (%)
   liquidationPrice?: number;
   breakEvenPrice?: number;
@@ -122,6 +124,7 @@ export interface UnifiedHistoryPosition {
   ccy?: string;
   side: PositionSide;
   realizedPnl: number;
+  closedPnl?: number;
   closeUpdateTime: number; // timestamp
   createdTime?: number; // open time timestamp
   entryPrice?: number;
@@ -246,6 +249,7 @@ export interface UnifiedOrder {
   exchangeOrderId: string;
   connectionId: string;
   exchange: ExchangeName;
+  label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
   side: 'buy' | 'sell';
@@ -263,6 +267,8 @@ export interface UnifiedOrder {
   createdTime: number;
   updatedTime: number;
   fees?: number;
+  leverage?: number;
+  marginMode?: UnifiedMarginMode;
   raw?: any;
 }
 ```

@@ -46,6 +46,16 @@ Conforme discutido no design técnico (SDD Phase 1 & 2), o projeto implementou o
 - **Implementação Real (`UnifiedHistoryPosition`):** Concentramos a lógica em exibir o `realizedPnl`. Embora os fees sejam mapeados, eles não foram abstraídos da UI. Nas métricas de ROI e Value, adotou-se o modelo matemático agressivo e fallback:
   - Na Okx (Rest) caso falte os "Sizes" no payload histórico ou o formato retorne Contratos, tentamos isolar o *Volume (Size)* retroagindo `pnl` dividido pela diferença de preços (`abs(closePx - entryPx)`).
 
+### UnifiedOrder (Ordens em Aberto e Históricas)
+- **Implementação Real (`UnifiedOrder`):** Fornece uma estrutura unificada para acompanhar ordens vigentes e histórico de ordens fechadas ou canceladas nas corretoras.
+- **Campos Normalizados:** `id`, `exchangeOrderId`, `connectionId`, `exchange`, `label`, `symbol`, `side` (buy/sell), `type` (LIMIT/MARKET/TP/SL/CONDITIONAL), `status` (NEW/FILLED/CANCELLED/etc.), `price`, `avgPrice`, `qty`, `filledQty`, `fees`, `leverage`.
+- **Lógica Específica OKX:** A OKX possui histórico de ordens regular de 7 dias e histórico arquivado de até 90 dias. O adapter funde ambos concorrentemente e remove duplicatas no ID para evitar redundâncias na UI.
+
+### UnifiedBillRecord (Histórico de Transações Financeiras)
+- **Implementação Real (`UnifiedBillRecord`):** Normaliza todo o fluxo de caixa de depósitos, saques, funding fees, taxas de corretagem e transferências internas.
+- **Categorias Unificadas:** Mapeia os códigos de transação internos das exchanges para termos comuns legíveis: `deposit`, `withdrawal`, `funding`, `fee`, `transfer` ou `other`.
+- **Tratamento de Sinais:** Harmoniza a matemática para representar saldos positivos (créditos) e negativos (débitos) uniformemente.
+
 ### Formatadores Core & Regras Decimais
 As regras propostas no SDD (2 casas para Stables, 8 para Assets) foram consolidadas integralmente em `src/utils/formatters.ts`:
 - **`formatCrypto`**: Utilizado para *Base Coin Sizes* com até 8 casas adaptativas.
@@ -63,13 +73,13 @@ Para unificar as apresentações, a camada de normalização foi expandida visua
    - `wss://ws.okx.com:8443/ws/v5/private`
    - `wss://ws.bitget.com/v2/ws/private`
    - `wss://stream.bybit.com/v5/private`
-2. `src/services/adapters/[exchange]/WsAdapter.ts` and `HistoryAdapter.ts` use Web Crypto APIs/HMAC routines to construct authorization strings in real-time.
+2. `src/services/adapters/BybitAdapter.ts`, `OkxAdapter.ts`, and `BitgetAdapter.ts` use Web Crypto APIs/HMAC routines to construct authorization strings in real-time.
 3. Once logged in, WS subscribes to `wallet` and `positions` topics.
 4. Active heartbeat mechanisms (`setInterval`) ping exchanges to keep-alive.
 
 ### REST API (Initial Snapshots & Historical Logs & caching)
 1. Fetching historical data requires specific `GET` requests via the Orchestrator/Factory services (`PositionHistoryService` and `BillsHistoryService`).
-2. The orchestrator delegates the request to the specific `IExchangeAdapter` (e.g. `BybitHistoryAdapter`, `OkxHistoryAdapter`).
+2. The orchestrator delegates the request to the specific `IExchangeAdapter` (e.g. `BybitAdapter`, `OkxAdapter`).
 3. The adapter generates signatures and HTTP headers for the specific Timestamp + Endpoint path.
 4. The adapter sends requests to the local backend proxy at `/api/proxy` via `hybridFetch`.
 5. Express Proxy forwards to the authentic endpoint (`api.bitget.com`, `api.bybit.com`, etc.) and streams the data back.
@@ -79,7 +89,7 @@ Para unificar as apresentações, a camada de normalização foi expandida visua
    - A periodic background synchronization task (`useHistoryCachePolling`) continuously keeps the cache warm based on user-defined intervals.
    - *Note:* `useBillsHistory` handles highly mutable deposit/withdrawal/transfer logs and thus bypasses IndexedDB, fetching directly from the Live APIs to ensure transactional accuracy.
 
-## 5. State Management Models
+## 6. State Management Models
 - **`useApiKeysStore`:** 
   - Holds `id`, `exchange`, `apiKey`, `apiSecret`, `passphrase`, `label`, `connected`.
   - Persisted dynamically to browser storage.
@@ -94,7 +104,7 @@ Para unificar as apresentações, a camada de normalização foi expandida visua
   - Handles network heuristics configurations like `pollingInterval` (for static REST calls) and `historyCacheInterval` (for background PnL sync limits).
   - Persisted to local storage for user preferences.
 
-## 6. Mocks, Types & Schema Consistency Protocol
+## 7. Mocks, Types & Schema Consistency Protocol
 It is mandatory to uphold strict synchronization across the entire stack when modifying unified interfaces (e.g., `UnifiedHistoryPosition`, `UnifiedPosition`, `UnifiedBalance`).
 
 If a property name or data type is altered (e.g., changing `closeTime` to `closeUpdateTime`), developers MUST systematically update:
