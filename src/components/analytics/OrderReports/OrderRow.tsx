@@ -69,24 +69,47 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
   let qtyIsCoin = false;
   if (isInverse && effPrice > 0) {
-    const estValIfQtyIsCoin = order.qty * effPrice;
-    const estValIfQtyIsUsd = order.qty;
-    const actualVal = order.value || 0;
-
-    if (actualVal > 0) {
-      const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-      const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-      if (distToCoin < distToUsd) {
-        qtyIsCoin = true;
-      }
+    if (order.exchange === 'bitget') {
+      qtyIsCoin = true;
+    } else if (order.exchange === 'okx' || order.exchange === 'bybit') {
+      qtyIsCoin = false;
     } else {
-      if (order.qty < 2 && order.qty * effPrice >= 10) {
-        qtyIsCoin = true;
+      const estValIfQtyIsCoin = order.qty * effPrice;
+      const estValIfQtyIsUsd = order.qty;
+      const actualVal = order.value || 0;
+
+      if (actualVal > 0) {
+        const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+        const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+        if (distToCoin < distToUsd) {
+          qtyIsCoin = true;
+        }
+      } else {
+        if (order.qty < 2 && order.qty * effPrice >= 10) {
+          qtyIsCoin = true;
+        }
       }
     }
   }
 
-  if (isInverse && !qtyIsCoin) {
+  if (order.exchange === 'bybit') {
+    if (isInverse) {
+      valUsd = order.value && order.value > 0 && effPrice > 0 ? order.value * effPrice : order.qty;
+      actualCoinSize = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.qty / effPrice : 0);
+      filledValUsd = order.value && order.value > 0 && effPrice > 0 ? order.value * effPrice : order.filledQty;
+      actualFilledCoinSize = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.filledQty / effPrice : 0);
+    } else {
+      valUsd = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.qty * effPrice : 0);
+      actualCoinSize = order.qty;
+      filledValUsd = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.filledQty * effPrice : 0);
+      actualFilledCoinSize = order.filledQty;
+    }
+  } else if (order.value && order.value > 0 && order.exchange !== 'bitget') {
+    valUsd = order.value;
+    actualCoinSize = isInverse ? (effPrice > 0 ? order.value / effPrice : order.qty) : order.qty;
+    filledValUsd = order.filledQty > 0 && order.filledQty !== order.qty ? (effPrice > 0 ? order.filledQty * effPrice : 0) : order.value;
+    actualFilledCoinSize = isInverse ? (effPrice > 0 ? filledValUsd / effPrice : order.filledQty) : order.filledQty;
+  } else if (isInverse && !qtyIsCoin) {
     valUsd = order.qty;
     actualCoinSize = effPrice > 0 ? order.qty / effPrice : 0;
     filledValUsd = order.filledQty;

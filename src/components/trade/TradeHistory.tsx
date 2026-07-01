@@ -54,6 +54,8 @@ export function TradeHistory() {
     return () => clearInterval(interval);
   }, [historyCacheInterval, fetchOrders]);
 
+  const useMockData = useSettingsStore(state => state.useMockData);
+
   // Filter to trades only (orders that have some filled quantity, representing trades)
   const trades = useMemo(() => {
     return orders.filter(o => o.filledQty > 0);
@@ -93,28 +95,45 @@ export function TradeHistory() {
       // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
       let qtyIsCoin = false;
       if (isInverse && p > 0) {
-        const estValIfQtyIsCoin = t.qty * p;
-        const estValIfQtyIsUsd = t.qty;
-        const actualVal = t.value || 0;
-
-        if (actualVal > 0) {
-          const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-          const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-          if (distToCoin < distToUsd) {
-            qtyIsCoin = true;
-          }
+        if (t.exchange === 'bitget') {
+          qtyIsCoin = true;
+        } else if (t.exchange === 'okx' || t.exchange === 'bybit') {
+          qtyIsCoin = false;
         } else {
-          if (t.qty < 2 && t.qty * p >= 10) {
-            qtyIsCoin = true;
+          const estValIfQtyIsCoin = t.qty * p;
+          const estValIfQtyIsUsd = t.qty;
+          const actualVal = t.value || 0;
+
+          if (actualVal > 0) {
+            const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+            const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+            if (distToCoin < distToUsd) {
+              qtyIsCoin = true;
+            }
+          } else {
+            if (t.qty < 2 && t.qty * p >= 10) {
+              qtyIsCoin = true;
+            }
           }
         }
       }
 
       let valUsd = 0;
-      if (isInverse && !qtyIsCoin) {
+      if (t.exchange === 'bybit') {
+        if (isInverse) {
+          // Bybit inverse: t.value (cumExecValue) is in COIN. Multiply by avg price to get USD value
+          valUsd = t.value && t.value > 0 && p > 0 ? Number(new Big(t.value).times(p)) : t.filledQty;
+        } else {
+          // Bybit linear: t.value is already in USD
+          valUsd = t.value && t.value > 0 ? t.value : (p > 0 ? Number(new Big(t.filledQty).times(p)) : 0);
+        }
+      } else if (t.value && t.value > 0 && t.exchange !== 'bitget') {
+        // Prefer exact value if available, except for bitget where it might be inaccurate for partial fills
+        valUsd = t.filledQty > 0 && t.filledQty !== t.qty ? (p > 0 ? Number(new Big(t.filledQty).times(p)) : 0) : t.value;
+      } else if (isInverse && !qtyIsCoin) {
         valUsd = t.filledQty;
       } else {
-        valUsd = t.value || (p > 0 ? Number(new Big(t.filledQty).times(p)) : 0);
+        valUsd = p > 0 ? Number(new Big(t.filledQty).times(p)) : 0;
       }
       totalTradedVolume += valUsd;
 
@@ -205,7 +224,15 @@ export function TradeHistory() {
       let actualFilledCoinSize = 0;
       let filledValUsd = 0;
 
-      if (isInverse && !qtyIsCoin) {
+      if (t.exchange === 'bybit') {
+        if (isInverse) {
+          filledValUsd = t.value && t.value > 0 && filledPrice > 0 ? t.value * filledPrice : t.filledQty;
+          actualFilledCoinSize = t.value && t.value > 0 ? t.value : (filledPrice > 0 ? t.filledQty / filledPrice : 0);
+        } else {
+          filledValUsd = t.value && t.value > 0 ? t.value : (filledPrice > 0 ? t.filledQty * filledPrice : 0);
+          actualFilledCoinSize = t.filledQty;
+        }
+      } else if (isInverse && !qtyIsCoin) {
         filledValUsd = t.filledQty;
         actualFilledCoinSize = filledPrice > 0 ? t.filledQty / filledPrice : 0;
       } else {
@@ -311,20 +338,27 @@ export function TradeHistory() {
 
           {/* Trade Volume */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-            <span className="text-[13px] text-[#8E9299] uppercase tracking-wider">Traded Volume</span>
+            <AppTooltip description="The total estimated USD value of all executed trades in the selected period.">
+              <span className="text-[13px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Traded Volume</span>
+            </AppTooltip>
             <span className="text-2xl font-medium text-[#00C853] mt-1">
               {formatCurrency(stats.totalTradedVolume, 'usd')}
             </span>
             <span className="text-xs text-[#8E9299] mt-1">Total traded across active accounts</span>
           </div>
 
-          {/* Paid Fees */}
+          {/* Est. Trading Fees */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-            <span className="text-[13px] text-[#8E9299] uppercase tracking-wider">Est. Trading Fees</span>
+            <AppTooltip description="The total estimated USD value of trading fees paid for these orders.">
+              <span className="text-[13px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Est. Trading Fees</span>
+            </AppTooltip>
             <span className="text-2xl font-medium text-[#FF4444] mt-1">
               {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
             </span>
-            <span className="text-xs text-[#8E9299] mt-1">Paid fees converted to USD</span>
+            <span className="text-xs text-[#8E9299] mt-1">
+              Paid fees converted to USD
+              {stats.totalTradedVolume > 0 && ` (${((stats.totalFees / stats.totalTradedVolume) * 100).toFixed(3)}% of volume)`}
+            </span>
           </div>
         </div>
       )}
@@ -419,7 +453,15 @@ export function TradeHistory() {
             let actualFilledCoinSize = 0;
             let filledValUsd = 0;
 
-            if (isInverse && !qtyIsCoin) {
+            if (trade.exchange === 'bybit') {
+              if (isInverse) {
+                filledValUsd = trade.value && trade.value > 0 && filledPrice > 0 ? Number(new Big(trade.value).times(filledPrice)) : trade.filledQty;
+                actualFilledCoinSize = trade.value && trade.value > 0 ? trade.value : (filledPrice > 0 ? trade.filledQty / filledPrice : 0);
+              } else {
+                filledValUsd = trade.value && trade.value > 0 ? trade.value : (filledPrice > 0 ? Number(new Big(trade.filledQty).times(filledPrice)) : 0);
+                actualFilledCoinSize = trade.filledQty;
+              }
+            } else if (isInverse && !qtyIsCoin) {
               filledValUsd = trade.filledQty;
               actualFilledCoinSize = filledPrice > 0 ? trade.filledQty / filledPrice : 0;
             } else {

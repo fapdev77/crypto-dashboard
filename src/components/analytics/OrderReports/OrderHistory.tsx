@@ -164,9 +164,42 @@ export function OrderHistory() {
         const p = o.avgPrice > 0 ? o.avgPrice : o.price || 0;
         let valUsd = 0;
         if (o.category === 'INVERSE') {
-           valUsd = o.filledQty; // Qty is mostly in USD already
+          // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs USD contracts (e.g. 100 USD)
+          let qtyIsCoin = false;
+          if (o.exchange === 'bitget') {
+            qtyIsCoin = true;
+          } else if (o.exchange === 'okx' || o.exchange === 'bybit') {
+            qtyIsCoin = false;
+          } else {
+            const estValIfQtyIsCoin = o.qty * p;
+            const estValIfQtyIsUsd = o.qty;
+            const actualVal = o.value || 0;
+
+            if (actualVal > 0 && p > 0) {
+              const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+              const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+              if (distToCoin < distToUsd) {
+                qtyIsCoin = true;
+              }
+            } else {
+              if (o.qty < 2 && o.qty * p >= 10) {
+                qtyIsCoin = true;
+              }
+            }
+          }
+
+          if (o.exchange === 'bybit') {
+            // Bybit inverse: o.value is in COIN. Multiply by price to get USD value
+            valUsd = o.value && o.value > 0 && p > 0 ? Number(new Big(o.value).times(p)) : o.filledQty;
+          } else if (o.value && o.value > 0 && o.exchange !== 'bitget') {
+            valUsd = o.filledQty > 0 && o.filledQty !== o.qty ? (p > 0 ? Number(new Big(o.filledQty).times(p)) : 0) : o.value;
+          } else if (!qtyIsCoin) {
+            valUsd = o.filledQty; // Qty is mostly in USD already
+          } else {
+            valUsd = p > 0 ? Number(new Big(o.filledQty).times(p)) : 0;
+          }
         } else {
-           valUsd = o.value || (p > 0 ? Number(new Big(o.filledQty).times(p)) : 0);
+          valUsd = o.value || (p > 0 ? Number(new Big(o.filledQty).times(p)) : 0);
         }
         totalTradedVolume += valUsd;
       }
@@ -325,23 +358,13 @@ export function OrderHistory() {
                 {formatCurrency(stats.totalTradedVolume, 'usd')}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-4 border-t border-[#2a2b30] pt-3">
-              <div className="flex flex-col">
-                <AppTooltip description="The total estimated USD value of trading fees paid for these orders.">
-                  <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Trading Fees</span>
-                </AppTooltip>
-                <span className="text-[13px] font-medium text-[#FF4444] mt-1">
-                  {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <AppTooltip description="The total estimated USD value of funding fees paid or received in the selected period.">
-                  <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Funding Fees</span>
-                </AppTooltip>
-                <span className={`text-[13px] font-medium mt-1 ${totalFundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                  {totalFundingFee > 0 ? '+' : ''}{totalFundingFee !== 0 ? formatCurrency(totalFundingFee, 'usd') : '0.00 USD'}
-                </span>
-              </div>
+            <div className="border-t border-[#2a2b30] pt-3 flex flex-col">
+              <AppTooltip description="The total estimated USD value of trading fees paid for these orders.">
+                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Trading Fees</span>
+              </AppTooltip>
+              <span className="text-[13px] font-medium text-[#FF4444] mt-1 font-mono">
+                {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
+              </span>
             </div>
           </div>
         </div>
