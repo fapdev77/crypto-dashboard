@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe, ShieldAlert, Compass, AlertTriangle } from 'lucide-react';
+import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe, ShieldAlert, Compass, AlertTriangle, BookOpen } from 'lucide-react';
 import { useSettingsStore } from '../store/settingsStore';
+import { UserManualModal } from './UserManualModal';
 
 interface WelcomeHelpModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface WelcomeHelpModalProps {
 export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
   const { showWelcomeOnStartup, setShowWelcomeOnStartup } = useSettingsStore();
   const [lang, setLang] = useState<'en' | 'pt'>('pt');
+  const [isManualOpen, setIsManualOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -73,29 +75,40 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
         <div className="flex flex-col gap-4 mb-6">
           {/* Top Row: Language Selector and Close Button */}
           <div className="flex items-center justify-between">
-            {/* Premium Language Selector with Globe Icon */}
-            <div className="flex items-center gap-2 bg-[#1c1d21] border border-[#2d2f34] rounded-xl p-1 pl-2.5 pr-1 shadow-sm">
-              <Globe className="w-3.5 h-3.5 text-[#2F6BFF] animate-pulse" style={{ animationDuration: '3s' }} />
-              <div className="flex items-center bg-[#111215] border border-[#222327] rounded-lg p-0.5 shadow-inner">
-                <button
-                  onClick={() => setLang('pt')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'pt'
-                    ? 'bg-[#2F6BFF] text-white shadow-sm'
-                    : 'text-[#8E9299] hover:text-white'
-                    }`}
-                >
-                  PT-BR
-                </button>
-                <button
-                  onClick={() => setLang('en')}
-                  className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'en'
-                    ? 'bg-[#2F6BFF] text-white shadow-sm'
-                    : 'text-[#8E9299] hover:text-white'
-                    }`}
-                >
-                  EN-US
-                </button>
+            <div className="flex items-center gap-3">
+              {/* Premium Language Selector with Globe Icon */}
+              <div className="flex items-center gap-2 bg-[#1c1d21] border border-[#2d2f34] rounded-xl p-1 pl-2.5 pr-1 shadow-sm">
+                <Globe className="w-3.5 h-3.5 text-[#2F6BFF] animate-pulse" style={{ animationDuration: '3s' }} />
+                <div className="flex items-center bg-[#111215] border border-[#222327] rounded-lg p-0.5 shadow-inner">
+                  <button
+                    onClick={() => setLang('pt')}
+                    className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'pt'
+                      ? 'bg-[#2F6BFF] text-white shadow-sm'
+                      : 'text-[#8E9299] hover:text-white'
+                      }`}
+                  >
+                    PT-BR
+                  </button>
+                  <button
+                    onClick={() => setLang('en')}
+                    className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'en'
+                      ? 'bg-[#2F6BFF] text-white shadow-sm'
+                      : 'text-[#8E9299] hover:text-white'
+                      }`}
+                  >
+                    EN-US
+                  </button>
+                </div>
               </div>
+
+              {/* User Manual Button */}
+              <button
+                onClick={() => setIsManualOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1 bg-[#1c1d21] border border-[#2d2f34] hover:bg-[#2F6BFF]/10 hover:border-[#2F6BFF]/30 text-[#2F6BFF] rounded-lg text-[10px] font-semibold transition-all shadow-sm"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>{lang === 'pt' ? 'MANUAL DO USUÁRIO' : 'USER MANUAL'}</span>
+              </button>
             </div>
 
             {/* Close Button */}
@@ -247,6 +260,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
         </div>
 
       </div>
+      <UserManualModal isOpen={isManualOpen} onClose={() => setIsManualOpen(false)} initialLang={lang} />
     </div>
   );
 }
