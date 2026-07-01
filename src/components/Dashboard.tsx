@@ -13,6 +13,79 @@ import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues } from '../utils/inverseUtils';
 
+const cleanAccountLabel = (label: string) => {
+  return label.replace(/\s*\(.*\)$/, '');
+};
+
+const getAssetOrigin = (b: BalanceItem) => {
+  const ex = b.exchange.toLowerCase();
+  
+  if (ex === 'okx' || ex === 'bybit') {
+    return 'UNIFIED';
+  }
+
+  // Bitget logic
+  const connId = b.connectionId;
+  const prefix = connId + '-';
+  if (b.id.startsWith(prefix)) {
+    const after = b.id.substring(prefix.length);
+    const lastDash = after.lastIndexOf('-');
+    if (lastDash !== -1) {
+      return after.substring(0, lastDash);
+    }
+  }
+  if (b.id.startsWith('bal-')) {
+    const numId = parseInt(b.id.replace('bal-', ''), 10);
+    const mockTypes = ['SPOT', 'COIN-FUTURES', 'USDT-FUTURES', 'EARN', 'SPOT', 'COIN-FUTURES', 'EARN'];
+    return mockTypes[numId % mockTypes.length];
+  }
+  return null;
+};
+
+const formatOriginLabel = (origin: string) => {
+  switch (origin.toUpperCase()) {
+    case 'SPOT':
+      return 'Spot';
+    case 'EARN':
+      return 'Earn';
+    case 'UNIFIED':
+      return 'Unified';
+    case 'MARGIN_CROSS':
+      return 'Margin Cross';
+    case 'MARGIN_ISOLATED':
+      return 'Margin Isolated';
+    case 'USDT-FUTURES':
+      return 'USDT Futures';
+    case 'COIN-FUTURES':
+      return 'COIN Futures';
+    case 'USDC-FUTURES':
+      return 'USDC Futures';
+    default:
+      return origin.replace('_', ' ').replace('-', ' ');
+  }
+};
+
+const getOriginBadgeStyle = (origin: string) => {
+  switch (origin.toUpperCase()) {
+    case 'SPOT':
+      return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+    case 'EARN':
+      return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+    case 'USDT-FUTURES':
+    case 'COIN-FUTURES':
+      return 'bg-[#03aac7]/10 text-[#03aac7] border border-[#03aac7]/20';
+    case 'USDC-FUTURES':
+      return 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+    case 'MARGIN_CROSS':
+    case 'UNIFIED':
+      return 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+    case 'MARGIN_ISOLATED':
+      return 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+    default:
+      return 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
+  }
+};
+
 export function Dashboard() {
   const { balances, positions } = useDashboardStore();
   const keys = useApiKeysStore(state => state.keys);
@@ -563,7 +636,7 @@ export function Dashboard() {
                                   <div className="hidden sm:block ml-4 pl-4 border-l border-[#2a2b30] opacity-70 group-hover:opacity-100 transition-opacity">
                                     <Sparkline data={sparkData} color={isPositive ? 'emerald' : 'red'} width={60} height={20} />
                                   </div>
-                                  <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{accData.label}</span>
+                                  <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{cleanAccountLabel(accData.label)}</span>
                                 </div>
                                 <span className="text-sm font-bold text-white font-mono">{formatCurrency(accData.total, 'usd')}</span>
                               </button>
@@ -580,22 +653,33 @@ export function Dashboard() {
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#2a2b30]">
-                                      {accData.balances.map(b => (
-                                        <tr key={b.id} className="hover:bg-[#1a1b1e] transition-colors">
-                                          <td className="px-4 py-2.5 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                              <CoinIcon symbol={b.ccy} size={20} className="w-5 h-5" />
-                                              <span className="text-sm font-bold text-white leading-none mt-0.5">{b.ccy}</span>
-                                            </div>
-                                          </td>
-                                          <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
-                                            {formatCurrency(b.amount, 'crypto', 6)}
-                                          </td>
-                                          <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
-                                            {formatCurrency(b.usdValue, 'usd')}
-                                          </td>
-                                        </tr>
-                                      ))}
+                                      {accData.balances.map(b => {
+                                        const origin = getAssetOrigin(b);
+                                        const formattedOrigin = origin ? formatOriginLabel(origin) : null;
+                                        const badgeStyle = origin ? getOriginBadgeStyle(origin) : null;
+
+                                        return (
+                                          <tr key={b.id} className="hover:bg-[#1a1b1e] transition-colors">
+                                            <td className="px-4 py-2.5 whitespace-nowrap">
+                                              <div className="flex items-center gap-2">
+                                                <CoinIcon symbol={b.ccy} size={20} className="w-5 h-5" />
+                                                <span className="text-sm font-bold text-white leading-none mt-0.5 mr-1">{b.ccy}</span>
+                                                {formattedOrigin && (
+                                                  <span className={`text-[10px] font-semibold tracking-wider px-1.5 py-0.5 rounded border leading-none ${badgeStyle}`}>
+                                                    {formattedOrigin}
+                                                  </span>
+                                                )}
+                                              </div>
+                                            </td>
+                                            <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
+                                              {formatCurrency(b.amount, 'crypto', 6)}
+                                            </td>
+                                            <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
+                                              {formatCurrency(b.usdValue, 'usd')}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
                                     </tbody>
                                   </table>
                                 </div>

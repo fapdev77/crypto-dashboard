@@ -25,7 +25,7 @@ export function ClosedPositions() {
   const { isPrivateMode } = usePrivacy();
 
   const [filterText, setFilterText] = useState('');
-  const [exchangeFilter, setExchangeFilter] = useState<string>('all');
+  const [exchangeFilter, setExchangeFilter] = useState<string>('All');
 
   const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
 
@@ -38,12 +38,12 @@ export function ClosedPositions() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterText, exchangeFilter, period, closedPositions]);
+  }, [filterText, exchangeFilter, period]);
 
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
 
-    if (exchangeFilter !== 'all') {
+    if (exchangeFilter.toLowerCase() !== 'all') {
       filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchangeFilter.toLowerCase());
     }
 
@@ -58,6 +58,14 @@ export function ClosedPositions() {
 
     return filtered;
   }, [closedPositions, filterText, exchangeFilter]);
+
+  // Adjust page if it exceeds the max page available for current closed positions
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(filteredClosedPositions.length / itemsPerPage));
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [filteredClosedPositions.length, currentPage]);
 
   const paginatedClosedPositions = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;

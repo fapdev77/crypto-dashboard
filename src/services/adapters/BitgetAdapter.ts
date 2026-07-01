@@ -7,7 +7,6 @@ import { useDashboardStore } from '../../store/dashboardStore';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
-import { getBitgetInverseContractVal } from '../../utils/inverseUtils';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -68,7 +67,8 @@ export class BitgetAdapter implements IExchangeAdapter {
       { path: '/api/v2/mix/account/accounts?productType=COIN-FUTURES', type: 'COIN-FUTURES' },
       { path: '/api/v2/mix/account/accounts?productType=USDC-FUTURES', type: 'USDC-FUTURES' },
       { path: '/api/v2/margin/crossed/account/assets', type: 'MARGIN_CROSS' },
-      { path: '/api/v2/margin/isolated/account/assets', type: 'MARGIN_ISOLATED' }
+      { path: '/api/v2/margin/isolated/account/assets', type: 'MARGIN_ISOLATED' },
+      { path: '/api/v2/earn/account/assets', type: 'EARN' }
     ];
 
     const requests = endpoints.map(async (ep) => {
@@ -103,6 +103,24 @@ export class BitgetAdapter implements IExchangeAdapter {
                 usdValue: amount, // Approximating as 1:1 USD for now if not available
                 walletBalance: amount,
                 availableMargin: available,
+                raw: item
+              });
+            }
+          });
+        } else if (type === 'EARN') {
+          res.data.forEach((item: any) => {
+            const amount = parseFloat(item.amount || '0');
+            if (amount > 0) {
+              balances.push({
+                id: `${key.id}-${type}-${item.coin}`,
+                connectionId: key.id,
+                exchange: 'bitget',
+                label: `${key.label} (${type})`,
+                ccy: (item.coin || '').toUpperCase(),
+                amount,
+                usdValue: amount, // Approximating as 1:1 USD for now if not available
+                walletBalance: amount,
+                availableMargin: amount,
                 raw: item
               });
             }
@@ -271,16 +289,9 @@ export class BitgetAdapter implements IExchangeAdapter {
         createdTime: createdTime,
         entryPrice: parseFloat(pos.openAvgPrice || pos.openPriceAvg || '0'),
         closePrice: parseFloat(pos.closeAvgPrice || pos.closePriceAvg || '0'),
-        size: (() => {
-          const rawSize = parseFloat(pos.closeTotalPos || pos.openTotalPos || '0');
-          const isInverse = mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES') === 'INVERSE';
-          if (isInverse) {
-            return rawSize * getBitgetInverseContractVal(pos.instId || pos.symbol);
-          }
-          return rawSize;
-        })(),
+        size: parseFloat(pos.closeTotalPos || pos.openTotalPos || '0'),
         fundingFee: pos.totalFunding ? parseFloat(pos.totalFunding) : undefined,
-        tradingFee: totalFee || undefined,
+        tradingFee: totalFee || 0,
         instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
         raw: pos,
       };
@@ -495,7 +506,13 @@ export class BitgetAdapter implements IExchangeAdapter {
         timeInForce: o.timeInForce || o.force,
         createdTime: parseInt(o.cTime || '0', 10),
         updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
-        fees: parseFloat(o.fee || '0'),
+        fees: (() => {
+          if (o.deductedFee) {
+            return parseFloat(o.deductedFee) * -1;
+          }
+          const rawFee = parseFloat(o.fee || '0');
+          return rawFee > 0 ? -rawFee : rawFee;
+        })(),
         leverage: o.leverage ? parseFloat(o.leverage) : undefined,
         marginMode: o.marginMode ? mapMarginMode('bitget', o.marginMode) : undefined,
         raw: o

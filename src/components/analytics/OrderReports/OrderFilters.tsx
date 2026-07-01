@@ -28,7 +28,7 @@ export function OrderFilters({ filters, setFilters, showPeriod = false, showStat
   }, []);
 
   const activeKeys = useMemo(() => {
-    return keys.filter(k => filters.exchange === 'All' || k.exchange === filters.exchange);
+    return keys.filter(k => k.isActive && (filters.exchange === 'All' || k.exchange === filters.exchange));
   }, [keys, filters.exchange]);
 
   // Handle cross-exchange instrument reset

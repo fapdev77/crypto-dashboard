@@ -76,6 +76,10 @@ export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
       positionValueUsd = parseFloat(pos.raw?.cumEntryValue || '0') || ((pos.size || 0) * (pos.entryPrice || 0));
       actualCoinSize = pos.size || 0;
     }
+  } else if (pos.exchange === 'bitget') {
+    // For Bitget, whether inverse or not, pos.size is already the coin size!
+    actualCoinSize = pos.size || 0;
+    positionValueUsd = (pos.size || 0) * (pos.entryPrice || 0);
   } else if (isInverse) {
     let sizeIsCoin = false;
     if (pos.entryPrice && pos.entryPrice > 0) {

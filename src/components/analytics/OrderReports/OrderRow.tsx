@@ -59,6 +59,8 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const isInverse = order.category === 'INVERSE';
   const symbolSuffix = extractBaseCoin(order.exchange, order.symbol);
 
+  const effPrice = order.price || order.avgPrice || 0;
+
   let valUsd = 0;
   let actualCoinSize = order.qty || 0;
   let filledValUsd = 0;
@@ -66,33 +68,56 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
   // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
   let qtyIsCoin = false;
-  if (isInverse && order.price > 0) {
-    const estValIfQtyIsCoin = order.qty * order.price;
-    const estValIfQtyIsUsd = order.qty;
-    const actualVal = order.value || 0;
-
-    if (actualVal > 0) {
-      const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-      const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-      if (distToCoin < distToUsd) {
-        qtyIsCoin = true;
-      }
+  if (isInverse && effPrice > 0) {
+    if (order.exchange === 'bitget') {
+      qtyIsCoin = true;
+    } else if (order.exchange === 'okx' || order.exchange === 'bybit') {
+      qtyIsCoin = false;
     } else {
-      if (order.qty < 2 && order.qty * order.price >= 10) {
-        qtyIsCoin = true;
+      const estValIfQtyIsCoin = order.qty * effPrice;
+      const estValIfQtyIsUsd = order.qty;
+      const actualVal = order.value || 0;
+
+      if (actualVal > 0) {
+        const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+        const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+        if (distToCoin < distToUsd) {
+          qtyIsCoin = true;
+        }
+      } else {
+        if (order.qty < 2 && order.qty * effPrice >= 10) {
+          qtyIsCoin = true;
+        }
       }
     }
   }
 
-  if (isInverse && !qtyIsCoin) {
+  if (order.exchange === 'bybit') {
+    if (isInverse) {
+      valUsd = order.value && order.value > 0 && effPrice > 0 ? order.value * effPrice : order.qty;
+      actualCoinSize = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.qty / effPrice : 0);
+      filledValUsd = order.value && order.value > 0 && effPrice > 0 ? order.value * effPrice : order.filledQty;
+      actualFilledCoinSize = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.filledQty / effPrice : 0);
+    } else {
+      valUsd = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.qty * effPrice : 0);
+      actualCoinSize = order.qty;
+      filledValUsd = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.filledQty * effPrice : 0);
+      actualFilledCoinSize = order.filledQty;
+    }
+  } else if (order.value && order.value > 0 && order.exchange !== 'bitget') {
+    valUsd = order.value;
+    actualCoinSize = isInverse ? (effPrice > 0 ? order.value / effPrice : order.qty) : order.qty;
+    filledValUsd = order.filledQty > 0 && order.filledQty !== order.qty ? (effPrice > 0 ? order.filledQty * effPrice : 0) : order.value;
+    actualFilledCoinSize = isInverse ? (effPrice > 0 ? filledValUsd / effPrice : order.filledQty) : order.filledQty;
+  } else if (isInverse && !qtyIsCoin) {
     valUsd = order.qty;
-    actualCoinSize = order.price > 0 ? order.qty / order.price : 0;
+    actualCoinSize = effPrice > 0 ? order.qty / effPrice : 0;
     filledValUsd = order.filledQty;
-    actualFilledCoinSize = (order.avgPrice || order.price) > 0 ? order.filledQty / (order.avgPrice || order.price) : 0;
+    actualFilledCoinSize = effPrice > 0 ? order.filledQty / effPrice : 0;
   } else {
-    valUsd = order.value || (order.price > 0 ? order.qty * order.price : 0);
+    valUsd = order.value || (effPrice > 0 ? order.qty * effPrice : 0);
     actualCoinSize = order.qty;
-    filledValUsd = order.filledQty > 0 ? (order.filledQty * (order.avgPrice || order.price)) : 0;
+    filledValUsd = order.filledQty > 0 ? (order.filledQty * effPrice) : 0;
     actualFilledCoinSize = order.filledQty;
   }
 
@@ -168,7 +193,16 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
             <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Order Price / Trig</span>
           </AppTooltip>
           <span className="font-mono text-white text-sm">
-            {order.price > 0 ? formatCurrency(order.price, 'crypto', 8) : 'Market'}
+            {order.price > 0 ? (
+              formatCurrency(order.price, 'crypto', 8)
+            ) : order.avgPrice > 0 ? (
+              <div className="flex flex-col">
+                <span>{formatCurrency(order.avgPrice, 'crypto', 8)}</span>
+                <span className="text-[10px] text-[#8E9299]">Market</span>
+              </div>
+            ) : (
+              'Market'
+            )}
           </span>
           {order.triggerPrice ? (
             <span className="font-mono text-orange-400 text-xs">
@@ -253,7 +287,42 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
               <AppTooltip description="Trading fees charged by the exchange for this order execution.">
                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">Trading Fees</span>
               </AppTooltip>
-              <span className="text-white font-mono text-sm">{order.fees ? (isInverse ? `${formatCurrency(order.fees, 'crypto', 8)} ${symbolSuffix}` : `${formatCurrency(order.fees, 'usd')} USD`) : '--'}</span>
+              {(() => {
+                const hasFees = order.fees !== undefined && order.fees !== null && order.fees !== 0;
+                let mainFeeStr = '--';
+                let subFeeStr = null;
+                let isFeeNegative = false;
+
+                if (hasFees) {
+                  const rawFee = order.fees!;
+                  const isCost = (order.exchange === 'okx' || order.exchange === 'bitget') ? rawFee < 0 : rawFee > 0;
+                  isFeeNegative = isCost;
+
+                  const absFee = Math.abs(rawFee);
+
+                  if (isInverse) {
+                    mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 8)} ${symbolSuffix}`;
+                    const price = order.avgPrice || order.price || 0;
+                    const feeUsd = absFee * price;
+                    subFeeStr = `≈ ${isCost ? '-' : ''}${formatCurrency(feeUsd, 'usd')} USD`;
+                  } else {
+                    mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'usd')} USD`;
+                  }
+                }
+
+                return (
+                  <div className="flex flex-col">
+                    <span className={`font-mono text-sm ${isFeeNegative ? 'text-[#FF4444]' : hasFees ? 'text-[#00C853]' : 'text-white'}`}>
+                      {mainFeeStr}
+                    </span>
+                    {subFeeStr && (
+                      <span className={`font-mono text-xs ${isFeeNegative ? 'text-[#FF4444]/80' : 'text-[#00C853]/80'} mt-0.5`}>
+                        {subFeeStr}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="flex flex-col gap-1">
