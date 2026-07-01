@@ -59,6 +59,8 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const isInverse = order.category === 'INVERSE';
   const symbolSuffix = extractBaseCoin(order.exchange, order.symbol);
 
+  const effPrice = order.price || order.avgPrice || 0;
+
   let valUsd = 0;
   let actualCoinSize = order.qty || 0;
   let filledValUsd = 0;
@@ -66,8 +68,8 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
   // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
   let qtyIsCoin = false;
-  if (isInverse && order.price > 0) {
-    const estValIfQtyIsCoin = order.qty * order.price;
+  if (isInverse && effPrice > 0) {
+    const estValIfQtyIsCoin = order.qty * effPrice;
     const estValIfQtyIsUsd = order.qty;
     const actualVal = order.value || 0;
 
@@ -78,7 +80,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
         qtyIsCoin = true;
       }
     } else {
-      if (order.qty < 2 && order.qty * order.price >= 10) {
+      if (order.qty < 2 && order.qty * effPrice >= 10) {
         qtyIsCoin = true;
       }
     }
@@ -86,13 +88,13 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
   if (isInverse && !qtyIsCoin) {
     valUsd = order.qty;
-    actualCoinSize = order.price > 0 ? order.qty / order.price : 0;
+    actualCoinSize = effPrice > 0 ? order.qty / effPrice : 0;
     filledValUsd = order.filledQty;
-    actualFilledCoinSize = (order.avgPrice || order.price) > 0 ? order.filledQty / (order.avgPrice || order.price) : 0;
+    actualFilledCoinSize = effPrice > 0 ? order.filledQty / effPrice : 0;
   } else {
-    valUsd = order.value || (order.price > 0 ? order.qty * order.price : 0);
+    valUsd = order.value || (effPrice > 0 ? order.qty * effPrice : 0);
     actualCoinSize = order.qty;
-    filledValUsd = order.filledQty > 0 ? (order.filledQty * (order.avgPrice || order.price)) : 0;
+    filledValUsd = order.filledQty > 0 ? (order.filledQty * effPrice) : 0;
     actualFilledCoinSize = order.filledQty;
   }
 
@@ -168,7 +170,16 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
             <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Order Price / Trig</span>
           </AppTooltip>
           <span className="font-mono text-white text-sm">
-            {order.price > 0 ? formatCurrency(order.price, 'crypto', 8) : 'Market'}
+            {order.price > 0 ? (
+              formatCurrency(order.price, 'crypto', 8)
+            ) : order.avgPrice > 0 ? (
+              <div className="flex flex-col">
+                <span>{formatCurrency(order.avgPrice, 'crypto', 8)}</span>
+                <span className="text-[10px] text-[#8E9299]">Market</span>
+              </div>
+            ) : (
+              'Market'
+            )}
           </span>
           {order.triggerPrice ? (
             <span className="font-mono text-orange-400 text-xs">
