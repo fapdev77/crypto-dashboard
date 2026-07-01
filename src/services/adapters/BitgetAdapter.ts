@@ -67,7 +67,8 @@ export class BitgetAdapter implements IExchangeAdapter {
       { path: '/api/v2/mix/account/accounts?productType=COIN-FUTURES', type: 'COIN-FUTURES' },
       { path: '/api/v2/mix/account/accounts?productType=USDC-FUTURES', type: 'USDC-FUTURES' },
       { path: '/api/v2/margin/crossed/account/assets', type: 'MARGIN_CROSS' },
-      { path: '/api/v2/margin/isolated/account/assets', type: 'MARGIN_ISOLATED' }
+      { path: '/api/v2/margin/isolated/account/assets', type: 'MARGIN_ISOLATED' },
+      { path: '/api/v2/earn/account/assets', type: 'EARN' }
     ];
 
     const requests = endpoints.map(async (ep) => {
@@ -102,6 +103,24 @@ export class BitgetAdapter implements IExchangeAdapter {
                 usdValue: amount, // Approximating as 1:1 USD for now if not available
                 walletBalance: amount,
                 availableMargin: available,
+                raw: item
+              });
+            }
+          });
+        } else if (type === 'EARN') {
+          res.data.forEach((item: any) => {
+            const amount = parseFloat(item.amount || '0');
+            if (amount > 0) {
+              balances.push({
+                id: `${key.id}-${type}-${item.coin}`,
+                connectionId: key.id,
+                exchange: 'bitget',
+                label: `${key.label} (${type})`,
+                ccy: (item.coin || '').toUpperCase(),
+                amount,
+                usdValue: amount, // Approximating as 1:1 USD for now if not available
+                walletBalance: amount,
+                availableMargin: amount,
                 raw: item
               });
             }

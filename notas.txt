@@ -7,4 +7,4 @@ bybit: #ff9c2e
 okx: #fafafa branco 
 4. DONE. implementar open positions e open orders em ordem decrescente (mais recente primeiro) ou inplementar um sorting
 5. DONE. verificar logica desnecessaria bitget
-6. Verificar comportamento de rede e requests mesmo sem apis ativas ou cadastradas
+6. DONE. Verificar comportamento de rede e requests mesmo sem apis ativas ou cadastradas
