@@ -10,7 +10,7 @@ Our absolute highest priority is **zero-trust client security** and **strict pri
 1. [Zero-Trust Security Architecture](#1-zero-trust-security-architecture)
 2. [Initial Configuration & API Keys Setup](#2-initial-configuration--api-keys-setup)
 3. [Simulation Mode (Mock Data)](#3-simulation-mode-mock-data)
-4. [Real-Time Performance Analysis (WebSockets & Latency)](#4-real-time-performance-analysis-websockets--latency)
+4. [Latency & Performance Analysis via REST](#4-latency--performance-analysis-via-rest)
 5. [Integrated Log Terminal (Connection Logs)](#5-integrated-log-terminal-connection-logs)
 6. [Advanced Synchronization with IndexedDB Caching](#6-advanced-synchronization-with-indexeddb-caching)
 7. [Screens & Daily Usability Guide](#7-screens--daily-usability-guide)
@@ -53,33 +53,33 @@ If you wish to explore the dashboard's capabilities without configuring any real
 1. Click on the **Settings** tab in the sidebar.
 2. Toggle on the **Use Mock Data (Simulation Mode)** setting.
 3. **What happens under simulation**:
-   - All active WebSockets are disconnected.
+   - Live synchronization with real REST APIs is immediately paused.
    - Realistic multi-exchange balances, open margin metrics, trade logs, and orders are immediately populated using structured JSON mocks.
    - An amber **"Simulation Mode"** banner is highlighted at the top of your screen.
    - Manual synchronization buttons are safely disabled to prevent unsolicited API errors.
 
 ---
 
-## 4. Real-Time Performance Analysis (WebSockets & Latency)
+## 4. Latency & Performance Analysis via REST
 
-The application employs high-speed, direct bi-directional WebSocket feeds to stream real-time price updates, active positions, and account balances.
+To maximize system stability, avoid connection dropouts, and respect browser CORS constraints, CPM has standardized all data collection (balances, positions, and ticker rates) using high-performance **REST Polling** (periodic HTTP queries).
 
 Under the **API Keys** tab, you can inspect visual connection diagnostics:
-- **Latency Sparklines**: A continuous mini-chart measuring the connection ping in milliseconds (ms) between your computer and the exchange servers.
-- **Data Throughput**: A live meter showing incoming data bandwidth (in KB/s), verifying active network health.
+- **Latency Sparklines**: A continuous mini-chart measuring the round-trip ping time in milliseconds (ms) of REST requests between your browser (via our secure local proxy) and the exchange servers.
+- **WebSocket Isolation**: WebSockets are kept isolated exclusively inside the **API Tester** tool (used only for development, connectivity sanity checks, and debugging). All main client dashboard pages operate over highly reliable HTTP REST connections.
 
 ---
 
 ## 5. Integrated Log Terminal (Connection Logs)
 
-To audit connection handshakes, WebSocket frames, and system warnings, CPM features a modular professional terminal:
+To audit connection handshakes, REST API payloads, and system warnings, CPM features a modular professional terminal:
 
 1. Scroll down to the bottom of the **API Keys** tab to inspect the docked terminal, or view it as an independent screen under **Connection Logs** in the sidebar.
 2. **Zero-Leak Masking**: The logger automatically intercepts and redacts any private API keys, secrets, or passphrases, rendering safe friendly logs for support audits.
 3. **Semantic Log Categorization**:
-   - `SYSTEM`: Internal state machine startups and reconnect signals.
-   - `DATA`: Feeds for real-time prices, position changes, and balances.
-   - `WARN` / `ERROR`: Alerts for network dropouts, API limit threshold exhaustion, or authentication rejections.
+   - `SYSTEM`: Internal state machine startups and routing logs.
+   - `DATA`: Feeds for REST query status, account updates, and balance states.
+   - `WARN` / `ERROR`: Alerts for network timeouts, CORS issues, or credential rejections.
 4. **Local Regex Filter**: Easily search logs for specific tickers (e.g. `BTC`) or raw event codes.
 
 ---
