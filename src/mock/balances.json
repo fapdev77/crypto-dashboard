@@ -5,8 +5,8 @@
     "exchange": "bitget",
     "label": "Mock BITGET 1",
     "ccy": "USDT",
-    "amount": 1294.368640633013,
-    "usdValue": 1294.368640633013
+    "amount": 37902.60436121864,
+    "usdValue": 37902.60436121864
   },
   {
     "id": "bal-2",
@@ -14,8 +14,8 @@
     "exchange": "bitget",
     "label": "Mock BITGET 1",
     "ccy": "USDC",
-    "amount": 34874.085408412844,
-    "usdValue": 34874.085408412844
+    "amount": 12543.61726634852,
+    "usdValue": 12543.61726634852
   },
   {
     "id": "bal-3",
@@ -23,8 +23,8 @@
     "exchange": "bitget",
     "label": "Mock BITGET 1",
     "ccy": "BTC",
-    "amount": 78.19637462446676,
-    "usdValue": 3779.721289763513
+    "amount": 35.5349156941374,
+    "usdValue": 399.8328058546943
   },
   {
     "id": "bal-4",
@@ -32,8 +32,8 @@
     "exchange": "bitget",
     "label": "Mock BITGET 1",
     "ccy": "ETH",
-    "amount": 72.70586398044618,
-    "usdValue": 2109.4190082121145
+    "amount": 70.1781998945365,
+    "usdValue": 5645.955974630503
   },
   {
     "id": "bal-5",
@@ -41,35 +41,35 @@
     "exchange": "bitget",
     "label": "Mock BITGET 1",
     "ccy": "SOL",
-    "amount": 4.266330397256916,
-    "usdValue": 239.347161185458
+    "amount": 94.47999089931712,
+    "usdValue": 6607.223621252033
   },
   {
     "id": "bal-6",
     "connectionId": "mocked-data-bitget-1",
     "exchange": "bitget",
     "label": "Mock BITGET 1",
-    "ccy": "XRP",
-    "amount": 31.747305598882477,
-    "usdValue": 1303.5298125881866
+    "ccy": "LINK",
+    "amount": 12.016110140885008,
+    "usdValue": 434.99691293047886
   },
   {
     "id": "bal-7",
     "connectionId": "mocked-data-bitget-1",
     "exchange": "bitget",
     "label": "Mock BITGET 1",
-    "ccy": "DOGE",
-    "amount": 48.925471614598884,
-    "usdValue": 3300.924575815943
+    "ccy": "USDT",
+    "amount": 36037.09075160128,
+    "usdValue": 36037.09075160128
   },
   {
     "id": "bal-8",
     "connectionId": "mocked-data-bitget-1",
     "exchange": "bitget",
     "label": "Mock BITGET 1",
-    "ccy": "ADA",
-    "amount": 97.53914860032204,
-    "usdValue": 7436.393306518517
+    "ccy": "USDC",
+    "amount": 13591.12217906802,
+    "usdValue": 13591.12217906802
   },
   {
     "id": "bal-9",
@@ -77,8 +77,8 @@
     "exchange": "bitget",
     "label": "Mock BITGET 2",
     "ccy": "USDT",
-    "amount": 13429.98064928707,
-    "usdValue": 13429.98064928707
+    "amount": 34537.88671527511,
+    "usdValue": 34537.88671527511
   },
   {
     "id": "bal-10",
@@ -86,8 +86,8 @@
     "exchange": "bitget",
     "label": "Mock BITGET 2",
     "ccy": "USDC",
-    "amount": 46429.802671055346,
-    "usdValue": 46429.802671055346
+    "amount": 25364.429311827127,
+    "usdValue": 25364.429311827127
   },
   {
     "id": "bal-11",
@@ -95,8 +95,8 @@
     "exchange": "bitget",
     "label": "Mock BITGET 2",
     "ccy": "BTC",
-    "amount": 99.07837770564008,
-    "usdValue": 8215.456862934087
+    "amount": 39.275186049606496,
+    "usdValue": 3012.18460690876
   },
   {
     "id": "bal-12",
@@ -104,8 +104,8 @@
     "exchange": "bitget",
     "label": "Mock BITGET 2",
     "ccy": "ETH",
-    "amount": 94.53837244902832,
-    "usdValue": 5041.790634290219
+    "amount": 17.47131922042632,
+    "usdValue": 1141.200197356412
   },
   {
     "id": "bal-13",
@@ -113,143 +113,143 @@
     "exchange": "bitget",
     "label": "Mock BITGET 2",
     "ccy": "SOL",
-    "amount": 78.21877849688029,
-    "usdValue": 1243.8886269162024
+    "amount": 90.41020493823531,
+    "usdValue": 6831.927675202678
   },
   {
     "id": "bal-14",
-    "connectionId": "mocked-data-bitget-2",
+    "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "ccy": "XRP",
-    "amount": 72.81735967974147,
-    "usdValue": 3156.6771038502447
+    "label": "Mock BITGET 3",
+    "ccy": "USDT",
+    "amount": 16750.114725621548,
+    "usdValue": 16750.114725621548
   },
   {
     "id": "bal-15",
     "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
     "label": "Mock BITGET 3",
-    "ccy": "USDT",
-    "amount": 40774.00423767406,
-    "usdValue": 40774.00423767406
+    "ccy": "USDC",
+    "amount": 36998.990753112754,
+    "usdValue": 36998.990753112754
   },
   {
     "id": "bal-16",
     "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
     "label": "Mock BITGET 3",
-    "ccy": "USDC",
-    "amount": 49840.04471072091,
-    "usdValue": 49840.04471072091
+    "ccy": "BTC",
+    "amount": 4.854836879674101,
+    "usdValue": 242.47825749642533
   },
   {
     "id": "bal-17",
     "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
     "label": "Mock BITGET 3",
-    "ccy": "BTC",
-    "amount": 55.33601129512223,
-    "usdValue": 2254.0313541851797
+    "ccy": "ETH",
+    "amount": 25.515266519066877,
+    "usdValue": 1811.246228574023
   },
   {
     "id": "bal-18",
     "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
     "label": "Mock BITGET 3",
-    "ccy": "ETH",
-    "amount": 21.965877465358098,
-    "usdValue": 124.12508122599296
+    "ccy": "SOL",
+    "amount": 19.66911756301986,
+    "usdValue": 1846.313903129812
   },
   {
     "id": "bal-19",
     "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
     "label": "Mock BITGET 3",
-    "ccy": "SOL",
-    "amount": 16.730681041616695,
-    "usdValue": 650.1177802927633
+    "ccy": "LINK",
+    "amount": 35.15725680756722,
+    "usdValue": 1078.0517077448526
   },
   {
     "id": "bal-20",
-    "connectionId": "mocked-data-bitget-4",
+    "connectionId": "mocked-data-bitget-3",
     "exchange": "bitget",
-    "label": "Mock BITGET 4",
+    "label": "Mock BITGET 3",
     "ccy": "USDT",
-    "amount": 8743.789531595477,
-    "usdValue": 8743.789531595477
+    "amount": 12947.73770326835,
+    "usdValue": 12947.73770326835
   },
   {
     "id": "bal-21",
     "connectionId": "mocked-data-bitget-4",
     "exchange": "bitget",
     "label": "Mock BITGET 4",
-    "ccy": "USDC",
-    "amount": 3060.184430508588,
-    "usdValue": 3060.184430508588
+    "ccy": "USDT",
+    "amount": 1294.9052701615112,
+    "usdValue": 1294.9052701615112
   },
   {
     "id": "bal-22",
     "connectionId": "mocked-data-bitget-4",
     "exchange": "bitget",
     "label": "Mock BITGET 4",
-    "ccy": "BTC",
-    "amount": 5.516278562624997,
-    "usdValue": 373.78179543340923
+    "ccy": "USDC",
+    "amount": 39135.93921387279,
+    "usdValue": 39135.93921387279
   },
   {
     "id": "bal-23",
     "connectionId": "mocked-data-bitget-4",
     "exchange": "bitget",
     "label": "Mock BITGET 4",
-    "ccy": "ETH",
-    "amount": 41.38625362648562,
-    "usdValue": 826.8596185899605
+    "ccy": "BTC",
+    "amount": 66.48719864069358,
+    "usdValue": 1905.8243551947664
   },
   {
     "id": "bal-24",
     "connectionId": "mocked-data-bitget-4",
     "exchange": "bitget",
     "label": "Mock BITGET 4",
-    "ccy": "SOL",
-    "amount": 56.22284186161606,
-    "usdValue": 499.21594740292215
+    "ccy": "ETH",
+    "amount": 51.51584920398945,
+    "usdValue": 4948.985069656612
   },
   {
     "id": "bal-25",
     "connectionId": "mocked-data-bitget-4",
     "exchange": "bitget",
     "label": "Mock BITGET 4",
-    "ccy": "XRP",
-    "amount": 54.66463419036897,
-    "usdValue": 1094.4344554259426
+    "ccy": "SOL",
+    "amount": 88.16769304361594,
+    "usdValue": 5323.010102624644
   },
   {
     "id": "bal-26",
     "connectionId": "mocked-data-bitget-4",
     "exchange": "bitget",
     "label": "Mock BITGET 4",
-    "ccy": "DOGE",
-    "amount": 19.7627194183885,
-    "usdValue": 1392.2276252003514
+    "ccy": "LINK",
+    "amount": 6.447434679690391,
+    "usdValue": 127.40015836418718
   },
   {
     "id": "bal-27",
     "connectionId": "mocked-data-bitget-4",
     "exchange": "bitget",
     "label": "Mock BITGET 4",
-    "ccy": "ADA",
-    "amount": 9.678553294615593,
-    "usdValue": 396.8577201206263
+    "ccy": "USDT",
+    "amount": 41365.27829827868,
+    "usdValue": 41365.27829827868
   },
   {
     "id": "bal-28",
     "connectionId": "mocked-data-bitget-4",
     "exchange": "bitget",
     "label": "Mock BITGET 4",
-    "ccy": "BNB",
-    "amount": 46.56217350918394,
-    "usdValue": 3815.5106826160004
+    "ccy": "USDC",
+    "amount": 30749.91520281923,
+    "usdValue": 30749.91520281923
   },
   {
     "id": "bal-29",
@@ -257,8 +257,8 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "USDT",
-    "amount": 37635.15901527278,
-    "usdValue": 37635.15901527278
+    "amount": 33154.91621423031,
+    "usdValue": 33154.91621423031
   },
   {
     "id": "bal-30",
@@ -266,8 +266,8 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "USDC",
-    "amount": 488.25435249747153,
-    "usdValue": 488.25435249747153
+    "amount": 27117.51938656666,
+    "usdValue": 27117.51938656666
   },
   {
     "id": "bal-31",
@@ -275,8 +275,8 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "BTC",
-    "amount": 62.5615130905488,
-    "usdValue": 4858.174830954731
+    "amount": 49.85679255950072,
+    "usdValue": 953.8834522301314
   },
   {
     "id": "bal-32",
@@ -284,8 +284,8 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "ETH",
-    "amount": 33.12902875532723,
-    "usdValue": 3219.6387853317738
+    "amount": 21.853784840189203,
+    "usdValue": 1543.9485907466171
   },
   {
     "id": "bal-33",
@@ -293,520 +293,403 @@
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "SOL",
-    "amount": 0.4846332757427063,
-    "usdValue": 28.628489107241208
+    "amount": 70.17439181953165,
+    "usdValue": 3997.507475594186
   },
   {
     "id": "bal-34",
-    "connectionId": "mocked-data-bybit-2",
+    "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
-    "label": "Mock BYBIT 2",
-    "ccy": "USDT",
-    "amount": 46378.12205531333,
-    "usdValue": 46378.12205531333
+    "label": "Mock BYBIT 1",
+    "ccy": "LINK",
+    "amount": 19.26288093538028,
+    "usdValue": 690.8444692730352
   },
   {
     "id": "bal-35",
-    "connectionId": "mocked-data-bybit-2",
+    "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
-    "label": "Mock BYBIT 2",
-    "ccy": "USDC",
-    "amount": 8768.046385731654,
-    "usdValue": 8768.046385731654
+    "label": "Mock BYBIT 1",
+    "ccy": "USDT",
+    "amount": 12117.243740675678,
+    "usdValue": 12117.243740675678
   },
   {
     "id": "bal-36",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
-    "ccy": "BTC",
-    "amount": 88.90914243152059,
-    "usdValue": 1060.0781273287153
+    "ccy": "USDT",
+    "amount": 3481.258175763244,
+    "usdValue": 3481.258175763244
   },
   {
     "id": "bal-37",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
-    "ccy": "ETH",
-    "amount": 92.3883703515129,
-    "usdValue": 882.9633697304105
+    "ccy": "USDC",
+    "amount": 32438.732540143796,
+    "usdValue": 32438.732540143796
   },
   {
     "id": "bal-38",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
-    "ccy": "SOL",
-    "amount": 36.968807858761146,
-    "usdValue": 1150.2505365956702
+    "ccy": "BTC",
+    "amount": 21.932588069375576,
+    "usdValue": 671.6462886544583
   },
   {
     "id": "bal-39",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
-    "ccy": "XRP",
-    "amount": 17.62632333082295,
-    "usdValue": 569.6808278827843
+    "ccy": "ETH",
+    "amount": 60.56662921130667,
+    "usdValue": 3127.8660477316826
   },
   {
     "id": "bal-40",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
-    "ccy": "DOGE",
-    "amount": 3.8486277433044176,
-    "usdValue": 147.15776550254046
+    "ccy": "SOL",
+    "amount": 44.93237077167792,
+    "usdValue": 2423.997571172843
   },
   {
     "id": "bal-41",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
-    "ccy": "ADA",
-    "amount": 65.63740235579968,
-    "usdValue": 1790.210619278761
+    "ccy": "LINK",
+    "amount": 47.38020895362687,
+    "usdValue": 606.9976872305274
   },
   {
     "id": "bal-42",
-    "connectionId": "mocked-data-bybit-2",
+    "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
-    "label": "Mock BYBIT 2",
-    "ccy": "BNB",
-    "amount": 47.67117108342534,
-    "usdValue": 1805.7198702435214
+    "label": "Mock BYBIT 3",
+    "ccy": "USDT",
+    "amount": 22858.09251800512,
+    "usdValue": 22858.09251800512
   },
   {
     "id": "bal-43",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
-    "ccy": "USDT",
-    "amount": 36182.11177654803,
-    "usdValue": 36182.11177654803
+    "ccy": "USDC",
+    "amount": 39302.78724527521,
+    "usdValue": 39302.78724527521
   },
   {
     "id": "bal-44",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
-    "ccy": "USDC",
-    "amount": 26062.661824586306,
-    "usdValue": 26062.661824586306
+    "ccy": "BTC",
+    "amount": 78.01438107367827,
+    "usdValue": 6781.80813483927
   },
   {
     "id": "bal-45",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
-    "ccy": "BTC",
-    "amount": 22.68481472310371,
-    "usdValue": 661.1778421950219
+    "ccy": "ETH",
+    "amount": 62.26527825701798,
+    "usdValue": 4385.296521843048
   },
   {
     "id": "bal-46",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
-    "ccy": "ETH",
-    "amount": 65.86704249681732,
-    "usdValue": 880.9716926354197
+    "ccy": "SOL",
+    "amount": 9.433544885624205,
+    "usdValue": 356.5937125990224
   },
   {
     "id": "bal-47",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
-    "ccy": "SOL",
-    "amount": 5.191978963916903,
-    "usdValue": 472.858362705667
+    "ccy": "LINK",
+    "amount": 20.930158964216595,
+    "usdValue": 1972.469067140915
   },
   {
     "id": "bal-48",
-    "connectionId": "mocked-data-bybit-3",
+    "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
-    "label": "Mock BYBIT 3",
-    "ccy": "XRP",
-    "amount": 35.25972359458115,
-    "usdValue": 656.9512904711215
+    "label": "Mock BYBIT 4",
+    "ccy": "USDT",
+    "amount": 38464.21920628787,
+    "usdValue": 38464.21920628787
   },
   {
     "id": "bal-49",
-    "connectionId": "mocked-data-bybit-3",
+    "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
-    "label": "Mock BYBIT 3",
-    "ccy": "DOGE",
-    "amount": 96.2481087923472,
-    "usdValue": 4803.703763635486
+    "label": "Mock BYBIT 4",
+    "ccy": "USDC",
+    "amount": 47430.09351892968,
+    "usdValue": 47430.09351892968
   },
   {
     "id": "bal-50",
-    "connectionId": "mocked-data-bybit-3",
+    "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
-    "label": "Mock BYBIT 3",
-    "ccy": "ADA",
-    "amount": 47.00856961346384,
-    "usdValue": 391.63764915496427
+    "label": "Mock BYBIT 4",
+    "ccy": "BTC",
+    "amount": 79.64880326492673,
+    "usdValue": 6285.850004741507
   },
   {
     "id": "bal-51",
-    "connectionId": "mocked-data-bybit-3",
+    "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
-    "label": "Mock BYBIT 3",
-    "ccy": "BNB",
-    "amount": 93.03614871087996,
-    "usdValue": 1749.891064931644
+    "label": "Mock BYBIT 4",
+    "ccy": "ETH",
+    "amount": 56.04481070069825,
+    "usdValue": 5041.700623918273
   },
   {
     "id": "bal-52",
     "connectionId": "mocked-data-bybit-4",
     "exchange": "bybit",
     "label": "Mock BYBIT 4",
-    "ccy": "USDT",
-    "amount": 12977.89123704168,
-    "usdValue": 12977.89123704168
+    "ccy": "SOL",
+    "amount": 4.4174010690755985,
+    "usdValue": 408.07062840123336
   },
   {
     "id": "bal-53",
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4",
-    "ccy": "USDC",
-    "amount": 24814.53542094349,
-    "usdValue": 24814.53542094349
+    "connectionId": "mocked-data-okx-1",
+    "exchange": "okx",
+    "label": "Mock OKX 1",
+    "ccy": "USDT",
+    "amount": 40324.04032191187,
+    "usdValue": 40324.04032191187
   },
   {
     "id": "bal-54",
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4",
-    "ccy": "BTC",
-    "amount": 81.57114260679407,
-    "usdValue": 2136.487074091304
+    "connectionId": "mocked-data-okx-1",
+    "exchange": "okx",
+    "label": "Mock OKX 1",
+    "ccy": "USDC",
+    "amount": 12338.197655179314,
+    "usdValue": 12338.197655179314
   },
   {
     "id": "bal-55",
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4",
-    "ccy": "ETH",
-    "amount": 46.808902726357225,
-    "usdValue": 3844.6179290515415
+    "connectionId": "mocked-data-okx-1",
+    "exchange": "okx",
+    "label": "Mock OKX 1",
+    "ccy": "BTC",
+    "amount": 37.720670278631864,
+    "usdValue": 765.6764275813637
   },
   {
     "id": "bal-56",
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4",
-    "ccy": "SOL",
-    "amount": 43.60654528586708,
-    "usdValue": 372.469749785557
+    "connectionId": "mocked-data-okx-1",
+    "exchange": "okx",
+    "label": "Mock OKX 1",
+    "ccy": "ETH",
+    "amount": 23.291535750466743,
+    "usdValue": 2041.2698948747293
   },
   {
     "id": "bal-57",
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4",
-    "ccy": "XRP",
-    "amount": 14.795755786769481,
-    "usdValue": 1095.7955537304745
+    "connectionId": "mocked-data-okx-1",
+    "exchange": "okx",
+    "label": "Mock OKX 1",
+    "ccy": "SOL",
+    "amount": 97.27879326538701,
+    "usdValue": 1564.5281239111396
   },
   {
     "id": "bal-58",
     "connectionId": "mocked-data-okx-1",
     "exchange": "okx",
     "label": "Mock OKX 1",
-    "ccy": "USDT",
-    "amount": 6604.725729793209,
-    "usdValue": 6604.725729793209
+    "ccy": "LINK",
+    "amount": 29.91299368458698,
+    "usdValue": 894.9257404941501
   },
   {
     "id": "bal-59",
     "connectionId": "mocked-data-okx-1",
     "exchange": "okx",
     "label": "Mock OKX 1",
-    "ccy": "USDC",
-    "amount": 4792.626789321395,
-    "usdValue": 4792.626789321395
+    "ccy": "USDT",
+    "amount": 47335.12956490119,
+    "usdValue": 47335.12956490119
   },
   {
     "id": "bal-60",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
-    "ccy": "BTC",
-    "amount": 8.929209781142115,
-    "usdValue": 81.20959443200981
+    "label": "Mock OKX 2",
+    "ccy": "USDT",
+    "amount": 49389.78491378423,
+    "usdValue": 49389.78491378423
   },
   {
     "id": "bal-61",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
-    "ccy": "ETH",
-    "amount": 25.302060257013697,
-    "usdValue": 1140.1367900969678
+    "label": "Mock OKX 2",
+    "ccy": "USDC",
+    "amount": 35822.67594837842,
+    "usdValue": 35822.67594837842
   },
   {
     "id": "bal-62",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
-    "ccy": "SOL",
-    "amount": 27.343564275309905,
-    "usdValue": 2053.3943975601464
+    "label": "Mock OKX 2",
+    "ccy": "BTC",
+    "amount": 37.23490797030396,
+    "usdValue": 2030.1227910734324
   },
   {
     "id": "bal-63",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
-    "ccy": "XRP",
-    "amount": 21.16581823224842,
-    "usdValue": 1513.1665450651242
+    "label": "Mock OKX 2",
+    "ccy": "ETH",
+    "amount": 83.82010032808257,
+    "usdValue": 6657.934353540586
   },
   {
     "id": "bal-64",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
-    "ccy": "DOGE",
-    "amount": 17.5797405090096,
-    "usdValue": 630.6306455378104
+    "label": "Mock OKX 2",
+    "ccy": "SOL",
+    "amount": 47.069668217170715,
+    "usdValue": 377.25490683827985
   },
   {
     "id": "bal-65",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
-    "label": "Mock OKX 1",
-    "ccy": "ADA",
-    "amount": 64.17728494104767,
-    "usdValue": 2060.002610512323
+    "label": "Mock OKX 2",
+    "ccy": "LINK",
+    "amount": 78.52583910525917,
+    "usdValue": 5856.079693849981
   },
   {
     "id": "bal-66",
-    "connectionId": "mocked-data-okx-1",
+    "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
-    "label": "Mock OKX 1",
-    "ccy": "BNB",
-    "amount": 11.071720354496268,
-    "usdValue": 367.73819989361994
+    "label": "Mock OKX 3",
+    "ccy": "USDT",
+    "amount": 39506.390830838085,
+    "usdValue": 39506.390830838085
   },
   {
     "id": "bal-67",
-    "connectionId": "mocked-data-okx-2",
+    "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
-    "label": "Mock OKX 2",
-    "ccy": "USDT",
-    "amount": 43537.9176116973,
-    "usdValue": 43537.9176116973
+    "label": "Mock OKX 3",
+    "ccy": "USDC",
+    "amount": 43547.1570274402,
+    "usdValue": 43547.1570274402
   },
   {
     "id": "bal-68",
-    "connectionId": "mocked-data-okx-2",
+    "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
-    "label": "Mock OKX 2",
-    "ccy": "USDC",
-    "amount": 13568.44863625987,
-    "usdValue": 13568.44863625987
+    "label": "Mock OKX 3",
+    "ccy": "BTC",
+    "amount": 98.12758561117359,
+    "usdValue": 340.35529963733876
   },
   {
     "id": "bal-69",
-    "connectionId": "mocked-data-okx-2",
+    "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
-    "label": "Mock OKX 2",
-    "ccy": "BTC",
-    "amount": 29.326168324429826,
-    "usdValue": 89.60074586952186
+    "label": "Mock OKX 3",
+    "ccy": "ETH",
+    "amount": 44.80055168166483,
+    "usdValue": 3244.118288773736
   },
   {
     "id": "bal-70",
-    "connectionId": "mocked-data-okx-2",
+    "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
-    "label": "Mock OKX 2",
-    "ccy": "ETH",
-    "amount": 39.02660742369954,
-    "usdValue": 3272.6119351573984
+    "label": "Mock OKX 3",
+    "ccy": "SOL",
+    "amount": 24.325506030710237,
+    "usdValue": 865.1930092658268
   },
   {
     "id": "bal-71",
-    "connectionId": "mocked-data-okx-2",
+    "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
-    "label": "Mock OKX 2",
-    "ccy": "SOL",
-    "amount": 96.82332283222995,
-    "usdValue": 1738.057113356283
+    "label": "Mock OKX 4",
+    "ccy": "USDT",
+    "amount": 47111.16060812773,
+    "usdValue": 47111.16060812773
   },
   {
     "id": "bal-72",
-    "connectionId": "mocked-data-okx-2",
+    "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
-    "label": "Mock OKX 2",
-    "ccy": "XRP",
-    "amount": 98.1388977761276,
-    "usdValue": 2141.0470084682656
+    "label": "Mock OKX 4",
+    "ccy": "USDC",
+    "amount": 17142.05463816252,
+    "usdValue": 17142.05463816252
   },
   {
     "id": "bal-73",
-    "connectionId": "mocked-data-okx-2",
+    "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
-    "label": "Mock OKX 2",
-    "ccy": "DOGE",
-    "amount": 45.25595426429557,
-    "usdValue": 1856.2101173178894
+    "label": "Mock OKX 4",
+    "ccy": "BTC",
+    "amount": 42.104783873554865,
+    "usdValue": 1614.8423620884566
   },
   {
     "id": "bal-74",
-    "connectionId": "mocked-data-okx-3",
+    "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
-    "label": "Mock OKX 3",
-    "ccy": "USDT",
-    "amount": 33080.3534359222,
-    "usdValue": 33080.3534359222
+    "label": "Mock OKX 4",
+    "ccy": "ETH",
+    "amount": 21.423034098862185,
+    "usdValue": 1512.3689374461385
   },
   {
     "id": "bal-75",
-    "connectionId": "mocked-data-okx-3",
+    "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
-    "label": "Mock OKX 3",
-    "ccy": "USDC",
-    "amount": 42306.42601460629,
-    "usdValue": 42306.42601460629
+    "label": "Mock OKX 4",
+    "ccy": "SOL",
+    "amount": 27.499433034570455,
+    "usdValue": 215.98738575853324
   },
   {
     "id": "bal-76",
-    "connectionId": "mocked-data-okx-3",
+    "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
-    "label": "Mock OKX 3",
-    "ccy": "BTC",
-    "amount": 37.9796495073616,
-    "usdValue": 1555.3015979302277
+    "label": "Mock OKX 4",
+    "ccy": "LINK",
+    "amount": 20.590619999563845,
+    "usdValue": 1983.7489615172012
   },
   {
     "id": "bal-77",
-    "connectionId": "mocked-data-okx-3",
-    "exchange": "okx",
-    "label": "Mock OKX 3",
-    "ccy": "ETH",
-    "amount": 32.60083012622658,
-    "usdValue": 2643.1968863333545
-  },
-  {
-    "id": "bal-78",
-    "connectionId": "mocked-data-okx-3",
-    "exchange": "okx",
-    "label": "Mock OKX 3",
-    "ccy": "SOL",
-    "amount": 81.02490502312297,
-    "usdValue": 6278.586350085681
-  },
-  {
-    "id": "bal-79",
-    "connectionId": "mocked-data-okx-3",
-    "exchange": "okx",
-    "label": "Mock OKX 3",
-    "ccy": "XRP",
-    "amount": 41.83955326173365,
-    "usdValue": 926.037972263469
-  },
-  {
-    "id": "bal-80",
-    "connectionId": "mocked-data-okx-3",
-    "exchange": "okx",
-    "label": "Mock OKX 3",
-    "ccy": "DOGE",
-    "amount": 49.77621353878738,
-    "usdValue": 995.0699430865667
-  },
-  {
-    "id": "bal-81",
-    "connectionId": "mocked-data-okx-3",
-    "exchange": "okx",
-    "label": "Mock OKX 3",
-    "ccy": "ADA",
-    "amount": 84.72111888567467,
-    "usdValue": 1030.7707798433678
-  },
-  {
-    "id": "bal-82",
     "connectionId": "mocked-data-okx-4",
     "exchange": "okx",
     "label": "Mock OKX 4",
     "ccy": "USDT",
-    "amount": 33559.86842892804,
-    "usdValue": 33559.86842892804
-  },
-  {
-    "id": "bal-83",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "ccy": "USDC",
-    "amount": 40160.571294677255,
-    "usdValue": 40160.571294677255
-  },
-  {
-    "id": "bal-84",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "ccy": "BTC",
-    "amount": 47.23932072521976,
-    "usdValue": 2765.63596334818
-  },
-  {
-    "id": "bal-85",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "ccy": "ETH",
-    "amount": 15.256639677968197,
-    "usdValue": 673.9843324409874
-  },
-  {
-    "id": "bal-86",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "ccy": "SOL",
-    "amount": 82.35875302160187,
-    "usdValue": 7124.614803934852
-  },
-  {
-    "id": "bal-87",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "ccy": "XRP",
-    "amount": 97.5175549237434,
-    "usdValue": 3627.252402029716
-  },
-  {
-    "id": "bal-88",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "ccy": "DOGE",
-    "amount": 72.17471125565132,
-    "usdValue": 1504.9658699384468
-  },
-  {
-    "id": "bal-89",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "ccy": "ADA",
-    "amount": 29.565371880728073,
-    "usdValue": 2254.069063187313
-  },
-  {
-    "id": "bal-90",
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4",
-    "ccy": "BNB",
-    "amount": 18.17145110005046,
-    "usdValue": 811.533735385482
+    "amount": 11314.872327370109,
+    "usdValue": 11314.872327370109
   }
 ]

@@ -3,15 +3,15 @@ import path from 'path';
 
 const exchanges = ['bitget', 'bybit', 'okx'];
 const ACCOUNTS_PER_EXCHANGE = 4;
-const POSITIONS_PER_ACCOUNT = 40;
-const HISTORY_PER_ACCOUNT = 40;
+const POSITIONS_PER_ACCOUNT = 25;
+const HISTORY_PER_ACCOUNT = 25;
 const ORDERS_PER_ACCOUNT = 30;
 
-const coins = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'BNB', 'AVAX', 'LINK', 'MATIC'];
+const coins = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'LINK'];
 const symbols = [
-  'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT', 'ADAUSDT', 
-  'BNBUSDT', 'AVAXUSDT', 'LINKUSDT', 'MATICUSDT', 
-  'BTCUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD', 'DOGEUSD'
+  'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'LINKUSDT',
+  'BTCUSDC', 'ETHUSDC', 'SOLUSDC', 'LINKUSDC',
+  'BTCUSD', 'ETHUSD', 'SOLUSD', 'LINKUSD'
 ];
 const sides = ['long', 'short'];
 const marginModes = ['isolated', 'cross'];
@@ -270,7 +270,7 @@ function generate() {
     for (let i = 1; i <= ACCOUNTS_PER_EXCHANGE; i++) {
       const connectionId = `mocked-data-${exchange}-${i}`;
       const label = `Mock ${exchange.toUpperCase()} ${i}`;
-      const numBills = randomInt(3, 8);
+      const numBills = randomInt(3, 7);
       
       for (let j = 0; j < numBills; j++) {
         const type = randomItem(billTypes);
