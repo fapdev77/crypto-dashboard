@@ -150,6 +150,7 @@ export function PnLBySymbol() {
             PnL by Symbol
           </h2>
           <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
+          <span className="text-xs text-[#8E9299] mt-1">To represent the actual PnL, it is calculated based on the real time USD value of the trades, not on the positions value.</span>
         </div>
         <div className="relative">
           <button
