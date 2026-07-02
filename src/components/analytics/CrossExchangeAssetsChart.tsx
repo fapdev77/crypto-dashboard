@@ -42,7 +42,7 @@ const CustomBarShape = (props: any) => {
       
       {value && meta && width >= 40 && (
         <foreignObject x={x} y={y} width={width} height={height}>
-          <div className="flex flex-col items-center justify-center w-full h-full pointer-events-none px-1 overflow-hidden" xmlns="http://www.w3.org/1999/xhtml">
+          <div className="flex flex-col items-center justify-center w-full h-full pointer-events-none px-1 overflow-hidden">
             <div className="flex items-center gap-1.5 opacity-100 overflow-hidden bg-transparent">
                {meta.name !== 'Outros' && width >= 55 && (
                  <div className="w-[18px] h-[18px] flex-shrink-0" style={{ filter: isLightBackground ? 'none' : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
@@ -114,7 +114,7 @@ const customYAxisTick = (props: any) => {
   return (
     <g transform={`translate(${x - 85}, ${y - 12})`}>
       <foreignObject width={80} height={24}>
-        <div data-theme={ex.toLowerCase()} className="flex items-center justify-end w-full h-full pr-1 gap-2" xmlns="http://www.w3.org/1999/xhtml">
+        <div data-theme={ex.toLowerCase()} className="flex items-center justify-end w-full h-full pr-1 gap-2">
           <div className="w-[18px] h-[18px] opacity-80 flex-shrink-0">
             <ExchangeIcon exchange={ex} />
           </div>

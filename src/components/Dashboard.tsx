@@ -140,19 +140,19 @@ export function Dashboard() {
   const unrealizedPnLPercent = totalEquity > 0 ? (openPositionsUnrealizedPnL / totalEquity) * 100 : 0;
   const openPositionsCount = activePositions.length;
 
-  const longPositions = activePositions.filter(pos => pos.side === 'long' || pos.side === 'buy').length;
-  const shortPositions = activePositions.filter(pos => pos.side === 'short' || pos.side === 'sell').length;
+  const longPositions = activePositions.filter(pos => pos.side === 'long').length;
+  const shortPositions = activePositions.filter(pos => pos.side === 'short').length;
   const longPercent = openPositionsCount > 0 ? (longPositions / openPositionsCount) * 100 : 0;
   const shortPercent = openPositionsCount > 0 ? (shortPositions / openPositionsCount) * 100 : 0;
 
   // Hedge Mode / Inverse calculations
   const inversePositions = activePositions.filter(pos => pos.instrumentType === 'INVERSE');
   const inverseOpenCount = inversePositions.length;
-  const inverseLongCount = inversePositions.filter(pos => pos.side === 'long' || pos.side === 'buy').length;
-  const inverseShortCount = inversePositions.filter(pos => pos.side === 'short' || pos.side === 'sell').length;
+  const inverseLongCount = inversePositions.filter(pos => pos.side === 'long').length;
+  const inverseShortCount = inversePositions.filter(pos => pos.side === 'short').length;
 
   const totalProtected = Number(inversePositions.reduce((acc, pos) => {
-    if (pos.side === 'short' || pos.side === 'sell') {
+    if (pos.side === 'short') {
       return acc.plus(new Big(pos.margin || 0).times(pos.markPrice || 0));
     }
     return acc;
