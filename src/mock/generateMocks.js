@@ -2,10 +2,10 @@ import fs from 'fs';
 import path from 'path';
 
 const exchanges = ['bitget', 'bybit', 'okx'];
-const ACCOUNTS_PER_EXCHANGE = 4;
-const POSITIONS_PER_ACCOUNT = 25;
+const ACCOUNTS_PER_EXCHANGE = 3;
+const POSITIONS_PER_ACCOUNT = 20;
 const HISTORY_PER_ACCOUNT = 25;
-const ORDERS_PER_ACCOUNT = 30;
+const ORDERS_PER_ACCOUNT = 25;
 
 const coins = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'LINK'];
 const symbols = [

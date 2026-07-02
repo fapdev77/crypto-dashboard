@@ -15,11 +15,6 @@
     "label": "Mock BITGET 3"
   },
   {
-    "connectionId": "mocked-data-bitget-4",
-    "exchange": "bitget",
-    "label": "Mock BITGET 4"
-  },
-  {
     "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
     "label": "Mock BYBIT 1"
@@ -35,11 +30,6 @@
     "label": "Mock BYBIT 3"
   },
   {
-    "connectionId": "mocked-data-bybit-4",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 4"
-  },
-  {
     "connectionId": "mocked-data-okx-1",
     "exchange": "okx",
     "label": "Mock OKX 1"
@@ -53,10 +43,5 @@
     "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
     "label": "Mock OKX 3"
-  },
-  {
-    "connectionId": "mocked-data-okx-4",
-    "exchange": "okx",
-    "label": "Mock OKX 4"
   }
 ]
