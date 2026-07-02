@@ -2,17 +2,22 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
-import { Search, Loader2, X } from 'lucide-react';
+import { Loader2, History, Download, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
+import { extractBaseCoin } from '../utils/unifiers';
 import { AppTooltip } from './ui/Tooltip';
 import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
-import { SyncBadge } from './ui/SyncBadge';
+import { StatusAndSyncBadge } from './ui/StatusAndSyncBadge';
+import { getHistoryInverseUsdValues, getHistoryPositionSizeAndValue } from '../utils/inverseUtils';
+import { FilterBar } from './ui/FilterBar';
+import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../utils/exportUtils';
+import { Pagination } from './ui/Pagination';
 
 export function ClosedPositions() {
   const keys = useApiKeysStore(state => state.keys);
@@ -20,18 +25,25 @@ export function ClosedPositions() {
   const { isPrivateMode } = usePrivacy();
 
   const [filterText, setFilterText] = useState('');
-  const [exchangeFilter, setExchangeFilter] = useState<string>('all');
-  const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
+  const [exchangeFilter, setExchangeFilter] = useState<string>('All');
 
   const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
 
-  const { positions: closedPositions, isLoading, isSyncing } = usePositionHistory(period);
+  const { positions: closedPositions, isLoading, isSyncing, syncMessage } = usePositionHistory(period);
   const [error, setError] = useState<string | null>(null);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterText, exchangeFilter, period]);
 
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
 
-    if (exchangeFilter !== 'all') {
+    if (exchangeFilter.toLowerCase() !== 'all') {
       filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchangeFilter.toLowerCase());
     }
 
@@ -47,6 +59,88 @@ export function ClosedPositions() {
     return filtered;
   }, [closedPositions, filterText, exchangeFilter]);
 
+  // Adjust page if it exceeds the max page available for current closed positions
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(filteredClosedPositions.length / itemsPerPage));
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [filteredClosedPositions.length, currentPage]);
+
+  const paginatedClosedPositions = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredClosedPositions.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredClosedPositions, currentPage]);
+
+  const handleExport = (formatType: 'csv' | 'excel' | 'pdf') => {
+    setExportMenuOpen(false);
+    
+    const headers = [
+      'Symbol',
+      'Exchange',
+      'Connection Name',
+      'Side',
+      'Leverage',
+      'Size',
+      'Value (USD)',
+      'Entry Price',
+      'Exit Price',
+      'Realized PnL',
+      'Currency',
+      'Funding Fee',
+      'Trading Fee',
+      'Open Time',
+      'Closed Time'
+    ];
+    
+    const rows = filteredClosedPositions.map(pos => {
+      const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
+      const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
+      const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
+      const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
+      
+      const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
+      
+      const openTimeStr = pos.createdTime && !isNaN(pos.createdTime) 
+        ? format(new Date(pos.createdTime), 'yyyy-MM-dd HH:mm:ss') 
+        : '--';
+      const closeTimeStr = pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) 
+        ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm:ss') 
+        : '--';
+
+      const { actualCoinSize, positionValueUsd } = getHistoryPositionSizeAndValue(pos);
+
+      return [
+        pos.symbol,
+        pos.exchange.toUpperCase(),
+        pos.label,
+        sideLabel,
+        `${leverage}x`,
+        actualCoinSize,
+        positionValueUsd,
+        pos.entryPrice || 0,
+        pos.closePrice || 0,
+        pos.realizedPnl || 0,
+        pnlCurrency,
+        pos.fundingFee || 0,
+        pos.tradingFee || 0,
+        openTimeStr,
+        closeTimeStr
+      ];
+    });
+
+    const config: ExportConfig = {
+      title: 'Positions History Report',
+      filename: `Positions_History_${Date.now()}`,
+      headers,
+      rows
+    };
+
+    if (formatType === 'csv') exportToCSV(config);
+    if (formatType === 'excel') exportToExcel(config);
+    if (formatType === 'pdf') exportToPDF(config);
+  };
+
   const closedStats = useMemo(() => {
     if (!filteredClosedPositions.length) return null;
 
@@ -61,12 +155,7 @@ export function ClosedPositions() {
     let shorts = 0;
 
     filteredClosedPositions.forEach(pos => {
-      const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
-      const isFiatCcy = pnlCurrency.includes('USD') || pnlCurrency === 'EUR';
-      let pnlInUsd = pos.realizedPnl;
-      if (!isFiatCcy && pos.closePrice) {
-        pnlInUsd = pos.realizedPnl * pos.closePrice;
-      }
+      const { realizedPnl: pnlInUsd } = getHistoryInverseUsdValues(pos);
 
       const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
       const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
@@ -123,106 +212,58 @@ export function ClosedPositions() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+            <History className="w-5 h-5 text-[#2F6BFF]" />
+            Positions History
+          </h2>
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setExportMenuOpen(!exportMenuOpen)}
+            className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Export</span> <ChevronDown className="w-3 h-3" />
+          </button>
+          {exportMenuOpen && (
+            <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export CSV</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export Excel</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export PDF</button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Filters Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <div className="flex items-center">
-          <SyncBadge isSyncing={isSyncing} />
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-        {/* Exchange Filter */}
-        <div className="relative z-20">
-          <button
-            type="button"
-            onClick={() => setIsExchangeDropdownOpen(!isExchangeDropdownOpen)}
-            className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between min-w-[160px]"
-          >
-            <div className="flex items-center gap-2">
-              {exchangeFilter !== 'all' && (
-                <ExchangeIcon exchange={exchangeFilter} className="w-4 h-4" />
-              )}
-              <span>
-                {exchangeFilter === 'all'
-                  ? 'Todas Exchanges'
-                  : exchangeFilter.charAt(0).toUpperCase() + exchangeFilter.slice(1)}
-              </span>
-            </div>
-            <svg className={`h-4 w-4 ml-2 text-gray-400 transition-transform ${isExchangeDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {isExchangeDropdownOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setIsExchangeDropdownOpen(false)}
-              />
-              <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setExchangeFilter('all');
-                    setIsExchangeDropdownOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === 'all' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
-                    }`}
-                >
-                  <span>Todas Exchanges</span>
-                </button>
-                {Array.from(new Set(keys.filter((apiKey: any) => apiKey.isActive).map((apiKey: any) => apiKey.exchange))).map(exchange => (
-                  <button
-                    key={exchange}
-                    type="button"
-                    onClick={() => {
-                      setExchangeFilter(exchange);
-                      setIsExchangeDropdownOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors ${exchangeFilter === exchange ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
-                      }`}
-                  >
-                    <ExchangeIcon exchange={exchange} className="w-4 h-4" />
-                    <span>{exchange.charAt(0).toUpperCase() + exchange.slice(1)}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as any)}
-          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
-        >
-          <option value="today">Hoje</option>
-          <option value="7d">7 Days</option>
-          <option value="14d">14 Days</option>
-          <option value="30d">30 Days</option>
-          <option value="90d">90 Days</option>
-        </select>
-
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-[#8E9299]" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search..."
-            className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-50"
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
+        <div className="flex flex-wrap items-center justify-end gap-2 flex-1">
+          <FilterBar
+            exchange={{
+              value: exchangeFilter,
+              onChange: setExchangeFilter,
+              labelAll: 'All Exchanges',
+            }}
+            period={{
+              value: period,
+              onChange: setPeriod,
+              options: [
+                { value: 'today', label: 'Today' },
+                { value: '7d', label: '7 Days' },
+                { value: '14d', label: '14 Days' },
+                { value: '30d', label: '30 Days' },
+                { value: '90d', label: '90 Days' },
+              ],
+            }}
+            search={{
+              value: filterText,
+              onChange: setFilterText,
+              placeholder: 'Search...',
+            }}
           />
-          {filterText && (
-            <button
-              onClick={() => setFilterText('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
-              title="Clear filter"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
         </div>
       </div>
 
@@ -314,11 +355,24 @@ export function ClosedPositions() {
 
       {filteredClosedPositions.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-          <p className="text-[#8E9299]">Nenhum histórico encontrado para as APIs ativas no período.</p>
+          <p className="text-[#8E9299]">No history found for active APIs in the selected period.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {filteredClosedPositions.map((pos) => {
+          {/* Top Pagination if filteredClosedPositions.length > 5 */}
+          {filteredClosedPositions.length > 5 && (
+            <div className="mb-2">
+              <Pagination
+                id="closed-positions-pagination-top"
+                currentPage={currentPage}
+                totalItems={filteredClosedPositions.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+
+          {paginatedClosedPositions.map((pos) => {
             const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
             const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
             const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
@@ -328,7 +382,7 @@ export function ClosedPositions() {
 
             const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
             const marginModeLabel = (pos.raw?.marginMode || pos.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
-            const symbolSuffix = pos.symbol.replace(/USDT|USDC|USD|-|SWAP/g, '');
+            const symbolSuffix = extractBaseCoin(pos.exchange, pos.symbol);
 
             let roiStr = '--';
             let roiValue = 0;
@@ -341,28 +395,7 @@ export function ClosedPositions() {
 
             const isInverse = pos.instrumentType === 'INVERSE';
 
-            let positionValueUsd = 0;
-            let actualCoinSize = pos.size || 0;
-
-            if (pos.exchange === 'okx' && pos.raw?.pnl) {
-              const priceDiff = Math.abs((pos.closePrice || 0) - (pos.entryPrice || 0));
-              const purePnl = Math.abs(parseFloat(pos.raw.pnl));
-              if (priceDiff > 0) {
-                actualCoinSize = purePnl / priceDiff;
-                positionValueUsd = actualCoinSize * (pos.entryPrice || 0);
-              } else {
-                positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
-              }
-            } else if (pos.exchange === 'bybit' && pos.raw?.cumEntryValue) {
-              positionValueUsd = parseFloat(pos.raw.cumEntryValue);
-              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
-            } else if (isInverse) {
-              positionValueUsd = pos.size || 0;
-              actualCoinSize = pos.entryPrice ? positionValueUsd / pos.entryPrice : 0;
-            } else {
-              positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
-              actualCoinSize = pos.size || 0;
-            }
+            const { actualCoinSize, positionValueUsd } = getHistoryPositionSizeAndValue(pos);
 
             if (pos.raw?.roi !== undefined && pos.raw?.roi !== null) {
               roiValue = parseFloat(pos.raw.roi) * 100;
@@ -377,27 +410,14 @@ export function ClosedPositions() {
               }
             }
 
-            let displayQuantity = '--';
-            let displayUnit = '';
-            let displaySecondaryQuantity = '--';
-            let displaySecondaryUnit = '';
-
-            if (isInverse) {
-              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 2) : '--';
-              displayUnit = 'USD';
-              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
-              displaySecondaryUnit = symbolSuffix;
-            } else if (pos.exchange === 'okx') {
-              displayQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
-              displayUnit = 'USD';
-              displaySecondaryQuantity = actualCoinSize ? formatCurrency(actualCoinSize, 'crypto', 8) : '--';
-              displaySecondaryUnit = symbolSuffix;
-            } else {
-              displayQuantity = pos.size ? formatCurrency(pos.size, 'crypto', 8) : '--';
-              displayUnit = symbolSuffix;
-              displaySecondaryQuantity = positionValueUsd ? formatCurrency(positionValueUsd, 'crypto', 2) : '--';
-              displaySecondaryUnit = 'USD';
-            }
+            const displayQuantity = (actualCoinSize !== undefined && actualCoinSize !== null)
+              ? formatCurrency(actualCoinSize, 'crypto', 8)
+              : '--';
+            const displayUnit = symbolSuffix;
+            const displaySecondaryQuantity = (positionValueUsd !== undefined && positionValueUsd !== null)
+              ? formatCurrency(positionValueUsd, 'crypto', 2)
+              : '--';
+            const displaySecondaryUnit = 'USD';
 
             if (hasRoi && isFinite(roiValue)) {
               roiStr = `${roiValue > 0 ? '+' : ''}${formatCurrency(roiValue, 'crypto', 2)}%`;
@@ -405,6 +425,8 @@ export function ClosedPositions() {
 
             const roiClass = hasRoi ? (roiValue >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]') : 'text-[#8E9299]';
             const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
+
+            const inverseVals = getHistoryInverseUsdValues(pos);
 
             return (
               <div key={pos.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col transition-colors hover:border-[#3a3b40]">
@@ -442,16 +464,20 @@ export function ClosedPositions() {
 
                   {/* Size / Value */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase">Pos Size / Value</span>
+                    <AppTooltip description="The peak size and USD value of this position before it was closed.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Pos Size / Value</span>
+                    </AppTooltip>
                     <span className="font-mono text-white text-sm">{displayQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displayUnit}</span></span>
                     {displaySecondaryQuantity !== '--' && (
-                      <span className="text-xs text-[#8E9299] font-mono">{displaySecondaryQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displaySecondaryUnit}</span></span>
+                      <span className="text-xs text-[#8E9299] font-mono">≈ {displaySecondaryQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displaySecondaryUnit}</span></span>
                     )}
                   </div>
 
                   {/* Entry / Exit Price */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase">Entry / Exit Price</span>
+                    <AppTooltip description="Average entry price and average exit price of the position.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Entry / Exit Price</span>
+                    </AppTooltip>
                     <span className="font-mono text-white text-sm truncate">{formatPrice(pos.entryPrice, isFiatPair)}</span>
                     <span className="font-mono text-white text-xs truncate">{formatPrice(pos.closePrice, isFiatPair)}</span>
                   </div>
@@ -471,19 +497,19 @@ export function ClosedPositions() {
                       rows={[
                         { 
                           label: 'Closed PnL', 
-                          value: `${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy((pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0))} ${pnlCurrency}`, 
+                          value: `${(pos.closedPnl || 0) > 0 ? '+' : ''}${formatCcy(pos.closedPnl || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
-                          valueClassName: `text-[11px] font-mono font-bold ${(pos.realizedPnl || 0) - (pos.fundingFee || 0) - (pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
+                          valueClassName: `text-[11px] font-mono font-bold ${(pos.closedPnl || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         },
                         { 
                           label: 'Funding fee', 
-                          value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${pnlCurrency}`, 
+                          value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                           valueClassName: `text-[11px] font-mono font-bold ${(pos.fundingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         },
                         { 
                           label: 'Trading fee', 
-                          value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${pnlCurrency}`, 
+                          value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                           valueClassName: `text-[11px] font-mono font-bold ${(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         }
@@ -496,9 +522,9 @@ export function ClosedPositions() {
                     </span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className={`font-mono text-xs ${roiClass}`}>{roiStr}</span>
-                      {!isFiatCcy && pos.closePrice ? (
+                      {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
                         <span className={`font-mono text-[10px] ${pnlClass} opacity-80`}>
-                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(pos.realizedPnl) * pos.closePrice, 'crypto', 2)} USD
+                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)}
                         </span>
                       ) : null}
                     </div>
@@ -506,7 +532,9 @@ export function ClosedPositions() {
 
                   {/* Open Time */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase">Open Time</span>
+                    <AppTooltip description="When the position was first opened.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Open Time</span>
+                    </AppTooltip>
                     <span className="font-mono text-white text-sm">
                       {pos.createdTime && !isNaN(pos.createdTime) ? format(new Date(pos.createdTime), 'yyyy-MM-dd') : '--'}
                     </span>
@@ -517,7 +545,9 @@ export function ClosedPositions() {
 
                   {/* Close Time */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-                    <span className="text-[10px] text-[#8E9299] uppercase">Closed Time</span>
+                    <AppTooltip description="When the position was completely closed.">
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Closed Time</span>
+                    </AppTooltip>
                     <span className="font-mono text-white text-sm">
                       {pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd') : '--'}
                     </span>
@@ -530,6 +560,17 @@ export function ClosedPositions() {
               </div>
             );
           })}
+
+          {/* Bottom Pagination */}
+          <div className="mt-3">
+            <Pagination
+              id="closed-positions-pagination-bottom"
+              currentPage={currentPage}
+              totalItems={filteredClosedPositions.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -40,7 +40,8 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
         return;
       }
 
-      if (keys.length === 0) {
+      const activeKeys = keys.filter(k => k.isActive);
+      if (activeKeys.length === 0) {
         setBills([]);
         return;
       }
@@ -50,7 +51,9 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
       const service = new BillsHistoryService();
       let allBills: UnifiedBillRecord[] = [];
       
-      const promises = keys.map(apiKey => service.fetchBills(apiKey, start, end));
+      const promises = activeKeys.map(apiKey => {
+        return service.fetchBills(apiKey, start, end);
+      });
       const results = await Promise.all(promises);
       for (const result of results) {
         allBills = [...allBills, ...result];

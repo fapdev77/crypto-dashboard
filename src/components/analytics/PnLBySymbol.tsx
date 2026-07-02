@@ -1,23 +1,25 @@
 import React, { useState, useMemo } from 'react';
 import Big from 'big.js';
 import { usePnLBySymbol } from '../../hooks/usePnLBySymbol';
-import { Download, ArrowUpDown, ChevronDown, Search } from 'lucide-react';
+import { Download, ArrowUpDown, ChevronDown, RefreshCw, BarChart2 } from 'lucide-react';
 import { SymbolPnLRecord } from '../../types';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../utils/exportUtils';
+import { Pagination } from '../ui/Pagination';
 
 import { formatValue, formatCrypto } from '../../utils/formatters';
 import { useTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { usePrivacy } from '../../context/PrivacyContext';
-import { SyncBadge } from '../ui/SyncBadge';
+import { StatusAndSyncBadge } from '../ui/StatusAndSyncBadge';
+import { FilterBar } from '../ui/FilterBar';
 
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
 
 export function PnLBySymbol() {
-  const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('30d');
+  const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
   const [exchange, setExchange] = useState<string>('All');
   const [instrument, setInstrument] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,7 +27,7 @@ export function PnLBySymbol() {
   const [sortField, setSortField] = useState<SortField>('totalPnL');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const { pnlData, isLoading, isSyncing } = usePnLBySymbol(period, exchange, instrument);
+  const { pnlData, isLoading, isSyncing, syncMessage } = usePnLBySymbol(period, exchange, instrument);
 
   const instrumentsAvailable = useMemo(() => {
     if (exchange === 'bitget') return ['All', 'USDT-M', 'Coin-M', 'USDC-M'];
@@ -102,9 +104,21 @@ export function PnLBySymbol() {
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [pnlData, exchange, instrument, searchTerm]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedData.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedData, currentPage]);
+
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
-    
+
     const headers = ['Symbol', 'Instrument', 'Exchange', 'Total PnL', 'Long PnL', 'Short PnL'];
     const rows = sortedData.map(r => [
       r.symbol,
@@ -128,152 +142,159 @@ export function PnLBySymbol() {
   };
 
   return (
-    <div className="w-full flex flex-col gap-6 pb-8 h-full bg-white dark:bg-[#0b0c10] text-gray-900 dark:text-white rounded-xl">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 pb-2">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold tracking-tight">PnL by symbol</h2>
-          <SyncBadge isSyncing={isSyncing} />
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+            <BarChart2 className="w-5 h-5 text-[#2F6BFF]" />
+            PnL by Symbol
+          </h2>
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
+          <span className="text-xs text-[#8E9299] mt-1">To represent the actual PnL, it is calculated based on the real time USD value of the trades, not on the positions value.</span>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search symbol..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg pl-9 pr-3 py-1.5 focus:outline-none w-36 focus:w-48 transition-all"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-500 whitespace-nowrap">Exchange:</label>
-            <select
-              value={exchange}
-              onChange={(e) => setExchange(e.target.value)}
-              className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none"
-            >
-              <option value="All">All Exchanges</option>
-              <option value="bitget">Bitget</option>
-              <option value="bybit">Bybit</option>
-              <option value="okx">OKX</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-500 whitespace-nowrap">Instrument:</label>
-            <select
-              value={instrument}
-              onChange={(e) => setInstrument(e.target.value)}
-              disabled={exchange === 'All'}
-              className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none disabled:opacity-50"
-            >
-              {instrumentsAvailable.map(inst => (
-                <option key={inst} value={inst}>{inst}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-500 whitespace-nowrap">Period:</label>
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as any)}
-              className="bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] text-sm rounded-lg px-3 py-1.5 focus:outline-none"
-            >
-              <option value="today">Today</option>
-              <option value="7d">Last 7 days</option>
-              <option value="14d">Last 14 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
-            </select>
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => setExportMenuOpen(!exportMenuOpen)}
-              className="p-2 ml-2 bg-gray-100 dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] flex items-center gap-2 rounded-lg hover:bg-gray-200 dark:hover:bg-[#2a2b30] transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              Export <ChevronDown className="w-3 h-3" />
-            </button>
-            {exportMenuOpen && (
-              <div className="absolute top-11 right-0 w-32 bg-white dark:bg-[#151619] border border-gray-200 dark:border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm">
-                <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export CSV</button>
-                <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export Excel</button>
-                <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2a2b30]">Export PDF</button>
-              </div>
-            )}
-          </div>
+        <div className="relative">
+          <button
+            onClick={() => setExportMenuOpen(!exportMenuOpen)}
+            className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Export</span> <ChevronDown className="w-3 h-3" />
+          </button>
+          {exportMenuOpen && (
+            <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export CSV</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export Excel</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export PDF</button>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto hide-scrollbar px-4 md:px-6">
+      <div className="px-0">
+        <FilterBar
+          exchange={{
+            value: exchange,
+            onChange: setExchange,
+            labelAll: 'All Exchanges',
+          }}
+          instrument={{
+            value: instrument,
+            onChange: setInstrument,
+            options: instrumentsAvailable,
+            disabled: exchange === 'All',
+            labelAll: 'All Instruments',
+          }}
+          period={{
+            value: period,
+            onChange: setPeriod,
+            options: [
+              { value: 'today', label: 'Today' },
+              { value: '7d', label: '7 Days' },
+              { value: '14d', label: '14 Days' },
+              { value: '30d', label: '30 Days' },
+              { value: '90d', label: '90 Days' },
+            ],
+          }}
+          search={{
+            value: searchTerm,
+            onChange: setSearchTerm,
+            placeholder: 'Search symbol...',
+          }}
+        />
+      </div>
+
+      <div className="flex-1 overflow-auto hide-scrollbar">
         {isLoading ? (
-          <div className="text-sm text-gray-500 py-4">Carregando dados...</div>
+          <div className="flex flex-col items-center justify-center py-20 text-[#8E9299]">
+            <RefreshCw className="w-8 h-8 animate-spin mb-4 text-[#8E9299]/70" />
+            <div className="text-sm font-medium">{syncMessage || 'Carregando dados...'}</div>
+          </div>
         ) : (
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-[#2a2b30] sticky top-0 bg-white dark:bg-[#0b0c10] z-10">
-              <tr>
-                <th className="py-3 font-normal cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('exchange')}>
-                  <div className="flex items-center gap-1">Exchange <ArrowUpDown className="w-3 h-3" /></div>
-                </th>
-                <th className="py-3 font-normal cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('symbol')}>
-                  <div className="flex items-center gap-1">Name <ArrowUpDown className="w-3 h-3" /></div>
-                </th>
-                <th className="py-3 font-normal cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('instrument')}>
-                  <div className="flex items-center gap-1">Instrument <ArrowUpDown className="w-3 h-3" /></div>
-                </th>
-                <th className="py-3 font-normal text-right cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('totalPnL')}>
-                  <div className="flex items-center justify-end gap-1">Total PnL <ArrowUpDown className="w-3 h-3" /></div>
-                </th>
-                <th className="py-3 font-normal text-right cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('longPnL')}>
-                  <div className="flex items-center justify-end gap-1">Long PnL <ArrowUpDown className="w-3 h-3" /></div>
-                </th>
-                <th className="py-3 font-normal text-right cursor-pointer hover:text-gray-700 dark:hover:text-gray-300" onClick={() => handleSort('shortPnL')}>
-                  <div className="flex items-center justify-end gap-1">Short PnL <ArrowUpDown className="w-3 h-3" /></div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedData.map((row) => (
-                <tr key={`${row.exchange}-${row.symbol}-${row.instrument}`} className="border-b border-gray-50 dark:border-[#2a2b30]/50 hover:bg-gray-50 dark:hover:bg-[#2a2b30]/20 transition-colors">
-                  <td className="py-4">
-                    <div data-theme={row.exchange.toLowerCase()} className="flex items-center gap-2 text-brand-normal font-medium">
-                      <ExchangeIcon exchange={row.exchange} className="w-5 h-5 rounded-sm" />
-                      <span className="capitalize">{row.exchange}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 font-bold text-[15px]">
-                    <div className="flex items-center gap-2">
-                      <CoinIcon symbol={row.symbol} className="w-6 h-6 rounded-full" />
-                      <span>{row.symbol}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 text-gray-500">{row.instrument}</td>
-                  {/* TD REFINADO: Fonte pesada, fundo presente e linhas de grade verticais exclusivas */}
-                  <td
-                    className="py-4 text-right px-4 font-bold text-[15px]
-                         bg-gray-50/70 dark:bg-[#1c1d22]/40 
-                         border-x border-gray-100 dark:border-[#2a2b30]/40"
-                  >
-                    <PnLCell value={row.totalPnL} maxAbs={maxTotal} ccy={row.ccy} />
-                  </td>
-                  <td className="py-4 text-right">
-                    <PnLCell value={row.longPnL} maxAbs={maxLong} ccy={row.ccy} />
-                  </td>
-                  <td className="py-4 text-right">
-                    <PnLCell value={row.shortPnL} maxAbs={maxShort} ccy={row.ccy} />
-                  </td>
-                </tr>
-              ))}
-              {sortedData.length === 0 && (
+          <div className="space-y-4">
+            {sortedData.length > 5 && (
+              <Pagination
+                id="pnl-symbol-pagination-top"
+                currentPage={currentPage}
+                totalItems={sortedData.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            )}
+            <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
+              <table className="w-full text-sm text-left">
+              <thead className="text-xs text-[#8E9299] border-b border-[#2a2b30] sticky top-0 bg-[#151619] z-10">
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-gray-500">Nenhum dado encontrado para os filtros selecionados.</td>
+                  <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('exchange')}>
+                    <div className="flex items-center gap-1">Exchange <ArrowUpDown className="w-3 h-3" /></div>
+                  </th>
+                  <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('symbol')}>
+                    <div className="flex items-center gap-1">Name <ArrowUpDown className="w-3 h-3" /></div>
+                  </th>
+                  <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('instrument')}>
+                    <div className="flex items-center gap-1">Instrument <ArrowUpDown className="w-3 h-3" /></div>
+                  </th>
+                  <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('totalPnL')}>
+                    <div className="flex items-center justify-end gap-1">Total PnL <ArrowUpDown className="w-3 h-3" /></div>
+                  </th>
+                  <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('longPnL')}>
+                    <div className="flex items-center justify-end gap-1">Long PnL <ArrowUpDown className="w-3 h-3" /></div>
+                  </th>
+                  <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('shortPnL')}>
+                    <div className="flex items-center justify-end gap-1">Short PnL <ArrowUpDown className="w-3 h-3" /></div>
+                  </th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody>
+                {paginatedData.map((row) => (
+                  <tr key={`${row.exchange}-${row.symbol}-${row.instrument}`} className="border-b border-[#2a2b30]/30 hover:bg-[#2a2b30]/10 transition-colors">
+                    <td className="px-4 py-4">
+                      <div data-theme={row.exchange.toLowerCase()} className="flex items-center gap-2 font-medium">
+                        <ExchangeIcon exchange={row.exchange} className="w-5 h-5 rounded-sm shrink-0" />
+                        <span className="capitalize text-white">{row.exchange}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 font-bold text-[15px] text-white">
+                      <div className="flex items-center gap-2">
+                        <CoinIcon symbol={row.symbol} className="w-6 h-6 rounded-full shrink-0" />
+                        <span>{row.symbol}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-[#8E9299]">{row.instrument}</td>
+                    {/* TD REFINADO: Fonte pesada, fundo presente e linhas de grade verticais exclusivas */}
+                    <td
+                      className="px-4 py-4 text-right font-bold text-[15px]
+                           bg-[#1c1d22]/40 
+                           border-x border-[#2a2b30]/30"
+                    >
+                      <PnLCell value={row.totalPnL} maxAbs={maxTotal} ccy={row.ccy} />
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <PnLCell value={row.longPnL} maxAbs={maxLong} ccy={row.ccy} />
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <PnLCell value={row.shortPnL} maxAbs={maxShort} ccy={row.ccy} />
+                    </td>
+                  </tr>
+                ))}
+                {paginatedData.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-[#8E9299]">No data or nothing found for selected filters.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {sortedData.length > 0 && (
+            <Pagination
+              id="pnl-symbol-pagination-bottom"
+              currentPage={currentPage}
+              totalItems={sortedData.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </div>
+      )}
       </div>
     </div>
   );
@@ -285,8 +306,8 @@ function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string 
 
   const isPositive = value.gt(0);
   const isZero = value.eq(0);
-  const colorTextClass = isZero ? 'text-gray-400' : isPositive ? 'text-[#10B981]' : 'text-pink-500';
-  const colorBgClass = isPositive ? 'bg-[#10B981]' : 'bg-pink-500';
+  const colorTextClass = isZero ? 'text-[#8E9299]' : isPositive ? 'text-[#00C853]' : 'text-[#FF4444]';
+  const colorBgClass = isPositive ? 'bg-[#00C853]' : 'bg-[#FF4444]';
 
   const valNum = Number(value);
   const maxNum = Number(maxAbs) === 0 ? 1 : Number(maxAbs);
@@ -294,25 +315,25 @@ function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string 
 
   const isFiatCcy = ccy.includes('USD') || ccy === 'EUR' || ccy === 'BRL';
   const displayCcy = ccy || 'USDT';
-  
+
   const tokenUsdPrice = useTokenUsdPrice(ccy);
   const usdValue = tokenUsdPrice ? valNum * tokenUsdPrice : null;
 
   return (
-    <div className="flex flex-col items-end gap-2 w-full gap-1.5 pl-4">
+    <div className="flex flex-col items-end gap-1.5 w-full pl-4">
       <div className="flex flex-col items-end px-1">
         <span className={`${colorTextClass} font-mono text-sm leading-tight tracking-tight`}>
-          {isPrivateMode ? '••••' : `${isPositive ? '+' : ''}${formatCurrency(valNum, 'crypto', isFiatCcy ? 2 : 8)}`} <span className="text-xs ml-0.5">{displayCcy}</span>
+          {isPrivateMode ? '••••' : `${isPositive ? '+' : ''}${formatCurrency(valNum, 'crypto', isFiatCcy ? 2 : 8)}`} <span className="text-xs ml-0.5 text-[#8E9299]">{displayCcy}</span>
         </span>
         {!isFiatCcy && usdValue !== null && (
-          <span className="text-xs text-gray-400 dark:text-gray-500 font-mono tracking-tight leading-none mt-0.5" title={isPrivateMode ? '' : `~$${formatValue(tokenUsdPrice || 0, 2)} per ${displayCcy}`}>
+          <span className="text-xs text-[#8E9299] font-mono tracking-tight leading-none mt-0.5" title={isPrivateMode ? '' : `~$${formatValue(tokenUsdPrice || 0, 2)} per ${displayCcy}`}>
             ≈ {isPrivateMode ? '$••••' : `${isPositive ? '+' : ''}${formatCurrency(usdValue, 'usd')}`}
           </span>
         )}
       </div>
-      <div className="w-full h-[3px] bg-gray-200 dark:bg-[#2e3039] rounded-full flex relative overflow-hidden">
+      <div className="w-full h-[3px] bg-[#2a2b30]/50 rounded-full flex relative overflow-hidden">
         {/* Middle divider */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-gray-300 dark:bg-[#2a2b30] z-10" />
+        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-[#2a2b30] z-10" />
 
         {/* Negative Side */}
         <div className="w-1/2 h-full flex justify-end">

@@ -5,6 +5,7 @@ import { useDashboardStore } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { ApiKeyModal } from './ApiKeyModal';
+import { AppTooltip } from './ui/Tooltip';
 
 const EXCHANGES: { id: Exchange; name: string }[] = [
   { id: 'bitget', name: 'Bitget' },
@@ -171,32 +172,35 @@ export function ApiKeys() {
                                 </div>
                               ) : (
                                 <>
-                                  <button
-                                    onClick={() => handleEdit(apiKey)}
-                                    className="text-[#8E9299] hover:text-[#2F6BFF] p-1 rounded hover:bg-[#202125] transition-all hover:scale-105"
-                                    title="Edit Label"
-                                  >
-                                    <Edit2 className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (apiKey.isActive) {
-                                        clearConnectionData(apiKey.id);
-                                      }
-                                      toggleKey(apiKey.id);
-                                    }}
-                                    className={`p-1 rounded hover:bg-[#202125] transition-all hover:scale-105 ${apiKey.isActive ? 'text-[#00C853] hover:text-[#FF4444]' : 'text-[#8E9299] hover:text-[#00C853]'}`}
-                                    title={apiKey.isActive ? 'Disable' : 'Enable'}
-                                  >
-                                    <Power className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => setKeyToDelete(apiKey.id)}
-                                    className="text-[#8E9299] hover:text-[#FF4444] p-1 rounded hover:bg-[#202125] transition-all hover:scale-105"
-                                    title="Remove"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
+                                  <AppTooltip description="Edit connection label">
+                                    <button
+                                      onClick={() => handleEdit(apiKey)}
+                                      className="text-[#8E9299] hover:text-[#2F6BFF] p-1 rounded hover:bg-[#202125] transition-all hover:scale-105"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </AppTooltip>
+                                  <AppTooltip description={apiKey.isActive ? 'Disable connection' : 'Enable connection'}>
+                                    <button
+                                      onClick={() => {
+                                        if (apiKey.isActive) {
+                                          clearConnectionData(apiKey.id);
+                                        }
+                                        toggleKey(apiKey.id);
+                                      }}
+                                      className={`p-1 rounded hover:bg-[#202125] transition-all hover:scale-105 ${apiKey.isActive ? 'text-[#00C853] hover:text-[#FF4444]' : 'text-[#8E9299] hover:text-[#00C853]'}`}
+                                    >
+                                      <Power className="w-3.5 h-3.5" />
+                                    </button>
+                                  </AppTooltip>
+                                  <AppTooltip description="Delete connection">
+                                    <button
+                                      onClick={() => setKeyToDelete(apiKey.id)}
+                                      className="text-[#8E9299] hover:text-[#FF4444] p-1 rounded hover:bg-[#202125] transition-all hover:scale-105"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </AppTooltip>
                                 </>
                               )}
                             </div>

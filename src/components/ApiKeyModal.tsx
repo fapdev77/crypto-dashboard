@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Save, X, Trash2 } from 'lucide-react';
 import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
+import { AppTooltip } from './ui/Tooltip';
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -144,7 +145,9 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2">Label</label>
+              <AppTooltip description="A custom name to identify this connection (e.g. 'Main Account', 'Scalp Bot').">
+                <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Label</label>
+              </AppTooltip>
               <input
                 type="text"
                 required
@@ -157,7 +160,9 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2">API Key</label>
+            <AppTooltip description="Your exchange API key. It is stored securely in your local browser and never sent to our servers.">
+              <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">API Key</label>
+            </AppTooltip>
             {mode === 'edit' ? (
               <div className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 text-sm text-[#8E9299] font-mono opacity-80 select-none">
                 {apiKey.substring(0, 8)}...{apiKey.substring(apiKey.length - 4)}
@@ -177,7 +182,9 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
           {mode === 'create' && (
              <>
                <div>
-                 <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2">API Secret</label>
+                 <AppTooltip description="Your exchange API Secret key. Keep it safe.">
+                   <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">API Secret</label>
+                 </AppTooltip>
                  <div className="relative">
                    <input
                      type={showSecret ? "text" : "password"}
@@ -199,7 +206,9 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
 
                {activeEx.requiresPassphrase && (
                  <div>
-                   <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2">Passphrase</label>
+                   <AppTooltip description="Required by some exchanges (like Bitget and OKX) as an extra security password for your API key.">
+                     <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Passphrase</label>
+                   </AppTooltip>
                    <input
                      type="password"
                      required

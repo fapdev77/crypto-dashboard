@@ -6,6 +6,7 @@ import { ArrowLeftRight } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
+import { AppTooltip } from '../../ui/Tooltip';
 
 export function OpenOrders() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -41,7 +42,29 @@ export function OpenOrders() {
 
       let valUsd = 0;
       if (o.category === 'INVERSE') {
-        valUsd = o.qty; // INVERSE qty is in USD
+        let qtyIsCoin = false;
+        if (o.price > 0) {
+          const estValIfQtyIsCoin = o.qty * o.price;
+          const estValIfQtyIsUsd = o.qty;
+          const actualVal = o.value || 0;
+          if (actualVal > 0) {
+            const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+            const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+            if (distToCoin < distToUsd) {
+              qtyIsCoin = true;
+            }
+          } else {
+            if (o.qty < 2 && o.qty * o.price >= 10) {
+              qtyIsCoin = true;
+            }
+          }
+        }
+        
+        if (qtyIsCoin) {
+          valUsd = o.value || (o.price > 0 ? Number(new Big(o.qty).times(o.price)) : 0);
+        } else {
+          valUsd = o.qty;
+        }
       } else {
         valUsd = o.value || (o.price > 0 ? Number(new Big(o.qty).times(o.price)) : 0);
       }
@@ -65,7 +88,7 @@ export function OpenOrders() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-         <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+         <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
            <ArrowLeftRight className="w-5 h-5 text-[#2F6BFF]" />
            Open Orders
          </h2>
@@ -134,7 +157,9 @@ export function OpenOrders() {
 
           {/* Total Value */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-            <span className="text-2xl text-[#8E9299]">Total Est. Value</span>
+            <AppTooltip description="The total estimated USD value of all open orders, calculated based on their limit trigger prices.">
+              <span className="text-2xl text-[#8E9299] w-max cursor-help border-b border-dashed border-[#8E9299]/50">Total Est. Value</span>
+            </AppTooltip>
             <span className="text-xl font-medium text-white mt-1">
               {formatCurrency(stats.totalVolume, 'usd')}
             </span>

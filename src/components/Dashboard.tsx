@@ -3,7 +3,7 @@ import Big from 'big.js';
 import { useDashboardStore, BalanceItem } from '../store/dashboardStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { DollarSign, Wallet, Search, X, TrendingUp, TrendingDown, ChevronDown, ChevronRight, BarChart2, Eye, EyeOff } from 'lucide-react';
+import { DollarSign, Wallet, Search, X, TrendingUp, TrendingDown, ChevronDown, ChevronRight, BarChart2, Eye, EyeOff, Activity } from 'lucide-react';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { Sparkline } from './ui/Sparkline';
@@ -11,6 +11,80 @@ import { MacroCapitalChart } from './analytics/MacroCapitalChart';
 import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
+import { getInverseUsdValues } from '../utils/inverseUtils';
+
+const cleanAccountLabel = (label: string) => {
+  return label.replace(/\s*\(.*\)$/, '');
+};
+
+const getAssetOrigin = (b: BalanceItem) => {
+  const ex = b.exchange.toLowerCase();
+  
+  if (ex === 'okx' || ex === 'bybit') {
+    return 'UNIFIED';
+  }
+
+  // Bitget logic
+  const connId = b.connectionId;
+  const prefix = connId + '-';
+  if (b.id.startsWith(prefix)) {
+    const after = b.id.substring(prefix.length);
+    const lastDash = after.lastIndexOf('-');
+    if (lastDash !== -1) {
+      return after.substring(0, lastDash);
+    }
+  }
+  if (b.id.startsWith('bal-')) {
+    const numId = parseInt(b.id.replace('bal-', ''), 10);
+    const mockTypes = ['SPOT', 'COIN-FUTURES', 'USDT-FUTURES', 'EARN', 'SPOT', 'COIN-FUTURES', 'EARN'];
+    return mockTypes[numId % mockTypes.length];
+  }
+  return null;
+};
+
+const formatOriginLabel = (origin: string) => {
+  switch (origin.toUpperCase()) {
+    case 'SPOT':
+      return 'Spot';
+    case 'EARN':
+      return 'Earn';
+    case 'UNIFIED':
+      return 'Unified';
+    case 'MARGIN_CROSS':
+      return 'Margin Cross';
+    case 'MARGIN_ISOLATED':
+      return 'Margin Isolated';
+    case 'USDT-FUTURES':
+      return 'USDT Futures';
+    case 'COIN-FUTURES':
+      return 'COIN Futures';
+    case 'USDC-FUTURES':
+      return 'USDC Futures';
+    default:
+      return origin.replace('_', ' ').replace('-', ' ');
+  }
+};
+
+const getOriginBadgeStyle = (origin: string) => {
+  switch (origin.toUpperCase()) {
+    case 'SPOT':
+      return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+    case 'EARN':
+      return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+    case 'USDT-FUTURES':
+    case 'COIN-FUTURES':
+      return 'bg-[#03aac7]/10 text-[#03aac7] border border-[#03aac7]/20';
+    case 'USDC-FUTURES':
+      return 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+    case 'MARGIN_CROSS':
+    case 'UNIFIED':
+      return 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+    case 'MARGIN_ISOLATED':
+      return 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+    default:
+      return 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
+  }
+};
 
 export function Dashboard() {
   const { balances, positions } = useDashboardStore();
@@ -43,11 +117,27 @@ export function Dashboard() {
     return Number(activeBalances.reduce((acc, curr) => acc.plus(curr.usdValue || 0), new Big(0)));
   }, [activeBalances]);
 
-  const dailyPnL = useMemo(() => {
-    return Number(activePositions.reduce((acc, curr) => acc.plus(curr.unrealizedPnl || 0), new Big(0)));
+  const openPositionsRealizedPnL = useMemo(() => {
+    return Number(activePositions.reduce((acc, curr) => {
+      const { realizedPnl } = getInverseUsdValues(curr, curr.markPrice);
+      return acc.plus(realizedPnl || 0);
+    }, new Big(0)));
   }, [activePositions]);
 
-  const dailyPnLPercent = totalEquity > 0 ? (dailyPnL / totalEquity) * 100 : 0;
+  const openPositionsUnrealizedPnL = useMemo(() => {
+    return Number(activePositions.reduce((acc, curr) => {
+      const { unrealizedPnl } = getInverseUsdValues(curr, curr.markPrice);
+      return acc.plus(unrealizedPnl || 0);
+    }, new Big(0)));
+  }, [activePositions]);
+
+  const openPositionsTotalPnL = useMemo(() => {
+    return openPositionsRealizedPnL + openPositionsUnrealizedPnL;
+  }, [openPositionsRealizedPnL, openPositionsUnrealizedPnL]);
+
+  const openPositionsTotalPnLPercent = totalEquity > 0 ? (openPositionsTotalPnL / totalEquity) * 100 : 0;
+  const realizedPnLPercent = totalEquity > 0 ? (openPositionsRealizedPnL / totalEquity) * 100 : 0;
+  const unrealizedPnLPercent = totalEquity > 0 ? (openPositionsUnrealizedPnL / totalEquity) * 100 : 0;
   const openPositionsCount = activePositions.length;
 
   const longPositions = activePositions.filter(pos => pos.side === 'long' || pos.side === 'buy').length;
@@ -68,7 +158,7 @@ export function Dashboard() {
     return acc;
   }, new Big(0)));
   const totalExposed = totalEquity - totalProtected;
-  
+
   const protectedPercent = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
   const exposedPercent = totalEquity > 0 ? (totalExposed / totalEquity) * 100 : 0;
 
@@ -156,7 +246,7 @@ export function Dashboard() {
     for (const [exchange, data] of Object.entries(exchangesMap)) {
       const totalNum = Number(data.total);
       const globalTotalNum = Number(globalTotal);
-      
+
       const sorted = Object.entries(data.assetsMap)
         .map(([ccy, val]) => ({ ccy, val: Number(val) }))
         .sort((a, b) => b.val - a.val);
@@ -256,13 +346,13 @@ export function Dashboard() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Total Equity (USD)</span>
-                <span className={`inline-block w-2 h-2 rounded-full ${dailyPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
+                <span className={`inline-block w-2 h-2 rounded-full ${openPositionsTotalPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
               </div>
               <div className="flex items-baseline gap-2 mt-1">
                 <p className="text-3xl font-bold text-white font-mono tracking-tight">
                   {formatCurrency(totalEquity, 'usd')}
                 </p>
-                {dailyPnL >= 0 ? (
+                {openPositionsTotalPnL >= 0 ? (
                   <TrendingUp className="w-4 h-4 text-emerald-500/70" />
                 ) : (
                   <TrendingDown className="w-4 h-4 text-red-500/70" />
@@ -274,37 +364,67 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Lado Direito: Daily P&L */}
+          {/* Lado Direito: Open Positions P&L */}
           <div className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Daily P&L</span>
-              <div className="w-[80px] h-[30px] opacity-90">
-                <Sparkline
-                  data={[10, 25, 15, 40, 30, 50, 45, 60, dailyPnL >= 0 ? 80 : 20]}
-                  color={dailyPnL >= 0 ? 'emerald' : 'red'}
-                  width={80}
-                  height={30}
-                />
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Open Positions P&L</span>
+              <Activity className="w-5 h-5 text-[#8E9299]/70" />
+            </div>
+
+            <div className="space-y-4">
+              {/* Unrealized */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-1">Unrealized P&L</div>
+                  <div className="flex items-baseline gap-2">
+                    <p className={`text-xl font-bold font-mono tracking-tight ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {isPrivateMode ? '$••••' : `${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsUnrealizedPnL, 'usd')}`}
+                    </p>
+                    <span className={`text-xs font-semibold font-mono ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {isPrivateMode ? '(••••%)' : `(${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${unrealizedPnLPercent.toFixed(2)}%)`}
+                    </span>
+                  </div>
+                </div>
+                <div className="w-[60px] h-[24px] opacity-90 hidden sm:block">
+                  <Sparkline
+                    data={[10, 20, 15, 30, 25, 40, 35, 50, openPositionsUnrealizedPnL >= 0 ? 70 : 20]}
+                    color={openPositionsUnrealizedPnL >= 0 ? 'emerald' : 'red'}
+                    width={60}
+                    height={24}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className={`text-2xl font-bold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                {isPrivateMode ? '$••••' : `${dailyPnL >= 0 ? '+' : ''}${formatCurrency(dailyPnL, 'usd')}`}
-              </p>
-              <span className={`text-sm font-semibold font-mono ${dailyPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                {isPrivateMode ? '(••••%)' : `(${dailyPnL >= 0 ? '+' : ''}${dailyPnLPercent.toFixed(2)}%)`}
-              </span>
-            </div>
-            <div className="mt-4 text-[10px] text-[#8E9299]/80 font-medium">
-              Unrealized P&L from active positions
+
+              {/* Realized */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-1">Realized P&L</div>
+                  <div className="flex items-baseline gap-2">
+                    <p className={`text-xl font-bold font-mono tracking-tight ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {isPrivateMode ? '$••••' : `${openPositionsRealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsRealizedPnL, 'usd')}`}
+                    </p>
+                    <span className={`text-xs font-semibold font-mono ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {isPrivateMode ? '(••••%)' : `(${openPositionsRealizedPnL >= 0 ? '+' : ''}${realizedPnLPercent.toFixed(2)}%)`}
+                    </span>
+                  </div>
+                </div>
+                <div className="w-[60px] h-[24px] opacity-90 hidden sm:block">
+                  <Sparkline
+                    data={[15, 10, 25, 20, 35, 30, 45, 40, openPositionsRealizedPnL >= 0 ? 60 : 30]}
+                    color={openPositionsRealizedPnL >= 0 ? 'emerald' : 'red'}
+                    width={60}
+                    height={24}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Card 2: Posições e Hedge Mode */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-6 md:divide-x divide-[#2a2b30]">
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-1 md:divide-x divide-[#2a2b30]">
           {/* Lado Esquerdo: Posições Ativas */}
-          <div className="flex-1 flex flex-col justify-between">
+          <div className="flex-1 flex flex-col justify-between pr-5">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Active Positions</span>
@@ -320,12 +440,12 @@ export function Dashboard() {
 
             {/* Long vs Short Bar */}
             <div className="space-y-2 mt-4">
-              <div className="flex justify-between text-[11px] font-semibold">
+              <div className="flex justify-between text-[15px] font-semibold">
                 <span className="text-emerald-500 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" /> Longs: {longPositions} ({longPercent.toFixed(0)}%)
+                  <TrendingUp className="w-3 h-3" /> Longs: {longPositions}
                 </span>
                 <span className="text-red-500 flex items-center gap-1">
-                  <TrendingDown className="w-3 h-3" /> Shorts: {shortPositions} ({shortPercent.toFixed(0)}%)
+                  <TrendingDown className="w-3 h-3" /> Shorts: {shortPositions}
                 </span>
               </div>
               <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
@@ -338,6 +458,14 @@ export function Dashboard() {
                   <div className="h-full w-full bg-[#2a2b30]" />
                 )}
               </div>
+              <div className="flex justify-between text-[15px] font-semibold">
+                <span className="text-emerald-500 flex items-center gap-1">
+                  {longPercent.toFixed(0)}%
+                </span>
+                <span className="text-red-500 flex items-center gap-1">
+                  {shortPercent.toFixed(0)}%
+                </span>
+              </div>
             </div>
           </div>
 
@@ -347,34 +475,40 @@ export function Dashboard() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Hedge Mode (Inverse)</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-500">L:{inverseLongCount}</span>
-                  <span className="text-[10px] font-bold text-red-500">S:{inverseShortCount}</span>
+                  <span className="text-xs font-semibold text-emerald-500">Longs: {inverseLongCount}</span>
+                  <span className="text-xs font-bold ">|</span>
+                  <span className="text-xs font-semibold text-red-500">Shorts: {inverseShortCount}</span>
                 </div>
               </div>
               <div className="flex items-baseline gap-1.5">
                 <p className="text-xl font-bold text-white font-mono">
                   {inverseOpenCount}
                 </p>
-                <span className="text-xs text-[#8E9299] font-medium">Active Contracts</span>
+                <span className="text-xs text-[#8E9299] font-medium">Active Positions</span>
               </div>
             </div>
 
             {/* Protected vs Exposed Bar */}
             <div className="space-y-2 mt-4">
-              <div className="flex justify-between text-[11px] font-semibold font-mono">
-                <span className="text-emerald-500/90">Prot: {formatCurrency(totalProtected, 'usd', 0)} ({protectedPercent.toFixed(1)}%)</span>
-                <span className="text-[#8E9299]">Exp: {formatCurrency(totalExposed, 'usd', 0)} ({exposedPercent.toFixed(1)}%)</span>
+              <div className="flex justify-between text-[15px] font-semibold font-mono">
+                <span className="text-emerald-500/90">Prot: {formatCurrency(totalProtected, 'usd', 2)} </span>
+                <span className="text-white font-semibold">Exp: {formatCurrency(totalExposed, 'usd', 2)} </span>
               </div>
               <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
                 {totalEquity > 0 ? (
                   <>
                     <div className="h-full bg-emerald-500/80 transition-all duration-300" style={{ width: `${protectedPercent}%` }} />
-                    <div className="h-full bg-[#2a2b30] transition-all duration-300" style={{ width: `${exposedPercent}%` }} />
+                    <div className="h-full bg-white transition-all duration-300" style={{ width: `${exposedPercent}%` }} />
                   </>
                 ) : (
                   <div className="h-full w-full bg-[#2a2b30]" />
                 )}
               </div>
+              <div className="flex justify-between text-[15px] font-semibold font-mono">
+                <span className="text-emerald-500/90"> {protectedPercent.toFixed(2)}%</span>
+                <span className="text-white font-semibold"> {exposedPercent.toFixed(2)}%</span>
+              </div>
+
             </div>
           </div>
         </div>
@@ -502,7 +636,7 @@ export function Dashboard() {
                                   <div className="hidden sm:block ml-4 pl-4 border-l border-[#2a2b30] opacity-70 group-hover:opacity-100 transition-opacity">
                                     <Sparkline data={sparkData} color={isPositive ? 'emerald' : 'red'} width={60} height={20} />
                                   </div>
-                                  <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{accData.label}</span>
+                                  <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{cleanAccountLabel(accData.label)}</span>
                                 </div>
                                 <span className="text-sm font-bold text-white font-mono">{formatCurrency(accData.total, 'usd')}</span>
                               </button>
@@ -519,22 +653,33 @@ export function Dashboard() {
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#2a2b30]">
-                                      {accData.balances.map(b => (
-                                        <tr key={b.id} className="hover:bg-[#1a1b1e] transition-colors">
-                                          <td className="px-4 py-2.5 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                              <CoinIcon symbol={b.ccy} size={20} className="w-5 h-5" />
-                                              <span className="text-sm font-bold text-white leading-none mt-0.5">{b.ccy}</span>
-                                            </div>
-                                          </td>
-                                          <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
-                                            {formatCurrency(b.amount, 'crypto', 6)}
-                                          </td>
-                                          <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
-                                            {formatCurrency(b.usdValue, 'usd')}
-                                          </td>
-                                        </tr>
-                                      ))}
+                                      {accData.balances.map(b => {
+                                        const origin = getAssetOrigin(b);
+                                        const formattedOrigin = origin ? formatOriginLabel(origin) : null;
+                                        const badgeStyle = origin ? getOriginBadgeStyle(origin) : null;
+
+                                        return (
+                                          <tr key={b.id} className="hover:bg-[#1a1b1e] transition-colors">
+                                            <td className="px-4 py-2.5 whitespace-nowrap">
+                                              <div className="flex items-center gap-2">
+                                                <CoinIcon symbol={b.ccy} size={20} className="w-5 h-5" />
+                                                <span className="text-sm font-bold text-white leading-none mt-0.5 mr-1">{b.ccy}</span>
+                                                {formattedOrigin && (
+                                                  <span className={`text-[10px] font-semibold tracking-wider px-1.5 py-0.5 rounded border leading-none ${badgeStyle}`}>
+                                                    {formattedOrigin}
+                                                  </span>
+                                                )}
+                                              </div>
+                                            </td>
+                                            <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
+                                              {formatCurrency(b.amount, 'crypto', 6)}
+                                            </td>
+                                            <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
+                                              {formatCurrency(b.usdValue, 'usd')}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
                                     </tbody>
                                   </table>
                                 </div>

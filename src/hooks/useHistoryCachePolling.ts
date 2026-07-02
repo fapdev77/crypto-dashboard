@@ -2,31 +2,43 @@ import { useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
+import { OrderHistoryService } from '../services/orders/OrderHistoryService';
 
 export function useHistoryCachePolling() {
   const keys = useApiKeysStore(state => state.keys);
-  const { useMockData, historyCacheInterval, bumpHistoryCacheVersion } = useSettingsStore();
+  const { useMockData, historyCacheInterval, bumpHistoryCacheVersion, setLastSyncTime } = useSettingsStore();
 
   useEffect(() => {
-    if (useMockData || keys.length === 0) return;
+    const activeKeys = keys.filter(k => k.isActive);
+    if (useMockData || activeKeys.length === 0) return;
 
     const intervalMs = historyCacheInterval * 60 * 1000;
 
     const poll = async () => {
       console.log('[HistoryCachePolling] Executing background update...');
-      const service = new PositionHistoryService();
+      const positionService = new PositionHistoryService();
+      const orderService = new OrderHistoryService();
       try {
-        await Promise.all(keys.map(apiKey => service.fetchWithCache(apiKey)));
+        const positionSyncs = activeKeys.map(apiKey => positionService.fetchWithCache(apiKey));
+        const orderSyncs = activeKeys.map(apiKey => orderService.fetchWithCache(apiKey));
+        
+        await Promise.all([...positionSyncs, ...orderSyncs]);
+        
         bumpHistoryCacheVersion();
+        setLastSyncTime(Date.now());
         console.log('[HistoryCachePolling] Background update complete.');
       } catch (err) {
         console.error('[HistoryCachePolling] Error during background update:', err);
       }
     };
 
-    // Run immediately on mount to pick up any trades closed since the last poll cycle,
+    // Run immediately on mount ONLY if the last sync was longer than the interval ago,
     // then keep refreshing on the configured interval.
-    poll();
+    const lastSync = useSettingsStore.getState().lastSyncTime;
+    const now = Date.now();
+    if (now - lastSync >= intervalMs) {
+      poll();
+    }
     const intervalId = setInterval(poll, intervalMs);
 
     return () => clearInterval(intervalId);

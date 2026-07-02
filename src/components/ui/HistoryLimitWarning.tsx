@@ -3,9 +3,9 @@ import { useApiKeysStore } from '../../store/apiKeysStore';
 import { AlertCircle } from 'lucide-react';
 
 const LIMITS: Record<string, { days: number, label: string }> = {
-  okx: { days: 90, label: '3 meses (90 dias)' },
-  bitget: { days: 90, label: '3 meses (90 dias)' },
-  bybit: { days: 730, label: '2 anos' }
+  okx: { days: 90, label: '3 months (90 days)' },
+  bitget: { days: 90, label: '3 months (90 days)' },
+  bybit: { days: 730, label: '2 years' }
 };
 
 interface HistoryLimitWarningProps {
@@ -52,11 +52,11 @@ export function HistoryLimitWarning({ period, className = '' }: HistoryLimitWarn
     <div className={`bg-[#2A1D0B] border border-[#FFAB00]/30 rounded-xl p-3 flex items-start gap-3 ${className}`}>
       <AlertCircle className="w-5 h-5 text-[#FFAB00] mt-0.5 flex-shrink-0" />
       <div className="text-sm text-[#FFAB00]/90">
-        <strong>Lacuna de Dados Históricos:</strong> Algumas de suas corretoras ativas possuem limites na API para consulta de histórico aberto. Dados antes destes limites não serão exibidos:
+        <strong>Historical Data Limits:</strong> Some of your active exchanges have API restrictions for retrieving historical data. Records older than these limits cannot be retrieved:
         <ul className="list-disc pl-5 mt-2 opacity-80 space-y-1">
           {warnings.map(w => (
             <li key={w.exchange} className="capitalize">
-              {w.exchange}: Máximo de {w.max}
+              {w.exchange}: Maximum of {w.max}
             </li>
           ))}
         </ul>

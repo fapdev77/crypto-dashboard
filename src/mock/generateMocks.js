@@ -2,16 +2,16 @@ import fs from 'fs';
 import path from 'path';
 
 const exchanges = ['bitget', 'bybit', 'okx'];
-const ACCOUNTS_PER_EXCHANGE = 4;
-const POSITIONS_PER_ACCOUNT = 40;
-const HISTORY_PER_ACCOUNT = 40;
-const ORDERS_PER_ACCOUNT = 30;
+const ACCOUNTS_PER_EXCHANGE = 3;
+const POSITIONS_PER_ACCOUNT = 20;
+const HISTORY_PER_ACCOUNT = 25;
+const ORDERS_PER_ACCOUNT = 25;
 
-const coins = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'BNB', 'AVAX', 'LINK', 'MATIC'];
+const coins = ['USDT', 'USDC', 'BTC', 'ETH', 'SOL', 'LINK'];
 const symbols = [
-  'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT', 'ADAUSDT', 
-  'BNBUSDT', 'AVAXUSDT', 'LINKUSDT', 'MATICUSDT', 
-  'BTCUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD', 'DOGEUSD'
+  'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'LINKUSDT',
+  'BTCUSDC', 'ETHUSDC', 'SOLUSDC', 'LINKUSDC',
+  'BTCUSD', 'ETHUSD', 'SOLUSD', 'LINKUSD'
 ];
 const sides = ['long', 'short'];
 const marginModes = ['isolated', 'cross'];
@@ -92,6 +92,11 @@ function generate() {
           instrumentType = ['USDT', 'USDC'].includes(ccy) ? 'FUTURES' : 'INVERSE';
         }
 
+        const realizedPnl = randomNum(-50, 50);
+        const accumulatedFunding = randomNum(-10, 10).toString();
+        const accumulatedTradingFee = randomNum(-5, 0).toString();
+        const closedPnl = realizedPnl - parseFloat(accumulatedFunding) - parseFloat(accumulatedTradingFee);
+
         positions.push({
           id: `pos-${posIdCounter++}`,
           connectionId,
@@ -106,7 +111,8 @@ function generate() {
           entryPrice,
           markPrice,
           unrealizedPnl,
-          realizedPnl: randomNum(-50, 50),
+          realizedPnl,
+          closedPnl,
           leverage: Math.round((entryPrice * size) / margin),
           marginMode: randomItem(marginModes),
           margin,
@@ -114,6 +120,8 @@ function generate() {
           breakEvenPrice: entryPrice * 1.001,
           roe,
           instrumentType,
+          accumulatedFunding,
+          accumulatedTradingFee,
           raw: {
             mockData: true,
             instType
@@ -157,6 +165,10 @@ function generate() {
           instrumentType = ['USDT', 'USDC'].includes(ccyHistory) ? 'FUTURES' : 'INVERSE';
         }
 
+        const fundingFee = randomNum(-10, 10);
+        const tradingFee = randomNum(-5, 0);
+        const closedPnl = realizedPnl - fundingFee - tradingFee;
+
         history.push({
           id: `hist-${histIdCounter++}`,
           connectionId,
@@ -167,14 +179,15 @@ function generate() {
           quoteCoin,
           side,
           realizedPnl,
+          closedPnl,
           closeUpdateTime,
           createdTime,
           entryPrice,
           closePrice,
           size,
           ccy: ccyHistory,
-          fundingFee: randomNum(-10, 10),
-          tradingFee: randomNum(-5, 0),
+          fundingFee,
+          tradingFee,
           instrumentType,
           raw: {
             mockData: true,
@@ -257,7 +270,7 @@ function generate() {
     for (let i = 1; i <= ACCOUNTS_PER_EXCHANGE; i++) {
       const connectionId = `mocked-data-${exchange}-${i}`;
       const label = `Mock ${exchange.toUpperCase()} ${i}`;
-      const numBills = randomInt(3, 8);
+      const numBills = randomInt(3, 7);
       
       for (let j = 0; j < numBills; j++) {
         const type = randomItem(billTypes);

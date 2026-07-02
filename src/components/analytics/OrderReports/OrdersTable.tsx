@@ -22,7 +22,7 @@ export function OrdersTable({ orders, loading }: Props) {
   if (orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl flex-1">
-        <p className="text-[#8E9299]">Nenhuma ordem encontrada para os filtros selecionados.</p>
+        <p className="text-[#8E9299]">No Open Orders found.</p>
       </div>
     );
   }

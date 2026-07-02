@@ -5,11 +5,13 @@ import { OrdersTable } from './OrdersTable';
 import { Download, ChevronDown, History } from 'lucide-react';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
-import { SyncBadge } from '../../ui/SyncBadge';
+import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
+import { AppTooltip } from '../../ui/Tooltip';
+import { Pagination } from '../../ui/Pagination';
 
 export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -20,7 +22,8 @@ export function OrderHistory() {
     side: 'All',
     status: 'CLOSED',
     timePeriod: 7 * 24 * 60 * 60 * 1000, // default 7 days
-    accountId: 'All'
+    accountId: 'All',
+    historyStatus: 'All'
   });
 
   const { fetchOrders, orders, loading, isSyncing, error } = useOrderReports(filters);
@@ -28,6 +31,21 @@ export function OrderHistory() {
   const formatCurrency = useFormatCurrency();
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  // Adjust page if it exceeds the max page available for current orders
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(orders.length / itemsPerPage));
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [orders.length, currentPage]);
 
   // Busca inicial
   useEffect(() => {
@@ -61,11 +79,13 @@ export function OrderHistory() {
         if (ccy.includes('USD') || ccy === 'EUR') return 1;
         if (priceCache[ccy]) return priceCache[ccy];
         try {
-          const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${ccy}USDT`);
+          const res = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${ccy}-USDT`);
           if (res.ok) {
-            const data = await res.json();
-            priceCache[ccy] = parseFloat(data.price);
-            return priceCache[ccy];
+            const json = await res.json();
+            if (json.code === '0' && json.data && json.data.length > 0) {
+              priceCache[ccy] = parseFloat(json.data[0].last);
+              return priceCache[ccy];
+            }
           }
         } catch { /* ignore fallback to 0 */ }
         return 0;
@@ -89,9 +109,15 @@ export function OrderHistory() {
         return;
       }
 
+      const activeKeys = keys.filter(k => k.isActive);
+      if (activeKeys.length === 0) {
+        if (isMounted) setTotalFundingFee(0);
+        return;
+      }
+
       import('../../../services/bills/BillsHistoryService').then(async ({ BillsHistoryService }) => {
         const service = new BillsHistoryService();
-        for (const key of keys) {
+        for (const key of activeKeys) {
            if (filters.exchange !== 'All' && key.exchange !== filters.exchange.toLowerCase()) continue;
            if (filters.accountId !== 'All' && key.id !== filters.accountId) continue;
            
@@ -138,9 +164,42 @@ export function OrderHistory() {
         const p = o.avgPrice > 0 ? o.avgPrice : o.price || 0;
         let valUsd = 0;
         if (o.category === 'INVERSE') {
-           valUsd = o.filledQty; // Qty is mostly in USD already
+          // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs USD contracts (e.g. 100 USD)
+          let qtyIsCoin = false;
+          if (o.exchange === 'bitget') {
+            qtyIsCoin = true;
+          } else if (o.exchange === 'okx' || o.exchange === 'bybit') {
+            qtyIsCoin = false;
+          } else {
+            const estValIfQtyIsCoin = o.qty * p;
+            const estValIfQtyIsUsd = o.qty;
+            const actualVal = o.value || 0;
+
+            if (actualVal > 0 && p > 0) {
+              const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+              const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+              if (distToCoin < distToUsd) {
+                qtyIsCoin = true;
+              }
+            } else {
+              if (o.qty < 2 && o.qty * p >= 10) {
+                qtyIsCoin = true;
+              }
+            }
+          }
+
+          if (o.exchange === 'bybit') {
+            // Bybit inverse: o.value is in COIN. Multiply by price to get USD value
+            valUsd = o.value && o.value > 0 && p > 0 ? Number(new Big(o.value).times(p)) : o.filledQty;
+          } else if (o.value && o.value > 0 && o.exchange !== 'bitget') {
+            valUsd = o.filledQty > 0 && o.filledQty !== o.qty ? (p > 0 ? Number(new Big(o.filledQty).times(p)) : 0) : o.value;
+          } else if (!qtyIsCoin) {
+            valUsd = o.filledQty; // Qty is mostly in USD already
+          } else {
+            valUsd = p > 0 ? Number(new Big(o.filledQty).times(p)) : 0;
+          }
         } else {
-           valUsd = o.value || (p > 0 ? Number(new Big(o.filledQty).times(p)) : 0);
+          valUsd = o.value || (p > 0 ? Number(new Big(o.filledQty).times(p)) : 0);
         }
         totalTradedVolume += valUsd;
       }
@@ -157,6 +216,11 @@ export function OrderHistory() {
 
     return { buyCount, sellCount, filledCount, cancelledCount, rejectedCount, totalTradedVolume, totalFees };
   }, [orders]);
+
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return orders.slice(startIndex, startIndex + itemsPerPage);
+  }, [orders, currentPage]);
 
   const SIDE_DONUT = [
     { name: 'Buy', value: stats.buyCount, color: '#00C853' },
@@ -200,13 +264,13 @@ export function OrderHistory() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-        <h2 className="text-xl font-bold tracking-tight flex items-center gap-3">
-          <div className="flex items-center gap-2">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <History className="w-5 h-5 text-[#2F6BFF]" />
-            Order History
-          </div>
-          <SyncBadge isSyncing={isSyncing} />
-        </h2>
+            Orders History
+          </h2>
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} />
+        </div>
         <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}
@@ -226,7 +290,7 @@ export function OrderHistory() {
       </div>
 
       <div className="px-0">
-        <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} />
+        <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} showStatusFilter={true} />
       </div>
 
       {orders.length > 0 && (
@@ -287,24 +351,20 @@ export function OrderHistory() {
           {/* Volume and Fees */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-3">
             <div className="flex flex-col">
-              <span className="text-[13px] text-[#8E9299] uppercase tracking-wider">Traded Volume</span>
-              <span className="text-xl font-medium text-white">
+              <AppTooltip description="The total estimated USD value of all executed trades in the selected period.">
+                <span className="text-[13px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Traded Volume</span>
+              </AppTooltip>
+              <span className="text-xl font-medium text-white mt-1">
                 {formatCurrency(stats.totalTradedVolume, 'usd')}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-4 border-t border-[#2a2b30] pt-3">
-              <div className="flex flex-col">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider">Trading Fees</span>
-                <span className="text-[13px] font-medium text-[#FF4444]">
-                  {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider">Funding Fees</span>
-                <span className={`text-[13px] font-medium ${totalFundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                  {totalFundingFee > 0 ? '+' : ''}{totalFundingFee !== 0 ? formatCurrency(totalFundingFee, 'usd') : '0.00 USD'}
-                </span>
-              </div>
+            <div className="border-t border-[#2a2b30] pt-3 flex flex-col">
+              <AppTooltip description="The total estimated USD value of trading fees paid for these orders.">
+                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Trading Fees</span>
+              </AppTooltip>
+              <span className="text-[13px] font-medium text-[#FF4444] mt-1 font-mono">
+                {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
+              </span>
             </div>
           </div>
         </div>
@@ -317,7 +377,29 @@ export function OrderHistory() {
       )}
 
       <div className="flex-1 overflow-auto hide-scrollbar">
-        <OrdersTable orders={orders} loading={loading} />
+        {orders.length > 5 && (
+          <div className="mb-4">
+            <Pagination
+              id="orders-pagination-top"
+              currentPage={currentPage}
+              totalItems={orders.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
+        <OrdersTable orders={paginatedOrders} loading={loading} />
+        {orders.length > 0 && (
+          <div className="mt-4">
+            <Pagination
+              id="orders-pagination-bottom"
+              currentPage={currentPage}
+              totalItems={orders.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

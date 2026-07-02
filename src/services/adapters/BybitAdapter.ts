@@ -1,5 +1,5 @@
 import Big from 'big.js';
-import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance, UnifiedPositionMode } from '../../types';
+import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance, UnifiedPositionMode, UnifiedMarginMode } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
 import { proxyFetch, hybridFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
@@ -85,7 +85,7 @@ export class BybitAdapter implements IExchangeAdapter {
 
   // REST Positions
   public async getOpenPositions(key: any): Promise<UnifiedPosition[]> {
-    let accountMarginMode: 'cross' | 'isolated' | 'unknown' = 'unknown';
+    let accountMarginMode: UnifiedMarginMode = 'unknown';
     try {
       const accUrl = `https://api.bybit.com/v5/account/info`;
       const accHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret);
@@ -120,12 +120,137 @@ export class BybitAdapter implements IExchangeAdapter {
     const results = await Promise.all(requests);
     const rawList = results.flat();
 
-    return rawList
-      .filter(pos => parseFloat(pos.size || '0') > 0)
-      .map(pos => this.mapPosition(pos, key.id, key.label, accountMarginMode));
+    const mappedPositions = await Promise.all(
+      rawList
+        .filter(pos => parseFloat(pos.size || '0') > 0)
+        .map(pos => this.mapPosition(pos, key, accountMarginMode))
+    );
+
+    return mappedPositions;
   }
 
-  private mapPosition(pos: any, connectionId: string, label: string, accountMarginMode: 'cross' | 'isolated' | 'unknown' = 'unknown'): UnifiedPosition {
+  public async fetchBybitRealPnLBySymbol(
+    key: any, 
+    startTime: number, 
+    endTime: number,
+    onProgress?: (msg: string) => void
+  ): Promise<Record<string, string>> {
+    const symbolPnL: Record<string, Big> = {};
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const categories = ['linear', 'inverse'];
+
+    try {
+      for (const category of categories) {
+        let catStart = startTime;
+        while (catStart < endTime) {
+          let catEnd = catStart + SEVEN_DAYS_MS;
+          if (catEnd > endTime) catEnd = endTime;
+
+          if (onProgress) {
+            onProgress(`Aguarde: sincronizando Bybit ${category} (${key.label})...`);
+          }
+
+          const queryUrl = `limit=50&category=${category}&startTime=${catStart}&endTime=${catEnd}`;
+          const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${queryUrl}`;
+          const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+          
+          let cursor = '';
+          let pages = 0;
+          const MAX_PAGES = 20; // 1000 tx per 7-day chunk max
+          do {
+             let thisQuery = queryUrl;
+             if (cursor) thisQuery += `&cursor=${cursor}`;
+             const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
+             const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
+             
+             const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
+             if (res.retCode !== 0) break;
+
+             const list = res.result?.list || [];
+             for (const item of list) {
+                if (!item.symbol) continue;
+                if (['TRADE', 'SETTLEMENT', 'LIQUIDATION', 'DELIVERY'].includes(item.type)) {
+                   if (!symbolPnL[item.symbol]) symbolPnL[item.symbol] = new Big(0);
+                   if (item.cashFlow) {
+                      symbolPnL[item.symbol] = symbolPnL[item.symbol].plus(new Big(item.cashFlow || '0'));
+                   }
+                }
+             }
+             cursor = res.result?.nextPageCursor || '';
+             pages++;
+          } while (cursor && pages < MAX_PAGES);
+
+          catStart = catEnd + 1;
+        }
+      }
+    } catch (e) {
+      console.warn(`[Bybit-RealPnL] Error fetching real PnL for ${key.label}:`, e);
+    }
+    
+    const result: Record<string, string> = {};
+    for (const [sym, val] of Object.entries(symbolPnL)) {
+      result[sym] = val.toString();
+    }
+    return result;
+  }
+
+  private async fetchBybitAccumulatedFees(key: any, symbol: string, startTime: number): Promise<{ accumulatedFunding: string; accumulatedTradingFee: string }> {
+    let accumulatedFunding = new Big(0);
+    let accumulatedTradingFee = new Big(0);
+    let currentStart = startTime;
+    const now = Date.now();
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const isInverse = symbol.endsWith('USD') && !symbol.includes('USDT') && !symbol.includes('USDC');
+    const targetCategory = isInverse ? 'inverse' : 'linear';
+
+    try {
+      while (currentStart < now) {
+        let currentEnd = currentStart + SEVEN_DAYS_MS;
+        if (currentEnd > now) currentEnd = now;
+
+        const queryUrl = `limit=50&category=${targetCategory}&symbol=${symbol}&startTime=${currentStart}&endTime=${currentEnd}`;
+        const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${queryUrl}`;
+        const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+        
+        let cursor = '';
+        let pages = 0;
+        const MAX_PAGES = 10;
+        do {
+           let thisQuery = queryUrl;
+           if (cursor) thisQuery += `&cursor=${cursor}`;
+           const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
+           const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
+           
+           const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
+           if (res.retCode !== 0) break;
+
+           const list = res.result?.list || [];
+           for (const item of list) {
+              if (item.symbol === symbol) {
+                 if (item.type === 'SETTLEMENT' && item.funding) {
+                    accumulatedFunding = accumulatedFunding.plus(new Big(item.funding || '0'));
+                 }
+                 if (item.type === 'TRADE' && item.fee) {
+                    accumulatedTradingFee = accumulatedTradingFee.plus(new Big(item.fee || '0').times(-1));
+                 }
+              }
+           }
+           cursor = res.result?.nextPageCursor || '';
+           pages++;
+        } while (cursor && pages < MAX_PAGES);
+
+        currentStart = currentEnd + 1;
+      }
+    } catch (e) {
+      console.warn(`[Bybit-AccumulatedFees] Error fetching for ${symbol}:`, e);
+    }
+    return {
+      accumulatedFunding: accumulatedFunding.toString(),
+      accumulatedTradingFee: accumulatedTradingFee.toString()
+    };
+  }
+
+  private async mapPosition(pos: any, key: any, accountMarginMode: UnifiedMarginMode = 'unknown'): Promise<UnifiedPosition> {
     const rawSize = parseFloat(pos.size || '0');
     const entryPrice = parseFloat(pos.avgPrice || pos.entryPrice || '0');
     const markPrice = parseFloat(pos.markPrice || '0');
@@ -140,15 +265,20 @@ export class BybitAdapter implements IExchangeAdapter {
       size = notionalUsd / entryPrice;
     }
 
-    const margin = parseFloat(pos.positionIM || '0');
+    const margin = parseFloat(pos.positionIMByMp || pos.positionIM || '0');
+    const maintenanceMargin = parseFloat(pos.positionMMByMp || pos.positionMM || '0');
     const unrealizedPnl = parseFloat(pos.unrealisedPnl || '0');
 
     const positionIdx = parseInt(pos.positionIdx || '0', 10);
     const positionMode: UnifiedPositionMode = positionIdx === 0 ? 'one_way' : 'hedge';
 
-    const marginObj = new Big(pos.positionIM || '0');
+    const marginObj = new Big(margin);
+    const mmObj = new Big(maintenanceMargin);
     const uPnlObj = new Big(pos.unrealisedPnl || '0');
     const roe = marginObj.gt(0) ? Number(uPnlObj.div(marginObj).times(100)) : undefined;
+
+    // Margin Ratio calculation: Maintenance Margin / Position Margin (Initial Margin) * 100
+    const marginRatio = marginObj.gt(0) ? Number(mmObj.div(marginObj).times(100)) : undefined;
 
     const side = mapPositionSide('bybit', pos.side);
     
@@ -157,11 +287,21 @@ export class BybitAdapter implements IExchangeAdapter {
       ccy = extractBaseCoin('bybit', pos.symbol);
     }
     
+    // We only fetch funding from transaction log for linear or inverse futures, mostly linear.
+    const createdTime = parseInt(pos.createdTime || Date.now().toString(), 10);
+    // Limit lookback of funding queries to at most the last 7 days to avoid rate-limiting / slow connections
+    const maxLookbackMs = 7 * 24 * 60 * 60 * 1000;
+    const effectiveStartTime = Math.max(createdTime, Date.now() - maxLookbackMs);
+    const { accumulatedFunding, accumulatedTradingFee } = await this.fetchBybitAccumulatedFees(key, pos.symbol, effectiveStartTime);
+    
+    const realizedPnl = parseFloat(pos.curRealisedPnl || '0');
+    const closedPnl = realizedPnl - parseFloat(accumulatedFunding) - parseFloat(accumulatedTradingFee);
+    
     return {
-      id: `${connectionId}-bybit-${pos.symbol}-${side}`,
-      connectionId,
+      id: `${key.id}-bybit-${pos.symbol}-${side}`,
+      connectionId: key.id,
       exchange: 'bybit',
-      label,
+      label: key.label,
       symbol: pos.symbol,
       baseCoin: extractBaseCoin('bybit', pos.symbol),
       quoteCoin: extractQuoteCoin('bybit', pos.symbol),
@@ -171,11 +311,16 @@ export class BybitAdapter implements IExchangeAdapter {
       entryPrice,
       markPrice,
       unrealizedPnl,
-      realizedPnl: parseFloat(pos.curRealisedPnl || '0'),
+      realizedPnl,
+      closedPnl,
+      accumulatedFunding,
+      accumulatedTradingFee,
       leverage: parseFloat(pos.leverage || '0'),
       marginMode: accountMarginMode !== 'unknown' ? accountMarginMode : mapMarginMode('bybit', pos.tradeMode),
       positionMode,
       margin,
+      maintenanceMargin,
+      marginRatio,
       notionalUsd,
       liquidationPrice: parseFloat(pos.liqPrice || '0'),
       breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
@@ -243,6 +388,7 @@ export class BybitAdapter implements IExchangeAdapter {
         ccy,
         side: mapPositionSide('bybit', pos.side),
         realizedPnl: parseFloat(pos.closedPnl || '0'),
+        closedPnl: parseFloat(pos.closedPnl || '0') - (pos.fundingFee ? parseFloat(pos.fundingFee) : 0) - (pos.execFee ? parseFloat(pos.execFee) : 0),
         closeUpdateTime: closeUpdateTime,
         createdTime: createdTime,
         entryPrice: parseFloat(pos.avgEntryPrice || '0'),
@@ -315,21 +461,35 @@ export class BybitAdapter implements IExchangeAdapter {
     let allOrders: any[] = [];
     
     for (const cat of categories) {
-      let query = '';
-      if (cat === 'spot') query = 'category=spot';
-      else if (cat === 'inverse') query = 'category=inverse';
-      else if (cat === 'linear-usdt') query = 'category=linear&settleCoin=USDT';
-      else if (cat === 'linear-usdc') query = 'category=linear&settleCoin=USDC';
+      let baseQuery = '';
+      if (cat === 'spot') baseQuery = 'category=spot';
+      else if (cat === 'inverse') baseQuery = 'category=inverse';
+      else if (cat === 'linear-usdt') baseQuery = 'category=linear&settleCoin=USDT';
+      else if (cat === 'linear-usdc') baseQuery = 'category=linear&settleCoin=USDC';
 
-      const targetUrl = `https://api.bybit.com/v5/order/realtime?${query}`;
-      const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+      let cursor = '';
+      let pages = 0;
       
       try {
-        const res = await hybridFetch(targetUrl, 'GET', headers);
-        if (res.retCode === 0 && res.result?.list) {
-          const listCat = cat.startsWith('linear') ? 'linear' : cat;
-          allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: listCat })));
-        }
+        do {
+          let query = `${baseQuery}&limit=50`;
+          if (cursor) {
+            query += `&cursor=${cursor}`;
+          }
+
+          const targetUrl = `https://api.bybit.com/v5/order/realtime?${query}`;
+          const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+          
+          const res = await hybridFetch(targetUrl, 'GET', headers);
+          if (res.retCode === 0 && res.result?.list) {
+            const listCat = cat.startsWith('linear') ? 'linear' : cat;
+            allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: listCat })));
+            cursor = res.result.nextPageCursor || '';
+          } else {
+            break;
+          }
+          pages++;
+        } while (cursor && pages < MAX_DEEP_PAGES);
       } catch (err) {
         console.warn(`[Bybit-OpenOrders] Error fetching ${cat}:`, err);
       }
@@ -353,16 +513,28 @@ export class BybitAdapter implements IExchangeAdapter {
       let currentStart = Math.max(startTimeObj, currentEnd - SEVEN_DAYS_MS + 1000);
 
       while (currentStart >= startTimeObj && currentStart < currentEnd) {
-        let queryUrl = `category=${cat}&limit=50&startTime=${currentStart}&endTime=${currentEnd}`;
-        
-        const targetUrl = `https://api.bybit.com/v5/order/history?${queryUrl}`;
-        const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+        let cursor = '';
+        let pages = 0;
         
         try {
-          const res = await hybridFetch(targetUrl, 'GET', headers);
-          if (res.retCode === 0 && res.result?.list) {
-            allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: cat })));
-          }
+          do {
+            let queryUrl = `category=${cat}&limit=50&startTime=${currentStart}&endTime=${currentEnd}`;
+            if (cursor) {
+              queryUrl += `&cursor=${cursor}`;
+            }
+            
+            const targetUrl = `https://api.bybit.com/v5/order/history?${queryUrl}`;
+            const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+            
+            const res = await hybridFetch(targetUrl, 'GET', headers);
+            if (res.retCode === 0 && res.result?.list) {
+              allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: cat })));
+              cursor = res.result.nextPageCursor || '';
+            } else {
+              break;
+            }
+            pages++;
+          } while (cursor && pages < MAX_DEEP_PAGES);
         } catch (err) {
           console.warn(`[Bybit-HistoryOrders] Error fetching ${cat}:`, err);
         }
@@ -405,6 +577,7 @@ export class BybitAdapter implements IExchangeAdapter {
         exchangeOrderId: o.orderId,
         connectionId: key.id,
         exchange: 'bybit',
+        label: key.label,
         symbol: o.symbol,
         category: mapInstrumentType('bybit', o.category || o._category || 'UNKNOWN'),
         side: o.side?.toLowerCase() === 'sell' ? 'sell' : 'buy',

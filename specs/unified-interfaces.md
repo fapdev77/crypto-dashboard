@@ -58,10 +58,12 @@ export interface UnifiedPosition {
   markPrice: number;
   unrealizedPnl: number;
   realizedPnl: number;
+  closedPnl?: number; // Net closed position profit (after all fees)
   leverage: number;
   marginMode?: UnifiedMarginMode; // 'cross' | 'isolated' | 'unknown'
   positionMode?: UnifiedPositionMode; // 'hedge' | 'one_way' | 'unknown'
   margin?: number; // Position Margin / Isolated Margin
+  maintenanceMargin?: number; // Maintenance Margin value (calculated or fetched directly)
   marginRatio?: number; // Tiered MMR or Margin Ratio (%)
   liquidationPrice?: number;
   breakEvenPrice?: number;
@@ -69,6 +71,8 @@ export interface UnifiedPosition {
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
   instrumentType?: UnifiedInstrumentType; // 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN'
+  accumulatedFunding?: string;
+  accumulatedTradingFee?: string;
   raw?: any; // To store the original broker data if needed
 }
 ```
@@ -92,12 +96,15 @@ export interface UnifiedPosition {
 | `leverage` | `leverage` | `leverage` | `lever` | Active position leverage |
 | `marginMode` | `tradeMode` / `marginMode`| `marginMode` | `mgnMode` | `cross` \| `isolated` |
 | `positionMode` | `positionIdx` | N/A (One Way fallback) | N/A | `hedge` \| `one_way` |
-| `margin` | `positionIM` | `marginSize` | `margin` | Active margin assigned |
+| `margin` | `positionIMByMp` / `positionIM`| `marginSize` | `imr` (cross) / `margin` (isolated) | Active margin assigned. For OKX, `imr` is mapped if cross-margin, and `margin` if isolated-margin. |
+| `maintenanceMargin`| `positionMMByMp` / `positionMM`| Calculated (`margin * leverage * keepMarginRate`)| `mmr` | Maintenance margin requirement value |
+| `marginRatio`| Computed (`MM / IM * 100`) | `keepMarginRate * 100` | `mgnRatio * 100` | Tiered MMR or Margin Ratio (%) |
 | `liquidationPrice`| `liqPrice` | `liquidationPrice`| `liqPx` | Liquidation reference |
 | `breakEvenPrice` | `breakEvenPrice` | `breakEvenPrice` | `bePx` | The 0 profit reference price |
 | `tp` | `takeProfit` | `takeProfit` | N/A | Take profit reference |
 | `sl` | `stopLoss` | `stopLoss` | N/A | Stop loss reference |
 | `roe` | Calculated (`UPL / IM`) | Calculated / `uplRatio` | `uplRatio * 100` | Normalized ROE % |
+| `closedPnl` | `curRealisedPnl + funding + fee` | `achievedProfits` | `pnl` | Net closed position profit (after all fees) |
 
 ---
 
@@ -117,6 +124,7 @@ export interface UnifiedHistoryPosition {
   ccy?: string;
   side: PositionSide;
   realizedPnl: number;
+  closedPnl?: number;
   closeUpdateTime: number; // timestamp
   createdTime?: number; // open time timestamp
   entryPrice?: number;
@@ -153,6 +161,31 @@ export interface UnifiedHistoryPosition {
 | `tradingFee` | `execFee` | `fee` / sum(openFee, closeFee) | `fee` | Platform trade fee |
 | `leverage` | `leverage` | `leverage` | `lever` | Active position leverage upon closing |
 | `instrumentType`| Mapped (`category`) | `instType` / `productType` | `instType` | Mapped `UnifiedInstrumentType` |
+
+### Advanced Normalization Logic for Sizing & Value (Inverse vs Linear)
+
+To guarantee exact consistency across all historical positions, the application uses helper utilities in `src/utils/inverseUtils.ts` (specifically `getHistoryPositionSizeAndValue(pos)`) with the following mapping and conversion rules:
+
+#### 1. Bybit
+*   **Inverse Contracts (e.g., BTCUSD, ETHUSD):**
+    *   The `cumEntryValue` property returned by Bybit API is denominated in the **coin** (e.g., `0.00021896 BTC`).
+    *   The `size` property represents the contract size in **USD** (e.g., `13`).
+    *   *Result:* Mapped `size` (actual coin size) = `cumEntryValue` (e.g. `0.00021896`), and `notionalUsd` (position value USD) = `size` (e.g. `13`).
+*   **Linear/USDT Contracts (e.g., BTCUSDT):**
+    *   The `cumEntryValue` property represents the value in **USD/USDT** (e.g., `5588.88 USDT`).
+    *   The `size` property represents the size in **coin** (e.g., `0.2 BTC`).
+    *   *Result:* Mapped `size` (actual coin size) = `size` (e.g. `0.2`), and `notionalUsd` (position value USD) = `cumEntryValue` (e.g. `5588.88`).
+
+#### 2. Bitget
+*   **API Response Consistency:** Bitget's historical position response (`/api/v2/mix/position/history-position`) exhibits inconsistencies in field names depending on the account setup and market conditions.
+    *   **Prices:** Uses `openAvgPrice || openPriceAvg` for `entryPrice`, and `closeAvgPrice || closePriceAvg` for `closePrice` to prevent zero prices.
+    *   **Quantities:** Uses `closeTotalPos || openTotalPos` as the raw position size.
+*   **Contract Sizing Scaling:**
+    *   For **Inverse Contracts**, the raw size (contracts) is multiplied by the contract unit value (`getBitgetInverseContractVal(symbol)`) to obtain the true actual coin size.
+    *   For **Linear Contracts**, the raw size is used directly as the coin size.
+
+#### 3. OKX
+*   **Contract Sizing Scaling:** Mapped `size` is scaled using the contract multiplier (`ctVal` from instrument info) against the closed volume, ensuring the actual coin quantity is reflected.
 
 ---
 
@@ -198,7 +231,7 @@ export interface SymbolPnLRecord {
   totalPnL: Big;
   longPnL: Big;
   shortPnL: Big;
-  exchange: 'bitget' | 'bybit' | 'okx';
+  exchange: ExchangeName;
   lastActivity: number;
 }
 ```
@@ -216,6 +249,7 @@ export interface UnifiedOrder {
   exchangeOrderId: string;
   connectionId: string;
   exchange: ExchangeName;
+  label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
   side: 'buy' | 'sell';
@@ -233,6 +267,8 @@ export interface UnifiedOrder {
   createdTime: number;
   updatedTime: number;
   fees?: number;
+  leverage?: number;
+  marginMode?: UnifiedMarginMode;
   raw?: any;
 }
 ```
@@ -251,4 +287,19 @@ export interface UnifiedOrder {
 | `createdTime`| `createdTime` | `cTime` | `cTime` | Milliseconds timestamp of creation |
 | `updatedTime`| `updatedTime` | `uTime` / `cTime` | `uTime` / `cTime` | Milliseconds timestamp of last update |
 | `timeInForce`| `timeInForce` | `timeInForce` / `force` | `notionalUsd` (fallback) | Order duration constraints |
+
+### Advanced Normalization Logic for Sizing & Value (Inverse vs Linear Orders)
+
+To ensure accurate representation of active and historical orders, each adapter maps quantities and values to the unified interface according to these guidelines:
+
+1. **Bitget (V2)**
+   * **Quantity and Fills:** For both Linear and Inverse (`COIN-FUTURES`) contracts, the Bitget API returns the order size (`o.size`) and filled volume (`o.filledQty || o.baseVolume`) denominated in the underlying coin directly (e.g. `0.03 ETH`). Thus, the values are used without scaling by contract multipliers.
+   * **Order Value:** The total USD value is computed by fetching `o.quoteVolume` when available, or fallbacks to the target quantity multiplied by the order price (or average price), ensuring proper visual display of the USD volume.
+   * **UI Detection:** The `OrderRow` component automatically detects if the order `qty` is denominated in coin (using the price & value relation), rendering the exact coin amount as the actual size and displaying the correct estimated USD value.
+
+2. **Bybit (V5)**
+   * For Inverse contracts, `qty` is mapped to the USD value (contract value), which the UI dynamically parses back into coin size using the order price.
+
+3. **OKX (V5)**
+   * For derivatives, quantities are scaled using the cached instrument contract multiplier (`ctVal`), and values are calculated accordingly to match.
 

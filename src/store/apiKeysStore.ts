@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { ExchangeName } from '../types';
 
-export type Exchange = 'bitget' | 'okx' | 'bybit';
+export type Exchange = ExchangeName;
 
 export interface ApiCredentials {
   id: string;

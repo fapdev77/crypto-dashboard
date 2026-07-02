@@ -1,3 +1,4 @@
+import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
 import { proxyFetch } from '../../utils/proxyFetch';
@@ -66,7 +67,8 @@ export class BitgetAdapter implements IExchangeAdapter {
       { path: '/api/v2/mix/account/accounts?productType=COIN-FUTURES', type: 'COIN-FUTURES' },
       { path: '/api/v2/mix/account/accounts?productType=USDC-FUTURES', type: 'USDC-FUTURES' },
       { path: '/api/v2/margin/crossed/account/assets', type: 'MARGIN_CROSS' },
-      { path: '/api/v2/margin/isolated/account/assets', type: 'MARGIN_ISOLATED' }
+      { path: '/api/v2/margin/isolated/account/assets', type: 'MARGIN_ISOLATED' },
+      { path: '/api/v2/earn/account/assets', type: 'EARN' }
     ];
 
     const requests = endpoints.map(async (ep) => {
@@ -101,6 +103,24 @@ export class BitgetAdapter implements IExchangeAdapter {
                 usdValue: amount, // Approximating as 1:1 USD for now if not available
                 walletBalance: amount,
                 availableMargin: available,
+                raw: item
+              });
+            }
+          });
+        } else if (type === 'EARN') {
+          res.data.forEach((item: any) => {
+            const amount = parseFloat(item.amount || '0');
+            if (amount > 0) {
+              balances.push({
+                id: `${key.id}-${type}-${item.coin}`,
+                connectionId: key.id,
+                exchange: 'bitget',
+                label: `${key.label} (${type})`,
+                ccy: (item.coin || '').toUpperCase(),
+                amount,
+                usdValue: amount, // Approximating as 1:1 USD for now if not available
+                walletBalance: amount,
+                availableMargin: amount,
                 raw: item
               });
             }
@@ -164,7 +184,15 @@ export class BitgetAdapter implements IExchangeAdapter {
           unrealizedPnl = unrealizedPnl / markPrice;
         }
         
+        let size = parseFloat(pos.total || '0');
+        let notionalUsd = size * markPrice;
+
         const side = mapPositionSide('bitget', pos.holdSide);
+
+        const accumulatedFunding = pos.totalFee ? new Big(pos.totalFee || 0).toString() : "0";
+        const accumulatedTradingFee = pos.deductedFee ? new Big(pos.deductedFee || 0).times(-1).toString() : "0";
+        const closedPnl = parseFloat(pos.achievedProfits || '0');
+        const realizedPnl = closedPnl + parseFloat(accumulatedFunding) + parseFloat(accumulatedTradingFee);
 
         return {
           id: `${key.id}-bitget-${pos.symbol || pos.instId}-${side}`,
@@ -176,15 +204,20 @@ export class BitgetAdapter implements IExchangeAdapter {
           quoteCoin: extractQuoteCoin('bitget', pos.symbol),
           ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.symbol),
           side,
-          size: parseFloat(pos.total || '0'),
+          size,
           entryPrice: parseFloat(pos.openPriceAvg || pos.avgPx || '0'),
           markPrice: parseFloat(pos.markPrice || '0'),
           unrealizedPnl,
-          realizedPnl: parseFloat(pos.achievedProfits || '0'),
+          realizedPnl,
+          closedPnl,
+          accumulatedFunding,
+          accumulatedTradingFee,
           leverage: parseFloat(pos.leverage || '0'),
           marginMode: mapMarginMode('bitget', pos.marginMode),
           margin,
-          notionalUsd: parseFloat(pos.total || '0') * parseFloat(pos.markPrice || '0'),
+          maintenanceMargin: margin * parseFloat(pos.leverage || '1') * parseFloat(pos.keepMarginRate || '0'),
+          marginRatio: pos.keepMarginRate ? parseFloat(pos.keepMarginRate) * 100 : undefined,
+          notionalUsd,
           liquidationPrice: parseFloat(pos.liquidationPrice || '0'),
           breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
           tp: parseFloat(pos.takeProfit || '0'),
@@ -251,13 +284,14 @@ export class BitgetAdapter implements IExchangeAdapter {
         ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.instId || pos.symbol),
         side: mapPositionSide('bitget', pos.holdSide, pos.side),
         realizedPnl: parseFloat(pos.netProfit ?? pos.pnl ?? pos.achievedProfits ?? '0'),
+        closedPnl: parseFloat(pos.netProfit ?? pos.pnl ?? pos.achievedProfits ?? '0') - (pos.totalFunding ? parseFloat(pos.totalFunding) : 0) - (totalFee || 0),
         closeUpdateTime: closeUpdateTime,
         createdTime: createdTime,
-        entryPrice: parseFloat(pos.openPriceAvg || '0'),
-        closePrice: parseFloat(pos.closePriceAvg || '0'),
-        size: parseFloat(pos.closeTotalPos || '0'),
+        entryPrice: parseFloat(pos.openAvgPrice || pos.openPriceAvg || '0'),
+        closePrice: parseFloat(pos.closeAvgPrice || pos.closePriceAvg || '0'),
+        size: parseFloat(pos.closeTotalPos || pos.openTotalPos || '0'),
         fundingFee: pos.totalFunding ? parseFloat(pos.totalFunding) : undefined,
-        tradingFee: totalFee || undefined,
+        tradingFee: totalFee || 0,
         instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
         raw: pos,
       };
@@ -444,30 +478,43 @@ export class BitgetAdapter implements IExchangeAdapter {
       else if (ot.includes('take') || ot.includes('profit')) type = 'TP';
       else if (ot.includes('plan') || ot.includes('conditional')) type = 'CONDITIONAL';
 
-      const pSize = parseFloat(o.size || '0');
-      const pFil = parseFloat(o.filledQty || o.baseVolume || '0');
+      const category = mapInstrumentType('bitget', o.productType || 'UNKNOWN');
+      const isInverse = category === 'INVERSE';
+      const qty = parseFloat(o.size || '0');
+      const filledQty = parseFloat(o.filledQty || o.baseVolume || '0');
+      const price = parseFloat(o.price || o.priceAvg || o.avgPrice || '0');
+      const value = parseFloat(o.quoteVolume || '0') || (qty * price);
       
       return {
         id: `${key.id}-${o.orderId}`,
         exchangeOrderId: o.orderId,
         connectionId: key.id,
         exchange: 'bitget',
+        label: key.label,
         symbol: o.symbol || o.instId,
-        category: mapInstrumentType('bitget', o.productType || 'UNKNOWN'),
+        category,
         side: o.side?.toLowerCase().includes('buy') ? 'buy' : 'sell',
         positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
         type,
         status,
         price: parseFloat(o.price || '0'),
         avgPrice: parseFloat(o.priceAvg || o.avgPrice || '0'),
-        qty: pSize,
-        filledQty: pFil,
-        value: parseFloat(o.totalProfits || '0'), // simplified
+        qty,
+        filledQty,
+        value,
         triggerPrice: o.triggerPrice ? parseFloat(o.triggerPrice) : undefined,
         timeInForce: o.timeInForce || o.force,
         createdTime: parseInt(o.cTime || '0', 10),
         updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
-        fees: parseFloat(o.fee || '0'),
+        fees: (() => {
+          if (o.deductedFee) {
+            return parseFloat(o.deductedFee) * -1;
+          }
+          const rawFee = parseFloat(o.fee || '0');
+          return rawFee > 0 ? -rawFee : rawFee;
+        })(),
+        leverage: o.leverage ? parseFloat(o.leverage) : undefined,
+        marginMode: o.marginMode ? mapMarginMode('bitget', o.marginMode) : undefined,
         raw: o
       };
     });
