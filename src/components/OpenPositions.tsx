@@ -62,8 +62,8 @@ export function OpenPositions() {
     let longsCount = 0;
     let shortsCount = 0;
     activePositions.forEach(pos => {
-      const isLong = pos.side === 'long' || pos.side === 'buy';
-      const isShort = pos.side === 'short' || pos.side === 'sell';
+      const isLong = pos.side === 'long';
+      const isShort = pos.side === 'short';
       if (isLong) longsCount++;
       if (isShort) shortsCount++;
       if (pos.side === 'net') {
@@ -177,8 +177,8 @@ export function OpenPositions() {
           <div className="flex flex-col gap-3">
             {activePositions.map((pos) => {
               const isExpanded = expandedRows[pos.id];
-              const isLong = pos.side === 'long' || pos.side === 'buy';
-              const isShort = pos.side === 'short' || pos.side === 'sell';
+              const isLong = pos.side === 'long';
+              const isShort = pos.side === 'short';
               const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
               const sideLabel = isLong ? 'Long' : isShort ? 'Short' : 'Net';
               const marginModeLabel = pos.marginMode === 'isolated' ? 'Isolated' : 'Cross';
@@ -232,7 +232,7 @@ export function OpenPositions() {
               }
 
               const posTypeStr = pos.instrumentType === 'INVERSE' ? 'CM Perpetual Inverse' :
-                (pos.instrumentType && pos.instrumentType !== 'SWAP' && pos.instrumentType !== 'PERPETUAL') ?
+                (pos.instrumentType && pos.instrumentType !== 'PERP') ?
                   pos.instrumentType.charAt(0).toUpperCase() + pos.instrumentType.slice(1).toLowerCase() :
                   'Perpetual';
               const posTitle = `${pos.symbol} ${posTypeStr}`;
