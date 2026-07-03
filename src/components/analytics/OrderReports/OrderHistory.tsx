@@ -12,6 +12,7 @@ import Big from 'big.js';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { AppTooltip } from '../../ui/Tooltip';
 import { Pagination } from '../../ui/Pagination';
+import { detectQtyIsCoin } from '../../../utils/inverseUtils';
 
 export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -164,29 +165,7 @@ export function OrderHistory() {
         const p = o.avgPrice > 0 ? o.avgPrice : o.price || 0;
         let valUsd = 0;
         if (o.category === 'INVERSE') {
-          // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs USD contracts (e.g. 100 USD)
-          let qtyIsCoin = false;
-          if (o.exchange === 'bitget') {
-            qtyIsCoin = true;
-          } else if (o.exchange === 'okx' || o.exchange === 'bybit') {
-            qtyIsCoin = false;
-          } else {
-            const estValIfQtyIsCoin = o.qty * p;
-            const estValIfQtyIsUsd = o.qty;
-            const actualVal = o.value || 0;
-
-            if (actualVal > 0 && p > 0) {
-              const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-              const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-              if (distToCoin < distToUsd) {
-                qtyIsCoin = true;
-              }
-            } else {
-              if (o.qty < 2 && o.qty * p >= 10) {
-                qtyIsCoin = true;
-              }
-            }
-          }
+          const qtyIsCoin = detectQtyIsCoin({ exchange: o.exchange, qty: o.qty, price: p, value: o.value });
 
           if (o.exchange === 'bybit') {
             // Bybit inverse: o.value is in COIN. Multiply by price to get USD value

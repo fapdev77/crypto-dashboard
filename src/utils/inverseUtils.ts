@@ -1,5 +1,45 @@
 import { UnifiedPosition, UnifiedHistoryPosition } from '../types';
 
+/**
+ * Detecta se a quantidade de uma ordem/trade está representada em coins (ex: 0.30 ETH)
+ * ou em contratos USD (ex: 100 USD). Essencial para contratos inverse onde a
+ * representação varia por exchange.
+ *
+ * Regras:
+ * - Bitget: sempre qtyIsCoin = true
+ * - OKX/Bybit inverse: sempre qtyIsCoin = false (qty em USD contracts)
+ * - Outras: heurística — compara distância entre valor estimado vs valor real
+ */
+export function detectQtyIsCoin(params: {
+  exchange: string;
+  qty: number;
+  price: number;
+  value?: number;
+}): boolean {
+  const { exchange, qty, price, value } = params;
+  if (price <= 0) return false;
+
+  if (exchange === 'bitget') {
+    return true;
+  }
+  if (exchange === 'okx' || exchange === 'bybit') {
+    return false;
+  }
+
+  // Heurística genérica para exchanges desconhecidas ou mock data
+  const estValIfQtyIsCoin = qty * price;
+  const estValIfQtyIsUsd = qty;
+  const actualVal = value || 0;
+
+  if (actualVal > 0) {
+    const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
+    const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
+    return distToCoin < distToUsd;
+  }
+
+  return qty < 2 && qty * price >= 10;
+}
+
 export function getBitgetInverseContractVal(symbol: string): number {
   const sym = (symbol || '').toUpperCase();
   if (sym.startsWith('BTC')) return 100;

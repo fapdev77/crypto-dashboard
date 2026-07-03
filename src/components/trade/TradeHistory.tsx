@@ -10,6 +10,7 @@ import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import Big from 'big.js';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../utils/exportUtils';
 import { AppTooltip } from '../ui/Tooltip';
+import { detectQtyIsCoin } from '../../utils/inverseUtils';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { AssetClassifierAggregator } from '../../services/AssetClassifierAggregator';
@@ -92,31 +93,7 @@ export function TradeHistory() {
       const p = t.avgPrice > 0 ? t.avgPrice : t.price || 0;
       const isInverse = t.category === 'INVERSE';
 
-      // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
-      let qtyIsCoin = false;
-      if (isInverse && p > 0) {
-        if (t.exchange === 'bitget') {
-          qtyIsCoin = true;
-        } else if (t.exchange === 'okx' || t.exchange === 'bybit') {
-          qtyIsCoin = false;
-        } else {
-          const estValIfQtyIsCoin = t.qty * p;
-          const estValIfQtyIsUsd = t.qty;
-          const actualVal = t.value || 0;
-
-          if (actualVal > 0) {
-            const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-            const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-            if (distToCoin < distToUsd) {
-              qtyIsCoin = true;
-            }
-          } else {
-            if (t.qty < 2 && t.qty * p >= 10) {
-              qtyIsCoin = true;
-            }
-          }
-        }
-      }
+      const qtyIsCoin = isInverse && detectQtyIsCoin({ exchange: t.exchange, qty: t.qty, price: p, value: t.value });
 
       let valUsd = 0;
       if (t.exchange === 'bybit') {
@@ -201,25 +178,7 @@ export function TradeHistory() {
       let filledValueStr = '';
       let filledQtyStr = '';
 
-      // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
-      let qtyIsCoin = false;
-      if (isInverse && filledPrice > 0) {
-        const estValIfQtyIsCoin = t.qty * filledPrice;
-        const estValIfQtyIsUsd = t.qty;
-        const actualVal = t.value || 0;
-
-        if (actualVal > 0) {
-          const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-          const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-          if (distToCoin < distToUsd) {
-            qtyIsCoin = true;
-          }
-        } else {
-          if (t.qty < 2 && t.qty * filledPrice >= 10) {
-            qtyIsCoin = true;
-          }
-        }
-      }
+      const qtyIsCoin = isInverse && detectQtyIsCoin({ exchange: t.exchange, qty: t.qty, price: filledPrice, value: t.value });
 
       let actualFilledCoinSize = 0;
       let filledValUsd = 0;
@@ -430,25 +389,7 @@ export function TradeHistory() {
             let filledValueStr = '';
             let filledQtyStr = '';
 
-            // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
-            let qtyIsCoin = false;
-            if (isInverse && filledPrice > 0) {
-              const estValIfQtyIsCoin = trade.qty * filledPrice;
-              const estValIfQtyIsUsd = trade.qty;
-              const actualVal = trade.value || 0;
-
-              if (actualVal > 0) {
-                const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-                const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-                if (distToCoin < distToUsd) {
-                  qtyIsCoin = true;
-                }
-              } else {
-                if (trade.qty < 2 && trade.qty * filledPrice >= 10) {
-                  qtyIsCoin = true;
-                }
-              }
-            }
+      const qtyIsCoin = isInverse && detectQtyIsCoin({ exchange: trade.exchange, qty: trade.qty, price: filledPrice, value: trade.value });
 
             let actualFilledCoinSize = 0;
             let filledValUsd = 0;
