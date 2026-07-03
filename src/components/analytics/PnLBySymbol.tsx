@@ -14,6 +14,7 @@ import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { StatusAndSyncBadge } from '../ui/StatusAndSyncBadge';
 import { FilterBar } from '../ui/FilterBar';
+import { usePagination } from '../../hooks/usePagination';
 
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
@@ -104,17 +105,9 @@ export function PnLBySymbol() {
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
-
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [pnlData, exchange, instrument, searchTerm]);
-
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return sortedData.slice(startIndex, startIndex + itemsPerPage);
-  }, [sortedData, currentPage]);
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedData, totalItems: sortedTotal } = usePagination(
+    sortedData, 50, [pnlData, exchange, instrument, searchTerm]
+  );
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
@@ -211,12 +204,12 @@ export function PnLBySymbol() {
           </div>
         ) : (
           <div className="space-y-4">
-            {sortedData.length > 5 && (
+            {sortedTotal > 5 && (
               <Pagination
                 id="pnl-symbol-pagination-top"
                 currentPage={currentPage}
-                totalItems={sortedData.length}
-                itemsPerPage={itemsPerPage}
+                totalItems={sortedTotal}
+                itemsPerPage={50}
                 onPageChange={setCurrentPage}
               />
             )}
@@ -284,12 +277,12 @@ export function PnLBySymbol() {
               </tbody>
             </table>
           </div>
-          {sortedData.length > 0 && (
+          {sortedTotal > 0 && (
             <Pagination
               id="pnl-symbol-pagination-bottom"
               currentPage={currentPage}
-              totalItems={sortedData.length}
-              itemsPerPage={itemsPerPage}
+              totalItems={sortedTotal}
+              itemsPerPage={50}
               onPageChange={setCurrentPage}
             />
           )}

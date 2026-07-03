@@ -17,6 +17,7 @@ import { AssetClassifierAggregator } from '../../services/AssetClassifierAggrega
 import { extractBaseCoin } from '../../utils/unifiers';
 import { format } from 'date-fns';
 import { Pagination } from '../ui/Pagination';
+import { usePagination } from '../../hooks/usePagination';
 
 export function TradeHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -37,9 +38,6 @@ export function TradeHistory() {
   const keys = useApiKeysStore(state => state.keys);
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
 
   // Initial Fetch
   useEffect(() => {
@@ -62,22 +60,9 @@ export function TradeHistory() {
     return orders.filter(o => o.filledQty > 0);
   }, [orders]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters]);
-
-  // Adjust page if it exceeds the max page available for current trades
-  useEffect(() => {
-    const maxPage = Math.max(1, Math.ceil(trades.length / itemsPerPage));
-    if (currentPage > maxPage) {
-      setCurrentPage(maxPage);
-    }
-  }, [trades.length, currentPage]);
-
-  const paginatedTrades = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return trades.slice(startIndex, startIndex + itemsPerPage);
-  }, [trades, currentPage]);
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedTrades, totalItems: tradesTotal } = usePagination(
+    trades, 50, [filters]
+  );
 
   // Stats
   const stats = useMemo(() => {
@@ -339,13 +324,13 @@ export function TradeHistory() {
       ) : (
         <div className="flex flex-col gap-3 pb-4">
           {/* Top Pagination if trades.length > 5 */}
-          {trades.length > 5 && (
+          {tradesTotal > 5 && (
             <div className="mb-2">
               <Pagination
                 id="trades-pagination-top"
                 currentPage={currentPage}
-                totalItems={trades.length}
-                itemsPerPage={itemsPerPage}
+                totalItems={tradesTotal}
+                itemsPerPage={50}
                 onPageChange={setCurrentPage}
               />
             </div>
@@ -547,8 +532,8 @@ export function TradeHistory() {
             <Pagination
               id="trades-pagination-bottom"
               currentPage={currentPage}
-              totalItems={trades.length}
-              itemsPerPage={itemsPerPage}
+              totalItems={tradesTotal}
+              itemsPerPage={50}
               onPageChange={setCurrentPage}
             />
           </div>

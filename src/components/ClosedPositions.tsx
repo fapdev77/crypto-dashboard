@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
+import { usePagination } from '../hooks/usePagination';
 import { Loader2, History, Download, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -33,13 +34,6 @@ export function ClosedPositions() {
   const [error, setError] = useState<string | null>(null);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterText, exchangeFilter, period]);
-
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
 
@@ -59,18 +53,9 @@ export function ClosedPositions() {
     return filtered;
   }, [closedPositions, filterText, exchangeFilter]);
 
-  // Adjust page if it exceeds the max page available for current closed positions
-  useEffect(() => {
-    const maxPage = Math.max(1, Math.ceil(filteredClosedPositions.length / itemsPerPage));
-    if (currentPage > maxPage) {
-      setCurrentPage(maxPage);
-    }
-  }, [filteredClosedPositions.length, currentPage]);
-
-  const paginatedClosedPositions = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredClosedPositions.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredClosedPositions, currentPage]);
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedClosedPositions } = usePagination(
+    filteredClosedPositions, 50, [filterText, exchangeFilter, period]
+  );
 
   const handleExport = (formatType: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
@@ -366,7 +351,7 @@ export function ClosedPositions() {
                 id="closed-positions-pagination-top"
                 currentPage={currentPage}
                 totalItems={filteredClosedPositions.length}
-                itemsPerPage={itemsPerPage}
+                itemsPerPage={50}
                 onPageChange={setCurrentPage}
               />
             </div>
@@ -567,7 +552,7 @@ export function ClosedPositions() {
               id="closed-positions-pagination-bottom"
               currentPage={currentPage}
               totalItems={filteredClosedPositions.length}
-              itemsPerPage={itemsPerPage}
+              itemsPerPage={50}
               onPageChange={setCurrentPage}
             />
           </div>

@@ -12,6 +12,7 @@ import Big from 'big.js';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { AppTooltip } from '../../ui/Tooltip';
 import { Pagination } from '../../ui/Pagination';
+import { usePagination } from '../../../hooks/usePagination';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
 
 export function OrderHistory() {
@@ -33,20 +34,9 @@ export function OrderHistory() {
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters]);
-
-  // Adjust page if it exceeds the max page available for current orders
-  useEffect(() => {
-    const maxPage = Math.max(1, Math.ceil(orders.length / itemsPerPage));
-    if (currentPage > maxPage) {
-      setCurrentPage(maxPage);
-    }
-  }, [orders.length, currentPage]);
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedOrders, totalItems: ordersTotal } = usePagination(
+    orders, 50, [filters]
+  );
 
   // Busca inicial
   useEffect(() => {
@@ -195,11 +185,6 @@ export function OrderHistory() {
 
     return { buyCount, sellCount, filledCount, cancelledCount, rejectedCount, totalTradedVolume, totalFees };
   }, [orders]);
-
-  const paginatedOrders = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return orders.slice(startIndex, startIndex + itemsPerPage);
-  }, [orders, currentPage]);
 
   const SIDE_DONUT = [
     { name: 'Buy', value: stats.buyCount, color: '#00C853' },
@@ -355,26 +340,25 @@ export function OrderHistory() {
         </div>
       )}
 
-      <div className="flex-1 overflow-auto hide-scrollbar">
-        {orders.length > 5 && (
+      <div className="flex-1 overflow-auto hide-scrollbar">          {ordersTotal > 5 && (
           <div className="mb-4">
             <Pagination
               id="orders-pagination-top"
               currentPage={currentPage}
-              totalItems={orders.length}
-              itemsPerPage={itemsPerPage}
+              totalItems={ordersTotal}
+              itemsPerPage={50}
               onPageChange={setCurrentPage}
             />
           </div>
         )}
         <OrdersTable orders={paginatedOrders} loading={loading} />
-        {orders.length > 0 && (
+        {ordersTotal > 0 && (
           <div className="mt-4">
             <Pagination
               id="orders-pagination-bottom"
               currentPage={currentPage}
-              totalItems={orders.length}
-              itemsPerPage={itemsPerPage}
+              totalItems={ordersTotal}
+              itemsPerPage={50}
               onPageChange={setCurrentPage}
             />
           </div>
