@@ -303,3 +303,42 @@ To ensure accurate representation of active and historical orders, each adapter 
 3. **OKX (V5)**
    * For derivatives, quantities are scaled using the cached instrument contract multiplier (`ctVal`), and values are calculated accordingly to match.
 
+---
+
+## 7. Unifiers and Mathematical Standardizations (`src/utils/`)
+
+A unificação perfeita dos dados repousa sobre utilitários determinísticos e de alta precisão baseados na biblioteca `Big.js` para cálculos financeiros críticos.
+
+### 7.1. Tratamento de Posições e Históricos Inversos (`inverseUtils.ts`)
+Para sanar o problema de as corretoras reportarem tamanhos e volumes em unidades fundamentalmente distintas dependendo do tipo de margem (Linear vs Inversa), as lógicas de conversão foram centralizadas:
+
+#### 1. Cálculo de Posições Abertas (`getOpenPositionSizeAndValue`)
+*   **Contratos Lineares (ex: BTCUSDT):** 
+    *   Tamanho (`size`) = Quantidade de Moedas (`size` bruto).
+    *   Valor Nocional USD (`notionalUsd`) = `size` × `markPrice`.
+*   **Contratos Inversos Bybit (ex: BTCUSD):**
+    *   Tamanho em Cripto (`size`) = `positionIM` (margem) / `entryPrice` ou derivado de `positionValue` / `entryPrice`. No caso Bybit, como o `size` enviado é em USD, convertemos para tamanho de moeda dividindo o valor nocional (USD) pelo preço de entrada (`value / entryPrice`).
+    *   Valor Nocional USD (`notionalUsd`) = `size` bruto (que já representa a quantidade em USD do contrato).
+*   **Contratos Inversos Bitget (ex: BTCUSD):**
+    *   Tamanho em Cripto (`size`) = `size` bruto × `contractValue` (obtido via `getBitgetInverseContractVal(symbol)`).
+    *   Valor Nocional USD (`notionalUsd`) = `size` (em cripto) × `markPrice`.
+
+#### 2. Cálculo de Posições Fechadas / Histórico (`getHistoryPositionSizeAndValue`)
+*   **Bybit Linear:**
+    *   `size` = `size` bruto (em cripto).
+    *   `notionalUsd` = `cumEntryValue` (já retornado em USD/USDT).
+*   **Bybit Inversa:**
+    *   `size` = `cumEntryValue` (valor bruto em cripto).
+    *   `notionalUsd` = `size` bruto (volume contratual em USD).
+*   **Bitget Inversa:**
+    *   `size` = `closeTotalPos` × `getBitgetInverseContractVal(symbol)`.
+    *   `notionalUsd` = `size` × `closePrice`.
+
+### 7.2. Extração de Moedas e Mapeamento de Atributos (`unifiers.ts`)
+*   **Direção da Posição (`mapPositionSide`):** Normaliza as strings `Buy`/`Sell`/`long`/`short`/`net` para as variantes literais `'long' | 'short' | 'net'`.
+*   **Modo de Margem (`mapMarginMode`):** Normaliza `cross`/`isolated`/`fixed`/`crossed`/`0`/`1` para as variantes literais `'cross' | 'isolated' | 'unknown'`.
+*   **Ativos Base e Cotação (`extractBaseCoin` & `extractQuoteCoin`):** 
+    *   OKX: Realiza o split por hífen (ex: `BTC-USDT-SWAP` -> Base: `BTC`, Quote: `USDT`).
+    *   Bybit & Bitget: Filtra sub-caracteres (como `_` em spot) e fatias de strings conhecidas (sufixos `USDT`, `USDC`, `USD`, `PERP`) de forma determinística para isolar os tickers reais das moedas.
+
+

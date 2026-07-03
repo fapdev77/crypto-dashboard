@@ -90,6 +90,7 @@ To circumvent rate-limiting bans (429 errors) and ensure sub-second rendering sp
 
 - **IndexedDB Database**: CPM establishes a local database (`crypto-dashboard-cache`) inside your browser to persist massive histories of orders and closed positions.
 - **SWR Hydration**: On screen entry, the cached data is displayed instantly to avoid empty screens, while a background REST request quietly checks and merges any missing records since your last session.
+- **Automatic Arithmetic Normalization (Linear vs. Inverse)**: CPM dynamically identifies whether an active/historical position or order uses Linear (USDT/USDC-M) or Inverse (Coin-M) margins. It seamlessly converts raw contract sizes into exact base asset quantities (e.g., BTC) and calculates correct USD values (Notional USD), bypassing bloated or confusing values from native exchange APIs.
 - **Custom Polling Interval**: Navigate to the **Settings** page to fine-tune how frequently background sync cycles run (default is 15 minutes).
 
 ---
