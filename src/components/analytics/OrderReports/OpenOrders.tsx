@@ -7,6 +7,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
 import { AppTooltip } from '../../ui/Tooltip';
+import { detectQtyIsCoin } from '../../../utils/inverseUtils';
 
 export function OpenOrders() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -42,24 +43,8 @@ export function OpenOrders() {
 
       let valUsd = 0;
       if (o.category === 'INVERSE') {
-        let qtyIsCoin = false;
-        if (o.price > 0) {
-          const estValIfQtyIsCoin = o.qty * o.price;
-          const estValIfQtyIsUsd = o.qty;
-          const actualVal = o.value || 0;
-          if (actualVal > 0) {
-            const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-            const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-            if (distToCoin < distToUsd) {
-              qtyIsCoin = true;
-            }
-          } else {
-            if (o.qty < 2 && o.qty * o.price >= 10) {
-              qtyIsCoin = true;
-            }
-          }
-        }
-        
+        const qtyIsCoin = detectQtyIsCoin({ exchange: o.exchange, qty: o.qty, price: o.price, value: o.value });
+
         if (qtyIsCoin) {
           valUsd = o.value || (o.price > 0 ? Number(new Big(o.qty).times(o.price)) : 0);
         } else {

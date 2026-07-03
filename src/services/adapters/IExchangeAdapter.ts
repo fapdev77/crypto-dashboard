@@ -1,4 +1,5 @@
 import { UnifiedHistoryPosition, UnifiedAssetCategory } from '../../types';
+import { ApiCredentials } from '../../store/apiKeysStore';
 
 export interface IExchangeAdapter {
   /**
@@ -9,7 +10,7 @@ export interface IExchangeAdapter {
    * @param start Optional start timestamp
    * @param end Optional end timestamp
    */
-  fetchAndNormalize(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]>;
+  fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]>;
 
   /**
    * Fetches the history of deposits and withdrawals (bills)
@@ -19,19 +20,19 @@ export interface IExchangeAdapter {
    * @param start Optional start timestamp
    * @param end Optional end timestamp
    */
-  fetchBills?(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedBillRecord[]>;
+  fetchBills?(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedBillRecord[]>;
 
   /**
    * Fetches open (pending) orders and normalizes them into UnifiedOrder.
    */
-  getOpenOrders?(key: any): Promise<import('../../types').UnifiedOrder[]>;
+  getOpenOrders?(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]>;
 
   /**
    * Fetches history (closed) orders and normalizes them into UnifiedOrder.
    * @param start Optional start timestamp
    * @param end Optional end timestamp
    */
-  getHistoryOrders?(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]>;
+  getHistoryOrders?(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]>;
 
   /**
    * Fetches public metadata for a specific instrument to determine its category.

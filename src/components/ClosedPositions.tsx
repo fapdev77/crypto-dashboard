@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
+import { usePagination } from '../hooks/usePagination';
 import { Loader2, History, Download, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -33,13 +34,6 @@ export function ClosedPositions() {
   const [error, setError] = useState<string | null>(null);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filterText, exchangeFilter, period]);
-
   const filteredClosedPositions = useMemo(() => {
     let filtered = [...closedPositions];
 
@@ -59,18 +53,9 @@ export function ClosedPositions() {
     return filtered;
   }, [closedPositions, filterText, exchangeFilter]);
 
-  // Adjust page if it exceeds the max page available for current closed positions
-  useEffect(() => {
-    const maxPage = Math.max(1, Math.ceil(filteredClosedPositions.length / itemsPerPage));
-    if (currentPage > maxPage) {
-      setCurrentPage(maxPage);
-    }
-  }, [filteredClosedPositions.length, currentPage]);
-
-  const paginatedClosedPositions = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredClosedPositions.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredClosedPositions, currentPage]);
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedClosedPositions } = usePagination(
+    filteredClosedPositions, 50, [filterText, exchangeFilter, period]
+  );
 
   const handleExport = (formatType: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
@@ -97,7 +82,7 @@ export function ClosedPositions() {
       const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
       const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
       const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
-      const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
+      const leverage = (pos.raw?.leverage as string) || (pos.raw?.lever as string) || '1';
       
       const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
       
@@ -366,7 +351,7 @@ export function ClosedPositions() {
                 id="closed-positions-pagination-top"
                 currentPage={currentPage}
                 totalItems={filteredClosedPositions.length}
-                itemsPerPage={itemsPerPage}
+                itemsPerPage={50}
                 onPageChange={setCurrentPage}
               />
             </div>
@@ -380,8 +365,8 @@ export function ClosedPositions() {
 
             const pnlClass = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
 
-            const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
-            const marginModeLabel = (pos.raw?.marginMode || pos.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
+            const leverage = (pos.raw?.leverage as string) || (pos.raw?.lever as string) || '1';
+            const marginModeLabel = ((pos.raw?.marginMode as string) || (pos.raw?.mgnMode as string) || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
             const symbolSuffix = extractBaseCoin(pos.exchange, pos.symbol);
 
             let roiStr = '--';
@@ -398,7 +383,7 @@ export function ClosedPositions() {
             const { actualCoinSize, positionValueUsd } = getHistoryPositionSizeAndValue(pos);
 
             if (pos.raw?.roi !== undefined && pos.raw?.roi !== null) {
-              roiValue = parseFloat(pos.raw.roi) * 100;
+              roiValue = parseFloat(pos.raw.roi as string) * 100;
               hasRoi = true;
             } else if (pos.entryPrice && pos.closePrice && pos.size && leverage) {
               const numLeverage = parseFloat(leverage);
@@ -567,7 +552,7 @@ export function ClosedPositions() {
               id="closed-positions-pagination-bottom"
               currentPage={currentPage}
               totalItems={filteredClosedPositions.length}
-              itemsPerPage={itemsPerPage}
+              itemsPerPage={50}
               onPageChange={setCurrentPage}
             />
           </div>

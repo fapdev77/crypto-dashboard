@@ -1,8 +1,6 @@
 import { UnifiedHistoryPosition } from '../../types';
-import { OkxAdapter } from '../adapters/OkxAdapter';
-import { BitgetAdapter } from '../adapters/BitgetAdapter';
-import { BybitAdapter } from '../adapters/BybitAdapter';
-import { IExchangeAdapter } from '../adapters/IExchangeAdapter';
+import { ApiCredentials } from '../../store/apiKeysStore';
+import { ExchangeAggregator } from '../adapters/ExchangeAggregator';
 import {
   getCachedHistory,
   saveCachedHistory,
@@ -11,27 +9,13 @@ import {
 } from '../historyCache';
 
 export class PositionHistoryService {
-  
-  private getAdapter(exchange: string): IExchangeAdapter {
-    switch (exchange) {
-      case 'okx':
-        return new OkxAdapter();
-      case 'bitget':
-        return new BitgetAdapter();
-      case 'bybit':
-        return new BybitAdapter();
-      default:
-        throw new Error(`[PositionHistoryService] No adapter found for exchange: ${exchange}`);
-    }
-  }
-
   /**
    * Standard fetch: hits the exchange API directly for the requested period.
    */
-  public async fetchExchangeHistory(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
+  public async fetchExchangeHistory(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     try {
       console.log(`[PositionHistoryService] Fetching history for ${key.exchange} (${key.label})`);
-      const adapter = this.getAdapter(key.exchange);
+      const adapter = ExchangeAggregator.getAdapter(key.exchange);
       return await adapter.fetchAndNormalize(key, start, end);
     } catch (error) {
       console.error(`Error fetching history for ${key.exchange} (${key.label}):`, error);
@@ -46,7 +30,7 @@ export class PositionHistoryService {
    * 3. Fetches only NEW records from the exchange (start = lastCachedTime + 1).
    * 4. Merges and persists the new data into IndexedDB.
    */
-  public async fetchWithCache(key: any): Promise<UnifiedHistoryPosition[]> {
+  public async fetchWithCache(key: ApiCredentials): Promise<UnifiedHistoryPosition[]> {
     const connectionId = key.id;
 
     // Step 1: Load existing cache

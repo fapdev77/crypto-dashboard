@@ -24,7 +24,7 @@ export interface UnifiedBalance {
   walletBalance?: number;
   availableMargin?: number;
   unrealizedPnl?: number;
-  raw?: any;
+  raw?: Record<string, unknown>;
 }
 
 export interface UnifiedOrder {
@@ -52,7 +52,7 @@ export interface UnifiedOrder {
   fees?: number;
   leverage?: number;
   marginMode?: UnifiedMarginMode;
-  raw?: any;
+  raw?: Record<string, unknown>;
 }
 
 export interface UnifiedPosition {
@@ -86,7 +86,7 @@ export interface UnifiedPosition {
   instrumentType?: UnifiedInstrumentType;
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
-  raw?: any; // To store the original broker data if needed
+  raw?: Record<string, unknown>; // To store the original broker data if needed
 }
 
 export interface UnifiedHistoryPosition {
@@ -114,7 +114,7 @@ export interface UnifiedHistoryPosition {
   notionalUsd?: number;
   roi?: number;
   instrumentType?: UnifiedInstrumentType;
-  raw?: any;
+  raw?: Record<string, unknown>;
 }
 
 export interface UnifiedBillRecord {
@@ -126,7 +126,7 @@ export interface UnifiedBillRecord {
   amount: number;
   ccy: string;
   timestamp: number;
-  raw?: any;
+  raw?: Record<string, unknown>;
 }
 
 export interface SymbolPnLRecord {
