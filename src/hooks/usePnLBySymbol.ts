@@ -5,12 +5,8 @@ import { SymbolPnLRecord } from '../types';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { BybitAdapter } from '../services/adapters/BybitAdapter';
 import { useSettingsStore } from '../store/settingsStore';
+import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getBybitRealPnLCache, saveBybitRealPnLCache } from '../services/historyCache';
-
-// Module-level state to persist across unmounts/remounts of different views
-let globalCachedPnLRecord: Record<string, string> = {};
-let globalLastPnlSyncedVersion: number | null = null;
-let globalLastPnlSyncTimestamp: number = 0;
 
 export function usePnLBySymbol(
   period: PositionHistoryPeriod,
@@ -24,13 +20,14 @@ export function usePnLBySymbol(
   const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
   const lastSyncTime = useSettingsStore(state => state.lastSyncTime);
   const setLastSyncTime = useSettingsStore(state => state.setLastSyncTime);
+  const syncStore = useSyncCoordinatorStore();
   
-  const [bybitRealPnL, setBybitRealPnL] = useState<Record<string, string>>(globalCachedPnLRecord);
+  const [bybitRealPnL, setBybitRealPnL] = useState<Record<string, string>>(syncStore.cachedPnLRecord);
   const [isBybitLoading, setIsBybitLoading] = useState(() => {
     if (useMockData || keys.length === 0) return false;
     const activeBybitKeys = keys.filter(k => k.exchange === 'bybit' && k.isActive);
     if (activeBybitKeys.length === 0) return false;
-    return Object.keys(globalCachedPnLRecord).length === 0;
+    return Object.keys(syncStore.cachedPnLRecord).length === 0;
   });
   const [bybitSyncMessage, setBybitSyncMessage] = useState<string | null>(null);
 
@@ -99,10 +96,10 @@ export function usePnLBySymbol(
               finalCached[sym] = val.toString();
             }
             setBybitRealPnL(finalCached);
-            globalCachedPnLRecord = finalCached;
+            useSyncCoordinatorStore.getState().setCachedPnLRecord(finalCached);
             setIsBybitLoading(false);
           } else {
-            if (Object.keys(globalCachedPnLRecord).length === 0) {
+            if (Object.keys(useSyncCoordinatorStore.getState().cachedPnLRecord).length === 0) {
               setIsBybitLoading(true);
             }
           }
@@ -136,17 +133,18 @@ export function usePnLBySymbol(
 
       // If a force sync is requested globally, reset local sync timestamp to force fetch
       if (lastSyncTime === 0) {
-        globalLastPnlSyncTimestamp = 0;
+        useSyncCoordinatorStore.getState().setLastPnlSyncTimestamp(0);
       }
 
       const now = Date.now();
       const intervalMs = (historyCacheInterval || 5) * 60 * 1000;
-      const hasRecentSync = (now - globalLastPnlSyncTimestamp) < intervalMs;
+      const lastPnlSync = useSyncCoordinatorStore.getState().lastPnlSyncTimestamp;
+      const hasRecentSync = (now - lastPnlSync) < intervalMs;
 
       // Skip network fetch if already done recently
       if (
         hasRecentSync &&
-        globalLastPnlSyncTimestamp > 0
+        lastPnlSync > 0
       ) {
         return;
       }
@@ -190,12 +188,12 @@ export function usePnLBySymbol(
           finalObj[sym] = val.toString();
         }
         setBybitRealPnL(finalObj);
-        globalCachedPnLRecord = finalObj;
+        useSyncCoordinatorStore.getState().setCachedPnLRecord(finalObj);
         setIsBybitLoading(false);
         setBybitSyncMessage(null);
 
-        globalLastPnlSyncedVersion = historyCacheVersion;
-        globalLastPnlSyncTimestamp = Date.now();
+        useSyncCoordinatorStore.getState().setLastPnlSyncedVersion(historyCacheVersion);
+        useSyncCoordinatorStore.getState().setLastPnlSyncTimestamp(Date.now());
 
         // If we were the one that finished a manual force sync, we restore the global lastSyncTime
         if (lastSyncTime === 0) {

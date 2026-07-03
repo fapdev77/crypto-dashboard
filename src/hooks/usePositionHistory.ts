@@ -4,14 +4,10 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { UnifiedHistoryPosition } from '../types';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { useSettingsStore } from '../store/settingsStore';
+import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getCachedHistory } from '../services/historyCache';
 
 export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d';
-
-// Module-level state to persist across unmounts/remounts of different views
-let globalCachedPositions: UnifiedHistoryPosition[] = [];
-let globalLastPositionsSyncedVersion: number | null = null;
-let globalLastPositionsSyncTimestamp: number = 0;
 
 export function usePositionHistory(period: PositionHistoryPeriod, exchange?: string, searchTerm?: string) {
   const keys = useApiKeysStore(state => state.keys);
@@ -20,11 +16,12 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
   const lastSyncTime = useSettingsStore(state => state.lastSyncTime);
   const setLastSyncTime = useSettingsStore(state => state.setLastSyncTime);
+  const syncStore = useSyncCoordinatorStore();
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
-  const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>(globalCachedPositions);
+  const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>(syncStore.cachedPositions);
   const [isLoading, setIsLoading] = useState(() => {
     if (useMockData || keys.filter(k => k.isActive).length === 0) return false;
-    return globalCachedPositions.length === 0;
+    return syncStore.cachedPositions.length === 0;
   });
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -80,7 +77,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
         }
         if (isMounted) {
           setRawCachedPositions(cachedTotal);
-          globalCachedPositions = cachedTotal;
+          useSyncCoordinatorStore.getState().setCachedPositions(cachedTotal);
           setIsLoading(false);
         }
       } catch (err) {
@@ -137,7 +134,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
         if (isMounted) {
           setRawCachedPositions(cachedTotal);
-          globalCachedPositions = cachedTotal;
+          useSyncCoordinatorStore.getState().setCachedPositions(cachedTotal);
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);

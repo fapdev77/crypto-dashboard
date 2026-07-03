@@ -5,13 +5,9 @@ import { UnifiedOrder } from '../types';
 import { useOrdersStore } from '../store/ordersStore';
 import { getCachedOrders } from '../services/historyCache';
 import { useSettingsStore } from '../store/settingsStore';
+import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { OrderHistoryService } from '../services/orders/OrderHistoryService';
 import mockOrdersData from '../mock/orders.json';
-
-// Module-level state to persist across unmounts/remounts of different views
-let globalCachedClosedOrders: UnifiedOrder[] = [];
-let globalLastOrdersSyncedVersion: number | null = null;
-let globalLastOrdersSyncTimestamp: number = 0;
 
 export interface OrderFilters {
   exchange: string;     // 'All' | 'bybit' | 'bitget' | 'okx'
@@ -32,11 +28,13 @@ export function useOrderReports(filters: OrderFilters) {
 
   const activeKeys = useMemo(() => keys.filter(k => k.isActive), [keys]);
 
+  const syncStore = useSyncCoordinatorStore();
+
   // Local state used only for CLOSED (history) orders
-  const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>(globalCachedClosedOrders);
+  const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>(syncStore.cachedClosedOrders);
   const [loading, setLoading] = useState(() => {
     if (useMockData || keys.filter(k => k.isActive).length === 0) return false;
-    return globalCachedClosedOrders.length === 0;
+    return syncStore.cachedClosedOrders.length === 0;
   });
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,14 +65,14 @@ export function useOrderReports(filters: OrderFilters) {
     const activeKeys = keys.filter(k => k.isActive);
     if (activeKeys.length === 0) {
       setClosedRawOrders([]);
-      globalCachedClosedOrders = [];
+      useSyncCoordinatorStore.getState().setCachedClosedOrders([]);
       if (!silent) setLoading(false);
       return;
     }
 
     // Only trigger loading state on non-silent runs if we don't have any cached orders yet
     if (!silent) {
-      if (globalCachedClosedOrders.length === 0) {
+      if (useSyncCoordinatorStore.getState().cachedClosedOrders.length === 0) {
         setLoading(true);
       }
       setError(null);
@@ -96,7 +94,7 @@ export function useOrderReports(filters: OrderFilters) {
       
       if (cachedTotal.length > 0) {
         setClosedRawOrders(cachedTotal);
-        globalCachedClosedOrders = cachedTotal;
+        useSyncCoordinatorStore.getState().setCachedClosedOrders(cachedTotal);
         if (!silent) setLoading(false); // Instant render
       }
 
@@ -133,10 +131,10 @@ export function useOrderReports(filters: OrderFilters) {
       
       if (updatedTotal.length > 0) {
         setClosedRawOrders(updatedTotal);
-        globalCachedClosedOrders = updatedTotal;
+        useSyncCoordinatorStore.getState().setCachedClosedOrders(updatedTotal);
       } else if (cachedTotal.length === 0) {
         setClosedRawOrders([]);
-        globalCachedClosedOrders = [];
+        useSyncCoordinatorStore.getState().setCachedClosedOrders([]);
       }
 
       // Mark as fully synchronized
