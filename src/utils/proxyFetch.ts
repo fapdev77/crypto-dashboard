@@ -1,3 +1,5 @@
+import { LogManager } from '../services/LogManager';
+
 export interface ProxyRequest {
   targetUrl: string;
   method: string;
@@ -33,7 +35,7 @@ export const hybridFetch = async (targetUrl: string, method: string, headers: Re
       return await res.json();
     }
   } catch (err) {
-    console.warn(`[HybridFetch] Fetch direto falhou, acionando Proxy...`, targetUrl);
+    LogManager.warn('HybridFetch', `Fetch direto falhou, acionando Proxy...`, targetUrl);
   }
   
   // Proxy Fallback

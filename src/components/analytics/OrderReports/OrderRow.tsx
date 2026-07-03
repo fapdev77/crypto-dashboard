@@ -9,7 +9,7 @@ import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { AssetClassifierAggregator } from '../../../services/AssetClassifierAggregator';
 import { extractBaseCoin } from '../../../utils/unifiers';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
-import { useDashboardStore } from '../../../store/dashboardStore';
+import { usePositionsStore } from '../../../store/positionsStore';
 
 interface Props {
   key?: React.Key;
@@ -23,7 +23,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const { keys } = useApiKeysStore();
   const connectionLabel = order.label || keys.find(k => k.id === order.connectionId)?.label || order.connectionId;
 
-  const activePositions = Object.values(useDashboardStore.getState().positions);
+  const activePositions = Object.values(usePositionsStore.getState().positions);
   const matchingPos = activePositions.find(p => p.connectionId === order.connectionId && p.symbol === order.symbol);
   const orderLeverage = order.leverage || matchingPos?.leverage || 1;
   const orderMarginMode = order.marginMode || matchingPos?.marginMode || 'cross';

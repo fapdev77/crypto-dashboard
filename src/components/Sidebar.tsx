@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker, AlignLeft, ClipboardList, ArrowLeftRight } from 'lucide-react';
-import { useDashboardStore } from '../store/dashboardStore';
+import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
 import logo1 from '../assets/CriptoDashboard-logo1.PNG';
@@ -15,7 +15,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
-  const { positions } = useDashboardStore();
+  const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
   const openOrdersCount = useOrdersStore(state => Object.keys(state.openOrders).length);
 

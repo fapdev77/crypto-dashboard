@@ -5,7 +5,7 @@ import { BaseExchangeAdapter } from './BaseExchangeAdapter';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
-import { useDashboardStore } from '../../store/dashboardStore';
+import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
@@ -189,7 +189,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
           pages++;
         } while (after && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[OKX-History] error for ${type}:`, err);
+        LogManager.warn('OKX-History', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _instType: type }));
     };
@@ -265,7 +265,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
           pages++;
         } while (after && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[OKX-Bills] error for ${type}:`, err);
+        LogManager.warn('OKX-Bills', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _type: type }));
     };
@@ -307,7 +307,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
           allOrders = allOrders.concat(res.data);
         }
       } catch (err) {
-        console.warn(`[Okx-OpenOrders] Error fetching ${instType}:`, err);
+        LogManager.warn('Okx-OpenOrders', `Error fetching ${instType}:`, err);
       }
     }
     await OkxAdapter.ensureInstrumentsLoaded();
@@ -347,7 +347,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
             allOrders = allOrders.concat(filtered);
           }
         } catch (err) {
-          console.warn(`[Okx-HistoryOrders] Error fetching ${instType} from ${endpoint}:`, err);
+          LogManager.warn('Okx-HistoryOrders', `Error fetching ${instType} from ${endpoint}:`, err);
         }
       }
     }
@@ -463,9 +463,9 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       }));
       this.cachedInstruments = allInsts;
       this.cachedInstrumentsTime = Date.now();
-      console.log(`[OKX-Adapter] Loaded ${Object.keys(allInsts).length} SWAP & FUTURES instruments into cache.`);
+      LogManager.info('OKX-Adapter', `Loaded ${Object.keys(allInsts).length} SWAP & FUTURES instruments into cache.`);
     } catch (err) {
-      console.warn('[OKX-Adapter] Error caching instruments:', err);
+      LogManager.warn('OKX-Adapter', 'Error caching instruments:', err);
     }
   }
 
@@ -508,7 +508,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
         }
       }
     } catch (err) {
-      console.warn('[OKX-Metadata] Fetch error:', err);
+      LogManager.warn('OKX-Metadata', 'Fetch error:', err);
     }
     return 'NOT_FOUND';
   }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Plus, Power, Edit2, Trash2 } from 'lucide-react';
 import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
-import { useDashboardStore } from '../store/dashboardStore';
+import { useConnectionStore } from '../store/connectionStore';
+import { clearConnectionData } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { ApiKeyModal } from './ApiKeyModal';
@@ -15,7 +16,7 @@ const EXCHANGES: { id: Exchange; name: string }[] = [
 
 export function ApiKeys() {
   const { keys, toggleKey, removeKey } = useApiKeysStore();
-  const { clearConnectionData, statuses } = useDashboardStore(state => state);
+  const { statuses } = useConnectionStore();
   const useMockData = useSettingsStore(state => state.useMockData);
 
   const [modalOpen, setModalOpen] = useState(false);

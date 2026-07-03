@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { LogManager } from '../services/LogManager';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -9,10 +10,10 @@ export function UpdateNotification() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r: ServiceWorkerRegistration | undefined) {
-      console.log('SW Registered:', r);
+      LogManager.info('SW', 'Service Worker Registered:', r);
     },
     onRegisterError(error: any) {
-      console.error('SW registration error', error);
+      LogManager.error('SW', 'Service Worker registration error', error);
     },
   });
 

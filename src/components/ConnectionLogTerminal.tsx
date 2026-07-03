@@ -4,8 +4,6 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { Search, X, ChevronUp, ChevronDown } from 'lucide-react';
 
-import { useDashboardStore } from '../store/dashboardStore';
-
 export function ConnectionLogTerminal() {
   const { entries, maxEntries, clearLogs } = useLogStore();
   const keys = useApiKeysStore(state => state.keys);

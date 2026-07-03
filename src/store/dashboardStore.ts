@@ -1,225 +1,52 @@
-import { create } from 'zustand';
-import { UnifiedPosition } from '../types';
+/**
+ * @deprecated This store is being split into focused sub-stores.
+ * Import directly from:
+ *   - connectionStore.ts  → useConnectionStore, ConnectionStatus, ConnectionTelemetry
+ *   - balancesStore.ts    → useBalancesStore, BalanceItem
+ *   - positionsStore.ts   → usePositionsStore
+ *
+ * This file re-exports everything for backward compatibility.
+ */
 
-export interface BalanceItem {
-  id: string; // e.g., 'connId-USDT'
-  connectionId: string;
-  exchange: string;
-  label: string;
-  ccy: string;
-  amount: number;
-  usdValue: number;
+import { useConnectionStore, type ConnectionStatus, type ConnectionTelemetry } from './connectionStore';
+import { useBalancesStore, type BalanceItem } from './balancesStore';
+import { usePositionsStore } from './positionsStore';
+
+// Re-export types
+export type { ConnectionStatus, ConnectionTelemetry, BalanceItem };
+
+/**
+ * Cross-domain action: clears all data (statuses, balances, positions)
+ * for a single connection across all 3 sub-stores.
+ */
+export function clearConnectionData(connectionId: string) {
+  useConnectionStore.getState().clearConnectionData(connectionId);
+  useBalancesStore.getState().clearConnectionData(connectionId);
+  usePositionsStore.getState().clearConnectionData(connectionId);
 }
 
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+/**
+ * Combined hook for backward compatibility.
+ * @deprecated Use the specific sub-store hooks instead.
+ */
+export function useDashboardStore<T = unknown>(selector?: (state: any) => T): T {
+  const connState = useConnectionStore();
+  const balState = useBalancesStore();
+  const posState = usePositionsStore();
 
-export interface ConnectionTelemetry {
-  latencyHistory: number[];
-  throughputHistory: number[];
-  lastPingMs: number;
-  bytesPerSecond: number;
-  accumulatingBytes: number;
-  lastThroughputUpdate: number;
+  const combined = {
+    // Connection
+    ...connState,
+    // Balances
+    ...balState,
+    // Positions
+    ...posState,
+    // Cross-domain clear (overrides individual clearConnectionData with the combined version)
+    clearConnectionData,
+  };
+
+  if (selector) {
+    return selector(combined);
+  }
+  return combined as unknown as T;
 }
-
-interface DashboardState {
-  // Connection statuses tracking (keyed by connectionId)
-  statuses: Record<string, ConnectionStatus>;
-  errors: Record<string, string | null>;
-  setConnectionStatus: (connectionId: string, status: ConnectionStatus, error?: string | null) => void;
-  setConnectionError: (connectionId: string, error: string | null) => void;
-
-  // Wallet balances
-  balances: Record<string, BalanceItem>;
-  updateBalances: (connectionId: string, newBalances: BalanceItem[]) => void;
-  updateBalancesDelta: (connectionId: string, deltaBalances: Partial<BalanceItem>[]) => void;
-  
-  // Positions
-  positions: Record<string, UnifiedPosition>;
-  updatePositions: (connectionId: string, newPositions: UnifiedPosition[]) => void;
-  updatePositionsDelta: (connectionId: string, deltaPositions: Partial<UnifiedPosition>[]) => void;
-  
-  // Telemetry
-  telemetry: Record<string, ConnectionTelemetry>;
-  updateLatency: (connectionId: string, ms: number) => void;
-  addBytesReceived: (connectionId: string, bytes: number) => void;
-  tickThroughput: () => void;
-
-  // Clear all data for a specific connection
-  clearConnectionData: (connectionId: string) => void;
-}
-
-export const useDashboardStore = create<DashboardState>((set) => ({
-  statuses: {},
-  errors: {},
-  setConnectionStatus: (connectionId, status, error) => set((state) => ({
-    statuses: { ...state.statuses, [connectionId]: status },
-    errors: error !== undefined ? { ...state.errors, [connectionId]: error } : state.errors
-  })),
-  setConnectionError: (connectionId, error) => set((state) => ({
-    errors: { ...state.errors, [connectionId]: error }
-  })),
-
-  balances: {},
-  updateBalances: (connectionId, newBalances) => set((state) => {
-    const nextBalances = { ...state.balances };
-    
-    const newIds = new Set(newBalances.map(b => b.id));
-    
-    // Remove only stale balances that are no longer present on this connection
-    for (const key in nextBalances) {
-      if (nextBalances[key].connectionId === connectionId && !newIds.has(key)) {
-        delete nextBalances[key];
-      }
-    }
-    
-    // Add or update balances in-place preserving key iteration order
-    newBalances.forEach(b => {
-      if (b.amount > 0) {
-        nextBalances[b.id] = b;
-      }
-    });
-
-    return { balances: nextBalances };
-  }),
-
-  updateBalancesDelta: (connectionId, deltaBalances) => set((state) => {
-    const nextBalances = { ...state.balances };
-    deltaBalances.forEach(b => {
-      if (!b.id) return;
-      if (nextBalances[b.id]) {
-        nextBalances[b.id] = { ...nextBalances[b.id], ...b };
-      } else {
-        nextBalances[b.id] = b as BalanceItem;
-      }
-    });
-    for (const key in nextBalances) {
-      if (nextBalances[key].amount <= 0) {
-        delete nextBalances[key];
-      }
-    }
-    return { balances: nextBalances };
-  }),
-
-  positions: {},
-  updatePositions: (connectionId, newPositions) => set((state) => {
-    const nextPositions = { ...state.positions };
-    
-    const newIds = new Set(newPositions.map(p => p.id));
-    
-    // Remove only stale positions that are no longer present on this connection
-    for (const key in nextPositions) {
-      if (nextPositions[key].connectionId === connectionId && !newIds.has(key)) {
-        delete nextPositions[key];
-      }
-    }
-
-    // Add or update positions in-place preserving key iteration order
-    newPositions.forEach(pos => {
-      if (Math.abs(pos.size) > 0) {
-        nextPositions[pos.id] = pos;
-      }
-    });
-
-    return { positions: nextPositions };
-  }),
-
-  updatePositionsDelta: (connectionId, deltaPositions) => set((state) => {
-    const nextPositions = { ...state.positions };
-    deltaPositions.forEach(pos => {
-      if (!pos.id) return;
-      if (nextPositions[pos.id]) {
-        nextPositions[pos.id] = { ...nextPositions[pos.id], ...pos };
-      } else {
-        nextPositions[pos.id] = pos as UnifiedPosition;
-      }
-    });
-    for (const key in nextPositions) {
-      if (Math.abs(nextPositions[key].size) <= 0) {
-        delete nextPositions[key];
-      }
-    }
-    return { positions: nextPositions };
-  }),
-
-  // Telemetry
-  telemetry: {},
-  updateLatency: (connectionId, ms) => set((state) => {
-    const current = state.telemetry[connectionId] || {
-      latencyHistory: [], throughputHistory: [], lastPingMs: 0, bytesPerSecond: 0, accumulatingBytes: 0, lastThroughputUpdate: Date.now()
-    };
-    const newHistory = [...current.latencyHistory, ms].slice(-20);
-    return {
-      telemetry: {
-        ...state.telemetry,
-        [connectionId]: {
-          ...current,
-          lastPingMs: ms,
-          latencyHistory: newHistory
-        }
-      }
-    };
-  }),
-  addBytesReceived: (connectionId, bytes) => set((state) => {
-    const current = state.telemetry[connectionId] || {
-      latencyHistory: [], throughputHistory: [], lastPingMs: 0, bytesPerSecond: 0, accumulatingBytes: 0, lastThroughputUpdate: Date.now()
-    };
-    return {
-      telemetry: {
-        ...state.telemetry,
-        [connectionId]: {
-          ...current,
-          accumulatingBytes: current.accumulatingBytes + bytes
-        }
-      }
-    };
-  }),
-  tickThroughput: () => set((state) => {
-    const now = Date.now();
-    const nextTelemetry = { ...state.telemetry };
-    Object.keys(nextTelemetry).forEach(id => {
-      const current = nextTelemetry[id];
-      const deltaMs = now - current.lastThroughputUpdate;
-      if (deltaMs >= 1000) {
-        const bytesPerSec = (current.accumulatingBytes / deltaMs) * 1000;
-        const newHistory = [...current.throughputHistory, bytesPerSec].slice(-20);
-        
-        nextTelemetry[id] = {
-          ...current,
-          bytesPerSecond: bytesPerSec,
-          throughputHistory: newHistory,
-          accumulatingBytes: 0,
-          lastThroughputUpdate: now
-        };
-      }
-    });
-    return { telemetry: nextTelemetry };
-  }),
-
-  clearConnectionData: (connectionId) => set((state) => {
-    const nextBalances = { ...state.balances };
-    const nextPositions = { ...state.positions };
-    const nextStatuses = { ...state.statuses };
-    const nextErrors = { ...state.errors };
-    const nextTelemetry = { ...state.telemetry };
-    
-    for (const key in nextBalances) {
-      if (nextBalances[key].connectionId === connectionId) {
-        delete nextBalances[key];
-      }
-    }
-    
-    for (const key in nextPositions) {
-      if (nextPositions[key].connectionId === connectionId) {
-        delete nextPositions[key];
-      }
-    }
-    
-    delete nextStatuses[connectionId];
-    delete nextErrors[connectionId];
-    delete nextTelemetry[connectionId];
-
-    return { balances: nextBalances, positions: nextPositions, statuses: nextStatuses, errors: nextErrors, telemetry: nextTelemetry };
-  })
-}));
-

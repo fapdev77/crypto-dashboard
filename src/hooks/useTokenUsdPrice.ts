@@ -1,8 +1,18 @@
 import { useState, useEffect } from 'react';
+import { LogManager } from '../services/LogManager';
 
 const cache: Record<string, { price: number; timestamp: number }> = {};
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
 
+/**
+ * Fetch the current USD price for a given currency using the OKX ticker API.
+ * Results are cached in-memory for 5 minutes to avoid redundant requests.
+ *
+ * Returns null for fiat currencies (USD, EUR) or when the price cannot be fetched.
+ *
+ * @param ccy The currency code to look up (e.g. 'BTC', 'ETH').
+ * @returns The current price in USD, or null if unavailable.
+ */
 export function useTokenUsdPrice(ccy: string) {
   const [price, setPrice] = useState<number | null>(null);
 
@@ -34,7 +44,7 @@ export function useTokenUsdPrice(ccy: string) {
           }
         }
       } catch (err) {
-        console.warn(`[useTokenUsdPrice] Failed to fetch price for ${cleanCcy}`, err);
+        LogManager.warn('useTokenUsdPrice', `Failed to fetch price for ${cleanCcy}`, err);
       }
     };
 

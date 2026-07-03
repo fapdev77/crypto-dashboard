@@ -3,7 +3,15 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { OrderHistoryService } from '../services/orders/OrderHistoryService';
+import { LogManager } from '../services/LogManager';
 
+/**
+ * Background polling hook that periodically refreshes the history cache
+ * (positions + orders) for all active API keys.
+ *
+ * Runs immediately on mount if the last sync is older than the configured interval,
+ * then keeps repeating at the interval. Hooked into the app lifecycle via main.tsx.
+ */
 export function useHistoryCachePolling() {
   const keys = useApiKeysStore(state => state.keys);
   const { useMockData, historyCacheInterval, bumpHistoryCacheVersion, setLastSyncTime } = useSettingsStore();
@@ -15,7 +23,7 @@ export function useHistoryCachePolling() {
     const intervalMs = historyCacheInterval * 60 * 1000;
 
     const poll = async () => {
-      console.log('[HistoryCachePolling] Executing background update...');
+      LogManager.info('HistoryCachePolling', 'Executing background update...');
       const positionService = new PositionHistoryService();
       const orderService = new OrderHistoryService();
       try {
@@ -26,9 +34,9 @@ export function useHistoryCachePolling() {
         
         bumpHistoryCacheVersion();
         setLastSyncTime(Date.now());
-        console.log('[HistoryCachePolling] Background update complete.');
+        LogManager.info('HistoryCachePolling', 'Background update complete.');
       } catch (err) {
-        console.error('[HistoryCachePolling] Error during background update:', err);
+        LogManager.error('HistoryCachePolling', 'Error during background update:', err);
       }
     };
 

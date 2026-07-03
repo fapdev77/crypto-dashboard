@@ -5,7 +5,7 @@ import { BaseExchangeAdapter } from './BaseExchangeAdapter';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch, hybridFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
-import { useDashboardStore } from '../../store/dashboardStore';
+import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
@@ -80,7 +80,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         else if (mm === 'REGULAR_MARGIN' || mm === 'PORTFOLIO_MARGIN') accountMarginMode = 'cross';
       }
     } catch (err) {
-      console.warn('[Bybit-AccountInfo]', err);
+      LogManager.warn('Bybit-AccountInfo', 'Error fetching account info:', err);
     }
 
     const categories = ['linear', 'inverse'];
@@ -168,7 +168,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         }
       }
     } catch (e) {
-      console.warn(`[Bybit-RealPnL] Error fetching real PnL for ${key.label}:`, e);
+      LogManager.warn('Bybit-RealPnL', `Error fetching real PnL for ${key.label}:`, e);
     }
     
     const result: Record<string, string> = {};
@@ -226,7 +226,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         currentStart = currentEnd + 1;
       }
     } catch (e) {
-      console.warn(`[Bybit-AccumulatedFees] Error fetching for ${symbol}:`, e);
+      LogManager.warn('Bybit-AccumulatedFees', `Error fetching for ${symbol}:`, e);
     }
     return {
       accumulatedFunding: accumulatedFunding.toString(),
@@ -344,7 +344,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           pages++;
         } while (cursor && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[Bybit-History] error for ${category}:`, err);
+        LogManager.warn('Bybit-History', `Error for ${category}:`, err);
       }
       return list.map(item => ({ ...item, _category: category }));
     };
@@ -413,7 +413,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           pages++;
         } while (cursor && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[Bybit-Bills] error for ${type}:`, err);
+        LogManager.warn('Bybit-Bills', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _type: type }));
     };
@@ -475,7 +475,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           pages++;
         } while (cursor && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[Bybit-OpenOrders] Error fetching ${cat}:`, err);
+        LogManager.warn('Bybit-OpenOrders', `Error fetching ${cat}:`, err);
       }
     }
     return this.normalizeOrders(allOrders, key);
@@ -520,7 +520,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
             pages++;
           } while (cursor && pages < MAX_DEEP_PAGES);
         } catch (err) {
-          console.warn(`[Bybit-HistoryOrders] Error fetching ${cat}:`, err);
+          LogManager.warn('Bybit-HistoryOrders', `Error fetching ${cat}:`, err);
         }
 
         if (currentStart <= startTimeObj) break;
@@ -611,7 +611,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
          return 'CRYPTO';
       }
     } catch (err) {
-      console.warn('[Bybit-Metadata] Fetch error:', err);
+      LogManager.warn('Bybit-Metadata', 'Fetch error:', err);
     }
     return 'NOT_FOUND';
   }

@@ -1,5 +1,6 @@
 import { UnifiedHistoryPosition } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
+import { LogManager } from '../LogManager';
 import { ExchangeAggregator } from '../adapters/ExchangeAggregator';
 import {
   getCachedHistory,
@@ -14,11 +15,11 @@ export class PositionHistoryService {
    */
   public async fetchExchangeHistory(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     try {
-      console.log(`[PositionHistoryService] Fetching history for ${key.exchange} (${key.label})`);
+      LogManager.info('PositionHistoryService', `Fetching history for ${key.exchange} (${key.label})`);
       const adapter = ExchangeAggregator.getAdapter(key.exchange);
       return await adapter.fetchAndNormalize(key, start, end);
     } catch (error) {
-      console.error(`Error fetching history for ${key.exchange} (${key.label}):`, error);
+      LogManager.error('PositionHistoryService', `Fetching history for ${key.exchange} (${key.label}):`, error);
     }
     return [];
   }
@@ -35,7 +36,7 @@ export class PositionHistoryService {
 
     // Step 1: Load existing cache
     const cachedPositions = await getCachedHistory(connectionId);
-    console.log(`[HistoryCache] ${connectionId}: ${cachedPositions.length} records in cache`);
+    LogManager.info('HistoryCache', `${connectionId}: ${cachedPositions.length} records in cache`);
 
     // Step 2: Determine incremental start
     const lastTimestamp = await getLastFetchTimestamp(connectionId);
@@ -46,9 +47,9 @@ export class PositionHistoryService {
     let newPositions: UnifiedHistoryPosition[] = [];
     try {
       newPositions = await this.fetchExchangeHistory(key, incrementalStart, now);
-      console.log(`[HistoryCache] ${connectionId}: ${newPositions.length} new records fetched`);
+      LogManager.info('HistoryCache', `${connectionId}: ${newPositions.length} new records fetched`);
     } catch (err) {
-      console.warn(`[HistoryCache] Incremental fetch failed for ${connectionId}, returning stale cache`, err);
+      LogManager.warn('HistoryCache', `Incremental fetch failed for ${connectionId}, returning stale cache`, err);
       return cachedPositions; // Graceful fallback to stale data (AGENTS.md §5)
     }
 

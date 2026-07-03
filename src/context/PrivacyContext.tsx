@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { LogManager } from '../services/LogManager';
 
 interface PrivacyContextType {
   isPrivateMode: boolean;
@@ -22,7 +23,7 @@ export function PrivacyProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem('app_privacy_mode', String(isPrivateMode));
     } catch (err) {
-      console.error('Failed to save privacy mode to localStorage:', err);
+      LogManager.error('PrivacyContext', 'Failed to save privacy mode to localStorage:', err);
     }
   }, [isPrivateMode]);
 
