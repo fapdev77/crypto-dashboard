@@ -1,4 +1,5 @@
 import { UnifiedBillRecord } from '../../types';
+import { ApiCredentials } from '../../store/apiKeysStore';
 import { IExchangeAdapter } from '../adapters/IExchangeAdapter';
 import { OkxAdapter } from '../adapters/OkxAdapter';
 import { BitgetAdapter } from '../adapters/BitgetAdapter';
@@ -25,7 +26,7 @@ export class BillsHistoryService {
    * Fetches bills and cache them if needed, acting as the main entry point
    * for the useBillsHistory hook.
    */
-  public async fetchBills(key: any, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+  public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
     try {
       const adapter = this.getAdapter(key.exchange);
       if (!adapter.fetchBills) {

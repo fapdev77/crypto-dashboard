@@ -1,4 +1,5 @@
 import { UnifiedOrder } from '../../types';
+import { ApiCredentials } from '../../store/apiKeysStore';
 import { ExchangeAggregator } from '../adapters/ExchangeAggregator';
 import {
   getCachedOrders,
@@ -15,7 +16,7 @@ export class OrderHistoryService {
    * 3. Fetches orders from exchange API.
    * 4. Updates cache and metadata.
    */
-  public async fetchWithCache(key: any): Promise<UnifiedOrder[]> {
+  public async fetchWithCache(key: ApiCredentials): Promise<UnifiedOrder[]> {
     const connectionId = key.id;
     const adapter = ExchangeAggregator.getAdapter(key.exchange);
     if (!adapter.getHistoryOrders) {

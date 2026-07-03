@@ -1,6 +1,7 @@
 import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
+import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
 import { useDashboardStore } from '../../store/dashboardStore';
@@ -60,7 +61,7 @@ export class BitgetAdapter implements IExchangeAdapter {
 
 
   // REST Balances
-  public async getBalance(key: any): Promise<UnifiedBalance[]> {
+  public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const endpoints = [
       { path: '/api/v2/spot/account/assets?assetType=hold_only', type: 'SPOT' },
       { path: '/api/v2/mix/account/accounts?productType=USDT-FUTURES', type: 'USDT-FUTURES' },
@@ -153,7 +154,7 @@ export class BitgetAdapter implements IExchangeAdapter {
   }
 
   // REST Positions
-  public async getOpenPositions(key: any): Promise<UnifiedPosition[]> {
+  public async getOpenPositions(key: ApiCredentials): Promise<UnifiedPosition[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     const requests = productTypes.map(async (pType) => {
       const path = `/api/v2/mix/position/all-position?productType=${pType}`;
@@ -230,7 +231,7 @@ export class BitgetAdapter implements IExchangeAdapter {
   }
 
   // REST Closed PnL History
-  public async fetchAndNormalize(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
+  public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     const fetchType = async (pType: string) => {
       let list: any[] = [];
@@ -299,7 +300,7 @@ export class BitgetAdapter implements IExchangeAdapter {
   }
 
   // REST Deposits / Withdrawals (Bills)
-  public async fetchBills(key: any, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+  public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
     const fetchRecords = async (type: 'deposit' | 'withdrawal') => {
       const endpoint = type === 'deposit' ? '/api/v2/spot/wallet/deposit-records' : '/api/v2/spot/wallet/withdrawal-records';
       let list: any[] = [];
@@ -355,7 +356,7 @@ export class BitgetAdapter implements IExchangeAdapter {
   }
 
   // Orders
-  public async getOpenOrders(key: any): Promise<import('../../types').UnifiedOrder[]> {
+  public async getOpenOrders(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     let allOrders: any[] = [];
     
@@ -392,7 +393,7 @@ export class BitgetAdapter implements IExchangeAdapter {
     return this.normalizeOrders(allOrders, key);
   }
 
-  public async getHistoryOrders(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
+  public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     let allOrders: any[] = [];
 
@@ -461,7 +462,7 @@ export class BitgetAdapter implements IExchangeAdapter {
     return this.normalizeOrders(allOrders, key);
   }
 
-  private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {
+  private normalizeOrders(rawOrders: any[], key: ApiCredentials): import('../../types').UnifiedOrder[] {
     return rawOrders.map(o => {
       let status: import('../../types').UnifiedOrderStatus = 'NEW';
       const state = o.state?.toLowerCase() || o.status?.toLowerCase() || '';

@@ -1,6 +1,7 @@
 import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance, UnifiedPositionMode, UnifiedMarginMode } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
+import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch, hybridFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
 import { useDashboardStore } from '../../store/dashboardStore';
@@ -54,7 +55,7 @@ export class BybitAdapter implements IExchangeAdapter {
 
 
   // REST Balances
-  public async getBalance(key: any): Promise<UnifiedBalance[]> {
+  public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const query = 'accountType=UNIFIED';
     const targetUrl = `https://api.bybit.com/v5/account/wallet-balance?${query}`;
     const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
@@ -84,7 +85,7 @@ export class BybitAdapter implements IExchangeAdapter {
   }
 
   // REST Positions
-  public async getOpenPositions(key: any): Promise<UnifiedPosition[]> {
+  public async getOpenPositions(key: ApiCredentials): Promise<UnifiedPosition[]> {
     let accountMarginMode: UnifiedMarginMode = 'unknown';
     try {
       const accUrl = `https://api.bybit.com/v5/account/info`;
@@ -130,7 +131,7 @@ export class BybitAdapter implements IExchangeAdapter {
   }
 
   public async fetchBybitRealPnLBySymbol(
-    key: any, 
+    key: ApiCredentials, 
     startTime: number, 
     endTime: number,
     onProgress?: (msg: string) => void
@@ -194,7 +195,7 @@ export class BybitAdapter implements IExchangeAdapter {
     return result;
   }
 
-  private async fetchBybitAccumulatedFees(key: any, symbol: string, startTime: number): Promise<{ accumulatedFunding: string; accumulatedTradingFee: string }> {
+  private async fetchBybitAccumulatedFees(key: ApiCredentials, symbol: string, startTime: number): Promise<{ accumulatedFunding: string; accumulatedTradingFee: string }> {
     let accumulatedFunding = new Big(0);
     let accumulatedTradingFee = new Big(0);
     let currentStart = startTime;
@@ -250,7 +251,7 @@ export class BybitAdapter implements IExchangeAdapter {
     };
   }
 
-  private async mapPosition(pos: any, key: any, accountMarginMode: UnifiedMarginMode = 'unknown'): Promise<UnifiedPosition> {
+  private async mapPosition(pos: any, key: ApiCredentials, accountMarginMode: UnifiedMarginMode = 'unknown'): Promise<UnifiedPosition> {
     const rawSize = parseFloat(pos.size || '0');
     const entryPrice = parseFloat(pos.avgPrice || pos.entryPrice || '0');
     const markPrice = parseFloat(pos.markPrice || '0');
@@ -333,7 +334,7 @@ export class BybitAdapter implements IExchangeAdapter {
   }
 
   // REST Closed PnL History
-  public async fetchAndNormalize(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
+  public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     await BybitAdapter.syncTime();
     const categories = ['linear', 'inverse'];
 
@@ -404,7 +405,7 @@ export class BybitAdapter implements IExchangeAdapter {
   }
 
   // REST Deposits / Withdrawals (Bills)
-  public async fetchBills(key: any, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+  public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
     await BybitAdapter.syncTime();
     const fetchRecords = async (type: 'deposit' | 'withdraw') => {
       const endpoint = type === 'deposit' ? '/v5/asset/deposit/query-record' : '/v5/asset/withdraw/query-record';
@@ -456,7 +457,7 @@ export class BybitAdapter implements IExchangeAdapter {
   }
 
   // Orders
-  public async getOpenOrders(key: any): Promise<import('../../types').UnifiedOrder[]> {
+  public async getOpenOrders(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]> {
     const categories = ['spot', 'inverse', 'linear-usdt', 'linear-usdc'];
     let allOrders: any[] = [];
     
@@ -497,7 +498,7 @@ export class BybitAdapter implements IExchangeAdapter {
     return this.normalizeOrders(allOrders, key);
   }
 
-  public async getHistoryOrders(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
+  public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
     const categories = ['linear', 'spot', 'inverse'];
     let allOrders: any[] = [];
 
@@ -548,7 +549,7 @@ export class BybitAdapter implements IExchangeAdapter {
     return this.normalizeOrders(allOrders, key);
   }
 
-  private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {
+  private normalizeOrders(rawOrders: any[], key: ApiCredentials): import('../../types').UnifiedOrder[] {
     return rawOrders.map(o => {
       let status: import('../../types').UnifiedOrderStatus = 'NEW';
       const bs = o.orderStatus?.toUpperCase() || '';

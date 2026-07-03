@@ -1,4 +1,5 @@
 import { UnifiedHistoryPosition } from '../../types';
+import { ApiCredentials } from '../../store/apiKeysStore';
 import { OkxAdapter } from '../adapters/OkxAdapter';
 import { BitgetAdapter } from '../adapters/BitgetAdapter';
 import { BybitAdapter } from '../adapters/BybitAdapter';
@@ -11,7 +12,7 @@ import {
 } from '../historyCache';
 
 export class PositionHistoryService {
-  
+
   private getAdapter(exchange: string): IExchangeAdapter {
     switch (exchange) {
       case 'okx':
@@ -28,7 +29,7 @@ export class PositionHistoryService {
   /**
    * Standard fetch: hits the exchange API directly for the requested period.
    */
-  public async fetchExchangeHistory(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
+  public async fetchExchangeHistory(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     try {
       console.log(`[PositionHistoryService] Fetching history for ${key.exchange} (${key.label})`);
       const adapter = this.getAdapter(key.exchange);
@@ -46,7 +47,7 @@ export class PositionHistoryService {
    * 3. Fetches only NEW records from the exchange (start = lastCachedTime + 1).
    * 4. Merges and persists the new data into IndexedDB.
    */
-  public async fetchWithCache(key: any): Promise<UnifiedHistoryPosition[]> {
+  public async fetchWithCache(key: ApiCredentials): Promise<UnifiedHistoryPosition[]> {
     const connectionId = key.id;
 
     // Step 1: Load existing cache

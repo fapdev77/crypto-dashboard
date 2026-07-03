@@ -1,3 +1,5 @@
+import { ApiCredentials } from '../../store/apiKeysStore';
+
 import { BybitAdapter } from './BybitAdapter';
 import { BitgetAdapter } from './BitgetAdapter';
 import { OkxAdapter } from './OkxAdapter';
@@ -17,7 +19,7 @@ export class ExchangeAggregator {
    * Fetches initial balances and positions in parallel via REST APIs
    * and populates the dashboard store to ensure immediate UI readiness.
    */
-  public static async bootloadConnection(key: any): Promise<void> {
+  public static async bootloadConnection(key: ApiCredentials): Promise<void> {
     const store = useDashboardStore.getState();
     const adapter = this.getAdapter(key.exchange);
     
