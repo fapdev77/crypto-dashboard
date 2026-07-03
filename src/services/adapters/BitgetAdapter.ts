@@ -1,6 +1,7 @@
 import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
+import { BaseExchangeAdapter } from './BaseExchangeAdapter';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
@@ -11,31 +12,13 @@ import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extr
 
 const MAX_DEEP_PAGES = 30;
 
-export class BitgetAdapter implements IExchangeAdapter {
-  static timeOffset = 0;
-  static lastSyncTime = 0;
-
-  static async syncTime() {
-    if (Date.now() - this.lastSyncTime < 300000) return;
-    try {
-      const targetUrl = 'https://api.bitget.com/api/v2/public/time';
-      let data;
-      try {
-        const res = await fetch(targetUrl, { method: 'GET' });
-        if (res.ok) data = await res.json();
-        else throw new Error();
-      } catch {
-        data = await proxyFetch({ targetUrl, method: 'GET', headers: {} });
-      }
-
-      if (data && data.code === '00000' && data.data?.serverTime) {
-        this.timeOffset = parseInt(data.data.serverTime, 10) - Date.now();
-        this.lastSyncTime = Date.now();
-        console.log(`[Time-Sync] Bitget synced. Offset: ${this.timeOffset}ms`);
-      }
-    } catch (e) {
-      console.error('[Time-Sync] Bitget time sync error:', e);
+export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapter {
+  static _timeSyncUrl = 'https://api.bitget.com/api/v2/public/time';
+  static _parseTimeResponse(data: any): number | null {
+    if (data?.code === '00000' && data.data?.serverTime) {
+      return parseInt(data.data.serverTime, 10);
     }
+    return null;
   }
 
   public static async getHeaders(

@@ -1,6 +1,7 @@
 import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance, UnifiedPositionMode, UnifiedMarginMode } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
+import { BaseExchangeAdapter } from './BaseExchangeAdapter';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch, hybridFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
@@ -11,31 +12,13 @@ import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extr
 
 const MAX_DEEP_PAGES = 30;
 
-export class BybitAdapter implements IExchangeAdapter {
-  static timeOffset = 0;
-  static lastSyncTime = 0;
-
-  static async syncTime() {
-    if (Date.now() - this.lastSyncTime < 300000) return;
-    try {
-      const targetUrl = 'https://api.bybit.com/v5/market/time';
-      let data;
-      try {
-        const res = await fetch(targetUrl, { method: 'GET' });
-        if (res.ok) data = await res.json();
-        else throw new Error();
-      } catch {
-        data = await proxyFetch({ targetUrl, method: 'GET', headers: {} });
-      }
-
-      if (data && data.retCode === 0 && data.result?.timeSecond) {
-        this.timeOffset = parseInt(data.result.timeSecond, 10) * 1000 - Date.now();
-        this.lastSyncTime = Date.now();
-        console.log(`[Time-Sync] Bybit synced. Offset: ${this.timeOffset}ms`);
-      }
-    } catch (e) {
-      console.error('[Time-Sync] Bybit time sync error:', e);
+export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapter {
+  static _timeSyncUrl = 'https://api.bybit.com/v5/market/time';
+  static _parseTimeResponse(data: any): number | null {
+    if (data?.retCode === 0 && data.result?.timeSecond) {
+      return parseInt(data.result.timeSecond, 10) * 1000;
     }
+    return null;
   }
 
   public static async getHeaders(apiKey: string, apiSecret: string, query: string = ''): Promise<Record<string, string>> {

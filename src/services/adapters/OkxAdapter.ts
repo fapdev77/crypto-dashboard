@@ -1,6 +1,7 @@
 import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
+import { BaseExchangeAdapter } from './BaseExchangeAdapter';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
@@ -11,31 +12,13 @@ import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extr
 
 const MAX_DEEP_PAGES = 30;
 
-export class OkxAdapter implements IExchangeAdapter {
-  static timeOffset = 0;
-  static lastSyncTime = 0;
-
-  static async syncTime() {
-    if (Date.now() - this.lastSyncTime < 300000) return;
-    try {
-      const targetUrl = 'https://www.okx.com/api/v5/public/time';
-      let data;
-      try {
-        const res = await fetch(targetUrl, { method: 'GET' });
-        if (res.ok) data = await res.json();
-        else throw new Error();
-      } catch {
-        data = await proxyFetch({ targetUrl, method: 'GET', headers: {} });
-      }
-
-      if (data && data.code === '0' && data.data?.[0]?.ts) {
-        this.timeOffset = parseInt(data.data[0].ts, 10) - Date.now();
-        this.lastSyncTime = Date.now();
-        console.log(`[Time-Sync] OKX synced. Offset: ${this.timeOffset}ms`);
-      }
-    } catch (e) {
-      console.error('[Time-Sync] OKX time sync error:', e);
+export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter {
+  static _timeSyncUrl = 'https://www.okx.com/api/v5/public/time';
+  static _parseTimeResponse(data: any): number | null {
+    if (data?.code === '0' && data.data?.[0]?.ts) {
+      return parseInt(data.data[0].ts, 10);
     }
+    return null;
   }
 
   public static async getHeaders(
