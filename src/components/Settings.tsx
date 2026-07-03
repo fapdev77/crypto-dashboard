@@ -8,6 +8,7 @@ import {
   Database, Trash2, CheckCircle2, Loader2, RefreshCw,
   Briefcase, AlertTriangle, FlaskConical, Gauge, Settings as SettingsIcon
 } from 'lucide-react';
+import { LogManager } from '../services/LogManager';
 import { AppTooltip } from './ui/Tooltip';
 
 export function Settings() {
@@ -31,8 +32,8 @@ export function Settings() {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
 
   useEffect(() => {
-    getCacheSize().then(setCacheSize).catch(console.error);
-    getAssetMetadataCacheSize().then(setMetaCacheSize).catch(console.error);
+    getCacheSize().then(setCacheSize).catch(err => LogManager.error('Settings', 'Failed to get cache size:', err));
+    getAssetMetadataCacheSize().then(setMetaCacheSize).catch(err => LogManager.error('Settings', 'Failed to get metadata cache size:', err));
   }, []);
 
   const handleForceSync = async () => {
@@ -52,7 +53,7 @@ export function Settings() {
       toast.success('Cache synced successfully', { id: 'cache-sync' });
       setTimeout(() => setSynced(false), 3000);
     } catch (e: any) {
-      console.error(e);
+      LogManager.error('Settings', 'Failed to sync cache:', e);
       toast.error(`Failed to sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-sync' });
     } finally {
       setIsSyncing(false);
@@ -76,7 +77,7 @@ export function Settings() {
       toast.success('Cache cleared and re-synced successfully', { id: 'cache-clear' });
       setTimeout(() => setCleared(false), 3000);
     } catch (e: any) {
-      console.error(e);
+      LogManager.error('Settings', 'Failed to clear and sync cache:', e);
       toast.error(`Failed to clear and sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-clear' });
     } finally {
       setIsClearing(false);
@@ -90,7 +91,7 @@ export function Settings() {
       setMetaCacheSize(0);
       toast.success('Metadata cache cleared', { id: 'meta-cache-clear' });
     } catch (e: any) {
-      console.error(e);
+      LogManager.error('Settings', 'Failed to clear metadata cache:', e);
       toast.error(`Failed to clear metadata cache: ${e.message || 'Unknown error'}`, { id: 'err-meta-cache-clear' });
     } finally {
       setIsClearingMeta(false);

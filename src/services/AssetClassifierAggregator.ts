@@ -2,6 +2,7 @@ import { UnifiedAssetCategory, ExchangeName } from '../types';
 import { getAssetMetadata, saveAssetMetadata } from './historyCache';
 import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeAggregator } from './adapters/ExchangeAggregator';
+import { LogManager } from './LogManager';
 
 export class AssetClassifierAggregator {
   
@@ -22,7 +23,7 @@ export class AssetClassifierAggregator {
      }
      
      // Trigger async fetch in background so next render has it
-     this.getGlobalAssetCategory(cleanSymbol).catch(console.error);
+     this.getGlobalAssetCategory(cleanSymbol).catch(err => LogManager.error('Agregador', 'Async fetch error:', err));
 
      return 'CRYPTO'; // Default assumption
   }
@@ -57,7 +58,7 @@ export class AssetClassifierAggregator {
              }
          }
       }
-    } catch (e) { console.warn('[Agregador] Falha OKX:', e); }
+    } catch (e) { LogManager.warn('Agregador', 'Falha OKX:', e); }
 
     // --- Passo 2 (Fallback Bybit) ---
     try {
@@ -71,7 +72,7 @@ export class AssetClassifierAggregator {
              }
          }
       }
-    } catch (e) { console.warn('[Agregador] Falha Bybit:', e); }
+    } catch (e) { LogManager.warn('Agregador', 'Falha Bybit:', e); }
 
     // --- Passo 3 (Fallback Bitget) ---
     try {
@@ -85,7 +86,7 @@ export class AssetClassifierAggregator {
              }
          }
       }
-    } catch (e) { console.warn('[Agregador] Falha Bitget:', e); }
+    } catch (e) { LogManager.warn('Agregador', 'Falha Bitget:', e); }
 
     // --- Passo 4 (Default) ---
     return this.saveAndReturnDetails(cacheKey, 'CRYPTO', 'Fallback (Default)');
@@ -95,7 +96,7 @@ export class AssetClassifierAggregator {
      try {
        await saveAssetMetadata(cacheKey, category);
      } catch (e) {
-       console.warn('[Agregador] Erro ao salvar cache', e);
+       LogManager.warn('Agregador', 'Erro ao salvar cache', e);
      }
      this.memCache[cacheKey] = category;
      return { category, source };
@@ -110,7 +111,7 @@ export class AssetClassifierAggregator {
      try {
        await saveAssetMetadata(cacheKey, category);
      } catch (e) {
-       console.warn('[Agregador] Erro ao salvar cache', e);
+       LogManager.warn('Agregador', 'Erro ao salvar cache', e);
      }
      this.memCache[cacheKey] = category;
      return category;

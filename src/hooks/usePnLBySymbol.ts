@@ -7,7 +7,20 @@ import { BybitAdapter } from '../services/adapters/BybitAdapter';
 import { useSettingsStore } from '../store/settingsStore';
 import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getBybitRealPnLCache, saveBybitRealPnLCache } from '../services/historyCache';
+import { LogManager } from '../services/LogManager';
 
+/**
+ * Aggregates PnL data broken down by symbol, exchange, and instrument type.
+ *
+ * Internally uses usePositionHistory for closed-position PnL from all exchanges,
+ * and supplements Bybit data with real PnL fetched from the transaction-log API
+ * (loaded via IndexedDB cache with SWR pattern).
+ *
+ * @param period           Time period for the history query.
+ * @param exchangeFilter   Exchange filter ('All' | 'bybit' | 'bitget' | 'okx').
+ * @param instrumentFilter Instrument type filter ('All' | 'Linear' | 'Inverse' etc).
+ * @returns Object with pnlData (aggregated SymbolPnLRecord[]), isLoading, isSyncing, syncMessage.
+ */
 export function usePnLBySymbol(
   period: PositionHistoryPeriod,
   exchangeFilter: string,
@@ -105,7 +118,7 @@ export function usePnLBySymbol(
           }
         }
       } catch (err) {
-        console.error('[usePnLBySymbol] Error reading Bybit Real PnL cache for SWR:', err);
+        LogManager.error('usePnLBySymbol', 'Error reading Bybit Real PnL cache for SWR:', err);
         if (isMounted) setIsBybitLoading(true);
       }
     };
@@ -178,7 +191,7 @@ export function usePnLBySymbol(
             combinedPnL[sym] = combinedPnL[sym].plus(new Big(val));
           }
         } catch (err) {
-          console.warn('[usePnLBySymbol] Failed to fetch Bybit Real PnL for key', key.label, err);
+          LogManager.warn('usePnLBySymbol', `Failed to fetch Bybit Real PnL for key ${key.label}:`, err);
         }
       }
 

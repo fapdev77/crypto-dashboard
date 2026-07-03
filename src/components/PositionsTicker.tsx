@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
-import { useDashboardStore } from '../store/dashboardStore';
+import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { AppTooltip } from './ui/Tooltip';
 
 export function PositionsTicker() {
-  const { positions } = useDashboardStore();
+  const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
 
   const activePositions = useMemo(() => {

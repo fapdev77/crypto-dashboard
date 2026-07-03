@@ -5,7 +5,7 @@ import { BaseExchangeAdapter } from './BaseExchangeAdapter';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
-import { useDashboardStore } from '../../store/dashboardStore';
+import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
@@ -61,7 +61,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
         const res = await proxyFetch({ targetUrl: `https://api.bitget.com${ep.path}`, method: 'GET', headers });
         return { res, type: ep.type };
       } catch (err) {
-        console.warn(`[BitgetAdapter] fetch failed for ${ep.path}`, err);
+        LogManager.warn('BitgetAdapter', `Fetch failed for ${ep.path}`, err);
         return { res: { code: 'error' }, type: ep.type };
       }
     });
@@ -242,7 +242,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
           pages++;
         } while (lastId && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[Bitget-History] error for ${pType}:`, err);
+        LogManager.warn('Bitget-History', `Error for ${pType}:`, err);
       }
       return list;
     };
@@ -312,7 +312,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
           pages++;
         } while (lastId && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[Bitget-Bills] error for ${type}:`, err);
+        LogManager.warn('Bitget-Bills', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _type: type }));
     };
@@ -355,7 +355,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
           allOrders = allOrders.concat(res.data.entrustedList.map((o: any) => ({ ...o, productType: pType })));
         }
       } catch (err) {
-        console.warn(`[Bitget-OpenOrders] Error fetching ${pType}:`, err);
+        LogManager.warn('Bitget-OpenOrders', `Error fetching ${pType}:`, err);
       }
     }
 
@@ -370,7 +370,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
         allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: 'spot' })));
       }
     } catch (err) {
-      console.warn(`[Bitget-OpenOrders] Error fetching spot:`, err);
+      LogManager.warn('Bitget-OpenOrders', 'Error fetching spot:', err);
     }
 
     return this.normalizeOrders(allOrders, key);
@@ -408,7 +408,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
         } while (lastId && pages < MAX_DEEP_PAGES);
         allOrders = allOrders.concat(list);
       } catch (err) {
-        console.warn(`[Bitget-HistoryOrders] Error fetching ${pType}:`, err);
+        LogManager.warn('Bitget-HistoryOrders', `Error fetching ${pType}:`, err);
       }
     }
 
@@ -439,7 +439,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
       } while (lastId && pages < MAX_DEEP_PAGES);
       allOrders = allOrders.concat(list);
     } catch (err) {
-      console.warn(`[Bitget-HistoryOrders] Error fetching spot:`, err);
+      LogManager.warn('Bitget-HistoryOrders', 'Error fetching spot:', err);
     }
 
     return this.normalizeOrders(allOrders, key);
@@ -520,7 +520,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
         }
       }
     } catch (err) {
-      console.warn('[Bitget-Metadata] Fetch error', err);
+      LogManager.warn('Bitget-Metadata', 'Fetch error', err);
     }
     return 'NOT_FOUND';
   }

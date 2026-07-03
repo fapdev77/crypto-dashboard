@@ -6,9 +6,24 @@ import { PositionHistoryService } from '../services/positions/PositionHistorySer
 import { useSettingsStore } from '../store/settingsStore';
 import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getCachedHistory } from '../services/historyCache';
+import { LogManager } from '../services/LogManager';
 
+/** Time period presets for position history queries. */
 export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d';
 
+/**
+ * Hook for fetching closed position history from all active API keys.
+ *
+ * Uses a two-tier SWR (stale-while-revalidate) approach:
+ *   1. Load cached positions from IndexedDB immediately
+ *   2. Fetch new/changed positions from exchange REST APIs in background
+ *
+ * @param period     Time period to filter by (today, 7d, 14d, 30d, 90d).
+ * @param exchange   Optional exchange filter ('All' | 'bybit' | 'bitget' | 'okx').
+ * @param searchTerm Optional text search on symbol or exchange name.
+ *
+ * @returns Object with positions array, isLoading, isSyncing, and syncMessage.
+ */
 export function usePositionHistory(period: PositionHistoryPeriod, exchange?: string, searchTerm?: string) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
@@ -81,7 +96,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           setIsLoading(false);
         }
       } catch (err) {
-        console.error('[usePositionHistory] Error loading cache:', err);
+        LogManager.error('usePositionHistory', 'Error loading cache:', err);
         if (isMounted) {
           setIsLoading(false);
         }
@@ -142,7 +157,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           setLastSyncTime(Date.now());
         }
       } catch (err) {
-        console.error('[usePositionHistory] Error syncing network positions:', err);
+        LogManager.error('usePositionHistory', 'Error syncing network positions:', err);
         if (isMounted) {
           setIsLoading(false);
           setIsSyncing(false);

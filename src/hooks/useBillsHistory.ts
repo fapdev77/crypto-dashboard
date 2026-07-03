@@ -4,6 +4,16 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { UnifiedBillRecord } from '../types';
 import { useSettingsStore } from '../store/settingsStore';
 import { BillsHistoryService } from '../services/bills/BillsHistoryService';
+/**
+ * Fetch deposit/withdrawal history (bills) for all active API keys.
+ * Supports pre-defined periods (1w, 2w, 1m) or a custom date range.
+ * Uses mock data when Simulation Mode is active.
+ *
+ * @param period       Pre-defined period or 'custom' for a custom range.
+ * @param customStart  ISO date string for the start of a custom range.
+ * @param customEnd    ISO date string for the end of a custom range.
+ * @param triggerSearch  Toggle value; changed to re-trigger fetching for custom ranges.
+ */
 export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customStart: string, customEnd: string, triggerSearch: boolean) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);

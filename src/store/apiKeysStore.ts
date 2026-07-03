@@ -4,6 +4,7 @@ import { ExchangeName } from '../types';
 
 export type Exchange = ExchangeName;
 
+/** Credentials for a single exchange API connection. */
 export interface ApiCredentials {
   id: string;
   label: string;
@@ -15,9 +16,13 @@ export interface ApiCredentials {
 }
 
 interface ApiKeysState {
+  /** All registered API credentials (persisted to localStorage). */
   keys: ApiCredentials[];
+  /** Add a new API key with a generated id and isActive=true. */
   addKey: (credentials: Omit<ApiCredentials, 'id' | 'isActive'>) => void;
+  /** Toggle the isActive flag for a key by id. */
   toggleKey: (id: string) => void;
+  /** Remove a key by id from the store. */
   removeKey: (id: string) => void;
 }
 

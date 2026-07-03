@@ -7,6 +7,7 @@ import { useSettingsStore } from '../../../store/settingsStore';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { LogManager } from '../../../services/LogManager';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
@@ -95,7 +96,7 @@ export function OrderHistory() {
           }
           if (isMounted) setTotalFundingFee(total);
         }).catch(err => {
-          console.warn('Could not load mock bills', err);
+          LogManager.warn('OrderHistory', 'Could not load mock bills', err);
         });
         return;
       }
@@ -122,7 +123,7 @@ export function OrderHistory() {
                }
              }
            } catch(e) {
-             console.error('Failed to fetch bills for funding fee', e);
+             LogManager.error('OrderHistory', 'Failed to fetch bills for funding fee', e);
            }
         }
         if (isMounted) setTotalFundingFee(total);

@@ -2,8 +2,14 @@ import { create } from 'zustand';
 import { UnifiedOrder } from '../types';
 
 interface OrdersState {
+  /** Map of order id → UnifiedOrder for all currently open orders. */
   openOrders: Record<string, UnifiedOrder>;
+  /**
+   * Full replacement of open orders for a connection.
+   * Removes stale orders (no longer in newOrders), adds/updates the rest.
+   */
   updateOpenOrders: (connectionId: string, newOrders: UnifiedOrder[]) => void;
+  /** Remove all open orders belonging to a specific connection. */
   clearConnectionOrders: (connectionId: string) => void;
 }
 

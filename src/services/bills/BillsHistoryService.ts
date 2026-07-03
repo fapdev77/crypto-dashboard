@@ -1,5 +1,6 @@
 import { UnifiedBillRecord } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
+import { LogManager } from '../LogManager';
 import { ExchangeAggregator } from '../adapters/ExchangeAggregator';
 
 export class BillsHistoryService {
@@ -11,14 +12,14 @@ export class BillsHistoryService {
     try {
       const adapter = ExchangeAggregator.getAdapter(key.exchange);
       if (!adapter.fetchBills) {
-        console.warn(`Adapter for ${key.exchange} does not implement fetchBills.`);
+        LogManager.warn('BillsHistoryService', `Adapter for ${key.exchange} does not implement fetchBills.`);
         return [];
       }
       // Depending on requirements, we can add cache logic here similar to PositionHistoryService
       // For now, we do a direct fetch since these are paginated
       return await adapter.fetchBills(key, start, end);
     } catch (err) {
-      console.error(`[BillsHistoryService] Failed to fetch bills for ${key.id}:`, err);
+      LogManager.error('BillsHistoryService', `Failed to fetch bills for ${key.id}:`, err);
       return [];
     }
   }

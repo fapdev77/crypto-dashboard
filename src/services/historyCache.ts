@@ -1,5 +1,6 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder } from '../types';
+import { LogManager } from './LogManager';
 
 const DB_NAME = 'crypto-dashboard-cache';
 const DB_VERSION = 5;
@@ -302,7 +303,7 @@ export async function getBybitRealPnLCache(
     const record = await db.get(BYBIT_REAL_PNL_STORE, id);
     return record?.pnlData;
   } catch (err) {
-    console.warn('Error reading Bybit Real PnL cache:', err);
+    LogManager.warn('HistoryCache', 'Error reading Bybit Real PnL cache:', err);
     return undefined;
   }
 }

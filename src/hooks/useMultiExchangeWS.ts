@@ -1,7 +1,10 @@
 import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useApiKeysStore, ApiCredentials } from '../store/apiKeysStore';
-import { useDashboardStore } from '../store/dashboardStore';
+import { useConnectionStore } from '../store/connectionStore';
+import { useBalancesStore } from '../store/balancesStore';
+import { usePositionsStore } from '../store/positionsStore';
+import { clearConnectionData } from '../store/dashboardStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
 import mockAccountsData from '../mock/accounts.json';
@@ -9,12 +12,22 @@ import mockBalancesData from '../mock/balances.json';
 import mockPositionsData from '../mock/positions.json';
 import mockOrdersData from '../mock/orders.json';
 import { ExchangeAggregator } from '../services/adapters/ExchangeAggregator';
+import { LogManager } from '../services/LogManager';
 
+/**
+ * Core data-fetching hook. Manages REST polling connections for all active API keys.
+ *
+ * - Bootstraps initial data (balances, positions, open orders) via REST
+ * - Polls for updates on a configurable interval (default 5s)
+ * - Uses mock data when Simulation Mode is active
+ * - Handles connection lifecycle (connect, disconnect, retry on error)
+ * - Coordinates data across connectionStore, balancesStore, positionsStore, and ordersStore
+ */
 export function useMultiExchangeWS() {
   const keys = useApiKeysStore((state) => state.keys);
   const useMockData = useSettingsStore((state) => state.useMockData);
-  const setConnectionStatus = useDashboardStore((state) => state.setConnectionStatus);
-  const setConnectionError = useDashboardStore((state) => state.setConnectionError);
+  const setConnectionStatus = useConnectionStore((state) => state.setConnectionStatus);
+  const setConnectionError = useConnectionStore((state) => state.setConnectionError);
 
   const intervalsRef = useRef<Record<string, NodeJS.Timeout | null>>({});
 
@@ -22,18 +35,19 @@ export function useMultiExchangeWS() {
     if (useMockData) {
       Object.keys(intervalsRef.current).forEach(id => disconnect(id));
       keys.forEach(k => {
-        useDashboardStore.getState().clearConnectionData(k.id);
+        clearConnectionData(k.id);
         useOrdersStore.getState().clearConnectionOrders(k.id);
       });
 
-      const currentState = useDashboardStore.getState();
+      const balState = useBalancesStore.getState();
+      const posState = usePositionsStore.getState();
       mockAccountsData.forEach((acc: any) => {
         const { connectionId } = acc;
         const accountBalances = mockBalancesData.filter((b: any) => b.connectionId === connectionId);
-        currentState.updateBalances(connectionId, accountBalances as any);
+        balState.updateBalances(connectionId, accountBalances as any);
         const accountPositions = mockPositionsData.filter((pos: any) => pos.connectionId === connectionId);
-        currentState.updatePositions(connectionId, accountPositions as any);
-        
+        posState.updatePositions(connectionId, accountPositions as any);
+
         const openOrders = mockOrdersData.filter((o: any) => o.connectionId === connectionId && ['NEW', 'PARTIALLY_FILLED'].includes(o.status));
         useOrdersStore.getState().updateOpenOrders(connectionId, openOrders as any);
       });
@@ -46,21 +60,19 @@ export function useMultiExchangeWS() {
         const realId = id.replace('-poll', '');
         disconnect(realId);
       });
-      const currentState = useDashboardStore.getState();
       keys.forEach(k => {
-        currentState.clearConnectionData(k.id);
+        clearConnectionData(k.id);
         useOrdersStore.getState().clearConnectionOrders(k.id);
       });
       mockAccountsData.forEach((acc: any) => {
-        currentState.clearConnectionData(acc.connectionId);
+        clearConnectionData(acc.connectionId);
       });
       return;
     }
 
     const activeIds = new Set<string>();
-    const currentState = useDashboardStore.getState();
     mockAccountsData.forEach((acc: any) => {
-      currentState.clearConnectionData(acc.connectionId);
+      clearConnectionData(acc.connectionId);
     });
 
     activeKeys.forEach((config) => {
@@ -77,14 +89,16 @@ export function useMultiExchangeWS() {
       }
     });
 
+    const existingBalances = Object.values(useBalancesStore.getState().balances);
+    const existingPositions = Object.values(usePositionsStore.getState().positions);
     const existingConnectionIds = new Set([
-      ...Object.values(currentState.balances).map(b => b.connectionId),
-      ...Object.values(currentState.positions).map(p => p.connectionId)
+      ...existingBalances.map(b => b.connectionId),
+      ...existingPositions.map(p => p.connectionId)
     ]);
 
     existingConnectionIds.forEach(id => {
       if (!id.startsWith('mocked-data') && !activeIds.has(id)) {
-        currentState.clearConnectionData(id);
+        clearConnectionData(id);
       }
     });
   }, [keys, useMockData]);
@@ -119,12 +133,11 @@ export function useMultiExchangeWS() {
         adapter.getOpenPositions(config),
         openOrdersPromise
       ]);
-      const dashState = useDashboardStore.getState();
-      dashState.updateBalances(config.id, balances as any);
-      dashState.updatePositions(config.id, positions);
+      useBalancesStore.getState().updateBalances(config.id, balances as any);
+      usePositionsStore.getState().updatePositions(config.id, positions);
       useOrdersStore.getState().updateOpenOrders(config.id, openOrders);
     } catch (err) {
-      console.error(`[REST-${config.id}] ${config.exchange} REST polling failed:`, err);
+      LogManager.error(`REST-${config.id}`, `${config.exchange} REST polling failed:`, err);
     }
   };
 
@@ -154,43 +167,43 @@ export function useMultiExchangeWS() {
   };
 
   const connect = (config: ApiCredentials) => {
-    const { id, exchange } = config;
+    const { id, label, exchange } = config;
 
     setConnectionStatus(id, 'connecting', null);
     setConnectionError(id, null);
-    
+
     // Set a dummy timeout to indicate it's active initially until the poll starts
-    intervalsRef.current[id + '-poll'] = setTimeout(() => {}, 100000);
+    intervalsRef.current[id + '-poll'] = setTimeout(() => { }, 100000);
 
     // REST Bootloader
     (async () => {
       try {
-        console.log(`[REST-${id}] Bootloading initial balances, positions and open orders...`);
+        LogManager.info(`REST-${id}`, 'Bootloading initial balances, positions and open orders...');
         await ExchangeAggregator.bootloadConnection(config);
         // Fetch open orders as part of the initial bootload
         await syncRestData(config);
-        console.log(`[REST-${id}] REST Bootload completed.`);
+        LogManager.info(`REST-${id}`, 'REST Bootload completed.');
 
         setConnectionStatus(id, 'connected', null);
-        toast.success(`${exchange.toUpperCase()} connected via REST.`, { id: `success-${id}` });
+        toast.success(`${exchange.toUpperCase()} - ${label} connected!`, { id: `success-${id}` });
 
         if (intervalsRef.current[id + '-poll']) {
           clearTimeout(intervalsRef.current[id + '-poll'] as NodeJS.Timeout);
         }
         startRestPolling(config);
       } catch (error: any) {
-        console.error(`[REST-${id}] REST Bootload failed:`, error);
+        LogManager.error(`REST-${id}`, 'REST Bootload failed:', error);
         setConnectionStatus(id, 'error', `REST Bootload Error: ${error.message}`);
         setConnectionError(id, `REST Bootload Error: ${error.message}`);
         toast.error(`${exchange.toUpperCase()} initial sync failed: ${error.message}`, { id: `rest-err-${id}` });
-        
+
         // Retry logic for bootload on error
         const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
         if (currentConfig && currentConfig.isActive && !useSettingsStore.getState().useMockData) {
-           console.log(`[REST-${id}] Retrying connection in 5 seconds...`);
-           intervalsRef.current[id + '-poll'] = setTimeout(() => {
-              connect(currentConfig);
-           }, 5000);
+          LogManager.info(`REST-${id}`, 'Retrying connection in 5 seconds...');
+          intervalsRef.current[id + '-poll'] = setTimeout(() => {
+            connect(currentConfig);
+          }, 5000);
         }
       }
     })();

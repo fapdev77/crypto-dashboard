@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { useDashboardStore } from '../store/dashboardStore';
+import { useConnectionStore } from '../store/connectionStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { Activity } from 'lucide-react';
 import { ExchangeIcon } from './ui/ExchangeIcon';
@@ -8,7 +8,7 @@ import { AppTooltip } from './ui/Tooltip';
 
 export function StatusBar() {
   const { keys } = useApiKeysStore();
-  const { statuses, errors } = useDashboardStore();
+  const { statuses, errors } = useConnectionStore();
   const useMockData = useSettingsStore(state => state.useMockData);
 
   const activeKeys = keys.filter(apiKey => apiKey.isActive);
