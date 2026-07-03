@@ -97,7 +97,7 @@ export function ClosedPositions() {
       const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
       const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
       const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
-      const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
+      const leverage = (pos.raw?.leverage as string) || (pos.raw?.lever as string) || '1';
       
       const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
       
@@ -380,8 +380,8 @@ export function ClosedPositions() {
 
             const pnlClass = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
 
-            const leverage = pos.raw?.leverage || pos.raw?.lever || '1';
-            const marginModeLabel = (pos.raw?.marginMode || pos.raw?.mgnMode || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
+            const leverage = (pos.raw?.leverage as string) || (pos.raw?.lever as string) || '1';
+            const marginModeLabel = ((pos.raw?.marginMode as string) || (pos.raw?.mgnMode as string) || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
             const symbolSuffix = extractBaseCoin(pos.exchange, pos.symbol);
 
             let roiStr = '--';
@@ -398,7 +398,7 @@ export function ClosedPositions() {
             const { actualCoinSize, positionValueUsd } = getHistoryPositionSizeAndValue(pos);
 
             if (pos.raw?.roi !== undefined && pos.raw?.roi !== null) {
-              roiValue = parseFloat(pos.raw.roi) * 100;
+              roiValue = parseFloat(pos.raw.roi as string) * 100;
               hasRoi = true;
             } else if (pos.entryPrice && pos.closePrice && pos.size && leverage) {
               const numLeverage = parseFloat(leverage);

@@ -223,23 +223,23 @@ export function usePnLBySymbol(
 
       let instrument = 'Unknown';
       if (pos.exchange === 'bitget') {
-        const pType = pos.raw?.productType;
+        const pType = pos.raw?.productType as string | undefined;
         if (pType === 'USDT-FUTURES') instrument = 'USDT-M';
         else if (pType === 'COIN-FUTURES') instrument = 'Coin-M';
         else if (pType === 'USDC-FUTURES') instrument = 'USDC-M';
         else if (pos.symbol.endsWith('USDT')) instrument = 'USDT-M';
         else if (pos.symbol.endsWith('USDC')) instrument = 'USDC-M';
         else if (pos.symbol.endsWith('USD')) instrument = 'Coin-M';
-        else instrument = pType || pos.raw?.marginCoin || 'Futures';
+        else instrument = pType || (pos.raw?.marginCoin as string | undefined) || 'Futures';
       } else if (pos.exchange === 'bybit') {
         if (pos.symbol.endsWith('USDT') || pos.symbol.endsWith('USDC') || pos.symbol.includes('USDC-') || pos.symbol.includes('USDT-')) instrument = 'Linear';
         else if (pos.symbol.endsWith('USD') || pos.symbol.includes('USD-') || pos.symbol.match(/USD[A-Z0-9]+$/)) instrument = 'Inverse';
-        else instrument = pos.raw?.category || 'Perpetual';
+        else instrument = (pos.raw?.category as string | undefined) || 'Perpetual';
       } else if (pos.exchange === 'okx') {
         if (pos.symbol.includes('-USDT')) instrument = 'USDT-margined';
         else if (pos.symbol.includes('-USDC')) instrument = 'USDC-margined';
         else if (pos.symbol.includes('-USD')) instrument = 'Coin-margined';
-        else instrument = pos.raw?.instType || 'SWAP';
+        else instrument = (pos.raw?.instType as string | undefined) || 'SWAP';
       }
 
       if (instrumentFilter !== 'All' && instrument.toLowerCase() !== instrumentFilter.toLowerCase()) {
