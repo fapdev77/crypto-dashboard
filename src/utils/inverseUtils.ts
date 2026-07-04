@@ -94,7 +94,7 @@ export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
 
   if (pos.exchange === 'okx' && (pos.raw?.pnl as string | undefined)) {
     const priceDiff = Math.abs((pos.closePrice || 0) - (pos.entryPrice || 0));
-    const purePnl = Math.abs(parseFloat(pos.raw.pnl as string));
+    const purePnl = Math.abs(parseFloat(pos.raw?.pnl as string));
     if (priceDiff > 0) {
       actualCoinSize = purePnl / priceDiff;
       positionValueUsd = actualCoinSize * (pos.entryPrice || 0);

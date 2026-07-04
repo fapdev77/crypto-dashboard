@@ -475,7 +475,7 @@ export function TradeHistory() {
                     {(() => {
                       const hasFees = trade.fees !== undefined && trade.fees !== null && trade.fees !== 0;
                       let mainFeeStr = '--';
-                      let subFeeStr = null;
+                      let subFeeStr: string | null = null;
                       let isFeeNegative = false;
 
                       if (hasFees) {

@@ -1,27 +1,144 @@
+/**
+ * Core connection management hook.
+ *
+ * Manages REST polling connections for all active API keys by:
+ * - Bootstrapping initial data (balances, positions, open orders) via REST
+ * - Polling for updates on a configurable interval (default 5s)
+ * - Handling connection lifecycle (connect, disconnect, retry on error)
+ * - Coordinating data across stores (connection, balances, positions, orders)
+ *
+ * Mock data injection is handled by the separate useMockDataInjector hook.
+ */
 import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useApiKeysStore, ApiCredentials } from '../store/apiKeysStore';
 import { useConnectionStore } from '../store/connectionStore';
 import { useBalancesStore } from '../store/balancesStore';
 import { usePositionsStore } from '../store/positionsStore';
-import { clearConnectionData } from '../store/dashboardStore';
+import { clearConnectionData } from '../store/crossStoreCleanup';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
-import mockAccountsData from '../mock/accounts.json';
-import mockBalancesData from '../mock/balances.json';
-import mockPositionsData from '../mock/positions.json';
-import mockOrdersData from '../mock/orders.json';
 import { ExchangeAggregator } from '../services/adapters/ExchangeAggregator';
 import { LogManager } from '../services/LogManager';
+import { useMockDataInjector } from './useMockDataInjector';
+
+/** How long to wait before retrying a failed bootload (ms). */
+const RETRY_DELAY_MS = 5000;
 
 /**
- * Core data-fetching hook. Manages REST polling connections for all active API keys.
- *
- * - Bootstraps initial data (balances, positions, open orders) via REST
- * - Polls for updates on a configurable interval (default 5s)
- * - Uses mock data when Simulation Mode is active
- * - Handles connection lifecycle (connect, disconnect, retry on error)
- * - Coordinates data across connectionStore, balancesStore, positionsStore, and ordersStore
+ * Fetch live balances, positions, and open orders for a single connection
+ * and push them into the respective Zustand stores.
+ */
+async function syncRestData(config: ApiCredentials): Promise<void> {
+  try {
+    const adapter = ExchangeAggregator.getAdapter(config.exchange);
+    const openOrdersPromise = adapter.getOpenOrders ? adapter.getOpenOrders(config) : Promise.resolve([]);
+    const [balances, positions, openOrders] = await Promise.all([
+      adapter.getBalance(config),
+      adapter.getOpenPositions(config),
+      openOrdersPromise,
+    ]);
+    useBalancesStore.getState().updateBalances(config.id, balances as any);
+    usePositionsStore.getState().updatePositions(config.id, positions);
+    useOrdersStore.getState().updateOpenOrders(config.id, openOrders);
+  } catch (err) {
+    LogManager.error(`REST-${config.id}`, `${config.exchange} REST polling failed:`, err);
+  }
+}
+
+/**
+ * Tear down a connection: clear poll timer, remove orders & connection state.
+ */
+function disconnect(
+  id: string,
+  intervals: Record<string, NodeJS.Timeout | null>,
+  setStatus: ReturnType<typeof useConnectionStore.getState>['setConnectionStatus'],
+  setError: ReturnType<typeof useConnectionStore.getState>['setConnectionError'],
+): void {
+  const pollTimer = intervals[id + '-poll'];
+  if (pollTimer) {
+    clearTimeout(pollTimer);
+    delete intervals[id + '-poll'];
+  }
+  useOrdersStore.getState().clearConnectionOrders(id);
+  setStatus(id, 'disconnected', null);
+  setError(id, null);
+}
+
+/**
+ * Start a polling loop for a single connection.
+ * Each cycle fetches fresh data then schedules the next tick.
+ */
+function startRestPolling(
+  config: ApiCredentials,
+  intervals: Record<string, NodeJS.Timeout | null>,
+): void {
+  const { id } = config;
+
+  const poll = async () => {
+    if (intervals[id + '-poll'] === null) return; // disconnected while waiting
+
+    const isMockEnabled = useSettingsStore.getState().useMockData;
+    const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
+    if (isMockEnabled || !currentConfig?.isActive) return;
+
+    await syncRestData(config);
+
+    const intervalMs = useSettingsStore.getState().pollingInterval * 1000;
+    if (intervals[id + '-poll'] !== null) {
+      intervals[id + '-poll'] = setTimeout(poll, intervalMs);
+    }
+  };
+
+  const intervalMs = useSettingsStore.getState().pollingInterval * 1000;
+  intervals[id + '-poll'] = setTimeout(poll, intervalMs);
+}
+
+/**
+ * Bootload a single connection: set status, fetch data, show toast, start polling.
+ * On failure, schedule a retry.
+ */
+async function bootload(
+  config: ApiCredentials,
+  intervals: Record<string, NodeJS.Timeout | null>,
+  setStatus: ReturnType<typeof useConnectionStore.getState>['setConnectionStatus'],
+  setError: ReturnType<typeof useConnectionStore.getState>['setConnectionError'],
+): Promise<void> {
+  const { id, label, exchange } = config;
+
+  try {
+    LogManager.info(`REST-${id}`, 'Bootloading initial balances, positions and open orders...');
+    await ExchangeAggregator.bootloadConnection(config);
+    await syncRestData(config);
+    LogManager.info(`REST-${id}`, 'REST Bootload completed.');
+
+    setStatus(id, 'connected', null);
+    toast.success(`${exchange.toUpperCase()} - ${label} connected!`, { id: `success-${id}` });
+
+    // Clear the dummy timeout and start real polling
+    const existing = intervals[id + '-poll'];
+    if (existing) clearTimeout(existing);
+    startRestPolling(config, intervals);
+  } catch (error: any) {
+    LogManager.error(`REST-${id}`, 'REST Bootload failed:', error);
+    setStatus(id, 'error', `REST Bootload Error: ${error.message}`);
+    setError(id, `REST Bootload Error: ${error.message}`);
+    toast.error(`${exchange.toUpperCase()} initial sync failed: ${error.message}`, { id: `rest-err-${id}` });
+
+    // Schedule retry
+    const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
+    if (currentConfig?.isActive && !useSettingsStore.getState().useMockData) {
+      LogManager.info(`REST-${id}`, `Retrying connection in ${RETRY_DELAY_MS / 1000}s...`);
+      intervals[id + '-poll'] = setTimeout(() => {
+        bootload(config, intervals, setStatus, setError);
+      }, RETRY_DELAY_MS);
+    }
+  }
+}
+
+/**
+ * Main hook — orchestrates REST polling for all active API keys.
+ * Delegates mock-data injection to useMockDataInjector.
  */
 export function useMultiExchangeWS() {
   const keys = useApiKeysStore((state) => state.keys);
@@ -31,182 +148,58 @@ export function useMultiExchangeWS() {
 
   const intervalsRef = useRef<Record<string, NodeJS.Timeout | null>>({});
 
+  // Inject mock data when Simulation Mode is active
+  useMockDataInjector();
+
+  // Real connection lifecycle
   useEffect(() => {
-    if (useMockData) {
-      Object.keys(intervalsRef.current).forEach(id => disconnect(id));
-      keys.forEach(k => {
-        clearConnectionData(k.id);
-        useOrdersStore.getState().clearConnectionOrders(k.id);
-      });
+    // Skip if mock data is active — useMockDataInjector handles this
+    if (useMockData) return;
 
-      const balState = useBalancesStore.getState();
-      const posState = usePositionsStore.getState();
-      mockAccountsData.forEach((acc: any) => {
-        const { connectionId } = acc;
-        const accountBalances = mockBalancesData.filter((b: any) => b.connectionId === connectionId);
-        balState.updateBalances(connectionId, accountBalances as any);
-        const accountPositions = mockPositionsData.filter((pos: any) => pos.connectionId === connectionId);
-        posState.updatePositions(connectionId, accountPositions as any);
+    const activeKeys = keys.filter((k) => k.isActive);
+    const intervals = intervalsRef.current;
 
-        const openOrders = mockOrdersData.filter((o: any) => o.connectionId === connectionId && ['NEW', 'PARTIALLY_FILLED'].includes(o.status));
-        useOrdersStore.getState().updateOpenOrders(connectionId, openOrders as any);
-      });
-      return;
-    }
+    // Clean up stale mock data
+    const activeIds = new Set(activeKeys.map((k) => k.id));
 
-    const activeKeys = keys.filter(k => k.isActive);
-    if (activeKeys.length === 0) {
-      Object.keys(intervalsRef.current).forEach(id => {
-        const realId = id.replace('-poll', '');
-        disconnect(realId);
-      });
-      keys.forEach(k => {
-        clearConnectionData(k.id);
-        useOrdersStore.getState().clearConnectionOrders(k.id);
-      });
-      mockAccountsData.forEach((acc: any) => {
-        clearConnectionData(acc.connectionId);
-      });
-      return;
-    }
-
-    const activeIds = new Set<string>();
-    mockAccountsData.forEach((acc: any) => {
-      clearConnectionData(acc.connectionId);
-    });
-
+    // Connect new keys
     activeKeys.forEach((config) => {
-      activeIds.add(config.id);
-      if (!intervalsRef.current[config.id + '-poll']) {
-        connect(config);
+      if (!intervals[config.id + '-poll']) {
+        bootload(config, intervals, setConnectionStatus, setConnectionError);
       }
     });
 
-    Object.keys(intervalsRef.current).forEach((id) => {
-      const realId = id.replace('-poll', '');
+    // Disconnect keys that are no longer active
+    Object.keys(intervals).forEach((key) => {
+      const realId = key.replace('-poll', '');
       if (!activeIds.has(realId)) {
-        disconnect(realId);
+        disconnect(realId, intervals, setConnectionStatus, setConnectionError);
       }
     });
 
-    const existingBalances = Object.values(useBalancesStore.getState().balances);
-    const existingPositions = Object.values(usePositionsStore.getState().positions);
-    const existingConnectionIds = new Set([
-      ...existingBalances.map(b => b.connectionId),
-      ...existingPositions.map(p => p.connectionId)
-    ]);
-
-    existingConnectionIds.forEach(id => {
-      if (!id.startsWith('mocked-data') && !activeIds.has(id)) {
-        clearConnectionData(id);
-      }
+    // Clean up orphaned data in stores (e.g. from previously removed keys)
+    const existingBalanceConnIds = new Set(
+      Object.values(useBalancesStore.getState().balances).map((b) => b.connectionId),
+    );
+    const existingPositionConnIds = new Set(
+      Object.values(usePositionsStore.getState().positions).map((p) => p.connectionId),
+    );
+    const allExisting = new Set([...existingBalanceConnIds, ...existingPositionConnIds]);
+    allExisting.forEach((cid) => {
+      if (cid.startsWith('mocked-data') || activeIds.has(cid)) return;
+      clearConnectionData(cid);
     });
-  }, [keys, useMockData]);
+  }, [keys, useMockData, setConnectionStatus, setConnectionError]);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      Object.keys(intervalsRef.current).forEach((id) => {
-        const realId = id.replace('-poll', '');
-        disconnect(realId);
+      const intervals = intervalsRef.current;
+      Object.keys(intervals).forEach((key) => {
+        const realId = key.replace('-poll', '');
+        disconnect(realId, intervals, setConnectionStatus, setConnectionError);
       });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const disconnect = (id: string) => {
-    const pollTimer = intervalsRef.current[id + '-poll'];
-    if (pollTimer) {
-      clearTimeout(pollTimer);
-      delete intervalsRef.current[id + '-poll'];
-    }
-
-    useOrdersStore.getState().clearConnectionOrders(id);
-    setConnectionStatus(id, 'disconnected', null);
-    setConnectionError(id, null);
-  };
-
-  const syncRestData = async (config: ApiCredentials) => {
-    try {
-      const adapter = ExchangeAggregator.getAdapter(config.exchange);
-      const openOrdersPromise = adapter.getOpenOrders ? adapter.getOpenOrders(config) : Promise.resolve([]);
-      const [balances, positions, openOrders] = await Promise.all([
-        adapter.getBalance(config),
-        adapter.getOpenPositions(config),
-        openOrdersPromise
-      ]);
-      useBalancesStore.getState().updateBalances(config.id, balances as any);
-      usePositionsStore.getState().updatePositions(config.id, positions);
-      useOrdersStore.getState().updateOpenOrders(config.id, openOrders);
-    } catch (err) {
-      LogManager.error(`REST-${config.id}`, `${config.exchange} REST polling failed:`, err);
-    }
-  };
-
-  const startRestPolling = (config: ApiCredentials) => {
-    const { id } = config;
-    const poll = async () => {
-      if (intervalsRef.current[id + '-poll'] === null) return; // Prevent execution if disconnected
-
-      const isMockEnabled = useSettingsStore.getState().useMockData;
-      const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
-
-      if (isMockEnabled || !currentConfig || !currentConfig.isActive) {
-        return;
-      }
-
-      await syncRestData(config);
-
-      const intervalMs = useSettingsStore.getState().pollingInterval * 1000;
-      if (intervalsRef.current[id + '-poll'] !== null) {
-        intervalsRef.current[id + '-poll'] = setTimeout(poll, intervalMs);
-      }
-    };
-
-    // First cycle
-    const intervalMs = useSettingsStore.getState().pollingInterval * 1000;
-    intervalsRef.current[id + '-poll'] = setTimeout(poll, intervalMs);
-  };
-
-  const connect = (config: ApiCredentials) => {
-    const { id, label, exchange } = config;
-
-    setConnectionStatus(id, 'connecting', null);
-    setConnectionError(id, null);
-
-    // Set a dummy timeout to indicate it's active initially until the poll starts
-    intervalsRef.current[id + '-poll'] = setTimeout(() => { }, 100000);
-
-    // REST Bootloader
-    (async () => {
-      try {
-        LogManager.info(`REST-${id}`, 'Bootloading initial balances, positions and open orders...');
-        await ExchangeAggregator.bootloadConnection(config);
-        // Fetch open orders as part of the initial bootload
-        await syncRestData(config);
-        LogManager.info(`REST-${id}`, 'REST Bootload completed.');
-
-        setConnectionStatus(id, 'connected', null);
-        toast.success(`${exchange.toUpperCase()} - ${label} connected!`, { id: `success-${id}` });
-
-        if (intervalsRef.current[id + '-poll']) {
-          clearTimeout(intervalsRef.current[id + '-poll'] as NodeJS.Timeout);
-        }
-        startRestPolling(config);
-      } catch (error: any) {
-        LogManager.error(`REST-${id}`, 'REST Bootload failed:', error);
-        setConnectionStatus(id, 'error', `REST Bootload Error: ${error.message}`);
-        setConnectionError(id, `REST Bootload Error: ${error.message}`);
-        toast.error(`${exchange.toUpperCase()} initial sync failed: ${error.message}`, { id: `rest-err-${id}` });
-
-        // Retry logic for bootload on error
-        const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
-        if (currentConfig && currentConfig.isActive && !useSettingsStore.getState().useMockData) {
-          LogManager.info(`REST-${id}`, 'Retrying connection in 5 seconds...');
-          intervalsRef.current[id + '-poll'] = setTimeout(() => {
-            connect(currentConfig);
-          }, 5000);
-        }
-      }
-    })();
-  };
 }
-
