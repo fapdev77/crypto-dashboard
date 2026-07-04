@@ -16,11 +16,11 @@ const cleanAccountLabel = (label: string) => {
 const getAssetOrigin = (b: BalanceItem) => {
   const ex = b.exchange.toLowerCase();
 
-  if (ex === 'okx' || ex === 'bybit') {
+  if (ex === 'bybit') {
     return 'UNIFIED';
   }
 
-  // Bitget logic
+  // Bitget and OKX logic
   const connId = b.connectionId;
   const prefix = connId + '-';
   if (b.id.startsWith(prefix)) {
@@ -46,6 +46,8 @@ const formatOriginLabel = (origin: string) => {
       return 'Earn';
     case 'UNIFIED':
       return 'Unified';
+    case 'FUNDING':
+      return 'Funding';
     case 'MARGIN_CROSS':
       return 'Margin Cross';
     case 'MARGIN_ISOLATED':
@@ -67,6 +69,8 @@ const getOriginBadgeStyle = (origin: string) => {
       return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
     case 'EARN':
       return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+    case 'FUNDING':
+      return 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
     case 'USDT-FUTURES':
     case 'COIN-FUTURES':
       return 'bg-[#03aac7]/10 text-[#03aac7] border border-[#03aac7]/20';

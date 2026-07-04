@@ -9,3 +9,4 @@ okx: #fafafa branco
 5. DONE. verificar logica desnecessaria bitget
 6. DONE. Verificar comportamento de rede e requests mesmo sem apis ativas ou cadastradas
 7. Criar um dashboard para analise de funding fees
+8. Verificar a refatoração do codigo
