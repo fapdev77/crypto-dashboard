@@ -21,9 +21,17 @@ export interface UnifiedBalance {
   walletBalance?: number;
   availableMargin?: number;
   unrealizedPnl?: number;
-  raw?: any;
+  raw?: RawBalanceItem;
 }
 ```
+
+### 1.1 OKX Dual Balance Integration (Trading & Funding)
+
+To provide a complete representation of user assets on OKX, the `OkxAdapter` aggregates balances from both the **Unified Trading account** and the **Funding account** concurrently:
+1. **Trading Account (`/api/v5/account/balance`):** Fetches active trading equity, adjusted equity, available margin, and floating unrealized profit/loss across all assets.
+2. **Funding Account (`/api/v5/asset/balances`):** Fetches passive asset holdings, including available and frozen balances in the user's Funding wallet.
+3. **Valuation Aggregation:** Dynamic exchange rates are extracted on-the-fly from active trading-account valuations (or fallback to stablecoin defaults like 1.0 USD for USDT/USDC). Funding assets are evaluated and summed up into the parent account's overall `totalEquity` and `walletBalance`.
+4. **Visual Segregation:** Asset origins are tracked using unique ID suffixes (e.g., `-UNIFIED-` and `-FUNDING-`), which are mapped by the frontend UI to display clear asset tagging (`UNIFIED` and `FUNDING` tags).
 
 ### Mappings Table
 | Field | Bybit (V5 UTA) | Bitget (V2) | OKX (V5) | Description |
@@ -73,7 +81,7 @@ export interface UnifiedPosition {
   instrumentType?: UnifiedInstrumentType; // 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN'
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
-  raw?: any; // To store the original broker data if needed
+  raw?: RawPositionData; // To store the original broker data if needed
 }
 ```
 
@@ -138,7 +146,7 @@ export interface UnifiedHistoryPosition {
   notionalUsd?: number;
   roi?: number;
   instrumentType?: UnifiedInstrumentType;
-  raw?: any;
+  raw?: RawHistoryPositionData;
 }
 ```
 
@@ -269,7 +277,7 @@ export interface UnifiedOrder {
   fees?: number;
   leverage?: number;
   marginMode?: UnifiedMarginMode;
-  raw?: any;
+  raw?: RawOrderData;
 }
 ```
 

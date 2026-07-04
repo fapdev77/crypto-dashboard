@@ -17,7 +17,7 @@ A arquitetura resolve o problema tradicional de CORS e as restrições arquitetu
 ## ⚙️ Tecnologias Utilizadas (A Stack)
 O sistema é inteiramente fundamentado no ecossistema de TypeScript moderno:
 - **Frontend / Interface**: React 19, TypeScript, **Vite**, **Tailwind CSS v4**. Interface de usuário amigável equipada com **Lucide React** para ícones otimizados.
-- **Gerenciamento de Estado**: **Zustand**. Utilizamos o `useDashboardStore` para o gerenciamento ultrarrápido dos objetos recebidos por WebSockets e o `useApiKeysStore` para a persistência e ciclo de vida criptografado das chaves de API locais.
+- **Gerenciamento de Estado**: **Zustand**. Migrado de uma única store inchada para uma arquitetura de micro-stores especializadas e de alta coesão: `useBalancesStore` (saldos), `usePositionsStore` (posições), `useOrdersStore` (ordens em aberto), `useConnectionStore` (status de conectividade) e `useApiKeysStore` (persistência das chaves locais), garantindo renderização ultra-eficiente e SRP (Single Responsibility Principle). Limpezas coordenadas de chaves desativadas são tratadas globalmente via `src/store/crossStoreCleanup.ts`.
 - **Tabelas Analíticas:** Visualização rica com ordenação multidirecional de resultados e sistemas de busca em tempo-real embutidos nas Views (filtros multicritério por ativo, nome ou corretora).
 - **Backend / Proxy de Hospedagem**: Servidor minimalista escalável fundado no Node.js com Express e capacidades de roteamento local Vite injetadas para o modo de desenvolvimento. Executado via `tsx`.
 - **Criptografia SecOps**: A espinha dorsal para assinatura de rotas REST, payloads ISO Timestamp (OKX), Nano Time (Bitget) e Hex Signatures (Bybit). Todos utilizando a nativa Web Crypto API (`window.crypto.subtle`).
@@ -62,6 +62,13 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 5. Volte para a rota principal "Dashboard", agora deverá ver seus saldos totais atualizando globalmente.
 
 ## 🛠 Features e UI/UX Recentes
+- ✅ **Integração OKX Dual-Wallet (Trading + Funding Account):**
+  - **Saldos Unificados e de Financiamento:** O `OkxAdapter` foi expandido para ler de forma concorrente tanto a conta unificada de trading (`/api/v5/account/balance`) quanto a conta de financiamento/funding (`/api/v5/asset/balances`).
+  - **Avaliação Patrimonial Precisa:** Ativos na carteira de funding são dinamicamente avaliados com base nos preços da conta de trading (ou fallbacks estáveis de $1.00 para stablecoins) e agregados ao patrimônio líquido (`totalEquity`) e saldo de carteira (`walletBalance`) globais da conexão.
+  - **Visual Segregation:** No frontend, saldos originários da carteira de funding são distinguidos visualmente através da tag `FUNDING` (fundo verde-azulado/teal), enquanto saldos de trading recebem a tag `UNIFIED` (fundo cinza/unified), permitindo controle transparente e granular de ativos.
+- ✅ **Tipagem Estrita de Respostas de Corretores (Raw Type-Safety):**
+  - **Tipos Isolados (`src/types/raw.ts`):** Centralização e declaração estrita de interfaces TypeScript para todas as respostas brutas ("Raw Responses") das corretoras (ex: `RawPositionData`, `RawOrderData`, `RawHistoryPositionData`, `RawBalanceItem`), banindo o uso de tipos frouxos como `any` ou `Record<string, unknown>` no campo `raw`.
+  - **Previsibilidade e Robustez:** Isso previne quebras em tempo de compilação, otimiza o autocompletion nos adaptadores e assegura total segurança de dados na manipulação dos metadados originais das exchanges.
 - ✅ **Múltiplos Formatos de Contratos e Exatidão de Precisão:** 
   - **Identificação Dinâmica de Pares:** O sistema distingue ativamente pares Fiats/Stablecoins (Ex: BTCUSDT, EURUSD) de Contratos Inversos Puros ("Inverse Contracts" como BTCUSD) em toda a arquitetura UI e de cálculo em background.
   - **Tamanho e Valores de Posição:** Foram realizadas estabilizações robustas do cálculo de tamanho em criptomoedas (Base Coin Size) versus Volume Financeiro em Dólar (Notional USD) para ativos peculiares em *Bybit* (Contratos onde "Size" é enviado como USD) e em *OKX* onde o *Size* costuma vir como número de Contratos (Contracts). As inferências ocorrem retroativamente calculando margens puras em `Close/Entry Prices` em registros históricos PnL.
