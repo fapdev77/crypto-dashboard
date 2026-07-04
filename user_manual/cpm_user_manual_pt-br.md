@@ -91,6 +91,8 @@ Para evitar limites de requisições de API (*Rate Limiting*) das corretoras e c
 - **IndexedDB**: Um banco de dados robusto embutido no seu navegador que armazena localmente o histórico de posições encerradas e ordens executadas.
 - **Orquestrador SWR (Stale-While-Revalidate)**: Ao acessar as abas de histórico, o CPM renderiza instantaneamente os dados salvos em cache enquanto uma verificação em segundo plano atualiza novas transações.
 - **Normalização Aritmética Automática (Linear vs Inverso)**: O CPM detecta automaticamente se uma posição ou ordem é baseada em Contratos Lineares (USDT/USDC-M) ou Inversos (Coin-Margined). Ele faz todas as conversões de contratos brutas para o tamanho exato na moeda base (ex: BTC) e calcula o valor nocional em USD, eliminando valores inflados ou confusos típicos das APIs nativas.
+- **Suporte OKX Dual-Wallet (Trading e Funding)**: O sistema de saldos foi expandido para puxar, em paralelo, os ativos da conta unificada de trading da OKX e também da carteira de financiamento (Funding Account). Os ativos de funding são avaliados com base no valor de mercado em tempo real e consolidados no patrimônio geral, sendo exibidos na tabela de saldos com a etiqueta verde `FUNDING` para facilitar o acompanhamento detalhado de seus fundos.
+- **Tipagem Estrita de Dados (Raw Security)**: O campo `raw` que armazena as respostas brutas dos servidores das corretoras é 100% tipado estritamente (`src/types/raw.ts`), o que garante a máxima estabilidade operacional e integridade de dados durante as conversões matemáticas em segundo plano.
 - **Intervalo de Polling Personalizável**: Acesse **Settings** para configurar o intervalo em que o cache em segundo plano deve ser recarregado (padrão de 15 minutos).
 
 ---

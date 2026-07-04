@@ -64,6 +64,11 @@ When developing in this project, enforce the following rules:
    - **OKX**: `#fafafa` / `#ffffff` (White/Silver)
    Never hardcode arbitrary palette indices for these exchanges; always tie elements like badges, borders, sparklines, and charts to their respective brand identity classes or style variables.
 
+9. **Modular Micro-Stores & OKX Dual-Wallet Ingestion**: 
+   - Never combine balances, positions, orders, or connection statuses into a single bloated store (keep them segregated in `useBalancesStore`, `usePositionsStore`, `useOrdersStore`, and `useConnectionStore`).
+   - Use the centralized `clearConnectionData` from `src/store/crossStoreCleanup.ts` for uniform connection disposal.
+   - For OKX, ensure both the Unified Account balance and the Funding Account balance are ingested concurrently via their respective REST endpoints. Use suffix trackers (e.g., `-UNIFIED-` and `-FUNDING-`) and map them to their corresponding origin values so the `ExchangeHierarchyTable` can display clear visual tagging.
+
 
 
 

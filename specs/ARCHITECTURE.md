@@ -67,11 +67,28 @@ Para unificar a aritmética complexa de derivativos lineares e inversos e metada
 
 ### 4.5. Detalhamento de Interfaces Unificadas
 
-#### UnifiedBalance (Balanços e Carteiras)
-*   **Implementação Real (`BalanceItem`):** Reduzimos a complexidade extraindo diretamente `amount` e `usdValue` por moeda individual (array de coins na corretora), delegando o cálculo do "Total Equity" para o momento de renderização da UI (`Dashboard.tsx`). Isso evita armazenar redundâncias (o total global pode ficar obsoleto em relação aos valores granulares individuais).
-*   Campos retidos: `id`, `connectionId`, `exchange`, `label`, `ccy`, `amount`, `usdValue`.
+Para garantir total previsibilidade de tipos em tempo de compilação sem abdicar da rastreabilidade dos dados originais enviados pelas corretoras, as interfaces do CPM possuem a seguinte estrutura rigorosamente tipada (definida em `src/types.ts` e `src/types/raw.ts`):
 
-... [Linhas idênticas de UnifiedPosition a UnifiedBillRecord preservadas para manter a integridade documental] ...
+- **`UnifiedBalance` (Saldos e Ativos):**
+  - **Função:** Captura as fatias patrimoniais, saldos livres e congelados por ativo.
+  - **Atributos Principais:** `id`, `connectionId`, `exchange`, `label`, `ccy`, `amount`, `usdValue`, `totalEquity`, `walletBalance`, `availableMargin`, `unrealizedPnl`.
+  - **Tipo de Dados Brutos (`raw`):** Tipado estritamente como `RawBalanceItem`.
+  - **Peculiaridade OKX:** Como a OKX possui contas isoladas de negociação (Unified Account) e financiamento (Funding Account), o `OkxAdapter` executa duas requisições paralelas: `/api/v5/account/balance` e `/api/v5/asset/balances`. Os saldos de Funding são valorizados com base no preço de mercado extraído das posições ativas ou fallbacks de moedas pareadas, somados ao patrimônio total e marcados na UI sob a tag visual `FUNDING`, enquanto os saldos de negociação recebem a tag `UNIFIED`.
+
+- **`UnifiedPosition` (Posições Ativas de Futuros):**
+  - **Função:** Representa posições direcionais em aberto, margens, preços de marcação e PnL flutuante.
+  - **Atributos Principais:** `id`, `symbol`, `baseCoin`, `quoteCoin`, `side` (`long | short | net`), `size`, `notionalUsd`, `entryPrice`, `markPrice`, `unrealizedPnl`, `realizedPnl`, `leverage`, `marginMode`, `margin`, `liquidationPrice`, `roe`.
+  - **Tipo de Dados Brutos (`raw`):** Tipado estritamente como `RawPositionData`.
+
+- **`UnifiedHistoryPosition` (Histórico de Posições Fechadas):**
+  - **Função:** Fornece o livro contábil definitivo de posições encerradas, com taxas e funding acumulados para cálculos de PnL por símbolo.
+  - **Atributos Principais:** `id`, `symbol`, `baseCoin`, `quoteCoin`, `side`, `realizedPnl`, `closedPnl`, `closeUpdateTime`, `createdTime`, `entryPrice`, `closePrice`, `size`, `fundingFee`, `tradingFee`, `leverage`, `notionalUsd`, `roi`.
+  - **Tipo de Dados Brutos (`raw`):** Tipado estritamente como `RawHistoryPositionData`.
+
+- **`UnifiedOrder` (Histórico de Ordens e Ordens Abertas):**
+  - **Função:** Normaliza ordens limit, market, trigger-orders, tp/sl ativas e executadas.
+  - **Atributos Principais:** `id`, `exchangeOrderId`, `connectionId`, `symbol`, `category`, `side`, `type`, `status`, `price`, `avgPrice`, `qty`, `filledQty`, `value`, `triggerPrice`, `createdTime`, `updatedTime`.
+  - **Tipo de Dados Brutos (`raw`):** Tipado estritamente como `RawOrderData`.
 
 ## 5. Data Flow and Synchronization
 
@@ -122,19 +139,30 @@ Para contornar as severas restrições de chamadas consecutivas impostas por Byb
    - *Note:* `useBillsHistory` handles highly mutable deposit/withdrawal/transfer logs and thus bypasses IndexedDB, fetching directly from the Live APIs to ensure transactional accuracy.
 
 ## 6. State Management Models
+
+O CPM adota uma arquitetura de micro-stores modularizadas para garantir que as atualizações de saldo, posições, conexões e ordens não causem re-renderizações em cascata desnecessárias (Princípio SRP e Alta Coesão):
+
 - **`useApiKeysStore`:** 
-  - Holds `id`, `exchange`, `apiKey`, `apiSecret`, `passphrase`, `label`, `connected`.
-  - Persisted dynamically to browser storage.
-- **`useDashboardStore`:** 
-  - Subscribes to UI flows. Aggregates positions, balances.
-  - Dynamically computes UI values on mapping loops (e.g. Total USD Equity).
+  - Mantém e persiste as credenciais de API (`id`, `exchange`, `apiKey`, `apiSecret`, `passphrase`, `label`, `isActive`).
+  - Persistência automática no `localStorage`.
+- **`useConnectionStore`:**
+  - Gerencia o status de conectividade em tempo real para cada chave de API (`'connecting' | 'connected' | 'disconnected' | 'error'`) e mensagens de erro de bootload.
+- **`useBalancesStore`:**
+  - Armazena as fatias de saldo de conta (`UnifiedBalance[]`) segmentadas por ID de conexão.
+  - Utilizado pelo `ExchangeHierarchyTable` para renderizar a distribuição patrimonial.
+- **`usePositionsStore`:**
+  - Gerencia as posições abertas e ativas (`UnifiedPosition[]`) recuperadas das exchanges em ciclos de polling.
+- **`useOrdersStore`:**
+  - Gerencia as ordens ativas e abertas (`UnifiedOrder[]`) para cada conexão ativa.
+- **`crossStoreCleanup.ts` (`clearConnectionData`):**
+  - Utilitário centralizado de limpeza que desliga e limpa simultaneamente os dados de uma conexão específica através das stores de Balanço, Posição, e Conexão, garantindo integridade de dados ao desativar uma chave de API.
+- **`useMockDataInjector`:**
+  - Hook isolado e especializado (SRP) encarregado de injetar payloads mockados estáticos (`accounts.json`, `balances.json`, `positions.json`, `orders.json`) quando o Modo Simulação estiver ativo, mantendo a engine principal de rede (`useMultiExchangeWS`) focada estritamente em requisições de produção.
 - **`PrivacyContext`:** 
-  - Global Context API wrapping the application.
-  - Controls visibility (`isPrivateMode`) of sensitive monetary values across all tables and cards via a native toggle. Persists to localStorage.
+  - Context API nativo que envelopa a aplicação para controlar a visibilidade (`isPrivateMode`) de valores monetários sensíveis em todas as tabelas e cards, persistindo a escolha no `localStorage`.
 - **`useSettingsStore`:** 
-  - Manages application-wide config (e.g. `useMockData`, visibility toggles).
-  - Handles network heuristics configurations like `pollingInterval` (for static REST calls) and `historyCacheInterval` (for background PnL sync limits).
-  - Persisted to local storage for user preferences.
+  - Gerencia configurações globais como `useMockData` (Modo Simulação), `pollingInterval` (intervalo de polling padrão das APIs REST, ex: 5s) e `historyCacheInterval` (tempo para expiração do cache IndexedDB).
+  - Persistido no `localStorage` do navegador.
 
 ## 7. Mocks, Types & Schema Consistency Protocol
 It is mandatory to uphold strict synchronization across the entire stack when modifying unified interfaces (e.g., `UnifiedHistoryPosition`, `UnifiedPosition`, `UnifiedBalance`).
