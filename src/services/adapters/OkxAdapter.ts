@@ -60,25 +60,112 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     const data = response.data?.[0];
     if (!data || !data.details) return [];
 
-    const totalEquity = parseFloat(data.totalEq || '0');
-    const walletBalance = parseFloat(data.adjEq || '0');
+    // Fetch Funding balances
+    let fundingData: any[] = [];
+    try {
+      const fundingPath = '/api/v5/asset/balances';
+      const fundingHeaders = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', fundingPath);
+      const fundingResponse = await proxyFetch({
+        targetUrl: `https://www.okx.com${fundingPath}`,
+        method: 'GET',
+        headers: fundingHeaders
+      });
+      if (fundingResponse && fundingResponse.code === '0' && fundingResponse.data) {
+        fundingData = fundingResponse.data;
+      } else if (fundingResponse && fundingResponse.code && fundingResponse.code !== '0') {
+        LogManager.warn('OKX-Balance', `Funding balance API warning (${fundingResponse.code}): ${fundingResponse.msg}`);
+      }
+    } catch (err) {
+      LogManager.warn('OKX-Balance', 'Failed to fetch OKX funding balances:', err);
+    }
+
+    // Build price map from trading balance details
+    const prices: Record<string, number> = {};
+    data.details.forEach((item: any) => {
+      const ccy = item.ccy.toUpperCase();
+      const cashBal = parseFloat(item.cashBal || '0');
+      const eqUsd = parseFloat(item.eqUsd || '0');
+      const eq = parseFloat(item.eq || '0');
+      let price = 0;
+      if (eq > 0) {
+        price = eqUsd / eq;
+      } else if (cashBal > 0) {
+        price = eqUsd / cashBal;
+      }
+      if (price > 0) {
+        prices[ccy] = price;
+      }
+    });
+
+    // Default prices for stablecoins
+    const stables = ['USDT', 'USDC', 'USD', 'DAI', 'EURT', 'BUSD', 'USDE', 'USDD'];
+    stables.forEach(s => {
+      if (prices[s] === undefined) {
+        prices[s] = 1.0;
+      }
+    });
+
+    // Calculate additional funding equity
+    let additionalFundingUsd = 0;
+    const fundingBalances: UnifiedBalance[] = [];
+
+    fundingData.forEach((item: any) => {
+      const ccy = item.ccy.toUpperCase();
+      const amount = parseFloat(item.bal || '0');
+      if (amount <= 0) return;
+
+      const price = prices[ccy] || 0;
+      const usdValue = amount * price;
+      additionalFundingUsd += usdValue;
+
+      fundingBalances.push({
+        id: `${key.id}-FUNDING-${ccy}`,
+        connectionId: key.id,
+        exchange: 'okx' as const,
+        label: key.label,
+        ccy,
+        amount,
+        usdValue,
+        raw: item
+      });
+    });
+
+    const baseTotalEquity = parseFloat(data.totalEq || '0');
+    const baseWalletBalance = parseFloat(data.adjEq || '0');
     const availableMargin = parseFloat(data.availEq || '0');
     const unrealizedPnl = parseFloat(data.upl || '0');
 
-    return data.details.map((item: any) => ({
-      id: `${key.id}-${item.ccy}`,
-      connectionId: key.id,
-      exchange: 'okx',
-      label: key.label,
-      ccy: item.ccy.toUpperCase(),
-      amount: parseFloat(item.cashBal || '0'),
-      usdValue: parseFloat(item.eqUsd || '0'),
-      totalEquity,
-      walletBalance,
-      availableMargin,
-      unrealizedPnl,
-      raw: item
-    }));
+    const totalEquity = baseTotalEquity + additionalFundingUsd;
+    const walletBalance = baseWalletBalance + additionalFundingUsd;
+
+    // Map trading balances with updated totalEquity and walletBalance
+    const tradingBalances = data.details.map((item: any) => {
+      const ccy = item.ccy.toUpperCase();
+      return {
+        id: `${key.id}-UNIFIED-${ccy}`,
+        connectionId: key.id,
+        exchange: 'okx' as const,
+        label: key.label,
+        ccy,
+        amount: parseFloat(item.cashBal || '0'),
+        usdValue: parseFloat(item.eqUsd || '0'),
+        totalEquity,
+        walletBalance,
+        availableMargin,
+        unrealizedPnl,
+        raw: item
+      };
+    });
+
+    // Set updated values on funding balances
+    fundingBalances.forEach((fb) => {
+      fb.totalEquity = totalEquity;
+      fb.walletBalance = walletBalance;
+      fb.availableMargin = availableMargin;
+      fb.unrealizedPnl = unrealizedPnl;
+    });
+
+    return [...tradingBalances, ...fundingBalances];
   }
 
   // REST Positions
