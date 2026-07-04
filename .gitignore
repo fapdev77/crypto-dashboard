@@ -8,3 +8,4 @@ coverage/
 !.env.example
 scripts/
 dev-dist/
+nul

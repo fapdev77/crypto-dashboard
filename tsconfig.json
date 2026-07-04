@@ -21,7 +21,12 @@
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+
+    /* Strict mode — enabled for safety with explicit overrides for practical API usage */
+    "strict": true,
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false
   },
   "include": ["src"]
 }
