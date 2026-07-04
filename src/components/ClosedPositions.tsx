@@ -130,6 +130,8 @@ export function ClosedPositions() {
     if (!filteredClosedPositions.length) return null;
 
     let totalPnl = 0;
+    let totalTradeFees = 0;
+    let totalFundingFees = 0;
     let wins = 0;
     let losses = 0;
     let largestWin = 0;
@@ -146,6 +148,9 @@ export function ClosedPositions() {
       const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
       if (isLong) longs++;
       if (isShort) shorts++;
+
+      if (pos.tradingFee) totalTradeFees += pos.tradingFee;
+      if (pos.fundingFee) totalFundingFees += pos.fundingFee;
 
       totalPnl += pnlInUsd;
       if (pnlInUsd > 0) {
@@ -166,6 +171,8 @@ export function ClosedPositions() {
 
     return {
       totalPnl,
+      totalTradeFees,
+      totalFundingFees,
       totalTrades,
       winRate,
       wins,
@@ -267,6 +274,21 @@ export function ClosedPositions() {
               <span className={`text-xl font-medium ${closedStats.totalPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                 {isPrivateMode ? '$••••' : `${closedStats.totalPnl >= 0 ? '+' : ''}${formatCurrency(closedStats.totalPnl, 'usd')}`}
               </span>
+              <div className="w-full border-t border-dashed border-[#2a2b30] my-3"></div>
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-[#8E9299]">Trade Fees:</span>
+                  <span className={`${closedStats.totalTradeFees < 0 ? 'text-[#FF4444]' : (closedStats.totalTradeFees > 0 ? 'text-[#00C853]' : 'text-[#8E9299]')}`}>
+                    {isPrivateMode ? '$••••' : `${closedStats.totalTradeFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalTradeFees, 'usd')}`}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-[#8E9299]">Funding Fees:</span>
+                  <span className={`${closedStats.totalFundingFees < 0 ? 'text-[#FF4444]' : (closedStats.totalFundingFees > 0 ? 'text-[#00C853]' : 'text-[#8E9299]')}`}>
+                    {isPrivateMode ? '$••••' : `${closedStats.totalFundingFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalFundingFees, 'usd')}`}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">

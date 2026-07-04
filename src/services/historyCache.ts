@@ -1,9 +1,9 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { openDB, deleteDB, DBSchema, IDBPDatabase } from 'idb';
 import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder } from '../types';
 import { LogManager } from './LogManager';
 
 const DB_NAME = 'crypto-dashboard-cache';
-const DB_VERSION = 5;
+const DB_VERSION = 7;
 const HISTORY_STORE = 'positionHistory';
 const META_STORE = 'cacheMeta';
 const ASSET_META_STORE = 'assetMetadata';
@@ -219,14 +219,11 @@ export async function updateCacheMeta(connectionId: string, latestCloseTime: num
  * Clear all cached data (useful for debugging or user-triggered resets).
  */
 export async function clearAllCache(): Promise<void> {
-  const db = await getDB();
-  await db.clear(HISTORY_STORE);
-  await db.clear(META_STORE);
-  await db.clear(ORDER_HISTORY_STORE);
-  await db.clear(ORDER_META_STORE);
-  if (db.objectStoreNames.contains(BYBIT_REAL_PNL_STORE)) {
-    await db.clear(BYBIT_REAL_PNL_STORE);
+  if (dbInstance) {
+    dbInstance.close();
+    dbInstance = null;
   }
+  await deleteDB(DB_NAME);
 }
 
 /**
