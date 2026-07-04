@@ -89,7 +89,7 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
             <RechartsTooltip
               contentStyle={{ backgroundColor: '#1a1b1e', borderColor: '#2a2b30', borderRadius: '8px', padding: '8px 12px' }}
               itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-              formatter={(value: number) => formatCurrency(value, 'usd')}
+              formatter={(value: any) => formatCurrency(Number(value ?? 0), 'usd')}
               labelStyle={{ display: 'none' }}
               isAnimationActive={false}
             />

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import mockHistoryData from '../mock/history.json';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { UnifiedHistoryPosition } from '../types';
+import type { UnifiedHistoryPosition } from '../types';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { useSettingsStore } from '../store/settingsStore';
 import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
@@ -177,7 +177,8 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   useEffect(() => {
     if (useMockData) {
       const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime);
-      setPositions(applyFilters(sortedHistory as UnifiedHistoryPosition[]));
+      // Mock data has raw fields as loose JSON — cast through unknown to skip strict field matching
+      setPositions(applyFilters(sortedHistory as unknown as UnifiedHistoryPosition[]));
       return;
     }
 

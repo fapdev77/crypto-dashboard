@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, X, Eye, EyeOff, ChevronDown, ChevronRight, Wallet } from 'lucide-react';
-import { BalanceItem } from '../store/dashboardStore';
+import { BalanceItem } from '../store/balancesStore';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { Sparkline } from './ui/Sparkline';

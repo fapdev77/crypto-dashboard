@@ -1,4 +1,9 @@
 import Big from 'big.js';
+import {
+  RawPositionData,
+  RawHistoryPositionData,
+  RawOrderData,
+} from './types/raw';
 
 // Types
 export type ExchangeName = 'bybit' | 'bitget' | 'okx';
@@ -52,7 +57,7 @@ export interface UnifiedOrder {
   fees?: number;
   leverage?: number;
   marginMode?: UnifiedMarginMode;
-  raw?: Record<string, unknown>;
+  raw?: RawOrderData;
 }
 
 export interface UnifiedPosition {
@@ -86,7 +91,7 @@ export interface UnifiedPosition {
   instrumentType?: UnifiedInstrumentType;
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
-  raw?: Record<string, unknown>; // To store the original broker data if needed
+  raw?: RawPositionData;
 }
 
 export interface UnifiedHistoryPosition {
@@ -114,7 +119,7 @@ export interface UnifiedHistoryPosition {
   notionalUsd?: number;
   roi?: number;
   instrumentType?: UnifiedInstrumentType;
-  raw?: Record<string, unknown>;
+  raw?: RawHistoryPositionData;
 }
 
 export interface UnifiedBillRecord {

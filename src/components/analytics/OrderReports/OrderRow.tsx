@@ -267,7 +267,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
               {(() => {
                 const hasFees = order.fees !== undefined && order.fees !== null && order.fees !== 0;
                 let mainFeeStr = '--';
-                let subFeeStr = null;
+                let subFeeStr: string | null = null;
                 let isFeeNegative = false;
 
                 if (hasFees) {
