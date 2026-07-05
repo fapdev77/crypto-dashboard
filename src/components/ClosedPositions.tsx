@@ -142,15 +142,15 @@ export function ClosedPositions() {
     let shorts = 0;
 
     filteredClosedPositions.forEach(pos => {
-      const { realizedPnl: pnlInUsd } = getHistoryInverseUsdValues(pos);
+      const { realizedPnl: pnlInUsd, tradingFee: tradingFeeUsd, fundingFee: fundingFeeUsd } = getHistoryInverseUsdValues(pos);
 
       const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
       const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
       if (isLong) longs++;
       if (isShort) shorts++;
 
-      if (pos.tradingFee) totalTradeFees += pos.tradingFee;
-      if (pos.fundingFee) totalFundingFees += pos.fundingFee;
+      if (tradingFeeUsd) totalTradeFees += tradingFeeUsd;
+      if (fundingFeeUsd) totalFundingFees += fundingFeeUsd;
 
       totalPnl += pnlInUsd;
       if (pnlInUsd > 0) {
@@ -362,7 +362,7 @@ export function ClosedPositions() {
 
       {filteredClosedPositions.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-          <p className="text-[#8E9299]">No history found for active APIs in the selected period.</p>
+          <p className="text-[#8E9299]">No history found for active Exchanges in the selected period.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
