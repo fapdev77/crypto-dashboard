@@ -69,6 +69,11 @@ When developing in this project, enforce the following rules:
    - Use the centralized `clearConnectionData` from `src/store/crossStoreCleanup.ts` for uniform connection disposal.
    - For OKX, ensure both the Unified Account balance and the Funding Account balance are ingested concurrently via their respective REST endpoints. Use suffix trackers (e.g., `-UNIFIED-` and `-FUNDING-`) and map them to their corresponding origin values so the `ExchangeHierarchyTable` can display clear visual tagging.
 
+10. **Serverless & REST-Only Architecture (Vercel Compatibility)**:
+    - The application is designed to be fully compatible with Vercel Serverless deployments.
+    - **No WebSockets**: Do not use WebSocket connections for core data fetching (except strictly isolated modules like API Tester). All exchange data fetching must be executed exclusively via REST polling to ensure stateless serverless execution and avoid connection timeouts.
+    - **Proxy Function**: All external API requests to exchanges that require CORS bypassing or IP obfuscation (e.g., Bybit US geo-blocking) must pass through the Vercel serverless function (`/api/proxy`). This function handles necessary header stripping (like `Origin`, `Host`) and enforces domain whitelists to prevent SSRF vulnerabilities.
+
 
 
 
