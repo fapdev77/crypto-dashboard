@@ -175,8 +175,8 @@ export function PnLBySymbol() {
             PnL by Symbol
           </h2>
           <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
-          <span className="text-xs text-[#8E9299] mt-1">To represent the actual PnL, it is calculated based on the real time USD value of the trades, not on the positions value.</span>
-          <span className="text-[10px] text-[#8E9299]/70 mt-1">For Bybit, PnL is derived from the transaction-log cache (up to 2 years). PnL for other exchanges is computed from closed positions.</span>
+          <span className="text-xs text-[#8E9299] mt-1">To represent the actual PnL, it is calculated based on the real time USD value of the trades, not on the positions value. <br/>
+          For Bybit, PnL is derived from the transaction-log cache (up to 2 years). PnL for other exchanges is computed from closed positions.</span>
           {isRealPnLSyncing && exchange === 'bybit' && (
             <div className="flex items-center gap-2 px-3 py-2 bg-amber-900/20 border border-amber-700/30 rounded-lg text-[11px] text-amber-300/80 mt-2">
               <RefreshCw className="w-3 h-3 animate-spin shrink-0" />
