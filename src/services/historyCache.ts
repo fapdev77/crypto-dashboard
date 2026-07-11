@@ -1,15 +1,17 @@
 import { openDB, deleteDB, DBSchema, IDBPDatabase } from 'idb';
-import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder } from '../types';
+import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder, BybitTransactionLogEntry } from '../types';
 import { LogManager } from './LogManager';
 
 const DB_NAME = 'crypto-dashboard-cache';
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 const HISTORY_STORE = 'positionHistory';
 const META_STORE = 'cacheMeta';
 const ASSET_META_STORE = 'assetMetadata';
 const ORDER_HISTORY_STORE = 'orderHistory';
 const ORDER_META_STORE = 'orderCacheMeta';
 const BYBIT_REAL_PNL_STORE = 'bybitRealPnL';
+const BYBIT_TX_LOG_STORE = 'bybit-transaction-log';
+const BYBIT_TX_META_STORE = 'bybit-transaction-meta';
 
 interface CacheDB extends DBSchema {
   positionHistory: {
@@ -59,6 +61,28 @@ interface CacheDB extends DBSchema {
       connectionId: string;
       period: string;
       pnlData: Record<string, string>;
+      updatedAt: number;
+    };
+  };
+  'bybit-transaction-log': {
+    key: string;
+    value: BybitTransactionLogEntry;
+    indexes: {
+      'by-connectionId': string;
+      'by-transactionTime': number;
+      'by-symbol': string;
+      'by-type': string;
+      'by-currency': string;
+      'by-category': string;
+    };
+  };
+  'bybit-transaction-meta': {
+    key: string;       // connectionId
+    value: {
+      connectionId: string;
+      oldestTransactionTime: number;
+      latestTransactionTime: number;
+      totalRecords: number;
       updatedAt: number;
     };
   };
@@ -112,6 +136,21 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
       if (oldVersion < 5) {
          if (!db.objectStoreNames.contains(BYBIT_REAL_PNL_STORE)) {
             db.createObjectStore(BYBIT_REAL_PNL_STORE, { keyPath: 'id' });
+         }
+      }
+
+      if (oldVersion < 8) {
+         if (!db.objectStoreNames.contains(BYBIT_TX_LOG_STORE)) {
+           const txLogStore = db.createObjectStore(BYBIT_TX_LOG_STORE, { keyPath: 'id' });
+           txLogStore.createIndex('by-connectionId', 'connectionId');
+           txLogStore.createIndex('by-transactionTime', 'transactionTime');
+           txLogStore.createIndex('by-symbol', 'symbol');
+           txLogStore.createIndex('by-type', 'type');
+           txLogStore.createIndex('by-currency', 'currency');
+           txLogStore.createIndex('by-category', 'category');
+         }
+         if (!db.objectStoreNames.contains(BYBIT_TX_META_STORE)) {
+           db.createObjectStore(BYBIT_TX_META_STORE, { keyPath: 'connectionId' });
          }
       }
     },
@@ -308,4 +347,63 @@ export async function getBybitRealPnLCache(
 export async function clearBybitRealPnLCache(): Promise<void> {
   const db = await getDB();
   await db.clear(BYBIT_REAL_PNL_STORE);
+}
+
+// ------------------------------------------------------------------
+// BYBIT TRANSACTION LOG CACHE
+// ------------------------------------------------------------------
+
+export async function getBybitTxLogCache(connectionId: string): Promise<BybitTransactionLogEntry[]> {
+  const db = await getDB();
+  const all = await db.getAllFromIndex(BYBIT_TX_LOG_STORE, 'by-connectionId', connectionId);
+  return all.sort((a, b) => b.transactionTime - a.transactionTime);
+}
+
+export async function getAllBybitTxLogCache(): Promise<BybitTransactionLogEntry[]> {
+  const db = await getDB();
+  const all = await db.getAll(BYBIT_TX_LOG_STORE);
+  return all.sort((a, b) => b.transactionTime - a.transactionTime);
+}
+
+export async function saveBybitTxLogCache(entries: BybitTransactionLogEntry[]): Promise<void> {
+  if (entries.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction(BYBIT_TX_LOG_STORE, 'readwrite');
+  const store = tx.objectStore(BYBIT_TX_LOG_STORE);
+  for (const entry of entries) {
+    await store.put(entry);
+  }
+  await tx.done;
+}
+
+export async function getBybitTxLogMeta(connectionId: string): Promise<{
+  connectionId: string;
+  oldestTransactionTime: number;
+  latestTransactionTime: number;
+  totalRecords: number;
+  updatedAt: number;
+} | undefined> {
+  const db = await getDB();
+  return db.get(BYBIT_TX_META_STORE, connectionId);
+}
+
+export async function updateBybitTxLogMeta(
+  connectionId: string,
+  oldestTransactionTime: number,
+  latestTransactionTime: number,
+  totalRecords: number
+): Promise<void> {
+  const db = await getDB();
+  await db.put(BYBIT_TX_META_STORE, {
+    connectionId,
+    oldestTransactionTime,
+    latestTransactionTime,
+    totalRecords,
+    updatedAt: Date.now(),
+  });
+}
+
+export async function getBybitTxLogCount(connectionId: string): Promise<number> {
+  const db = await getDB();
+  return db.countFromIndex(BYBIT_TX_LOG_STORE, 'by-connectionId', connectionId);
 }

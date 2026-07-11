@@ -1,5 +1,11 @@
 import { create } from 'zustand';
-import { UnifiedHistoryPosition, UnifiedOrder } from '../types';
+import { UnifiedHistoryPosition, UnifiedOrder, BybitTransactionLogEntry } from '../types';
+
+/** Sync progress info for Bybit transaction log backfill. */
+export interface BybitTxProgress {
+  pct: number;       // 0-100
+  records: number;   // total records cached so far
+}
 
 /** Synchronisation state coordinator used to share sync state across multiple history views. */
 interface SyncCoordinatorState {
@@ -35,6 +41,29 @@ interface SyncCoordinatorState {
   /** Timestamp of the last successful orders sync. */
   lastOrdersSyncTimestamp: number;
   setLastOrdersSyncTimestamp: (timestamp: number) => void;
+
+  // ── 4. Bybit Transactions ──
+  /** In-memory cache of transaction log entries across connections. */
+  cachedTxLog: BybitTransactionLogEntry[];
+  setCachedTxLog: (entries: BybitTransactionLogEntry[]) => void;
+  /** Whether a transaction-log sync is currently in progress. */
+  isBybitTxSyncing: boolean;
+  setIsBybitTxSyncing: (v: boolean) => void;
+  /** Sync progress info. */
+  bybitTxProgress: BybitTxProgress | null;
+  setBybitTxProgress: (p: BybitTxProgress | null) => void;
+  /** Timestamp of the last successful transaction-log sync. */
+  bybitTxLastSyncTime: number;
+  setBybitTxLastSyncTime: (t: number) => void;
+  /** Latest transactionTime cached. */
+  bybitTxLatestTransactionTime: number;
+  setBybitTxLatestTransactionTime: (t: number) => void;
+  /** Oldest transactionTime cached. */
+  bybitTxOldestTransactionTime: number;
+  setBybitTxOldestTransactionTime: (t: number) => void;
+  /** Total transaction records cached. */
+  bybitTxTotalRecords: number;
+  setBybitTxTotalRecords: (n: number) => void;
 }
 
 export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
@@ -61,4 +90,20 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setLastOrdersSyncedVersion: (lastOrdersSyncedVersion) => set({ lastOrdersSyncedVersion }),
   lastOrdersSyncTimestamp: 0,
   setLastOrdersSyncTimestamp: (lastOrdersSyncTimestamp) => set({ lastOrdersSyncTimestamp }),
+
+  // 4. Bybit Transactions
+  cachedTxLog: [],
+  setCachedTxLog: (cachedTxLog) => set({ cachedTxLog }),
+  isBybitTxSyncing: false,
+  setIsBybitTxSyncing: (isBybitTxSyncing) => set({ isBybitTxSyncing }),
+  bybitTxProgress: null,
+  setBybitTxProgress: (bybitTxProgress) => set({ bybitTxProgress }),
+  bybitTxLastSyncTime: 0,
+  setBybitTxLastSyncTime: (bybitTxLastSyncTime) => set({ bybitTxLastSyncTime }),
+  bybitTxLatestTransactionTime: 0,
+  setBybitTxLatestTransactionTime: (bybitTxLatestTransactionTime) => set({ bybitTxLatestTransactionTime }),
+  bybitTxOldestTransactionTime: 0,
+  setBybitTxOldestTransactionTime: (bybitTxOldestTransactionTime) => set({ bybitTxOldestTransactionTime }),
+  bybitTxTotalRecords: 0,
+  setBybitTxTotalRecords: (bybitTxTotalRecords) => set({ bybitTxTotalRecords }),
 }));

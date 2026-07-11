@@ -144,3 +144,38 @@ export interface SymbolPnLRecord {
   exchange: ExchangeName;
   lastActivity: number;
 }
+
+// ── Bybit Transaction Log ──
+
+export interface BybitTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'bybit';
+  label: string;
+
+  // Raw data preserved from Bybit
+  rawId: string;
+  symbol: string;
+  category: string;        // linear, inverse, spot, option
+  side: 'Buy' | 'Sell' | 'None';
+  transactionTime: number; // ms timestamp
+  type: string;            // TRADE, SETTLEMENT, DELIVERY, LIQUIDATION, BONUS, TRANSFER, etc.
+  transSubType: string;
+  qty: string;
+  size: string;
+  currency: string;
+  tradePrice: string;
+  funding: string;
+  fee: string;
+  cashFlow: string;
+  change: string;          // change = cashFlow + funding - fee
+  cashBalance: string;
+  feeRate: string;
+  bonusChange: string;
+  tradeId: string;
+  orderId: string;
+  orderLinkId: string;
+
+  raw: Record<string, unknown>;
+}

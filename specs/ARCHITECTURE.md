@@ -94,6 +94,29 @@ Para garantir total previsibilidade de tipos em tempo de compilação sem abdica
 
 O Crypto Portfolio Manager opera uma via de sincronização otimizada projetada para garantir performance fluida com baixo overhead de rede e sem atingir rate-limits agressivos (HTTP 429).
 
+### 5.4. Bybit Transaction Log Sync Engine
+
+O módulo **BybitTransactions** adiciona uma engine de sincronização dedicada para o endpoint `GET /v5/account/transaction-log` da Bybit (UTA), permitindo auditoria completa de até 2 anos de transações.
+
+- **Progressive Deep Sync:** Na inicialização da aplicação, o `useBybitTransactionSync` (montado no `WorkSpace.tsx`) dispara um backfill progressivo começando dos registros mais recentes em chunks de 7 dias, percorrendo as categorias linear, inverse e spot. Cada chunk é salvo no IndexedDB como checkpoint, e o progresso é reportado via `syncCoordinatorStore`.
+- **Incremental Delta Sync:** Após o deep sync inicial, sincronizações periódicas (no intervalo configurado em `historyCacheInterval`) buscam apenas registros com `transactionTime > latestTransactionTime + 1`.
+- **Cache:** Duas novas stores no IndexedDB: `bybit-transaction-log` (dados com índices por connectionId, transactionTime, symbol, type, currency, category) e `bybit-transaction-meta` (metadados de sincronização por connectionId). DB_VERSION incrementado para 8.
+- **UI SWR:** O hook `useBybitTransactions` carrega o cache instantaneamente, aplica filtros em memória (sem latência de rede), e exibe badges de progresso durante o sync.
+- **Serviço:** `BybitTransactionService` encapsula toda a lógica de paginação, chunking temporal, retry com exponential backoff e normalização de dados brutos da Bybit para `BybitTransactionLogEntry`.
+
+```
+[BybitTransactions.tsx] ← [useBybitTransactions] ← [BybitTransactionService]
+       │                          │                          │
+       │ (instant load)           │ (SWR cache)             ├─ syncAll() [deep sync]
+       │ (filters in memo)        │ (stats in memo)         ├─ syncIncremental()
+       │ (export / pagination)    │                          ├─ filterEntries()
+       │                          │                          └─ computeStats()
+       │                    [IndexedDB]                 [BybitAdapter.getTransactionLog]
+       │                  bybit-transaction-log                │
+       │                  bybit-transaction-meta        [hybridFetch → /api/proxy]
+       │                                                    [Bybit API V5]
+```
+
 ### 5.1. Engine de Sincronização e Cache SWR (Stale-While-Revalidate)
 
 ```
