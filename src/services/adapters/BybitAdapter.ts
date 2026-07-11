@@ -584,6 +584,73 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     });
   }
 
+  // ── Transaction Log (UTA) ──
+  /**
+   * Fetch transaction log from the Bybit UTA API with cursor-based pagination.
+   * Returns raw list and nextPageCursor for pagination.
+   */
+  public async getTransactionLog(
+    key: ApiCredentials,
+    startTime: number,
+    endTime: number,
+    category: string = '',
+    cursor?: string
+  ): Promise<{ list: any[]; nextPageCursor: string }> {
+    await BybitAdapter.syncTime();
+    let query = `limit=50`;
+    if (category) query += `&category=${category}`;
+    query += `&startTime=${startTime}&endTime=${endTime}`;
+    if (cursor) query += `&cursor=${cursor}`;
+
+    const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${query}`;
+    const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+    const res = await hybridFetch(targetUrl, 'GET', headers);
+
+    if (res.retCode !== 0) {
+      throw new Error(`Bybit tx-log API Error (${res.retCode}): ${res.retMsg}`);
+    }
+
+    return {
+      list: res.result?.list || [],
+      nextPageCursor: res.result?.nextPageCursor || '',
+    };
+  }
+
+  /**
+   * Normalize a raw Bybit transaction-log entry into BybitTransactionLogEntry.
+   */
+  public static normalizeTxLogEntry(raw: any, key: ApiCredentials): import('../../types').BybitTransactionLogEntry {
+    const transactionTime = parseInt(raw.transactionTime || '0', 10);
+    return {
+      id: `${key.id}-${raw.id}-${transactionTime}`,
+      connectionId: key.id,
+      exchange: 'bybit',
+      label: key.label,
+      rawId: raw.id || '',
+      symbol: raw.symbol || '',
+      category: raw.category || '',
+      side: raw.side || 'None',
+      transactionTime,
+      type: raw.type || '',
+      transSubType: raw.transSubType || '',
+      qty: raw.qty || '0',
+      size: raw.size || '0',
+      currency: raw.currency || '',
+      tradePrice: raw.tradePrice || '0',
+      funding: raw.funding || '0',
+      fee: raw.fee || '0',
+      cashFlow: raw.cashFlow || '0',
+      change: raw.change || '0',
+      cashBalance: raw.cashBalance || '0',
+      feeRate: raw.feeRate || '0',
+      bonusChange: raw.bonusChange || '0',
+      tradeId: raw.tradeId || '',
+      orderId: raw.orderId || '',
+      orderLinkId: raw.orderLinkId || '',
+      raw,
+    };
+  }
+
   // Instrument Metadata (Public)
   public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
     try {

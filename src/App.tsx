@@ -17,6 +17,7 @@ import { StatusBar } from './components/StatusBar';
 import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
 import { PnLBySymbol } from './components/analytics/PnLBySymbol';
+import { BybitTransactions } from './components/analytics/BybitTransactions/BybitTransactions';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
 import { AssetMetadataPlayground } from './components/AssetMetadataPlayground';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
@@ -121,6 +122,7 @@ export default function App() {
                   {activeTab === 'positions-open' && <OpenPositions />}
                   {activeTab === 'positions-history' && <ClosedPositions />}
                   {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
+                  {activeTab === 'analytics-bybit-tx' && <BybitTransactions />}
                   {activeTab === 'reports' && <ReportsDashboard />}
                   {activeTab === 'mvp-asset-metadata' && <AssetMetadataPlayground />}
                   {activeTab === 'orders-open' && <OpenOrders />}
