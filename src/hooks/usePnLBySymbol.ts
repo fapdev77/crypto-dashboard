@@ -56,6 +56,7 @@ export function usePnLBySymbol(
   // While the deep sync is in progress, closed-positions PnL serves as fallback.
   useEffect(() => {
     let isMounted = true;
+    setIsBybitLoading(true);
     if (useMockData) {
       setBybitRealPnL({});
       setIsBybitLoading(false);
