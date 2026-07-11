@@ -332,6 +332,9 @@ export function TradeHistory() {
                 totalItems={tradesTotal}
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
+                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+                refreshLabel="Updating"
+                refreshDataReady={!loading}
               />
             </div>
           )}
@@ -535,6 +538,8 @@ export function TradeHistory() {
               totalItems={tradesTotal}
               itemsPerPage={50}
               onPageChange={setCurrentPage}
+              refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+              refreshLabel="Updating"
             />
           </div>
         </div>

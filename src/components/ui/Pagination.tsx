@@ -1,5 +1,5 @@
-import React from 'react';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RefreshCw, Check } from 'lucide-react';
 
 interface PaginationProps {
   id?: string;
@@ -7,6 +7,12 @@ interface PaginationProps {
   totalItems: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  /** When this string value changes, a subtle refresh animation (spinner → checkmark → fade) plays inside the pagination bar. */
+  refreshKey?: string;
+  /** Custom label for the loading state (default: 'Updating'). */
+  refreshLabel?: string;
+  /** When false, the refresh indicator waits for this to become true before transitioning from loading to done. */
+  refreshDataReady?: boolean;
 }
 
 export function Pagination({
@@ -15,7 +21,63 @@ export function Pagination({
   totalItems,
   itemsPerPage,
   onPageChange,
+  refreshKey,
+  refreshLabel,
+  refreshDataReady,
 }: PaginationProps) {
+  // ── Refresh animation indicator ──
+  const [refreshAnim, setRefreshAnim] = useState<'idle' | 'loading' | 'done' | 'fading'>('idle');
+  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstRefreshRef = useRef(true);
+
+  const clearAllTimers = () => {
+    if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    if (doneTimerRef.current) clearTimeout(doneTimerRef.current);
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+  };
+
+  const goToDone = (delay = 200) => {
+    clearAllTimers();
+    animTimerRef.current = setTimeout(() => {
+      setRefreshAnim('done');
+      doneTimerRef.current = setTimeout(() => {
+        setRefreshAnim('fading');
+        fadeTimerRef.current = setTimeout(() => setRefreshAnim('idle'), 400);
+      }, 2200);
+    }, delay);
+  };
+
+  // refreshKey changes → start loading
+  useEffect(() => {
+    if (!refreshKey) return;
+    if (isFirstRefreshRef.current) {
+      isFirstRefreshRef.current = false;
+      return;
+    }
+    clearAllTimers();
+    setRefreshAnim('loading');
+  }, [refreshKey]);
+
+  // refreshDataReady transitions → advance the animation
+  // Also serves as timer fallback when refreshDataReady is not provided
+  useEffect(() => {
+    if (refreshAnim !== 'loading') return;
+
+    if (typeof refreshDataReady === 'boolean' && !refreshDataReady) {
+      // Data-driven mode: data not ready yet, wait for refreshDataReady to become true
+      return;
+    }
+
+    // Data is ready (or no refreshDataReady provided — timer mode)
+    const delay = typeof refreshDataReady === 'boolean' ? 200 : 400;
+    goToDone(delay);
+
+    return clearAllTimers;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshAnim, refreshDataReady]);
+
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
   if (totalItems === 0) return null;
@@ -78,10 +140,27 @@ export function Pagination({
       className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-[#111216] border border-[#2a2b30] rounded-xl text-sm"
     >
       {/* Items Count Summary */}
-      <div id={`${id}-summary`} className="text-gray-400 font-medium">
-        Showing <span className="text-white font-mono">{startItem}</span> to{' '}
-        <span className="text-white font-mono">{endItem}</span> of{' '}
-        <span className="text-white font-mono">{totalItems}</span> records
+      <div className="flex items-center gap-2">
+        <div id={`${id}-summary`} className="text-gray-400 font-medium">
+          Showing <span className="text-white font-mono">{startItem}</span> to{' '}
+          <span className="text-white font-mono">{endItem}</span> of{' '}
+          <span className="text-white font-mono">{totalItems}</span> records
+        </div>
+        {refreshAnim === 'loading' && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] leading-tight font-medium bg-blue-500/10 text-blue-400 select-none">
+            <RefreshCw className="w-2.5 h-2.5 animate-spin shrink-0" />
+            {refreshLabel || 'Updating'}
+          </span>
+        )}
+        {(refreshAnim === 'done' || refreshAnim === 'fading') && (
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] leading-tight font-medium bg-emerald-500/10 text-emerald-400 select-none transition-all duration-[400ms] ease-out ${
+            refreshAnim === 'fading' ? 'opacity-0 scale-50' : ''
+          }`}
+            style={refreshAnim === 'done' ? { animation: 'refresh-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)' } : undefined}
+          >
+            <Check className="w-3 h-3 shrink-0" style={refreshAnim === 'done' ? { animation: 'refresh-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)' } : undefined} />
+          </span>
+        )}
       </div>
 
       {/* Pagination Controls */}

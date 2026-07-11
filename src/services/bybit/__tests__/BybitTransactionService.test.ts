@@ -95,6 +95,152 @@ describe('BybitTransactionService', () => {
     });
   });
 
+  describe('computeRealPnL', () => {
+    it('should return empty object for empty entries', () => {
+      const result = BybitTransactionService.computeRealPnL([]);
+      expect(result).toEqual({});
+    });
+
+    it('should return empty object when entries have no symbol', () => {
+      const entries = [
+        makeMockEntry({ symbol: '', cashFlow: '500' }),
+        makeMockEntry({ id: 'mock-no-sym', symbol: '', cashFlow: '300' }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries);
+      expect(result).toEqual({});
+    });
+
+    it('should skip non-relevant types (BONUS, TRANSFER, SPOT)', () => {
+      const entries = [
+        makeMockEntry({ symbol: 'BTCUSDT', type: 'TRADE', cashFlow: '1000' }),
+        makeMockEntry({ id: 'mock-2', symbol: 'BTCUSDT', type: 'BONUS', cashFlow: '500' }),
+        makeMockEntry({ id: 'mock-3', symbol: 'BTCUSDT', type: 'TRANSFER', cashFlow: '200' }),
+        makeMockEntry({ id: 'mock-4', symbol: 'BTCUSDT', type: 'SPOT', cashFlow: '300' }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries);
+      // Only TRADE should be included
+      expect(result).toEqual({ BTCUSDT: '1000' });
+    });
+
+    it('should aggregate cashFlow by symbol for relevant types', () => {
+      const entries = [
+        makeMockEntry({ symbol: 'BTCUSDT', type: 'TRADE', cashFlow: '2500' }),
+        makeMockEntry({ id: 'mock-2', symbol: 'ETHUSDT', type: 'TRADE', cashFlow: '-1200' }),
+        makeMockEntry({ id: 'mock-3', symbol: 'BTCUSDT', type: 'TRADE', cashFlow: '800' }),
+        makeMockEntry({ id: 'mock-4', symbol: 'SOLUSDT', type: 'SETTLEMENT', cashFlow: '350' }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries);
+      // BTCUSDT: 2500 + 800 = 3300
+      // ETHUSDT: -1200
+      // SOLUSDT: 350
+      expect(result).toEqual({
+        BTCUSDT: '3300',
+        ETHUSDT: '-1200',
+        SOLUSDT: '350',
+      });
+    });
+
+    it('should include SETTLEMENT, LIQUIDATION, DELIVERY as relevant types', () => {
+      const entries = [
+        makeMockEntry({ symbol: 'BTCUSDT', type: 'TRADE', cashFlow: '1000' }),
+        makeMockEntry({ id: 'mock-2', symbol: 'ETHUSDT', type: 'SETTLEMENT', cashFlow: '500' }),
+        makeMockEntry({ id: 'mock-3', symbol: 'SOLUSDT', type: 'LIQUIDATION', cashFlow: '-2000' }),
+        makeMockEntry({ id: 'mock-4', symbol: 'DOGEUSDT', type: 'DELIVERY', cashFlow: '150' }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries);
+      expect(result).toEqual({
+        BTCUSDT: '1000',
+        ETHUSDT: '500',
+        SOLUSDT: '-2000',
+        DOGEUSDT: '150',
+      });
+    });
+
+    it('should filter by startTime correctly', () => {
+      const entries = [
+        makeMockEntry({ symbol: 'BTCUSDT', cashFlow: '1000', transactionTime: 1000 }),
+        makeMockEntry({ id: 'mock-2', symbol: 'BTCUSDT', cashFlow: '2000', transactionTime: 2000 }),
+        makeMockEntry({ id: 'mock-3', symbol: 'BTCUSDT', cashFlow: '3000', transactionTime: 3000 }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries, 2000);
+      // Only entries at time >= 2000: 2000 + 3000 = 5000
+      expect(result).toEqual({ BTCUSDT: '5000' });
+    });
+
+    it('should filter by endTime correctly', () => {
+      const entries = [
+        makeMockEntry({ symbol: 'BTCUSDT', cashFlow: '1000', transactionTime: 1000 }),
+        makeMockEntry({ id: 'mock-2', symbol: 'BTCUSDT', cashFlow: '2000', transactionTime: 2000 }),
+        makeMockEntry({ id: 'mock-3', symbol: 'BTCUSDT', cashFlow: '3000', transactionTime: 3000 }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries, undefined, 2000);
+      // Only entries at time <= 2000: 1000 + 2000 = 3000
+      expect(result).toEqual({ BTCUSDT: '3000' });
+    });
+
+    it('should filter by both startTime and endTime', () => {
+      const entries = [
+        makeMockEntry({ symbol: 'BTCUSDT', cashFlow: '1000', transactionTime: 1000 }),
+        makeMockEntry({ id: 'mock-2', symbol: 'BTCUSDT', cashFlow: '2000', transactionTime: 2000 }),
+        makeMockEntry({ id: 'mock-3', symbol: 'BTCUSDT', cashFlow: '3000', transactionTime: 3000 }),
+        makeMockEntry({ id: 'mock-4', symbol: 'BTCUSDT', cashFlow: '4000', transactionTime: 4000 }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries, 2000, 3500);
+      // Only entries at time between 2000 and 3500: 2000 + 3000 = 5000
+      expect(result).toEqual({ BTCUSDT: '5000' });
+    });
+
+    it('should handle negative cashFlow values', () => {
+      const entries = [
+        makeMockEntry({ symbol: 'BTCUSDT', cashFlow: '-500' }),
+        makeMockEntry({ id: 'mock-2', symbol: 'BTCUSDT', cashFlow: '200' }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries);
+      expect(result).toEqual({ BTCUSDT: '-300' });
+    });
+
+    it('should handle zero cashFlow values', () => {
+      const entries = [
+        makeMockEntry({ symbol: 'BTCUSDT', cashFlow: '0' }),
+        makeMockEntry({ id: 'mock-2', symbol: 'ETHUSDT', cashFlow: '500' }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries);
+      expect(result).toEqual({
+        BTCUSDT: '0',
+        ETHUSDT: '500',
+      });
+    });
+
+    it('should handle large numbers without precision loss', () => {
+      const entries = [
+        makeMockEntry({ symbol: 'BTCUSDT', cashFlow: '123456789.123456789' }),
+        makeMockEntry({ id: 'mock-2', symbol: 'BTCUSDT', cashFlow: '0.000000001' }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries);
+      expect(result).toEqual({ BTCUSDT: '123456789.12345679' });
+    });
+
+    it('should handle multiple symbols with mixed relevant/irrelevant types and time filter', () => {
+      const entries = [
+        // Relevant, within time range
+        makeMockEntry({ symbol: 'BTCUSDT', type: 'TRADE', cashFlow: '1000', transactionTime: 1500 }),
+        // Relevant, before startTime — excluded
+        makeMockEntry({ id: 'mock-2', symbol: 'BTCUSDT', type: 'TRADE', cashFlow: '2000', transactionTime: 500 }),
+        // Irrelevant type — excluded even if within range
+        makeMockEntry({ id: 'mock-3', symbol: 'BTCUSDT', type: 'BONUS', cashFlow: '3000', transactionTime: 1500 }),
+        // Relevant, different symbol
+        makeMockEntry({ id: 'mock-4', symbol: 'ETHUSDT', type: 'SETTLEMENT', cashFlow: '400', transactionTime: 2500 }),
+        // No symbol — excluded
+        makeMockEntry({ id: 'mock-5', symbol: '', type: 'TRADE', cashFlow: '5000', transactionTime: 1500 }),
+      ];
+      const result = BybitTransactionService.computeRealPnL(entries, 1000, 3000);
+      expect(result).toEqual({
+        BTCUSDT: '1000',
+        ETHUSDT: '400',
+      });
+    });
+  });
+
   describe('computeStats', () => {
     it('should compute correct stats for empty list', () => {
       const stats = BybitTransactionService.computeStats([]);
