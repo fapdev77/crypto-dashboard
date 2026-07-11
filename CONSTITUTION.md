@@ -54,6 +54,26 @@ When developing in this project, enforce the following rules:
 
 5. **Interface Hover e Tooltips Unificados:** SEMPRE utilize o componente `<AppTooltip />` encapsulado para exibir informações adicionais, explicações ou popovers no hover de elementos interativos (como Status, Marquees, células de tabelas). NUNCA crie novos componentes absolutos gerados no hover via Tailwind, nem utilize atributos nativos do DOM como `title="..."`. Utilize a estrutura modular `description` e `rows` nativa do componente.
 
+6. **Coordinated History Sync Engine**: Always use the global `lastSyncTime` from `useSettingsStore` to coordinate sync states across multiple historical views. Never create separate or individual local sync state timestamps for historical tabs (Orders, Closed Positions, Trade History, PnL by Symbol) as this causes duplicate requests and rate-limiting issues. Always disable manual synchronization buttons and provide clear visual alerts (e.g. amber Simulation Mode badge) when the user activates `useMockData` (Simulation Mode).
+
+7. **Zero-Leak Logging & UI Masking**: All application telemetry, web socket, and REST events must be piped securely through the global logger interceptor (`logger.ts`). Never output raw secrets (API Secret, Passphrase, API keys) to the console or log terminal. Ensure connection UUIDs are mapped to friendly user labels before display. For financial values, adhere strictly to the global `isPrivateMode` check to mask sensitive figures dynamically in the UI.
+
+8. **Brand Color Consistency**: Ensure brand color variables are applied uniformly across the visual layer:
+   - **Bitget**: `#03aac7` (Cyan)
+   - **Bybit**: `#ff9c2e` (Orange)
+   - **OKX**: `#fafafa` / `#ffffff` (White/Silver)
+   Never hardcode arbitrary palette indices for these exchanges; always tie elements like badges, borders, sparklines, and charts to their respective brand identity classes or style variables.
+
+9. **Modular Micro-Stores & OKX Dual-Wallet Ingestion**: 
+   - Never combine balances, positions, orders, or connection statuses into a single bloated store (keep them segregated in `useBalancesStore`, `usePositionsStore`, `useOrdersStore`, and `useConnectionStore`).
+   - Use the centralized `clearConnectionData` from `src/store/crossStoreCleanup.ts` for uniform connection disposal.
+   - For OKX, ensure both the Unified Account balance and the Funding Account balance are ingested concurrently via their respective REST endpoints. Use suffix trackers (e.g., `-UNIFIED-` and `-FUNDING-`) and map them to their corresponding origin values so the `ExchangeHierarchyTable` can display clear visual tagging.
+
+10. **Serverless & REST-Only Architecture (Vercel Compatibility)**:
+    - The application is designed to be fully compatible with Vercel Serverless deployments.
+    - **No WebSockets**: Do not use WebSocket connections for core data fetching (except strictly isolated modules like API Tester). All exchange data fetching must be executed exclusively via REST polling to ensure stateless serverless execution and avoid connection timeouts.
+    - **Proxy Function**: All external API requests to exchanges that require CORS bypassing or IP obfuscation (e.g., Bybit US geo-blocking) must pass through the Vercel serverless function (`/api/proxy`). This function handles necessary header stripping (like `Origin`, `Host`) and enforces domain whitelists to prevent SSRF vulnerabilities.
+
 
 
 
