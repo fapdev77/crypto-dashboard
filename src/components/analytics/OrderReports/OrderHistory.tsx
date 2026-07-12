@@ -348,8 +348,10 @@ export function OrderHistory() {
               currentPage={currentPage}
               totalItems={ordersTotal}
               itemsPerPage={50}
-              onPageChange={setCurrentPage}
-            />
+              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+                refreshLabel="Updating"
+                refreshDataReady={!loading}
+              />
           </div>
         )}
         <OrdersTable orders={paginatedOrders} loading={loading} />
@@ -360,8 +362,10 @@ export function OrderHistory() {
               currentPage={currentPage}
               totalItems={ordersTotal}
               itemsPerPage={50}
-              onPageChange={setCurrentPage}
-            />
+              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+                refreshLabel="Updating"
+                refreshDataReady={!loading}
+              />
           </div>
         )}
       </div>

@@ -164,6 +164,41 @@ export class BybitTransactionService {
   }
 
   /**
+   * Derive real PnL by symbol from cached transaction-log entries.
+   * Aggregates cashFlow for relevant trade types (TRADE, SETTLEMENT,
+   * LIQUIDATION, DELIVERY) — same logic as BybitAdapter.fetchBybitRealPnLBySymbol
+   * but operating on already-cached data, no network calls.
+   *
+   * @param entries   Cached transaction-log entries (from IndexedDB).
+   * @param startTime Optional start of time range (ms timestamp).
+   * @param endTime   Optional end of time range (ms timestamp).
+   * @returns Record of symbol → total PnL (as string for Big.js precision).
+   */
+  static computeRealPnL(
+    entries: BybitTransactionLogEntry[],
+    startTime?: number,
+    endTime?: number
+  ): Record<string, string> {
+    const symbolPnL: Record<string, Big> = {};
+    const relevantTypes = new Set(['TRADE', 'SETTLEMENT', 'LIQUIDATION', 'DELIVERY']);
+
+    for (const e of entries) {
+      if (!e.symbol) continue;
+      if (!relevantTypes.has(e.type)) continue;
+      if (startTime !== undefined && e.transactionTime < startTime) continue;
+      if (endTime !== undefined && e.transactionTime > endTime) continue;
+
+      const cashFlow = new Big(e.cashFlow || '0');
+      if (!symbolPnL[e.symbol]) symbolPnL[e.symbol] = new Big(0);
+      symbolPnL[e.symbol] = symbolPnL[e.symbol].plus(cashFlow);
+    }
+
+    return Object.fromEntries(
+      Object.entries(symbolPnL).map(([sym, val]) => [sym, val.toString()])
+    );
+  }
+
+  /**
    * Apply in-memory filters for the UI.
    */
   static filterEntries(
