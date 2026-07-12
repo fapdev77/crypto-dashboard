@@ -9,7 +9,7 @@ import { getCachedHistory } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
 
 /** Time period presets for position history queries. */
-export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d';
+export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d' | '120d' | '180d' | '365d' | 'all';
 
 /**
  * Hook for fetching closed position history from all active API keys.
@@ -188,26 +188,20 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
       return;
     }
 
-    let start: number | undefined;
-    let end: number | undefined;
     const now = Date.now();
-
-    if (period === 'today') {
-      start = new Date(now).setHours(0, 0, 0, 0);
-      end = now;
-    } else if (period === '7d') {
-      start = now - 7 * 24 * 60 * 60 * 1000;
-      end = now;
-    } else if (period === '14d') {
-      start = now - 14 * 24 * 60 * 60 * 1000;
-      end = now;
-    } else if (period === '30d') {
-      start = now - 30 * 24 * 60 * 60 * 1000;
-      end = now;
-    } else if (period === '90d') {
-      start = now - 90 * 24 * 60 * 60 * 1000;
-      end = now;
-    }
+    const periodStartMap: Record<string, number | undefined> = {
+      today: new Date(now).setHours(0, 0, 0, 0),
+      '7d': now - 7 * 24 * 60 * 60 * 1000,
+      '14d': now - 14 * 24 * 60 * 60 * 1000,
+      '30d': now - 30 * 24 * 60 * 60 * 1000,
+      '90d': now - 90 * 24 * 60 * 60 * 1000,
+      '120d': now - 120 * 24 * 60 * 60 * 1000,
+      '180d': now - 180 * 24 * 60 * 60 * 1000,
+      '365d': now - 365 * 24 * 60 * 60 * 1000,
+      'all': undefined,
+    };
+    const start = periodStartMap[period];
+    const end = start !== undefined ? now : undefined;
 
     const activeKeyIds = new Set(activeKeys.map(k => k.id));
     let filtered = rawCachedPositions.filter(pos => activeKeyIds.has(pos.connectionId));

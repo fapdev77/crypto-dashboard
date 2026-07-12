@@ -25,6 +25,8 @@ export function BybitTransactions() {
     timePeriod: 0, // Default: All Time
   });
 
+  // ── Refresh animation indicator key ──
+  const filterMonitorKey = `${filters.category}-${filters.type}-${filters.currency}-${filters.accountId}-${filters.timePeriod}`;
   const { filteredEntries, isLoading, isSyncing, progress, error, stats } = useBybitTransactions(filters);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
@@ -301,6 +303,9 @@ export function BybitTransactions() {
                 totalItems={entriesTotal}
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
+                refreshKey={filterMonitorKey}
+                refreshLabel="Filtering"
+                refreshDataReady={!isLoading}
               />
             </div>
           )}
@@ -318,13 +323,15 @@ export function BybitTransactions() {
 
           {entriesTotal > 0 && (
             <div className="mt-4">
-              <Pagination
-                id="bybit-tx-pagination-bottom"
-                currentPage={currentPage}
-                totalItems={entriesTotal}
-                itemsPerPage={50}
-                onPageChange={setCurrentPage}
-              />
+            <Pagination
+              id="bybit-tx-pagination-bottom"
+              currentPage={currentPage}
+              totalItems={entriesTotal}
+              itemsPerPage={50}
+              onPageChange={setCurrentPage}
+              refreshKey={filterMonitorKey}
+              refreshLabel="Filtering"
+            />
             </div>
           )}
         </div>

@@ -375,6 +375,9 @@ export function ClosedPositions() {
                 totalItems={filteredClosedPositions.length}
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
+                refreshKey={`${period}-${exchangeFilter}`}
+                refreshLabel="Updating"
+                refreshDataReady={!isLoading}
               />
             </div>
           )}
@@ -576,6 +579,8 @@ export function ClosedPositions() {
               totalItems={filteredClosedPositions.length}
               itemsPerPage={50}
               onPageChange={setCurrentPage}
+              refreshKey={`${period}-${exchangeFilter}`}
+              refreshLabel="Updating"
             />
           </div>
         </div>
