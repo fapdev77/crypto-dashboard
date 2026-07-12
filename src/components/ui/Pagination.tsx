@@ -27,29 +27,22 @@ export function Pagination({
 }: PaginationProps) {
   // ── Refresh animation indicator ──
   const [refreshAnim, setRefreshAnim] = useState<'idle' | 'loading' | 'done' | 'fading'>('idle');
-  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRefreshRef = useRef(true);
+  /** Deferred check: set true after 'loading' first commits, so hooks have time to set isLoading. */
+  const loadingDeferredRef = useRef(false);
+  /** Counter to force a re-render after deferred check, ensuring Effect 2 fires a second time. */
+  const [deferredTick, setDeferredTick] = useState(0);
 
   const clearAllTimers = () => {
-    if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current);
     if (doneTimerRef.current) clearTimeout(doneTimerRef.current);
     if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
   };
 
-  const goToDone = (delay = 200) => {
-    clearAllTimers();
-    animTimerRef.current = setTimeout(() => {
-      setRefreshAnim('done');
-      doneTimerRef.current = setTimeout(() => {
-        setRefreshAnim('fading');
-        fadeTimerRef.current = setTimeout(() => setRefreshAnim('idle'), 400);
-      }, 2200);
-    }, delay);
-  };
-
-  // refreshKey changes → start loading
+  // ─── Effect 1: refreshKey change → start loading ───
   useEffect(() => {
     if (!refreshKey) return;
     if (isFirstRefreshRef.current) {
@@ -57,26 +50,63 @@ export function Pagination({
       return;
     }
     clearAllTimers();
+    loadingDeferredRef.current = false;
     setRefreshAnim('loading');
   }, [refreshKey]);
 
-  // refreshDataReady transitions → advance the animation
-  // Also serves as timer fallback when refreshDataReady is not provided
+  // ─── Effect 2: loading → done (data-driven or timer fallback) ───
+  // Uses a deferred check: on first render with 'loading', let hooks settle.
+  // On subsequent renders with 'loading' still active, check refreshDataReady.
   useEffect(() => {
-    if (refreshAnim !== 'loading') return;
-
-    if (typeof refreshDataReady === 'boolean' && !refreshDataReady) {
-      // Data-driven mode: data not ready yet, wait for refreshDataReady to become true
+    if (refreshAnim !== 'loading') {
+      loadingDeferredRef.current = false;
       return;
     }
 
-    // Data is ready (or no refreshDataReady provided — timer mode)
-    const delay = typeof refreshDataReady === 'boolean' ? 200 : 400;
-    goToDone(delay);
+    // Deferred: skip the first render where 'loading' was just committed.
+    // This gives descendant hooks (usePositionHistory etc.) time to set isLoading=true.
+    if (!loadingDeferredRef.current) {
+      loadingDeferredRef.current = true;
+      setDeferredTick(t => t + 1); // force re-render so effect fires again
+      return;
+    }
 
-    return clearAllTimers;
+    // Second+ render with 'loading': hooks have had time to process.
+    if (typeof refreshDataReady === 'boolean' && !refreshDataReady) {
+      // Data still loading asynchronously — wait for refreshDataReady to become true
+      return;
+    }
+
+    // Data is ready (or timer fallback when no refreshDataReady prop)
+    const delay = typeof refreshDataReady === 'boolean' ? 200 : 400;
+    clearAllTimers();
+    loadingTimerRef.current = setTimeout(() => {
+      setRefreshAnim('done');
+    }, delay);
+
+    // Only clean up THIS effect's timer — not doneTimer/fadeTimer from Effect 3
+    return () => {
+      if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshAnim, refreshDataReady]);
+  }, [refreshAnim, refreshDataReady, deferredTick]);
+
+  // ─── Effect 3: done → fading → idle (auto-advance) ───
+  useEffect(() => {
+    if (refreshAnim !== 'done') return;
+
+    doneTimerRef.current = setTimeout(() => {
+      setRefreshAnim('fading');
+      fadeTimerRef.current = setTimeout(() => {
+        setRefreshAnim('idle');
+      }, 400);
+    }, 2200);
+
+    return () => {
+      if (doneTimerRef.current) clearTimeout(doneTimerRef.current);
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+    };
+  }, [refreshAnim]);
 
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 

@@ -72,11 +72,6 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       ]
     },
     { id: 'reports', label: 'Reports', icon: FileText },
-    {
-      id: 'testes-mvp', label: 'Tests Playground', icon: Beaker, subItems: [
-        { id: 'mvp-asset-metadata', label: 'Asset Metadata' }
-      ]
-    },
   ];
 
   return (
