@@ -51,33 +51,62 @@ export class BybitTransactionService {
    */
   async syncIncremental(key: ApiCredentials, latestTime: number): Promise<BybitTransactionLogEntry[]> {
     const now = Date.now();
-    const allNew: BybitTransactionLogEntry[] = [];
-
+    let allNew: BybitTransactionLogEntry[] = [];
     const categories = ['linear', 'inverse', 'spot'];
+    let hasError = false;
 
     for (const category of categories) {
       let chunkStart = latestTime + 1;
       while (chunkStart < now) {
         const chunkEnd = Math.min(chunkStart + SEVEN_DAYS_MS, now);
+        let cursor = '';
+        let pages = 0;
         try {
-          const { list } = await this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category);
-          for (const raw of list) {
-            allNew.push(BybitAdapter.normalizeTxLogEntry(raw, key));
-          }
+          do {
+            const { list, nextPageCursor } = await this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined);
+            for (const raw of list) {
+              allNew.push(BybitAdapter.normalizeTxLogEntry(raw, key));
+            }
+            cursor = nextPageCursor;
+            pages++;
+          } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
           LogManager.warn('BybitTxService', `Incremental chunk error ${key.label}/${category}:`, err);
+          hasError = true;
         }
         chunkStart = chunkEnd + 1;
+        // Throttle to avoid rate-limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
+    }
+
+    // Deduplicate
+    if (allNew.length > 0) {
+      const dedup = new Map<string, BybitTransactionLogEntry>();
+      for (const entry of allNew) {
+        dedup.set(entry.id, entry);
+      }
+      allNew = Array.from(dedup.values());
+    }
+
+    const meta = await getBybitTxLogMeta(key.id);
+    const oldest = meta ? meta.oldestTransactionTime : (allNew.length > 0 ? Math.min(...allNew.map(e => e.transactionTime)) : now);
+    const totalRecords = (meta?.totalRecords || 0) + allNew.length;
+
+    let nextLatestTime = latestTime;
+    if (!hasError) {
+      nextLatestTime = now;
+    } else if (allNew.length > 0) {
+      nextLatestTime = Math.max(latestTime, ...allNew.map(e => e.transactionTime));
     }
 
     if (allNew.length > 0) {
       await saveBybitTxLogCache(allNew);
-      const meta = await getBybitTxLogMeta(key.id);
-      const oldest = meta ? Math.min(meta.oldestTransactionTime, ...allNew.map(e => e.transactionTime)) : Math.min(...allNew.map(e => e.transactionTime));
-      const latest = Math.max(latestTime, ...allNew.map(e => e.transactionTime));
-      const totalRecords = (meta?.totalRecords || 0) + allNew.length;
-      await updateBybitTxLogMeta(key.id, oldest, latest, totalRecords);
+    }
+    
+    // Always update meta to advance latestTransactionTime (if no error), even if allNew is empty
+    if (!hasError || allNew.length > 0) {
+       await updateBybitTxLogMeta(key.id, oldest, nextLatestTime, totalRecords);
     }
 
     return allNew;
