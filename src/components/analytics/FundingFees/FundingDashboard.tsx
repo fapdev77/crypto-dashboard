@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useFundingData } from '../../../hooks/useFundingData';
 import { useFundingStore } from '../../../store/fundingStore';
 import { useFundingSync } from '../../../hooks/useFundingSync';
@@ -10,8 +10,12 @@ import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { FilterBar } from '../../ui/FilterBar';
 import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
+import { Pagination } from '../../ui/Pagination';
+import { usePagination } from '../../../hooks/usePagination';
 import clsx from 'clsx';
 import { format } from 'date-fns';
+
+const COINS_PER_PAGE = 25;
 
 const getBaseCoin = (symbol: string) => {
   let base = symbol.split('-')[0];
@@ -21,6 +25,111 @@ const getBaseCoin = (symbol: string) => {
 };
 
 const formatPercent = (val: number) => (val * 100).toFixed(4) + '%';
+
+/** Text shared across tooltips explaining what each time-based column means. */
+const HISTORICAL_NOTE = 'Excludes the current month.';
+
+/** Tooltip content for each rate column header. */
+const COLUMN_TOOLTIPS: Record<string, string> = {
+  next:
+    'The upcoming funding rate and its estimated settlement time. A positive rate (green) means Long positions pay Short positions. A negative rate (red) means Short positions pay Long positions.',
+  last:
+    'The most recent funding rate that was already settled. Positive = Longs paid Shorts. Negative = Shorts paid Longs.',
+  today:
+    'Cumulative funding rate sum for today (UTC). Reflects all settled funding intervals so far today.',
+  currentMonth:
+    'Cumulative funding rate sum for the current calendar month. Includes today.',
+  lastMonth: `Cumulative funding rate sum for the previous calendar month. ${HISTORICAL_NOTE}`,
+  last3Months: `Cumulative funding rate sum over the last 3 calendar months. ${HISTORICAL_NOTE}`,
+  last6Months: `Cumulative funding rate sum over the last 6 calendar months. ${HISTORICAL_NOTE}`,
+  oneYear: `Cumulative funding rate sum over the last 12 calendar months. ${HISTORICAL_NOTE}`,
+};
+
+const ThTooltip = ({ columnKey, children }: { columnKey: string; children: React.ReactNode }) => {
+  const description = COLUMN_TOOLTIPS[columnKey];
+  if (!description) return <>{children}</>;
+  return (
+    <AppTooltip description={description}>
+      <span className="cursor-help border-b border-dashed border-[#8E9299]/40 hover:border-[#8E9299]/80 transition-colors">
+        {children}
+      </span>
+    </AppTooltip>
+  );
+};
+
+/**
+ * Wraps children and flashes green/red when `value` changes (up/down).
+ * Only the `nextFundingRate` changes dynamically, so this is applied exclusively to that column.
+ */
+const FundingRateFlash = ({
+  value,
+  children,
+}: {
+  value: number | undefined;
+  children: React.ReactNode;
+}) => {
+  const prevRef = useRef(value);
+  const [flash, setFlash] = useState<'up' | 'down' | null>(null);
+
+  useEffect(() => {
+    if (prevRef.current !== undefined && value !== undefined && prevRef.current !== value) {
+      const direction = value > prevRef.current ? 'up' : 'down';
+      setFlash(direction);
+      const timer = setTimeout(() => setFlash(null), 800);
+      prevRef.current = value;
+      return () => clearTimeout(timer);
+    }
+    prevRef.current = value;
+  }, [value]);
+
+  return (
+    <span
+      className={
+        flash === 'up'
+          ? 'animate-funding-flash-up rounded-sm inline-block'
+          : flash === 'down'
+            ? 'animate-funding-flash-down rounded-sm inline-block'
+            : undefined
+      }
+    >
+      {children}
+    </span>
+  );
+};
+
+/** Explanation for a single funding-rate value: who paid whom. */
+const RateTooltip = ({
+  rate,
+  label,
+  children,
+}: {
+  rate: number | undefined;
+  label: string;
+  children: React.ReactNode;
+}) => {
+  if (rate === undefined) return <>{children}</>;
+  const isPositive = rate > 0;
+  const isNegative = rate < 0;
+  const whoPaid = isPositive
+    ? 'Long positions are paying Short positions'
+    : isNegative
+      ? 'Short positions are paying Long positions'
+      : 'No payment is exchanged';
+
+  return (
+    <AppTooltip
+      description={`${label}: ${(rate * 100).toFixed(4)}%`}
+      rows={[
+        { label: 'Direction', value: isPositive ? 'Longs → Shorts' : isNegative ? 'Shorts → Longs' : 'Neutral' },
+        { label: 'Who Pays', value: whoPaid },
+      ]}
+      side="top"
+      align="center"
+    >
+      <span className="cursor-help">{children}</span>
+    </AppTooltip>
+  );
+};
 
 const FundingTable = ({ 
   title, 
@@ -50,6 +159,16 @@ const FundingTable = ({
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [data]);
 
+  // ── Pagination ──
+  const {
+    page,
+    setPage,
+    paginated: paginatedGroups,
+    totalItems: groupsTotal,
+  } = usePagination(groupedByCoin, COINS_PER_PAGE, [data]);
+
+  const paginationId = `funding-${title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
+
   if (data.length === 0) return null;
 
   return (
@@ -66,28 +185,57 @@ const FundingTable = ({
       
       {expanded && (
         <div className="overflow-x-auto">
+          {/* Top Pagination */}
+          {groupsTotal > COINS_PER_PAGE && (
+            <div className="px-6 py-3 border-b border-[#2a2b30]/50">
+              <Pagination
+                id={`${paginationId}-top`}
+                currentPage={page}
+                totalItems={groupsTotal}
+                itemsPerPage={COINS_PER_PAGE}
+                onPageChange={setPage}
+                refreshKey={`${groupsTotal}-${data.length}`}
+                refreshLabel="Filtering"
+              />
+            </div>
+          )}
+
           <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="text-[#8E9299] bg-[#1A1C20]/50 border-y border-[#2a2b30]">
               <tr>
                 <th className="px-6 py-3 font-medium w-10"></th>
                 <th className="px-6 py-3 font-medium">Asset / Exchange</th>
-                <th className="px-6 py-3 font-medium text-right">Next (Rate / Time)</th>
-                <th className="px-6 py-3 font-medium text-right">Last</th>
-                <th className="px-6 py-3 font-medium text-right">Today</th>
-                <th className="px-6 py-3 font-medium text-right">Current Month</th>
-                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">Last Month</th>
-                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">Last 3 Months</th>
-                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">Last 6 Months</th>
-                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">1 Year</th>
+                <th className="px-6 py-3 font-medium text-right">
+                  <ThTooltip columnKey="next">Next (Rate / Time)</ThTooltip>
+                </th>
+                <th className="px-6 py-3 font-medium text-right">
+                  <ThTooltip columnKey="last">Last</ThTooltip>
+                </th>
+                <th className="px-6 py-3 font-medium text-right">
+                  <ThTooltip columnKey="today">Today</ThTooltip>
+                </th>
+                <th className="px-6 py-3 font-medium text-right">
+                  <ThTooltip columnKey="currentMonth">Current Month</ThTooltip>
+                </th>
+                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
+                  <ThTooltip columnKey="lastMonth">Last Month</ThTooltip>
+                </th>
+                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
+                  <ThTooltip columnKey="last3Months">Last 3 Months</ThTooltip>
+                </th>
+                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
+                  <ThTooltip columnKey="last6Months">Last 6 Months</ThTooltip>
+                </th>
+                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
+                  <ThTooltip columnKey="oneYear">1 Year</ThTooltip>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2b30]/50">
-              {groupedByCoin.map(([coin, rows]) => {
+              {paginatedGroups.map(([coin, rows]) => {
                 const isExpanded = expandedCoins[coin];
-                // Check if the group is favorited
                 const isFav = favorites.includes(coin);
-                
-                // Averages for the parent row
+
                 const avg = (key: keyof FundingFeeAggregated) => {
                   const valid = rows.filter(r => r[key] !== undefined && typeof r[key] === 'number');
                   if (valid.length === 0) return undefined;
@@ -127,25 +275,55 @@ const FundingTable = ({
                         </div>
                       </td>
                       <td className="px-6 py-3 text-right">
-                        {avgNext !== undefined ? (
-                          <span className={avgNext > 0 ? "text-green-400 font-medium" : avgNext < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
-                            {formatPercent(avgNext)}
-                          </span>
-                        ) : <span className="text-[#8E9299]">---</span>}
+                        <RateTooltip rate={avgNext} label="Avg next funding rate">
+                          <FundingRateFlash value={avgNext}>
+                            {avgNext !== undefined ? (
+                              <span className={avgNext > 0 ? "text-green-400 font-medium" : avgNext < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
+                                {formatPercent(avgNext)}
+                              </span>
+                            ) : <span className="text-[#8E9299]">---</span>}
+                          </FundingRateFlash>
+                        </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right">
-                        {avgLast !== undefined ? (
-                          <span className={avgLast > 0 ? "text-green-400 font-medium" : avgLast < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
-                            {formatPercent(avgLast)}
-                          </span>
-                        ) : <span className="text-[#8E9299]">---</span>}
+                        <RateTooltip rate={avgLast} label="Avg last funding rate">
+                          {avgLast !== undefined ? (
+                            <span className={avgLast > 0 ? "text-green-400 font-medium" : avgLast < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
+                              {formatPercent(avgLast)}
+                            </span>
+                          ) : <span className="text-[#8E9299]">---</span>}
+                        </RateTooltip>
                       </td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-90">{avgToday !== undefined ? formatPercent(avgToday) : '---'}</td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-90">{avgMonth !== undefined ? formatPercent(avgMonth) : '---'}</td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">{avgLastMonth !== undefined ? formatPercent(avgLastMonth) : '---'}</td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">{avg3M !== undefined ? formatPercent(avg3M) : '---'}</td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">{avg6M !== undefined ? formatPercent(avg6M) : '---'}</td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">{avgYear !== undefined ? formatPercent(avgYear) : '---'}</td>
+                      <td className="px-6 py-3 text-right font-mono text-white opacity-90">
+                        <RateTooltip rate={avgToday} label="Today cumulative">
+                          {avgToday !== undefined ? formatPercent(avgToday) : '---'}
+                        </RateTooltip>
+                      </td>
+                      <td className="px-6 py-3 text-right font-mono text-white opacity-90">
+                        <RateTooltip rate={avgMonth} label="Current month cumulative">
+                          {avgMonth !== undefined ? formatPercent(avgMonth) : '---'}
+                        </RateTooltip>
+                      </td>
+                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">
+                        <RateTooltip rate={avgLastMonth} label="Last month cumulative">
+                          {avgLastMonth !== undefined ? formatPercent(avgLastMonth) : '---'}
+                        </RateTooltip>
+                      </td>
+                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">
+                        <RateTooltip rate={avg3M} label="3-month cumulative">
+                          {avg3M !== undefined ? formatPercent(avg3M) : '---'}
+                        </RateTooltip>
+                      </td>
+                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">
+                        <RateTooltip rate={avg6M} label="6-month cumulative">
+                          {avg6M !== undefined ? formatPercent(avg6M) : '---'}
+                        </RateTooltip>
+                      </td>
+                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">
+                        <RateTooltip rate={avgYear} label="1-year cumulative">
+                          {avgYear !== undefined ? formatPercent(avgYear) : '---'}
+                        </RateTooltip>
+                      </td>
                     </tr>
                     
                     {isExpanded && rows.map((row) => {
@@ -171,39 +349,59 @@ const FundingTable = ({
                           <td className="px-6 py-2 text-right">
                             {row.nextFundingRate !== undefined ? (
                               <div className="flex flex-col items-end">
-                                <span className={row.nextFundingRate > 0 ? "text-green-400" : row.nextFundingRate < 0 ? "text-red-400" : "text-white"}>
-                                  {formatPercent(row.nextFundingRate)}
-                                </span>
+                                <RateTooltip rate={row.nextFundingRate} label="Next funding rate">
+                                  <FundingRateFlash value={row.nextFundingRate}>
+                                    <span className={row.nextFundingRate > 0 ? "text-green-400" : row.nextFundingRate < 0 ? "text-red-400" : "text-white"}>
+                                      {formatPercent(row.nextFundingRate)}
+                                    </span>
+                                  </FundingRateFlash>
+                                </RateTooltip>
                                 {row.nextFundingTime && (
-                                  <span className="text-[10px] text-[#8E9299]">
-                                    {format(row.nextFundingTime, 'MM/dd HH:mm')}
-                                  </span>
+                                  <AppTooltip description="Estimated time of the next funding settlement.">
+                                    <span className="text-[10px] text-[#8E9299] cursor-help border-b border-dashed border-[#8E9299]/30">
+                                      {format(row.nextFundingTime, 'MM/dd HH:mm')}
+                                    </span>
+                                  </AppTooltip>
                                 )}
                               </div>
                             ) : <span className="text-[#8E9299]">---</span>}
                           </td>
                           <td className="px-6 py-2 text-right">
-                            <span className={row.lastFundingRate > 0 ? "text-green-400" : row.lastFundingRate < 0 ? "text-red-400" : "text-white"}>
-                              {formatPercent(row.lastFundingRate)}
-                            </span>
+                            <RateTooltip rate={row.lastFundingRate} label="Last settled funding rate">
+                              <span className={row.lastFundingRate > 0 ? "text-green-400" : row.lastFundingRate < 0 ? "text-red-400" : "text-white"}>
+                                {formatPercent(row.lastFundingRate)}
+                              </span>
+                            </RateTooltip>
                           </td>
                           <td className="px-6 py-2 text-right font-mono text-white/80">
-                            {formatPercent(row.todaySum)}
+                            <RateTooltip rate={row.todaySum} label="Today cumulative">
+                              {formatPercent(row.todaySum)}
+                            </RateTooltip>
                           </td>
                           <td className="px-6 py-2 text-right font-mono text-white/80">
-                            {formatPercent(row.currentMonthSum)}
+                            <RateTooltip rate={row.currentMonthSum} label="Current month cumulative">
+                              {formatPercent(row.currentMonthSum)}
+                            </RateTooltip>
                           </td>
                           <td className="px-6 py-2 text-right font-mono text-white/60">
-                            {row.exchange === 'okx' ? '---' : formatPercent(row.lastMonthSum)}
+                            <RateTooltip rate={row.lastMonthSum} label="Last month cumulative">
+                              {row.exchange === 'okx' ? '---' : formatPercent(row.lastMonthSum)}
+                            </RateTooltip>
                           </td>
                           <td className="px-6 py-2 text-right font-mono text-white/60">
-                            {row.exchange === 'okx' ? '---' : formatPercent(row.last3MonthsSum)}
+                            <RateTooltip rate={row.last3MonthsSum} label="3-month cumulative">
+                              {row.exchange === 'okx' ? '---' : formatPercent(row.last3MonthsSum)}
+                            </RateTooltip>
                           </td>
                           <td className="px-6 py-2 text-right font-mono text-white/60">
-                            {row.exchange === 'okx' ? '---' : formatPercent(row.last6MonthsSum)}
+                            <RateTooltip rate={row.last6MonthsSum} label="6-month cumulative">
+                              {row.exchange === 'okx' ? '---' : formatPercent(row.last6MonthsSum)}
+                            </RateTooltip>
                           </td>
                           <td className="px-6 py-2 text-right font-mono text-white/60">
-                            {row.exchange === 'okx' ? '---' : formatPercent(row.yearSum)}
+                            <RateTooltip rate={row.yearSum} label="Year cumulative">
+                              {row.exchange === 'okx' ? '---' : formatPercent(row.yearSum)}
+                            </RateTooltip>
                           </td>
                         </tr>
                       );
@@ -213,6 +411,22 @@ const FundingTable = ({
               })}
             </tbody>
           </table>
+
+          {/* Bottom Pagination */}
+          {groupsTotal > COINS_PER_PAGE && (
+            <div className="px-6 py-3 border-t border-[#2a2b30]/50">
+              <Pagination
+                id={`${paginationId}-bottom`}
+                currentPage={page}
+                totalItems={groupsTotal}
+                itemsPerPage={COINS_PER_PAGE}
+                onPageChange={setPage}
+                refreshKey={`${groupsTotal}-${data.length}`}
+                refreshLabel="Filtering"
+              />
+            </div>
+          )}
+
           <div className="px-6 py-3 bg-[#1A1C20]/20 text-[10px] text-[#8E9299] flex items-center justify-end gap-2 border-t border-[#2a2b30]/50">
             <AlertTriangle className="w-3 h-3 text-yellow-500" />
             Historical columns (Last Month, 3M, 6M, 1Y) do not include the current month. OKX API limits historical data to the last 3 months.
@@ -233,7 +447,7 @@ export const FundingDashboard = () => {
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [expandAll, setExpandAll] = useState(true); // Default true
+  const [expandAll, setExpandAll] = useState(true);
 
   const filteredData = useMemo(() => {
     return aggregatedData.filter(row => {
@@ -246,7 +460,6 @@ export const FundingDashboard = () => {
     });
   }, [aggregatedData, searchTerm, exchangeFilter, instrumentFilter, showFavoritesOnly, favorites]);
 
-  // Group by instrument type
   const groupedData = useMemo(() => {
     const groups: Record<string, FundingFeeAggregated[]> = {
       'USDT-M Perpetual': [],
@@ -261,7 +474,6 @@ export const FundingDashboard = () => {
       }
     });
     
-    // Sort within groups by symbol
     Object.keys(groups).forEach(k => {
       groups[k].sort((a, b) => a.symbol.localeCompare(b.symbol));
     });
