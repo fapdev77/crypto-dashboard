@@ -8,9 +8,11 @@ interface StatusAndSyncBadgeProps {
   isSyncing: boolean;
   syncMessage?: string | null;
   className?: string;
+  /** Override the auto-sync interval in ms. Defaults to historyCacheInterval (minutes) from settingsStore. */
+  overrideIntervalMs?: number;
 }
 
-export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: StatusAndSyncBadgeProps) {
+export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '', overrideIntervalMs }: StatusAndSyncBadgeProps) {
   const {
     historyCacheInterval,
     historyCacheVersion,
@@ -47,7 +49,8 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
   const cooldownLeft = Math.max(0, Math.ceil((cooldownEnd - now) / 1000));
 
   // Calculate remaining time until next scheduled background sync
-  const nextSyncTime = lastSyncTime + historyCacheInterval * 60 * 1000;
+  const intervalMs = overrideIntervalMs ?? historyCacheInterval * 60 * 1000;
+  const nextSyncTime = lastSyncTime + intervalMs;
   const secondsLeft = Math.max(0, Math.ceil((nextSyncTime - now) / 1000));
   
   const minutes = Math.floor(secondsLeft / 60);
@@ -107,7 +110,7 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
       <AppTooltip
         description="Automatic cache renewal schedule. Background worker fetches incremental updates on the configured interval."
         rows={[
-          { label: 'Interval Settings', value: `${historyCacheInterval} min` },
+          { label: 'Interval Settings', value: overrideIntervalMs ? `${Math.round(overrideIntervalMs / 60000)} min` : `${historyCacheInterval} min` },
           { label: 'Last Completed', value: formattedLastSync },
           { label: 'Next Scheduled', value: format(new Date(nextSyncTime), 'HH:mm:ss') }
         ]}

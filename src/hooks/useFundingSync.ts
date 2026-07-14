@@ -13,6 +13,7 @@ const EXCHANGES: ('bybit' | 'okx' | 'bitget')[] = ['bybit', 'okx', 'bitget'];
 
 export function useFundingSync() {
   const { fundingPollingInterval, fundingHistoryInterval, useMockData } = useSettingsStore();
+  const setLastSyncTime = useSettingsStore(state => state.setLastSyncTime);
   const { isSyncing, setSyncStatus, lastHistoryFetch, setLastHistoryFetch } = useFundingStore();
   
   const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -93,7 +94,9 @@ export function useFundingSync() {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      setLastHistoryFetch(Date.now());
+      const completedAt = Date.now();
+      setLastHistoryFetch(completedAt);
+      setLastSyncTime(completedAt);
       setSyncStatus(false, 100, `Synced ${successCount} symbols.`);
       
     } catch (error: any) {
@@ -107,7 +110,7 @@ export function useFundingSync() {
         }
       }, 3000);
     }
-  }, [useMockData, fundingHistoryInterval, lastHistoryFetch, setLastHistoryFetch, setSyncStatus]);
+  }, [useMockData, fundingHistoryInterval, lastHistoryFetch, setLastHistoryFetch, setLastSyncTime, setSyncStatus]);
 
   // Main loop
   useEffect(() => {

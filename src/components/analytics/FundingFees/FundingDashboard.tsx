@@ -2,12 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { useFundingData } from '../../../hooks/useFundingData';
 import { useFundingStore } from '../../../store/fundingStore';
 import { useFundingSync } from '../../../hooks/useFundingSync';
+import { useSettingsStore } from '../../../store/settingsStore';
 import { FundingFeeAggregated } from '../../../types';
-import { Loader2, Search, Star, RefreshCw, ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
 import { AppTooltip } from '../../ui/Tooltip';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { FilterBar } from '../../ui/FilterBar';
+import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import clsx from 'clsx';
 import { format } from 'date-fns';
 
@@ -223,8 +225,9 @@ const FundingTable = ({
 
 export const FundingDashboard = () => {
   const { aggregatedData, isLoading } = useFundingData();
-  const { forceSync } = useFundingSync();
-  const { isSyncing, syncProgress, syncMessage, favorites } = useFundingStore();
+  useFundingSync();
+  const { isSyncing, syncMessage, favorites } = useFundingStore();
+  const fundingHistoryInterval = useSettingsStore(state => state.fundingHistoryInterval);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
@@ -274,22 +277,11 @@ export const FundingDashboard = () => {
           <p className="text-xs text-[#8E9299] mt-1">
             Real-time and historical funding rates aggregated across exchanges.
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {isSyncing && (
-            <div className="flex items-center gap-2 bg-[#2F6BFF]/10 text-[#2F6BFF] px-3 py-1.5 rounded-lg border border-[#2F6BFF]/20 text-xs font-medium">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>{syncMessage} ({syncProgress}%)</span>
-            </div>
-          )}
-          <button
-            onClick={() => forceSync()}
-            disabled={isSyncing}
-            className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-          >
-            <RefreshCw className={clsx("w-3.5 h-3.5", isSyncing && "animate-spin")} />
-            Sync Now
-          </button>
+          <StatusAndSyncBadge
+            isSyncing={isSyncing}
+            syncMessage={isSyncing ? (syncMessage || 'Syncing funding history...') : null}
+            overrideIntervalMs={fundingHistoryInterval * 60 * 60 * 1000}
+          />
         </div>
       </div>
       
