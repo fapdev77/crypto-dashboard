@@ -30,6 +30,12 @@ interface SettingsState {
   /** Timestamp until which sync is rate-limited (cooldown). */
   cooldownEnd: number;
   setCooldownEnd: (time: number) => void;
+  /** Funding rate polling interval in minutes (default 1). */
+  fundingPollingInterval: number;
+  setFundingPollingInterval: (interval: number) => void;
+  /** Funding history fetch interval in hours (default 4). */
+  fundingHistoryInterval: number;
+  setFundingHistoryInterval: (interval: number) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -51,6 +57,10 @@ export const useSettingsStore = create<SettingsState>()(
       setLastSyncTime: (lastSyncTime: number) => set({ lastSyncTime }),
       cooldownEnd: 0,
       setCooldownEnd: (cooldownEnd: number) => set({ cooldownEnd }),
+      fundingPollingInterval: 1,
+      setFundingPollingInterval: (fundingPollingInterval: number) => set({ fundingPollingInterval }),
+      fundingHistoryInterval: 4,
+      setFundingHistoryInterval: (fundingHistoryInterval: number) => set({ fundingHistoryInterval }),
     }),
     {
       name: 'terminal-settings',

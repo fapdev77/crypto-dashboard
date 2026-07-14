@@ -147,6 +147,32 @@ export interface SymbolPnLRecord {
 
 // ── Bybit Transaction Log ──
 
+export interface UnifiedFundingFee {
+  id: string; // `${exchange}-${symbol}-${timestamp}`
+  exchange: ExchangeName;
+  symbol: string;
+  instrumentType: 'USDT-M' | 'COIN-M';
+  timestamp: number;
+  fundingRate: number;
+  realizedRate?: number;
+}
+
+export interface FundingFeeAggregated {
+  exchange: ExchangeName;
+  symbol: string;
+  instrumentType: 'USDT-M' | 'COIN-M';
+  currentPrice?: number;
+  nextFundingRate?: number;
+  nextFundingTime?: number;
+  lastFundingRate: number;
+  todaySum: number;
+  currentMonthSum: number;
+  lastMonthSum: number;
+  last3MonthsSum: number;
+  last6MonthsSum: number;
+  yearSum: number;
+}
+
 export interface BybitTransactionLogEntry {
   // Primary key = `${connectionId}-${rawId}-${transactionTime}`
   id: string;
