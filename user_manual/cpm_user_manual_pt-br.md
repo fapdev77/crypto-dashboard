@@ -59,45 +59,30 @@ Se você deseja experimentar a interface e as ferramentas analíticas sem inseri
    - Botões de sincronização manual de histórico serão desativados para evitar chamadas de API inválidas.
 
 ---
+## 4. Terminal de Logs Integrado (Connection Logs)
 
-## 4. Análise de Latência e Desempenho via REST
+Para que você possa acompanhar cada requisição, autenticação e evento de comunicação REST, desenvolvemos um terminal de log profissional em uma página dedicada:
 
-Para maximizar a estabilidade, evitar a complexidade de conexões assíncronas e respeitar as limitações de CORS dos navegadores, o CPM padronizou toda a coleta de dados (saldos, posições e cotações) utilizando consultas de alta performance via **REST Polling** (consultas periódicas HTTP).
-
-No painel **API Keys**, você terá uma visão de telemetria refinada:
-- **Sparklines de Latência**: Um gráfico em linha atualizado que mede o tempo de resposta em milissegundos (ping) das requisições REST entre o seu navegador (através do nosso proxy seguro) e os servidores das corretoras.
-- **Isolamento de WebSockets**: A tecnologia de WebSockets foi mantida e isolada exclusivamente dentro da ferramenta **API Tester** (para fins de testes de conexão e depuração). As telas principais do dashboard utilizam requisições HTTP REST padronizadas de alta confiabilidade.
-
----
-
-## 5. Terminal de Logs Integrado (Connection Logs)
-
-Para que você possa acompanhar cada requisição, autenticação e evento de comunicação REST (ou diagnósticos de WebSocket do API Tester), desenvolvemos um terminal de log profissional acoplado à página de credenciais:
-
-1. Na página **API Keys**, deslize para a parte inferior para visualizar o terminal docked. Ele também está acessível através do menu lateral na aba **Connection Logs**.
+1. **Acesso Dedicado**: Acesse a aba **Connection Logs** diretamente pelo menu lateral para visualizar o terminal.
 2. **Máscara de Segredos (Zero-Leak)**: O terminal possui filtros inteligentes para garantir que suas chaves de API, Passphrases ou assinaturas criptográficas **nunca apareçam em texto puro nos logs**.
-3. **Filtros por Categoria**:
+3. **Filtros por Categoria**: 
    - `SYSTEM`: Inicialização de módulos e reconexões de rede.
    - `DATA`: Entrada de atualizações de saldo e feeds de preços.
    - `WARN` / `ERROR`: Alertas de conexão lenta, expiração de tokens ou erros nas credenciais de API.
 4. **Busca Local por Texto**: Digite termos ou utilize expressões regulares (regex) na barra de busca para localizar eventos de ativos específicos.
 
 ---
+## 5. Sincronização e Configurações de Cache (Settings)
 
-## 6. Sincronização Avançada com Cache IndexedDB
+Para garantir um carregamento ultrarrápido das suas informações e evitar que as corretoras bloqueiem o acesso (rate limiting), o aplicativo salva seu histórico de posições, ordens e taxas de financiamento no seu navegador (Cache local).
 
-Para evitar limites de requisições de API (*Rate Limiting*) das corretoras e carregamentos lentos, o CPM conta com um mecanismo sofisticado de **Cache Inteligente**:
-
-- **IndexedDB**: Um banco de dados robusto embutido no seu navegador que armazena localmente o histórico de posições encerradas e ordens executadas.
-- **Orquestrador SWR (Stale-While-Revalidate)**: Ao acessar as abas de histórico, o CPM renderiza instantaneamente os dados salvos em cache enquanto uma verificação em segundo plano atualiza novas transações.
-- **Normalização Aritmética Automática (Linear vs Inverso)**: O CPM detecta automaticamente se uma posição ou ordem é baseada em Contratos Lineares (USDT/USDC-M) ou Inversos (Coin-Margined). Ele faz todas as conversões de contratos brutas para o tamanho exato na moeda base (ex: BTC) e calcula o valor nocional em USD, eliminando valores inflados ou confusos típicos das APIs nativas.
-- **Suporte OKX Dual-Wallet (Trading e Funding)**: O sistema de saldos foi expandido para puxar, em paralelo, os ativos da conta unificada de trading da OKX e também da carteira de financiamento (Funding Account). Os ativos de funding são avaliados com base no valor de mercado em tempo real e consolidados no patrimônio geral, sendo exibidos na tabela de saldos com a etiqueta verde `FUNDING` para facilitar o acompanhamento detalhado de seus fundos.
-- **Tipagem Estrita de Dados (Raw Security)**: O campo `raw` que armazena as respostas brutas dos servidores das corretoras é 100% tipado estritamente (`src/types/raw.ts`), o que garante a máxima estabilidade operacional e integridade de dados durante as conversões matemáticas em segundo plano.
-- **Intervalo de Polling Personalizável**: Acesse **Settings** para configurar o intervalo em que o cache em segundo plano deve ser recarregado (padrão de 15 minutos).
+Através da tela **Settings** no menu lateral, você pode controlar o funcionamento do aplicativo:
+- **Intervalos de Atualização (Polling)**: Ajuste com que frequência o sistema busca novas ordens, posições ou taxas de financiamento. Isso é útil caso você queira atualizações mais rápidas ou prefira reduzir o consumo de internet.
+- **Limpeza de Cache (Clear Data)**: Caso você sinta que o aplicativo está exibindo dados desatualizados, ordens travadas ou inconsistências após operar diretamente na corretora, você pode usar os botões de limpeza (ex: *Clear Orders Cache*, *Clear Funding Cache*). Isso forçará o aplicativo a baixar todo o seu histórico novamente na próxima sincronização.
+- **Simulation Mode**: Ative ou desative o modo de simulação a qualquer momento para testar a interface com dados fictícios.
 
 ---
-
-## 7. Guia de Telas e Navegação Diária
+## 6. Guia de Telas e Navegação Diária
 
 ### 🏠 Dashboard Principal
 Seu painel analítico central, composto por uma estrutura elegante de cartões:
@@ -116,12 +101,37 @@ Monitoramento em tempo real de suas posições ativas de derivativos (Futuros):
 - **Análise Estatística**: Exibe métricas de desempenho chave como **Win Rate %**, **Profit Factor**, Médias de Ganho/Perda e Maior Trade Executado.
 - **Histórico de Ordens**: Tabela interativa com busca regex avançada local, permitindo expandir linhas para ver as taxas operacionais (fees) pagas à corretora.
 
+### 🔄 Trade History (Histórico de Execuções)
+Uma visualização detalhada de todas as execuções de ordens e trades preenchidos nas corretoras.
+- **Histórico Completo**: Acompanhe o preço exato de execução, quantidade (size), lado (Buy/Sell) e o papel (Taker/Maker) em cada transação.
+- **Auditoria de Taxas**: Verifique exatamente quanto você pagou ou recebeu de taxa de execução (fees) por trade, com destaque para a moeda utilizada no pagamento.
+- **Busca e Filtros**: Utilize a barra de busca para encontrar rapidamente os trades de um símbolo específico ou refine por corretora.
+
+### 📊 PnL by Symbol (Lucros e Perdas por Símbolo)
+Um relatório gerencial para analisar a performance individual de cada ativo operado.
+- **Métricas Agregadas**: Visualize o Total de Ganhos, Total de Perdas, PnL Líquido (Net PnL), Win Rate e Fator de Lucro especificamente isolados para um ativo (ex: BTC, ETH).
+- **Ranking de Performance**: Descubra rapidamente quais ativos lhe dão mais lucro e quais estão gerando perdas consistentes, ordenando a tabela pelas colunas desejadas.
+- **Análise Profunda**: Identifique se a maioria do seu resultado positivo em um ativo vem de operações Long ou Short, otimizando suas estratégias.
+
+### 💸 Dashboard de Taxas de Financiamento (Funding Fees)
+Um painel abrangente que consolida dados de taxas de financiamento (funding rates) em tempo real e históricos da Bybit, Bitget e OKX (contratos perpétuos USDT-M e COIN-M).
+- **Análise Multi-Período**: Analise as taxas em diferentes intervalos: Próxima Taxa, Última Taxa, Hoje, Mês Atual, Mês Passado, 3 Meses, 6 Meses e 1 Ano.
+- **Cache Inteligente**: Utiliza o IndexedDB para armazenar o histórico de taxas. Após a sincronização inicial completa (~400 dias), o aplicativo realiza atualizações incrementais ultrarrápidas, baixando apenas os novos registros.
+- **Indicadores Visuais**: Animações (flash) ao atualizar taxas em tempo real e tooltips explicativos informando a direção do pagamento (ex: Longs pagando Shorts).
+- *Nota sobre a OKX*: A API da OKX limita o histórico de dados a aproximadamente 3 meses. Portanto, a OKX é excluída das médias de 6 Meses e 1 Ano para evitar distorções no mercado.
+
+### 📜 Histórico de Transações Bybit (Transaction Log)
+Uma ferramenta especializada para usuários da Bybit, desenvolvida para baixar, armazenar e analisar o histórico completo de transações brutas diretamente da corretora.
+- **Sincronização Profunda**: Baixa todo o seu histórico de liquidações, taxas de financiamento pagas/recebidas e taxas de trade, salvando tudo no cache local (IndexedDB).
+- **Cálculo de PnL Realizado**: Calcula com precisão os ganhos e perdas realizados com base no fluxo de caixa (cash flow), taxas de financiamento e taxas de trade.
+- **Atualizações Incrementais**: Realiza sincronizações incrementais inteligentes após o download inicial, mantendo seus dados atualizados com o mínimo consumo de API.
+
 ### 👁 Modo Privacidade (Privacy Mode)
 Clique no **Ícone de Olho** no topo direito do menu lateral para ativar o ocultamento global de valores numéricos. Isso transformará números financeiros em máscaras `***`, permitindo que você compartilhe capturas de tela ou faça transmissões ao vivo sem expor o tamanho do seu patrimônio.
 
 ---
 
-## 8. Exportação de Relatórios Operacionais
+## 7. Exportação de Relatórios Operacionais
 
 Deseja realizar auditorias externas ou arquivar seus relatórios? Acesse a aba **Reports** para exportar:
 - **Formato PDF**: Gera um documento profissional estruturado de forma visual contendo seu balanço atual, principais posições fechadas e estatísticas agregadas.
@@ -129,16 +139,13 @@ Deseja realizar auditorias externas ou arquivar seus relatórios? Acesse a aba *
 
 ---
 
-## 9. Solução de Problemas Comuns (FAQ)
+## 8. Solução de Problemas Comuns (FAQ)
 
 ### Minhas chaves de API não conectam. O que fazer?
 1. Verifique se copiou a chave sem espaços extras no início ou fim.
 2. Verifique se selecionou a corretora correta (as chaves da Bybit não funcionam na OKX).
 3. Na **Bitget** e **OKX**, certifique-se de que inseriu a **Passphrase** exata que criou no site da corretora.
 4. Certifique-se de que a sua chave possui permissões de **Leitura** ativas.
-
-### A latência está muito alta. Isso afeta minha conta?
-Não. A latência alta significa apenas que o feed de dados visualizados no terminal está ligeiramente atrasado em relação à corretora. Suas ordens e posições continuam operando de forma nativa e segura dentro do servidor da exchange.
 
 ### Posso usar o CPM no meu smartphone?
 Sim! O design do CPM é totalmente responsivo e adapta todas as tabelas e painéis em layouts de toque simplificados.
