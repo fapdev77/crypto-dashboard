@@ -59,45 +59,30 @@ If you wish to explore the dashboard's capabilities without configuring any real
    - Manual synchronization buttons are safely disabled to prevent unsolicited API errors.
 
 ---
+## 4. Integrated Log Terminal (Connection Logs)
 
-## 4. Latency & Performance Analysis via REST
+To audit connection handshakes, REST API payloads, and system warnings, CPM features a dedicated professional log terminal:
 
-To maximize system stability, avoid connection dropouts, and respect browser CORS constraints, CPM has standardized all data collection (balances, positions, and ticker rates) using high-performance **REST Polling** (periodic HTTP queries).
-
-Under the **API Keys** tab, you can inspect visual connection diagnostics:
-- **Latency Sparklines**: A continuous mini-chart measuring the round-trip ping time in milliseconds (ms) of REST requests between your browser (via our secure local proxy) and the exchange servers.
-- **WebSocket Isolation**: WebSockets are kept isolated exclusively inside the **API Tester** tool (used only for development, connectivity sanity checks, and debugging). All main client dashboard pages operate over highly reliable HTTP REST connections.
-
----
-
-## 5. Integrated Log Terminal (Connection Logs)
-
-To audit connection handshakes, REST API payloads, and system warnings, CPM features a modular professional terminal:
-
-1. Scroll down to the bottom of the **API Keys** tab to inspect the docked terminal, or view it as an independent screen under **Connection Logs** in the sidebar.
+1. **Dedicated Access**: Access the **Connection Logs** tab directly from the sidebar to view the full terminal interface.
 2. **Zero-Leak Masking**: The logger automatically intercepts and redacts any private API keys, secrets, or passphrases, rendering safe friendly logs for support audits.
-3. **Semantic Log Categorization**:
+3. **Semantic Log Categorization**: 
    - `SYSTEM`: Internal state machine startups and routing logs.
    - `DATA`: Feeds for REST query status, account updates, and balance states.
    - `WARN` / `ERROR`: Alerts for network timeouts, CORS issues, or credential rejections.
 4. **Local Regex Filter**: Easily search logs for specific tickers (e.g. `BTC`) or raw event codes.
 
 ---
+## 5. Synchronization & Cache Settings
 
-## 6. Advanced Synchronization with IndexedDB Caching
+To ensure lightning-fast load times and prevent exchanges from blocking your access due to rate limiting, the application saves your history of positions, orders, and funding fees locally in your browser (Cache).
 
-To circumvent rate-limiting bans (429 errors) and ensure sub-second rendering speeds, CPM uses a **Stale-While-Revalidate (SWR)** caching approach:
-
-- **IndexedDB Database**: CPM establishes a local database (`crypto-dashboard-cache`) inside your browser to persist massive histories of orders and closed positions.
-- **SWR Hydration**: On screen entry, the cached data is displayed instantly to avoid empty screens, while a background REST request quietly checks and merges any missing records since your last session.
-- **Automatic Arithmetic Normalization (Linear vs. Inverse)**: CPM dynamically identifies whether an active/historical position or order uses Linear (USDT/USDC-M) or Inverse (Coin-M) margins. It seamlessly converts raw contract sizes into exact base asset quantities (e.g., BTC) and calculates correct USD values (Notional USD), bypassing bloated or confusing values from native exchange APIs.
-- **OKX Dual-Wallet Ingestion (Trading & Funding)**: The balance system has been extended to pull assets concurrently from both the OKX Unified Trading account and the passive Funding Wallet. Funding assets are dynamically valued based on market rates and aggregated into your net equity and wallet balance, displayed on the balances table with a green `FUNDING` tag.
-- **Strict Response Type-Safety**: Raw payloads retrieved from broker servers are strictly typed (`src/types/raw.ts`) inside the `raw` property, ensuring ultimate compilation type safety and runtime stability during background mathematical conversions.
-- **Custom Polling Interval**: Navigate to the **Settings** page to fine-tune how frequently background sync cycles run (default is 15 minutes).
+Through the **Settings** screen in the sidebar, you can easily control how the application behaves:
+- **Update Intervals (Polling)**: Adjust how often the system fetches new orders, positions, or funding fees. This is useful if you want faster updates or prefer to reduce network consumption.
+- **Clear Cache (Clear Data)**: If you feel the application is displaying outdated data, stuck orders, or inconsistencies after trading directly on the exchange, you can use the clear cache buttons (e.g., *Clear Orders Cache*, *Clear Funding Cache*). This will force the application to redownload your entire history on the next synchronization.
+- **Simulation Mode**: Toggle the mock data simulation on or off at any time to test the interface without using real API keys.
 
 ---
-
-## 7. Screens & Daily Usability Guide
+## 6. Screens & Daily Usability Guide
 
 ### 🏠 Dashboard Home
 Your central intelligence center structured in a responsive masonry grid:
@@ -116,12 +101,37 @@ Monitor your active derivatives contracts in real-time:
 - **Operational Metrics**: Displays your global **Win Rate %**, **Profit Factor**, Average profit/loss margins, and your biggest profitable trade.
 - **Order Reports**: Search open or historical orders with regex filters, and expand rows to review exchange order IDs and cumulative commissions (fees).
 
+### 🔄 Trade History
+A detailed view of all individual order executions and filled trades across your connected exchanges.
+- **Complete Execution Log**: Track the exact fill price, size, side (Buy/Sell), and role (Taker/Maker) for every single transaction.
+- **Fee Auditing**: Verify exactly how much you paid or received in trading fees per execution, highlighting the specific fee currency.
+- **Search & Filters**: Use the search bar to quickly find trades for a specific ticker symbol or filter results by exchange.
+
+### 📊 PnL by Symbol
+A managerial reporting tool to analyze the individual performance of every traded asset.
+- **Aggregated Metrics**: View Total Gross Profit, Total Gross Loss, Net PnL, Win Rate, and Profit Factor isolated for a specific asset (e.g., BTC, ETH).
+- **Performance Ranking**: Quickly discover which assets are your most profitable and which are generating consistent losses by sorting the data columns.
+- **Deep Analysis**: Identify whether the majority of your positive outcome on an asset stems from Long or Short operations, allowing you to optimize your strategies.
+
+### 💸 Funding Fees Dashboard
+A comprehensive dashboard providing a unified view of real-time and historical funding rates across Bybit, Bitget, and OKX (USDT-M and COIN-M perpetual swaps). 
+- **Multi-Period Analysis**: Analyze funding rates across different timeframes including Next Funding, Last Settlement, Today, Current Month, Last Month, 3 Months, 6 Months, and 1 Year.
+- **Smart Caching**: Uses IndexedDB to cache historical funding data. Once the full history (~400 days) is synced, the app performs ultra-fast incremental updates, only downloading new records.
+- **Visual Indicators**: Flashing animations for rate changes and clear tooltips explaining the direction of the funding fee (e.g., Longs paying Shorts).
+- *Note on OKX*: OKX API restricts historical data to approximately 3 months. Therefore, OKX data is excluded from the 6M and 1Y averages to ensure accurate market representations.
+
+### 📜 Bybit Transactions Log
+A specialized tracking tool specifically built for Bybit users to download, store, and analyze the full raw transaction log directly from the exchange.
+- **Deep Syncing**: Downloads your entire history of settlements, funding fees paid/received, and trading fees into the local IndexedDB cache.
+- **Realized PnL Calculation**: Computes exact realized gains and losses based on cash flow, funding, and fees.
+- **Incremental Updates**: Performs smart incremental syncs after the initial download, keeping your data up-to-date with minimal API usage.
+
 ### 👁 Privacy Mode
 Toggle the **Eye Icon** in the sidebar header to hide all numerical balances, sizes, and PnL metrics behind secure `***` masks. This is designed for safe streaming, sharing, or public presentations.
 
 ---
 
-## 8. Exporting Operational Reports
+## 7. Exporting Operational Reports
 
 When auditing accounts or archiving tax reports, navigate to **Reports** in the sidebar to download:
 - **PDF Export**: Generates a clean, print-friendly file with custody distributions and key performance stats.
@@ -129,16 +139,13 @@ When auditing accounts or archiving tax reports, navigate to **Reports** in the 
 
 ---
 
-## 9. Frequently Asked Questions (FAQ)
+## 8. Frequently Asked Questions (FAQ)
 
 ### My API Key status is failing. How can I fix it?
 1. Verify that there are no leading or trailing blank spaces in the copied keys.
 2. Confirm you selected the correct exchange in the dropdown menu.
 3. For **OKX** and **Bitget**, make sure you typed the exact **Passphrase** configured during key creation.
 4. Ensure your key has active **Read** permissions.
-
-### Does high latency affect my current orders?
-No. High latency only means the display terminal updates slightly slower. Your actual orders and positions remain active and execute securely on the exchange servers.
 
 ### Can I run CPM on my mobile device?
 Yes! CPM's interface is completely responsive, reorganizing charts and complex rows for optimal touch screen tracking.
