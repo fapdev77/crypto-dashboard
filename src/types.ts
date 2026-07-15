@@ -164,7 +164,7 @@ export interface FundingFeeAggregated {
   currentPrice?: number;
   nextFundingRate?: number;
   nextFundingTime?: number;
-  lastFundingRate: number;
+  lastFundingRate?: number;
   todaySum: number;
   currentMonthSum: number;
   lastMonthSum: number;

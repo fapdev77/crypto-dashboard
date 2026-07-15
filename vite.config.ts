@@ -19,24 +19,6 @@ export default defineConfig(({ mode }) => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg}'], // Cacheia os assets básicos
           maximumFileSizeToCacheInBytes: 5000000,
-          runtimeCaching: [
-            {
-              urlPattern: /^https:\/\/api\.bybit\.com\/.*/,
-              handler: 'NetworkOnly',
-            },
-            {
-              urlPattern: /^https:\/\/api\.bitget\.com\/.*/,
-              handler: 'NetworkOnly',
-            },
-            {
-              urlPattern: /^https:\/\/(www\.)?okx\.com\/.*/,
-              handler: 'NetworkOnly',
-            },
-            {
-              urlPattern: /^\/api\/proxy/,
-              handler: 'NetworkOnly',
-            },
-          ],
         },
       }),
     ],

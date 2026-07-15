@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
+import { useFundingStore } from '../store/fundingStore';
 import { clearAllCache, getCacheSize, getAssetMetadataCacheSize, clearAssetMetadataCache, clearFundingFeesCache } from '../services/historyCache';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import {
@@ -105,7 +106,11 @@ export function Settings() {
     setIsClearingFunding(true);
     try {
       await clearFundingFeesCache();
-      toast.success('Funding fees cache cleared', { id: 'funding-cache-clear' });
+      // Reset the sync guard so the next useFundingSync cycle triggers a full re-sync.
+      useFundingStore.getState().setLastHistoryFetch(0);
+      // Notify any mounted funding sync hook to start syncing immediately.
+      window.dispatchEvent(new CustomEvent('funding-cache-cleared'));
+      toast.success('Funding cache cleared — historical sync will start in background.', { id: 'funding-cache-clear' });
     } catch (e: any) {
       LogManager.error('Settings', 'Failed to clear funding cache:', e);
       toast.error(`Failed to clear funding cache: ${e.message || 'Unknown error'}`, { id: 'err-funding-cache-clear' });

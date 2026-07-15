@@ -42,7 +42,7 @@ export function useFundingData() {
         instrumentType: cr.instrumentType,
         nextFundingRate: cr.fundingRate,
         nextFundingTime: cr.nextFundingTime,
-        lastFundingRate: 0,
+        lastFundingRate: undefined,
         todaySum: 0,
         currentMonthSum: 0,
         lastMonthSum: 0,
@@ -61,7 +61,8 @@ export function useFundingData() {
     
     const threeMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 3, 1).getTime();
     const sixMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 6, 1).getTime();
-    const oneYearAgoStart = new Date(now.getFullYear() - 1, now.getMonth(), 1).getTime();
+    // Anchored to the last complete month (now.getMonth() - 1), not the current month
+    const oneYearAgoStart = new Date(now.getFullYear() - 1, now.getMonth() - 1, 1).getTime();
     
     // Sort history descending
     const sortedHistory = [...history].sort((a, b) => b.timestamp - a.timestamp);
@@ -90,7 +91,7 @@ export function useFundingData() {
       const rate = fee.fundingRate; // we just sum the percentages
       
       // If it's the very first historical record (most recent), set it as last funding rate
-      if (agg.lastFundingRate === 0) {
+      if (agg.lastFundingRate === undefined) {
         agg.lastFundingRate = rate;
       }
       

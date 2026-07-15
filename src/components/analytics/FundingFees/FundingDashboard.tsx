@@ -4,7 +4,7 @@ import { useFundingStore } from '../../../store/fundingStore';
 import { useFundingSync } from '../../../hooks/useFundingSync';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { FundingFeeAggregated } from '../../../types';
-import { Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Clock, Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
 import { AppTooltip } from '../../ui/Tooltip';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
@@ -13,7 +13,6 @@ import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { Pagination } from '../../ui/Pagination';
 import { usePagination } from '../../../hooks/usePagination';
 import clsx from 'clsx';
-import { format } from 'date-fns';
 
 const COINS_PER_PAGE = 25;
 
@@ -26,8 +25,17 @@ const getBaseCoin = (symbol: string) => {
 
 const formatPercent = (val: number) => (val * 100).toFixed(4) + '%';
 
+/** Return a Tailwind text-color class based on whether the value is positive, negative, or zero. */
+const OKX_INCOMPLETE_NOTE = 'OKX API limits historical data to ~3 months. Values beyond 3 months are from our local cache and may be partial until sufficient data accumulates.';
+const fundingColor = (val: number | undefined): string => {
+  if (val === undefined) return 'text-[#8E9299]';
+  if (val > 0) return 'text-green-400';
+  if (val < 0) return 'text-red-400';
+  return 'text-white';
+};
+
 /** Text shared across tooltips explaining what each time-based column means. */
-const HISTORICAL_NOTE = 'Excludes the current month.';
+const HISTORICAL_NOTE = `⚠ Does NOT include the current month — only completed months are counted.`;
 
 /** Tooltip content for each rate column header. */
 const COLUMN_TOOLTIPS: Record<string, string> = {
@@ -41,8 +49,8 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
     'Cumulative funding rate sum for the current calendar month. Includes today.',
   lastMonth: `Cumulative funding rate sum for the previous calendar month. ${HISTORICAL_NOTE}`,
   last3Months: `Cumulative funding rate sum over the last 3 calendar months. ${HISTORICAL_NOTE}`,
-  last6Months: `Cumulative funding rate sum over the last 6 calendar months. ${HISTORICAL_NOTE}`,
-  oneYear: `Cumulative funding rate sum over the last 12 calendar months. ${HISTORICAL_NOTE}`,
+  last6Months: `Cumulative funding rate sum over the last 6 calendar months. ${HISTORICAL_NOTE} ${OKX_INCOMPLETE_NOTE}`,
+  oneYear: `Cumulative funding rate sum over the last 12 calendar months. ${HISTORICAL_NOTE} ${OKX_INCOMPLETE_NOTE}`,
 };
 
 const ThTooltip = ({ columnKey, children }: { columnKey: string; children: React.ReactNode }) => {
@@ -236,8 +244,9 @@ const FundingTable = ({
                 const isExpanded = expandedCoins[coin];
                 const isFav = favorites.includes(coin);
 
-                const avg = (key: keyof FundingFeeAggregated) => {
-                  const valid = rows.filter(r => r[key] !== undefined && typeof r[key] === 'number');
+                const avg = (key: keyof FundingFeeAggregated, filterFn?: (r: FundingFeeAggregated) => boolean) => {
+                  let valid = rows.filter(r => r[key] !== undefined && typeof r[key] === 'number');
+                  if (filterFn) valid = valid.filter(filterFn);
                   if (valid.length === 0) return undefined;
                   const sum = valid.reduce((acc, r) => acc + (r[key] as number), 0);
                   return sum / valid.length;
@@ -249,8 +258,12 @@ const FundingTable = ({
                 const avgMonth = avg('currentMonthSum');
                 const avgLastMonth = avg('lastMonthSum');
                 const avg3M = avg('last3MonthsSum');
-                const avg6M = avg('last6MonthsSum');
-                const avgYear = avg('yearSum');
+                // Exclude OKX from 6M/1Y averages because their API only returns 3 months of history,
+                // so their values would be identical to 3M and drag down the cross-exchange average.
+                // OKX is excluded from 6M/1Y averages because its API has a hard 3-month limit;
+                // its partial cache values would be systematically lower than full-span exchanges.
+                const avg6M = avg('last6MonthsSum', r => r.exchange !== 'okx');
+                const avgYear = avg('yearSum', r => r.exchange !== 'okx');
 
                 return (
                   <React.Fragment key={coin}>
@@ -294,34 +307,46 @@ const FundingTable = ({
                           ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-90">
+                      <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={avgToday} label="Today cumulative">
-                          {avgToday !== undefined ? formatPercent(avgToday) : '---'}
+                          {avgToday !== undefined ? (
+                            <span className={fundingColor(avgToday)}>{formatPercent(avgToday)}</span>
+                          ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-90">
+                      <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={avgMonth} label="Current month cumulative">
-                          {avgMonth !== undefined ? formatPercent(avgMonth) : '---'}
+                          {avgMonth !== undefined ? (
+                            <span className={fundingColor(avgMonth)}>{formatPercent(avgMonth)}</span>
+                          ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">
+                      <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={avgLastMonth} label="Last month cumulative">
-                          {avgLastMonth !== undefined ? formatPercent(avgLastMonth) : '---'}
+                          {avgLastMonth !== undefined ? (
+                            <span className={fundingColor(avgLastMonth)}>{formatPercent(avgLastMonth)}</span>
+                          ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">
+                      <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={avg3M} label="3-month cumulative">
-                          {avg3M !== undefined ? formatPercent(avg3M) : '---'}
+                          {avg3M !== undefined ? (
+                            <span className={fundingColor(avg3M)}>{formatPercent(avg3M)}</span>
+                          ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">
+                      <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={avg6M} label="6-month cumulative">
-                          {avg6M !== undefined ? formatPercent(avg6M) : '---'}
+                          {avg6M !== undefined ? (
+                            <span className={fundingColor(avg6M)}>{formatPercent(avg6M)}</span>
+                          ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
-                      <td className="px-6 py-3 text-right font-mono text-white opacity-50">
+                      <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={avgYear} label="1-year cumulative">
-                          {avgYear !== undefined ? formatPercent(avgYear) : '---'}
+                          {avgYear !== undefined ? (
+                            <span className={fundingColor(avgYear)}>{formatPercent(avgYear)}</span>
+                          ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
                     </tr>
@@ -357,9 +382,23 @@ const FundingTable = ({
                                   </FundingRateFlash>
                                 </RateTooltip>
                                 {row.nextFundingTime && (
-                                  <AppTooltip description="Estimated time of the next funding settlement.">
-                                    <span className="text-[10px] text-[#8E9299] cursor-help border-b border-dashed border-[#8E9299]/30">
-                                      {format(row.nextFundingTime, 'MM/dd HH:mm')}
+                                  <AppTooltip
+                                    description="Estimated time of the next funding settlement."
+                                    rows={[{
+                                      label: 'Full Date',
+                                      value: new Date(row.nextFundingTime).toLocaleString([], {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit',
+                                      }),
+                                    }]}
+                                  >
+                                    <span className="inline-flex items-center gap-1 text-[10px] text-[#8E9299] cursor-help border-b border-dashed border-[#8E9299]/30">
+                                      <Clock className="w-3 h-3" />
+                                      {new Date(row.nextFundingTime).toLocaleString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                   </AppTooltip>
                                 )}
@@ -367,40 +406,42 @@ const FundingTable = ({
                             ) : <span className="text-[#8E9299]">---</span>}
                           </td>
                           <td className="px-6 py-2 text-right">
-                            <RateTooltip rate={row.lastFundingRate} label="Last settled funding rate">
-                              <span className={row.lastFundingRate > 0 ? "text-green-400" : row.lastFundingRate < 0 ? "text-red-400" : "text-white"}>
-                                {formatPercent(row.lastFundingRate)}
-                              </span>
-                            </RateTooltip>
+                            {row.lastFundingRate !== undefined ? (
+                              <RateTooltip rate={row.lastFundingRate} label="Last settled funding rate">
+                                <span className={row.lastFundingRate > 0 ? "text-green-400" : row.lastFundingRate < 0 ? "text-red-400" : "text-white"}>
+                                  {formatPercent(row.lastFundingRate)}
+                                </span>
+                              </RateTooltip>
+                            ) : <span className="text-[#8E9299]">---</span>}
                           </td>
-                          <td className="px-6 py-2 text-right font-mono text-white/80">
+                          <td className="px-6 py-2 text-right font-mono">
                             <RateTooltip rate={row.todaySum} label="Today cumulative">
-                              {formatPercent(row.todaySum)}
+                              <span className={fundingColor(row.todaySum)}>{formatPercent(row.todaySum)}</span>
                             </RateTooltip>
                           </td>
-                          <td className="px-6 py-2 text-right font-mono text-white/80">
+                          <td className="px-6 py-2 text-right font-mono">
                             <RateTooltip rate={row.currentMonthSum} label="Current month cumulative">
-                              {formatPercent(row.currentMonthSum)}
+                              <span className={fundingColor(row.currentMonthSum)}>{formatPercent(row.currentMonthSum)}</span>
                             </RateTooltip>
                           </td>
-                          <td className="px-6 py-2 text-right font-mono text-white/60">
+                          <td className="px-6 py-2 text-right font-mono">
                             <RateTooltip rate={row.lastMonthSum} label="Last month cumulative">
-                              {row.exchange === 'okx' ? '---' : formatPercent(row.lastMonthSum)}
+                              <span className={fundingColor(row.lastMonthSum)}>{formatPercent(row.lastMonthSum)}</span>
                             </RateTooltip>
                           </td>
-                          <td className="px-6 py-2 text-right font-mono text-white/60">
+                          <td className="px-6 py-2 text-right font-mono">
                             <RateTooltip rate={row.last3MonthsSum} label="3-month cumulative">
-                              {row.exchange === 'okx' ? '---' : formatPercent(row.last3MonthsSum)}
+                              <span className={fundingColor(row.last3MonthsSum)}>{formatPercent(row.last3MonthsSum)}</span>
                             </RateTooltip>
                           </td>
-                          <td className="px-6 py-2 text-right font-mono text-white/60">
+                          <td className="px-6 py-2 text-right font-mono">
                             <RateTooltip rate={row.last6MonthsSum} label="6-month cumulative">
-                              {row.exchange === 'okx' ? '---' : formatPercent(row.last6MonthsSum)}
+                              <span className={fundingColor(row.last6MonthsSum)}>{formatPercent(row.last6MonthsSum)}</span>
                             </RateTooltip>
                           </td>
-                          <td className="px-6 py-2 text-right font-mono text-white/60">
+                          <td className="px-6 py-2 text-right font-mono">
                             <RateTooltip rate={row.yearSum} label="Year cumulative">
-                              {row.exchange === 'okx' ? '---' : formatPercent(row.yearSum)}
+                              <span className={fundingColor(row.yearSum)}>{formatPercent(row.yearSum)}</span>
                             </RateTooltip>
                           </td>
                         </tr>
