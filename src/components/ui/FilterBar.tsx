@@ -12,11 +12,15 @@ export interface FilterBarProps {
     placeholder?: string;
   };
 
+  // Optional component to prepend
+  prepend?: React.ReactNode;
+
   // Exchange Filter
   exchange?: {
     value: string;
     onChange: (val: string) => void;
     labelAll?: string; // Defaults to "All Exchanges"
+    options?: string[]; // If provided, uses these instead of connected activeExchanges
   };
 
   // Account Filter
@@ -71,6 +75,7 @@ export interface FilterBarProps {
 
 export function FilterBar({
   search,
+  prepend,
   exchange,
   account,
   instrument,
@@ -82,10 +87,11 @@ export function FilterBar({
   const { keys } = useApiKeysStore();
   const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
 
-  // Extract unique active exchanges from keys
+  // Extract unique active exchanges from keys or options
   const activeExchanges = useMemo(() => {
+    if (exchange?.options) return exchange.options;
     return Array.from(new Set(keys.filter(k => k.isActive).map(k => k.exchange)));
-  }, [keys]);
+  }, [keys, exchange?.options]);
 
   // Clean value for presentation
   const getExchangeLabel = (val: string) => {
@@ -98,6 +104,9 @@ export function FilterBar({
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 w-full">
       
+      {/* Prepend Component */}
+      {prepend}
+
       {/* 1. Custom Exchange Dropdown */}
       {exchange && (
         <div className="relative z-20">

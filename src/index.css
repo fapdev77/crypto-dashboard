@@ -67,6 +67,24 @@
   100% { transform: scale(1); opacity: 1; }
 }
 
+@keyframes funding-flash-up {
+  0% { background-color: rgba(34, 197, 94, 0.35); box-shadow: 0 0 8px rgba(34, 197, 94, 0.2); }
+  100% { background-color: transparent; box-shadow: none; }
+}
+
+@keyframes funding-flash-down {
+  0% { background-color: rgba(239, 68, 68, 0.35); box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
+  100% { background-color: transparent; box-shadow: none; }
+}
+
+.animate-funding-flash-up {
+  animation: funding-flash-up 0.8s ease-out forwards;
+}
+
+.animate-funding-flash-down {
+  animation: funding-flash-down 0.8s ease-out forwards;
+}
+
 @keyframes marquee {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }

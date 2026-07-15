@@ -1,9 +1,9 @@
 import { openDB, deleteDB, DBSchema, IDBPDatabase } from 'idb';
-import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder, BybitTransactionLogEntry } from '../types';
+import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder, BybitTransactionLogEntry, UnifiedFundingFee } from '../types';
 import { LogManager } from './LogManager';
 
 const DB_NAME = 'crypto-dashboard-cache';
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 const HISTORY_STORE = 'positionHistory';
 const META_STORE = 'cacheMeta';
 const ASSET_META_STORE = 'assetMetadata';
@@ -12,6 +12,8 @@ const ORDER_META_STORE = 'orderCacheMeta';
 const BYBIT_REAL_PNL_STORE = 'bybitRealPnL';
 const BYBIT_TX_LOG_STORE = 'bybit-transaction-log';
 const BYBIT_TX_META_STORE = 'bybit-transaction-meta';
+const FUNDING_FEES_STORE = 'funding-fees';
+const FUNDING_META_STORE = 'funding-meta';
 
 interface CacheDB extends DBSchema {
   positionHistory: {
@@ -86,6 +88,27 @@ interface CacheDB extends DBSchema {
       updatedAt: number;
     };
   };
+  'funding-fees': {
+    key: string; // id
+    value: UnifiedFundingFee;
+    indexes: {
+      'by-exchange': string;
+      'by-symbol': string;
+      'by-timestamp': number;
+      'by-exchange-symbol': string;
+    };
+  };
+  'funding-meta': {
+    key: string; // `${exchange}-${symbol}`
+    value: {
+      id: string;
+      exchange: string;
+      symbol: string;
+      oldestTimestamp: number;
+      latestTimestamp: number;
+      updatedAt: number;
+    };
+  };
 }
 
 let dbInstance: IDBPDatabase<CacheDB> | null = null;
@@ -152,6 +175,22 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
          if (!db.objectStoreNames.contains(BYBIT_TX_META_STORE)) {
            db.createObjectStore(BYBIT_TX_META_STORE, { keyPath: 'connectionId' });
          }
+      }
+
+      if (oldVersion < 9) {
+        if (!db.objectStoreNames.contains(FUNDING_FEES_STORE)) {
+          const fundingStore = db.createObjectStore(FUNDING_FEES_STORE, { keyPath: 'id' });
+          fundingStore.createIndex('by-exchange', 'exchange');
+          fundingStore.createIndex('by-symbol', 'symbol');
+          fundingStore.createIndex('by-timestamp', 'timestamp');
+          // Creating a compound index is not natively supported by a single key path if it's an array for a simple index,
+          // but we can create a secondary field or just filter in memory. Actually we'll use a derived property `exchangeSymbol` if needed,
+          // but we can just use by-symbol since symbol names are mostly unique per exchange, or query by exchange and filter by symbol.
+          // Let's use by-exchange and filter.
+        }
+        if (!db.objectStoreNames.contains(FUNDING_META_STORE)) {
+          db.createObjectStore(FUNDING_META_STORE, { keyPath: 'id' });
+        }
       }
     },
   });
@@ -406,4 +445,68 @@ export async function updateBybitTxLogMeta(
 export async function getBybitTxLogCount(connectionId: string): Promise<number> {
   const db = await getDB();
   return db.countFromIndex(BYBIT_TX_LOG_STORE, 'by-connectionId', connectionId);
+}
+
+// ------------------------------------------------------------------
+// FUNDING FEES CACHE
+// ------------------------------------------------------------------
+
+export async function saveFundingFeesCache(entries: UnifiedFundingFee[]): Promise<void> {
+  if (entries.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction(FUNDING_FEES_STORE, 'readwrite');
+  const store = tx.objectStore(FUNDING_FEES_STORE);
+  for (const entry of entries) {
+    await store.put(entry);
+  }
+  await tx.done;
+}
+
+export async function getFundingFeesBySymbol(exchange: string, symbol: string): Promise<UnifiedFundingFee[]> {
+  const db = await getDB();
+  // Using by-symbol index, then filtering by exchange
+  const allForSymbol = await db.getAllFromIndex(FUNDING_FEES_STORE, 'by-symbol', symbol);
+  return allForSymbol.filter(e => e.exchange === exchange).sort((a, b) => b.timestamp - a.timestamp);
+}
+
+export async function getAllFundingFees(): Promise<UnifiedFundingFee[]> {
+  const db = await getDB();
+  return db.getAll(FUNDING_FEES_STORE);
+}
+
+export async function clearFundingFeesCache(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([FUNDING_FEES_STORE, FUNDING_META_STORE], 'readwrite');
+  await tx.objectStore(FUNDING_FEES_STORE).clear();
+  await tx.objectStore(FUNDING_META_STORE).clear();
+  await tx.done;
+}
+
+export async function getFundingMeta(exchange: string, symbol: string): Promise<{
+  id: string;
+  exchange: string;
+  symbol: string;
+  oldestTimestamp: number;
+  latestTimestamp: number;
+  updatedAt: number;
+} | undefined> {
+  const db = await getDB();
+  return db.get(FUNDING_META_STORE, `${exchange}-${symbol}`);
+}
+
+export async function updateFundingMeta(
+  exchange: string,
+  symbol: string,
+  oldestTimestamp: number,
+  latestTimestamp: number
+): Promise<void> {
+  const db = await getDB();
+  await db.put(FUNDING_META_STORE, {
+    id: `${exchange}-${symbol}`,
+    exchange,
+    symbol,
+    oldestTimestamp,
+    latestTimestamp,
+    updatedAt: Date.now(),
+  });
 }
