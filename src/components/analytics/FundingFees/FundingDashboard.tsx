@@ -26,7 +26,7 @@ const getBaseCoin = (symbol: string) => {
 const formatPercent = (val: number) => (val * 100).toFixed(4) + '%';
 
 /** Return a Tailwind text-color class based on whether the value is positive, negative, or zero. */
-const OKX_INCOMPLETE_NOTE = 'OKX API limits historical data to ~3 months. Values beyond 3 months are from our local cache and may be partial until sufficient data accumulates.';
+const INCOMPLETE_NOTE = 'OKX and Bitget APIs limit historical data to ~3 months. Values beyond 3 months are from our local cache and may be partial until sufficient data accumulates.';
 const fundingColor = (val: number | undefined): string => {
   if (val === undefined) return 'text-[#8E9299]';
   if (val > 0) return 'text-green-400';
@@ -49,8 +49,8 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
     'Cumulative funding rate sum for the current calendar month. Includes today.',
   lastMonth: `Cumulative funding rate sum for the previous calendar month. ${HISTORICAL_NOTE}`,
   last3Months: `Cumulative funding rate sum over the last 3 calendar months. ${HISTORICAL_NOTE}`,
-  last6Months: `Cumulative funding rate sum over the last 6 calendar months. ${HISTORICAL_NOTE} ${OKX_INCOMPLETE_NOTE}`,
-  oneYear: `Cumulative funding rate sum over the last 12 calendar months. ${HISTORICAL_NOTE} ${OKX_INCOMPLETE_NOTE}`,
+  last6Months: `Cumulative funding rate sum over the last 6 calendar months. ${HISTORICAL_NOTE} ${INCOMPLETE_NOTE}`,
+  oneYear: `Cumulative funding rate sum over the last 12 calendar months. ${HISTORICAL_NOTE} ${INCOMPLETE_NOTE}`,
 };
 
 const ThTooltip = ({ columnKey, children }: { columnKey: string; children: React.ReactNode }) => {
@@ -109,13 +109,29 @@ const FundingRateFlash = ({
 const RateTooltip = ({
   rate,
   label,
+  missingReason,
   children,
 }: {
   rate: number | undefined;
   label: string;
+  missingReason?: string;
   children: React.ReactNode;
 }) => {
-  if (rate === undefined) return <>{children}</>;
+  if (rate === undefined) {
+    if (missingReason) {
+      return (
+        <AppTooltip
+          description={missingReason}
+          rows={[]}
+          side="top"
+          align="center"
+        >
+          <span className="cursor-help text-[#8E9299]">{children}</span>
+        </AppTooltip>
+      );
+    }
+    return <>{children}</>;
+  }
   const isPositive = rate > 0;
   const isNegative = rate < 0;
   const whoPaid = isPositive
@@ -142,10 +158,12 @@ const RateTooltip = ({
 const FundingTable = ({ 
   title, 
   data, 
+  filterKey,
   defaultExpanded = true 
 }: { 
   title: string, 
   data: FundingFeeAggregated[], 
+  filterKey?: string,
   defaultExpanded?: boolean 
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -168,12 +186,13 @@ const FundingTable = ({
   }, [data]);
 
   // ── Pagination ──
+  // Only reset pagination when explicit filters change, not when data refreshes
   const {
     page,
     setPage,
     paginated: paginatedGroups,
     totalItems: groupsTotal,
-  } = usePagination(groupedByCoin, COINS_PER_PAGE, [data]);
+  } = usePagination(groupedByCoin, COINS_PER_PAGE, [filterKey]);
 
   const paginationId = `funding-${title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
 
@@ -258,12 +277,8 @@ const FundingTable = ({
                 const avgMonth = avg('currentMonthSum');
                 const avgLastMonth = avg('lastMonthSum');
                 const avg3M = avg('last3MonthsSum');
-                // Exclude OKX from 6M/1Y averages because their API only returns 3 months of history,
-                // so their values would be identical to 3M and drag down the cross-exchange average.
-                // OKX is excluded from 6M/1Y averages because its API has a hard 3-month limit;
-                // its partial cache values would be systematically lower than full-span exchanges.
-                const avg6M = avg('last6MonthsSum', r => r.exchange !== 'okx');
-                const avgYear = avg('yearSum', r => r.exchange !== 'okx');
+                const avg6M = avg('last6MonthsSum');
+                const avgYear = avg('yearSum');
 
                 return (
                   <React.Fragment key={coin}>
@@ -435,13 +450,17 @@ const FundingTable = ({
                             </RateTooltip>
                           </td>
                           <td className="px-6 py-2 text-right font-mono">
-                            <RateTooltip rate={row.last6MonthsSum} label="6-month cumulative">
-                              <span className={fundingColor(row.last6MonthsSum)}>{formatPercent(row.last6MonthsSum)}</span>
+                            <RateTooltip rate={row.last6MonthsSum} label="6-month cumulative" missingReason={row.last6MonthsSum === undefined ? (row.exchange === 'okx' || row.exchange === 'bitget' ? `The ${row.exchange.toUpperCase()} API limits historical data to ~3 months. Data will accumulate locally over time.` : undefined) : undefined}>
+                              {row.last6MonthsSum !== undefined ? (
+                                <span className={fundingColor(row.last6MonthsSum)}>{formatPercent(row.last6MonthsSum)}</span>
+                              ) : <span className="text-[#8E9299]">---</span>}
                             </RateTooltip>
                           </td>
                           <td className="px-6 py-2 text-right font-mono">
-                            <RateTooltip rate={row.yearSum} label="Year cumulative">
-                              <span className={fundingColor(row.yearSum)}>{formatPercent(row.yearSum)}</span>
+                            <RateTooltip rate={row.yearSum} label="Year cumulative" missingReason={row.yearSum === undefined ? (row.exchange === 'okx' || row.exchange === 'bitget' ? `The ${row.exchange.toUpperCase()} API limits historical data to ~3 months. Data will accumulate locally over time.` : undefined) : undefined}>
+                              {row.yearSum !== undefined ? (
+                                <span className={fundingColor(row.yearSum)}>{formatPercent(row.yearSum)}</span>
+                              ) : <span className="text-[#8E9299]">---</span>}
                             </RateTooltip>
                           </td>
                         </tr>
@@ -586,6 +605,7 @@ export const FundingDashboard = () => {
               key={groupTitle} 
               title={groupTitle} 
               data={rows} 
+              filterKey={`${searchTerm}-${exchangeFilter}-${instrumentFilter}-${showFavoritesOnly}`}
               defaultExpanded={expandAll} 
             />
           ))}

@@ -31,7 +31,7 @@ export function useFundingData() {
   }, [isSyncing, syncProgress]);
 
   const aggregatedData = useMemo(() => {
-    const map = new Map<string, FundingFeeAggregated>();
+    const map = new Map<string, FundingFeeAggregated & { oldestRecordTs?: number }>();
     
     // Initialize map with current rates
     currentRates.forEach(cr => {
@@ -48,7 +48,8 @@ export function useFundingData() {
         lastMonthSum: 0,
         last3MonthsSum: 0,
         last6MonthsSum: 0,
-        yearSum: 0
+        yearSum: 0,
+        oldestRecordTs: undefined
       });
     });
     
@@ -64,11 +65,8 @@ export function useFundingData() {
     // Anchored to the last complete month (now.getMonth() - 1), not the current month
     const oneYearAgoStart = new Date(now.getFullYear() - 1, now.getMonth() - 1, 1).getTime();
     
-    // Sort history descending
-    const sortedHistory = [...history].sort((a, b) => b.timestamp - a.timestamp);
-    
     // Group history by symbol
-    sortedHistory.forEach(fee => {
+    history.forEach(fee => {
       const key = `${fee.exchange}-${fee.symbol}`;
       let agg = map.get(key);
       if (!agg) {
@@ -76,23 +74,32 @@ export function useFundingData() {
           exchange: fee.exchange,
           symbol: fee.symbol,
           instrumentType: fee.instrumentType,
-          lastFundingRate: fee.fundingRate,
+          lastFundingRate: undefined, // Will be set below
           todaySum: 0,
           currentMonthSum: 0,
           lastMonthSum: 0,
           last3MonthsSum: 0,
           last6MonthsSum: 0,
-          yearSum: 0
-        };
+          yearSum: 0,
+          oldestRecordTs: undefined,
+          highestRecordTs: undefined
+        } as FundingFeeAggregated & { oldestRecordTs?: number, highestRecordTs?: number };
         map.set(key, agg);
       }
       
       const ts = fee.timestamp;
-      const rate = fee.fundingRate; // we just sum the percentages
+      const rate = fee.fundingRate;
       
-      // If it's the very first historical record (most recent), set it as last funding rate
-      if (agg.lastFundingRate === undefined) {
+      // Track the most recent historical record to use as lastFundingRate
+      const currentHighestTs = (agg as any).highestRecordTs ?? -1;
+      if (ts > currentHighestTs) {
+        (agg as any).highestRecordTs = ts;
         agg.lastFundingRate = rate;
+      }
+
+      const currentOldestTs = agg.oldestRecordTs ?? Infinity;
+      if (ts < currentOldestTs) {
+        agg.oldestRecordTs = ts;
       }
       
       if (ts >= todayStart) {
@@ -110,15 +117,32 @@ export function useFundingData() {
           agg.last3MonthsSum += rate;
         }
         if (ts >= sixMonthsAgoStart) {
-          agg.last6MonthsSum += rate;
+          if (agg.last6MonthsSum !== undefined) agg.last6MonthsSum += rate;
         }
         if (ts >= oneYearAgoStart) {
-          agg.yearSum += rate;
+          if (agg.yearSum !== undefined) agg.yearSum += rate;
         }
       }
     });
     
-    return Array.from(map.values());
+    return Array.from(map.values()).map(agg => {
+      // For Bitget and OKX, the API only goes back ~3 months.
+      // If we haven't accumulated enough data in the local cache yet, we should
+      // not display a partial sum for 6 months or 1 year.
+      if (agg.exchange === 'okx' || agg.exchange === 'bitget') {
+        const oldest = agg.oldestRecordTs ?? now.getTime();
+        if (oldest > sixMonthsAgoStart) {
+          agg.last6MonthsSum = undefined;
+        }
+        if (oldest > oneYearAgoStart) {
+          agg.yearSum = undefined;
+        }
+      }
+      
+      // Clean up internal properties
+      const { oldestRecordTs, highestRecordTs, ...rest } = agg as any;
+      return rest as FundingFeeAggregated;
+    });
   }, [currentRates, history]);
 
   return { aggregatedData, isLoading };

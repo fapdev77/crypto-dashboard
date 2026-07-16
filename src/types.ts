@@ -169,8 +169,8 @@ export interface FundingFeeAggregated {
   currentMonthSum: number;
   lastMonthSum: number;
   last3MonthsSum: number;
-  last6MonthsSum: number;
-  yearSum: number;
+  last6MonthsSum?: number;
+  yearSum?: number;
 }
 
 export interface BybitTransactionLogEntry {
