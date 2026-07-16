@@ -338,18 +338,11 @@ export class FundingService {
         );
 
         let minTimestampInBatch = Infinity;
-        let hadPartialPage = false;
 
         for (const result of results) {
-          if (result.status === 'rejected') {
-            hadPartialPage = true;
-            continue;
-          }
+          if (result.status === 'rejected') continue;
           const data = result.value;
-          if (!data || data.code !== '00000' || !data.data || data.data.length === 0) {
-            hadPartialPage = true;
-            continue;
-          }
+          if (!data || data.code !== '00000' || !data.data || data.data.length === 0) continue;
 
           const entries = data.data.map((item: any) => ({
             id: `bitget-${symbol}-${item.fundingTime || item.settleTime}`,
@@ -367,17 +360,26 @@ export class FundingService {
           }
 
           allEntries.push(...entries);
-
-          if (entries.length < pageSize) {
-            hadPartialPage = true;
-          }
         }
 
         if (minTimestampInBatch <= targetStartTime) {
           reachedTargetDepth = true;
         }
 
-        if (hadPartialPage || reachedTargetDepth) break;
+        // ── Stop conditions for Bitget full fetch ──
+        // 1. reachedTargetDepth: cache now spans the full 400-day target → done
+        // 2. NO page in this batch returned any data → API is exhausted, stop
+        //
+        // NOTE: we do NOT break on transient single-page errors (rate limiting,
+        // network glitch) — doing so would cause a single failed request to abort
+        // the entire 15-page fetch, leaving the cache artificially shallow (~3 months).
+        // The loop is bounded by MAX_PAGES (15) so it cannot run forever.
+        const anyPageHadData = results.some(r =>
+          r.status === 'fulfilled' &&
+          r.value && r.value.code === '00000' &&
+          r.value.data && r.value.data.length > 0
+        );
+        if (!anyPageHadData || reachedTargetDepth) break;
       }
     }
 

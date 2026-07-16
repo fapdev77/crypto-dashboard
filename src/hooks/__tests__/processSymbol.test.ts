@@ -136,7 +136,7 @@ describe('processSymbol', () => {
     spy.mockRestore();
   });
 
-  // ── Scenario 4: Bybit/Bitget fresh + deep enough → skip ─────
+  // ── Scenario 4: Bybit/Bitget/OKX fresh + deep enough → skip ─
 
   it('Scenario 4a: should skip Bybit when fresh and deep enough', async () => {
     const latestTs = NOW - 1000; // fresh (< 8h)
@@ -152,10 +152,9 @@ describe('processSymbol', () => {
     spy.mockRestore();
   });
 
-  it('Scenario 4b: should skip Bitget when fresh and deep enough', async () => {
+  it('Scenario 4b: should skip Bitget when fresh (freshness-only, like OKX)', async () => {
     const latestTs = NOW - 1000;
-    const oldestTs = NOW - 1000 - TARGET_DEPTH_MS - 1;
-    mockGetFundingMeta.mockResolvedValue(makeMeta(oldestTs, latestTs, 'bitget'));
+    mockGetFundingMeta.mockResolvedValue(makeMeta(0, latestTs, 'bitget'));
     const spy = vi.spyOn(FundingService, 'fetchFundingHistory');
 
     await processSymbol(makeRate('bitget'), NOW);
@@ -164,7 +163,7 @@ describe('processSymbol', () => {
     spy.mockRestore();
   });
 
-  // ── Scenario 5: Bybit/Bitget stale + deep enough → doIncrementalFetch ─
+  // ── Scenario 5: Bybit stale + deep enough → doIncrementalFetch ─
 
   it('Scenario 5a: should doIncrementalFetch for Bybit when stale but deep enough', async () => {
     const latestTs = NOW - FUNDING_CYCLE_MS - 1; // stale (> 8h ago)
@@ -184,8 +183,8 @@ describe('processSymbol', () => {
     spy.mockRestore();
   });
 
-  it('Scenario 5b: should doIncrementalFetch for Bitget when stale but deep enough', async () => {
-    const latestTs = NOW - FUNDING_CYCLE_MS - 1;
+  it('Scenario 5b: should doFullFetch for Bitget when stale (freshness-only, like OKX)', async () => {
+    const latestTs = NOW - FUNDING_CYCLE_MS - 1; // stale (> 8h ago)
     const oldestTs = NOW - FUNDING_CYCLE_MS - 1 - TARGET_DEPTH_MS;
     mockGetFundingMeta.mockResolvedValue(makeMeta(oldestTs, latestTs, 'bitget'));
     const spy = vi.spyOn(FundingService, 'fetchFundingHistory');
@@ -193,7 +192,12 @@ describe('processSymbol', () => {
 
     await processSymbol(makeRate('bitget'), NOW);
 
-    expect(spy).toHaveBeenCalledWith('bitget', 'BTCUSDT', 'USDT-M', 200, latestTs);
+    // Should fetch WITHOUT sinceTimestamp (full fetch, not incremental)
+    expect(spy).toHaveBeenCalledWith('bitget', 'BTCUSDT', 'USDT-M', 200);
+    expect(mockSaveFundingFeesCache).toHaveBeenCalled();
+    // Should preserve oldest depth (Math.min of existing vs fetched)
+    const [, , updatedOldest] = mockUpdateFundingMeta.mock.calls[0];
+    expect(updatedOldest).toBe(oldestTs);
     spy.mockRestore();
   });
 
@@ -213,7 +217,7 @@ describe('processSymbol', () => {
     spy.mockRestore();
   });
 
-  // ── Scenario 6: Bybit/Bitget not deep enough → doFullFetch ──
+  // ── Scenario 6: Bybit not deep enough → doFullFetch ──────────
 
   it('Scenario 6a: should doFullFetch for Bybit when not deep enough (even if fresh)', async () => {
     const latestTs = NOW - 1000; // fresh
@@ -231,7 +235,7 @@ describe('processSymbol', () => {
     spy.mockRestore();
   });
 
-  it('Scenario 6b: should doFullFetch for Bitget when not deep enough and stale', async () => {
+  it('Scenario 6b: should doFullFetch for Bitget when stale (regardless of depth)', async () => {
     const latestTs = NOW - FUNDING_CYCLE_MS - 1; // stale
     const oldestTs = NOW - 100 * 24 * 60 * 60 * 1000; // only 100d
     mockGetFundingMeta.mockResolvedValue(makeMeta(oldestTs, latestTs, 'bitget'));
@@ -241,6 +245,7 @@ describe('processSymbol', () => {
     await processSymbol(makeRate('bitget'), NOW);
 
     expect(spy).toHaveBeenCalledWith('bitget', 'BTCUSDT', 'USDT-M', 200);
+    expect(mockSaveFundingFeesCache).toHaveBeenCalled();
     spy.mockRestore();
   });
 

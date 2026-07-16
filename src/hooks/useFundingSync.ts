@@ -17,8 +17,8 @@ const FUNDING_CYCLE_MS = 8 * 60 * 60 * 1000; // 8 hours
 /** Minimum data span (ms) before we consider the cache deep enough and stop refetching.
  *  ~400 days ensures last6Months and 1-year columns are meaningful.
  *  Bybit: startTime=400d ago + 10 pages × 200 records → full 400-day span.
- *  Bitget: 15 pages × 100 records → ~500 days.
- *  OKX: api limit ~3 months; accumulates over time in cache (freshness-only check). */
+ *  Bitget: api limit ~3 months (similar to OKX); accumulates over time in cache.
+ *  OKX:   api limit ~3 months; accumulates over time in cache (freshness-only check). */
 const TARGET_DEPTH_MS = 400 * 24 * 60 * 60 * 1000;
 
 /** Number of symbols to fetch in parallel during historical sync. */
@@ -52,18 +52,18 @@ export async function processSymbol(rate: CurrentFundingRate, now: number): Prom
       const isDeepEnough = spanMs >= TARGET_DEPTH_MS;
       const isFresh = (now - meta.latestTimestamp) < FUNDING_CYCLE_MS;
 
-      if (rate.exchange === 'okx') {
-        // OKX: freshness-only (API never returns > 3 months)
+      if (rate.exchange === 'okx' || rate.exchange === 'bitget') {
+        // OKX/Bitget: freshness-only (API never returns > 3 months)
         if (isFresh) return;
         await doFullFetch(rate, meta.oldestTimestamp, meta.latestTimestamp);
       } else if (isFresh && isDeepEnough) {
-        // Bybit/Bitget: fresh + deep → nothing to do
+        // Bybit: fresh + deep → nothing to do
         return;
       } else if (!isFresh && isDeepEnough) {
-        // Bybit/Bitget: stale + deep → incremental fetch (just new records)
+        // Bybit: stale + deep → incremental fetch (just new records)
         await doIncrementalFetch(rate, meta.latestTimestamp, meta.oldestTimestamp);
       } else {
-        // Bybit/Bitget: not deep enough yet → full fetch (accumulate depth)
+        // Bybit: not deep enough yet → full fetch (accumulate depth)
         await doFullFetch(rate, meta.oldestTimestamp, meta.latestTimestamp);
       }
     }
