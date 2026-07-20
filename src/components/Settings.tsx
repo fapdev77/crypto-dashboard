@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useFundingStore } from '../store/fundingStore';
-import { clearAllCache, getCacheSize, getAssetMetadataCacheSize, clearAssetMetadataCache, clearFundingFeesCache } from '../services/historyCache';
+import { clearAllCache, getCacheSize, getAssetMetadataCacheSize, clearAssetMetadataCache, clearFundingSummariesCache } from '../services/historyCache';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import {
   Database, Trash2, CheckCircle2, Loader2, RefreshCw,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { LogManager } from '../services/LogManager';
 import { AppTooltip } from './ui/Tooltip';
+import { FundingSyncTimingPanel } from './sync/FundingSyncTimingPanel';
 
 export function Settings() {
   const {
@@ -105,7 +106,7 @@ export function Settings() {
   const handleClearFundingCache = async () => {
     setIsClearingFunding(true);
     try {
-      await clearFundingFeesCache();
+      await clearFundingSummariesCache();
       // Reset the sync guard so the next useFundingSync cycle triggers a full re-sync.
       useFundingStore.getState().setLastHistoryFetch(0);
       // Notify any mounted funding sync hook to start syncing immediately.
@@ -448,26 +449,26 @@ export function Settings() {
             {/* History Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <AppTooltip description="Sets the interval for downloading historical funding fees for the tables in the background.">
+                <AppTooltip description="Controls how often a full history sync is allowed after page load. Auto-sync is triggered 1 minute after each funding settlement (every 8h). This interval acts as a minimum cooldown for additional syncs when the page is reloaded mid-cycle.">
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">History Fetch Interval</h4>
                 </AppTooltip>
                 <span className="text-orange-400 font-mono text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">{fundingHistoryInterval}h</span>
               </div>
               <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Fetch new historical funding events (1 to 8 hours).
+                Minimum cooldown between full history syncs (4 to 8 hours). Auto-sync runs each funding cycle regardless of this setting.
               </p>
               <input
                 type="range"
-                min="1"
+                min="4"
                 max="8"
                 step="1"
                 value={fundingHistoryInterval}
                 onChange={(e) => setFundingHistoryInterval(Number(e.target.value))}
-                onPointerUp={() => toast.success(`Funding History set to ${fundingHistoryInterval}h`, { id: 'funding-history' })}
+                onPointerUp={() => toast.success(`History fetch cooldown set to ${fundingHistoryInterval}h`, { id: 'funding-history' })}
                 className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-orange-400"
               />
               <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
-                <span>1h</span>
+                <span>4h</span>
                 <span>8h</span>
               </div>
             </div>
@@ -493,6 +494,9 @@ export function Settings() {
                 {isClearingFunding ? 'Clearing...' : 'Clear Cache Now'}
               </button>
             </div>
+
+            {/* Sync Timing Performance Panel */}
+            <FundingSyncTimingPanel />
           </div>
         </div>
 

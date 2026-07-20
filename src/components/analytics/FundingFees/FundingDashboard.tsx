@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useFundingData } from '../../../hooks/useFundingData';
 import { useFundingStore } from '../../../store/fundingStore';
-import { useFundingSync } from '../../../hooks/useFundingSync';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { FundingFeeAggregated } from '../../../types';
 import { Clock, Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
@@ -499,7 +498,6 @@ const FundingTable = ({
 
 export const FundingDashboard = () => {
   const { aggregatedData, isLoading } = useFundingData();
-  useFundingSync();
   const { isSyncing, syncMessage, favorites } = useFundingStore();
   const fundingHistoryInterval = useSettingsStore(state => state.fundingHistoryInterval);
   

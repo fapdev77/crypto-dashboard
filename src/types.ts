@@ -147,16 +147,6 @@ export interface SymbolPnLRecord {
 
 // ── Bybit Transaction Log ──
 
-export interface UnifiedFundingFee {
-  id: string; // `${exchange}-${symbol}-${timestamp}`
-  exchange: ExchangeName;
-  symbol: string;
-  instrumentType: 'USDT-M' | 'COIN-M';
-  timestamp: number;
-  fundingRate: number;
-  realizedRate?: number;
-}
-
 export interface FundingFeeAggregated {
   exchange: ExchangeName;
   symbol: string;
@@ -171,6 +161,22 @@ export interface FundingFeeAggregated {
   last3MonthsSum: number;
   last6MonthsSum?: number;
   yearSum?: number;
+}
+
+export interface FundingRateSummary {
+  id: string;                      // `${exchange}-${symbol}`
+  exchange: ExchangeName;
+  symbol: string;
+  instrumentType: 'USDT-M' | 'COIN-M';
+  last12MonthsFundingRate?: string; // Big.js toFixed(8) — optional, only populated by Bybit (400d coverage)
+  last6MonthsFundingRate?: string;  // Big.js toFixed(8) — optional, only populated by Bybit (400d coverage)
+  last3MonthsFundingRate: string;   // Big.js toFixed(8)
+  lastMonthFundingRate: string;     // Big.js toFixed(8)
+  currentMonthFundingRate: string;  // Big.js toFixed(8)
+  todayFundingRate: string;         // Big.js toFixed(8)
+  lastFundingRate: string;          // Rate of most recent settlement
+  lastFundingTime: string;          // ms timestamp of most recent settlement, as string
+  updatedAt: number;                // ms timestamp
 }
 
 export interface BybitTransactionLogEntry {

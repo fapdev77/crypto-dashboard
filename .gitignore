@@ -9,4 +9,5 @@ coverage/
 scripts/
 dev-dist/
 nul
-.agent
+.agent/
+.kiro/
