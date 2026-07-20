@@ -3,6 +3,24 @@ import { persist } from 'zustand/middleware';
 
 import { CurrentFundingRate } from '../services/funding/FundingService';
 
+// ── Types for persisted performance data ──────────────────────────
+
+export interface SyncPerformance {
+  fetchSec: number;
+  writeSec: number;
+  totalSec: number;
+  symbols: number;
+  timestamp: number; // when the sync completed
+}
+
+export interface ExchangeTimingData {
+  name: string;
+  synced: number;
+  stale: number;
+  totalSec: number;
+  avgMs: number;
+}
+
 interface FundingState {
   favorites: string[]; // array of base coins
   toggleFavorite: (coin: string) => void;
@@ -19,6 +37,16 @@ interface FundingState {
   
   lastHistoryFetch: number;
   setLastHistoryFetch: (time: number) => void;
+
+  // ── Persisted sync performance data ───────────────────────────
+  lastSyncPerformance: SyncPerformance | null;
+  setLastSyncPerformance: (perf: SyncPerformance) => void;
+  lastExchangeTimings: ExchangeTimingData[];
+  setLastExchangeTimings: (timings: ExchangeTimingData[]) => void;
+  nextFundingTime: number; // next funding settlement time (ms timestamp)
+  setNextFundingTime: (time: number) => void;
+  nextScheduledSyncTime: number; // 0 = not scheduled, otherwise ms timestamp
+  setNextScheduledSyncTime: (time: number) => void;
 }
 
 export const useFundingStore = create<FundingState>()(
@@ -44,10 +72,27 @@ export const useFundingStore = create<FundingState>()(
       
       lastHistoryFetch: 0,
       setLastHistoryFetch: (lastHistoryFetch) => set({ lastHistoryFetch }),
+
+      // ── Persisted performance data ────────────────────────────
+      lastSyncPerformance: null,
+      setLastSyncPerformance: (lastSyncPerformance) => set({ lastSyncPerformance }),
+      lastExchangeTimings: [],
+      setLastExchangeTimings: (lastExchangeTimings) => set({ lastExchangeTimings }),
+      nextFundingTime: 0,
+      setNextFundingTime: (nextFundingTime) => set({ nextFundingTime }),
+      nextScheduledSyncTime: 0,
+      setNextScheduledSyncTime: (nextScheduledSyncTime) => set({ nextScheduledSyncTime }),
     }),
     {
       name: 'funding-store',
-      partialize: (state) => ({ favorites: state.favorites, lastHistoryFetch: state.lastHistoryFetch }),
+      partialize: (state) => ({
+        favorites: state.favorites,
+        lastHistoryFetch: state.lastHistoryFetch,
+        lastSyncPerformance: state.lastSyncPerformance,
+        lastExchangeTimings: state.lastExchangeTimings,
+        nextFundingTime: state.nextFundingTime,
+        nextScheduledSyncTime: state.nextScheduledSyncTime,
+      }),
     }
   )
 );

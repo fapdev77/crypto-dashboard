@@ -35,6 +35,11 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: true,
       setupFiles: [],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'text-summary'],
+        include: ['src/store/fundingStore.ts', 'src/services/funding/**'],
+      },
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
