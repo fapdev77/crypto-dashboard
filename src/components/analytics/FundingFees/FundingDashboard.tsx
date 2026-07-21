@@ -587,27 +587,33 @@ export const FundingDashboard = () => {
               <button
                 onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                 className={clsx(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap",
+                  "relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap overflow-hidden",
                   showFavoritesOnly 
-                    ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-500" 
+                    ? "border-yellow-500/30 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
                     : "bg-[#1a1b1e] border-[#2a2b30] text-[#8E9299] hover:text-white"
                 )}
               >
-                <Star className={clsx("w-4 h-4", showFavoritesOnly && "fill-yellow-500")} />
-                Favorites
+                {showFavoritesOnly && (
+                  <div className="absolute inset-0 bg-yellow-500/10 animate-pulse pointer-events-none" />
+                )}
+                <Star className={clsx("w-4 h-4 relative z-10", showFavoritesOnly && "fill-yellow-500")} />
+                <span className="relative z-10">Favorites</span>
               </button>
               {hasOpenPositions && (
                 <button
                   onClick={() => setShowOpenPositionsOnly(!showOpenPositionsOnly)}
                   className={clsx(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap",
+                    "relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap overflow-hidden",
                     showOpenPositionsOnly 
-                      ? "bg-[#2F6BFF]/10 border-[#2F6BFF]/20 text-[#2F6BFF]" 
+                      ? "border-[#2F6BFF]/30 text-[#2F6BFF] shadow-[0_0_10px_rgba(47,107,255,0.1)]" 
                       : "bg-[#1a1b1e] border-[#2a2b30] text-[#8E9299] hover:text-white"
                   )}
                 >
-                  <Briefcase className="w-4 h-4" />
-                  Open Positions
+                  {showOpenPositionsOnly && (
+                    <div className="absolute inset-0 bg-[#2F6BFF]/10 animate-pulse pointer-events-none" />
+                  )}
+                  <Briefcase className="w-4 h-4 relative z-10" />
+                  <span className="relative z-10">Open Positions</span>
                 </button>
               )}
             </div>
