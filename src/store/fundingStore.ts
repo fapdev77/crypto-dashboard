@@ -22,8 +22,8 @@ export interface ExchangeTimingData {
 }
 
 interface FundingState {
-  favorites: string[]; // array of base coins
-  toggleFavorite: (coin: string) => void;
+  favorites: string[]; // array of ids (e.g. USDT-M_BTC)
+  toggleFavorite: (id: string) => void;
   
   // Current live rates
   currentRates: CurrentFundingRate[];
@@ -53,12 +53,23 @@ export const useFundingStore = create<FundingState>()(
   persist(
     (set, get) => ({
       favorites: [],
-      toggleFavorite: (coin: string) => {
+      toggleFavorite: (id: string) => {
         const { favorites } = get();
-        if (favorites.includes(coin)) {
-          set({ favorites: favorites.filter(f => f !== coin) });
+        let newFavorites = [...favorites];
+        
+        // Extract coin symbol if it's the new composite format (e.g. BTC_USDT-M)
+        const parts = id.split('_');
+        const coinSymbol = parts[0]; 
+
+        // If the legacy coin symbol exists, remove it
+        if (newFavorites.includes(coinSymbol)) {
+          newFavorites = newFavorites.filter(f => f !== coinSymbol);
+        }
+
+        if (newFavorites.includes(id)) {
+          set({ favorites: newFavorites.filter(f => f !== id) });
         } else {
-          set({ favorites: [...favorites, coin] });
+          set({ favorites: [...newFavorites, id] });
         }
       },
       

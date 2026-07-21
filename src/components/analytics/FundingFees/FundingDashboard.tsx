@@ -261,7 +261,9 @@ const FundingTable = ({
             <tbody className="divide-y divide-[#2a2b30]/50">
               {paginatedGroups.map(([coin, rows]) => {
                 const isExpanded = expandedCoins[coin];
-                const isFav = favorites.includes(coin);
+                const instType = rows[0]?.instrumentType || 'USDT-M';
+                const rowId = `${coin}_${instType}`;
+                const isFav = favorites.includes(rowId) || favorites.includes(coin);
 
                 const maxVal = (key: keyof FundingFeeAggregated, filterFn?: (r: FundingFeeAggregated) => boolean) => {
                   let valid = rows.filter(r => r[key] !== undefined && typeof r[key] === 'number');
@@ -287,7 +289,7 @@ const FundingTable = ({
                     >
                       <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
                         <button 
-                          onClick={() => toggleFavorite(coin)}
+                          onClick={() => toggleFavorite(rowId)}
                           className="text-[#8E9299] hover:text-yellow-500 transition-colors"
                         >
                           <Star className={clsx("w-4 h-4", isFav && "fill-yellow-500 text-yellow-500")} />
@@ -526,7 +528,13 @@ export const FundingDashboard = () => {
   const openPositionCoins = useMemo(() => {
     const coins = new Set<string>();
     Object.values(positions).forEach(p => {
-      coins.add(getBaseCoin(p.symbol));
+      let instType = 'USDT-M';
+      if (p.quoteCoin === 'USD' || p.ccy === p.baseCoin) {
+        instType = 'COIN-M';
+      } else if (p.quoteCoin === 'USDC' || p.ccy === 'USDC') {
+        instType = 'USDC-M';
+      }
+      coins.add(`${getBaseCoin(p.symbol)}_${instType}`);
     });
     return coins;
   }, [positions]);
@@ -534,8 +542,14 @@ export const FundingDashboard = () => {
   const filteredData = useMemo(() => {
     return aggregatedData.filter(row => {
       const coin = getBaseCoin(row.symbol);
-      if (showFavoritesOnly && !favorites.includes(coin)) return false;
-      if (showOpenPositionsOnly && !openPositionCoins.has(coin)) return false;
+      const rowId = `${coin}_${row.instrumentType}`;
+      
+      const isFav = favorites.includes(rowId) || favorites.includes(coin);
+      if (showFavoritesOnly && !isFav) return false;
+      
+      const hasOpenPos = openPositionCoins.has(rowId) || openPositionCoins.has(coin);
+      if (showOpenPositionsOnly && !hasOpenPos) return false;
+      
       if (exchangeFilter.toLowerCase() !== 'all' && row.exchange !== exchangeFilter.toLowerCase()) return false;
       if (instrumentFilter.toLowerCase() !== 'all' && row.instrumentType !== instrumentFilter) return false;
       if (searchTerm && !row.symbol.toLowerCase().includes(searchTerm.toLowerCase()) && !coin.toLowerCase().includes(searchTerm.toLowerCase())) return false;
