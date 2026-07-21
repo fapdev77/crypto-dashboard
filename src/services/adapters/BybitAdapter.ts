@@ -83,11 +83,15 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       LogManager.warn('Bybit-AccountInfo', 'Error fetching account info:', err);
     }
 
-    const categories = ['linear', 'inverse'];
-    const requests = categories.map(async (category) => {
-      const query = `category=${category}&limit=200`;
-      const targetUrl = `https://api.bybit.com/v5/position/list?${query}`;
-      const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+    const queries = [
+      { category: 'inverse', queryStr: 'category=inverse&limit=200' },
+      { category: 'linear', queryStr: 'category=linear&settleCoin=USDT&limit=200' },
+      { category: 'linear', queryStr: 'category=linear&settleCoin=USDC&limit=200' }
+    ];
+
+    const requests = queries.map(async ({ category, queryStr }) => {
+      const targetUrl = `https://api.bybit.com/v5/position/list?${queryStr}`;
+      const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryStr);
       const response = await hybridFetch(targetUrl, 'GET', headers);
 
       if (response.retCode === 10001) return []; // "position idx not match position mode" generic catch
