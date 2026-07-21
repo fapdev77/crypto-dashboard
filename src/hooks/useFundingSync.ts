@@ -248,12 +248,6 @@ export function useFundingSync() {
 
   // ── Schedule next auto-sync based on nearest nextFundingTime + 1 min ──
   const scheduleNextAutoSync = useCallback(() => {
-    // Clear any previous schedule
-    if (autoSyncTimerRef.current) {
-      clearTimeout(autoSyncTimerRef.current);
-      autoSyncTimerRef.current = null;
-    }
-
     const rates = useFundingStore.getState().currentRates;
     if (!rates || rates.length === 0) return;
 
@@ -273,6 +267,26 @@ export function useFundingSync() {
 
     // Don't schedule if it's already in the past
     if (delayMs <= 0) return;
+
+    // ── Preserve existing timer if it will fire sooner ──────────────
+    // Prevents polling ticks AFTER a funding settlement (when
+    // nextFundingTime has rolled forward to the next cycle) from
+    // cancelling the auto-sync that was already scheduled for +1 minute
+    // after that settlement.
+    const existingNextSyncTime = useFundingStore.getState().nextScheduledSyncTime;
+    if (autoSyncTimerRef.current && existingNextSyncTime > nowMs) {
+      const existingRemainingMs = existingNextSyncTime - nowMs;
+      if (existingRemainingMs < delayMs) {
+        // Existing timer fires sooner — keep it, don't replace.
+        return;
+      }
+    }
+
+    // Clear previous schedule and set the new one
+    if (autoSyncTimerRef.current) {
+      clearTimeout(autoSyncTimerRef.current);
+      autoSyncTimerRef.current = null;
+    }
 
     LogManager.info(
       'useFundingSync',
@@ -305,12 +319,19 @@ export function useFundingSync() {
     try {
       const results: CurrentFundingRate[] = [];
       for (const ex of EXCHANGES) {
-        const rates = await FundingService.fetchCurrentFundingRates(ex);
-        results.push(...rates);
+        try {
+          const rates = await FundingService.fetchCurrentFundingRates(ex);
+          results.push(...rates);
+        } catch (e) {
+          LogManager.error('useFundingSync', `Failed to fetch current rates for ${ex}:`, e);
+        }
       }
-      useFundingStore.setState({ currentRates: results });
-    } catch (e) {
-      LogManager.error('useFundingSync', 'Failed to fetch current rates:', e);
+      // Save partial results — if one exchange fails, data from others survives.
+      // Only overwrite if we got at least some data; otherwise keep the stale
+      // snapshot so scheduleNextAutoSync() can still work on the next tick.
+      if (results.length > 0) {
+        useFundingStore.setState({ currentRates: results });
+      }
     } finally {
       fetchingRef.current = false;
     }
@@ -450,17 +471,21 @@ export function useFundingSync() {
       setSyncStatus(false, 0, `Sync failed: ${error.message}`);
     } finally {
       syncInProgressRef.current = false;
+
+      // Clear success/error status after a brief delay (keeps UX readable)
       setTimeout(() => {
         if (!syncInProgressRef.current) {
           setSyncStatus(false, 0, '');
         }
-        // If a restart was requested while we were syncing, re-trigger now
-        if (restartRequestedRef.current) {
-          restartRequestedRef.current = false;
-          LogManager.info('useFundingSync', 'Restarting sync after user force request...');
-          forceSync();
-        }
       }, 3000);
+
+      // Handle restart request IMMEDIATELY — no 3s gap, no race window
+      // where forceSync() starts a new sync before the flag is checked.
+      if (restartRequestedRef.current) {
+        restartRequestedRef.current = false;
+        LogManager.info('useFundingSync', 'Restarting sync after user force request...');
+        forceSync();
+      }
     }
   }, [useMockData, fundingHistoryInterval, setLastHistoryFetch, setLastSyncTime, setSyncStatus, scheduleNextAutoSync]);
 

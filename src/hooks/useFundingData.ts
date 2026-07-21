@@ -6,7 +6,7 @@ import { LogManager } from '../services/LogManager';
 
 export function useFundingData() {
   const [summaries, setSummaries] = useState<FundingRateSummary[]>([]);
-  const { currentRates, isSyncing, syncProgress } = useFundingStore();
+  const { currentRates, isSyncing } = useFundingStore();
   const [isLoading, setIsLoading] = useState(true);
 
   // Poll IndexedDB for new summaries every few seconds while syncing, or just once if not syncing
@@ -34,7 +34,7 @@ export function useFundingData() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isSyncing, syncProgress]);
+  }, [isSyncing]);
 
   // Lightweight mapping: seed from currentRates, overwrite from pre-computed summaries
   const aggregatedData = useMemo(() => {

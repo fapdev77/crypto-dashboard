@@ -42,7 +42,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     const query = 'accountType=UNIFIED';
     const targetUrl = `https://api.bybit.com/v5/account/wallet-balance?${query}`;
     const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
-    
+
     const response = await hybridFetch(targetUrl, 'GET', headers);
     if (response.retCode !== 0) {
       throw new Error(`Bybit balance API Error (${response.retCode}): ${response.retMsg}`);
@@ -94,7 +94,10 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryStr);
       const response = await hybridFetch(targetUrl, 'GET', headers);
 
-      if (response.retCode === 10001) return []; // "position idx not match position mode" generic catch
+      if (response.retCode === 10001) {
+        LogManager.warn('Bybit-Positions', `API returned 10001 for query ${queryStr} (Account type fallback)`, response.retMsg);
+        return [];
+      }
       if (response.retCode !== 0) throw new Error(response.retMsg);
 
       // Bybit category value came in the result object so we need to inject it in the list object to be returned
@@ -118,8 +121,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   }
 
   public async fetchBybitRealPnLBySymbol(
-    key: ApiCredentials, 
-    startTime: number, 
+    key: ApiCredentials,
+    startTime: number,
     endTime: number,
     onProgress?: (msg: string) => void
   ): Promise<Record<string, string>> {
@@ -141,31 +144,31 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           const queryUrl = `limit=50&category=${category}&startTime=${catStart}&endTime=${catEnd}`;
           const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${queryUrl}`;
           const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
-          
+
           let cursor = '';
           let pages = 0;
           const MAX_PAGES = 20; // 1000 tx per 7-day chunk max
           do {
-             let thisQuery = queryUrl;
-             if (cursor) thisQuery += `&cursor=${cursor}`;
-             const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
-             const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
-             
-             const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
-             if (res.retCode !== 0) break;
+            let thisQuery = queryUrl;
+            if (cursor) thisQuery += `&cursor=${cursor}`;
+            const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
+            const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
 
-             const list = res.result?.list || [];
-             for (const item of list) {
-                if (!item.symbol) continue;
-                if (['TRADE', 'SETTLEMENT', 'LIQUIDATION', 'DELIVERY'].includes(item.type)) {
-                   if (!symbolPnL[item.symbol]) symbolPnL[item.symbol] = new Big(0);
-                   if (item.cashFlow) {
-                      symbolPnL[item.symbol] = symbolPnL[item.symbol].plus(new Big(item.cashFlow || '0'));
-                   }
+            const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
+            if (res.retCode !== 0) break;
+
+            const list = res.result?.list || [];
+            for (const item of list) {
+              if (!item.symbol) continue;
+              if (['TRADE', 'SETTLEMENT', 'LIQUIDATION', 'DELIVERY'].includes(item.type)) {
+                if (!symbolPnL[item.symbol]) symbolPnL[item.symbol] = new Big(0);
+                if (item.cashFlow) {
+                  symbolPnL[item.symbol] = symbolPnL[item.symbol].plus(new Big(item.cashFlow || '0'));
                 }
-             }
-             cursor = res.result?.nextPageCursor || '';
-             pages++;
+              }
+            }
+            cursor = res.result?.nextPageCursor || '';
+            pages++;
           } while (cursor && pages < MAX_PAGES);
 
           catStart = catEnd + 1;
@@ -174,7 +177,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     } catch (e) {
       LogManager.warn('Bybit-RealPnL', `Error fetching real PnL for ${key.label}:`, e);
     }
-    
+
     const result: Record<string, string> = {};
     for (const [sym, val] of Object.entries(symbolPnL)) {
       result[sym] = val.toString();
@@ -199,32 +202,32 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         const queryUrl = `limit=50&category=${targetCategory}&symbol=${symbol}&startTime=${currentStart}&endTime=${currentEnd}`;
         const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${queryUrl}`;
         const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
-        
+
         let cursor = '';
         let pages = 0;
         const MAX_PAGES = 10;
         do {
-           let thisQuery = queryUrl;
-           if (cursor) thisQuery += `&cursor=${cursor}`;
-           const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
-           const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
-           
-           const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
-           if (res.retCode !== 0) break;
+          let thisQuery = queryUrl;
+          if (cursor) thisQuery += `&cursor=${cursor}`;
+          const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
+          const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
 
-           const list = res.result?.list || [];
-           for (const item of list) {
-              if (item.symbol === symbol) {
-                 if (item.type === 'SETTLEMENT' && item.funding) {
-                    accumulatedFunding = accumulatedFunding.plus(new Big(item.funding || '0'));
-                 }
-                 if (item.type === 'TRADE' && item.fee) {
-                    accumulatedTradingFee = accumulatedTradingFee.plus(new Big(item.fee || '0').times(-1));
-                 }
+          const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
+          if (res.retCode !== 0) break;
+
+          const list = res.result?.list || [];
+          for (const item of list) {
+            if (item.symbol === symbol) {
+              if (item.type === 'SETTLEMENT' && item.funding) {
+                accumulatedFunding = accumulatedFunding.plus(new Big(item.funding || '0'));
               }
-           }
-           cursor = res.result?.nextPageCursor || '';
-           pages++;
+              if (item.type === 'TRADE' && item.fee) {
+                accumulatedTradingFee = accumulatedTradingFee.plus(new Big(item.fee || '0').times(-1));
+              }
+            }
+          }
+          cursor = res.result?.nextPageCursor || '';
+          pages++;
         } while (cursor && pages < MAX_PAGES);
 
         currentStart = currentEnd + 1;
@@ -244,7 +247,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     const markPrice = parseFloat(pos.markPrice || '0');
     let size = rawSize;
     let notionalUsd = parseFloat(pos.positionValue || '0');
-    
+
     const isInverse = pos.symbol?.endsWith('USD') && !pos.symbol.includes('USDT') && !pos.symbol.includes('USDC');
     if (isInverse) {
       size = parseFloat(pos.positionValue || '0');
@@ -269,22 +272,22 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     const marginRatio = marginObj.gt(0) ? Number(mmObj.div(marginObj).times(100)) : undefined;
 
     const side = mapPositionSide('bybit', pos.side);
-    
+
     let ccy = extractCcy('bybit', pos.settleCoin, undefined, pos.coin, pos.symbol);
     if (isInverse && ccy === 'USD') {
       ccy = extractBaseCoin('bybit', pos.symbol);
     }
-    
+
     // We only fetch funding from transaction log for linear or inverse futures, mostly linear.
     const createdTime = parseInt(pos.createdTime || Date.now().toString(), 10);
     // Limit lookback of funding queries to at most the last 7 days to avoid rate-limiting / slow connections
     const maxLookbackMs = 7 * 24 * 60 * 60 * 1000;
     const effectiveStartTime = Math.max(createdTime, Date.now() - maxLookbackMs);
     const { accumulatedFunding, accumulatedTradingFee } = await this.fetchBybitAccumulatedFees(key, pos.symbol, effectiveStartTime);
-    
+
     const realizedPnl = parseFloat(pos.curRealisedPnl || '0');
     const closedPnl = realizedPnl - parseFloat(accumulatedFunding) - parseFloat(accumulatedTradingFee);
-    
+
     return {
       id: `${key.id}-bybit-${pos.symbol}-${side}`,
       connectionId: key.id,
@@ -341,7 +344,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           const res = await hybridFetch(targetUrl, 'GET', headers);
 
           if (res.retCode !== 0) throw new Error(res.retMsg);
-          
+
           const rows = res.result?.list || [];
           list = [...list, ...rows];
           cursor = res.result?.nextPageCursor || '';
@@ -447,7 +450,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   public async getOpenOrders(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]> {
     const categories = ['spot', 'inverse', 'linear-usdt', 'linear-usdc'];
     let allOrders: any[] = [];
-    
+
     for (const cat of categories) {
       let baseQuery = '';
       if (cat === 'spot') baseQuery = 'category=spot';
@@ -457,7 +460,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
 
       let cursor = '';
       let pages = 0;
-      
+
       try {
         do {
           let query = `${baseQuery}&limit=50`;
@@ -467,7 +470,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
 
           const targetUrl = `https://api.bybit.com/v5/order/realtime?${query}`;
           const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
-          
+
           const res = await hybridFetch(targetUrl, 'GET', headers);
           if (res.retCode === 0 && res.result?.list) {
             const listCat = cat.startsWith('linear') ? 'linear' : cat;
@@ -492,7 +495,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     const now = Date.now();
     const endTimeObj = end ? end : now;
     const startTimeObj = start ? start : (endTimeObj - 7 * 24 * 60 * 60 * 1000); // default 7 days 
-    
+
     // Bybit history max 7 days per request. We might need to chunk if period > 7 days.
     const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -503,17 +506,17 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       while (currentStart >= startTimeObj && currentStart < currentEnd) {
         let cursor = '';
         let pages = 0;
-        
+
         try {
           do {
             let queryUrl = `category=${cat}&limit=50&startTime=${currentStart}&endTime=${currentEnd}`;
             if (cursor) {
               queryUrl += `&cursor=${cursor}`;
             }
-            
+
             const targetUrl = `https://api.bybit.com/v5/order/history?${queryUrl}`;
             const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
-            
+
             const res = await hybridFetch(targetUrl, 'GET', headers);
             if (res.retCode === 0 && res.result?.list) {
               allOrders = allOrders.concat(res.result.list.map((o: any) => ({ ...o, _category: cat })));
@@ -552,14 +555,14 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       if (ot === 'MARKET') type = 'MARKET';
       // simple handling for TP/SL if needed based on trigger parameters, Bybit usually has stopOrderType
       if (o.stopOrderType) {
-         if (o.stopOrderType.toUpperCase() === 'TAKEPROFIT') type = 'TP';
-         else if (o.stopOrderType.toUpperCase() === 'STOPLOSS') type = 'SL';
-         else type = 'CONDITIONAL';
+        if (o.stopOrderType.toUpperCase() === 'TAKEPROFIT') type = 'TP';
+        else if (o.stopOrderType.toUpperCase() === 'STOPLOSS') type = 'SL';
+        else type = 'CONDITIONAL';
       }
 
       const pSize = parseFloat(o.qty || '0');
       const pFil = parseFloat(o.cumExecQty || '0');
-      
+
       return {
         id: `${key.id}-${o.orderId}`,
         exchangeOrderId: o.orderId,
@@ -659,27 +662,27 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
     try {
       const res = await proxyFetch({
-         targetUrl: `https://api.bybit.com/v5/market/instruments-info?category=linear&symbol=${symbol}`,
-         method: 'GET',
-         headers: {}
+        targetUrl: `https://api.bybit.com/v5/market/instruments-info?category=linear&symbol=${symbol}`,
+        method: 'GET',
+        headers: {}
       });
       // Try spot if not found in linear
       let data = res;
       if (data.retCode !== 0 || !data.result?.list?.length) {
-         const res2 = await proxyFetch({
-            targetUrl: `https://api.bybit.com/v5/market/instruments-info?category=spot&symbol=${symbol}`,
-            method: 'GET',
-            headers: {}
-         });
-         data = res2;
+        const res2 = await proxyFetch({
+          targetUrl: `https://api.bybit.com/v5/market/instruments-info?category=spot&symbol=${symbol}`,
+          method: 'GET',
+          headers: {}
+        });
+        data = res2;
       }
       if (data.retCode === 0 && data.result?.list?.length > 0) {
-         const info = data.result.list[0];
-         const sType = info.symbolType?.toLowerCase();
-         if (sType === 'stock' || sType === 'xstocks') {
-             return 'STOCK';
-         }
-         return 'CRYPTO';
+        const info = data.result.list[0];
+        const sType = info.symbolType?.toLowerCase();
+        if (sType === 'stock' || sType === 'xstocks') {
+          return 'STOCK';
+        }
+        return 'CRYPTO';
       }
     } catch (err) {
       LogManager.warn('Bybit-Metadata', 'Fetch error:', err);
