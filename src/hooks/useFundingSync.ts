@@ -45,6 +45,100 @@ async function asyncPool<T>(
   await Promise.allSettled(workers);
 }
 
+interface ExchangeSyncDetails {
+  exchange: ExchangeName;
+  summaries: FundingRateSummary[];
+  synced: number;
+  skippedSymbols: string[];
+  errors: number;
+  stale: number;
+  elapsedMs: number;
+}
+
+function formatDateTime(ts: number): string {
+  const d = new Date(ts);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const seconds = String(d.getSeconds()).padStart(2, '0');
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+function formatDurationHms(totalSec: number): string {
+  const totalSeconds = Math.floor(totalSec);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const hh = String(hours).padStart(2, '0');
+  const mm = String(minutes).padStart(2, '0');
+  const ss = String(seconds).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
+function buildSyncReport(
+  exchangeResults: ExchangeSyncDetails[],
+  totalSec: number,
+  startMs: number,
+  endMs: number,
+): string {
+  const lines: string[] = [];
+  const hms = formatDurationHms(totalSec);
+  lines.push('');
+  lines.push('======================================================');
+  lines.push('             FUNDING SYNC COMPLETED (REPORT)         ');
+  lines.push('======================================================');
+  lines.push(`  Start Time  : ${formatDateTime(startMs)}`);
+  lines.push(`  End Time    : ${formatDateTime(endMs)}`);
+  lines.push(`  Total Time  : ${totalSec.toFixed(1)}s (${hms})`);
+  lines.push('------------------------------------------------------');
+  lines.push('  Exchange | Processed | Skipped | Total Stale | Errors');
+  lines.push('------------------------------------------------------');
+
+  let totalProcessed = 0;
+  let totalSkipped = 0;
+  let totalStaleAll = 0;
+  let totalErrorsAll = 0;
+
+  for (const r of exchangeResults) {
+    const ex = r.exchange.toUpperCase().padEnd(8);
+    const proc = String(r.synced).padStart(9);
+    const skip = String(r.skippedSymbols.length).padStart(7);
+    const stale = String(r.stale).padStart(11);
+    const err = String(r.errors).padStart(6);
+
+    totalProcessed += r.synced;
+    totalSkipped += r.skippedSymbols.length;
+    totalStaleAll += r.stale;
+    totalErrorsAll += r.errors;
+
+    lines.push(`  ${ex} | ${proc} | ${skip} | ${stale} | ${err}`);
+  }
+
+  lines.push('------------------------------------------------------');
+  lines.push(
+    `  TOTAL    | ${String(totalProcessed).padStart(9)} | ${String(totalSkipped).padStart(7)} | ${String(totalStaleAll).padStart(11)} | ${String(totalErrorsAll).padStart(6)}`,
+  );
+  lines.push('======================================================');
+
+  lines.push('\n--- SKIPPED SYMBOLS (No Funding) ---');
+  for (const r of exchangeResults) {
+    const ex = r.exchange.toUpperCase().padEnd(8);
+    if (r.skippedSymbols.length > 0) {
+      const maxDisplay = 15;
+      const displayed = r.skippedSymbols.slice(0, maxDisplay).join(', ');
+      const remaining = r.skippedSymbols.length - maxDisplay;
+      const suffix = remaining > 0 ? ` (+${remaining} more)` : '';
+      lines.push(`  [${ex}] Skipped (${r.skippedSymbols.length}): ${displayed}${suffix}`);
+    } else {
+      lines.push(`  [${ex}] No symbols skipped.`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
 // ── Sync one exchange's stale symbols ──────────────────────────────
 
 async function syncExchange(
@@ -52,7 +146,7 @@ async function syncExchange(
   rates: CurrentFundingRate[],
   now: number,
   onProgress: (pct: number, message: string) => void,
-): Promise<{ summaries: FundingRateSummary[]; synced: number; stale: number; elapsedMs: number }> {
+): Promise<ExchangeSyncDetails> {
   const exchangeStartMs = performance.now();
 
   // 1. Check freshness via IndexedDB meta
@@ -65,11 +159,13 @@ async function syncExchange(
   });
 
   if (staleRates.length === 0) {
-    return { summaries: [], synced: 0, stale: 0, elapsedMs: 0 };
+    return { exchange, summaries: [], synced: 0, skippedSymbols: [], errors: 0, stale: 0, elapsedMs: 0 };
   }
 
   const totalStale = staleRates.length;
   const summaries: FundingRateSummary[] = [];
+  const skippedSymbols: string[] = [];
+  let errors = 0;
   let completed = 0;
 
   onProgress(0, `${exchange}: ${totalStale} symbols to sync...`);
@@ -77,25 +173,31 @@ async function syncExchange(
   await asyncPool(staleRates, CONCURRENCY[exchange], async (rate) => {
     const symbolStartMs = performance.now();
 
-    const summary = await FundingService.fetchAndAggregateSummary(
-      rate.exchange,
-      rate.symbol,
-      rate.instrumentType,
-    );
-
-    const symbolElapsed = performance.now() - symbolStartMs;
-
-    // Warn if a single symbol takes > 10s (signals API issue)
-    if (symbolElapsed > 10_000) {
-      LogManager.warn(
-        'useFundingSync',
-        `SLOW [${exchange}] ${rate.symbol}: ${(symbolElapsed / 1000).toFixed(1)}s`,
+    try {
+      const summary = await FundingService.fetchAndAggregateSummary(
+        rate.exchange,
+        rate.symbol,
+        rate.instrumentType,
       );
-    }
 
-    // Skip symbols with no data (zeroSummary guard)
-    if (summary.lastFundingTime !== '0') {
-      summaries.push(summary);
+      const symbolElapsed = performance.now() - symbolStartMs;
+
+      // Warn if a single symbol takes > 10s (signals API issue)
+      if (symbolElapsed > 10_000) {
+        LogManager.warn(
+          'useFundingSync',
+          `SLOW [${exchange}] ${rate.symbol}: ${(symbolElapsed / 1000).toFixed(1)}s`,
+        );
+      }
+
+      // Skip symbols with no data (zeroSummary guard)
+      if (summary.lastFundingTime !== '0') {
+        summaries.push(summary);
+      } else {
+        skippedSymbols.push(rate.symbol);
+      }
+    } catch {
+      errors++;
     }
 
     completed++;
@@ -117,7 +219,15 @@ async function syncExchange(
     `${avgMsPerSymbol}ms avg/symbol`,
   );
 
-  return { summaries, synced: summaries.length, stale: totalStale, elapsedMs: exchangeElapsed };
+  return {
+    exchange,
+    summaries,
+    synced: summaries.length,
+    skippedSymbols,
+    errors,
+    stale: totalStale,
+    elapsedMs: exchangeElapsed,
+  };
 }
 
 // ── Hook ──────────────────────────────────────────────────────────
@@ -238,8 +348,10 @@ export function useFundingSync() {
       }
 
       // ── 2. Run all exchanges in parallel (V3-compatible) ──
+      const syncStartMs = Date.now();
       const exchangeSyncStart = performance.now();
       const capturedTimings: ExchangeTimingData[] = [];
+      const exchangeSyncResults: ExchangeSyncDetails[] = [];
 
       const exchangePromises = Array.from(exchangeMap.entries()).map(
         async ([exchange, rates]) => {
@@ -255,6 +367,7 @@ export function useFundingSync() {
               totalSec: result.elapsedMs / 1000,
               avgMs: Math.round(result.elapsedMs / result.stale),
             });
+            exchangeSyncResults.push(result);
           }
           return result.summaries;
         },
@@ -289,14 +402,20 @@ export function useFundingSync() {
       const completedAt = Date.now();
       const totalSec = (fetchElapsed + writeElapsed) / 1000;
 
-      LogManager.system(
-        'FundingTiming',
-        `=== SYNC COMPLETE === ` +
-        `Fetch: ${(fetchElapsed / 1000).toFixed(1)}s | ` +
-        `Write: ${(writeElapsed / 1000).toFixed(1)}s | ` +
-        `Total: ${totalSec.toFixed(1)}s | ` +
-        `${allSummaries.length} symbols`,
-      );
+      // ── 3b. Emit ASCII Summary Report to system logs ──
+      if (exchangeSyncResults.length > 0) {
+        const syncReport = buildSyncReport(exchangeSyncResults, totalSec, syncStartMs, completedAt);
+        LogManager.system('FundingSync', syncReport);
+      } else {
+        LogManager.system(
+          'FundingTiming',
+          `=== SYNC COMPLETE === ` +
+          `Fetch: ${(fetchElapsed / 1000).toFixed(1)}s | ` +
+          `Write: ${(writeElapsed / 1000).toFixed(1)}s | ` +
+          `Total: ${totalSec.toFixed(1)}s | ` +
+          `${allSummaries.length} symbols`,
+        );
+      }
 
       // ── 4. Persist performance data to fundingStore ──
       const { setLastSyncPerformance, setLastExchangeTimings, setNextFundingTime, setNextScheduledSyncTime } = useFundingStore.getState();
