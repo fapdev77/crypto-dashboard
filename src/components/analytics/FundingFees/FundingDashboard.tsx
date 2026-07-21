@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useFundingData } from '../../../hooks/useFundingData';
+import { useFundingSync } from '../../../hooks/useFundingSync';
 import { useFundingStore } from '../../../store/fundingStore';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { usePositionsStore } from '../../../store/positionsStore';
@@ -499,8 +500,9 @@ const FundingTable = ({
 };
 
 export const FundingDashboard = () => {
+  const { forceSync } = useFundingSync();
   const { aggregatedData, isLoading } = useFundingData();
-  const { isSyncing, syncMessage, favorites } = useFundingStore();
+  const { isSyncing, syncMessage, favorites, lastHistoryFetch, nextScheduledSyncTime } = useFundingStore();
   const fundingHistoryInterval = useSettingsStore(state => state.fundingHistoryInterval);
   const positions = usePositionsStore(state => state.positions);
   
@@ -590,6 +592,9 @@ export const FundingDashboard = () => {
             isSyncing={isSyncing}
             syncMessage={isSyncing ? (syncMessage || 'Syncing funding history...') : null}
             overrideIntervalMs={fundingHistoryInterval * 60 * 60 * 1000}
+            overrideLastSyncTime={lastHistoryFetch}
+            overrideNextSyncTime={nextScheduledSyncTime}
+            onManualSync={forceSync}
           />
         </div>
       </div>

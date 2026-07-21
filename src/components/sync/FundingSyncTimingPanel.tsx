@@ -248,35 +248,41 @@ export function FundingSyncTimingPanel() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-orange-400" />
-          <h4 className="text-white font-medium text-sm">Sync Performance</h4>
+          <AppTooltip description="Displays real-time and historical performance data for the background synchronization of funding rates.">
+            <h4 className="text-white font-medium text-sm cursor-help border-b border-dashed border-[#8E9299]/50">Sync Performance</h4>
+          </AppTooltip>
         </div>
         <div className="flex items-center gap-2">
           {/* Clear Cache + Sync button */}
-          <button
-            onClick={handleClearAndSync}
-            disabled={isClearing || isSyncing}
-            className="flex items-center gap-1.5 bg-red-400/10 hover:bg-red-400/20 disabled:opacity-40 disabled:cursor-not-allowed text-red-400 border border-red-400/20 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors"
-          >
-            {isClearing ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <Trash2 className="w-3 h-3" />
-            )}
-            {isClearing ? 'Clearing...' : 'Clear + Sync'}
-          </button>
+          <AppTooltip description="Clears the local database of historical funding rates and immediately triggers a fresh synchronization.">
+            <button
+              onClick={handleClearAndSync}
+              disabled={isClearing || isSyncing}
+              className="flex items-center gap-1.5 bg-red-400/10 hover:bg-red-400/20 disabled:opacity-40 disabled:cursor-not-allowed text-red-400 border border-red-400/20 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-help"
+            >
+              {isClearing ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Trash2 className="w-3 h-3" />
+              )}
+              {isClearing ? 'Clearing...' : 'Clear + Sync'}
+            </button>
+          </AppTooltip>
           {/* Run Sync Now button */}
-          <button
-            onClick={handleRunSync}
-            disabled={isSyncing}
-            className="flex items-center gap-1.5 bg-orange-400/10 hover:bg-orange-400/20 disabled:opacity-40 disabled:cursor-not-allowed text-orange-400 border border-orange-400/20 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors"
-          >
-            {isSyncing ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <Play className="w-3 h-3" />
-            )}
-            {isSyncing ? 'Syncing...' : 'Run Sync'}
-          </button>
+          <AppTooltip description="Manually trigger a background sync of funding rates across all connected exchanges without clearing existing data.">
+            <button
+              onClick={handleRunSync}
+              disabled={isSyncing}
+              className="flex items-center gap-1.5 bg-orange-400/10 hover:bg-orange-400/20 disabled:opacity-40 disabled:cursor-not-allowed text-orange-400 border border-orange-400/20 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-help"
+            >
+              {isSyncing ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Play className="w-3 h-3" />
+              )}
+              {isSyncing ? 'Syncing...' : 'Run Sync'}
+            </button>
+          </AppTooltip>
           {/* Last sync timestamp */}
           {lastSyncTime > 0 && (
             <span className="text-[10px] font-mono text-[#8E9299] flex items-center gap-1">
@@ -358,29 +364,39 @@ export function FundingSyncTimingPanel() {
           {overallTiming && (
             <div className="bg-[#1a1b1e] rounded-lg p-3 border border-[#2a2b30]/50">
               <div className="grid grid-cols-3 gap-3">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white font-mono">
-                    {overallTiming.totalSec.toFixed(1)}s
+                <AppTooltip description="Total time taken for the complete synchronization process, including fetching from all exchanges and saving to the local database.">
+                  <div className="text-center cursor-help">
+                    <div className="text-lg font-bold text-white font-mono">
+                      {overallTiming.totalSec.toFixed(1)}s
+                    </div>
+                    <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">Total Time</div>
                   </div>
-                  <div className="text-[10px] text-[#8E9299] font-mono mt-0.5">Total</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-orange-400 font-mono">
-                    {overallTiming.fetchSec.toFixed(1)}s
+                </AppTooltip>
+                
+                <AppTooltip description="Time spent actively fetching data from exchange APIs.">
+                  <div className="text-center cursor-help">
+                    <div className="text-lg font-bold text-orange-400 font-mono">
+                      {overallTiming.fetchSec.toFixed(1)}s
+                    </div>
+                    <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">API Fetch</div>
                   </div>
-                  <div className="text-[10px] text-[#8E9299] font-mono mt-0.5">API Fetch</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-blue-400 font-mono">
-                    {overallTiming.writeSec.toFixed(1)}s
+                </AppTooltip>
+
+                <AppTooltip description="Time spent writing the processed data into the local IndexedDB storage.">
+                  <div className="text-center cursor-help">
+                    <div className="text-lg font-bold text-blue-400 font-mono">
+                      {overallTiming.writeSec.toFixed(1)}s
+                    </div>
+                    <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">DB Write</div>
                   </div>
-                  <div className="text-[10px] text-[#8E9299] font-mono mt-0.5">DB Write</div>
-                </div>
+                </AppTooltip>
               </div>
               <div className="flex justify-center mt-2">
-                <span className="text-[10px] font-mono text-[#8E9299] bg-[#2a2b30]/50 px-2 py-0.5 rounded">
-                  {overallTiming.symbols} symbols synced
-                </span>
+                <AppTooltip description="Total number of trading pairs successfully synced across all connected exchanges.">
+                  <span className="text-[10px] font-mono text-[#8E9299] bg-[#2a2b30]/50 px-2 py-0.5 rounded cursor-help">
+                    {overallTiming.symbols} symbols synced
+                  </span>
+                </AppTooltip>
               </div>
             </div>
           )}
@@ -405,11 +421,17 @@ export function FundingSyncTimingPanel() {
                     {/* Timing bar */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 text-[11px] font-mono text-[#8E9299]">
-                        <span>{ex.totalSec.toFixed(1)}s</span>
+                        <AppTooltip description={`Total time spent fetching from ${ex.name}.`}>
+                          <span className="cursor-help border-b border-dashed border-[#8E9299]/50">{ex.totalSec.toFixed(1)}s</span>
+                        </AppTooltip>
                         <span className="text-[#8E9299]/50">|</span>
-                        <span>{ex.synced}/{ex.stale}</span>
+                        <AppTooltip description="Number of symbols successfully synced out of the total stale symbols that needed updates.">
+                          <span className="cursor-help border-b border-dashed border-[#8E9299]/50">{ex.synced}/{ex.stale}</span>
+                        </AppTooltip>
                         <span className="text-[#8E9299]/50">|</span>
-                        <span>{ex.avgMs}ms avg</span>
+                        <AppTooltip description="Average latency (in milliseconds) per API request batch.">
+                          <span className="cursor-help border-b border-dashed border-[#8E9299]/50">{ex.avgMs}ms avg</span>
+                        </AppTooltip>
                       </div>
                       {/* Mini progress bar */}
                       <div className="mt-1 h-1 bg-[#2a2b30] rounded-full overflow-hidden">
@@ -424,13 +446,21 @@ export function FundingSyncTimingPanel() {
                     </div>
                     {/* Success badge */}
                     <div className="shrink-0">
-                      {pct >= 80 ? (
-                        <Zap className="w-3.5 h-3.5 text-[#00C853]" />
-                      ) : pct >= 50 ? (
-                        <RefreshCw className="w-3.5 h-3.5 text-yellow-400" />
-                      ) : (
-                        <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
-                      )}
+                      <AppTooltip description={
+                        pct >= 80 ? "Healthy sync rate. Most or all stale symbols were successfully updated." :
+                        pct >= 50 ? "Degraded sync rate. Some symbols failed to update or hit rate limits." :
+                        "Poor sync rate. Many symbols failed to update, possibly due to rate limits or API errors."
+                      }>
+                        <div className="cursor-help">
+                          {pct >= 80 ? (
+                            <Zap className="w-3.5 h-3.5 text-[#00C853]" />
+                          ) : pct >= 50 ? (
+                            <RefreshCw className="w-3.5 h-3.5 text-yellow-400" />
+                          ) : (
+                            <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+                          )}
+                        </div>
+                      </AppTooltip>
                     </div>
                   </div>
                 );
