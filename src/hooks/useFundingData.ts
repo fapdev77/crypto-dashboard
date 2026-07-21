@@ -6,7 +6,7 @@ import { LogManager } from '../services/LogManager';
 
 export function useFundingData() {
   const [summaries, setSummaries] = useState<FundingRateSummary[]>([]);
-  const { currentRates, isSyncing, syncProgress } = useFundingStore();
+  const { currentRates, isSyncing } = useFundingStore();
   const [isLoading, setIsLoading] = useState(true);
 
   // Poll IndexedDB for new summaries every few seconds while syncing, or just once if not syncing
@@ -34,14 +34,15 @@ export function useFundingData() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isSyncing, syncProgress]);
+  }, [isSyncing]);
 
   // Lightweight mapping: seed from currentRates, overwrite from pre-computed summaries
   const aggregatedData = useMemo(() => {
     const map = new Map<string, FundingFeeAggregated>();
 
-    // Seed from current rates (provides nextFundingRate/nextFundingTime + zero-fill for unsync'd symbols)
+    // Seed from current rates (only if nextFundingTime > 0)
     currentRates.forEach(cr => {
+      if (!cr.nextFundingTime || cr.nextFundingTime <= 0) return;
       map.set(`${cr.exchange}-${cr.symbol}`, {
         exchange: cr.exchange,
         symbol: cr.symbol,
@@ -58,8 +59,9 @@ export function useFundingData() {
       });
     });
 
-    // Overwrite historical fields from pre-computed summaries
+    // Overwrite historical fields from pre-computed summaries (skip zeroSummary guards)
     summaries.forEach(s => {
+      if (s.lastFundingTime === '0') return;
       const key = `${s.exchange}-${s.symbol}`;
       const existing = map.get(key);
       const base = existing ?? {
@@ -87,7 +89,12 @@ export function useFundingData() {
       });
     });
 
-    return Array.from(map.values());
+    // Filter out items that have neither a valid next funding time nor historical funding data
+    return Array.from(map.values()).filter(item => {
+      const hasNextFunding = item.nextFundingTime !== undefined && item.nextFundingTime > 0;
+      const hasHistory = item.lastFundingRate !== undefined;
+      return hasNextFunding || hasHistory;
+    });
   }, [currentRates, summaries]);
 
   return { aggregatedData, isLoading };

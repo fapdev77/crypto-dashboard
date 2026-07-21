@@ -9,7 +9,7 @@ export function ConnectionLogTerminal() {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
   
-  const [selectedLevels, setSelectedLevels] = useState<LogLevel[]>(['ERROR', 'WARN']);
+  const [selectedLevels, setSelectedLevels] = useState<LogLevel[]>(['ERROR', 'WARN', 'SYSTEM']);
   const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedConnection, setSelectedConnection] = useState<string>('ALL');

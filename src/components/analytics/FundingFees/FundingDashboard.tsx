@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useFundingData } from '../../../hooks/useFundingData';
+import { useFundingSync } from '../../../hooks/useFundingSync';
 import { useFundingStore } from '../../../store/fundingStore';
 import { useSettingsStore } from '../../../store/settingsStore';
+import { usePositionsStore } from '../../../store/positionsStore';
 import { FundingFeeAggregated } from '../../../types';
-import { Clock, Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Clock, Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle, Briefcase } from 'lucide-react';
 import { AppTooltip } from '../../ui/Tooltip';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
@@ -260,24 +262,25 @@ const FundingTable = ({
             <tbody className="divide-y divide-[#2a2b30]/50">
               {paginatedGroups.map(([coin, rows]) => {
                 const isExpanded = expandedCoins[coin];
-                const isFav = favorites.includes(coin);
+                const instType = rows[0]?.instrumentType || 'USDT-M';
+                const rowId = `${coin}_${instType}`;
+                const isFav = favorites.includes(rowId) || favorites.includes(coin);
 
-                const avg = (key: keyof FundingFeeAggregated, filterFn?: (r: FundingFeeAggregated) => boolean) => {
+                const maxVal = (key: keyof FundingFeeAggregated, filterFn?: (r: FundingFeeAggregated) => boolean) => {
                   let valid = rows.filter(r => r[key] !== undefined && typeof r[key] === 'number');
                   if (filterFn) valid = valid.filter(filterFn);
                   if (valid.length === 0) return undefined;
-                  const sum = valid.reduce((acc, r) => acc + (r[key] as number), 0);
-                  return sum / valid.length;
+                  return Math.max(...valid.map(r => r[key] as number));
                 };
 
-                const avgNext = avg('nextFundingRate');
-                const avgLast = avg('lastFundingRate');
-                const avgToday = avg('todaySum');
-                const avgMonth = avg('currentMonthSum');
-                const avgLastMonth = avg('lastMonthSum');
-                const avg3M = avg('last3MonthsSum');
-                const avg6M = avg('last6MonthsSum');
-                const avgYear = avg('yearSum');
+                const maxNext = maxVal('nextFundingRate');
+                const maxLast = maxVal('lastFundingRate');
+                const maxToday = maxVal('todaySum');
+                const maxMonth = maxVal('currentMonthSum');
+                const maxLastMonth = maxVal('lastMonthSum');
+                const max3M = maxVal('last3MonthsSum');
+                const max6M = maxVal('last6MonthsSum');
+                const maxYear = maxVal('yearSum');
 
                 return (
                   <React.Fragment key={coin}>
@@ -287,7 +290,7 @@ const FundingTable = ({
                     >
                       <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
                         <button 
-                          onClick={() => toggleFavorite(coin)}
+                          onClick={() => toggleFavorite(rowId)}
                           className="text-[#8E9299] hover:text-yellow-500 transition-colors"
                         >
                           <Star className={clsx("w-4 h-4", isFav && "fill-yellow-500 text-yellow-500")} />
@@ -298,68 +301,68 @@ const FundingTable = ({
                           {isExpanded ? <ChevronDown className="w-4 h-4 text-[#8E9299]" /> : <ChevronRight className="w-4 h-4 text-[#8E9299]" />}
                           <CoinIcon symbol={coin} className="w-6 h-6" />
                           <span className="text-white font-bold text-sm">{coin}</span>
-                          <span className="text-[10px] text-[#8E9299] bg-[#2a2b30] px-1.5 py-0.5 rounded">Avg</span>
+                          <span className="text-[10px] text-[#8E9299] bg-[#2a2b30] px-1.5 py-0.5 rounded">Max</span>
                         </div>
                       </td>
                       <td className="px-6 py-3 text-right">
-                        <RateTooltip rate={avgNext} label="Avg next funding rate">
-                          <FundingRateFlash value={avgNext}>
-                            {avgNext !== undefined ? (
-                              <span className={avgNext > 0 ? "text-green-400 font-medium" : avgNext < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
-                                {formatPercent(avgNext)}
+                        <RateTooltip rate={maxNext} label="Max next funding rate">
+                          <FundingRateFlash value={maxNext}>
+                            {maxNext !== undefined ? (
+                              <span className={maxNext > 0 ? "text-green-400 font-medium" : maxNext < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
+                                {formatPercent(maxNext)}
                               </span>
                             ) : <span className="text-[#8E9299]">---</span>}
                           </FundingRateFlash>
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right">
-                        <RateTooltip rate={avgLast} label="Avg last funding rate">
-                          {avgLast !== undefined ? (
-                            <span className={avgLast > 0 ? "text-green-400 font-medium" : avgLast < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
-                              {formatPercent(avgLast)}
+                        <RateTooltip rate={maxLast} label="Max last funding rate">
+                          {maxLast !== undefined ? (
+                            <span className={maxLast > 0 ? "text-green-400 font-medium" : maxLast < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
+                              {formatPercent(maxLast)}
                             </span>
                           ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
-                        <RateTooltip rate={avgToday} label="Today cumulative">
-                          {avgToday !== undefined ? (
-                            <span className={fundingColor(avgToday)}>{formatPercent(avgToday)}</span>
+                        <RateTooltip rate={maxToday} label="Today cumulative">
+                          {maxToday !== undefined ? (
+                            <span className={fundingColor(maxToday)}>{formatPercent(maxToday)}</span>
                           ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
-                        <RateTooltip rate={avgMonth} label="Current month cumulative">
-                          {avgMonth !== undefined ? (
-                            <span className={fundingColor(avgMonth)}>{formatPercent(avgMonth)}</span>
+                        <RateTooltip rate={maxMonth} label="Current month cumulative">
+                          {maxMonth !== undefined ? (
+                            <span className={fundingColor(maxMonth)}>{formatPercent(maxMonth)}</span>
                           ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
-                        <RateTooltip rate={avgLastMonth} label="Last month cumulative">
-                          {avgLastMonth !== undefined ? (
-                            <span className={fundingColor(avgLastMonth)}>{formatPercent(avgLastMonth)}</span>
+                        <RateTooltip rate={maxLastMonth} label="Last month cumulative">
+                          {maxLastMonth !== undefined ? (
+                            <span className={fundingColor(maxLastMonth)}>{formatPercent(maxLastMonth)}</span>
                           ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
-                        <RateTooltip rate={avg3M} label="3-month cumulative">
-                          {avg3M !== undefined ? (
-                            <span className={fundingColor(avg3M)}>{formatPercent(avg3M)}</span>
+                        <RateTooltip rate={max3M} label="3-month cumulative">
+                          {max3M !== undefined ? (
+                            <span className={fundingColor(max3M)}>{formatPercent(max3M)}</span>
                           ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
-                        <RateTooltip rate={avg6M} label="6-month cumulative">
-                          {avg6M !== undefined ? (
-                            <span className={fundingColor(avg6M)}>{formatPercent(avg6M)}</span>
+                        <RateTooltip rate={max6M} label="6-month cumulative">
+                          {max6M !== undefined ? (
+                            <span className={fundingColor(max6M)}>{formatPercent(max6M)}</span>
                           ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
-                        <RateTooltip rate={avgYear} label="1-year cumulative">
-                          {avgYear !== undefined ? (
-                            <span className={fundingColor(avgYear)}>{formatPercent(avgYear)}</span>
+                        <RateTooltip rate={maxYear} label="1-year cumulative">
+                          {maxYear !== undefined ? (
+                            <span className={fundingColor(maxYear)}>{formatPercent(maxYear)}</span>
                           ) : <span className="text-[#8E9299]">---</span>}
                         </RateTooltip>
                       </td>
@@ -497,26 +500,64 @@ const FundingTable = ({
 };
 
 export const FundingDashboard = () => {
+  const { forceSync } = useFundingSync();
   const { aggregatedData, isLoading } = useFundingData();
-  const { isSyncing, syncMessage, favorites } = useFundingStore();
+  const { isSyncing, syncMessage, favorites, lastHistoryFetch, nextScheduledSyncTime } = useFundingStore();
   const fundingHistoryInterval = useSettingsStore(state => state.fundingHistoryInterval);
+  const positions = usePositionsStore(state => state.positions);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(() => {
+    return localStorage.getItem('fundingDashboard_showFavoritesOnly') === 'true';
+  });
+  const [showOpenPositionsOnly, setShowOpenPositionsOnly] = useState(() => {
+    return localStorage.getItem('fundingDashboard_showOpenPositionsOnly') === 'true';
+  });
   const [expandAll, setExpandAll] = useState(true);
+
+  useEffect(() => {
+    localStorage.setItem('fundingDashboard_showFavoritesOnly', String(showFavoritesOnly));
+  }, [showFavoritesOnly]);
+
+  useEffect(() => {
+    localStorage.setItem('fundingDashboard_showOpenPositionsOnly', String(showOpenPositionsOnly));
+  }, [showOpenPositionsOnly]);
+
+  const hasOpenPositions = Object.keys(positions).length > 0;
+  
+  const openPositionCoins = useMemo(() => {
+    const coins = new Set<string>();
+    Object.values(positions).forEach(p => {
+      let instType = 'USDT-M';
+      if (p.quoteCoin === 'USD' || p.ccy === p.baseCoin) {
+        instType = 'COIN-M';
+      } else if (p.quoteCoin === 'USDC' || p.ccy === 'USDC') {
+        instType = 'USDC-M';
+      }
+      coins.add(`${getBaseCoin(p.symbol)}_${instType}`);
+    });
+    return coins;
+  }, [positions]);
 
   const filteredData = useMemo(() => {
     return aggregatedData.filter(row => {
       const coin = getBaseCoin(row.symbol);
-      if (showFavoritesOnly && !favorites.includes(coin)) return false;
+      const rowId = `${coin}_${row.instrumentType}`;
+      
+      const isFav = favorites.includes(rowId) || favorites.includes(coin);
+      if (showFavoritesOnly && !isFav) return false;
+      
+      const hasOpenPos = openPositionCoins.has(rowId) || openPositionCoins.has(coin);
+      if (showOpenPositionsOnly && !hasOpenPos) return false;
+      
       if (exchangeFilter.toLowerCase() !== 'all' && row.exchange !== exchangeFilter.toLowerCase()) return false;
       if (instrumentFilter.toLowerCase() !== 'all' && row.instrumentType !== instrumentFilter) return false;
       if (searchTerm && !row.symbol.toLowerCase().includes(searchTerm.toLowerCase()) && !coin.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       return true;
     });
-  }, [aggregatedData, searchTerm, exchangeFilter, instrumentFilter, showFavoritesOnly, favorites]);
+  }, [aggregatedData, searchTerm, exchangeFilter, instrumentFilter, showFavoritesOnly, showOpenPositionsOnly, openPositionCoins, favorites]);
 
   const groupedData = useMemo(() => {
     const groups: Record<string, FundingFeeAggregated[]> = {
@@ -551,6 +592,9 @@ export const FundingDashboard = () => {
             isSyncing={isSyncing}
             syncMessage={isSyncing ? (syncMessage || 'Syncing funding history...') : null}
             overrideIntervalMs={fundingHistoryInterval * 60 * 60 * 1000}
+            overrideLastSyncTime={lastHistoryFetch}
+            overrideNextSyncTime={nextScheduledSyncTime}
+            onManualSync={forceSync}
           />
         </div>
       </div>
@@ -558,18 +602,40 @@ export const FundingDashboard = () => {
       <div className="px-0">
         <FilterBar
           prepend={
-            <button
-              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-              className={clsx(
-                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap",
-                showFavoritesOnly 
-                  ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-500" 
-                  : "bg-[#1a1b1e] border-[#2a2b30] text-[#8E9299] hover:text-white"
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                className={clsx(
+                  "relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap overflow-hidden",
+                  showFavoritesOnly 
+                    ? "border-yellow-500/30 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
+                    : "bg-[#1a1b1e] border-[#2a2b30] text-[#8E9299] hover:text-white"
+                )}
+              >
+                {showFavoritesOnly && (
+                  <div className="absolute inset-0 bg-yellow-500/10 animate-pulse pointer-events-none" />
+                )}
+                <Star className={clsx("w-4 h-4 relative z-10", showFavoritesOnly && "fill-yellow-500")} />
+                <span className="relative z-10">Favorites</span>
+              </button>
+              {hasOpenPositions && (
+                <button
+                  onClick={() => setShowOpenPositionsOnly(!showOpenPositionsOnly)}
+                  className={clsx(
+                    "relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap overflow-hidden",
+                    showOpenPositionsOnly 
+                      ? "border-[#2F6BFF]/30 text-[#2F6BFF] shadow-[0_0_10px_rgba(47,107,255,0.1)]" 
+                      : "bg-[#1a1b1e] border-[#2a2b30] text-[#8E9299] hover:text-white"
+                  )}
+                >
+                  {showOpenPositionsOnly && (
+                    <div className="absolute inset-0 bg-[#2F6BFF]/10 animate-pulse pointer-events-none" />
+                  )}
+                  <Briefcase className="w-4 h-4 relative z-10" />
+                  <span className="relative z-10">Open Positions</span>
+                </button>
               )}
-            >
-              <Star className={clsx("w-4 h-4", showFavoritesOnly && "fill-yellow-500")} />
-              Favorites
-            </button>
+            </div>
           }
           search={{
             value: searchTerm,
@@ -603,7 +669,7 @@ export const FundingDashboard = () => {
               key={groupTitle} 
               title={groupTitle} 
               data={rows} 
-              filterKey={`${searchTerm}-${exchangeFilter}-${instrumentFilter}-${showFavoritesOnly}`}
+              filterKey={`${searchTerm}-${exchangeFilter}-${instrumentFilter}-${showFavoritesOnly}-${showOpenPositionsOnly}`}
               defaultExpanded={expandAll} 
             />
           ))}

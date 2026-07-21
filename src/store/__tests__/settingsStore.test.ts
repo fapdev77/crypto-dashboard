@@ -50,14 +50,16 @@ describe('settingsStore — fundingHistoryInterval', () => {
       expect(useSettingsStore.getState().fundingPollingInterval).toBe(1);
     });
 
-    it('should allow values outside 4-8h at store level (range is UI-only)', () => {
-      // The store does NOT enforce the 4-8h range — that's done by the UI slider.
-      // This test documents that the store accepts any number.
+    it('should clamp values outside 4-8h range at store level', () => {
+      // The store now enforces the 4-8h range via clamp in the setter.
       useSettingsStore.getState().setFundingHistoryInterval(2);
-      expect(useSettingsStore.getState().fundingHistoryInterval).toBe(2);
+      expect(useSettingsStore.getState().fundingHistoryInterval).toBe(4);
 
       useSettingsStore.getState().setFundingHistoryInterval(12);
-      expect(useSettingsStore.getState().fundingHistoryInterval).toBe(12);
+      expect(useSettingsStore.getState().fundingHistoryInterval).toBe(8);
+
+      useSettingsStore.getState().setFundingHistoryInterval(6);
+      expect(useSettingsStore.getState().fundingHistoryInterval).toBe(6);
     });
   });
 
@@ -81,7 +83,159 @@ describe('settingsStore — fundingHistoryInterval', () => {
     });
   });
 
-  describe('persist layer', () => {
+  describe('setFundingPollingInterval clamp', () => {
+    it('should clamp fundingPollingInterval to [1, 60]', () => {
+      useSettingsStore.getState().setFundingPollingInterval(-5);
+      expect(useSettingsStore.getState().fundingPollingInterval).toBe(1);
+
+      useSettingsStore.getState().setFundingPollingInterval(0);
+      expect(useSettingsStore.getState().fundingPollingInterval).toBe(1);
+
+      useSettingsStore.getState().setFundingPollingInterval(30);
+      expect(useSettingsStore.getState().fundingPollingInterval).toBe(30);
+
+      useSettingsStore.getState().setFundingPollingInterval(99);
+      expect(useSettingsStore.getState().fundingPollingInterval).toBe(60);
+    });
+  });
+});
+
+// ───────────────────────────────────────────────
+// Settings Store — pollingInterval (REST refresh)
+// ───────────────────────────────────────────────
+
+describe('settingsStore — pollingInterval', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ pollingInterval: 5 });
+  });
+
+  describe('default value', () => {
+    it('should start with pollingInterval = 5', () => {
+      expect(useSettingsStore.getState().pollingInterval).toBe(5);
+    });
+  });
+
+  describe('setPollingInterval', () => {
+    it('should set in-range values correctly', () => {
+      useSettingsStore.getState().setPollingInterval(1);
+      expect(useSettingsStore.getState().pollingInterval).toBe(1);
+
+      useSettingsStore.getState().setPollingInterval(30);
+      expect(useSettingsStore.getState().pollingInterval).toBe(30);
+
+      useSettingsStore.getState().setPollingInterval(60);
+      expect(useSettingsStore.getState().pollingInterval).toBe(60);
+    });
+
+    it('should clamp values below 1 to 1', () => {
+      useSettingsStore.getState().setPollingInterval(0);
+      expect(useSettingsStore.getState().pollingInterval).toBe(1);
+
+      useSettingsStore.getState().setPollingInterval(-10);
+      expect(useSettingsStore.getState().pollingInterval).toBe(1);
+    });
+
+    it('should clamp values above 60 to 60', () => {
+      useSettingsStore.getState().setPollingInterval(120);
+      expect(useSettingsStore.getState().pollingInterval).toBe(60);
+    });
+  });
+});
+
+// ───────────────────────────────────────────────
+// Settings Store — historyCacheInterval
+// ───────────────────────────────────────────────
+
+describe('settingsStore — historyCacheInterval', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({
+      historyCacheInterval: 15,
+      pollingInterval: 5, // ensure isolation
+    });
+  });
+
+  describe('default value', () => {
+    it('should start with historyCacheInterval = 15', () => {
+      expect(useSettingsStore.getState().historyCacheInterval).toBe(15);
+    });
+  });
+
+  describe('setHistoryCacheInterval', () => {
+    it('should set in-range values correctly', () => {
+      useSettingsStore.getState().setHistoryCacheInterval(1);
+      expect(useSettingsStore.getState().historyCacheInterval).toBe(1);
+
+      useSettingsStore.getState().setHistoryCacheInterval(30);
+      expect(useSettingsStore.getState().historyCacheInterval).toBe(30);
+
+      useSettingsStore.getState().setHistoryCacheInterval(60);
+      expect(useSettingsStore.getState().historyCacheInterval).toBe(60);
+    });
+
+    it('should clamp values below 1 to 1', () => {
+      useSettingsStore.getState().setHistoryCacheInterval(0);
+      expect(useSettingsStore.getState().historyCacheInterval).toBe(1);
+
+      useSettingsStore.getState().setHistoryCacheInterval(-5);
+      expect(useSettingsStore.getState().historyCacheInterval).toBe(1);
+    });
+
+    it('should clamp values above 60 to 60', () => {
+      useSettingsStore.getState().setHistoryCacheInterval(100);
+      expect(useSettingsStore.getState().historyCacheInterval).toBe(60);
+    });
+
+    it('should not affect other settings', () => {
+      useSettingsStore.getState().setHistoryCacheInterval(30);
+      expect(useSettingsStore.getState().pollingInterval).toBe(5);
+    });
+  });
+});
+
+// ───────────────────────────────────────────────
+// Settings Store — metadataCacheTtlHours
+// ───────────────────────────────────────────────
+
+describe('settingsStore — metadataCacheTtlHours', () => {
+  beforeEach(() => {
+    useSettingsStore.setState({ metadataCacheTtlHours: 24 });
+  });
+
+  describe('default value', () => {
+    it('should start with metadataCacheTtlHours = 24', () => {
+      expect(useSettingsStore.getState().metadataCacheTtlHours).toBe(24);
+    });
+  });
+
+  describe('setMetadataCacheTtlHours', () => {
+    it('should set in-range values correctly', () => {
+      useSettingsStore.getState().setMetadataCacheTtlHours(1);
+      expect(useSettingsStore.getState().metadataCacheTtlHours).toBe(1);
+
+      useSettingsStore.getState().setMetadataCacheTtlHours(12);
+      expect(useSettingsStore.getState().metadataCacheTtlHours).toBe(12);
+
+      useSettingsStore.getState().setMetadataCacheTtlHours(24);
+      expect(useSettingsStore.getState().metadataCacheTtlHours).toBe(24);
+    });
+
+    it('should clamp values below 1 to 1', () => {
+      useSettingsStore.getState().setMetadataCacheTtlHours(0);
+      expect(useSettingsStore.getState().metadataCacheTtlHours).toBe(1);
+    });
+
+    it('should clamp values above 24 to 24', () => {
+      useSettingsStore.getState().setMetadataCacheTtlHours(48);
+      expect(useSettingsStore.getState().metadataCacheTtlHours).toBe(24);
+    });
+  });
+});
+
+// ───────────────────────────────────────────────
+// Settings Store — persist layer
+// ───────────────────────────────────────────────
+
+describe('persist layer', () => {
     it('should store fundingHistoryInterval in localStorage', () => {
       // Clear any previous persist
       localStorage.removeItem('terminal-settings');
@@ -106,5 +260,4 @@ describe('settingsStore — fundingHistoryInterval', () => {
 
       localStorage.removeItem('terminal-settings');
     });
-  });
 });

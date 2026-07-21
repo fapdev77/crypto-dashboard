@@ -446,7 +446,7 @@ export class FundingService {
           for (const item of data.result.list) {
             const fundingRate = FundingService.parseFundingRate(item.fundingRate);
             const nextFundingTime = FundingService.parseIntOrNull(item.nextFundingTime);
-            if (fundingRate !== null && nextFundingTime !== null) {
+            if (fundingRate !== null && nextFundingTime !== null && nextFundingTime > 0) {
               results.push({
                 exchange: 'bybit',
                 symbol: item.symbol,
@@ -480,7 +480,7 @@ export class FundingService {
 
           const fundingRate = FundingService.parseFundingRate(item.fundingRate);
           const nextFundingTime = FundingService.parseIntOrNull(item.fundingTime);
-          if (fundingRate !== null && nextFundingTime !== null) {
+          if (fundingRate !== null && nextFundingTime !== null && nextFundingTime > 0) {
             results.push({
               exchange: 'okx',
               symbol: item.instId,
@@ -509,7 +509,7 @@ export class FundingService {
           for (const item of data.data) {
             const fundingRate = FundingService.parseFundingRate(item.fundingRate);
             const nextTime = FundingService.parseIntOrNull(item.nextUpdate || item.nextFundingTime);
-            if (fundingRate !== null && nextTime !== null) {
+            if (fundingRate !== null && nextTime !== null && nextTime > 0) {
               results.push({
                 exchange: 'bitget',
                 symbol: item.symbol,
