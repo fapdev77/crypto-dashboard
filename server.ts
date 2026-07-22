@@ -5,7 +5,7 @@ import fetch from "node-fetch"; // natively available globally in Node 18+ but l
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
 
   // We need express.text or raw to parse arbitrary body formats, but json is also good
   // ONLY for non-websocket proxy routes
