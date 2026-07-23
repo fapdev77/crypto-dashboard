@@ -8,6 +8,7 @@ import { FundingFeeAggregated } from '../../../types';
 import { Clock, Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle, Briefcase } from 'lucide-react';
 import { useKpiMetrics } from '../../../hooks/useKpiMetrics';
 import { MarketOverviewCards } from './MarketOverviewCards';
+import { FundingRateComparison } from './FundingRateComparison';
 import { AppTooltip } from '../../ui/Tooltip';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
@@ -72,41 +73,6 @@ const ThTooltip = ({ columnKey, children }: { columnKey: string; children: React
  * Wraps children and flashes green/red when `value` changes (up/down).
  * Only the `nextFundingRate` changes dynamically, so this is applied exclusively to that column.
  */
-const FundingRateFlash = ({
-  value,
-  children,
-}: {
-  value: number | undefined;
-  children: React.ReactNode;
-}) => {
-  const prevRef = useRef(value);
-  const [flash, setFlash] = useState<'up' | 'down' | null>(null);
-
-  useEffect(() => {
-    if (prevRef.current !== undefined && value !== undefined && prevRef.current !== value) {
-      const direction = value > prevRef.current ? 'up' : 'down';
-      setFlash(direction);
-      const timer = setTimeout(() => setFlash(null), 800);
-      prevRef.current = value;
-      return () => clearTimeout(timer);
-    }
-    prevRef.current = value;
-  }, [value]);
-
-  return (
-    <span
-      className={
-        flash === 'up'
-          ? 'animate-funding-flash-up rounded-sm inline-block'
-          : flash === 'down'
-            ? 'animate-funding-flash-down rounded-sm inline-block'
-            : undefined
-      }
-    >
-      {children}
-    </span>
-  );
-};
 
 /** Explanation for a single funding-rate value: who paid whom. */
 const RateTooltip = ({
@@ -308,13 +274,13 @@ const FundingTable = ({
                       </td>
                       <td className="px-6 py-3 text-right">
                         <RateTooltip rate={maxNext} label="Max next funding rate">
-                          <FundingRateFlash value={maxNext}>
+                          
                             {maxNext !== undefined ? (
                               <span className={maxNext > 0 ? "text-green-400 font-medium" : maxNext < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
                                 {formatPercent(maxNext)}
                               </span>
                             ) : <span className="text-[#8E9299]">---</span>}
-                          </FundingRateFlash>
+                          
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right">
@@ -394,11 +360,11 @@ const FundingTable = ({
                             {row.nextFundingRate !== undefined ? (
                               <div className="flex flex-col items-end">
                                 <RateTooltip rate={row.nextFundingRate} label="Next funding rate">
-                                  <FundingRateFlash value={row.nextFundingRate}>
+                                  
                                     <span className={row.nextFundingRate > 0 ? "text-green-400" : row.nextFundingRate < 0 ? "text-red-400" : "text-white"}>
                                       {formatPercent(row.nextFundingRate)}
                                     </span>
-                                  </FundingRateFlash>
+                                  
                                 </RateTooltip>
                                 {row.nextFundingTime && (
                                   <AppTooltip
@@ -502,6 +468,7 @@ const FundingTable = ({
 };
 
 export const FundingDashboard = () => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'comparison'>('overview');
   const { forceSync } = useFundingSync();
   const { aggregatedData, isLoading } = useFundingData();
   const { isSyncing, syncMessage, favorites, lastHistoryFetch, nextScheduledSyncTime } = useFundingStore();
@@ -608,8 +575,31 @@ export const FundingDashboard = () => {
         </div>
       </div>
 
-      <div className="px-0">
-        <FilterBar
+      <div className="flex items-center gap-2 border-b border-[#2a2b30] pb-2">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={clsx(
+            "px-4 py-2 text-sm font-medium transition-colors border-b-2",
+            activeTab === 'overview' ? "border-[#2F6BFF] text-white" : "border-transparent text-[#8E9299] hover:text-white"
+          )}
+        >
+          Historical Overview
+        </button>
+        <button
+          onClick={() => setActiveTab('comparison')}
+          className={clsx(
+            "px-4 py-2 text-sm font-medium transition-colors border-b-2",
+            activeTab === 'comparison' ? "border-[#2F6BFF] text-white" : "border-transparent text-[#8E9299] hover:text-white"
+          )}
+        >
+          Funding Rate Comparison
+        </button>
+      </div>
+
+      {activeTab === 'overview' ? (
+        <>
+          <div className="px-0">
+            <FilterBar
           prepend={
             <div className="flex items-center gap-2 flex-wrap">
               <button
@@ -697,6 +687,12 @@ export const FundingDashboard = () => {
                <p className="text-sm text-[#8E9299]">Try adjusting your filters or search term.</p>
              </div>
           )}
+        </div>
+      )}
+      </>
+      ) : (
+        <div className="flex-1 min-h-0">
+          <FundingRateComparison />
         </div>
       )}
     </div>
