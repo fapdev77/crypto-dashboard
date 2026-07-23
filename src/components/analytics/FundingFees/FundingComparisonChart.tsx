@@ -13,6 +13,8 @@ import {
 } from 'recharts';
 import { CoinIcon } from '../../ui/CoinIcon';
 import clsx from 'clsx';
+import { useFundingStore } from '../../../store/fundingStore';
+import { Star } from 'lucide-react';
 
 export interface ChartDataPoint {
   id: string;
@@ -40,9 +42,14 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => {
+  const { comparisonFavorites, toggleComparisonFavorite } = useFundingStore();
+
   if (active && payload && payload.length) {
     const data = payload[0].payload as ChartDataPoint;
     const isPositive = data.value > 0;
+    
+    const rowId = data.id;
+    const isFav = comparisonFavorites.includes(rowId);
     
     return (
       <div className="bg-[#151619] border border-[#2a2b30] p-3 rounded-lg shadow-xl min-w-[200px]">
@@ -50,6 +57,15 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
           <div className="flex items-center gap-2">
             <CoinIcon symbol={data.coin} className="w-5 h-5" />
             <span className="font-bold text-white text-base">{data.symbol}</span>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleComparisonFavorite(rowId);
+              }}
+              className="text-[#8E9299] hover:text-yellow-500 transition-colors cursor-pointer"
+            >
+              <Star className={clsx("w-3.5 h-3.5", isFav && "fill-yellow-500 text-yellow-500")} />
+            </button>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#2a2b30] bg-[#2a2b30]/50 text-[#8E9299] uppercase">
@@ -111,6 +127,8 @@ const CustomizedLabel = (props: any) => {
 };
 
 export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) => {
+  const { comparisonFavorites, toggleComparisonFavorite } = useFundingStore();
+
   // Ensure enough height to avoid squished bars in horizontal layout
   const minHeight = Math.max(300, data.length * 40 + 60);
 
@@ -137,16 +155,28 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
               axisLine={{ stroke: '#2a2b30' }}
               tickLine={false}
               interval={0}
-              width={160}
+              width={180}
               tick={(props: any) => {
                 const { x, y, index } = props;
                 const item = data[index];
                 if (!item) return null;
 
+                const rowId = item.id;
+                const isFav = comparisonFavorites.includes(rowId);
+
                 return (
                   <g transform={`translate(${x},${y})`}>
-                    <foreignObject x={-150} y={-10} width={140} height={20}>
+                    <foreignObject x={-175} y={-10} width={165} height={20}>
                       <div className="flex items-center justify-end w-full h-full gap-1.5 overflow-hidden">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleComparisonFavorite(rowId);
+                          }}
+                          className="text-[#8E9299] hover:text-yellow-500 transition-colors cursor-pointer shrink-0"
+                        >
+                          <Star className={clsx("w-3.5 h-3.5", isFav && "fill-yellow-500 text-yellow-500")} />
+                        </button>
                         <span className="text-xs font-medium text-[#8E9299] truncate">{item.symbol}</span>
                         <span className={clsx(
                           "flex items-center px-1 py-[1px] rounded border text-[8px] font-medium capitalize shrink-0",

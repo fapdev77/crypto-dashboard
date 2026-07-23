@@ -25,6 +25,9 @@ interface FundingState {
   favorites: string[]; // array of ids (e.g. USDT-M_BTC)
   toggleFavorite: (id: string) => void;
   
+  comparisonFavorites: string[]; // array of ids for comparison chart
+  toggleComparisonFavorite: (id: string) => void;
+  
   // Current live rates
   currentRates: CurrentFundingRate[];
   setCurrentRates: (rates: CurrentFundingRate[]) => void;
@@ -73,6 +76,17 @@ export const useFundingStore = create<FundingState>()(
         }
       },
       
+      comparisonFavorites: [],
+      toggleComparisonFavorite: (id: string) => {
+        const { comparisonFavorites } = get();
+        
+        if (comparisonFavorites.includes(id)) {
+          set({ comparisonFavorites: comparisonFavorites.filter(f => f !== id) });
+        } else {
+          set({ comparisonFavorites: [...comparisonFavorites, id] });
+        }
+      },
+      
       currentRates: [],
       setCurrentRates: (currentRates) => set({ currentRates }),
       
@@ -98,6 +112,7 @@ export const useFundingStore = create<FundingState>()(
       name: 'funding-store',
       partialize: (state) => ({
         favorites: state.favorites,
+        comparisonFavorites: state.comparisonFavorites,
         lastHistoryFetch: state.lastHistoryFetch,
         lastSyncPerformance: state.lastSyncPerformance,
         lastExchangeTimings: state.lastExchangeTimings,
