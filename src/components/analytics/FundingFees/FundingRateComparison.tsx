@@ -97,7 +97,7 @@ export const FundingRateComparison = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
+    <div className="flex flex-col bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
       {/* Header Controls */}
       <div className="p-4 border-b border-[#2a2b30] flex flex-col gap-4 bg-[#1A1C20]/30">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
@@ -119,13 +119,13 @@ export const FundingRateComparison = () => {
             symbols={availableSymbols}
             selectedSymbols={selectedSymbols}
             onChange={setSelectedSymbols}
-            maxSelections={30}
+            maxSelections={25}
           />
         </div>
       </div>
 
       {/* Chart Area */}
-      <div className="flex-1 overflow-y-auto p-6 min-h-[400px]">
+      <div className="w-full p-6 min-h-[400px]">
         {selectedSymbols.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
             <div className="w-16 h-16 bg-[#2a2b30] rounded-full flex items-center justify-center mb-4">
@@ -133,7 +133,7 @@ export const FundingRateComparison = () => {
             </div>
             <h3 className="text-xl font-medium text-white mb-2">Select symbols</h3>
             <p className="text-[#8E9299] max-w-sm">
-              Choose up to 30 symbols from the dropdown above to compare their funding rates over time.
+              Choose up to 25 symbols from the dropdown above to compare their funding rates over time.
             </p>
           </div>
         ) : isLoading && aggregatedData.length === 0 ? (
