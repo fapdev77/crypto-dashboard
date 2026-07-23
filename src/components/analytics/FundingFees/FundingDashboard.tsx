@@ -6,6 +6,8 @@ import { useSettingsStore } from '../../../store/settingsStore';
 import { usePositionsStore } from '../../../store/positionsStore';
 import { FundingFeeAggregated } from '../../../types';
 import { Clock, Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle, Briefcase } from 'lucide-react';
+import { useKpiMetrics } from '../../../hooks/useKpiMetrics';
+import { MarketOverviewCards } from './MarketOverviewCards';
 import { AppTooltip } from '../../ui/Tooltip';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
@@ -503,12 +505,19 @@ export const FundingDashboard = () => {
   const { forceSync } = useFundingSync();
   const { aggregatedData, isLoading } = useFundingData();
   const { isSyncing, syncMessage, favorites, lastHistoryFetch, nextScheduledSyncTime } = useFundingStore();
+  const { currentRates } = useFundingStore();
   const fundingHistoryInterval = useSettingsStore(state => state.fundingHistoryInterval);
   const positions = usePositionsStore(state => state.positions);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
+  // ── KPI metrics ──
+  const { marketMetrics, rankings } = useKpiMetrics(
+    aggregatedData,
+    currentRates,
+  );
+
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(() => {
     return localStorage.getItem('fundingDashboard_showFavoritesOnly') === 'true';
   });
@@ -598,11 +607,11 @@ export const FundingDashboard = () => {
           />
         </div>
       </div>
-      
+
       <div className="px-0">
         <FilterBar
           prepend={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                 className={clsx(
@@ -656,7 +665,13 @@ export const FundingDashboard = () => {
           }}
         />
       </div>
-      
+
+      {/* ── Market Overview ── */}
+      <MarketOverviewCards
+        marketMetrics={marketMetrics}
+        rankings={rankings}
+      />
+
       {isLoading && aggregatedData.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-12 opacity-50">
           <Loader2 className="w-8 h-8 text-[#2F6BFF] animate-spin mb-4" />
