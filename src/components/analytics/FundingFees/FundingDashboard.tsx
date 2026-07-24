@@ -3,7 +3,7 @@ import { useFundingData } from '../../../hooks/useFundingData';
 import { useFundingSync } from '../../../hooks/useFundingSync';
 import { useFundingStore } from '../../../store/fundingStore';
 import { useSettingsStore } from '../../../store/settingsStore';
-import { usePositionsStore } from '../../../store/positionsStore';
+import { useOpenPositionKeys, getBaseCoin } from '../../../hooks/useOpenPositionKeys';
 import { FundingFeeAggregated } from '../../../types';
 import { Clock, Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle, Briefcase } from 'lucide-react';
 import { useKpiMetrics } from '../../../hooks/useKpiMetrics';
@@ -19,13 +19,6 @@ import { usePagination } from '../../../hooks/usePagination';
 import clsx from 'clsx';
 
 const COINS_PER_PAGE = 25;
-
-const getBaseCoin = (symbol: string) => {
-  let base = symbol.split('-')[0];
-  base = base.split('_')[0];
-  base = base.replace(/USDT$|USD$|PERP$|FUTURES$/i, '');
-  return base.toUpperCase();
-};
 
 const formatPercent = (val: number) => (val * 100).toFixed(4) + '%';
 
@@ -474,7 +467,7 @@ export const FundingDashboard = () => {
   const { isSyncing, syncMessage, favorites, lastHistoryFetch, nextScheduledSyncTime } = useFundingStore();
   const { currentRates } = useFundingStore();
   const fundingHistoryInterval = useSettingsStore(state => state.fundingHistoryInterval);
-  const positions = usePositionsStore(state => state.positions);
+  const openPositionKeys = useOpenPositionKeys();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
@@ -501,21 +494,7 @@ export const FundingDashboard = () => {
     localStorage.setItem('fundingDashboard_showOpenPositionsOnly', String(showOpenPositionsOnly));
   }, [showOpenPositionsOnly]);
 
-  const hasOpenPositions = Object.keys(positions).length > 0;
-  
-  const openPositionCoins = useMemo(() => {
-    const coins = new Set<string>();
-    Object.values(positions).forEach(p => {
-      let instType = 'USDT-M';
-      if (p.quoteCoin === 'USD' || p.ccy === p.baseCoin) {
-        instType = 'COIN-M';
-      } else if (p.quoteCoin === 'USDC' || p.ccy === 'USDC') {
-        instType = 'USDC-M';
-      }
-      coins.add(`${getBaseCoin(p.symbol)}_${instType}`);
-    });
-    return coins;
-  }, [positions]);
+  const hasOpenPositions = openPositionKeys.size > 0;
 
   const filteredData = useMemo(() => {
     return aggregatedData.filter(row => {
@@ -525,7 +504,7 @@ export const FundingDashboard = () => {
       const isFav = favorites.includes(rowId) || favorites.includes(coin);
       if (showFavoritesOnly && !isFav) return false;
       
-      const hasOpenPos = openPositionCoins.has(rowId) || openPositionCoins.has(coin);
+      const hasOpenPos = openPositionKeys.has(`${row.exchange}|${coin}|${row.instrumentType}`);
       if (showOpenPositionsOnly && !hasOpenPos) return false;
       
       if (exchangeFilter.toLowerCase() !== 'all' && row.exchange !== exchangeFilter.toLowerCase()) return false;
@@ -533,7 +512,7 @@ export const FundingDashboard = () => {
       if (searchTerm && !row.symbol.toLowerCase().includes(searchTerm.toLowerCase()) && !coin.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       return true;
     });
-  }, [aggregatedData, searchTerm, exchangeFilter, instrumentFilter, showFavoritesOnly, showOpenPositionsOnly, openPositionCoins, favorites]);
+  }, [aggregatedData, searchTerm, exchangeFilter, instrumentFilter, showFavoritesOnly, showOpenPositionsOnly, openPositionKeys, favorites]);
 
   const groupedData = useMemo(() => {
     const groups: Record<string, FundingFeeAggregated[]> = {

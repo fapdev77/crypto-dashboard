@@ -1,25 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useFundingData } from '../../../hooks/useFundingData';
 import { useFundingStore } from '../../../store/fundingStore';
-import { usePositionsStore } from '../../../store/positionsStore';
+import { useOpenPositionKeys, getBaseCoin } from '../../../hooks/useOpenPositionKeys';
 import { SymbolMultiSelect, SymbolOption } from './SymbolMultiSelect';
 import { PeriodSegmentedControl, PeriodOption } from './PeriodSegmentedControl';
 import { FundingComparisonChart, ChartDataPoint } from './FundingComparisonChart';
 import { BarChart2, X, Star, Briefcase } from 'lucide-react';
 import clsx from 'clsx';
 
-const getBaseCoin = (symbol: string) => {
-  let base = symbol.split('-')[0];
-  base = base.split('_')[0];
-  base = base.replace(/USDT$|USD$|PERP$|FUTURES$/i, '');
-  return base.toUpperCase();
-};
-
 export const FundingRateComparison = () => {
   const { aggregatedData, isLoading } = useFundingData();
   const { comparisonFavorites } = useFundingStore();
-  const positions = usePositionsStore(state => state.positions);
-  
   const [selectedSymbols, setSelectedSymbols] = useState<string[]>([]);
   const [period, setPeriod] = useState<PeriodOption>('last');
 
@@ -46,38 +37,23 @@ export const FundingRateComparison = () => {
     }
   }, [comparisonFavorites.length]);
 
-  const hasOpenPositions = Object.keys(positions).length > 0;
+  const openPositionKeys = useOpenPositionKeys();
+  const hasOpenPositions = openPositionKeys.size > 0;
   
-  const openPositionCoins = useMemo(() => {
-    const coins = new Set<string>();
-    Object.values(positions).forEach(p => {
-      let instType = 'USDT-M';
-      if (p.quoteCoin === 'USD' || p.ccy === p.baseCoin) {
-        instType = 'COIN-M';
-      } else if (p.quoteCoin === 'USDC' || p.ccy === 'USDC') {
-        instType = 'USDC-M';
-      }
-      coins.add(`${getBaseCoin(p.symbol)}_${instType}`);
-    });
-    return coins;
-  }, [positions]);
-
-  // Filter the available dataset by favorites/positions
   const filteredAggregatedData = useMemo(() => {
     return aggregatedData.filter(row => {
       const coin = getBaseCoin(row.symbol);
-      const coinTypeId = `${coin}_${row.instrumentType}`;
       const individualId = `${row.exchange}|${row.symbol}|${row.instrumentType}`;
       
       const isFav = comparisonFavorites.includes(individualId);
       if (showFavoritesOnly && !isFav) return false;
       
-      const hasOpenPos = openPositionCoins.has(coinTypeId) || openPositionCoins.has(coin);
+      const hasOpenPos = openPositionKeys.has(`${row.exchange}|${coin}|${row.instrumentType}`);
       if (showOpenPositionsOnly && !hasOpenPos) return false;
       
       return true;
     });
-  }, [aggregatedData, showFavoritesOnly, showOpenPositionsOnly, openPositionCoins, comparisonFavorites]);
+  }, [aggregatedData, showFavoritesOnly, showOpenPositionsOnly, openPositionKeys, comparisonFavorites]);
 
   // Extract unique combinations for the selector
   const availableSymbols: SymbolOption[] = useMemo(() => {
