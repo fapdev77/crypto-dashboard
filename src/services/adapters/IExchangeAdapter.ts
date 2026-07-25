@@ -3,6 +3,20 @@ import { ApiCredentials } from '../../store/apiKeysStore';
 
 export interface IExchangeAdapter {
   /**
+   * Fetches active account balances and normalizes them into the UnifiedBalance format.
+   *
+   * @param key API Key metadata object
+   */
+  getBalance?(key: ApiCredentials): Promise<import('../../types').UnifiedBalance[]>;
+
+  /**
+   * Fetches current open positions and normalizes them into the UnifiedPosition format.
+   *
+   * @param key API Key metadata object
+   */
+  getOpenPositions?(key: ApiCredentials): Promise<import('../../types').UnifiedPosition[]>;
+
+  /**
    * Encapsulates the entire process of authenticating, fetching raw data (including pagination),
    * and normalizing it into the unified format.
    * 

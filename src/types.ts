@@ -3,6 +3,8 @@ import {
   RawPositionData,
   RawHistoryPositionData,
   RawOrderData,
+  RawBalanceItem,
+  RawBillData
 } from './types/raw';
 
 // Types
@@ -29,7 +31,7 @@ export interface UnifiedBalance {
   walletBalance?: number;
   availableMargin?: number;
   unrealizedPnl?: number;
-  raw?: Record<string, unknown>;
+  raw?: RawBalanceItem;
 }
 
 export interface UnifiedOrder {
@@ -131,7 +133,7 @@ export interface UnifiedBillRecord {
   amount: number;
   ccy: string;
   timestamp: number;
-  raw?: Record<string, unknown>;
+  raw?: RawBillData;
 }
 
 export interface SymbolPnLRecord {
@@ -211,3 +213,14 @@ export interface BybitTransactionLogEntry {
 
   raw: Record<string, unknown>;
 }
+
+export interface FundingMeta {
+  id: string; // 'exchange-symbol'
+  exchange: ExchangeName;
+  symbol: string;
+  oldestTimestamp: number;
+  latestTimestamp: number;
+  recordCount?: number;
+  updatedAt: number;
+}
+

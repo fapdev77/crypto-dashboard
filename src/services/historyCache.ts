@@ -1,5 +1,5 @@
 import { openDB, deleteDB, DBSchema, IDBPDatabase } from 'idb';
-import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder, BybitTransactionLogEntry, FundingRateSummary, ExchangeName } from '../types';
+import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder, BybitTransactionLogEntry, FundingRateSummary, ExchangeName, FundingMeta } from '../types';
 import { LogManager } from './LogManager';
 
 const DB_NAME = 'crypto-dashboard-cache';
@@ -505,14 +505,7 @@ export async function saveFundingSummariesBatch(summaries: FundingRateSummary[])
   await tx.done;
 }
 
-export async function getFundingMeta(exchange: string, symbol: string): Promise<{
-  id: string;
-  exchange: string;
-  symbol: string;
-  oldestTimestamp: number;
-  latestTimestamp: number;
-  updatedAt: number;
-} | undefined> {
+export async function getFundingMeta(exchange: string, symbol: string): Promise<FundingMeta | undefined> {
   const db = await getDB();
   return db.get(FUNDING_META_STORE, `${exchange}-${symbol}`);
 }
