@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Save, X, Trash2 } from 'lucide-react';
 import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
+import { LogManager } from '../services/LogManager';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AppTooltip } from './ui/Tooltip';
 
@@ -64,17 +65,20 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
         apiSecret,
         passphrase,
       });
+      LogManager.info('ApiKeys', `New API key added: ${label} (${exchange})`);
     } else if (mode === 'edit' && existingKey) {
       const keys = useApiKeysStore.getState().keys;
       useApiKeysStore.setState({
         keys: keys.map(k => k.id === existingKey.id ? { ...k, label } : k)
       });
+      LogManager.info('ApiKeys', `API key edited: ${label}`);
     }
     onClose();
   };
 
   const handleDelete = () => {
     if (existingKey) {
+       LogManager.info('ApiKeys', `API key deleted: ${existingKey.label} (${existingKey.exchange})`);
        removeKey(existingKey.id);
        onClose();
     }

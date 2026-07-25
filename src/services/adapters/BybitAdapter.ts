@@ -80,7 +80,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         else if (mm === 'REGULAR_MARGIN' || mm === 'PORTFOLIO_MARGIN') accountMarginMode = 'cross';
       }
     } catch (err) {
-      LogManager.warn('Bybit-AccountInfo', 'Error fetching account info:', err);
+      LogManager.warn('BybitAdapter.AccountInfo', 'Error fetching account info:', err);
     }
 
     const queries = [
@@ -95,7 +95,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       const response = await hybridFetch(targetUrl, 'GET', headers);
 
       if (response.retCode === 10001) {
-        LogManager.warn('Bybit-Positions', `API returned 10001 for query ${queryStr} (Account type fallback)`, response.retMsg);
+        LogManager.warn('BybitAdapter.Positions', `API returned 10001 for query ${queryStr} (Account type fallback)`, response.retMsg);
         return [];
       }
       if (response.retCode !== 0) throw new Error(response.retMsg);
@@ -175,7 +175,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         }
       }
     } catch (e) {
-      LogManager.warn('Bybit-RealPnL', `Error fetching real PnL for ${key.label}:`, e);
+      LogManager.warn('BybitAdapter.RealPnL', `Error fetching real PnL for ${key.label}:`, e);
     }
 
     const result: Record<string, string> = {};
@@ -233,7 +233,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         currentStart = currentEnd + 1;
       }
     } catch (e) {
-      LogManager.warn('Bybit-AccumulatedFees', `Error fetching for ${symbol}:`, e);
+      LogManager.warn('BybitAdapter.AccumulatedFees', `Error fetching for ${symbol}:`, e);
     }
     return {
       accumulatedFunding: accumulatedFunding.toString(),
@@ -351,7 +351,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           pages++;
         } while (cursor && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        LogManager.warn('Bybit-History', `Error for ${category}:`, err);
+        LogManager.warn('BybitAdapter.History', `Error for ${category}:`, err);
       }
       return list.map(item => ({ ...item, _category: category }));
     };
@@ -420,7 +420,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           pages++;
         } while (cursor && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        LogManager.warn('Bybit-Bills', `Error for ${type}:`, err);
+        LogManager.warn('BybitAdapter.Bills', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _type: type }));
     };
@@ -482,7 +482,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           pages++;
         } while (cursor && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        LogManager.warn('Bybit-OpenOrders', `Error fetching ${cat}:`, err);
+        LogManager.warn('BybitAdapter.OpenOrders', `Error fetching ${cat}:`, err);
       }
     }
     return this.normalizeOrders(allOrders, key);
@@ -527,7 +527,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
             pages++;
           } while (cursor && pages < MAX_DEEP_PAGES);
         } catch (err) {
-          LogManager.warn('Bybit-HistoryOrders', `Error fetching ${cat}:`, err);
+          LogManager.warn('BybitAdapter.HistoryOrders', `Error fetching ${cat}:`, err);
         }
 
         if (currentStart <= startTimeObj) break;
@@ -685,7 +685,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         return 'CRYPTO';
       }
     } catch (err) {
-      LogManager.warn('Bybit-Metadata', 'Fetch error:', err);
+      LogManager.warn('BybitAdapter.Metadata', 'Fetch error:', err);
     }
     return 'NOT_FOUND';
   }

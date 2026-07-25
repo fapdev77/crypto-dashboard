@@ -242,7 +242,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
           pages++;
         } while (lastId && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        LogManager.warn('Bitget-History', `Error for ${pType}:`, err);
+        LogManager.warn('BitgetAdapter.History', `Error for ${pType}:`, err);
       }
       return list;
     };
@@ -312,7 +312,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
           pages++;
         } while (lastId && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        LogManager.warn('Bitget-Bills', `Error for ${type}:`, err);
+        LogManager.warn('BitgetAdapter.Bills', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _type: type }));
     };
@@ -355,7 +355,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
           allOrders = allOrders.concat(res.data.entrustedList.map((o: any) => ({ ...o, productType: pType })));
         }
       } catch (err) {
-        LogManager.warn('Bitget-OpenOrders', `Error fetching ${pType}:`, err);
+        LogManager.warn('BitgetAdapter.OpenOrders', `Error fetching ${pType}:`, err);
       }
     }
 
@@ -370,7 +370,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
         allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: 'spot' })));
       }
     } catch (err) {
-      LogManager.warn('Bitget-OpenOrders', 'Error fetching spot:', err);
+      LogManager.warn('BitgetAdapter.OpenOrders', 'Error fetching spot:', err);
     }
 
     return this.normalizeOrders(allOrders, key);
@@ -408,7 +408,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
         } while (lastId && pages < MAX_DEEP_PAGES);
         allOrders = allOrders.concat(list);
       } catch (err) {
-        LogManager.warn('Bitget-HistoryOrders', `Error fetching ${pType}:`, err);
+        LogManager.warn('BitgetAdapter.HistoryOrders', `Error fetching ${pType}:`, err);
       }
     }
 
@@ -439,7 +439,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
       } while (lastId && pages < MAX_DEEP_PAGES);
       allOrders = allOrders.concat(list);
     } catch (err) {
-      LogManager.warn('Bitget-HistoryOrders', 'Error fetching spot:', err);
+      LogManager.warn('BitgetAdapter.HistoryOrders', 'Error fetching spot:', err);
     }
 
     return this.normalizeOrders(allOrders, key);
@@ -520,7 +520,7 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
         }
       }
     } catch (err) {
-      LogManager.warn('Bitget-Metadata', 'Fetch error', err);
+      LogManager.warn('BitgetAdapter.Metadata', 'Fetch error', err);
     }
     return 'NOT_FOUND';
   }

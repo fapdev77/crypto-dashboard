@@ -185,7 +185,7 @@ async function syncExchange(
       // Warn if a single symbol takes > 10s (signals API issue)
       if (symbolElapsed > 10_000) {
         LogManager.warn(
-          'useFundingSync',
+          'FundingSync',
           `SLOW [${exchange}] ${rate.symbol}: ${(symbolElapsed / 1000).toFixed(1)}s`,
         );
       }
@@ -212,7 +212,7 @@ async function syncExchange(
   const avgMsPerSymbol = totalStale > 0 ? (exchangeElapsed / totalStale).toFixed(0) : '0';
 
   LogManager.info(
-    'FundingTiming',
+    'FundingSync',
     `${exchange.toUpperCase()} | ` +
     `${summaries.length} synced / ${totalStale} stale | ` +
     `${(exchangeElapsed / 1000).toFixed(1)}s total | ` +
@@ -289,8 +289,8 @@ export function useFundingSync() {
     }
 
     LogManager.info(
-      'useFundingSync',
-      `Auto-sync scheduled: ${new Date(nextSyncTime).toLocaleString('pt-BR')} ` +
+      'FundingSync',
+      `Auto-sync scheduled: ${new Date(nextSyncTime).toLocaleString('en-US')} ` +
       `(${(delayMs / 60_000).toFixed(0)} min after next funding)`,
     );
 
@@ -302,9 +302,9 @@ export function useFundingSync() {
       const driftSec = ((actual - nextSyncTime) / 1000).toFixed(1);
       const diff = driftSec.startsWith('-') ? `${driftSec}s (early)` : `${driftSec}s (late)`;
       LogManager.info(
-        'useFundingSync',
-        `Auto-sync fired | scheduled: ${new Date(nextSyncTime).toLocaleString('pt-BR')} | ` +
-        `actual: ${new Date(actual).toLocaleString('pt-BR')} | diff: ${diff}`,
+        'FundingSync',
+        `Auto-sync fired | scheduled: ${new Date(nextSyncTime).toLocaleString('en-US')} | ` +
+        `actual: ${new Date(actual).toLocaleString('en-US')} | diff: ${diff}`,
       );
       // Use the event-based approach (same as manual sync buttons)
       useFundingStore.getState().setLastHistoryFetch(0);
@@ -323,7 +323,7 @@ export function useFundingSync() {
           const rates = await FundingService.fetchCurrentFundingRates(ex);
           results.push(...rates);
         } catch (e) {
-          LogManager.error('useFundingSync', `Failed to fetch current rates for ${ex}:`, e);
+          LogManager.error('FundingSync', `Failed to fetch current rates for ${ex}:`, e);
         }
       }
       // Save partial results — if one exchange fails, data from others survives.
@@ -429,7 +429,7 @@ export function useFundingSync() {
         LogManager.system('FundingSync', syncReport);
       } else {
         LogManager.system(
-          'FundingTiming',
+          'FundingSync',
           `=== SYNC COMPLETE === ` +
           `Fetch: ${(fetchElapsed / 1000).toFixed(1)}s | ` +
           `Write: ${(writeElapsed / 1000).toFixed(1)}s | ` +
@@ -467,7 +467,7 @@ export function useFundingSync() {
         `in ${totalSec.toFixed(1)}s.`,
       );
     } catch (error: any) {
-      LogManager.error('useFundingSync', 'Historical sync error:', error);
+      LogManager.error('FundingSync', 'Historical sync error:', error);
       setSyncStatus(false, 0, `Sync failed: ${error.message}`);
     } finally {
       syncInProgressRef.current = false;
@@ -483,7 +483,7 @@ export function useFundingSync() {
       // where forceSync() starts a new sync before the flag is checked.
       if (restartRequestedRef.current) {
         restartRequestedRef.current = false;
-        LogManager.info('useFundingSync', 'Restarting sync after user force request...');
+        LogManager.info('FundingSync', 'Restarting sync after user force request...');
         forceSync();
       }
     }
@@ -493,7 +493,7 @@ export function useFundingSync() {
   const forceSync = async () => {
     // If a sync is already running, flag a restart instead of silently ignoring
     if (syncInProgressRef.current) {
-      LogManager.info('useFundingSync', 'Sync already in progress — will restart after completion');
+      LogManager.info('FundingSync', 'Sync already in progress — will restart after completion');
       restartRequestedRef.current = true;
       return;
     }

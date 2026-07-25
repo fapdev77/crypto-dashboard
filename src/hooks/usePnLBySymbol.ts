@@ -116,7 +116,7 @@ export function usePnLBySymbol(
           setIsBybitLoading(false);
         }
       } catch (err) {
-        LogManager.error('usePnLBySymbol', 'Error reading tx-log cache for Bybit PnL:', err);
+        LogManager.error('PnLBySymbol', 'Error reading tx-log cache for Bybit PnL:', err);
         if (isMounted) setIsBybitLoading(false);
       }
     };

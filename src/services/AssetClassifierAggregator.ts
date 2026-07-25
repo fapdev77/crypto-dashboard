@@ -23,7 +23,7 @@ export class AssetClassifierAggregator {
      }
      
      // Trigger async fetch in background so next render has it
-     this.getGlobalAssetCategory(cleanSymbol).catch(err => LogManager.error('Agregador', 'Async fetch error:', err));
+     this.getGlobalAssetCategory(cleanSymbol).catch(err => LogManager.error('AssetClassifier', 'Background category fetch failed:', err));
 
      return 'CRYPTO'; // Default assumption
   }
@@ -58,7 +58,7 @@ export class AssetClassifierAggregator {
              }
          }
       }
-    } catch (e) { LogManager.warn('Agregador', 'Falha OKX:', e); }
+    } catch (e) { LogManager.warn('AssetClassifier', 'OKX lookup failed:', e); }
 
     // --- Passo 2 (Fallback Bybit) ---
     try {
@@ -72,7 +72,7 @@ export class AssetClassifierAggregator {
              }
          }
       }
-    } catch (e) { LogManager.warn('Agregador', 'Falha Bybit:', e); }
+    } catch (e) { LogManager.warn('AssetClassifier', 'Bybit lookup failed:', e); }
 
     // --- Passo 3 (Fallback Bitget) ---
     try {
@@ -86,7 +86,7 @@ export class AssetClassifierAggregator {
              }
          }
       }
-    } catch (e) { LogManager.warn('Agregador', 'Falha Bitget:', e); }
+    } catch (e) { LogManager.warn('AssetClassifier', 'Bitget lookup failed:', e); }
 
     // --- Passo 4 (Default) ---
     return this.saveAndReturnDetails(cacheKey, 'CRYPTO', 'Fallback (Default)');
@@ -96,7 +96,7 @@ export class AssetClassifierAggregator {
      try {
        await saveAssetMetadata(cacheKey, category);
      } catch (e) {
-       LogManager.warn('Agregador', 'Erro ao salvar cache', e);
+       LogManager.warn('AssetClassifier', 'Failed to save metadata cache', e);
      }
      this.memCache[cacheKey] = category;
      return { category, source };
@@ -111,7 +111,7 @@ export class AssetClassifierAggregator {
      try {
        await saveAssetMetadata(cacheKey, category);
      } catch (e) {
-       LogManager.warn('Agregador', 'Erro ao salvar cache', e);
+       LogManager.warn('AssetClassifier', 'Failed to save cache entry', e);
      }
      this.memCache[cacheKey] = category;
      return category;

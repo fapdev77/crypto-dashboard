@@ -34,14 +34,14 @@ export class BybitTransactionService {
     // If we have cache, return it immediately and sync incrementally
     if (cached.length > 0 && meta && meta.latestTransactionTime > 0) {
       this.syncIncremental(key, meta.latestTransactionTime).catch(err =>
-        LogManager.warn('BybitTxService', `Incremental sync failed for ${key.label}:`, err)
+        LogManager.warn('BybitTransactionService', `Incremental sync failed for ${key.label}:`, err)
       );
       return cached;
     }
 
     // No cache: trigger deep sync and return empty for now
     this.syncAll(key).catch(err =>
-      LogManager.warn('BybitTxService', `Deep sync failed for ${key.label}:`, err)
+      LogManager.warn('BybitTransactionService', `Deep sync failed for ${key.label}:`, err)
     );
     return [];
   }
@@ -71,7 +71,7 @@ export class BybitTransactionService {
             pages++;
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BybitTxService', `Incremental chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('BybitTransactionService', `Incremental chunk error ${key.label}/${category}:`, err);
           hasError = true;
         }
         chunkStart = chunkEnd + 1;
@@ -151,7 +151,7 @@ export class BybitTransactionService {
             pages++;
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BybitTxService', `Chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('BybitTransactionService', `Chunk error ${key.label}/${category}:`, err);
         }
       }
 
@@ -189,7 +189,7 @@ export class BybitTransactionService {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    LogManager.info('BybitTxService', `Deep sync complete for ${key.label}: ${totalNew} records`);
+    LogManager.info('BybitTransactionService', `Deep sync complete for ${key.label}: ${totalNew} records`);
   }
 
   /**

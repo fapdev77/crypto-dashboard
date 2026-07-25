@@ -96,7 +96,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           setIsLoading(false);
         }
       } catch (err) {
-        LogManager.error('usePositionHistory', 'Error loading cache:', err);
+        LogManager.error('PositionHistory', 'Error loading cache:', err);
         if (isMounted) {
           setIsLoading(false);
         }
@@ -128,14 +128,14 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
       if (isMounted) {
         setIsSyncing(true);
-        setSyncMessage('Iniciando sincronização...');
+        setSyncMessage('Starting sync...');
       }
 
       try {
         const service = new PositionHistoryService();
         for (const key of activeKeys) {
           if (!key.isActive) continue;
-          if (isMounted) setSyncMessage(`Aguarde: sincronizando ${key.exchange} (${key.label})...`);
+          if (isMounted) setSyncMessage(`Syncing ${key.exchange} (${key.label})...`);
           await service.fetchWithCache(key);
         }
 
@@ -157,7 +157,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           setLastSyncTime(Date.now());
         }
       } catch (err) {
-        LogManager.error('usePositionHistory', 'Error syncing network positions:', err);
+        LogManager.error('PositionHistory', 'Error syncing network positions:', err);
         if (isMounted) {
           setIsLoading(false);
           setIsSyncing(false);

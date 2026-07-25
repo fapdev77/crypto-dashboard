@@ -73,10 +73,10 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       if (fundingResponse && fundingResponse.code === '0' && fundingResponse.data) {
         fundingData = fundingResponse.data;
       } else if (fundingResponse && fundingResponse.code && fundingResponse.code !== '0') {
-        LogManager.warn('OKX-Balance', `Funding balance API warning (${fundingResponse.code}): ${fundingResponse.msg}`);
+        LogManager.warn('OKXAdapter.Balance', `Funding balance API warning (${fundingResponse.code}): ${fundingResponse.msg}`);
       }
     } catch (err) {
-      LogManager.warn('OKX-Balance', 'Failed to fetch OKX funding balances:', err);
+      LogManager.warn('OKXAdapter.Balance', 'Failed to fetch OKX funding balances:', err);
     }
 
     // Build price map from trading balance details
@@ -276,7 +276,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
           pages++;
         } while (after && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        LogManager.warn('OKX-History', `Error for ${type}:`, err);
+        LogManager.warn('OKXAdapter.History', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _instType: type }));
     };
@@ -352,7 +352,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
           pages++;
         } while (after && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        LogManager.warn('OKX-Bills', `Error for ${type}:`, err);
+        LogManager.warn('OKXAdapter.Bills', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _type: type }));
     };
@@ -394,7 +394,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
           allOrders = allOrders.concat(res.data);
         }
       } catch (err) {
-        LogManager.warn('Okx-OpenOrders', `Error fetching ${instType}:`, err);
+        LogManager.warn('OKXAdapter.OpenOrders', `Error fetching ${instType}:`, err);
       }
     }
     await OkxAdapter.ensureInstrumentsLoaded();
@@ -434,7 +434,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
             allOrders = allOrders.concat(filtered);
           }
         } catch (err) {
-          LogManager.warn('Okx-HistoryOrders', `Error fetching ${instType} from ${endpoint}:`, err);
+          LogManager.warn('OKXAdapter.HistoryOrders', `Error fetching ${instType} from ${endpoint}:`, err);
         }
       }
     }
@@ -550,9 +550,9 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       }));
       this.cachedInstruments = allInsts;
       this.cachedInstrumentsTime = Date.now();
-      LogManager.info('OKX-Adapter', `Loaded ${Object.keys(allInsts).length} SWAP & FUTURES instruments into cache.`);
+      LogManager.info('OKXAdapter', `Loaded ${Object.keys(allInsts).length} SWAP & FUTURES instruments into cache.`);
     } catch (err) {
-      LogManager.warn('OKX-Adapter', 'Error caching instruments:', err);
+      LogManager.warn('OKXAdapter', 'Error caching instruments:', err);
     }
   }
 
@@ -595,7 +595,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
         }
       }
     } catch (err) {
-      LogManager.warn('OKX-Metadata', 'Fetch error:', err);
+      LogManager.warn('OKXAdapter.Metadata', 'Fetch error:', err);
     }
     return 'NOT_FOUND';
   }

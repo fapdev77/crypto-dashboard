@@ -7,6 +7,7 @@ import { getCachedOrders } from '../services/historyCache';
 import { useSettingsStore } from '../store/settingsStore';
 import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { OrderHistoryService } from '../services/orders/OrderHistoryService';
+import { LogManager } from '../services/LogManager';
 import mockOrdersData from '../mock/orders.json';
 
 /** Filter configuration for the Order Reports view. */
@@ -161,6 +162,7 @@ export function useOrderReports(filters: OrderFilters) {
       setLastSyncTime(Date.now());
 
     } catch (err: any) {
+      LogManager.error('OrderReports', 'Failed to fetch order history:', err);
       if (!silent) setError(err.message || 'Failed to fetch order history');
     } finally {
       if (!silent) setLoading(false);
