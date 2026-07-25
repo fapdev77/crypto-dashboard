@@ -93,16 +93,31 @@ export const SymbolMultiSelect: React.FC<Props> = ({
           );
         })}
 
-        <div className="flex-1 min-w-[120px] flex items-center relative">
+        <div className="flex-1 min-w-[120px] flex items-center relative group">
           {isOpen && (
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-transparent border-none focus:outline-none text-sm text-white px-2 py-1"
-              placeholder="Search..."
-              autoFocus
-            />
+            <>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent border-none focus:outline-none text-sm text-white pl-2 pr-7 py-1"
+                placeholder="Search..."
+                autoFocus
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSearchTerm('');
+                  }}
+                  className="absolute right-1.5 text-[#8E9299] hover:text-white bg-[#2a2b30] rounded-full p-0.5 focus:outline-none transition-colors"
+                  title="Clear search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </>
           )}
         </div>
         
