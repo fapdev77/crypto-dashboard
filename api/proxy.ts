@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { ServerLogger } from '../src/utils/serverLogger';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Configurar headers CORS para permitir o uso adequado via Vercel
@@ -26,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing targetUrl or method" });
     }
 
-    // Prevenção de SSRF: Validar Domínio (Allowlist)
+    // SSRF prevention: Domain validation (Allowlist)
     const allowedDomains = [
       'api.bybit.com',
       'api.bitget.com',
@@ -37,14 +38,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const urlObj = new URL(targetUrl);
       if (!allowedDomains.includes(urlObj.hostname)) {
-        console.error(`[Proxy-SSRF-Block] Tentativa de acesso bloqueado a domínio não autorizado: ${urlObj.hostname}`);
+        ServerLogger.error('Vercel-Proxy', `SSRF-Block — unauthorized domain: ${urlObj.hostname}`);
         return res.status(403).json({ error: "Forbidden: Domain not in proxy allowlist" });
       }
     } catch (err) {
       return res.status(400).json({ error: "Invalid targetUrl format" });
     }
 
-    console.log(`[Vercel-Proxy] ${method} ${targetUrl}`);
+    ServerLogger.info('Vercel-Proxy', `${method} ${targetUrl}`);
 
     // Remove headers que causam problemas (como block de WAF das exchanges)
     const cleanHeaders: Record<string, string> = { ...headers } || {};
@@ -69,16 +70,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       responseData = JSON.parse(responseText);
     } catch (e) {
-      console.warn(`[Vercel-Proxy] Warning: Failed to parse JSON from ${targetUrl}. Status: ${response.status}`);
+      ServerLogger.warn('Vercel-Proxy', `Failed to parse JSON response. Status: ${response.status}`, targetUrl);
       responseData = responseText;
     }
 
-    console.log(`[Vercel-Proxy] Response status from ${targetUrl}: ${response.status}`);
+    ServerLogger.info('Vercel-Proxy', `Response status: ${response.status}`, targetUrl);
 
     res.status(response.status).json(responseData);
 
   } catch (error: any) {
-    console.error("Vercel Proxy error:", error);
+    ServerLogger.error('Vercel-Proxy', 'Proxy error:', error);
     res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 }

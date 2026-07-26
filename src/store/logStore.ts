@@ -30,7 +30,7 @@ interface LogState {
 
 export const useLogStore = create<LogState>((set) => ({
   entries: [],
-  maxEntries: 1000,
+  maxEntries: 10000,
   addLog: (level, source, message) => set((state) => {
     const newEntry: LogEntry = {
       id: crypto.randomUUID(),

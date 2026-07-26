@@ -3,9 +3,12 @@ import { useFundingData } from '../../../hooks/useFundingData';
 import { useFundingSync } from '../../../hooks/useFundingSync';
 import { useFundingStore } from '../../../store/fundingStore';
 import { useSettingsStore } from '../../../store/settingsStore';
-import { usePositionsStore } from '../../../store/positionsStore';
+import { useOpenPositionKeys, getBaseCoin } from '../../../hooks/useOpenPositionKeys';
 import { FundingFeeAggregated } from '../../../types';
 import { Clock, Loader2, Search, Star, ChevronDown, ChevronRight, AlertTriangle, Briefcase } from 'lucide-react';
+import { useKpiMetrics } from '../../../hooks/useKpiMetrics';
+import { MarketOverviewCards } from './MarketOverviewCards';
+import { FundingRateComparison } from './FundingRateComparison';
 import { AppTooltip } from '../../ui/Tooltip';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
@@ -16,13 +19,6 @@ import { usePagination } from '../../../hooks/usePagination';
 import clsx from 'clsx';
 
 const COINS_PER_PAGE = 25;
-
-const getBaseCoin = (symbol: string) => {
-  let base = symbol.split('-')[0];
-  base = base.split('_')[0];
-  base = base.replace(/USDT$|USD$|PERP$|FUTURES$/i, '');
-  return base.toUpperCase();
-};
 
 const formatPercent = (val: number) => (val * 100).toFixed(4) + '%';
 
@@ -70,41 +66,6 @@ const ThTooltip = ({ columnKey, children }: { columnKey: string; children: React
  * Wraps children and flashes green/red when `value` changes (up/down).
  * Only the `nextFundingRate` changes dynamically, so this is applied exclusively to that column.
  */
-const FundingRateFlash = ({
-  value,
-  children,
-}: {
-  value: number | undefined;
-  children: React.ReactNode;
-}) => {
-  const prevRef = useRef(value);
-  const [flash, setFlash] = useState<'up' | 'down' | null>(null);
-
-  useEffect(() => {
-    if (prevRef.current !== undefined && value !== undefined && prevRef.current !== value) {
-      const direction = value > prevRef.current ? 'up' : 'down';
-      setFlash(direction);
-      const timer = setTimeout(() => setFlash(null), 800);
-      prevRef.current = value;
-      return () => clearTimeout(timer);
-    }
-    prevRef.current = value;
-  }, [value]);
-
-  return (
-    <span
-      className={
-        flash === 'up'
-          ? 'animate-funding-flash-up rounded-sm inline-block'
-          : flash === 'down'
-            ? 'animate-funding-flash-down rounded-sm inline-block'
-            : undefined
-      }
-    >
-      {children}
-    </span>
-  );
-};
 
 /** Explanation for a single funding-rate value: who paid whom. */
 const RateTooltip = ({
@@ -306,13 +267,13 @@ const FundingTable = ({
                       </td>
                       <td className="px-6 py-3 text-right">
                         <RateTooltip rate={maxNext} label="Max next funding rate">
-                          <FundingRateFlash value={maxNext}>
+                          
                             {maxNext !== undefined ? (
                               <span className={maxNext > 0 ? "text-green-400 font-medium" : maxNext < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
                                 {formatPercent(maxNext)}
                               </span>
                             ) : <span className="text-[#8E9299]">---</span>}
-                          </FundingRateFlash>
+                          
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right">
@@ -392,11 +353,11 @@ const FundingTable = ({
                             {row.nextFundingRate !== undefined ? (
                               <div className="flex flex-col items-end">
                                 <RateTooltip rate={row.nextFundingRate} label="Next funding rate">
-                                  <FundingRateFlash value={row.nextFundingRate}>
+                                  
                                     <span className={row.nextFundingRate > 0 ? "text-green-400" : row.nextFundingRate < 0 ? "text-red-400" : "text-white"}>
                                       {formatPercent(row.nextFundingRate)}
                                     </span>
-                                  </FundingRateFlash>
+                                  
                                 </RateTooltip>
                                 {row.nextFundingTime && (
                                   <AppTooltip
@@ -500,15 +461,23 @@ const FundingTable = ({
 };
 
 export const FundingDashboard = () => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'comparison'>('overview');
   const { forceSync } = useFundingSync();
   const { aggregatedData, isLoading } = useFundingData();
   const { isSyncing, syncMessage, favorites, lastHistoryFetch, nextScheduledSyncTime } = useFundingStore();
+  const { currentRates } = useFundingStore();
   const fundingHistoryInterval = useSettingsStore(state => state.fundingHistoryInterval);
-  const positions = usePositionsStore(state => state.positions);
+  const openPositionKeys = useOpenPositionKeys();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('all');
   const [instrumentFilter, setInstrumentFilter] = useState<string>('all');
+  // ── KPI metrics ──
+  const { marketMetrics, rankings } = useKpiMetrics(
+    aggregatedData,
+    currentRates,
+  );
+
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(() => {
     return localStorage.getItem('fundingDashboard_showFavoritesOnly') === 'true';
   });
@@ -525,21 +494,7 @@ export const FundingDashboard = () => {
     localStorage.setItem('fundingDashboard_showOpenPositionsOnly', String(showOpenPositionsOnly));
   }, [showOpenPositionsOnly]);
 
-  const hasOpenPositions = Object.keys(positions).length > 0;
-  
-  const openPositionCoins = useMemo(() => {
-    const coins = new Set<string>();
-    Object.values(positions).forEach(p => {
-      let instType = 'USDT-M';
-      if (p.quoteCoin === 'USD' || p.ccy === p.baseCoin) {
-        instType = 'COIN-M';
-      } else if (p.quoteCoin === 'USDC' || p.ccy === 'USDC') {
-        instType = 'USDC-M';
-      }
-      coins.add(`${getBaseCoin(p.symbol)}_${instType}`);
-    });
-    return coins;
-  }, [positions]);
+  const hasOpenPositions = openPositionKeys.size > 0;
 
   const filteredData = useMemo(() => {
     return aggregatedData.filter(row => {
@@ -549,7 +504,7 @@ export const FundingDashboard = () => {
       const isFav = favorites.includes(rowId) || favorites.includes(coin);
       if (showFavoritesOnly && !isFav) return false;
       
-      const hasOpenPos = openPositionCoins.has(rowId) || openPositionCoins.has(coin);
+      const hasOpenPos = openPositionKeys.has(`${row.exchange}|${coin}|${row.instrumentType}`);
       if (showOpenPositionsOnly && !hasOpenPos) return false;
       
       if (exchangeFilter.toLowerCase() !== 'all' && row.exchange !== exchangeFilter.toLowerCase()) return false;
@@ -557,7 +512,7 @@ export const FundingDashboard = () => {
       if (searchTerm && !row.symbol.toLowerCase().includes(searchTerm.toLowerCase()) && !coin.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       return true;
     });
-  }, [aggregatedData, searchTerm, exchangeFilter, instrumentFilter, showFavoritesOnly, showOpenPositionsOnly, openPositionCoins, favorites]);
+  }, [aggregatedData, searchTerm, exchangeFilter, instrumentFilter, showFavoritesOnly, showOpenPositionsOnly, openPositionKeys, favorites]);
 
   const groupedData = useMemo(() => {
     const groups: Record<string, FundingFeeAggregated[]> = {
@@ -598,11 +553,34 @@ export const FundingDashboard = () => {
           />
         </div>
       </div>
-      
-      <div className="px-0">
-        <FilterBar
+
+      <div className="flex items-center gap-2 border-b border-[#2a2b30] pb-2">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={clsx(
+            "px-4 py-2 text-sm font-medium transition-colors border-b-2",
+            activeTab === 'overview' ? "border-[#2F6BFF] text-white" : "border-transparent text-[#8E9299] hover:text-white"
+          )}
+        >
+          Historical Overview
+        </button>
+        <button
+          onClick={() => setActiveTab('comparison')}
+          className={clsx(
+            "px-4 py-2 text-sm font-medium transition-colors border-b-2",
+            activeTab === 'comparison' ? "border-[#2F6BFF] text-white" : "border-transparent text-[#8E9299] hover:text-white"
+          )}
+        >
+          Funding Rate Comparison
+        </button>
+      </div>
+
+      {activeTab === 'overview' ? (
+        <>
+          <div className="px-0">
+            <FilterBar
           prepend={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
                 className={clsx(
@@ -656,7 +634,13 @@ export const FundingDashboard = () => {
           }}
         />
       </div>
-      
+
+      {/* ── Market Overview ── */}
+      <MarketOverviewCards
+        marketMetrics={marketMetrics}
+        rankings={rankings}
+      />
+
       {isLoading && aggregatedData.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-12 opacity-50">
           <Loader2 className="w-8 h-8 text-[#2F6BFF] animate-spin mb-4" />
@@ -682,6 +666,12 @@ export const FundingDashboard = () => {
                <p className="text-sm text-[#8E9299]">Try adjusting your filters or search term.</p>
              </div>
           )}
+        </div>
+      )}
+      </>
+      ) : (
+        <div className="flex-1 w-full">
+          <FundingRateComparison />
         </div>
       )}
     </div>

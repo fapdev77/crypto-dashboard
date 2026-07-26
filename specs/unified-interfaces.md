@@ -243,7 +243,7 @@ export interface UnifiedBillRecord {
   amount: number;
   ccy: string;
   timestamp: number;
-  raw?: any;
+  raw?: RawBillData;
 }
 ```
 

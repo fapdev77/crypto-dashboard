@@ -21,7 +21,7 @@ export const useOrdersStore = create<OrdersState>()((set) => ({
     
     const newIds = new Set(newOrders.map(o => o.id));
     
-    // Remover apenas as ordens desta conexão que não vieram mais (foram fechadas ou canceladas)
+    // Remove only orders from this connection that are no longer present (were closed or cancelled)
     for (const key in nextOrders) {
       if (nextOrders[key].connectionId === connectionId && !newIds.has(key)) {
         delete nextOrders[key];

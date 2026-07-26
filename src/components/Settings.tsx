@@ -128,9 +128,13 @@ export function Settings() {
           for (const db of dbs) {
             if (db.name) window.indexedDB.deleteDatabase(db.name);
           }
-        }).catch(() => {});
+        }).catch((e) => {
+          LogManager.warn('Settings', 'Factory reset — failed to enumerate IndexedDB databases:', e);
+        });
       }
-    } catch (e) {}
+    } catch (e) {
+      LogManager.warn('Settings', 'Factory reset — failed to delete IndexedDB databases:', e);
+    }
 
     window.localStorage.clear();
     window.location.reload();

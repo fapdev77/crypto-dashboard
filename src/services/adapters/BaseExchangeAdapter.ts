@@ -58,11 +58,11 @@ export abstract class BaseExchangeAdapter {
         this.timeOffset = serverTimeMs - Date.now();
         this.lastSyncTime = Date.now();
         const name = this.extractExchangeName();
-        LogManager.info('Time-Sync', `${name} synced. Offset: ${this.timeOffset}ms`);
+        LogManager.info('TimeSync', `${name} synced. Offset: ${this.timeOffset}ms`);
       }
     } catch (e) {
       const name = this.extractExchangeName();
-      LogManager.error('Time-Sync', `${name} time sync error:`, e);
+      LogManager.error('TimeSync', `${name} time sync error:`, e);
     }
   }
 }

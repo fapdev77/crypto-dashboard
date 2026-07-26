@@ -18,7 +18,7 @@ export function useFundingData() {
         const data = await getAllFundingSummaries();
         setSummaries(data);
       } catch (err) {
-        LogManager.error('useFundingData', 'Failed to load summaries:', err);
+        LogManager.error('FundingData', 'Failed to load summaries:', err);
         setSummaries([]);
       } finally {
         setIsLoading(false);
