@@ -25,8 +25,11 @@ export function StatusBar() {
 
   if (activeKeys.length === 0 && !useMockData) {
     return (
-      <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 text-xs text-gray-500 shrink-0 select-none">
-        No connected accounts.
+      <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center justify-between px-4 text-xs text-gray-500 shrink-0 select-none">
+        <span>No connected accounts.</span>
+        <span className="text-xs font-mono text-[#8E9299] flex items-center gap-4 pr-2">
+          <span className="opacity-50 text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
+        </span>
       </div>
     );
   }
