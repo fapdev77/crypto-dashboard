@@ -106,8 +106,9 @@ export function StatusBar() {
           </div>
         </div>
 
-        <span className="text-xs font-mono text-[#8E9299] flex items-center gap-2 pr-2">
+        <span className="text-xs font-mono text-[#8E9299] flex items-center gap-4 pr-2">
           <span>Connections: <span className="text-[#00C853]">{activeCount} Active</span></span>
+          <span className="opacity-50 text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
         </span>
       </div>
     </div>
