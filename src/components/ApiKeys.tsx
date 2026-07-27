@@ -7,6 +7,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { ApiKeyModal } from './ApiKeyModal';
 import { AppTooltip } from './ui/Tooltip';
+import { LogManager } from '../services/LogManager';
 
 const EXCHANGES: { id: Exchange; name: string }[] = [
   { id: 'bitget', name: 'Bitget' },
@@ -188,6 +189,7 @@ export function ApiKeys() {
                                           clearConnectionData(apiKey.id);
                                         }
                                         toggleKey(apiKey.id);
+                                        LogManager.info('ApiKeys', `Key ${apiKey.label} ${apiKey.isActive ? 'disabled' : 'enabled'}`);
                                       }}
                                       className={`p-1 rounded hover:bg-[#202125] transition-all hover:scale-105 ${apiKey.isActive ? 'text-[#00C853] hover:text-[#FF4444]' : 'text-[#8E9299] hover:text-[#00C853]'}`}
                                     >

@@ -3,6 +3,8 @@ import {
   RawPositionData,
   RawHistoryPositionData,
   RawOrderData,
+  RawBalanceItem,
+  RawBillData
 } from './types/raw';
 
 // Types
@@ -29,7 +31,7 @@ export interface UnifiedBalance {
   walletBalance?: number;
   availableMargin?: number;
   unrealizedPnl?: number;
-  raw?: Record<string, unknown>;
+  raw?: RawBalanceItem;
 }
 
 export interface UnifiedOrder {
@@ -131,7 +133,7 @@ export interface UnifiedBillRecord {
   amount: number;
   ccy: string;
   timestamp: number;
-  raw?: Record<string, unknown>;
+  raw?: RawBillData;
 }
 
 export interface SymbolPnLRecord {
@@ -147,16 +149,6 @@ export interface SymbolPnLRecord {
 
 // ── Bybit Transaction Log ──
 
-export interface UnifiedFundingFee {
-  id: string; // `${exchange}-${symbol}-${timestamp}`
-  exchange: ExchangeName;
-  symbol: string;
-  instrumentType: 'USDT-M' | 'COIN-M';
-  timestamp: number;
-  fundingRate: number;
-  realizedRate?: number;
-}
-
 export interface FundingFeeAggregated {
   exchange: ExchangeName;
   symbol: string;
@@ -169,8 +161,24 @@ export interface FundingFeeAggregated {
   currentMonthSum: number;
   lastMonthSum: number;
   last3MonthsSum: number;
-  last6MonthsSum: number;
-  yearSum: number;
+  last6MonthsSum?: number;
+  yearSum?: number;
+}
+
+export interface FundingRateSummary {
+  id: string;                      // `${exchange}-${symbol}`
+  exchange: ExchangeName;
+  symbol: string;
+  instrumentType: 'USDT-M' | 'COIN-M';
+  last12MonthsFundingRate?: string; // Big.js toFixed(8) — optional, only populated by Bybit (400d coverage)
+  last6MonthsFundingRate?: string;  // Big.js toFixed(8) — optional, only populated by Bybit (400d coverage)
+  last3MonthsFundingRate: string;   // Big.js toFixed(8)
+  lastMonthFundingRate: string;     // Big.js toFixed(8)
+  currentMonthFundingRate: string;  // Big.js toFixed(8)
+  todayFundingRate: string;         // Big.js toFixed(8)
+  lastFundingRate: string;          // Rate of most recent settlement
+  lastFundingTime: string;          // ms timestamp of most recent settlement, as string
+  updatedAt: number;                // ms timestamp
 }
 
 export interface BybitTransactionLogEntry {
@@ -205,3 +213,14 @@ export interface BybitTransactionLogEntry {
 
   raw: Record<string, unknown>;
 }
+
+export interface FundingMeta {
+  id: string; // 'exchange-symbol'
+  exchange: ExchangeName;
+  symbol: string;
+  oldestTimestamp: number;
+  latestTimestamp: number;
+  recordCount?: number;
+  updatedAt: number;
+}
+

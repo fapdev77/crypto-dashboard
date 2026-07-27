@@ -4,6 +4,7 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { UnifiedBillRecord } from '../types';
 import { useSettingsStore } from '../store/settingsStore';
 import { BillsHistoryService } from '../services/bills/BillsHistoryService';
+import { LogManager } from '../services/LogManager';
 /**
  * Fetch deposit/withdrawal history (bills) for all active API keys.
  * Supports pre-defined periods (1w, 2w, 1m) or a custom date range.
@@ -61,12 +62,16 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
       const service = new BillsHistoryService();
       let allBills: UnifiedBillRecord[] = [];
       
-      const promises = activeKeys.map(apiKey => {
-        return service.fetchBills(apiKey, start, end);
-      });
-      const results = await Promise.all(promises);
-      for (const result of results) {
-        allBills = [...allBills, ...result];
+      try {
+        const promises = activeKeys.map(apiKey => {
+          return service.fetchBills(apiKey, start, end);
+        });
+        const results = await Promise.all(promises);
+        for (const result of results) {
+          allBills = [...allBills, ...result];
+        }
+      } catch (err) {
+        LogManager.error('BillsHistory', 'Failed to fetch bills:', err);
       }
 
       if (start !== undefined && end !== undefined) {

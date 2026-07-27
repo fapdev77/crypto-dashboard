@@ -5,6 +5,9 @@ import { PositionHistoryService } from '../services/positions/PositionHistorySer
 import { OrderHistoryService } from '../services/orders/OrderHistoryService';
 import { LogManager } from '../services/LogManager';
 
+/** Module-level guard: shared across all hook instances */
+const syncInProgressRef = { current: false };
+
 /**
  * Background polling hook that periodically refreshes the history cache
  * (positions + orders) for all active API keys.
@@ -23,6 +26,13 @@ export function useHistoryCachePolling() {
     const intervalMs = historyCacheInterval * 60 * 1000;
 
     const poll = async () => {
+      if (syncInProgressRef.current) {
+        LogManager.warn('HistoryCachePolling', 'Sync skipped — previous sync still in progress');
+        return;
+      }
+      syncInProgressRef.current = true;
+
+      const startMs = performance.now();
       LogManager.info('HistoryCachePolling', 'Executing background update...');
       const positionService = new PositionHistoryService();
       const orderService = new OrderHistoryService();
@@ -34,9 +44,12 @@ export function useHistoryCachePolling() {
         
         bumpHistoryCacheVersion();
         setLastSyncTime(Date.now());
-        LogManager.info('HistoryCachePolling', 'Background update complete.');
+        const elapsed = ((performance.now() - startMs) / 1000).toFixed(1);
+        LogManager.info('HistoryCachePolling', `Background update complete — ${elapsed}s`);
       } catch (err) {
         LogManager.error('HistoryCachePolling', 'Error during background update:', err);
+      } finally {
+        syncInProgressRef.current = false;
       }
     };
 

@@ -1,9 +1,9 @@
 import { openDB, deleteDB, DBSchema, IDBPDatabase } from 'idb';
-import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder, BybitTransactionLogEntry, UnifiedFundingFee } from '../types';
+import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder, BybitTransactionLogEntry, FundingRateSummary, ExchangeName, FundingMeta } from '../types';
 import { LogManager } from './LogManager';
 
 const DB_NAME = 'crypto-dashboard-cache';
-const DB_VERSION = 9;
+const DB_VERSION = 10;
 const HISTORY_STORE = 'positionHistory';
 const META_STORE = 'cacheMeta';
 const ASSET_META_STORE = 'assetMetadata';
@@ -12,8 +12,9 @@ const ORDER_META_STORE = 'orderCacheMeta';
 const BYBIT_REAL_PNL_STORE = 'bybitRealPnL';
 const BYBIT_TX_LOG_STORE = 'bybit-transaction-log';
 const BYBIT_TX_META_STORE = 'bybit-transaction-meta';
-const FUNDING_FEES_STORE = 'funding-fees';
+const FUNDING_SUMMARIES_STORE = 'funding-summaries';
 const FUNDING_META_STORE = 'funding-meta';
+
 
 interface CacheDB extends DBSchema {
   positionHistory: {
@@ -88,15 +89,10 @@ interface CacheDB extends DBSchema {
       updatedAt: number;
     };
   };
-  'funding-fees': {
-    key: string; // id
-    value: UnifiedFundingFee;
-    indexes: {
-      'by-exchange': string;
-      'by-symbol': string;
-      'by-timestamp': number;
-      'by-exchange-symbol': string;
-    };
+  'funding-summaries': {
+    key: string;
+    value: FundingRateSummary;
+    indexes: { 'by-exchange': ExchangeName; 'by-symbol': string };
   };
   'funding-meta': {
     key: string; // `${exchange}-${symbol}`
@@ -138,59 +134,70 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
           historyStore.createIndex('by-closeUpdateTime', 'closeUpdateTime');
         }
       }
-      
+
       if (oldVersion < 3) {
-         if (!db.objectStoreNames.contains(ASSET_META_STORE)) {
-            db.createObjectStore(ASSET_META_STORE, { keyPath: 'id' });
-         }
+        if (!db.objectStoreNames.contains(ASSET_META_STORE)) {
+          db.createObjectStore(ASSET_META_STORE, { keyPath: 'id' });
+        }
       }
-      
+
       if (oldVersion < 4) {
-         if (!db.objectStoreNames.contains(ORDER_HISTORY_STORE)) {
-           const orderStore = db.createObjectStore(ORDER_HISTORY_STORE, { keyPath: 'id' });
-           orderStore.createIndex('by-connectionId', 'connectionId');
-           orderStore.createIndex('by-createdTime', 'createdTime');
-         }
-         if (!db.objectStoreNames.contains(ORDER_META_STORE)) {
-           db.createObjectStore(ORDER_META_STORE, { keyPath: 'connectionId' });
-         }
+        if (!db.objectStoreNames.contains(ORDER_HISTORY_STORE)) {
+          const orderStore = db.createObjectStore(ORDER_HISTORY_STORE, { keyPath: 'id' });
+          orderStore.createIndex('by-connectionId', 'connectionId');
+          orderStore.createIndex('by-createdTime', 'createdTime');
+        }
+        if (!db.objectStoreNames.contains(ORDER_META_STORE)) {
+          db.createObjectStore(ORDER_META_STORE, { keyPath: 'connectionId' });
+        }
       }
 
       if (oldVersion < 5) {
-         if (!db.objectStoreNames.contains(BYBIT_REAL_PNL_STORE)) {
-            db.createObjectStore(BYBIT_REAL_PNL_STORE, { keyPath: 'id' });
-         }
+        if (!db.objectStoreNames.contains(BYBIT_REAL_PNL_STORE)) {
+          db.createObjectStore(BYBIT_REAL_PNL_STORE, { keyPath: 'id' });
+        }
       }
 
       if (oldVersion < 8) {
-         if (!db.objectStoreNames.contains(BYBIT_TX_LOG_STORE)) {
-           const txLogStore = db.createObjectStore(BYBIT_TX_LOG_STORE, { keyPath: 'id' });
-           txLogStore.createIndex('by-connectionId', 'connectionId');
-           txLogStore.createIndex('by-transactionTime', 'transactionTime');
-           txLogStore.createIndex('by-symbol', 'symbol');
-           txLogStore.createIndex('by-type', 'type');
-           txLogStore.createIndex('by-currency', 'currency');
-           txLogStore.createIndex('by-category', 'category');
-         }
-         if (!db.objectStoreNames.contains(BYBIT_TX_META_STORE)) {
-           db.createObjectStore(BYBIT_TX_META_STORE, { keyPath: 'connectionId' });
-         }
+        if (!db.objectStoreNames.contains(BYBIT_TX_LOG_STORE)) {
+          const txLogStore = db.createObjectStore(BYBIT_TX_LOG_STORE, { keyPath: 'id' });
+          txLogStore.createIndex('by-connectionId', 'connectionId');
+          txLogStore.createIndex('by-transactionTime', 'transactionTime');
+          txLogStore.createIndex('by-symbol', 'symbol');
+          txLogStore.createIndex('by-type', 'type');
+          txLogStore.createIndex('by-currency', 'currency');
+          txLogStore.createIndex('by-category', 'category');
+        }
+        if (!db.objectStoreNames.contains(BYBIT_TX_META_STORE)) {
+          db.createObjectStore(BYBIT_TX_META_STORE, { keyPath: 'connectionId' });
+        }
       }
 
       if (oldVersion < 9) {
-        if (!db.objectStoreNames.contains(FUNDING_FEES_STORE)) {
-          const fundingStore = db.createObjectStore(FUNDING_FEES_STORE, { keyPath: 'id' });
+        // 'funding-fees' store is removed from CacheDB type (v10+).
+        // Cast to 'any' for this legacy migration block since the store
+        // no longer exists in the current schema.
+        const u = db as any;
+        if (!u.objectStoreNames.contains('funding-fees')) {
+          const fundingStore = u.createObjectStore('funding-fees', { keyPath: 'id' });
           fundingStore.createIndex('by-exchange', 'exchange');
           fundingStore.createIndex('by-symbol', 'symbol');
           fundingStore.createIndex('by-timestamp', 'timestamp');
-          // Creating a compound index is not natively supported by a single key path if it's an array for a simple index,
-          // but we can create a secondary field or just filter in memory. Actually we'll use a derived property `exchangeSymbol` if needed,
-          // but we can just use by-symbol since symbol names are mostly unique per exchange, or query by exchange and filter by symbol.
-          // Let's use by-exchange and filter.
         }
-        if (!db.objectStoreNames.contains(FUNDING_META_STORE)) {
-          db.createObjectStore(FUNDING_META_STORE, { keyPath: 'id' });
+        if (!u.objectStoreNames.contains(FUNDING_META_STORE)) {
+          u.createObjectStore(FUNDING_META_STORE, { keyPath: 'id' });
         }
+      }
+
+      if (oldVersion < 10) {
+        // funding-fees was removed from CacheDB — cast to any for legacy cleanup
+        const v10db = db as any;
+        if (v10db.objectStoreNames.contains('funding-fees')) {
+          v10db.deleteObjectStore('funding-fees');
+        }
+        const summaryStore = db.createObjectStore('funding-summaries', { keyPath: 'id' });
+        summaryStore.createIndex('by-exchange', 'exchange');
+        summaryStore.createIndex('by-symbol', 'symbol');
       }
     },
   });
@@ -213,7 +220,7 @@ export async function saveAssetMetadata(id: string, category: UnifiedAssetCatego
 /**
  * Get Asset Metadata
  */
-export async function getAssetMetadata(id: string): Promise<{id: string, category: UnifiedAssetCategory, updatedAt: number} | undefined> {
+export async function getAssetMetadata(id: string): Promise<{ id: string, category: UnifiedAssetCategory, updatedAt: number } | undefined> {
   const db = await getDB();
   return db.get(ASSET_META_STORE, id);
 }
@@ -448,56 +455,69 @@ export async function getBybitTxLogCount(connectionId: string): Promise<number> 
 }
 
 // ------------------------------------------------------------------
-// FUNDING FEES CACHE
+// FUNDING SUMMARIES CACHE
 // ------------------------------------------------------------------
 
-export async function saveFundingFeesCache(entries: UnifiedFundingFee[]): Promise<void> {
-  if (entries.length === 0) return;
+export async function saveFundingSummary(summary: FundingRateSummary): Promise<void> {
   const db = await getDB();
-  const tx = db.transaction(FUNDING_FEES_STORE, 'readwrite');
-  const store = tx.objectStore(FUNDING_FEES_STORE);
-  for (const entry of entries) {
-    await store.put(entry);
+  await db.put('funding-summaries', summary);
+}
+
+export async function getAllFundingSummaries(): Promise<FundingRateSummary[]> {
+  const db = await getDB();
+  return db.getAll('funding-summaries');
+}
+
+export async function getFundingSummaryByKey(exchange: ExchangeName, symbol: string): Promise<FundingRateSummary | undefined> {
+  const db = await getDB();
+  return db.get('funding-summaries', `${exchange}-${symbol}`);
+}
+
+export async function clearFundingSummariesCache(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction(['funding-summaries', 'funding-meta'], 'readwrite');
+  await tx.objectStore('funding-summaries').clear();
+  await tx.objectStore('funding-meta').clear();
+  await tx.done;
+}
+
+/**
+ * Batch-write all summaries and their metadata in a single transaction.
+ * Much more efficient than 500+ individual transactions during initial sync.
+ */
+export async function saveFundingSummariesBatch(summaries: FundingRateSummary[]): Promise<void> {
+  if (summaries.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction(['funding-summaries', 'funding-meta'], 'readwrite');
+  const summaryStore = tx.objectStore('funding-summaries');
+  const metaStore = tx.objectStore('funding-meta');
+  for (const s of summaries) {
+    await summaryStore.put(s);
+    await metaStore.put({
+      id: `${s.exchange}-${s.symbol}`,
+      exchange: s.exchange,
+      symbol: s.symbol,
+      oldestTimestamp: Number(s.lastFundingTime),
+      latestTimestamp: Number(s.lastFundingTime),
+      updatedAt: Date.now(),
+    });
   }
   await tx.done;
 }
 
-export async function getFundingFeesBySymbol(exchange: string, symbol: string): Promise<UnifiedFundingFee[]> {
-  const db = await getDB();
-  // Using by-symbol index, then filtering by exchange
-  const allForSymbol = await db.getAllFromIndex(FUNDING_FEES_STORE, 'by-symbol', symbol);
-  return allForSymbol.filter(e => e.exchange === exchange).sort((a, b) => b.timestamp - a.timestamp);
-}
-
-export async function getAllFundingFees(): Promise<UnifiedFundingFee[]> {
-  const db = await getDB();
-  return db.getAll(FUNDING_FEES_STORE);
-}
-
-export async function clearFundingFeesCache(): Promise<void> {
-  const db = await getDB();
-  const tx = db.transaction([FUNDING_FEES_STORE, FUNDING_META_STORE], 'readwrite');
-  await tx.objectStore(FUNDING_FEES_STORE).clear();
-  await tx.objectStore(FUNDING_META_STORE).clear();
-  await tx.done;
-}
-
-export async function getFundingMeta(exchange: string, symbol: string): Promise<{
-  id: string;
-  exchange: string;
-  symbol: string;
-  oldestTimestamp: number;
-  latestTimestamp: number;
-  updatedAt: number;
-} | undefined> {
+export async function getFundingMeta(exchange: string, symbol: string): Promise<FundingMeta | undefined> {
   const db = await getDB();
   return db.get(FUNDING_META_STORE, `${exchange}-${symbol}`);
 }
 
+/**
+ * Update the funding metadata for a symbol.
+ * Simplified signature: only `latestTimestamp` is needed for the 8h freshness guard.
+ * Both `oldestTimestamp` and `latestTimestamp` are set to the same value for schema compatibility.
+ */
 export async function updateFundingMeta(
   exchange: string,
   symbol: string,
-  oldestTimestamp: number,
   latestTimestamp: number
 ): Promise<void> {
   const db = await getDB();
@@ -505,7 +525,7 @@ export async function updateFundingMeta(
     id: `${exchange}-${symbol}`,
     exchange,
     symbol,
-    oldestTimestamp,
+    oldestTimestamp: latestTimestamp,
     latestTimestamp,
     updatedAt: Date.now(),
   });

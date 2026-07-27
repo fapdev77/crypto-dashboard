@@ -12,6 +12,7 @@ import { usePositionsStore } from '../store/positionsStore';
 import { useOrdersStore } from '../store/ordersStore';
 import { clearConnectionData } from '../store/crossStoreCleanup';
 import { useConnectionStore } from '../store/connectionStore';
+import { LogManager } from '../services/LogManager';
 import mockAccountsData from '../mock/accounts.json';
 import mockBalancesData from '../mock/balances.json';
 import mockPositionsData from '../mock/positions.json';
@@ -27,6 +28,7 @@ export function useMockDataInjector() {
     // clean up all mock data connections to prevent mock data persisting
     // alongside real data in the stores.
     if (!useMockData) {
+      LogManager.system('MockInjector', `Cleaning up ${mockAccountsData.length} mock connections`);
       mockAccountsData.forEach((acc: any) => {
         clearConnectionData(acc.connectionId);
         useOrdersStore.getState().clearConnectionOrders(acc.connectionId);
@@ -40,6 +42,8 @@ export function useMockDataInjector() {
       clearConnectionData(k.id);
       useOrdersStore.getState().clearConnectionOrders(k.id);
     });
+
+    LogManager.system('MockInjector', `Injecting mock data — ${mockAccountsData.length} accounts, ${mockBalancesData.length} balances, ${mockPositionsData.length} positions`);
 
     // Inject mock data
     const balState = useBalancesStore.getState();

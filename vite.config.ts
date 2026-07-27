@@ -5,6 +5,8 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+import packageJson from './package.json' with { type: 'json' };
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
@@ -24,6 +26,7 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      '__APP_VERSION__': JSON.stringify(packageJson.version),
     },
     resolve: {
       alias: {
@@ -35,6 +38,11 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: true,
       setupFiles: [],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'text-summary'],
+        include: ['src/store/fundingStore.ts', 'src/services/funding/**'],
+      },
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

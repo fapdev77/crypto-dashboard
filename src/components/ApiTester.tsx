@@ -4,6 +4,7 @@ import { OkxAdapter } from '../services/adapters/OkxAdapter';
 import { BitgetAdapter } from '../services/adapters/BitgetAdapter';
 import { BybitAdapter } from '../services/adapters/BybitAdapter';
 import { proxyFetch } from '../utils/proxyFetch';
+import { LogManager } from '../services/LogManager';
 import { Send, Play, Square, Wifi, WifiOff, Terminal, ListCollapse } from 'lucide-react';
 
 /* 
@@ -86,6 +87,7 @@ export function ApiTester() {
       const proxyResponse = await proxyFetch({ targetUrl, method: 'GET', headers });
       setRestResponse(JSON.stringify(proxyResponse, null, 2));
     } catch (err: any) {
+      LogManager.error('ApiTester', `REST request failed: ${restPath}`, err);
       setRestResponse(`Error:\n${err.message || String(err)}`);
     }
   };
@@ -121,9 +123,11 @@ export function ApiTester() {
           logWs('Sending authentication payload...');
           ws.send(JSON.stringify(exchangeCredentials));
         } else {
+           LogManager.info('ApiTester', `WS connected for ${activeKey?.exchange} (${activeKey?.id}) — public channels only`);
            logWs('WS connected (Public channels only). Submit a subscribe payload to test.');
         }
       } catch (err: any) {
+         LogManager.warn('ApiTester', `WS auth error for ${activeKey?.exchange}:`, err);
          logWs(`Auth Error: ${err.message}`);
       }
     };
@@ -138,6 +142,7 @@ export function ApiTester() {
     };
 
     ws.onerror = (error) => {
+      LogManager.error('ApiTester', `WS connection error for ${activeKey?.exchange} (${activeKey?.id})`);
       logWs(`WS Error occurred`);
     };
 
@@ -150,6 +155,7 @@ export function ApiTester() {
 
   const handleWsDisconnect = () => {
     if (wsRef.current) {
+      LogManager.info('ApiTester', `WS disconnected for ${activeKey?.exchange} (${activeKey?.id})`);
       logWs('Disconnecting...');
       wsRef.current.close();
     }
