@@ -186,7 +186,7 @@ export interface BybitTransactionLogEntry {
   id: string;
   connectionId: string;
   exchange: 'bybit';
-  label: string;
+  label: string; // ApiKey Label 
 
   // Raw data preserved from Bybit
   rawId: string;

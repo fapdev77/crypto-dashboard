@@ -120,9 +120,9 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
               {entry.symbol && <span className="text-[10px] text-[#8E9299] truncate max-w-[80px]">{entry.symbol}</span>}
             </div>
           </div>
-          {isInverse && (
-            <span className="text-[8px] uppercase tracking-wider text-amber-400 font-semibold">Inverse</span>
-          )}
+          <span className="w-max px-1.5 py-0.5 text-[9px] rounded font-semibold border text-white bg-white/10 border-white/20">
+            {entry.label}
+          </span>
         </div>
 
         {/* Col 3: Type (type) */}
@@ -186,7 +186,7 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
         </div>
 
         {/* Col 7: Cash Flow + Change */}
-          <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
+        <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
           <AppTooltip description={`Cash flow and Net change (cashFlow + funding - fee). Values in ${isInverse ? entry.currency : 'USD'}${isInverse && usdPrice ? `. USD approx: multiply by ${formatCurrency(usdPrice, 'usd')}` : ''}.`}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
               Cash Flow · Change

@@ -1,10 +1,3 @@
-# [1.1.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.0.0...v1.1.0) (2026-07-26)
-
-
-### Features
-
-* **sync:** add "Last Sync:" label to timestamp ([5f159b3](https://github.com/fapdev77/crypto-dashboard/commit/5f159b3903fa8be2a818b2bf86f179ef94dd3bdb))
-
 # 1.0.0 (2026-07-26)
 
 
