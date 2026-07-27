@@ -7,11 +7,14 @@ import { useSettingsStore } from '../../../store/settingsStore';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { LogManager } from '../../../services/LogManager';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { AppTooltip } from '../../ui/Tooltip';
 import { Pagination } from '../../ui/Pagination';
+import { usePagination } from '../../../hooks/usePagination';
+import { detectQtyIsCoin } from '../../../utils/inverseUtils';
 
 export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -32,20 +35,9 @@ export function OrderHistory() {
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters]);
-
-  // Adjust page if it exceeds the max page available for current orders
-  useEffect(() => {
-    const maxPage = Math.max(1, Math.ceil(orders.length / itemsPerPage));
-    if (currentPage > maxPage) {
-      setCurrentPage(maxPage);
-    }
-  }, [orders.length, currentPage]);
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedOrders, totalItems: ordersTotal } = usePagination(
+    orders, 50, [filters]
+  );
 
   // Busca inicial
   useEffect(() => {
@@ -104,7 +96,7 @@ export function OrderHistory() {
           }
           if (isMounted) setTotalFundingFee(total);
         }).catch(err => {
-          console.warn('Could not load mock bills', err);
+          LogManager.warn('OrderHistory', 'Could not load mock bills', err);
         });
         return;
       }
@@ -131,7 +123,7 @@ export function OrderHistory() {
                }
              }
            } catch(e) {
-             console.error('Failed to fetch bills for funding fee', e);
+             LogManager.error('OrderHistory', 'Failed to fetch bills for funding fee', e);
            }
         }
         if (isMounted) setTotalFundingFee(total);
@@ -164,29 +156,7 @@ export function OrderHistory() {
         const p = o.avgPrice > 0 ? o.avgPrice : o.price || 0;
         let valUsd = 0;
         if (o.category === 'INVERSE') {
-          // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs USD contracts (e.g. 100 USD)
-          let qtyIsCoin = false;
-          if (o.exchange === 'bitget') {
-            qtyIsCoin = true;
-          } else if (o.exchange === 'okx' || o.exchange === 'bybit') {
-            qtyIsCoin = false;
-          } else {
-            const estValIfQtyIsCoin = o.qty * p;
-            const estValIfQtyIsUsd = o.qty;
-            const actualVal = o.value || 0;
-
-            if (actualVal > 0 && p > 0) {
-              const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-              const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-              if (distToCoin < distToUsd) {
-                qtyIsCoin = true;
-              }
-            } else {
-              if (o.qty < 2 && o.qty * p >= 10) {
-                qtyIsCoin = true;
-              }
-            }
-          }
+          const qtyIsCoin = detectQtyIsCoin({ exchange: o.exchange, qty: o.qty, price: p, value: o.value });
 
           if (o.exchange === 'bybit') {
             // Bybit inverse: o.value is in COIN. Multiply by price to get USD value
@@ -216,11 +186,6 @@ export function OrderHistory() {
 
     return { buyCount, sellCount, filledCount, cancelledCount, rejectedCount, totalTradedVolume, totalFees };
   }, [orders]);
-
-  const paginatedOrders = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return orders.slice(startIndex, startIndex + itemsPerPage);
-  }, [orders, currentPage]);
 
   const SIDE_DONUT = [
     { name: 'Buy', value: stats.buyCount, color: '#00C853' },
@@ -376,28 +341,31 @@ export function OrderHistory() {
         </div>
       )}
 
-      <div className="flex-1 overflow-auto hide-scrollbar">
-        {orders.length > 5 && (
+      <div className="flex-1 overflow-auto hide-scrollbar">          {ordersTotal > 5 && (
           <div className="mb-4">
             <Pagination
               id="orders-pagination-top"
               currentPage={currentPage}
-              totalItems={orders.length}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-            />
+              totalItems={ordersTotal}
+              itemsPerPage={50}
+              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+                refreshLabel="Updating"
+                refreshDataReady={!loading}
+              />
           </div>
         )}
         <OrdersTable orders={paginatedOrders} loading={loading} />
-        {orders.length > 0 && (
+        {ordersTotal > 0 && (
           <div className="mt-4">
             <Pagination
               id="orders-pagination-bottom"
               currentPage={currentPage}
-              totalItems={orders.length}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-            />
+              totalItems={ordersTotal}
+              itemsPerPage={50}
+              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+                refreshLabel="Updating"
+                refreshDataReady={!loading}
+              />
           </div>
         )}
       </div>

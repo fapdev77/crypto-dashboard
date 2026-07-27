@@ -2,8 +2,16 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { formatValue, formatCrypto, formatPrice, formatCompactUSD } from '../utils/formatters';
 import Big from 'big.js';
 
+/** Currency/mask type for formatting values via useFormatCurrency. */
 export type CurrencyFormatType = 'usd' | 'crypto' | 'price' | 'compact';
 
+/**
+ * Hook returning a formatCurrency function that respects the global privacy mode.
+ * When privacy mode is on, numeric values are masked (e.g. $••••).
+ *
+ * @returns A format function with signature:
+ *   (value, type = 'usd', decimalsOrSymbol?) => string
+ */
 export function useFormatCurrency() {
   const { isPrivateMode } = usePrivacy();
 

@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { clearAllCache, getCacheSize, getAssetMetadataCacheSize, clearAssetMetadataCache } from '../services/historyCache';
+import { useFundingStore } from '../store/fundingStore';
+import { clearAllCache, getCacheSize, getAssetMetadataCacheSize, clearAssetMetadataCache, clearFundingSummariesCache } from '../services/historyCache';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import {
   Database, Trash2, CheckCircle2, Loader2, RefreshCw,
   Briefcase, AlertTriangle, FlaskConical, Gauge, Settings as SettingsIcon
 } from 'lucide-react';
+import { LogManager } from '../services/LogManager';
 import { AppTooltip } from './ui/Tooltip';
+import { FundingSyncTimingPanel } from './sync/FundingSyncTimingPanel';
 
 export function Settings() {
   const {
@@ -16,7 +19,9 @@ export function Settings() {
     pollingInterval, setPollingInterval,
     historyCacheInterval, setHistoryCacheInterval,
     metadataCacheTtlHours, setMetadataCacheTtlHours,
-    showWelcomeOnStartup, setShowWelcomeOnStartup
+    showWelcomeOnStartup, setShowWelcomeOnStartup,
+    fundingPollingInterval, setFundingPollingInterval,
+    fundingHistoryInterval, setFundingHistoryInterval
   } = useSettingsStore();
 
   const keys = useApiKeysStore(state => state.keys);
@@ -28,11 +33,12 @@ export function Settings() {
   const [cacheSize, setCacheSize] = useState<number | null>(null);
   const [metaCacheSize, setMetaCacheSize] = useState<number | null>(null);
   const [isClearingMeta, setIsClearingMeta] = useState(false);
+  const [isClearingFunding, setIsClearingFunding] = useState(false);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
 
   useEffect(() => {
-    getCacheSize().then(setCacheSize).catch(console.error);
-    getAssetMetadataCacheSize().then(setMetaCacheSize).catch(console.error);
+    getCacheSize().then(setCacheSize).catch(err => LogManager.error('Settings', 'Failed to get cache size:', err));
+    getAssetMetadataCacheSize().then(setMetaCacheSize).catch(err => LogManager.error('Settings', 'Failed to get metadata cache size:', err));
   }, []);
 
   const handleForceSync = async () => {
@@ -52,7 +58,7 @@ export function Settings() {
       toast.success('Cache synced successfully', { id: 'cache-sync' });
       setTimeout(() => setSynced(false), 3000);
     } catch (e: any) {
-      console.error(e);
+      LogManager.error('Settings', 'Failed to sync cache:', e);
       toast.error(`Failed to sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-sync' });
     } finally {
       setIsSyncing(false);
@@ -76,7 +82,7 @@ export function Settings() {
       toast.success('Cache cleared and re-synced successfully', { id: 'cache-clear' });
       setTimeout(() => setCleared(false), 3000);
     } catch (e: any) {
-      console.error(e);
+      LogManager.error('Settings', 'Failed to clear and sync cache:', e);
       toast.error(`Failed to clear and sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-clear' });
     } finally {
       setIsClearing(false);
@@ -90,10 +96,27 @@ export function Settings() {
       setMetaCacheSize(0);
       toast.success('Metadata cache cleared', { id: 'meta-cache-clear' });
     } catch (e: any) {
-      console.error(e);
+      LogManager.error('Settings', 'Failed to clear metadata cache:', e);
       toast.error(`Failed to clear metadata cache: ${e.message || 'Unknown error'}`, { id: 'err-meta-cache-clear' });
     } finally {
       setIsClearingMeta(false);
+    }
+  };
+
+  const handleClearFundingCache = async () => {
+    setIsClearingFunding(true);
+    try {
+      await clearFundingSummariesCache();
+      // Reset the sync guard so the next useFundingSync cycle triggers a full re-sync.
+      useFundingStore.getState().setLastHistoryFetch(0);
+      // Notify any mounted funding sync hook to start syncing immediately.
+      window.dispatchEvent(new CustomEvent('funding-cache-cleared'));
+      toast.success('Funding cache cleared — historical sync will start in background.', { id: 'funding-cache-clear' });
+    } catch (e: any) {
+      LogManager.error('Settings', 'Failed to clear funding cache:', e);
+      toast.error(`Failed to clear funding cache: ${e.message || 'Unknown error'}`, { id: 'err-funding-cache-clear' });
+    } finally {
+      setIsClearingFunding(false);
     }
   };
 
@@ -105,9 +128,13 @@ export function Settings() {
           for (const db of dbs) {
             if (db.name) window.indexedDB.deleteDatabase(db.name);
           }
-        }).catch(() => {});
+        }).catch((e) => {
+          LogManager.warn('Settings', 'Factory reset — failed to enumerate IndexedDB databases:', e);
+        });
       }
-    } catch (e) {}
+    } catch (e) {
+      LogManager.warn('Settings', 'Factory reset — failed to delete IndexedDB databases:', e);
+    }
 
     window.localStorage.clear();
     window.location.reload();
@@ -382,6 +409,98 @@ export function Settings() {
                 {isClearingMeta ? 'Clearing...' : 'Clear Metadata Cache'}
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Card 4.5: Funding Fees Configuration */}
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
+          <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
+            <Gauge className="w-4 h-4 text-orange-400" />
+            Funding Fees Sync
+          </h3>
+          <p className="text-[#8E9299] text-xs mb-5">Manage background syncing of funding rates</p>
+
+          <div className="flex flex-col gap-5 flex-1">
+            {/* Polling Interval */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <AppTooltip description="Sets the interval for fetching the 'next' funding rate in the background.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Live Polling Interval</h4>
+                </AppTooltip>
+                <span className="text-orange-400 font-mono text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">{fundingPollingInterval}m</span>
+              </div>
+              <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
+                Periodically fetch the upcoming funding rates (1 to 60 minutes).
+              </p>
+              <input
+                type="range"
+                min="1"
+                max="60"
+                step="1"
+                value={fundingPollingInterval}
+                onChange={(e) => setFundingPollingInterval(Number(e.target.value))}
+                onPointerUp={() => toast.success(`Funding Polling set to ${fundingPollingInterval}m`, { id: 'funding-polling' })}
+                className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-orange-400"
+              />
+              <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
+                <span>1m</span>
+                <span>60m</span>
+              </div>
+            </div>
+
+            <div className="border-t border-[#2a2b30]" />
+
+            {/* History Interval */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <AppTooltip description="Controls how often a full history sync is allowed after page load. Auto-sync is triggered 1 minute after each funding settlement (every 8h). This interval acts as a minimum cooldown for additional syncs when the page is reloaded mid-cycle.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">History Fetch Interval</h4>
+                </AppTooltip>
+                <span className="text-orange-400 font-mono text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">{fundingHistoryInterval}h</span>
+              </div>
+              <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
+                Minimum cooldown between full history syncs (4 to 8 hours). Auto-sync runs each funding cycle regardless of this setting.
+              </p>
+              <input
+                type="range"
+                min="4"
+                max="8"
+                step="1"
+                value={fundingHistoryInterval}
+                onChange={(e) => setFundingHistoryInterval(Number(e.target.value))}
+                onPointerUp={() => toast.success(`History fetch cooldown set to ${fundingHistoryInterval}h`, { id: 'funding-history' })}
+                className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-orange-400"
+              />
+              <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
+                <span>4h</span>
+                <span>8h</span>
+              </div>
+            </div>
+
+            <div className="border-t border-[#2a2b30]" />
+
+            {/* Clear Funding Cache */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <AppTooltip description="Deletes the local funding fee cache causing it to start from scratch.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Clear Funding Cache</h4>
+                </AppTooltip>
+              </div>
+              <button
+                onClick={handleClearFundingCache}
+                disabled={isClearingFunding}
+                className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors mt-2"
+              >
+                {isClearingFunding
+                  ? <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />
+                  : <Trash2 className="w-4 h-4 text-red-400" />
+                }
+                {isClearingFunding ? 'Clearing...' : 'Clear Cache Now'}
+              </button>
+            </div>
+
+            {/* Sync Timing Performance Panel */}
+            <FundingSyncTimingPanel />
           </div>
         </div>
 

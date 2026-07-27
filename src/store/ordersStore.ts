@@ -2,8 +2,14 @@ import { create } from 'zustand';
 import { UnifiedOrder } from '../types';
 
 interface OrdersState {
+  /** Map of order id → UnifiedOrder for all currently open orders. */
   openOrders: Record<string, UnifiedOrder>;
+  /**
+   * Full replacement of open orders for a connection.
+   * Removes stale orders (no longer in newOrders), adds/updates the rest.
+   */
   updateOpenOrders: (connectionId: string, newOrders: UnifiedOrder[]) => void;
+  /** Remove all open orders belonging to a specific connection. */
   clearConnectionOrders: (connectionId: string) => void;
 }
 
@@ -15,7 +21,7 @@ export const useOrdersStore = create<OrdersState>()((set) => ({
     
     const newIds = new Set(newOrders.map(o => o.id));
     
-    // Remover apenas as ordens desta conexão que não vieram mais (foram fechadas ou canceladas)
+    // Remove only orders from this connection that are no longer present (were closed or cancelled)
     for (const key in nextOrders) {
       if (nextOrders[key].connectionId === connectionId && !newIds.has(key)) {
         delete nextOrders[key];

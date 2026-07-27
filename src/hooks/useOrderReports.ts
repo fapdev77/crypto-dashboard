@@ -5,26 +5,43 @@ import { UnifiedOrder } from '../types';
 import { useOrdersStore } from '../store/ordersStore';
 import { getCachedOrders } from '../services/historyCache';
 import { useSettingsStore } from '../store/settingsStore';
+import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { OrderHistoryService } from '../services/orders/OrderHistoryService';
+import { LogManager } from '../services/LogManager';
 import mockOrdersData from '../mock/orders.json';
 
-// Module-level state to persist across unmounts/remounts of different views
-let globalCachedClosedOrders: UnifiedOrder[] = [];
-let globalLastOrdersSyncedVersion: number | null = null;
-let globalLastOrdersSyncTimestamp: number = 0;
-
+/** Filter configuration for the Order Reports view. */
 export interface OrderFilters {
-  exchange: string;     // 'All' | 'bybit' | 'bitget' | 'okx'
-  instrument: string;   // 'All' | 'SPOT' | 'PERP' | 'FUTURES' etc
+  /** Exchange filter: 'All' | 'bybit' | 'bitget' | 'okx'. */
+  exchange: string;
+  /** Instrument type filter: 'All' | 'SPOT' | 'PERP' | 'FUTURES' etc. */
+  instrument: string;
+  /** Comma-separated list of symbol substrings to filter by. */
   symbols: string;
-  type: string;         // 'All' | 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL'
-  side: string;         // 'All' | 'buy' | 'sell'
+  /** Order type filter: 'All' | 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL'. */
+  type: string;
+  /** Side filter: 'All' | 'buy' | 'sell'. */
+  side: string;
+  /** Whether to show open or closed orders. */
   status: 'OPEN' | 'CLOSED';
+  /** Time period in ms for closed orders (only orders newer than this). */
   timePeriod: number;
-  accountId: string;    // 'All' | connectionId
-  historyStatus?: string; // 'All' | 'FILLED' | 'CANCELLED' etc
+  /** Account/connection filter: 'All' | connectionId. */
+  accountId: string;
+  /** Optional fine-grained status filter for closed orders ('All' | 'FILLED' | 'CANCELLED' etc). */
+  historyStatus?: string;
 }
 
+/**
+ * Hook for fetching and filtering open/closed orders from all active API keys.
+ *
+ * - Open orders come from the in-memory ordersStore (live REST polling).
+ * - Closed orders are fetched via IndexedDB cache + background REST sync (SWR pattern).
+ * - Mock data is used when Simulation Mode is active.
+ *
+ * @param filters Current filter configuration.
+ * @returns Object with fetchOrders callback, filtered orders array, loading/syncing/error states.
+ */
 export function useOrderReports(filters: OrderFilters) {
   const { keys } = useApiKeysStore();
   const cachedOpenOrders = useOrdersStore(state => state.openOrders);
@@ -32,11 +49,13 @@ export function useOrderReports(filters: OrderFilters) {
 
   const activeKeys = useMemo(() => keys.filter(k => k.isActive), [keys]);
 
+  const syncStore = useSyncCoordinatorStore();
+
   // Local state used only for CLOSED (history) orders
-  const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>(globalCachedClosedOrders);
+  const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>(syncStore.cachedClosedOrders);
   const [loading, setLoading] = useState(() => {
     if (useMockData || keys.filter(k => k.isActive).length === 0) return false;
-    return globalCachedClosedOrders.length === 0;
+    return syncStore.cachedClosedOrders.length === 0;
   });
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,14 +86,14 @@ export function useOrderReports(filters: OrderFilters) {
     const activeKeys = keys.filter(k => k.isActive);
     if (activeKeys.length === 0) {
       setClosedRawOrders([]);
-      globalCachedClosedOrders = [];
+      useSyncCoordinatorStore.getState().setCachedClosedOrders([]);
       if (!silent) setLoading(false);
       return;
     }
 
     // Only trigger loading state on non-silent runs if we don't have any cached orders yet
     if (!silent) {
-      if (globalCachedClosedOrders.length === 0) {
+      if (useSyncCoordinatorStore.getState().cachedClosedOrders.length === 0) {
         setLoading(true);
       }
       setError(null);
@@ -96,7 +115,7 @@ export function useOrderReports(filters: OrderFilters) {
       
       if (cachedTotal.length > 0) {
         setClosedRawOrders(cachedTotal);
-        globalCachedClosedOrders = cachedTotal;
+        useSyncCoordinatorStore.getState().setCachedClosedOrders(cachedTotal);
         if (!silent) setLoading(false); // Instant render
       }
 
@@ -133,16 +152,17 @@ export function useOrderReports(filters: OrderFilters) {
       
       if (updatedTotal.length > 0) {
         setClosedRawOrders(updatedTotal);
-        globalCachedClosedOrders = updatedTotal;
+        useSyncCoordinatorStore.getState().setCachedClosedOrders(updatedTotal);
       } else if (cachedTotal.length === 0) {
         setClosedRawOrders([]);
-        globalCachedClosedOrders = [];
+        useSyncCoordinatorStore.getState().setCachedClosedOrders([]);
       }
 
       // Mark as fully synchronized
       setLastSyncTime(Date.now());
 
     } catch (err: any) {
+      LogManager.error('OrderReports', 'Failed to fetch order history:', err);
       if (!silent) setError(err.message || 'Failed to fetch order history');
     } finally {
       if (!silent) setLoading(false);

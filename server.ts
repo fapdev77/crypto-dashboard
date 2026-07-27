@@ -2,30 +2,11 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import fetch from "node-fetch"; // natively available globally in Node 18+ but let's use standard global fetch
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import { ServerLogger } from './src/utils/serverLogger';
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
-
-  // Local Proxy para WebSockets da Bitget e outras exchanges que possam bloquear navegadores
-  // Como navegadores não podem alterar o Origin header de um WebSocket, usamos esse proxy intermediário.
-  const wsProxy = createProxyMiddleware({ 
-    target: 'wss://ws.bitget.com', 
-    changeOrigin: true, 
-    ws: true,
-    pathRewrite: {
-      '^/ws-proxy/bitget': '', // remove o path de entrada
-    },
-    on: {
-      proxyReqWs: (proxyReq, req, socket, options, head) => {
-        // Remove a origem do navegador para simular uma conexão server-to-server
-        proxyReq.removeHeader('origin');
-      }
-    }
-  }) as any;
-  
-  app.use('/ws-proxy/bitget', wsProxy);
+  const PORT = process.env.PORT || 3000;
 
   // We need express.text or raw to parse arbitrary body formats, but json is also good
   // ONLY for non-websocket proxy routes
@@ -41,7 +22,7 @@ async function startServer() {
         return res.status(400).json({ error: "Missing targetUrl or method" });
       }
 
-      // Prevenção de SSRF: Validar Domínio (Allowlist)
+      // SSRF prevention: Domain validation (Allowlist)
       const allowedDomains = [
         'api.bybit.com',
         'api.bitget.com',
@@ -52,14 +33,14 @@ async function startServer() {
       try {
         const urlObj = new URL(targetUrl);
         if (!allowedDomains.includes(urlObj.hostname)) {
-          console.error(`[Proxy-SSRF-Block] Tentativa de acesso bloqueado a domínio não autorizado: ${urlObj.hostname}`);
+          ServerLogger.error('Proxy', `SSRF-Block — unauthorized domain: ${urlObj.hostname}`);
           return res.status(403).json({ error: "Forbidden: Domain not in proxy allowlist" });
         }
       } catch (err) {
         return res.status(400).json({ error: "Invalid targetUrl format" });
       }
 
-      console.log(`[Proxy] ${method} ${targetUrl}`);
+      ServerLogger.info('Proxy', `${method} ${targetUrl}`);
 
       // We omit host/origin headers to avoid 403s from strict exchange proxies
       const cleanHeaders = { ...headers };
@@ -83,16 +64,16 @@ async function startServer() {
       try {
         responseData = JSON.parse(responseText);
       } catch (e) {
-        console.warn(`[Proxy] Warning: Failed to parse JSON from ${targetUrl}. Status: ${response.status}`);
+        ServerLogger.warn('Proxy', `Failed to parse JSON response. Status: ${response.status}`, targetUrl);
         responseData = responseText;
       }
 
-      console.log(`[Proxy] Response status from ${targetUrl}: ${response.status}`);
+      ServerLogger.info('Proxy', `Response status: ${response.status}`, targetUrl);
 
       res.status(response.status).json(responseData);
 
     } catch (error: any) {
-      console.error("Proxy error:", error);
+      ServerLogger.error('Proxy', 'Proxy error:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -113,13 +94,7 @@ async function startServer() {
   }
 
   const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-
-  server.on('upgrade', (req, socket, head) => {
-    if (req.url && req.url.startsWith('/ws-proxy/bitget')) {
-      wsProxy.upgrade(req, socket, head);
-    }
+    ServerLogger.info('Server', `Running on http://localhost:${PORT}`);
   });
 }
 

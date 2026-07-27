@@ -1,4 +1,11 @@
 import Big from 'big.js';
+import {
+  RawPositionData,
+  RawHistoryPositionData,
+  RawOrderData,
+  RawBalanceItem,
+  RawBillData
+} from './types/raw';
 
 // Types
 export type ExchangeName = 'bybit' | 'bitget' | 'okx';
@@ -24,7 +31,7 @@ export interface UnifiedBalance {
   walletBalance?: number;
   availableMargin?: number;
   unrealizedPnl?: number;
-  raw?: any;
+  raw?: RawBalanceItem;
 }
 
 export interface UnifiedOrder {
@@ -52,7 +59,7 @@ export interface UnifiedOrder {
   fees?: number;
   leverage?: number;
   marginMode?: UnifiedMarginMode;
-  raw?: any;
+  raw?: RawOrderData;
 }
 
 export interface UnifiedPosition {
@@ -86,7 +93,7 @@ export interface UnifiedPosition {
   instrumentType?: UnifiedInstrumentType;
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
-  raw?: any; // To store the original broker data if needed
+  raw?: RawPositionData;
 }
 
 export interface UnifiedHistoryPosition {
@@ -114,7 +121,7 @@ export interface UnifiedHistoryPosition {
   notionalUsd?: number;
   roi?: number;
   instrumentType?: UnifiedInstrumentType;
-  raw?: any;
+  raw?: RawHistoryPositionData;
 }
 
 export interface UnifiedBillRecord {
@@ -126,7 +133,7 @@ export interface UnifiedBillRecord {
   amount: number;
   ccy: string;
   timestamp: number;
-  raw?: any;
+  raw?: RawBillData;
 }
 
 export interface SymbolPnLRecord {
@@ -139,3 +146,81 @@ export interface SymbolPnLRecord {
   exchange: ExchangeName;
   lastActivity: number;
 }
+
+// ── Bybit Transaction Log ──
+
+export interface FundingFeeAggregated {
+  exchange: ExchangeName;
+  symbol: string;
+  instrumentType: 'USDT-M' | 'COIN-M';
+  currentPrice?: number;
+  nextFundingRate?: number;
+  nextFundingTime?: number;
+  lastFundingRate?: number;
+  todaySum: number;
+  currentMonthSum: number;
+  lastMonthSum: number;
+  last3MonthsSum: number;
+  last6MonthsSum?: number;
+  yearSum?: number;
+}
+
+export interface FundingRateSummary {
+  id: string;                      // `${exchange}-${symbol}`
+  exchange: ExchangeName;
+  symbol: string;
+  instrumentType: 'USDT-M' | 'COIN-M';
+  last12MonthsFundingRate?: string; // Big.js toFixed(8) — optional, only populated by Bybit (400d coverage)
+  last6MonthsFundingRate?: string;  // Big.js toFixed(8) — optional, only populated by Bybit (400d coverage)
+  last3MonthsFundingRate: string;   // Big.js toFixed(8)
+  lastMonthFundingRate: string;     // Big.js toFixed(8)
+  currentMonthFundingRate: string;  // Big.js toFixed(8)
+  todayFundingRate: string;         // Big.js toFixed(8)
+  lastFundingRate: string;          // Rate of most recent settlement
+  lastFundingTime: string;          // ms timestamp of most recent settlement, as string
+  updatedAt: number;                // ms timestamp
+}
+
+export interface BybitTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'bybit';
+  label: string;
+
+  // Raw data preserved from Bybit
+  rawId: string;
+  symbol: string;
+  category: string;        // linear, inverse, spot, option
+  side: 'Buy' | 'Sell' | 'None';
+  transactionTime: number; // ms timestamp
+  type: string;            // TRADE, SETTLEMENT, DELIVERY, LIQUIDATION, BONUS, TRANSFER, etc.
+  transSubType: string;
+  qty: string;
+  size: string;
+  currency: string;
+  tradePrice: string;
+  funding: string;
+  fee: string;
+  cashFlow: string;
+  change: string;          // change = cashFlow + funding - fee
+  cashBalance: string;
+  feeRate: string;
+  bonusChange: string;
+  tradeId: string;
+  orderId: string;
+  orderLinkId: string;
+
+  raw: Record<string, unknown>;
+}
+
+export interface FundingMeta {
+  id: string; // 'exchange-symbol'
+  exchange: ExchangeName;
+  symbol: string;
+  oldestTimestamp: number;
+  latestTimestamp: number;
+  recordCount?: number;
+  updatedAt: number;
+}
+

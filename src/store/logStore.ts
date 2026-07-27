@@ -1,25 +1,36 @@
 import { create } from 'zustand';
 
+/** Log severity level for the in-app log terminal. */
 export type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DATA' | 'SYSTEM';
 
+/** A single entry in the in-app log terminal. */
 export interface LogEntry {
-  id: string;        // crypto.randomUUID()
-  timestamp: number; // Date.now()
+  /** Unique identifier (crypto.randomUUID). */
+  id: string;
+  /** Creation timestamp. */
+  timestamp: number;
+  /** Severity level. */
   level: LogLevel;
-  source: string;    // Label amigável da conexão ou identificador do sistema (ex: 'SYSTEM', 'CACHE')
-  message: string;   // Mensagem formatada
+  /** Friendly label of the source (connection label, system identifier). */
+  source: string;
+  /** Formatted log message. */
+  message: string;
 }
 
 interface LogState {
+  /** Ordered list of log entries (newest appended last). */
   entries: LogEntry[];
+  /** Maximum number of entries kept in memory (oldest sliced off). */
   maxEntries: number;
+  /** Append a new log entry; old entries are trimmed to maxEntries. */
   addLog: (level: LogLevel, source: string, message: string) => void;
+  /** Clear all log entries. */
   clearLogs: () => void;
 }
 
 export const useLogStore = create<LogState>((set) => ({
   entries: [],
-  maxEntries: 1000,
+  maxEntries: 10000,
   addLog: (level, source, message) => set((state) => {
     const newEntry: LogEntry = {
       id: crypto.randomUUID(),

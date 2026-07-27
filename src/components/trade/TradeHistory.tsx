@@ -10,12 +10,14 @@ import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import Big from 'big.js';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../utils/exportUtils';
 import { AppTooltip } from '../ui/Tooltip';
+import { detectQtyIsCoin } from '../../utils/inverseUtils';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { AssetClassifierAggregator } from '../../services/AssetClassifierAggregator';
 import { extractBaseCoin } from '../../utils/unifiers';
 import { format } from 'date-fns';
 import { Pagination } from '../ui/Pagination';
+import { usePagination } from '../../hooks/usePagination';
 
 export function TradeHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -36,9 +38,6 @@ export function TradeHistory() {
   const keys = useApiKeysStore(state => state.keys);
 
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
 
   // Initial Fetch
   useEffect(() => {
@@ -61,22 +60,9 @@ export function TradeHistory() {
     return orders.filter(o => o.filledQty > 0);
   }, [orders]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters]);
-
-  // Adjust page if it exceeds the max page available for current trades
-  useEffect(() => {
-    const maxPage = Math.max(1, Math.ceil(trades.length / itemsPerPage));
-    if (currentPage > maxPage) {
-      setCurrentPage(maxPage);
-    }
-  }, [trades.length, currentPage]);
-
-  const paginatedTrades = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return trades.slice(startIndex, startIndex + itemsPerPage);
-  }, [trades, currentPage]);
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedTrades, totalItems: tradesTotal } = usePagination(
+    trades, 50, [filters]
+  );
 
   // Stats
   const stats = useMemo(() => {
@@ -92,31 +78,7 @@ export function TradeHistory() {
       const p = t.avgPrice > 0 ? t.avgPrice : t.price || 0;
       const isInverse = t.category === 'INVERSE';
 
-      // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
-      let qtyIsCoin = false;
-      if (isInverse && p > 0) {
-        if (t.exchange === 'bitget') {
-          qtyIsCoin = true;
-        } else if (t.exchange === 'okx' || t.exchange === 'bybit') {
-          qtyIsCoin = false;
-        } else {
-          const estValIfQtyIsCoin = t.qty * p;
-          const estValIfQtyIsUsd = t.qty;
-          const actualVal = t.value || 0;
-
-          if (actualVal > 0) {
-            const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-            const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-            if (distToCoin < distToUsd) {
-              qtyIsCoin = true;
-            }
-          } else {
-            if (t.qty < 2 && t.qty * p >= 10) {
-              qtyIsCoin = true;
-            }
-          }
-        }
-      }
+      const qtyIsCoin = isInverse && detectQtyIsCoin({ exchange: t.exchange, qty: t.qty, price: p, value: t.value });
 
       let valUsd = 0;
       if (t.exchange === 'bybit') {
@@ -201,25 +163,7 @@ export function TradeHistory() {
       let filledValueStr = '';
       let filledQtyStr = '';
 
-      // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
-      let qtyIsCoin = false;
-      if (isInverse && filledPrice > 0) {
-        const estValIfQtyIsCoin = t.qty * filledPrice;
-        const estValIfQtyIsUsd = t.qty;
-        const actualVal = t.value || 0;
-
-        if (actualVal > 0) {
-          const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-          const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-          if (distToCoin < distToUsd) {
-            qtyIsCoin = true;
-          }
-        } else {
-          if (t.qty < 2 && t.qty * filledPrice >= 10) {
-            qtyIsCoin = true;
-          }
-        }
-      }
+      const qtyIsCoin = isInverse && detectQtyIsCoin({ exchange: t.exchange, qty: t.qty, price: filledPrice, value: t.value });
 
       let actualFilledCoinSize = 0;
       let filledValUsd = 0;
@@ -380,14 +324,17 @@ export function TradeHistory() {
       ) : (
         <div className="flex flex-col gap-3 pb-4">
           {/* Top Pagination if trades.length > 5 */}
-          {trades.length > 5 && (
+          {tradesTotal > 5 && (
             <div className="mb-2">
               <Pagination
                 id="trades-pagination-top"
                 currentPage={currentPage}
-                totalItems={trades.length}
-                itemsPerPage={itemsPerPage}
+                totalItems={tradesTotal}
+                itemsPerPage={50}
                 onPageChange={setCurrentPage}
+                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+                refreshLabel="Updating"
+                refreshDataReady={!loading}
               />
             </div>
           )}
@@ -430,25 +377,7 @@ export function TradeHistory() {
             let filledValueStr = '';
             let filledQtyStr = '';
 
-            // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
-            let qtyIsCoin = false;
-            if (isInverse && filledPrice > 0) {
-              const estValIfQtyIsCoin = trade.qty * filledPrice;
-              const estValIfQtyIsUsd = trade.qty;
-              const actualVal = trade.value || 0;
-
-              if (actualVal > 0) {
-                const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-                const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-                if (distToCoin < distToUsd) {
-                  qtyIsCoin = true;
-                }
-              } else {
-                if (trade.qty < 2 && trade.qty * filledPrice >= 10) {
-                  qtyIsCoin = true;
-                }
-              }
-            }
+      const qtyIsCoin = isInverse && detectQtyIsCoin({ exchange: trade.exchange, qty: trade.qty, price: filledPrice, value: trade.value });
 
             let actualFilledCoinSize = 0;
             let filledValUsd = 0;
@@ -549,7 +478,7 @@ export function TradeHistory() {
                     {(() => {
                       const hasFees = trade.fees !== undefined && trade.fees !== null && trade.fees !== 0;
                       let mainFeeStr = '--';
-                      let subFeeStr = null;
+                      let subFeeStr: string | null = null;
                       let isFeeNegative = false;
 
                       if (hasFees) {
@@ -606,9 +535,11 @@ export function TradeHistory() {
             <Pagination
               id="trades-pagination-bottom"
               currentPage={currentPage}
-              totalItems={trades.length}
-              itemsPerPage={itemsPerPage}
+              totalItems={tradesTotal}
+              itemsPerPage={50}
               onPageChange={setCurrentPage}
+              refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+              refreshLabel="Updating"
             />
           </div>
         </div>

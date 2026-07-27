@@ -1,18 +1,29 @@
 import { useState, useEffect, useMemo } from 'react';
 import mockHistoryData from '../mock/history.json';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { UnifiedHistoryPosition } from '../types';
+import type { UnifiedHistoryPosition } from '../types';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { useSettingsStore } from '../store/settingsStore';
+import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getCachedHistory } from '../services/historyCache';
+import { LogManager } from '../services/LogManager';
 
-export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d';
+/** Time period presets for position history queries. */
+export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d' | '120d' | '180d' | '365d' | 'all';
 
-// Module-level state to persist across unmounts/remounts of different views
-let globalCachedPositions: UnifiedHistoryPosition[] = [];
-let globalLastPositionsSyncedVersion: number | null = null;
-let globalLastPositionsSyncTimestamp: number = 0;
-
+/**
+ * Hook for fetching closed position history from all active API keys.
+ *
+ * Uses a two-tier SWR (stale-while-revalidate) approach:
+ *   1. Load cached positions from IndexedDB immediately
+ *   2. Fetch new/changed positions from exchange REST APIs in background
+ *
+ * @param period     Time period to filter by (today, 7d, 14d, 30d, 90d).
+ * @param exchange   Optional exchange filter ('All' | 'bybit' | 'bitget' | 'okx').
+ * @param searchTerm Optional text search on symbol or exchange name.
+ *
+ * @returns Object with positions array, isLoading, isSyncing, and syncMessage.
+ */
 export function usePositionHistory(period: PositionHistoryPeriod, exchange?: string, searchTerm?: string) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
@@ -20,11 +31,12 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   const historyCacheInterval = useSettingsStore(state => state.historyCacheInterval);
   const lastSyncTime = useSettingsStore(state => state.lastSyncTime);
   const setLastSyncTime = useSettingsStore(state => state.setLastSyncTime);
+  const syncStore = useSyncCoordinatorStore();
   const [positions, setPositions] = useState<UnifiedHistoryPosition[]>([]);
-  const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>(globalCachedPositions);
+  const [rawCachedPositions, setRawCachedPositions] = useState<UnifiedHistoryPosition[]>(syncStore.cachedPositions);
   const [isLoading, setIsLoading] = useState(() => {
     if (useMockData || keys.filter(k => k.isActive).length === 0) return false;
-    return globalCachedPositions.length === 0;
+    return syncStore.cachedPositions.length === 0;
   });
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -80,11 +92,11 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
         }
         if (isMounted) {
           setRawCachedPositions(cachedTotal);
-          globalCachedPositions = cachedTotal;
+          useSyncCoordinatorStore.getState().setCachedPositions(cachedTotal);
           setIsLoading(false);
         }
       } catch (err) {
-        console.error('[usePositionHistory] Error loading cache:', err);
+        LogManager.error('PositionHistory', 'Error loading cache:', err);
         if (isMounted) {
           setIsLoading(false);
         }
@@ -116,14 +128,14 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
       if (isMounted) {
         setIsSyncing(true);
-        setSyncMessage('Iniciando sincronização...');
+        setSyncMessage('Starting sync...');
       }
 
       try {
         const service = new PositionHistoryService();
         for (const key of activeKeys) {
           if (!key.isActive) continue;
-          if (isMounted) setSyncMessage(`Aguarde: sincronizando ${key.exchange} (${key.label})...`);
+          if (isMounted) setSyncMessage(`Syncing ${key.exchange} (${key.label})...`);
           await service.fetchWithCache(key);
         }
 
@@ -137,7 +149,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
         if (isMounted) {
           setRawCachedPositions(cachedTotal);
-          globalCachedPositions = cachedTotal;
+          useSyncCoordinatorStore.getState().setCachedPositions(cachedTotal);
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
@@ -145,7 +157,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           setLastSyncTime(Date.now());
         }
       } catch (err) {
-        console.error('[usePositionHistory] Error syncing network positions:', err);
+        LogManager.error('PositionHistory', 'Error syncing network positions:', err);
         if (isMounted) {
           setIsLoading(false);
           setIsSyncing(false);
@@ -165,7 +177,8 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   useEffect(() => {
     if (useMockData) {
       const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime);
-      setPositions(applyFilters(sortedHistory as UnifiedHistoryPosition[]));
+      // Mock data has raw fields as loose JSON — cast through unknown to skip strict field matching
+      setPositions(applyFilters(sortedHistory as unknown as UnifiedHistoryPosition[]));
       return;
     }
 
@@ -175,26 +188,20 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
       return;
     }
 
-    let start: number | undefined;
-    let end: number | undefined;
     const now = Date.now();
-
-    if (period === 'today') {
-      start = new Date(now).setHours(0, 0, 0, 0);
-      end = now;
-    } else if (period === '7d') {
-      start = now - 7 * 24 * 60 * 60 * 1000;
-      end = now;
-    } else if (period === '14d') {
-      start = now - 14 * 24 * 60 * 60 * 1000;
-      end = now;
-    } else if (period === '30d') {
-      start = now - 30 * 24 * 60 * 60 * 1000;
-      end = now;
-    } else if (period === '90d') {
-      start = now - 90 * 24 * 60 * 60 * 1000;
-      end = now;
-    }
+    const periodStartMap: Record<string, number | undefined> = {
+      today: new Date(now).setHours(0, 0, 0, 0),
+      '7d': now - 7 * 24 * 60 * 60 * 1000,
+      '14d': now - 14 * 24 * 60 * 60 * 1000,
+      '30d': now - 30 * 24 * 60 * 60 * 1000,
+      '90d': now - 90 * 24 * 60 * 60 * 1000,
+      '120d': now - 120 * 24 * 60 * 60 * 1000,
+      '180d': now - 180 * 24 * 60 * 60 * 1000,
+      '365d': now - 365 * 24 * 60 * 60 * 1000,
+      'all': undefined,
+    };
+    const start = periodStartMap[period];
+    const end = start !== undefined ? now : undefined;
 
     const activeKeyIds = new Set(activeKeys.map(k => k.id));
     let filtered = rawCachedPositions.filter(pos => activeKeyIds.has(pos.connectionId));

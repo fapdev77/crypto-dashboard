@@ -1,6 +1,36 @@
 # Unified Interfaces Specification (`unified-interfaces.md`)
 
-This document defines the unified interfaces (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, `UnifiedBillRecord`, and `SymbolPnLRecord`) to serve as the single source of truth for the frontend UI. It maps exchange-specific API payloads to normalized fields as defined in `src/types.ts`.
+This document defines the unified interfaces (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, `UnifiedBillRecord`, `SymbolPnLRecord`, `UnifiedOrder`, `FundingFeeAggregated`, `FundingRateSummary`, and `BybitTransactionLogEntry`) to serve as the single source of truth for the frontend UI. It maps exchange-specific API payloads to normalized fields as defined in `src/types.ts`.
+
+---
+
+## 0. Common Type Aliases
+
+These type aliases are shared across all unified interfaces and defined in `src/types.ts`:
+
+```typescript
+export type ExchangeName = 'bybit' | 'bitget' | 'okx';
+export type PositionSide = 'long' | 'short' | 'net';
+export type UnifiedMarginMode = 'cross' | 'isolated' | 'unknown';
+export type UnifiedPositionMode = 'hedge' | 'one_way' | 'unknown';
+export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
+export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
+export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
+```
+
+| Type | Used by | Purpose |
+|------|---------|---------|
+| `ExchangeName` | All interfaces | Supported exchange identifiers |
+| `PositionSide` | UnifiedPosition, UnifiedHistoryPosition, UnifiedOrder | Direction of a position |
+| `UnifiedMarginMode` | UnifiedPosition, UnifiedHistoryPosition, UnifiedOrder | Cross vs isolated margin |
+| `UnifiedPositionMode` | UnifiedPosition | Hedge vs one-way mode |
+| `UnifiedInstrumentType` | UnifiedPosition, UnifiedHistoryPosition, UnifiedOrder | Instrument class (spot, perp, inverse, futures, option) |
+| `UnifiedAssetCategory` | AssetClassifierAggregator | High-level asset classification (crypto, stock, unknown) |
+| `UnifiedOrderStatus` | UnifiedOrder | Order lifecycle state |
+| `UnifiedOrderType` | UnifiedOrder | Order type (limit, market, TP, SL, conditional) |
+| `BillType` | UnifiedBillRecord | Wallet flow classification |
 
 ---
 
@@ -21,9 +51,17 @@ export interface UnifiedBalance {
   walletBalance?: number;
   availableMargin?: number;
   unrealizedPnl?: number;
-  raw?: any;
+  raw?: RawBalanceItem;
 }
 ```
+
+### 1.1 OKX Dual Balance Integration (Trading & Funding)
+
+To provide a complete representation of user assets on OKX, the `OkxAdapter` aggregates balances from both the **Unified Trading account** and the **Funding account** concurrently:
+1. **Trading Account (`/api/v5/account/balance`):** Fetches active trading equity, adjusted equity, available margin, and floating unrealized profit/loss across all assets.
+2. **Funding Account (`/api/v5/asset/balances`):** Fetches passive asset holdings, including available and frozen balances in the user's Funding wallet.
+3. **Valuation Aggregation:** Dynamic exchange rates are extracted on-the-fly from active trading-account valuations (or fallback to stablecoin defaults like 1.0 USD for USDT/USDC). Funding assets are evaluated and summed up into the parent account's overall `totalEquity` and `walletBalance`.
+4. **Visual Segregation:** Asset origins are tracked using unique ID suffixes (e.g., `-UNIFIED-` and `-FUNDING-`), which are mapped by the frontend UI to display clear asset tagging (`UNIFIED` and `FUNDING` tags).
 
 ### Mappings Table
 | Field | Bybit (V5 UTA) | Bitget (V2) | OKX (V5) | Description |
@@ -73,7 +111,7 @@ export interface UnifiedPosition {
   instrumentType?: UnifiedInstrumentType; // 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN'
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
-  raw?: any; // To store the original broker data if needed
+  raw?: RawPositionData; // To store the original broker data if needed
 }
 ```
 
@@ -138,7 +176,7 @@ export interface UnifiedHistoryPosition {
   notionalUsd?: number;
   roi?: number;
   instrumentType?: UnifiedInstrumentType;
-  raw?: any;
+  raw?: RawHistoryPositionData;
 }
 ```
 
@@ -205,7 +243,7 @@ export interface UnifiedBillRecord {
   amount: number;
   ccy: string;
   timestamp: number;
-  raw?: any;
+  raw?: RawBillData;
 }
 ```
 
@@ -269,7 +307,7 @@ export interface UnifiedOrder {
   fees?: number;
   leverage?: number;
   marginMode?: UnifiedMarginMode;
-  raw?: any;
+  raw?: RawOrderData;
 }
 ```
 
@@ -303,3 +341,415 @@ To ensure accurate representation of active and historical orders, each adapter 
 3. **OKX (V5)**
    * For derivatives, quantities are scaled using the cached instrument contract multiplier (`ctVal`), and values are calculated accordingly to match.
 
+---
+
+## 7. Funding Fee Aggregated Interface (`FundingFeeAggregated`)
+
+The computed per-exchange-symbol row used by the Funding Fees Dashboard UI. Combines live current rates (from REST polling) with historical cached summaries (from IndexedDB) to produce period-aggregated values.
+
+```typescript
+export interface FundingFeeAggregated {
+  exchange: ExchangeName;
+  symbol: string;
+  instrumentType: 'USDT-M' | 'COIN-M';
+  currentPrice?: number;
+  nextFundingRate?: number;
+  nextFundingTime?: number;
+  lastFundingRate?: number;
+  todaySum: number;
+  currentMonthSum: number;
+  lastMonthSum: number;
+  last3MonthsSum: number;
+  last6MonthsSum?: number;    // undefined for OKX/Bitget (API limited to ~3 months)
+  yearSum?: number;           // undefined for OKX/Bitget (API limited to ~3 months)
+}
+```
+
+### Aggregation Period Definitions
+
+| Field | Period | Timestamp Range | Excludes Current Month? |
+|-------|--------|----------------|------------------------|
+| `nextFundingRate` | Next scheduled settlement | N/A (from current-rates API) | N/A |
+| `nextFundingTime` | When next settlement occurs | N/A (from current-rates API) | N/A |
+| `lastFundingRate` | Most recent completed settlement | `= summaries[0].lastFundingRate` (newest record) | N/A |
+| `todaySum` | Today (UTC day start → now) | `≥ todayStart` | N/A |
+| `currentMonthSum` | Current calendar month (1st → now) | `≥ currentMonthStart` | N/A |
+| `lastMonthSum` | Previous calendar month | `≥ lastMonthStart AND < currentMonthStart` | ✅ Yes |
+| `last3MonthsSum` | Previous 3 calendar months | `≥ threeMonthsAgoStart AND < currentMonthStart` | ✅ Yes |
+| `last6MonthsSum` | Previous 6 calendar months | `≥ sixMonthsAgoStart AND < currentMonthStart` | ✅ Yes (Bybit only) |
+| `yearSum` | Previous 12 calendar months | `≥ oneYearAgoStart AND < currentMonthStart` | ✅ Yes (Bybit only) |
+
+> **Critical rule:** Multi-month aggregates exclude the current month entirely. The boundary is anchored to the 1st of the current month. For example, on July 15 2026, "Last 6 Months" sums records from January 1 → June 30.
+
+> **OKX limitation:** `last6MonthsSum` and `yearSum` are `undefined` for OKX due to its hard ~3-month API limit.
+> **Bitget:** Depth varies per symbol. With up to 15 pages × 100 records, some symbols may reach 6M/12M boundaries, but the fields may remain `undefined` if insufficient records exist.
+> **Bybit:** Always populates all fields (400+ day coverage). The UI displays `---` for undefined values.
+
+---
+
+## 8. FundingRateSummary (Aggregation-First Interface)
+
+The **core storage interface** for the funding rates pipeline. A single `FundingRateSummary` object stores all pre-computed period sums for one exchange-symbol pair, replacing the previous approach of storing thousands of individual `UnifiedFundingFee` records in IndexedDB.
+
+```typescript
+export interface FundingRateSummary {
+  id: string;                      // `${exchange}-${symbol}`
+  exchange: ExchangeName;
+  symbol: string;
+  instrumentType: 'USDT-M' | 'COIN-M';
+  last12MonthsFundingRate?: string; // Big.js toFixed(8) — Bybit only (400d coverage)
+  last6MonthsFundingRate?: string;  // Big.js toFixed(8) — Bybit only (400d coverage)
+  last3MonthsFundingRate: string;   // Big.js toFixed(8) — all exchanges
+  lastMonthFundingRate: string;     // Big.js toFixed(8) — previous calendar month only
+  currentMonthFundingRate: string;  // Big.js toFixed(8) — current calendar month
+  todayFundingRate: string;         // Big.js toFixed(8) — today (00:00 UTC)
+  lastFundingRate: string;          // Rate of the most recent settlement record
+  lastFundingTime: string;          // ms timestamp of the most recent settlement, as string
+  updatedAt: number;                // ms timestamp of last upsert
+}
+```
+
+**Key design decisions:**
+- All rate values stored as **strings with 8 decimal places** (`toFixed(8)` from Big.js) — no native floats, no precision loss
+- `last12MonthsFundingRate` and `last6MonthsFundingRate` are **optional** — only populated for Bybit (which provides 400+ days of history)
+- Bucket classification uses **calendar-month boundaries**, not sliding windows
+- A single row per exchange-symbol: the IndexedDB store is bounded at `N symbols × 3 exchanges`, never growing
+
+### `FundingRateSummary → FundingFeeAggregated` Mapping
+
+| `FundingRateSummary` field | `FundingFeeAggregated` field | Conversion |
+|----------------------------|------------------------------|------------|
+| `last12MonthsFundingRate` | `yearSum` | `parseFloat()` |
+| `last6MonthsFundingRate` | `last6MonthsSum` | `parseFloat()` |
+| `last3MonthsFundingRate` | `last3MonthsSum` | `parseFloat()` |
+| `lastMonthFundingRate` | `lastMonthSum` | `parseFloat()` |
+| `currentMonthFundingRate` | `currentMonthSum` | `parseFloat()` |
+| `todayFundingRate` | `todaySum` | `parseFloat()` |
+| `lastFundingRate` | `lastFundingRate` | `parseFloat()` |
+
+---
+
+## 9. CurrentFundingRate (Live Snapshot Interface)
+
+Defined in `src/services/funding/FundingService.ts` (not `types.ts`), used for real-time polling:
+
+```typescript
+export interface CurrentFundingRate {
+  exchange: ExchangeName;
+  symbol: string;
+  instrumentType: 'USDT-M' | 'COIN-M';
+  fundingRate: number;
+  nextFundingTime: number;    // ms timestamp
+}
+```
+
+**Source by exchange:**
+| Exchange | Endpoint | Notes |
+|----------|----------|-------|
+| Bybit | `GET /v5/market/tickers` | Public, no auth. Linear + inverse categories. |
+| Bitget | `GET /api/v2/mix/market/current-fund-rate` | Public, no auth. `productType=USDT-FUTURES` / `COIN-FUTURES`. |
+| OKX | `GET /api/v5/public/funding-rate` | Public, no auth. `instId=ANY` returns all. |
+
+---
+
+## 10. Funding Sync Engine
+
+### 10.1 Architecture (Aggregation-First)
+
+The current architecture replaces the old incremental-fetch pipeline with an **aggregation-first** approach:
+
+```
+useFundingSync.ts
+├── fetchCurrentRates()    → FundingService.fetchCurrentRates(exchange)  [rates per symbol]
+│                              ├── fetchBybitCurrentRates()  → /v5/market/tickers
+│                              ├── fetchBitgetCurrentRates() → /api/v2/mix/market/current-fund-rate
+│                              └── fetchOkxCurrentRates()    → /api/v5/public/funding-rate
+│
+└── syncHistoricalRates(rates)  →  Per-exchange parallel (Promise.all)
+     └── syncExchange(exchange, rates, now)
+           ├── getFundingMeta()  (freshness check: 8h guard)
+           └── asyncPool(staleRates, CONCURRENCY[exchange])
+                └── processSummaryForSymbol(rate)
+                      ├── FundingService.fetchAndAggregateSummary()
+                      │     ├── fetch records from API (pagination)
+                      │     ├── Big.js bucket accumulation
+                      │     └── return FundingRateSummary
+                      └── saveFundingSummariesBatch() [batch write to IndexedDB]
+```
+
+### 10.2 Freshness Guard
+
+```
+// For each symbol:
+const meta = await getFundingMeta(exchange, symbol);
+if (meta && (now - meta.latestTimestamp) < FUNDING_CYCLE_MS (8h)) → SKIP
+```
+
+### 10.3 Lock Mechanisms
+
+| Guard | Implementation | Purpose |
+|-------|---------------|---------|
+| Sync in progress | Module-level `{ current: false }` object | Prevents concurrent historical sync runs across all hook instances |
+| Fetching current | Module-level `{ current: false }` object | Prevents concurrent current-rates fetches |
+| Rate-limit interval | `lastHistoryFetchRef` + store value (`fundingHistoryInterval`) | Prevents re-triggering before configured interval (4-8h) |
+| Restart request | Module-level `{ current: false }` object | Queues a manual forceSync restart when a sync is already running |
+| Batch concurrency | `asyncPool(items, limit)` per exchange | Controls API load per cycle (6 for Bybit/Bitget, 4 for OKX) |
+| Auto-sync | `setTimeout` based on `nextFundingTime + 1min` | Schedules a sync 1 minute after the nearest future funding payment |
+
+### 10.4 Sync Lifecycle
+
+1. **On app start** (`useEffect` in `useFundingSync.ts`):
+   - Fetches current rates for all 3 exchanges
+   - Kicks off historical sync (aggregation)
+   - Schedules next auto-sync based on nearest `nextFundingTime + 60s`
+
+2. **On polling timer** (configurable `fundingPollingInterval`, default 5 min):
+   - Re-fetches current rates
+   - Re-schedules auto-sync timer
+
+3. **On auto-sync** (`setTimeout` at `nextFundingTime + 60s`):
+   - Dispatches `'funding-cache-cleared'` event
+   - Triggers a full `forceSync()`: fetch rates → sync historical
+
+4. **On manual "Run Sync Now"**: sets `lastHistoryFetch = 0`, triggers `forceSync()`
+
+5. **On manual "Clear Cache + Sync"**: `clearFundingSummariesCache()` → triggers `forceSync()`
+
+### 10.5 Aggregation Pipeline
+
+**`FundingService.fetchAndAggregateSummary()`** — the core method:
+
+1. Computes calendar-month boundary timestamps (`buildAggregationBoundaries()`)
+2. Routes to exchange-specific pagination method:
+   - **Bybit:** `fetchBybitRecordsForAggregation()` — reverse cursor via `endTime`, 200/page, up to 10 pages, stop at `last12MStart`
+   - **OKX:** `fetchOkxRecordsForAggregation()` — cursor via `after`, 400/page, up to 5 pages, stop at `last3MStart`
+   - **Bitget:** `fetchBitgetRecordsForAggregation()` — page-based, 100/page, up to 15 pages, stop at `last3MStart`
+3. Classifies each record into calendar-month buckets using Big.js arithmetic
+4. Returns `FundingRateSummary` (or all-zero `zeroSummary()` on error)
+
+### 10.6 API Pagination Strategies
+
+| Exchange | Strategy | Page Size | Max Pages | Stop Condition | Delay Between Pages |
+|----------|----------|-----------|-----------|----------------|-------------------|
+| **Bybit** | Reverse cursor (`endTime`) | 200 | 10 | `oldest ≤ last12MStart` or partial page | 65ms |
+| **OKX** | Cursor-based (`after`) | 400 | 5 | `oldest ≤ last3MStart` or partial page | 250ms |
+| **Bitget** | Page-based (`pageNo`) | 100 | 15 | `oldest ≤ last3MStart` or partial page | 65ms |
+
+### 10.7 Error Handling
+
+- **Per-symbol:** Exceptions in `processSummaryForSymbol` are caught individually, logged, and don't block other symbols
+- **`fetchWithRetry`:** 3 retries with exponential backoff (1s, 2s, 4s) for rate-limit errors or null responses
+- **`fetchAndAggregateSummary`:** Returns `zeroSummary()` (all `"0.00000000"`) on any unhandled exception — never throws
+- **Per-exchange:** `asyncPool` uses `Promise.allSettled` — individual symbol failures are absorbed
+- **IndexedDB:** `saveFundingSummariesBatch` failures are caught per batch
+
+---
+
+## 11. Funding Store (Zustand)
+
+Defined in `src/store/fundingStore.ts`:
+
+```typescript
+export interface SyncPerformance {
+  fetchSec: number;     // time spent fetching data from APIs
+  writeSec: number;     // time spent writing to IndexedDB
+  totalSec: number;     // total sync time
+  symbols: number;      // number of symbols synced
+  timestamp: number;    // when the sync completed
+}
+
+export interface ExchangeTimingData {
+  name: string;         // exchange name ('bybit', 'okx', 'bitget')
+  synced: number;       // symbols successfully synced
+  stale: number;        // total stale symbols
+  totalSec: number;     // total seconds for this exchange
+  avgMs: number;        // average milliseconds per symbol
+}
+```
+
+**State fields:**
+
+| Field | Type | Persisted? | Description |
+|-------|------|------------|-------------|
+| `favorites` | `string[]` | ✅ | Base coins user has favorited |
+| `currentRates` | `CurrentFundingRate[]` | ❌ | Live funding rate snapshots |
+| `isSyncing` | `boolean` | ❌ | Whether a sync is in progress |
+| `syncProgress` | `number` (0-100) | ❌ | Sync completion percentage |
+| `syncMessage` | `string` | ❌ | Current sync status message |
+| `lastHistoryFetch` | `number` | ✅ | Timestamp of last historical sync |
+| `lastSyncPerformance` | `SyncPerformance \| null` | ✅ | Performance metrics from last sync |
+| `lastExchangeTimings` | `ExchangeTimingData[]` | ✅ | Per-exchange timing breakdowns |
+| `nextFundingTime` | `number` | ✅ | Nearest future funding payment time |
+| `nextScheduledSyncTime` | `number` | ✅ | Scheduled auto-sync timestamp (0 = not scheduled) |
+
+**Persist strategy** (`partialize`):
+```typescript
+partialize: (state) => ({
+  favorites: state.favorites,
+  lastHistoryFetch: state.lastHistoryFetch,
+  lastSyncPerformance: state.lastSyncPerformance,
+  lastExchangeTimings: state.lastExchangeTimings,
+  nextFundingTime: state.nextFundingTime,
+  nextScheduledSyncTime: state.nextScheduledSyncTime,
+})
+```
+Transient fields (`currentRates`, `isSyncing`, etc.) are NOT persisted to localStorage.
+
+---
+
+## 12. Funding Cache Stores (IndexedDB via `historyCache.ts`)
+
+### 12.1 Object Stores (DB_VERSION 10)
+
+| Store Name | Key Path | Indexes | Description |
+|-----------|----------|---------|-------------|
+| `funding-summaries` | `id` (string) | `by-exchange`, `by-symbol` | Pre-computed period sums per exchange-symbol |
+| `funding-meta` | `id` (string) | `by-exchange` | Coverage metadata (freshness guard) |
+
+### 12.2 CRUD Operations
+
+| Function | Store | Description |
+|----------|-------|-------------|
+| `saveFundingSummary(summary)` | `funding-summaries` | Single upsert |
+| `saveFundingSummariesBatch(summaries[])` | `funding-summaries` | Batch upsert in a single transaction |
+| `getAllFundingSummaries()` | `funding-summaries` | Read ALL summaries across all exchanges |
+| `getFundingSummaryByKey(exchange, symbol)` | `funding-summaries` | Read one specific summary |
+| `clearFundingSummariesCache()` | `funding-summaries` + `funding-meta` | Clear everything (atomic transaction) |
+| `getFundingMeta(exchange, symbol)` | `funding-meta` | Read coverage metadata |
+| `updateFundingMeta(exchange, symbol, oldest, latest)` | `funding-meta` | Upsert coverage metadata |
+
+### 12.3 Migration (v9 → v10)
+
+| Action | Details |
+|--------|---------|
+| Delete `funding-fees` store | Removes all raw individual settlement records |
+| Create `funding-summaries` store | New store with `by-exchange` and `by-symbol` indexes |
+| Preserve `funding-meta` store | Unchanged, all metadata entries retained |
+
+### 12.4 Metadata Schema (unchanged)
+
+```typescript
+interface FundingMeta {
+  id: string;                 // "exchange-symbol"
+  exchange: ExchangeName;
+  symbol: string;
+  oldestTimestamp: number;    // oldest cached record (used for depth checks)
+  latestTimestamp: number;    // most recent cached record (used for freshness guard)
+  recordCount: number;
+  updatedAt: number;
+}
+```
+
+---
+
+## 13. Bybit Transaction Log Entry (`BybitTransactionLogEntry`)
+
+Captures the full raw payload from Bybit's `/v5/account/transaction-log` endpoint after normalization. Unlike other unified interfaces which normalize into abstract fields, `BybitTransactionLogEntry` preserves the complete Bybit schema because its fields are used directly by the transaction log filtering, computation, and display components.
+
+```typescript
+export interface BybitTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'bybit';
+  label: string;
+
+  // Raw data preserved from Bybit
+  rawId: string;
+  symbol: string;
+  category: string;        // linear, inverse, spot, option
+  side: 'Buy' | 'Sell' | 'None';
+  transactionTime: number; // ms timestamp
+  type: string;            // TRADE, SETTLEMENT, DELIVERY, LIQUIDATION, BONUS, TRANSFER, etc.
+  transSubType: string;
+  qty: string;
+  size: string;
+  currency: string;
+  tradePrice: string;
+  funding: string;
+  fee: string;
+  cashFlow: string;
+  change: string;          // change = cashFlow + funding - fee
+  cashBalance: string;
+  feeRate: string;
+  bonusChange: string;
+  tradeId: string;
+  orderId: string;
+  orderLinkId: string;
+
+  raw: Record<string, unknown>;
+}
+```
+
+### Key Fields for Funding Analysis
+
+| Field | Description | Used By |
+|-------|-------------|---------|
+| `transactionTime` | Timestamp of the event | Sorting, grouping, period filtering |
+| `type` | Event type (`SETTLEMENT` = funding settlement) | `filterEntries()` for funding-specific aggregation |
+| `funding` | Funding fee amount (positive = received, negative = paid) | PnL computation, `computeRealPnL()` |
+| `fee` | Trading fee amount | PnL computation |
+| `cashFlow` | Cash flow component of the transaction | `computeRealPnL()` — `cashFlow + funding - fee` |
+| `change` | Net change to cash balance (`cashFlow + funding - fee`) | Verification, reconciliation |
+
+### Sync & Cache
+
+| Function | Location | Description |
+|----------|----------|-------------|
+| `syncWithCache(key)` | BybitTransactionService | Initial full sync: fetches all pages from Bybit, deduplicates, writes to IndexedDB |
+| `syncIncremental(key, latestTime)` | BybitTransactionService | Incremental sync: fetches only records since `latestTime`, deduplicates, appends to cache |
+| `getBybitTxLogCache(connectionId)` | historyCache.ts | Read all entries for a connection from IndexedDB |
+| `getAllBybitTxLogCache()` | historyCache.ts | Read ALL entries across all connections |
+| `saveBybitTxLogCache(entries)` | historyCache.ts | Bulk upsert to IndexedDB `bybitTxLog` store |
+
+### Computed Statistics (`BybitTransactionService.computeStats`)
+
+Returns derived metrics from filtered entries:
+
+```typescript
+{
+  totalFunding: number;      // Sum of `funding` field
+  totalFees: number;         // Sum of `fee` field
+  totalRealized: number;     // Sum of `change` field (cashFlow + funding - fee)
+  tradeCount: number;        // Count of `TRADE` type entries
+  fundingCount: number;      // Count of `SETTLEMENT` type entries
+}
+```
+
+---
+
+## 14. Unifiers and Mathematical Standardizations (`src/utils/`)
+
+A unificação perfeita dos dados repousa sobre utilitários determinísticos e de alta precisão baseados na biblioteca `Big.js` para cálculos financeiros críticos.
+
+### 14.1. Tratamento de Posições e Históricos Inversos (`inverseUtils.ts`)
+Para sanar o problema de as corretoras reportarem tamanhos e volumes em unidades fundamentalmente distintas dependendo do tipo de margem (Linear vs Inversa), as lógicas de conversão foram centralizadas:
+
+#### 1. Cálculo de Posições Abertas (`getOpenPositionSizeAndValue`)
+*   **Contratos Lineares (ex: BTCUSDT):** 
+    *   Tamanho (`size`) = Quantidade de Moedas (`size` bruto).
+    *   Valor Nocional USD (`notionalUsd`) = `size` × `markPrice`.
+*   **Contratos Inversos Bybit (ex: BTCUSD):**
+    *   Tamanho em Cripto (`size`) = `positionIM` (margem) / `entryPrice` ou derivado de `positionValue` / `entryPrice`. No caso Bybit, como o `size` enviado é em USD, convertemos para tamanho de moeda dividindo o valor nocional (USD) pelo preço de entrada (`value / entryPrice`).
+    *   Valor Nocional USD (`notionalUsd`) = `size` bruto (que já representa a quantidade em USD do contrato).
+*   **Contratos Inversos Bitget (ex: BTCUSD):**
+    *   Tamanho em Cripto (`size`) = `size` bruto × `contractValue` (obtido via `getBitgetInverseContractVal(symbol)`).
+    *   Valor Nocional USD (`notionalUsd`) = `size` (em cripto) × `markPrice`.
+
+#### 2. Cálculo de Posições Fechadas / Histórico (`getHistoryPositionSizeAndValue`)
+*   **Bybit Linear:**
+    *   `size` = `size` bruto (em cripto).
+    *   `notionalUsd` = `cumEntryValue` (já retornado em USD/USDT).
+*   **Bybit Inversa:**
+    *   `size` = `cumEntryValue` (valor bruto em cripto).
+    *   `notionalUsd` = `size` bruto (volume contratual em USD).
+*   **Bitget Inversa:**
+    *   `size` = `closeTotalPos` × `getBitgetInverseContractVal(symbol)`.
+    *   `notionalUsd` = `size` × `closePrice`.
+
+### 14.2. Extração de Moedas e Mapeamento de Atributos (`unifiers.ts`)
+*   **Direção da Posição (`mapPositionSide`):** Normaliza as strings `Buy`/`Sell`/`long`/`short`/`net` para as variantes literais `'long' | 'short' | 'net'`.
+*   **Modo de Margem (`mapMarginMode`):** Normaliza `cross`/`isolated`/`fixed`/`crossed`/`0`/`1` para as variantes literais `'cross' | 'isolated' | 'unknown'`.
+*   **Ativos Base e Cotação (`extractBaseCoin` & `extractQuoteCoin`):** 
+    *   OKX: Realiza o split por hífen (ex: `BTC-USDT-SWAP` -> Base: `BTC`, Quote: `USDT`).
+    *   Bybit & Bitget: Filtra sub-caracteres (como `_` em spot) e fatias de strings conhecidas (sufixos `USDT`, `USDC`, `USD`, `PERP`) de forma determinística para isolar os tickers reais das moedas.

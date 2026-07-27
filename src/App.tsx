@@ -17,8 +17,9 @@ import { StatusBar } from './components/StatusBar';
 import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
 import { PnLBySymbol } from './components/analytics/PnLBySymbol';
+import { BybitTransactions } from './components/analytics/BybitTransactions/BybitTransactions';
+import { FundingDashboard } from './components/analytics/FundingFees/FundingDashboard';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
-import { AssetMetadataPlayground } from './components/AssetMetadataPlayground';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 import { PrivacyProvider } from './context/PrivacyContext';
 import { PrivacyToggleButton } from './components/PrivacyToggleButton';
@@ -49,14 +50,12 @@ export default function App() {
   if (activeTab === 'api-keys') activeTabName = 'API Keys Manager';
   if (activeTab === 'logs') activeTabName = 'Live Connection Logs';
   if (activeTab === 'settings') activeTabName = 'Settings';
-  if (activeTab === 'testes-mvp') activeTabName = 'Tests Playground';
   if (activeTab === 'api-tester') activeTabName = 'API Tester';
   if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
   if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
   if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
   if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
   if (activeTab === 'reports') activeTabName = 'Reports';
-  if (activeTab === 'mvp-asset-metadata') activeTabName = 'Asset Metadata Playground';
 
   return (
     <PrivacyProvider>
@@ -121,8 +120,9 @@ export default function App() {
                   {activeTab === 'positions-open' && <OpenPositions />}
                   {activeTab === 'positions-history' && <ClosedPositions />}
                   {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
+                  {activeTab === 'analytics-bybit-tx' && <BybitTransactions />}
+                  {activeTab === 'analytics-funding' && <FundingDashboard />}
                   {activeTab === 'reports' && <ReportsDashboard />}
-                  {activeTab === 'mvp-asset-metadata' && <AssetMetadataPlayground />}
                   {activeTab === 'orders-open' && <OpenOrders />}
                   {activeTab === 'orders-history' && <OrderHistory />}
                   {activeTab === 'trade-history' && <TradeHistory />}

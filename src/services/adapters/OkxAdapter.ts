@@ -1,40 +1,24 @@
 import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
+import { BaseExchangeAdapter } from './BaseExchangeAdapter';
+import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
-import { useDashboardStore } from '../../store/dashboardStore';
+import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 
 const MAX_DEEP_PAGES = 30;
 
-export class OkxAdapter implements IExchangeAdapter {
-  static timeOffset = 0;
-  static lastSyncTime = 0;
-
-  static async syncTime() {
-    if (Date.now() - this.lastSyncTime < 300000) return;
-    try {
-      const targetUrl = 'https://www.okx.com/api/v5/public/time';
-      let data;
-      try {
-        const res = await fetch(targetUrl, { method: 'GET' });
-        if (res.ok) data = await res.json();
-        else throw new Error();
-      } catch {
-        data = await proxyFetch({ targetUrl, method: 'GET', headers: {} });
-      }
-
-      if (data && data.code === '0' && data.data?.[0]?.ts) {
-        this.timeOffset = parseInt(data.data[0].ts, 10) - Date.now();
-        this.lastSyncTime = Date.now();
-        console.log(`[Time-Sync] OKX synced. Offset: ${this.timeOffset}ms`);
-      }
-    } catch (e) {
-      console.error('[Time-Sync] OKX time sync error:', e);
+export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter {
+  static _timeSyncUrl = 'https://www.okx.com/api/v5/public/time';
+  static _parseTimeResponse(data: any): number | null {
+    if (data?.code === '0' && data.data?.[0]?.ts) {
+      return parseInt(data.data[0].ts, 10);
     }
+    return null;
   }
 
   public static async getHeaders(
@@ -60,7 +44,7 @@ export class OkxAdapter implements IExchangeAdapter {
 
 
   // REST Balances
-  public async getBalance(key: any): Promise<UnifiedBalance[]> {
+  public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const path = '/api/v5/account/balance';
     const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
     const response = await proxyFetch({
@@ -76,29 +60,116 @@ export class OkxAdapter implements IExchangeAdapter {
     const data = response.data?.[0];
     if (!data || !data.details) return [];
 
-    const totalEquity = parseFloat(data.totalEq || '0');
-    const walletBalance = parseFloat(data.adjEq || '0');
+    // Fetch Funding balances
+    let fundingData: any[] = [];
+    try {
+      const fundingPath = '/api/v5/asset/balances';
+      const fundingHeaders = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', fundingPath);
+      const fundingResponse = await proxyFetch({
+        targetUrl: `https://www.okx.com${fundingPath}`,
+        method: 'GET',
+        headers: fundingHeaders
+      });
+      if (fundingResponse && fundingResponse.code === '0' && fundingResponse.data) {
+        fundingData = fundingResponse.data;
+      } else if (fundingResponse && fundingResponse.code && fundingResponse.code !== '0') {
+        LogManager.warn('OKXAdapter.Balance', `Funding balance API warning (${fundingResponse.code}): ${fundingResponse.msg}`);
+      }
+    } catch (err) {
+      LogManager.warn('OKXAdapter.Balance', 'Failed to fetch OKX funding balances:', err);
+    }
+
+    // Build price map from trading balance details
+    const prices: Record<string, number> = {};
+    data.details.forEach((item: any) => {
+      const ccy = item.ccy.toUpperCase();
+      const cashBal = parseFloat(item.cashBal || '0');
+      const eqUsd = parseFloat(item.eqUsd || '0');
+      const eq = parseFloat(item.eq || '0');
+      let price = 0;
+      if (eq > 0) {
+        price = eqUsd / eq;
+      } else if (cashBal > 0) {
+        price = eqUsd / cashBal;
+      }
+      if (price > 0) {
+        prices[ccy] = price;
+      }
+    });
+
+    // Default prices for stablecoins
+    const stables = ['USDT', 'USDC', 'USD', 'DAI', 'EURT', 'BUSD', 'USDE', 'USDD'];
+    stables.forEach(s => {
+      if (prices[s] === undefined) {
+        prices[s] = 1.0;
+      }
+    });
+
+    // Calculate additional funding equity
+    let additionalFundingUsd = 0;
+    const fundingBalances: UnifiedBalance[] = [];
+
+    fundingData.forEach((item: any) => {
+      const ccy = item.ccy.toUpperCase();
+      const amount = parseFloat(item.bal || '0');
+      if (amount <= 0) return;
+
+      const price = prices[ccy] || 0;
+      const usdValue = amount * price;
+      additionalFundingUsd += usdValue;
+
+      fundingBalances.push({
+        id: `${key.id}-FUNDING-${ccy}`,
+        connectionId: key.id,
+        exchange: 'okx' as const,
+        label: key.label,
+        ccy,
+        amount,
+        usdValue,
+        raw: item
+      });
+    });
+
+    const baseTotalEquity = parseFloat(data.totalEq || '0');
+    const baseWalletBalance = parseFloat(data.adjEq || '0');
     const availableMargin = parseFloat(data.availEq || '0');
     const unrealizedPnl = parseFloat(data.upl || '0');
 
-    return data.details.map((item: any) => ({
-      id: `${key.id}-${item.ccy}`,
-      connectionId: key.id,
-      exchange: 'okx',
-      label: key.label,
-      ccy: item.ccy.toUpperCase(),
-      amount: parseFloat(item.cashBal || '0'),
-      usdValue: parseFloat(item.eqUsd || '0'),
-      totalEquity,
-      walletBalance,
-      availableMargin,
-      unrealizedPnl,
-      raw: item
-    }));
+    const totalEquity = baseTotalEquity + additionalFundingUsd;
+    const walletBalance = baseWalletBalance + additionalFundingUsd;
+
+    // Map trading balances with updated totalEquity and walletBalance
+    const tradingBalances = data.details.map((item: any) => {
+      const ccy = item.ccy.toUpperCase();
+      return {
+        id: `${key.id}-UNIFIED-${ccy}`,
+        connectionId: key.id,
+        exchange: 'okx' as const,
+        label: key.label,
+        ccy,
+        amount: parseFloat(item.cashBal || '0'),
+        usdValue: parseFloat(item.eqUsd || '0'),
+        totalEquity,
+        walletBalance,
+        availableMargin,
+        unrealizedPnl,
+        raw: item
+      };
+    });
+
+    // Set updated values on funding balances
+    fundingBalances.forEach((fb) => {
+      fb.totalEquity = totalEquity;
+      fb.walletBalance = walletBalance;
+      fb.availableMargin = availableMargin;
+      fb.unrealizedPnl = unrealizedPnl;
+    });
+
+    return [...tradingBalances, ...fundingBalances];
   }
 
   // REST Positions
-  public async getOpenPositions(key: any): Promise<UnifiedPosition[]> {
+  public async getOpenPositions(key: ApiCredentials): Promise<UnifiedPosition[]> {
     const path = '/api/v5/account/positions';
     const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
     const response = await proxyFetch({
@@ -164,7 +235,7 @@ export class OkxAdapter implements IExchangeAdapter {
   }
 
   // REST Closed PnL History
-  public async fetchAndNormalize(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
+  public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     const instTypes = ['SWAP', 'FUTURES', 'MARGIN'];
 
     const fetchType = async (type: string) => {
@@ -205,7 +276,7 @@ export class OkxAdapter implements IExchangeAdapter {
           pages++;
         } while (after && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[OKX-History] error for ${type}:`, err);
+        LogManager.warn('OKXAdapter.History', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _instType: type }));
     };
@@ -241,7 +312,7 @@ export class OkxAdapter implements IExchangeAdapter {
   }
 
   // REST Deposits / Withdrawals (Bills)
-  public async fetchBills(key: any, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+  public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
     const fetchRecords = async (type: 'deposit' | 'withdrawal') => {
       const endpoint = type === 'deposit' ? '/api/v5/asset/deposit-history' : '/api/v5/asset/withdrawal-history';
       let list: any[] = [];
@@ -281,7 +352,7 @@ export class OkxAdapter implements IExchangeAdapter {
           pages++;
         } while (after && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[OKX-Bills] error for ${type}:`, err);
+        LogManager.warn('OKXAdapter.Bills', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _type: type }));
     };
@@ -308,7 +379,7 @@ export class OkxAdapter implements IExchangeAdapter {
   }
 
   // Orders
-  public async getOpenOrders(key: any): Promise<import('../../types').UnifiedOrder[]> {
+  public async getOpenOrders(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]> {
     const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
     let allOrders: any[] = [];
 
@@ -323,14 +394,14 @@ export class OkxAdapter implements IExchangeAdapter {
           allOrders = allOrders.concat(res.data);
         }
       } catch (err) {
-        console.warn(`[Okx-OpenOrders] Error fetching ${instType}:`, err);
+        LogManager.warn('OKXAdapter.OpenOrders', `Error fetching ${instType}:`, err);
       }
     }
     await OkxAdapter.ensureInstrumentsLoaded();
     return this.normalizeOrders(allOrders, key);
   }
 
-  public async getHistoryOrders(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
+  public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
     const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
     let allOrders: any[] = [];
 
@@ -363,7 +434,7 @@ export class OkxAdapter implements IExchangeAdapter {
             allOrders = allOrders.concat(filtered);
           }
         } catch (err) {
-          console.warn(`[Okx-HistoryOrders] Error fetching ${instType} from ${endpoint}:`, err);
+          LogManager.warn('OKXAdapter.HistoryOrders', `Error fetching ${instType} from ${endpoint}:`, err);
         }
       }
     }
@@ -382,7 +453,7 @@ export class OkxAdapter implements IExchangeAdapter {
     return this.normalizeOrders(uniqueOrders, key);
   }
 
-  private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {
+  private normalizeOrders(rawOrders: any[], key: ApiCredentials): import('../../types').UnifiedOrder[] {
     return rawOrders.map(o => {
       let status: import('../../types').UnifiedOrderStatus = 'NEW';
       const state = o.state?.toLowerCase() || '';
@@ -479,9 +550,9 @@ export class OkxAdapter implements IExchangeAdapter {
       }));
       this.cachedInstruments = allInsts;
       this.cachedInstrumentsTime = Date.now();
-      console.log(`[OKX-Adapter] Loaded ${Object.keys(allInsts).length} SWAP & FUTURES instruments into cache.`);
+      LogManager.info('OKXAdapter', `Loaded ${Object.keys(allInsts).length} SWAP & FUTURES instruments into cache.`);
     } catch (err) {
-      console.warn('[OKX-Adapter] Error caching instruments:', err);
+      LogManager.warn('OKXAdapter', 'Error caching instruments:', err);
     }
   }
 
@@ -524,7 +595,7 @@ export class OkxAdapter implements IExchangeAdapter {
         }
       }
     } catch (err) {
-      console.warn('[OKX-Metadata] Fetch error:', err);
+      LogManager.warn('OKXAdapter.Metadata', 'Fetch error:', err);
     }
     return 'NOT_FOUND';
   }

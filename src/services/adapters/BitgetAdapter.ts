@@ -1,40 +1,24 @@
 import Big from 'big.js';
 import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
 import { IExchangeAdapter } from './IExchangeAdapter';
+import { BaseExchangeAdapter } from './BaseExchangeAdapter';
+import { ApiCredentials } from '../../store/apiKeysStore';
 import { proxyFetch } from '../../utils/proxyFetch';
 import { hmacSha256 } from '../../utils/cryptoLib';
-import { useDashboardStore } from '../../store/dashboardStore';
+import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 
 const MAX_DEEP_PAGES = 30;
 
-export class BitgetAdapter implements IExchangeAdapter {
-  static timeOffset = 0;
-  static lastSyncTime = 0;
-
-  static async syncTime() {
-    if (Date.now() - this.lastSyncTime < 300000) return;
-    try {
-      const targetUrl = 'https://api.bitget.com/api/v2/public/time';
-      let data;
-      try {
-        const res = await fetch(targetUrl, { method: 'GET' });
-        if (res.ok) data = await res.json();
-        else throw new Error();
-      } catch {
-        data = await proxyFetch({ targetUrl, method: 'GET', headers: {} });
-      }
-
-      if (data && data.code === '00000' && data.data?.serverTime) {
-        this.timeOffset = parseInt(data.data.serverTime, 10) - Date.now();
-        this.lastSyncTime = Date.now();
-        console.log(`[Time-Sync] Bitget synced. Offset: ${this.timeOffset}ms`);
-      }
-    } catch (e) {
-      console.error('[Time-Sync] Bitget time sync error:', e);
+export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapter {
+  static _timeSyncUrl = 'https://api.bitget.com/api/v2/public/time';
+  static _parseTimeResponse(data: any): number | null {
+    if (data?.code === '00000' && data.data?.serverTime) {
+      return parseInt(data.data.serverTime, 10);
     }
+    return null;
   }
 
   public static async getHeaders(
@@ -60,7 +44,7 @@ export class BitgetAdapter implements IExchangeAdapter {
 
 
   // REST Balances
-  public async getBalance(key: any): Promise<UnifiedBalance[]> {
+  public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const endpoints = [
       { path: '/api/v2/spot/account/assets?assetType=hold_only', type: 'SPOT' },
       { path: '/api/v2/mix/account/accounts?productType=USDT-FUTURES', type: 'USDT-FUTURES' },
@@ -77,7 +61,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         const res = await proxyFetch({ targetUrl: `https://api.bitget.com${ep.path}`, method: 'GET', headers });
         return { res, type: ep.type };
       } catch (err) {
-        console.warn(`[BitgetAdapter] fetch failed for ${ep.path}`, err);
+        LogManager.warn('BitgetAdapter', `Fetch failed for ${ep.path}`, err);
         return { res: { code: 'error' }, type: ep.type };
       }
     });
@@ -153,7 +137,7 @@ export class BitgetAdapter implements IExchangeAdapter {
   }
 
   // REST Positions
-  public async getOpenPositions(key: any): Promise<UnifiedPosition[]> {
+  public async getOpenPositions(key: ApiCredentials): Promise<UnifiedPosition[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     const requests = productTypes.map(async (pType) => {
       const path = `/api/v2/mix/position/all-position?productType=${pType}`;
@@ -230,7 +214,7 @@ export class BitgetAdapter implements IExchangeAdapter {
   }
 
   // REST Closed PnL History
-  public async fetchAndNormalize(key: any, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
+  public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     const fetchType = async (pType: string) => {
       let list: any[] = [];
@@ -258,7 +242,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           pages++;
         } while (lastId && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[Bitget-History] error for ${pType}:`, err);
+        LogManager.warn('BitgetAdapter.History', `Error for ${pType}:`, err);
       }
       return list;
     };
@@ -299,7 +283,7 @@ export class BitgetAdapter implements IExchangeAdapter {
   }
 
   // REST Deposits / Withdrawals (Bills)
-  public async fetchBills(key: any, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+  public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
     const fetchRecords = async (type: 'deposit' | 'withdrawal') => {
       const endpoint = type === 'deposit' ? '/api/v2/spot/wallet/deposit-records' : '/api/v2/spot/wallet/withdrawal-records';
       let list: any[] = [];
@@ -328,7 +312,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           pages++;
         } while (lastId && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        console.warn(`[Bitget-Bills] error for ${type}:`, err);
+        LogManager.warn('BitgetAdapter.Bills', `Error for ${type}:`, err);
       }
       return list.map(item => ({ ...item, _type: type }));
     };
@@ -355,7 +339,7 @@ export class BitgetAdapter implements IExchangeAdapter {
   }
 
   // Orders
-  public async getOpenOrders(key: any): Promise<import('../../types').UnifiedOrder[]> {
+  public async getOpenOrders(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     let allOrders: any[] = [];
     
@@ -371,7 +355,7 @@ export class BitgetAdapter implements IExchangeAdapter {
           allOrders = allOrders.concat(res.data.entrustedList.map((o: any) => ({ ...o, productType: pType })));
         }
       } catch (err) {
-        console.warn(`[Bitget-OpenOrders] Error fetching ${pType}:`, err);
+        LogManager.warn('BitgetAdapter.OpenOrders', `Error fetching ${pType}:`, err);
       }
     }
 
@@ -386,13 +370,13 @@ export class BitgetAdapter implements IExchangeAdapter {
         allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: 'spot' })));
       }
     } catch (err) {
-      console.warn(`[Bitget-OpenOrders] Error fetching spot:`, err);
+      LogManager.warn('BitgetAdapter.OpenOrders', 'Error fetching spot:', err);
     }
 
     return this.normalizeOrders(allOrders, key);
   }
 
-  public async getHistoryOrders(key: any, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
+  public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     let allOrders: any[] = [];
 
@@ -424,7 +408,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         } while (lastId && pages < MAX_DEEP_PAGES);
         allOrders = allOrders.concat(list);
       } catch (err) {
-        console.warn(`[Bitget-HistoryOrders] Error fetching ${pType}:`, err);
+        LogManager.warn('BitgetAdapter.HistoryOrders', `Error fetching ${pType}:`, err);
       }
     }
 
@@ -455,13 +439,13 @@ export class BitgetAdapter implements IExchangeAdapter {
       } while (lastId && pages < MAX_DEEP_PAGES);
       allOrders = allOrders.concat(list);
     } catch (err) {
-      console.warn(`[Bitget-HistoryOrders] Error fetching spot:`, err);
+      LogManager.warn('BitgetAdapter.HistoryOrders', 'Error fetching spot:', err);
     }
 
     return this.normalizeOrders(allOrders, key);
   }
 
-  private normalizeOrders(rawOrders: any[], key: any): import('../../types').UnifiedOrder[] {
+  private normalizeOrders(rawOrders: any[], key: ApiCredentials): import('../../types').UnifiedOrder[] {
     return rawOrders.map(o => {
       let status: import('../../types').UnifiedOrderStatus = 'NEW';
       const state = o.state?.toLowerCase() || o.status?.toLowerCase() || '';
@@ -536,7 +520,7 @@ export class BitgetAdapter implements IExchangeAdapter {
         }
       }
     } catch (err) {
-      console.warn('[Bitget-Metadata] Fetch error', err);
+      LogManager.warn('BitgetAdapter.Metadata', 'Fetch error', err);
     }
     return 'NOT_FOUND';
   }

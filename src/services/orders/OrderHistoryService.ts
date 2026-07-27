@@ -1,5 +1,7 @@
 import { UnifiedOrder } from '../../types';
+import { ApiCredentials } from '../../store/apiKeysStore';
 import { ExchangeAggregator } from '../adapters/ExchangeAggregator';
+import { LogManager } from '../LogManager';
 import {
   getCachedOrders,
   saveCachedOrders,
@@ -15,7 +17,7 @@ export class OrderHistoryService {
    * 3. Fetches orders from exchange API.
    * 4. Updates cache and metadata.
    */
-  public async fetchWithCache(key: any): Promise<UnifiedOrder[]> {
+  public async fetchWithCache(key: ApiCredentials): Promise<UnifiedOrder[]> {
     const connectionId = key.id;
     const adapter = ExchangeAggregator.getAdapter(key.exchange);
     if (!adapter.getHistoryOrders) {
@@ -48,7 +50,7 @@ export class OrderHistoryService {
       // Return fully merged set from cache
       return await getCachedOrders(connectionId);
     } catch (err) {
-      console.warn(`[OrderHistoryCache] Incremental fetch failed for ${connectionId}, returning cached data`, err);
+      LogManager.warn('OrderHistoryCache', `Incremental fetch failed for ${connectionId}, returning cached data`, err);
       return cachedOrders;
     }
   }

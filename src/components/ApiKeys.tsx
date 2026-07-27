@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Plus, Power, Edit2, Trash2 } from 'lucide-react';
 import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
-import { useDashboardStore } from '../store/dashboardStore';
+import { useConnectionStore } from '../store/connectionStore';
+import { clearConnectionData } from '../store/crossStoreCleanup';
 import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { ApiKeyModal } from './ApiKeyModal';
 import { AppTooltip } from './ui/Tooltip';
+import { LogManager } from '../services/LogManager';
 
 const EXCHANGES: { id: Exchange; name: string }[] = [
   { id: 'bitget', name: 'Bitget' },
@@ -15,7 +17,7 @@ const EXCHANGES: { id: Exchange; name: string }[] = [
 
 export function ApiKeys() {
   const { keys, toggleKey, removeKey } = useApiKeysStore();
-  const { clearConnectionData, statuses } = useDashboardStore(state => state);
+  const { statuses } = useConnectionStore();
   const useMockData = useSettingsStore(state => state.useMockData);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -187,6 +189,7 @@ export function ApiKeys() {
                                           clearConnectionData(apiKey.id);
                                         }
                                         toggleKey(apiKey.id);
+                                        LogManager.info('ApiKeys', `Key ${apiKey.label} ${apiKey.isActive ? 'disabled' : 'enabled'}`);
                                       }}
                                       className={`p-1 rounded hover:bg-[#202125] transition-all hover:scale-105 ${apiKey.isActive ? 'text-[#00C853] hover:text-[#FF4444]' : 'text-[#8E9299] hover:text-[#00C853]'}`}
                                     >

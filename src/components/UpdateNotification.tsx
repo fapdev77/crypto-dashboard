@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { LogManager } from '../services/LogManager';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -9,16 +10,16 @@ export function UpdateNotification() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r: ServiceWorkerRegistration | undefined) {
-      console.log('SW Registered:', r);
+      LogManager.info('ServiceWorker', 'Service Worker Registered:', r);
     },
     onRegisterError(error: any) {
-      console.error('SW registration error', error);
+      LogManager.error('ServiceWorker', 'Service Worker registration error', error);
     },
   });
 
   useEffect(() => {
     if (localStorage.getItem('app-updated') === 'true') {
-      toast.success('Aplicativo atualizado com sucesso!', {
+      toast.success('App updated successfully!', {
         duration: 5000,
         position: 'bottom-center',
         style: {
@@ -45,15 +46,15 @@ export function UpdateNotification() {
           <RefreshCw className="w-5 h-5 animate-[spin_3s_linear_infinite]" />
         </div>
         <div className="flex-1">
-          <h3 className="text-[15px] font-semibold text-gray-200 mb-1">Nova versão disponível</h3>
+          <h3 className="text-[15px] font-semibold text-gray-200 mb-1">New version available</h3>
           <p className="text-sm text-gray-400">
-            Uma nova versão do aplicativo está pronta para ser usada. Atualize para ver as mudanças e correções.
+            A new version of the app is ready to use. Update to see the latest changes and fixes.
           </p>
         </div>
         <button 
           onClick={() => setNeedRefresh(false)}
           className="text-gray-500 hover:text-gray-300 transition-colors shrink-0 p-1 bg-[#2a2b30] hover:bg-[#3a3b40] rounded-md"
-          aria-label="Dispensar aviso"
+          aria-label="Dismiss notification"
         >
           <X className="w-4 h-4" />
         </button>
@@ -63,13 +64,13 @@ export function UpdateNotification() {
           onClick={() => setNeedRefresh(false)}
           className="flex-1 py-3 text-sm font-medium text-gray-400 hover:text-gray-200 hover:bg-[#2a2b30]/50 transition-colors"
         >
-          Agora Não
+          Not Now
         </button>
         <button
           onClick={handleUpdate}
           className="flex-1 py-3 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-[#2a2b30]/50 transition-colors border-l border-[#2a2b30]"
         >
-          Atualizar Agora
+          Update Now
         </button>
       </div>
     </div>

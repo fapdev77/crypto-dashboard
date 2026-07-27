@@ -1,9 +1,8 @@
 import { UnifiedAssetCategory, ExchangeName } from '../types';
 import { getAssetMetadata, saveAssetMetadata } from './historyCache';
 import { useSettingsStore } from '../store/settingsStore';
-import { BitgetAdapter } from './adapters/BitgetAdapter';
-import { BybitAdapter } from './adapters/BybitAdapter';
-import { OkxAdapter } from './adapters/OkxAdapter';
+import { ExchangeAggregator } from './adapters/ExchangeAggregator';
+import { LogManager } from './LogManager';
 
 export class AssetClassifierAggregator {
   
@@ -24,7 +23,7 @@ export class AssetClassifierAggregator {
      }
      
      // Trigger async fetch in background so next render has it
-     this.getGlobalAssetCategory(cleanSymbol).catch(console.error);
+     this.getGlobalAssetCategory(cleanSymbol).catch(err => LogManager.error('AssetClassifier', 'Background category fetch failed:', err));
 
      return 'CRYPTO'; // Default assumption
   }
@@ -49,7 +48,7 @@ export class AssetClassifierAggregator {
 
     // --- Passo 1 (OKX) ---
     try {
-      const okx = new OkxAdapter();
+      const okx = ExchangeAggregator.getAdapter('okx');
       if (okx.fetchInstrumentMetadata) {
          const vars = [symbol, `${symbol}-USDT`, `${symbol}-USDC`];
          for (const v of vars) {
@@ -59,11 +58,11 @@ export class AssetClassifierAggregator {
              }
          }
       }
-    } catch (e) { console.warn('[Agregador] Falha OKX:', e); }
+    } catch (e) { LogManager.warn('AssetClassifier', 'OKX lookup failed:', e); }
 
     // --- Passo 2 (Fallback Bybit) ---
     try {
-      const bybit = new BybitAdapter();
+      const bybit = ExchangeAggregator.getAdapter('bybit');
       if (bybit.fetchInstrumentMetadata) {
          const vars = [symbol, `${symbol}USDT`];
          for (const v of vars) {
@@ -73,11 +72,11 @@ export class AssetClassifierAggregator {
              }
          }
       }
-    } catch (e) { console.warn('[Agregador] Falha Bybit:', e); }
+    } catch (e) { LogManager.warn('AssetClassifier', 'Bybit lookup failed:', e); }
 
     // --- Passo 3 (Fallback Bitget) ---
     try {
-      const bitget = new BitgetAdapter();
+      const bitget = ExchangeAggregator.getAdapter('bitget');
       if (bitget.fetchInstrumentMetadata) {
          const vars = [symbol, `${symbol}USDT`];
          for (const v of vars) {
@@ -87,7 +86,7 @@ export class AssetClassifierAggregator {
              }
          }
       }
-    } catch (e) { console.warn('[Agregador] Falha Bitget:', e); }
+    } catch (e) { LogManager.warn('AssetClassifier', 'Bitget lookup failed:', e); }
 
     // --- Passo 4 (Default) ---
     return this.saveAndReturnDetails(cacheKey, 'CRYPTO', 'Fallback (Default)');
@@ -97,7 +96,7 @@ export class AssetClassifierAggregator {
      try {
        await saveAssetMetadata(cacheKey, category);
      } catch (e) {
-       console.warn('[Agregador] Erro ao salvar cache', e);
+       LogManager.warn('AssetClassifier', 'Failed to save metadata cache', e);
      }
      this.memCache[cacheKey] = category;
      return { category, source };
@@ -112,7 +111,7 @@ export class AssetClassifierAggregator {
      try {
        await saveAssetMetadata(cacheKey, category);
      } catch (e) {
-       console.warn('[Agregador] Erro ao salvar cache', e);
+       LogManager.warn('AssetClassifier', 'Failed to save cache entry', e);
      }
      this.memCache[cacheKey] = category;
      return category;
@@ -123,4 +122,3 @@ export class AssetClassifierAggregator {
      return this.getGlobalAssetCategory(symbol);
   }
 }
-

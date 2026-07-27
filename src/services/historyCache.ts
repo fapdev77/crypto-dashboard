@@ -1,14 +1,20 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder } from '../types';
+import { openDB, deleteDB, DBSchema, IDBPDatabase } from 'idb';
+import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder, BybitTransactionLogEntry, FundingRateSummary, ExchangeName, FundingMeta } from '../types';
+import { LogManager } from './LogManager';
 
 const DB_NAME = 'crypto-dashboard-cache';
-const DB_VERSION = 5;
+const DB_VERSION = 10;
 const HISTORY_STORE = 'positionHistory';
 const META_STORE = 'cacheMeta';
 const ASSET_META_STORE = 'assetMetadata';
 const ORDER_HISTORY_STORE = 'orderHistory';
 const ORDER_META_STORE = 'orderCacheMeta';
 const BYBIT_REAL_PNL_STORE = 'bybitRealPnL';
+const BYBIT_TX_LOG_STORE = 'bybit-transaction-log';
+const BYBIT_TX_META_STORE = 'bybit-transaction-meta';
+const FUNDING_SUMMARIES_STORE = 'funding-summaries';
+const FUNDING_META_STORE = 'funding-meta';
+
 
 interface CacheDB extends DBSchema {
   positionHistory: {
@@ -61,6 +67,44 @@ interface CacheDB extends DBSchema {
       updatedAt: number;
     };
   };
+  'bybit-transaction-log': {
+    key: string;
+    value: BybitTransactionLogEntry;
+    indexes: {
+      'by-connectionId': string;
+      'by-transactionTime': number;
+      'by-symbol': string;
+      'by-type': string;
+      'by-currency': string;
+      'by-category': string;
+    };
+  };
+  'bybit-transaction-meta': {
+    key: string;       // connectionId
+    value: {
+      connectionId: string;
+      oldestTransactionTime: number;
+      latestTransactionTime: number;
+      totalRecords: number;
+      updatedAt: number;
+    };
+  };
+  'funding-summaries': {
+    key: string;
+    value: FundingRateSummary;
+    indexes: { 'by-exchange': ExchangeName; 'by-symbol': string };
+  };
+  'funding-meta': {
+    key: string; // `${exchange}-${symbol}`
+    value: {
+      id: string;
+      exchange: string;
+      symbol: string;
+      oldestTimestamp: number;
+      latestTimestamp: number;
+      updatedAt: number;
+    };
+  };
 }
 
 let dbInstance: IDBPDatabase<CacheDB> | null = null;
@@ -90,28 +134,70 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
           historyStore.createIndex('by-closeUpdateTime', 'closeUpdateTime');
         }
       }
-      
+
       if (oldVersion < 3) {
-         if (!db.objectStoreNames.contains(ASSET_META_STORE)) {
-            db.createObjectStore(ASSET_META_STORE, { keyPath: 'id' });
-         }
+        if (!db.objectStoreNames.contains(ASSET_META_STORE)) {
+          db.createObjectStore(ASSET_META_STORE, { keyPath: 'id' });
+        }
       }
-      
+
       if (oldVersion < 4) {
-         if (!db.objectStoreNames.contains(ORDER_HISTORY_STORE)) {
-           const orderStore = db.createObjectStore(ORDER_HISTORY_STORE, { keyPath: 'id' });
-           orderStore.createIndex('by-connectionId', 'connectionId');
-           orderStore.createIndex('by-createdTime', 'createdTime');
-         }
-         if (!db.objectStoreNames.contains(ORDER_META_STORE)) {
-           db.createObjectStore(ORDER_META_STORE, { keyPath: 'connectionId' });
-         }
+        if (!db.objectStoreNames.contains(ORDER_HISTORY_STORE)) {
+          const orderStore = db.createObjectStore(ORDER_HISTORY_STORE, { keyPath: 'id' });
+          orderStore.createIndex('by-connectionId', 'connectionId');
+          orderStore.createIndex('by-createdTime', 'createdTime');
+        }
+        if (!db.objectStoreNames.contains(ORDER_META_STORE)) {
+          db.createObjectStore(ORDER_META_STORE, { keyPath: 'connectionId' });
+        }
       }
 
       if (oldVersion < 5) {
-         if (!db.objectStoreNames.contains(BYBIT_REAL_PNL_STORE)) {
-            db.createObjectStore(BYBIT_REAL_PNL_STORE, { keyPath: 'id' });
-         }
+        if (!db.objectStoreNames.contains(BYBIT_REAL_PNL_STORE)) {
+          db.createObjectStore(BYBIT_REAL_PNL_STORE, { keyPath: 'id' });
+        }
+      }
+
+      if (oldVersion < 8) {
+        if (!db.objectStoreNames.contains(BYBIT_TX_LOG_STORE)) {
+          const txLogStore = db.createObjectStore(BYBIT_TX_LOG_STORE, { keyPath: 'id' });
+          txLogStore.createIndex('by-connectionId', 'connectionId');
+          txLogStore.createIndex('by-transactionTime', 'transactionTime');
+          txLogStore.createIndex('by-symbol', 'symbol');
+          txLogStore.createIndex('by-type', 'type');
+          txLogStore.createIndex('by-currency', 'currency');
+          txLogStore.createIndex('by-category', 'category');
+        }
+        if (!db.objectStoreNames.contains(BYBIT_TX_META_STORE)) {
+          db.createObjectStore(BYBIT_TX_META_STORE, { keyPath: 'connectionId' });
+        }
+      }
+
+      if (oldVersion < 9) {
+        // 'funding-fees' store is removed from CacheDB type (v10+).
+        // Cast to 'any' for this legacy migration block since the store
+        // no longer exists in the current schema.
+        const u = db as any;
+        if (!u.objectStoreNames.contains('funding-fees')) {
+          const fundingStore = u.createObjectStore('funding-fees', { keyPath: 'id' });
+          fundingStore.createIndex('by-exchange', 'exchange');
+          fundingStore.createIndex('by-symbol', 'symbol');
+          fundingStore.createIndex('by-timestamp', 'timestamp');
+        }
+        if (!u.objectStoreNames.contains(FUNDING_META_STORE)) {
+          u.createObjectStore(FUNDING_META_STORE, { keyPath: 'id' });
+        }
+      }
+
+      if (oldVersion < 10) {
+        // funding-fees was removed from CacheDB — cast to any for legacy cleanup
+        const v10db = db as any;
+        if (v10db.objectStoreNames.contains('funding-fees')) {
+          v10db.deleteObjectStore('funding-fees');
+        }
+        const summaryStore = db.createObjectStore('funding-summaries', { keyPath: 'id' });
+        summaryStore.createIndex('by-exchange', 'exchange');
+        summaryStore.createIndex('by-symbol', 'symbol');
       }
     },
   });
@@ -134,7 +220,7 @@ export async function saveAssetMetadata(id: string, category: UnifiedAssetCatego
 /**
  * Get Asset Metadata
  */
-export async function getAssetMetadata(id: string): Promise<{id: string, category: UnifiedAssetCategory, updatedAt: number} | undefined> {
+export async function getAssetMetadata(id: string): Promise<{ id: string, category: UnifiedAssetCategory, updatedAt: number } | undefined> {
   const db = await getDB();
   return db.get(ASSET_META_STORE, id);
 }
@@ -218,14 +304,11 @@ export async function updateCacheMeta(connectionId: string, latestCloseTime: num
  * Clear all cached data (useful for debugging or user-triggered resets).
  */
 export async function clearAllCache(): Promise<void> {
-  const db = await getDB();
-  await db.clear(HISTORY_STORE);
-  await db.clear(META_STORE);
-  await db.clear(ORDER_HISTORY_STORE);
-  await db.clear(ORDER_META_STORE);
-  if (db.objectStoreNames.contains(BYBIT_REAL_PNL_STORE)) {
-    await db.clear(BYBIT_REAL_PNL_STORE);
+  if (dbInstance) {
+    dbInstance.close();
+    dbInstance = null;
   }
+  await deleteDB(DB_NAME);
 }
 
 /**
@@ -302,7 +385,7 @@ export async function getBybitRealPnLCache(
     const record = await db.get(BYBIT_REAL_PNL_STORE, id);
     return record?.pnlData;
   } catch (err) {
-    console.warn('Error reading Bybit Real PnL cache:', err);
+    LogManager.warn('HistoryCache', 'Error reading Bybit Real PnL cache:', err);
     return undefined;
   }
 }
@@ -310,4 +393,140 @@ export async function getBybitRealPnLCache(
 export async function clearBybitRealPnLCache(): Promise<void> {
   const db = await getDB();
   await db.clear(BYBIT_REAL_PNL_STORE);
+}
+
+// ------------------------------------------------------------------
+// BYBIT TRANSACTION LOG CACHE
+// ------------------------------------------------------------------
+
+export async function getBybitTxLogCache(connectionId: string): Promise<BybitTransactionLogEntry[]> {
+  const db = await getDB();
+  const all = await db.getAllFromIndex(BYBIT_TX_LOG_STORE, 'by-connectionId', connectionId);
+  return all.sort((a, b) => b.transactionTime - a.transactionTime);
+}
+
+export async function getAllBybitTxLogCache(): Promise<BybitTransactionLogEntry[]> {
+  const db = await getDB();
+  const all = await db.getAll(BYBIT_TX_LOG_STORE);
+  return all.sort((a, b) => b.transactionTime - a.transactionTime);
+}
+
+export async function saveBybitTxLogCache(entries: BybitTransactionLogEntry[]): Promise<void> {
+  if (entries.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction(BYBIT_TX_LOG_STORE, 'readwrite');
+  const store = tx.objectStore(BYBIT_TX_LOG_STORE);
+  for (const entry of entries) {
+    await store.put(entry);
+  }
+  await tx.done;
+}
+
+export async function getBybitTxLogMeta(connectionId: string): Promise<{
+  connectionId: string;
+  oldestTransactionTime: number;
+  latestTransactionTime: number;
+  totalRecords: number;
+  updatedAt: number;
+} | undefined> {
+  const db = await getDB();
+  return db.get(BYBIT_TX_META_STORE, connectionId);
+}
+
+export async function updateBybitTxLogMeta(
+  connectionId: string,
+  oldestTransactionTime: number,
+  latestTransactionTime: number,
+  totalRecords: number
+): Promise<void> {
+  const db = await getDB();
+  await db.put(BYBIT_TX_META_STORE, {
+    connectionId,
+    oldestTransactionTime,
+    latestTransactionTime,
+    totalRecords,
+    updatedAt: Date.now(),
+  });
+}
+
+export async function getBybitTxLogCount(connectionId: string): Promise<number> {
+  const db = await getDB();
+  return db.countFromIndex(BYBIT_TX_LOG_STORE, 'by-connectionId', connectionId);
+}
+
+// ------------------------------------------------------------------
+// FUNDING SUMMARIES CACHE
+// ------------------------------------------------------------------
+
+export async function saveFundingSummary(summary: FundingRateSummary): Promise<void> {
+  const db = await getDB();
+  await db.put('funding-summaries', summary);
+}
+
+export async function getAllFundingSummaries(): Promise<FundingRateSummary[]> {
+  const db = await getDB();
+  return db.getAll('funding-summaries');
+}
+
+export async function getFundingSummaryByKey(exchange: ExchangeName, symbol: string): Promise<FundingRateSummary | undefined> {
+  const db = await getDB();
+  return db.get('funding-summaries', `${exchange}-${symbol}`);
+}
+
+export async function clearFundingSummariesCache(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction(['funding-summaries', 'funding-meta'], 'readwrite');
+  await tx.objectStore('funding-summaries').clear();
+  await tx.objectStore('funding-meta').clear();
+  await tx.done;
+}
+
+/**
+ * Batch-write all summaries and their metadata in a single transaction.
+ * Much more efficient than 500+ individual transactions during initial sync.
+ */
+export async function saveFundingSummariesBatch(summaries: FundingRateSummary[]): Promise<void> {
+  if (summaries.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction(['funding-summaries', 'funding-meta'], 'readwrite');
+  const summaryStore = tx.objectStore('funding-summaries');
+  const metaStore = tx.objectStore('funding-meta');
+  for (const s of summaries) {
+    await summaryStore.put(s);
+    await metaStore.put({
+      id: `${s.exchange}-${s.symbol}`,
+      exchange: s.exchange,
+      symbol: s.symbol,
+      oldestTimestamp: Number(s.lastFundingTime),
+      latestTimestamp: Number(s.lastFundingTime),
+      updatedAt: Date.now(),
+    });
+  }
+  await tx.done;
+}
+
+export async function getFundingMeta(exchange: string, symbol: string): Promise<FundingMeta | undefined> {
+  const db = await getDB();
+  return db.get(FUNDING_META_STORE, `${exchange}-${symbol}`);
+}
+
+/**
+ * Update the funding metadata for a symbol.
+ * Simplified signature: only `latestTimestamp` is needed for the 8h freshness guard.
+ * Both `oldestTimestamp` and `latestTimestamp` are set to the same value for schema compatibility.
+ */
+export async function updateFundingMeta(
+  exchange: string,
+  symbol: string,
+  latestTimestamp: number
+): Promise<void> {
+  const db = await getDB();
+  await db.put(FUNDING_META_STORE, {
+    id: `${exchange}-${symbol}`,
+    exchange,
+    symbol,
+    oldestTimestamp: latestTimestamp,
+    latestTimestamp,
+    updatedAt: Date.now(),
+  });
 }

@@ -8,7 +8,8 @@ import { CoinIcon } from '../../ui/CoinIcon';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { AssetClassifierAggregator } from '../../../services/AssetClassifierAggregator';
 import { extractBaseCoin } from '../../../utils/unifiers';
-import { useDashboardStore } from '../../../store/dashboardStore';
+import { detectQtyIsCoin } from '../../../utils/inverseUtils';
+import { usePositionsStore } from '../../../store/positionsStore';
 
 interface Props {
   key?: React.Key;
@@ -22,7 +23,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const { keys } = useApiKeysStore();
   const connectionLabel = order.label || keys.find(k => k.id === order.connectionId)?.label || order.connectionId;
 
-  const activePositions = Object.values(useDashboardStore.getState().positions);
+  const activePositions = Object.values(usePositionsStore.getState().positions);
   const matchingPos = activePositions.find(p => p.connectionId === order.connectionId && p.symbol === order.symbol);
   const orderLeverage = order.leverage || matchingPos?.leverage || 1;
   const orderMarginMode = order.marginMode || matchingPos?.marginMode || 'cross';
@@ -66,31 +67,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   let filledValUsd = 0;
   let actualFilledCoinSize = order.filledQty || 0;
 
-  // Detect if quantity is represented in coins (e.g. 0.30 ETH) vs in USD contracts (e.g. 100 USD)
-  let qtyIsCoin = false;
-  if (isInverse && effPrice > 0) {
-    if (order.exchange === 'bitget') {
-      qtyIsCoin = true;
-    } else if (order.exchange === 'okx' || order.exchange === 'bybit') {
-      qtyIsCoin = false;
-    } else {
-      const estValIfQtyIsCoin = order.qty * effPrice;
-      const estValIfQtyIsUsd = order.qty;
-      const actualVal = order.value || 0;
-
-      if (actualVal > 0) {
-        const distToCoin = Math.abs(actualVal - estValIfQtyIsCoin);
-        const distToUsd = Math.abs(actualVal - estValIfQtyIsUsd);
-        if (distToCoin < distToUsd) {
-          qtyIsCoin = true;
-        }
-      } else {
-        if (order.qty < 2 && order.qty * effPrice >= 10) {
-          qtyIsCoin = true;
-        }
-      }
-    }
-  }
+  const qtyIsCoin = isInverse && detectQtyIsCoin({ exchange: order.exchange, qty: order.qty, price: effPrice, value: order.value });
 
   if (order.exchange === 'bybit') {
     if (isInverse) {
@@ -290,7 +267,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
               {(() => {
                 const hasFees = order.fees !== undefined && order.fees !== null && order.fees !== 0;
                 let mainFeeStr = '--';
-                let subFeeStr = null;
+                let subFeeStr: string | null = null;
                 let isFeeNegative = false;
 
                 if (hasFees) {

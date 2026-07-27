@@ -8,9 +8,25 @@ interface StatusAndSyncBadgeProps {
   isSyncing: boolean;
   syncMessage?: string | null;
   className?: string;
+  /** Override the auto-sync interval in ms. Defaults to historyCacheInterval (minutes) from settingsStore. */
+  overrideIntervalMs?: number;
+  /** Override the last sync time timestamp */
+  overrideLastSyncTime?: number;
+  /** Override the next scheduled sync time timestamp */
+  overrideNextSyncTime?: number;
+  /** Override the manual sync click handler */
+  onManualSync?: () => void;
 }
 
-export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: StatusAndSyncBadgeProps) {
+export function StatusAndSyncBadge({ 
+  isSyncing, 
+  syncMessage, 
+  className = '', 
+  overrideIntervalMs,
+  overrideLastSyncTime,
+  overrideNextSyncTime,
+  onManualSync
+}: StatusAndSyncBadgeProps) {
   const {
     historyCacheInterval,
     historyCacheVersion,
@@ -36,10 +52,12 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
   // Update last sync time ONLY when isSyncing actually transitions from true to false
   useEffect(() => {
     if (wasSyncingRef.current && !isSyncing) {
-      setLastSyncTime(Date.now());
+      if (overrideLastSyncTime === undefined) {
+        setLastSyncTime(Date.now());
+      }
     }
     wasSyncingRef.current = isSyncing;
-  }, [isSyncing, setLastSyncTime]);
+  }, [isSyncing, setLastSyncTime, overrideLastSyncTime]);
 
   const now = currentTime;
   
@@ -47,7 +65,9 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
   const cooldownLeft = Math.max(0, Math.ceil((cooldownEnd - now) / 1000));
 
   // Calculate remaining time until next scheduled background sync
-  const nextSyncTime = lastSyncTime + historyCacheInterval * 60 * 1000;
+  const intervalMs = overrideIntervalMs ?? historyCacheInterval * 60 * 1000;
+  const actualLastSync = overrideLastSyncTime ?? lastSyncTime;
+  const nextSyncTime = overrideNextSyncTime ?? (actualLastSync + intervalMs);
   const secondsLeft = Math.max(0, Math.ceil((nextSyncTime - now) / 1000));
   
   const minutes = Math.floor(secondsLeft / 60);
@@ -57,8 +77,8 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
     : 'Pending...';
 
   // Format last sync time safely
-  const formattedLastSync = lastSyncTime > 0 
-    ? format(new Date(lastSyncTime), 'HH:mm:ss')
+  const formattedLastSync = actualLastSync > 0 
+    ? format(new Date(actualLastSync), 'HH:mm:ss')
     : 'Never';
 
   const handleManualSync = () => {
@@ -66,10 +86,14 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
 
     // Set cooldown to 1 minute from now
     setCooldownEnd(Date.now() + 60000);
-    // Set last sync to 0 to signal a force sync across all active views/hooks
-    setLastSyncTime(0);
-    // Trigger global historyCacheVersion bump to force all hooks to refresh
-    bumpHistoryCacheVersion();
+    if (onManualSync) {
+      onManualSync();
+    } else {
+      // Set last sync to 0 to signal a force sync across all active views/hooks
+      setLastSyncTime(0);
+      // Trigger global historyCacheVersion bump to force all hooks to refresh
+      bumpHistoryCacheVersion();
+    }
   };
 
   return (
@@ -107,7 +131,7 @@ export function StatusAndSyncBadge({ isSyncing, syncMessage, className = '' }: S
       <AppTooltip
         description="Automatic cache renewal schedule. Background worker fetches incremental updates on the configured interval."
         rows={[
-          { label: 'Interval Settings', value: `${historyCacheInterval} min` },
+          { label: 'Interval Settings', value: overrideIntervalMs ? `${Math.round(overrideIntervalMs / 60000)} min` : `${historyCacheInterval} min` },
           { label: 'Last Completed', value: formattedLastSync },
           { label: 'Next Scheduled', value: format(new Date(nextSyncTime), 'HH:mm:ss') }
         ]}

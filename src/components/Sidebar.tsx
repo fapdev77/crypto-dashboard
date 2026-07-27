@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, BarChart2, FileText, Beaker, AlignLeft, ClipboardList, ArrowLeftRight } from 'lucide-react';
-import { useDashboardStore } from '../store/dashboardStore';
+import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
 import logo1 from '../assets/CriptoDashboard-logo1.PNG';
@@ -15,7 +15,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
-  const { positions } = useDashboardStore();
+  const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
   const openOrdersCount = useOrdersStore(state => Object.keys(state.openOrders).length);
 
@@ -67,15 +67,12 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     },
     {
       id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
-        { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' }
+        { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
+        { id: 'analytics-bybit-tx', label: 'Bybit Transactions' },
+        { id: 'analytics-funding', label: 'Funding Fees' }
       ]
     },
     { id: 'reports', label: 'Reports', icon: FileText },
-    {
-      id: 'testes-mvp', label: 'Tests Playground', icon: Beaker, subItems: [
-        { id: 'mvp-asset-metadata', label: 'Asset Metadata' }
-      ]
-    },
   ];
 
   return (
