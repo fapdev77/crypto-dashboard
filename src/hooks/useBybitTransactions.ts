@@ -92,7 +92,7 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
           setIsLoading(false);
         }
       } catch (err) {
-        LogManager.error('useBybitTransactions', 'Error loading tx log cache:', err);
+        LogManager.error('BybitTransactions', 'Error loading tx log cache:', err);
         if (isMounted) {
           setError('Failed to load cached transactions');
           setIsLoading(false);

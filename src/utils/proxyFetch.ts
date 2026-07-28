@@ -35,11 +35,11 @@ export const proxyFetch = async (req: ProxyRequest) => {
 
 /**
  * Hybrid Fetch Workaround:
- * O servidor proxy no AI Studio / Cloud Run normalmente está em região US-East.
- * A Bybit bloqueia ativamente requisições para seus endpoints originadas de IP dos EUA (Geo-Block HTTP 403).
- * Este helper tenta realizar um 'direct fetch' via navegador do próprio usuário (que normalmente estará fora dos EUA e Bybit permite CORS para GET v5)
- * Se falhar (ex: erro de rede/CORS estrito em outro ambiente), recorre ao proxyFetch convencional na nuvem.
- * NÃO REMOVA: Sem este fallback, a renderização da Bybit no dashboard falhará em ambientes hospedados em solo americano.
+ * The proxy server on AI Studio / Cloud Run is typically in the US-East region.
+ * Bybit actively blocks requests from US IPs (Geo-Block HTTP 403).
+ * This helper attempts a 'direct fetch' from the user's own browser (usually outside the US, and Bybit allows CORS for GET v5).
+ * If it fails (e.g., network error / strict CORS in another environment), it falls back to the conventional cloud proxyFetch.
+ * DO NOT REMOVE: Without this fallback, Bybit dashboard rendering will fail on US-hosted environments.
  */
 export const hybridFetch = async (targetUrl: string, method: string, headers: Record<string, string>) => {
   try {
@@ -57,7 +57,7 @@ export const hybridFetch = async (targetUrl: string, method: string, headers: Re
       return await res.json();
     }
   } catch (err) {
-    LogManager.warn('HybridFetch', `Fetch direto falhou, acionando Proxy...`, targetUrl);
+    LogManager.warn('HybridFetch', `Direct fetch failed, falling back to proxy...`, targetUrl);
   }
   
   // Proxy Fallback

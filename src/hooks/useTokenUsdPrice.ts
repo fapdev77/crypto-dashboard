@@ -44,7 +44,7 @@ export function useTokenUsdPrice(ccy: string) {
           }
         }
       } catch (err) {
-        LogManager.warn('useTokenUsdPrice', `Failed to fetch price for ${cleanCcy}`, err);
+        LogManager.warn('TokenUsdPrice', `Failed to fetch price for ${cleanCcy}`, err);
       }
     };
 

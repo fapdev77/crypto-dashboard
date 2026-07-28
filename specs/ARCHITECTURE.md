@@ -17,6 +17,9 @@ This project implements a unique Hybrid-Proxy Client Architecture (2-Tier Local)
 
 ## 3. Tech Stack & Dependency Risk Graph
 A stack atual repousa sobre fundações modernas, possuindo os seguintes pontos e mitigações:
+- **Precision Math:** Big.js library para cálculos financeiros de alta precisão no módulo de funding rates (substituiu aritmética nativa com floats).
+- **Testing:** Vitest com cobertura v8 provider. Módulo de funding rates possui >140 testes unitários (fundingStore: 58, FundingService: 32, settingsStore: 12, stores existentes: 38).
+
 
 - **Core Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Lucide React (Icons).
   - *Risk:* Tailwind v4 is in early adoption. Some external component libraries might lack full compatibility, requiring native UI solutions.
@@ -117,6 +120,59 @@ O módulo **BybitTransactions** adiciona uma engine de sincronização dedicada 
        │                                                    [Bybit API V5]
 ```
 
+### 5.5. Funding Sync Engine
+
+O módulo de **Funding Rates** possui sua própria engine de sincronização dedicada, operando com uma arquitetura **aggregation-first** que substituiu o antigo pipeline de registros brutos no IndexedDB.
+
+```
+useFundingSync (singleton — module-level locks)
+├── fetchCurrentRates() → 3 exchanges, sequential
+│     FundingService.fetchCurrentFundingRates(exchange)
+│     ├── Bybit:  /v5/market/tickers
+│     ├── Bitget:  /api/v2/mix/market/current-fund-rate
+│     └── OKX:     /api/v5/public/funding-rate
+│
+├── scheduleNextAutoSync() → setTimeout
+│     nearestFutureFundingTime + 60s → dispatch 'funding-cache-cleared'
+│
+└── syncHistoricalRates(rates)
+    └── Promise.all [parallel exchanges]
+        └── syncExchange(exchange, rates, now)
+              ├── getFundingMeta() [freshness guard: 8h]
+              └── asyncPool(staleSymbols, CONCURRENCY[xchg])
+                    └── FundingService.fetchAndAggregateSummary()
+                          ├── fetch raw records (pagination)
+                          ├── Big.js bucket accumulation
+                          └── return FundingRateSummary
+              → Log per-exchange timing report
+        → saveFundingSummariesBatch(allSummaries) [IndexedDB]
+        → Persist performance data + schedule auto-sync
+```
+
+**Características principais:**
+- **Agregação no serviço, não na UI:** `FundingService.fetchAndAggregateSummary()` faz fetch paginado das APIs e computa somatórios via Big.js, retornando um `FundingRateSummary` por exchange-symbol
+- **Armazenamento compacto:** Apenas somatórios pré-calculados no IndexedDB (`funding-summaries` store), eliminando registros brutos individuais
+- **Full recalculation:** Cada sync refaz o fetch completo das APIs e re-agrega (não há incremental fetch)
+- **Parallel exchanges:** As 3 exchanges rodam em paralelo via `Promise.all`, cada uma com seu próprio `asyncPool` de concorrência (6/4/6)
+- **Auto-sync inteligente:** Timer baseado no próximo funding time + 1 minuto, garantindo sync logo após cada pagamento de funding
+- **Singleton locks:** Locks module-level (`syncInProgressRef`, `fetchingRef`, `restartRequestedRef`) previnem execução concorrente entre múltiplas instâncias do hook
+- **Performance persistence:** Métricas de tempo por exchange e por ciclo são salvas no fundingStore + localStorage
+- **ForceSync com restart:** Se o usuário pede um sync manual enquanto outro está rodando, o sync atual termina e um novo é iniciado automaticamente
+
+**Locks mechanism:**
+```typescript
+// Module-level (fora do hook) — compartilhado entre todas as instâncias
+const syncInProgressRef = { current: false };
+const fetchingRef = { current: false };
+const restartRequestedRef = { current: false };
+```
+
+**IndexedDB stores (DB_VERSION 10):**
+| Store | Key | Indexes | Descrição |
+|-------|-----|---------|-----------|
+| `funding-summaries` | `id` (exchange-symbol) | `by-exchange`, `by-symbol` | Somatórios pré-calculados |
+| `funding-meta` | `id` (exchange-symbol) | `by-exchange` | Metadados de cobertura (freshness guard) |
+
 ### 5.1. Engine de Sincronização e Cache SWR (Stale-While-Revalidate)
 
 ```
@@ -184,8 +240,12 @@ O CPM adota uma arquitetura de micro-stores modularizadas para garantir que as a
 - **`PrivacyContext`:** 
   - Context API nativo que envelopa a aplicação para controlar a visibilidade (`isPrivateMode`) de valores monetários sensíveis em todas as tabelas e cards, persistindo a escolha no `localStorage`.
 - **`useSettingsStore`:** 
-  - Gerencia configurações globais como `useMockData` (Modo Simulação), `pollingInterval` (intervalo de polling padrão das APIs REST, ex: 5s) e `historyCacheInterval` (tempo para expiração do cache IndexedDB).
+  - Gerencia configurações globais como `useMockData` (Modo Simulação), `pollingInterval` (intervalo de polling padrão das APIs REST, ex: 5s), `historyCacheInterval` (tempo para expiração do cache IndexedDB), `fundingPollingInterval` (polling de current funding rates), e `fundingHistoryInterval` (intervalo mínimo entre syncs históricos de funding, range 4-8h).
   - Persistido no `localStorage` do navegador.
+- **`useFundingStore`:**
+  - Gerencia o estado do módulo de Funding Rates: `currentRates` (taxas ao vivo), `isSyncing`/`syncProgress`/`syncMessage` (status de sincronização), `favorites` (moedas favoritadas), `lastHistoryFetch` (timestamp do último sync), `lastSyncPerformance` (métricas de performance do último sync), `lastExchangeTimings` (timing por exchange), `nextFundingTime` (próximo pagamento de funding), `nextScheduledSyncTime` (próximo auto-sync agendado).
+  - `favorites`, `lastHistoryFetch`, `lastSyncPerformance`, `lastExchangeTimings`, `nextFundingTime`, e `nextScheduledSyncTime` são persistidos no `localStorage` via middleware `persist`.
+  - Campos transientes (`currentRates`, `isSyncing`, `syncProgress`, `syncMessage`) NÃO são persistidos.
 
 ## 7. Mocks, Types & Schema Consistency Protocol
 It is mandatory to uphold strict synchronization across the entire stack when modifying unified interfaces (e.g., `UnifiedHistoryPosition`, `UnifiedPosition`, `UnifiedBalance`).

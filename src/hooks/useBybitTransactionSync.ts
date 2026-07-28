@@ -77,7 +77,7 @@ export function useBybitTransactionSync() {
         setBybitTxTotalRecords(allEntries.length);
         setBybitTxLastSyncTime(now);
       } catch (err) {
-        LogManager.error('BybitTxSync', 'Deep sync error:', err);
+        LogManager.error('BybitTransactionSync', 'Deep sync error:', err);
       } finally {
         setIsBybitTxSyncing(false);
         setBybitTxProgress(null);
@@ -113,7 +113,7 @@ export function useBybitTransactionSync() {
         setBybitTxTotalRecords(allEntries.length);
         setBybitTxLastSyncTime(Date.now());
       } catch (err) {
-        LogManager.error('BybitTxSync', 'Incremental sync error:', err);
+        LogManager.error('BybitTransactionSync', 'Incremental sync error:', err);
       } finally {
         setIsBybitTxSyncing(false);
         setBybitTxProgress(null);

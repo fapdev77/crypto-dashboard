@@ -1,7 +1,7 @@
-import { UnifiedFundingFee, ExchangeName, UnifiedInstrumentType } from '../../types';
+import Big from 'big.js';
+import { ExchangeName, FundingRateSummary } from '../../types';
 import { hybridFetch } from '../../utils/proxyFetch';
 import { LogManager } from '../logger';
-import { getAssetMetadata, saveAssetMetadata } from '../historyCache';
 
 export interface CurrentFundingRate {
   exchange: ExchangeName;
@@ -11,10 +11,25 @@ export interface CurrentFundingRate {
   nextFundingTime: number;
 }
 
+/** Internal minimal record shape used exclusively in the aggregation path. */
+type RawRecord = {
+  fundingTime: string; // ms timestamp as string
+  fundingRate: string; // rate as string (e.g. "0.0001")
+};
+
+/** Boundary timestamps for bucket classification (calendar-month logic). */
+type AggregationBoundaries = {
+  todayStart: number;
+  currentMonthStart: number;
+  lastMonthStart: number;
+  last3MStart: number;
+  last6MStart: number;
+  last12MStart: number;
+};
+
 export class FundingService {
-  /**
-   * Fetch current funding rates for all USDT-M and COIN-M symbols from an exchange.
-   */
+  // ── Current rates (unchanged) ──────────────────────────────────────
+
   static async fetchCurrentFundingRates(exchange: ExchangeName): Promise<CurrentFundingRate[]> {
     switch (exchange) {
       case 'bybit':
@@ -28,34 +43,383 @@ export class FundingService {
     }
   }
 
+  // ── Sleep helper ───────────────────────────────────────────────────
+
+  private static sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // ── Aggregation entry point ────────────────────────────────────────
+
   /**
-   * Fetch historical funding rates for a specific symbol.
-   * @param sinceTimestamp - If provided, fetch only records AFTER this timestamp (incremental).
-   *                         When omitted, fetches full depth (~400 days).
+   * Fetch all available historical funding records from the exchange API
+   * and return a fully computed `FundingRateSummary`.
+   *
+   * On any error, logs via LogManager and returns a zero-filled summary
+   * (all rate fields "0.00000000", lastFundingTime "0") — never throws.
    */
-  static async fetchFundingHistory(
+  static async fetchAndAggregateSummary(
     exchange: ExchangeName,
     symbol: string,
     instrumentType: 'USDT-M' | 'COIN-M',
-    limit: number = 100,
-    sinceTimestamp?: number
-  ): Promise<UnifiedFundingFee[]> {
+  ): Promise<FundingRateSummary> {
     try {
+      const boundaries = this.buildAggregationBoundaries();
+      let records: RawRecord[];
+
       switch (exchange) {
         case 'bybit':
-          return this.fetchBybitFundingHistory(symbol, instrumentType, limit, sinceTimestamp);
+          records = await this.fetchBybitRecordsForAggregation(symbol, instrumentType);
+          break;
         case 'okx':
-          return this.fetchOkxFundingHistory(symbol, instrumentType, limit);
+          records = await this.fetchOkxRecordsForAggregation(symbol, instrumentType);
+          break;
         case 'bitget':
-          return this.fetchBitgetFundingHistory(symbol, instrumentType, limit, sinceTimestamp);
+          records = await this.fetchBitgetRecordsForAggregation(symbol, instrumentType);
+          break;
         default:
-          return [];
+          records = [];
       }
+
+      return this.aggregateData(records, exchange, symbol, instrumentType, boundaries);
     } catch (error) {
-      LogManager.error('FundingService', `Error fetching ${exchange} history for ${symbol}:`, error);
-      return [];
+      LogManager.error('FundingService', `fetchAndAggregateSummary error for ${exchange} ${symbol}:`, error);
+      return this.zeroSummary(exchange, symbol, instrumentType);
     }
   }
+
+  /**
+   * Fetch wrapper with retry logic for rate-limited requests.
+   * Retries up to 3 times with exponential backoff (1s, 2s, 4s)
+   * when the API returns a rate-limit error or null response.
+   */
+  private static async fetchWithRetry(url: string): Promise<any> {
+    const MAX_RETRIES = 3;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        const backoffMs = 1000 * Math.pow(2, attempt - 1);
+        await this.sleep(backoffMs);
+      }
+      const data = await hybridFetch(url, 'GET', {});
+      if (!data) {
+        if (attempt < MAX_RETRIES) continue;
+        return null;
+      }
+      // Bybit rate limit (retCode 10006)
+      if (typeof data === 'object' && data.retCode === 10006) {
+        if (attempt < MAX_RETRIES) continue;
+        return data;
+      }
+      return data;
+    }
+    return null;
+  }
+
+  // ── Aggregation boundaries ─────────────────────────────────────────
+
+  /**
+   * Compute calendar-month boundary timestamps.
+   * Identical to the V3 script: `new Date(year, month - N, 1).getTime()`.
+   */
+  private static buildAggregationBoundaries(): AggregationBoundaries {
+    const now = new Date();
+    return {
+      todayStart: new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(),
+      currentMonthStart: new Date(now.getFullYear(), now.getMonth(), 1).getTime(),
+      lastMonthStart: new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime(),
+      last3MStart: new Date(now.getFullYear(), now.getMonth() - 3, 1).getTime(),
+      last6MStart: new Date(now.getFullYear(), now.getMonth() - 6, 1).getTime(),
+      last12MStart: new Date(now.getFullYear(), now.getMonth() - 12, 1).getTime(),
+    };
+  }
+
+  // ── Shared aggregation logic (V3-compatible) ───────────────────────
+
+  /**
+   * Core aggregation: classify records into calendar-month buckets using
+   * Big.js arithmetic, identical to `aggregateData()` in the V3 script.
+   *
+   * For Bybit (which fetches 400+ days of data), all fields are populated.
+   * For OKX/Bitget (limited to ~3 months), last6MonthsFundingRate and
+   * last12MonthsFundingRate are set to `undefined` since the API doesn't
+   * reach those boundaries.
+   */
+  private static aggregateData(
+    records: RawRecord[],
+    exchange: ExchangeName,
+    symbol: string,
+    instrumentType: 'USDT-M' | 'COIN-M',
+    boundaries: AggregationBoundaries,
+  ): FundingRateSummary {
+    if (records.length === 0) {
+      return this.zeroSummary(exchange, symbol, instrumentType);
+    }
+
+    // Bucket accumulators (let, because Big.plus() returns a new Big — must reassign)
+    let todayBucket = new Big(0);
+    let currentMonthBucket = new Big(0);
+    let lastMonthBucket = new Big(0);
+    let last3MonthsBucket = new Big(0);
+    let last6MonthsBucket = new Big(0);
+    let last12MonthsBucket = new Big(0);
+
+    // Track the oldest record's timestamp (last element in newest-first array)
+    const oldestRecordTs = Number(records[records.length - 1].fundingTime);
+    const newestRecord = records[0];
+
+    for (const record of records) {
+      const ts = Number(record.fundingTime);
+      const rate = new Big(record.fundingRate);
+
+      // ── Bucket classification (V3 rules) ──
+      // todayFundingRate: ts >= todayStart
+      if (ts >= boundaries.todayStart) {
+        todayBucket = todayBucket.plus(rate);
+      }
+
+      // currentMonthFundingRate: ts >= currentMonthStart
+      if (ts >= boundaries.currentMonthStart) {
+        currentMonthBucket = currentMonthBucket.plus(rate);
+      }
+
+      // Multi-month buckets: ts >= boundary AND ts < currentMonthStart
+      // (excludes current month from historical buckets)
+      // Must use Big.plus() for each addition — no native float accumulation
+      if (ts < boundaries.currentMonthStart) {
+        if (ts >= boundaries.last12MStart) {
+          last12MonthsBucket = last12MonthsBucket.plus(rate);
+        }
+        if (ts >= boundaries.last6MStart) {
+          last6MonthsBucket = last6MonthsBucket.plus(rate);
+        }
+        if (ts >= boundaries.last3MStart) {
+          last3MonthsBucket = last3MonthsBucket.plus(rate);
+        }
+        if (ts >= boundaries.lastMonthStart) {
+          lastMonthBucket = lastMonthBucket.plus(rate);
+        }
+      }
+    }
+
+    // ── Determine which optional fields are reachable based on oldestRecord ──
+    // Bybit: all fields populated (oldest <= last12MStart)
+    // OKX/Bitget: only populate up to the API's natural boundary
+    const apiIsLimited = (exchange === 'okx' || exchange === 'bitget');
+
+    const summary: FundingRateSummary = {
+      id: `${exchange}-${symbol}`,
+      exchange,
+      symbol,
+      instrumentType,
+      lastMonthFundingRate: lastMonthBucket.toFixed(8),
+      last3MonthsFundingRate: last3MonthsBucket.toFixed(8),
+      currentMonthFundingRate: currentMonthBucket.toFixed(8),
+      todayFundingRate: todayBucket.toFixed(8),
+      lastFundingRate: newestRecord.fundingRate,
+      lastFundingTime: newestRecord.fundingTime,
+      updatedAt: Date.now(),
+    };
+
+    // ── Populate optional fields only if coverage is sufficient ──
+    // For limited APIs (OKX/Bitget), only populate if oldestRecord reaches the boundary
+    // For Bybit, always populate (oldestRecord is guaranteed to be < last12MStart)
+    if (!apiIsLimited || oldestRecordTs <= boundaries.last12MStart) {
+      summary.last12MonthsFundingRate = last12MonthsBucket.toFixed(8);
+    }
+    if (!apiIsLimited || oldestRecordTs <= boundaries.last6MStart) {
+      summary.last6MonthsFundingRate = last6MonthsBucket.toFixed(8);
+    }
+
+    return summary;
+  }
+
+  /** Build a zero-filled FundingRateSummary. */
+  private static zeroSummary(
+    exchange: ExchangeName,
+    symbol: string,
+    instrumentType: 'USDT-M' | 'COIN-M',
+  ): FundingRateSummary {
+    return {
+      id: `${exchange}-${symbol}`,
+      exchange,
+      symbol,
+      instrumentType,
+      lastFundingRate: '0.00000000',
+      lastFundingTime: '0',
+      todayFundingRate: '0.00000000',
+      currentMonthFundingRate: '0.00000000',
+      lastMonthFundingRate: '0.00000000',
+      last3MonthsFundingRate: '0.00000000',
+      updatedAt: Date.now(),
+    };
+  }
+
+  // ═════════════════════════════════════════════════════════════════
+  //  BYBIT
+  // ═════════════════════════════════════════════════════════════════
+
+  private static async fetchBybitRecordsForAggregation(
+    symbol: string,
+    instrumentType: 'USDT-M' | 'COIN-M',
+  ): Promise<RawRecord[]> {
+    const category = instrumentType === 'USDT-M' ? 'linear' : 'inverse';
+    const boundaries = this.buildAggregationBoundaries();
+    const records: RawRecord[] = [];
+    const MAX_PAGES = 10;
+    const pageSize = 200;
+    const PAGE_DELAY_MS = 65; // V3-compatible delay
+    let endTime = String(Date.now());
+    let pages = 0;
+
+    do {
+      const url = `https://api.bybit.com/v5/market/funding/history?category=${category}&symbol=${symbol}&limit=${pageSize}&endTime=${endTime}`;
+      const data = await this.fetchWithRetry(url);
+
+      if (!data || data.retCode !== 0 || !data.result?.list || data.result.list.length === 0) {
+        break;
+      }
+
+      const pageRecords: RawRecord[] = data.result.list.map((item: any) => ({
+        fundingTime: item.fundingRateTimestamp,
+        fundingRate: String(item.fundingRate),
+      }));
+
+      records.push(...pageRecords);
+
+      // Cursor advance: endTime - 1 to avoid duplicates
+      const oldest = pageRecords[pageRecords.length - 1];
+      endTime = String(Number(oldest.fundingTime) - 1);
+
+      // Stop if oldest record reaches the 12-month boundary
+      if (Number(oldest.fundingTime) <= boundaries.last12MStart) {
+        break;
+      }
+
+      // Partial page (< 200) means no more data
+      if (pageRecords.length < pageSize) {
+        break;
+      }
+
+      pages++;
+
+      // V3-compatible delay between pages to avoid rate limiting
+      await this.sleep(PAGE_DELAY_MS);
+    } while (pages < MAX_PAGES);
+
+    return records;
+  }
+
+  // ═════════════════════════════════════════════════════════════════
+  //  OKX
+  // ═════════════════════════════════════════════════════════════════
+
+  private static async fetchOkxRecordsForAggregation(
+    symbol: string,
+    instrumentType: 'USDT-M' | 'COIN-M',
+  ): Promise<RawRecord[]> {
+    const boundaries = this.buildAggregationBoundaries();
+    const records: RawRecord[] = [];
+    const MAX_PAGES = 5;
+    const pageSize = 400;
+    const PAGE_DELAY_MS = 250; // V3-compatible delay (OKX is strict: 10 req/2s)
+    let after = '';
+    let pages = 0;
+
+    do {
+      let query = `instId=${symbol}&limit=${pageSize}`;
+      if (after) query += `&after=${after}`;
+
+      const url = `https://www.okx.com/api/v5/public/funding-rate-history?${query}`;
+      const data = await this.fetchWithRetry(url);
+
+      if (!data || data.code !== '0' || !data.data || data.data.length === 0) {
+        break;
+      }
+
+      const pageRecords: RawRecord[] = data.data.map((item: any) => ({
+        fundingTime: item.fundingTime,
+        fundingRate: String(item.realizedRate ?? item.fundingRate),
+      }));
+
+      records.push(...pageRecords);
+
+      // Cursor advance
+      const oldest = pageRecords[pageRecords.length - 1];
+      after = oldest.fundingTime;
+
+      // Stop if oldest record reaches the 3-month boundary
+      if (Number(oldest.fundingTime) <= boundaries.last3MStart) {
+        break;
+      }
+
+      // Partial page means no more data
+      if (pageRecords.length < pageSize) {
+        break;
+      }
+
+      pages++;
+
+      // V3-compatible delay between pages
+      await this.sleep(PAGE_DELAY_MS);
+    } while (pages < MAX_PAGES);
+
+    return records;
+  }
+
+  // ═════════════════════════════════════════════════════════════════
+  //  BITGET
+  // ═════════════════════════════════════════════════════════════════
+
+  private static async fetchBitgetRecordsForAggregation(
+    symbol: string,
+    instrumentType: 'USDT-M' | 'COIN-M',
+  ): Promise<RawRecord[]> {
+    const productType = instrumentType === 'USDT-M' ? 'USDT-FUTURES' : 'COIN-FUTURES';
+    const boundaries = this.buildAggregationBoundaries();
+    const records: RawRecord[] = [];
+    const MAX_PAGES = 15;
+    const pageSize = 100;
+    const PAGE_DELAY_MS = 65; // V3-compatible delay
+    let pageNo = 1;
+
+    do {
+      const url = `https://api.bitget.com/api/v2/mix/market/history-fund-rate?symbol=${symbol}&productType=${productType}&pageSize=${pageSize}&pageNo=${pageNo}`;
+      const data = await this.fetchWithRetry(url);
+
+      if (!data || data.code !== '00000' || !data.data || data.data.length === 0) {
+        break;
+      }
+
+      const pageRecords: RawRecord[] = data.data.map((item: any) => ({
+        fundingTime: String(item.fundingTime || item.settleTime),
+        fundingRate: String(item.fundingRate),
+      }));
+
+      records.push(...pageRecords);
+
+      // Check oldest record against boundary
+      const oldest = pageRecords[pageRecords.length - 1];
+      if (Number(oldest.fundingTime) <= boundaries.last3MStart) {
+        break;
+      }
+
+      // Partial page means no more data
+      if (pageRecords.length < pageSize) {
+        break;
+      }
+
+      pageNo++;
+
+      // V3-compatible delay between pages
+      await this.sleep(PAGE_DELAY_MS);
+    } while (pageNo <= MAX_PAGES);
+
+    return records;
+  }
+
+  // ═════════════════════════════════════════════════════════════════
+  //  Current-rate fetchers (unchanged)
+  // ═════════════════════════════════════════════════════════════════
 
   private static parseFundingRate(val: any): number | null {
     if (val === undefined || val === null || val === '') return null;
@@ -71,18 +435,18 @@ export class FundingService {
 
   private static async fetchBybitCurrentRates(): Promise<CurrentFundingRate[]> {
     const results: CurrentFundingRate[] = [];
-    
+
     for (const category of ['linear', 'inverse']) {
       try {
         const url = `https://api.bybit.com/v5/market/tickers?category=${category}`;
         const data = await hybridFetch(url, 'GET', {});
-        
+
         if (data && data.retCode === 0 && data.result && data.result.list) {
           const instType = category === 'linear' ? 'USDT-M' : 'COIN-M';
           for (const item of data.result.list) {
             const fundingRate = FundingService.parseFundingRate(item.fundingRate);
             const nextFundingTime = FundingService.parseIntOrNull(item.nextFundingTime);
-            if (fundingRate !== null && nextFundingTime !== null) {
+            if (fundingRate !== null && nextFundingTime !== null && nextFundingTime > 0) {
               results.push({
                 exchange: 'bybit',
                 symbol: item.symbol,
@@ -97,72 +461,8 @@ export class FundingService {
         LogManager.error('FundingService', `Bybit current rates error for ${category}:`, e);
       }
     }
-    
+
     return results;
-  }
-
-  private static async fetchBybitFundingHistory(
-    symbol: string,
-    instrumentType: 'USDT-M' | 'COIN-M',
-    limit: number,
-    sinceTimestamp?: number
-  ): Promise<UnifiedFundingFee[]> {
-    const category = instrumentType === 'USDT-M' ? 'linear' : 'inverse';
-    const allEntries: UnifiedFundingFee[] = [];
-    
-    // Bybit funding history API: endTime-based REVERSE pagination.
-    //   - Full fetch (no sinceTimestamp): stop at ~400 days ago (targetStartTime)
-    //   - Incremental fetch (sinceTimestamp): stop at sinceTimestamp
-    //
-    // IMPORTANT: Passing ONLY startTime returns an error, so we ALWAYS include endTime.
-    // When sinceTimestamp is provided, we pass BOTH startTime and endTime together.
-    const isIncremental = sinceTimestamp !== undefined;
-    const MAX_PAGES = isIncremental ? 5 : 10;
-    const pageSize = Math.min(limit, 200);
-    const boundary = isIncremental ? sinceTimestamp! : (Date.now() - 400 * 24 * 60 * 60 * 1000);
-    const now = Date.now();
-    let endTime = String(now);
-    let pages = 0;
-    let reachedTarget = false;
-
-    do {
-      let query = `category=${category}&symbol=${symbol}&limit=${pageSize}`;
-      if (isIncremental) query += `&startTime=${boundary}`;
-      query += `&endTime=${endTime}`;
-
-      const data = await hybridFetch(
-        `https://api.bybit.com/v5/market/funding/history?${query}`,
-        'GET',
-        {}
-      );
-
-      if (!data || data.retCode !== 0 || !data.result?.list || data.result.list.length === 0) break;
-
-      const entries = data.result.list.map((item: any) => ({
-        id: `bybit-${symbol}-${item.fundingRateTimestamp}`,
-        exchange: 'bybit' as const,
-        symbol,
-        instrumentType,
-        timestamp: parseInt(item.fundingRateTimestamp, 10),
-        fundingRate: FundingService.parseFundingRate(item.fundingRate) ?? 0,
-      }));
-
-      allEntries.push(...entries);
-
-      // The last item in the list is the oldest record of this page.
-      // Use its timestamp as endTime for the next page to get records before it.
-      const oldestEntry = entries[entries.length - 1];
-      endTime = String(oldestEntry.timestamp);
-
-      // Stop if the oldest record is older than (or equal to) our boundary
-      if (oldestEntry.timestamp <= boundary) {
-        reachedTarget = true;
-      }
-
-      pages++;
-    } while (!reachedTarget && endTime && pages < MAX_PAGES);
-
-    return allEntries;
   }
 
   private static async fetchOkxCurrentRates(): Promise<CurrentFundingRate[]> {
@@ -170,17 +470,17 @@ export class FundingService {
     try {
       const url = `https://www.okx.com/api/v5/public/funding-rate?instId=ANY`;
       const data = await hybridFetch(url, 'GET', {});
-      
+
       if (data && data.code === '0' && data.data) {
         for (const item of data.data) {
           const isUsdt = item.instId.endsWith('-USDT-SWAP');
           const isCoin = item.instId.endsWith('-USD-SWAP');
-          
+
           if (!isUsdt && !isCoin) continue;
 
           const fundingRate = FundingService.parseFundingRate(item.fundingRate);
           const nextFundingTime = FundingService.parseIntOrNull(item.fundingTime);
-          if (fundingRate !== null && nextFundingTime !== null) {
+          if (fundingRate !== null && nextFundingTime !== null && nextFundingTime > 0) {
             results.push({
               exchange: 'okx',
               symbol: item.instId,
@@ -197,65 +497,19 @@ export class FundingService {
     return results;
   }
 
-  private static async fetchOkxFundingHistory(
-    symbol: string,
-    instrumentType: 'USDT-M' | 'COIN-M',
-    limit: number
-  ): Promise<UnifiedFundingFee[]> {
-    const allEntries: UnifiedFundingFee[] = [];
-    // OKX API has a hard 3-month limit; 5 pages × 100 records = 500 records ≈ 166 days (5.5 months) is enough.
-    // Actual data will be shorter (~270 records). Cache accumulates more over time.
-    const MAX_PAGES = 5;
-    const pageSize = Math.min(limit, 100);
-    let after = '';
-    let pages = 0;
-
-    do {
-      let query = `instId=${symbol}&limit=${pageSize}`;
-      if (after) query += `&after=${after}`;
-
-      const data = await hybridFetch(
-        `https://www.okx.com/api/v5/public/funding-rate-history?${query}`,
-        'GET',
-        {}
-      );
-
-      if (!data || data.code !== '0' || !data.data || data.data.length === 0) break;
-
-      const entries = data.data.map((item: any) => ({
-        id: `okx-${symbol}-${item.fundingTime}`,
-        exchange: 'okx' as const,
-        symbol,
-        instrumentType,
-        timestamp: parseInt(item.fundingTime, 10),
-        fundingRate: FundingService.parseFundingRate(item.realizedRate ?? item.fundingRate) ?? 0,
-        realizedRate: FundingService.parseFundingRate(item.realizedRate) ?? undefined,
-      }));
-
-      allEntries.push(...entries);
-
-      // Paginate backward: 'after' = timestamp of the last record
-      const lastEntry = data.data[data.data.length - 1];
-      after = lastEntry?.fundingTime || '';
-      pages++;
-    } while (after && pages < MAX_PAGES);
-
-    return allEntries;
-  }
-
   private static async fetchBitgetCurrentRates(): Promise<CurrentFundingRate[]> {
     const results: CurrentFundingRate[] = [];
     for (const productType of ['USDT-FUTURES', 'COIN-FUTURES']) {
       try {
         const url = `https://api.bitget.com/api/v2/mix/market/current-fund-rate?productType=${productType}`;
         const data = await hybridFetch(url, 'GET', {});
-        
+
         if (data && data.code === '00000' && data.data) {
           const instType = productType === 'USDT-FUTURES' ? 'USDT-M' : 'COIN-M';
           for (const item of data.data) {
             const fundingRate = FundingService.parseFundingRate(item.fundingRate);
             const nextTime = FundingService.parseIntOrNull(item.nextUpdate || item.nextFundingTime);
-            if (fundingRate !== null && nextTime !== null) {
+            if (fundingRate !== null && nextTime !== null && nextTime > 0) {
               results.push({
                 exchange: 'bitget',
                 symbol: item.symbol,
@@ -271,118 +525,5 @@ export class FundingService {
       }
     }
     return results;
-  }
-
-  private static async fetchBitgetFundingHistory(
-    symbol: string,
-    instrumentType: 'USDT-M' | 'COIN-M',
-    limit: number,
-    sinceTimestamp?: number
-  ): Promise<UnifiedFundingFee[]> {
-    const productType = instrumentType === 'USDT-M' ? 'USDT-FUTURES' : 'COIN-FUTURES';
-    const isIncremental = sinceTimestamp !== undefined;
-    const pageSize = Math.min(limit, 100);
-    const allEntries: UnifiedFundingFee[] = [];
-
-    if (isIncremental) {
-      // ── Incremental: fetch only the most recent page(s), filter by timestamp ──
-      // Page 1 has the 100 most recent records (~33 days). We fetch 2 pages (200 records)
-      // to be safe for cases where user was away for 30+ days.
-      const pageNumbers = [1, 2];
-
-      const results = await Promise.allSettled(
-        pageNumbers.map(async (pageNo) => {
-          const url = `https://api.bitget.com/api/v2/mix/market/history-fund-rate?symbol=${symbol}&productType=${productType}&pageSize=${pageSize}&pageNo=${pageNo}`;
-          return hybridFetch(url, 'GET', {});
-        })
-      );
-
-      for (const result of results) {
-        if (result.status === 'rejected') continue;
-        const data = result.value;
-        if (!data || data.code !== '00000' || !data.data || data.data.length === 0) continue;
-
-        const entries = data.data
-          .map((item: any) => ({
-            id: `bitget-${symbol}-${item.fundingTime || item.settleTime}`,
-            exchange: 'bitget' as const,
-            symbol,
-            instrumentType,
-            timestamp: parseInt(item.fundingTime || item.settleTime, 10),
-            fundingRate: FundingService.parseFundingRate(item.fundingRate) ?? 0,
-          }))
-          .filter(e => e.timestamp > sinceTimestamp); // Keep only truly new records
-
-        allEntries.push(...entries);
-
-        // If this page has records older than sinceTimestamp, no need for more pages
-        const oldestInPage = parseInt(data.data[data.data.length - 1].fundingTime || data.data[data.data.length - 1].settleTime, 10);
-        if (oldestInPage < sinceTimestamp) break;
-      }
-    } else {
-      // ── Full fetch: 15 pages in parallel batches, stop at ~400 days ──
-      const MAX_PAGES = 15;
-      const PAGE_BATCH = 5;
-      const targetStartTime = Date.now() - 400 * 24 * 60 * 60 * 1000;
-      let reachedTargetDepth = false;
-
-      for (let batchStart = 0; batchStart < MAX_PAGES; batchStart += PAGE_BATCH) {
-        const batchSize = Math.min(PAGE_BATCH, MAX_PAGES - batchStart);
-        const pageNumbers = Array.from({ length: batchSize }, (_, i) => batchStart + i + 1);
-
-        const results = await Promise.allSettled(
-          pageNumbers.map(async (pageNo) => {
-            const url = `https://api.bitget.com/api/v2/mix/market/history-fund-rate?symbol=${symbol}&productType=${productType}&pageSize=${pageSize}&pageNo=${pageNo}`;
-            return hybridFetch(url, 'GET', {});
-          })
-        );
-
-        let minTimestampInBatch = Infinity;
-        let hadPartialPage = false;
-
-        for (const result of results) {
-          if (result.status === 'rejected') {
-            hadPartialPage = true;
-            continue;
-          }
-          const data = result.value;
-          if (!data || data.code !== '00000' || !data.data || data.data.length === 0) {
-            hadPartialPage = true;
-            continue;
-          }
-
-          const entries = data.data.map((item: any) => ({
-            id: `bitget-${symbol}-${item.fundingTime || item.settleTime}`,
-            exchange: 'bitget' as const,
-            symbol,
-            instrumentType,
-            timestamp: parseInt(item.fundingTime || item.settleTime, 10),
-            fundingRate: FundingService.parseFundingRate(item.fundingRate) ?? 0,
-          }));
-
-          for (const entry of entries) {
-            if (entry.timestamp < minTimestampInBatch) {
-              minTimestampInBatch = entry.timestamp;
-            }
-          }
-
-          allEntries.push(...entries);
-
-          if (entries.length < pageSize) {
-            hadPartialPage = true;
-          }
-        }
-
-        if (minTimestampInBatch <= targetStartTime) {
-          reachedTargetDepth = true;
-        }
-
-        if (hadPartialPage || reachedTargetDepth) break;
-      }
-    }
-
-    // Sort descending by timestamp (most recent first) for consistent ordering
-    allEntries.sort((a, b) => b.timestamp - a.timestamp);
-    return allEntries;
   }
 }

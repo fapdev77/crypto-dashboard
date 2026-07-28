@@ -1,42 +1,49 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useFundingStore } from '../store/fundingStore';
-import { getAllFundingFees } from '../services/historyCache';
-import { UnifiedFundingFee, FundingFeeAggregated } from '../types';
-import { CurrentFundingRate } from '../services/funding/FundingService';
+import { getAllFundingSummaries } from '../services/historyCache';
+import { FundingRateSummary, FundingFeeAggregated } from '../types';
+import { LogManager } from '../services/LogManager';
 
 export function useFundingData() {
-  const [history, setHistory] = useState<UnifiedFundingFee[]>([]);
-  const { currentRates, isSyncing, syncProgress } = useFundingStore();
+  const [summaries, setSummaries] = useState<FundingRateSummary[]>([]);
+  const { currentRates, isSyncing } = useFundingStore();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Poll IndexedDB for new history every few seconds while syncing, or just once if not syncing
+  // Poll IndexedDB for new summaries every few seconds while syncing, or just once if not syncing
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
-    const fetchHistory = async () => {
-      const data = await getAllFundingFees();
-      setHistory(data);
-      setIsLoading(false);
+
+    const fetchSummaries = async () => {
+      try {
+        const data = await getAllFundingSummaries();
+        setSummaries(data);
+      } catch (err) {
+        LogManager.error('FundingData', 'Failed to load summaries:', err);
+        setSummaries([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    
-    fetchHistory();
-    
+
+    fetchSummaries();
+
     if (isSyncing) {
-      interval = setInterval(fetchHistory, 5000);
+      interval = setInterval(fetchSummaries, 5000);
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isSyncing, syncProgress]);
+  }, [isSyncing]);
 
+  // Lightweight mapping: seed from currentRates, overwrite from pre-computed summaries
   const aggregatedData = useMemo(() => {
     const map = new Map<string, FundingFeeAggregated>();
-    
-    // Initialize map with current rates
+
+    // Seed from current rates (only if nextFundingTime > 0)
     currentRates.forEach(cr => {
-      const key = `${cr.exchange}-${cr.symbol}`;
-      map.set(key, {
+      if (!cr.nextFundingTime || cr.nextFundingTime <= 0) return;
+      map.set(`${cr.exchange}-${cr.symbol}`, {
         exchange: cr.exchange,
         symbol: cr.symbol,
         instrumentType: cr.instrumentType,
@@ -48,78 +55,47 @@ export function useFundingData() {
         lastMonthSum: 0,
         last3MonthsSum: 0,
         last6MonthsSum: 0,
-        yearSum: 0
+        yearSum: 0,
       });
     });
-    
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
-    const lastMonthEnd = currentMonthStart - 1;
-    
-    const threeMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 3, 1).getTime();
-    const sixMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 6, 1).getTime();
-    // Anchored to the last complete month (now.getMonth() - 1), not the current month
-    const oneYearAgoStart = new Date(now.getFullYear() - 1, now.getMonth() - 1, 1).getTime();
-    
-    // Sort history descending
-    const sortedHistory = [...history].sort((a, b) => b.timestamp - a.timestamp);
-    
-    // Group history by symbol
-    sortedHistory.forEach(fee => {
-      const key = `${fee.exchange}-${fee.symbol}`;
-      let agg = map.get(key);
-      if (!agg) {
-        agg = {
-          exchange: fee.exchange,
-          symbol: fee.symbol,
-          instrumentType: fee.instrumentType,
-          lastFundingRate: fee.fundingRate,
-          todaySum: 0,
-          currentMonthSum: 0,
-          lastMonthSum: 0,
-          last3MonthsSum: 0,
-          last6MonthsSum: 0,
-          yearSum: 0
-        };
-        map.set(key, agg);
-      }
-      
-      const ts = fee.timestamp;
-      const rate = fee.fundingRate; // we just sum the percentages
-      
-      // If it's the very first historical record (most recent), set it as last funding rate
-      if (agg.lastFundingRate === undefined) {
-        agg.lastFundingRate = rate;
-      }
-      
-      if (ts >= todayStart) {
-        agg.todaySum += rate;
-      }
-      
-      if (ts >= currentMonthStart) {
-        agg.currentMonthSum += rate;
-      } else {
-        // Exclude current month
-        if (ts >= lastMonthStart && ts <= lastMonthEnd) {
-          agg.lastMonthSum += rate;
-        }
-        if (ts >= threeMonthsAgoStart) {
-          agg.last3MonthsSum += rate;
-        }
-        if (ts >= sixMonthsAgoStart) {
-          agg.last6MonthsSum += rate;
-        }
-        if (ts >= oneYearAgoStart) {
-          agg.yearSum += rate;
-        }
-      }
+
+    // Overwrite historical fields from pre-computed summaries (skip zeroSummary guards)
+    summaries.forEach(s => {
+      if (s.lastFundingTime === '0') return;
+      const key = `${s.exchange}-${s.symbol}`;
+      const existing = map.get(key);
+      const base = existing ?? {
+        exchange: s.exchange,
+        symbol: s.symbol,
+        instrumentType: s.instrumentType,
+        nextFundingRate: undefined,
+        nextFundingTime: undefined,
+      };
+
+      map.set(key, {
+        ...base,
+        lastFundingRate: parseFloat(s.lastFundingRate),
+        todaySum: parseFloat(s.todayFundingRate),
+        currentMonthSum: parseFloat(s.currentMonthFundingRate),
+        lastMonthSum: parseFloat(s.lastMonthFundingRate),
+        last3MonthsSum: parseFloat(s.last3MonthsFundingRate),
+        // Optional fields: only set if the summary has the data
+        ...(s.last6MonthsFundingRate !== undefined
+          ? { last6MonthsSum: parseFloat(s.last6MonthsFundingRate) }
+          : { last6MonthsSum: undefined }),
+        ...(s.last12MonthsFundingRate !== undefined
+          ? { yearSum: parseFloat(s.last12MonthsFundingRate) }
+          : { yearSum: undefined }),
+      });
     });
-    
-    return Array.from(map.values());
-  }, [currentRates, history]);
+
+    // Filter out items that have neither a valid next funding time nor historical funding data
+    return Array.from(map.values()).filter(item => {
+      const hasNextFunding = item.nextFundingTime !== undefined && item.nextFundingTime > 0;
+      const hasHistory = item.lastFundingRate !== undefined;
+      return hasNextFunding || hasHistory;
+    });
+  }, [currentRates, summaries]);
 
   return { aggregatedData, isLoading };
 }

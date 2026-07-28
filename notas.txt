@@ -1,12 +1,3 @@
-Ideias e melhorias:
-1. DONE. Item de privacidade: incluir icone de olho para privacidade, estilo um togglee para esconder todos os valores monetários de todas as telas. aberto (mostrar valores)/fechado (ocultar valores)
-2. DONE. Incluir indicador de proteção de capital no dashboard exibindo qual o valor protegido e a porcentagem do capital total (posições hedge (inverse) - saldo total) simples e outro mostrando o real considerando tambem o pnl das posições.
-3. DONE. Definir paleta cores padrão de cada corretora para logo, brand, graficos, etc.
-bitget: #03aac7
-bybit: #ff9c2e
-okx: #fafafa branco 
-4. DONE. implementar open positions e open orders em ordem decrescente (mais recente primeiro) ou inplementar um sorting
-5. DONE. verificar logica desnecessaria bitget
-6. DONE. Verificar comportamento de rede e requests mesmo sem apis ativas ou cadastradas
-7. Criar um dashboard para analise de funding fees
-8. Verificar a refatoração do codigo
+Anotações para futuras implementações de Ideias e melhorias:
+27/07/2026
+- Verificar a refatoração do codigo

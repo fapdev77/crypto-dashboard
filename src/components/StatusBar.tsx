@@ -25,8 +25,11 @@ export function StatusBar() {
 
   if (activeKeys.length === 0 && !useMockData) {
     return (
-      <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 text-xs text-gray-500 shrink-0 select-none">
-        Nenhuma conta conectada.
+      <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center justify-between px-4 text-xs text-gray-500 shrink-0 select-none">
+        <span>No connected accounts.</span>
+        <span className="text-xs font-mono text-[#8E9299] flex items-center gap-4 pr-2">
+          <span className="opacity-50 text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
+        </span>
       </div>
     );
   }
@@ -38,19 +41,19 @@ export function StatusBar() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
               <Activity className="w-3.5 h-3.5" />
-              <span>Contas conectadas:</span>
+              <span>Connected accounts:</span>
             </div>
             {useMockData && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-500 text-[10px] font-bold uppercase tracking-widest shrink-0">
-                 <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
-                 Simulation Mode
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+                Simulation Mode!
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-5 flex-wrap">
             {activeKeys.length === 0 && useMockData && (
-              <span className="text-[10px] text-gray-500 italic">Simulando conexões...</span>
+              <span className="text-[10px] text-gray-500 italic">Simulating connections...</span>
             )}
             {Object.entries(exchangeGroups).map(([exchange, xKeysRaw]) => {
               const xKeys = xKeysRaw as typeof keys;
@@ -64,50 +67,51 @@ export function StatusBar() {
                   </div>
                   <div className="flex items-center gap-3">
                     {xKeys.map(key => {
-                    const status = statuses[key.id] || 'disconnected';
-                    const error = errors[key.id];
+                      const status = statuses[key.id] || 'disconnected';
+                      const error = errors[key.id];
 
-                    let bgColorClass = 'bg-gray-500';
-                    let shadowClass = '';
-                    
-                    if (status === 'connected') {
-                      bgColorClass = 'bg-emerald-500';
-                      shadowClass = 'shadow-[0_0_4px_rgba(16,185,129,0.5)]';
-                    } else if (status === 'connecting') {
-                      bgColorClass = 'bg-amber-500 animate-pulse';
-                      shadowClass = 'shadow-[0_0_4px_rgba(245,158,11,0.5)]';
-                    } else if (status === 'error') {
-                      bgColorClass = 'bg-rose-500';
-                      shadowClass = 'shadow-[0_0_4px_rgba(244,63,94,0.5)]';
-                    }
+                      let bgColorClass = 'bg-gray-500';
+                      let shadowClass = '';
 
-                    return (
-                      <AppTooltip
-                        key={key.id}
-                        description={<>
-                          <p className="font-semibold text-white text-sm">{key.label}</p>
-                          <p className={`mt-0.5 text-[11px] capitalize ${status === 'connected' ? 'text-[#00C853]' : status === 'error' ? 'text-rose-400' : 'text-amber-400'}`}>{status}</p>
-                          {error && <p className="mt-1 text-rose-400 max-w-[200px] text-[11px] whitespace-normal leading-tight">{error}</p>}
-                        </>}
-                      >
-                        <div className="cursor-help flex items-center gap-1.5 focus:outline-none">
-                          <div className={`w-2 h-2 rounded-full ${bgColorClass} ${shadowClass} transition-colors`} />
-                          <span className="text-[10px] text-gray-300 font-medium whitespace-nowrap">
-                            {key.label}
-                          </span>
-                        </div>
-                      </AppTooltip>
-                    );
-                  })}
+                      if (status === 'connected') {
+                        bgColorClass = 'bg-emerald-500';
+                        shadowClass = 'shadow-[0_0_4px_rgba(16,185,129,0.5)]';
+                      } else if (status === 'connecting') {
+                        bgColorClass = 'bg-amber-500 animate-pulse';
+                        shadowClass = 'shadow-[0_0_4px_rgba(245,158,11,0.5)]';
+                      } else if (status === 'error') {
+                        bgColorClass = 'bg-rose-500';
+                        shadowClass = 'shadow-[0_0_4px_rgba(244,63,94,0.5)]';
+                      }
+
+                      return (
+                        <AppTooltip
+                          key={key.id}
+                          description={<>
+                            <p className="font-semibold text-white text-sm">{key.label}</p>
+                            <p className={`mt-0.5 text-[11px] capitalize ${status === 'connected' ? 'text-[#00C853]' : status === 'error' ? 'text-rose-400' : 'text-amber-400'}`}>{status}</p>
+                            {error && <p className="mt-1 text-rose-400 max-w-[200px] text-[11px] whitespace-normal leading-tight">{error}</p>}
+                          </>}
+                        >
+                          <div className="cursor-help flex items-center gap-1.5 focus:outline-none">
+                            <div className={`w-2 h-2 rounded-full ${bgColorClass} ${shadowClass} transition-colors`} />
+                            <span className="text-[10px] text-gray-300 font-medium whitespace-nowrap">
+                              {key.label}
+                            </span>
+                          </div>
+                        </AppTooltip>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
               );
             })}
           </div>
         </div>
 
-        <span className="text-xs font-mono text-[#8E9299] flex items-center gap-2 pr-2">
-            <span>Connections: <span className="text-[#00C853]">{activeCount} Active</span></span>
+        <span className="text-xs font-mono text-[#8E9299] flex items-center gap-4 pr-2">
+          <span>Connections: <span className="text-[#00C853]">{activeCount} Active</span></span>
+          <span className="opacity-50 text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
         </span>
       </div>
     </div>
