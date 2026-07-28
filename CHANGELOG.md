@@ -1,10 +1,3 @@
-# [1.3.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.2.0...v1.3.0) (2026-07-28)
-
-
-### Features
-
-* implement fixed UTC sync schedule logic ([72961f8](https://github.com/fapdev77/crypto-dashboard/commit/72961f8c1665a3d6dc0de7c29c9157d8d7017f2e))
-
 # 1.0.0 (2026-07-26)
 
 
