@@ -1,9 +1,9 @@
-# [1.1.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.0.0...v1.1.0) (2026-07-26)
+# [1.2.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.1.0...v1.2.0) (2026-07-27)
 
 
 ### Features
 
-* **sync:** add "Last Sync:" label to timestamp ([5f159b3](https://github.com/fapdev77/crypto-dashboard/commit/5f159b3903fa8be2a818b2bf86f179ef94dd3bdb))
+* **analytics:** add label display to BybitTransactionRow ([89d9fdc](https://github.com/fapdev77/crypto-dashboard/commit/89d9fdc53f578c26ec79a72d535076f2cf750342))
 
 # 1.0.0 (2026-07-26)
 
