@@ -1,10 +1,3 @@
-## [1.3.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.3.0...v1.3.1) (2026-07-30)
-
-
-### Bug Fixes
-
-* prevent division by zero and improve type safety ([69ea493](https://github.com/fapdev77/crypto-dashboard/commit/69ea49375934afcfa742f74bc2f24f0dfa955f23))
-
 # 1.0.0 (2026-07-26)
 
 

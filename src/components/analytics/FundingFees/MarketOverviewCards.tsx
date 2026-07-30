@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   BarChart3, TrendingUp, TrendingDown, Activity,
-  Flame, Snowflake, Layers, ChevronDown, ChevronRight,
+  Flame, Snowflake, Layers, ChevronDown, ChevronRight, Loader2
 } from 'lucide-react';
 import { MarketMetrics, Rankings } from '../../../hooks/useKpiMetrics';
 import { KpiRankingList } from './KpiRankingList';
@@ -11,6 +11,7 @@ interface MarketOverviewCardsProps {
   marketMetrics: MarketMetrics;
   rankings: Rankings;
   className?: string;
+  isSyncing?: boolean;
 }
 
 const formatPercent = (val: number): string => val.toFixed(4) + '%';
@@ -22,6 +23,7 @@ export const MarketOverviewCards = ({
   marketMetrics,
   rankings,
   className = '',
+  isSyncing = false,
 }: MarketOverviewCardsProps) => {
   const [expanded, setExpanded] = useState(() => {
     return localStorage.getItem(STORAGE_KEY) !== 'false';
@@ -37,7 +39,7 @@ export const MarketOverviewCards = ({
     <div className={`bg-[#151619] border border-[#2a2b30] rounded-xl ${className}`}>
       {/* ── Toggle Header ── */}
       <div
-        className="flex items-center justify-between px-6 py-3 cursor-pointer bg-[#1A1C20] hover:bg-[#202226] transition-colors select-none"
+        className="relative flex items-center justify-between px-6 py-3 cursor-pointer bg-[#1A1C20] hover:bg-[#202226] transition-colors select-none overflow-hidden"
         onClick={() => setExpanded(prev => !prev)}
         role="button"
         tabIndex={0}
@@ -56,6 +58,13 @@ export const MarketOverviewCards = ({
             ({marketMetrics.totalSymbols} symbols · {rankings.topPayers.length} top / {rankings.bottomPayers.length} bottom)
           </span>
         </div>
+
+        {isSyncing && (
+           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-xs font-medium animate-pulse">
+             <Loader2 className="w-3 h-3 animate-spin" />
+             Please wait, rates update in progress...
+           </div>
+        )}
 
         {/* Mini preview when collapsed */}
         {!expanded && (
