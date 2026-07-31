@@ -1,3 +1,4 @@
+import { useSettingsStore } from '../../store/settingsStore';
 import Big from 'big.js';
 import { BybitTransactionLogEntry } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';

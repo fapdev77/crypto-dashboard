@@ -219,6 +219,11 @@ async function syncExchange(
   onProgress(0, `${exchange}: ${totalStale} symbols to sync...`);
 
   await asyncPool(staleRates, CONCURRENCY[exchange], async (rate) => {
+    // ABORT IF MOCK DATA WAS TOGGLED ON MID-SYNC
+    if (useSettingsStore.getState().useMockData) {
+      errors++;
+      return;
+    }
     const symbolStartMs = performance.now();
 
     try {
@@ -368,6 +373,7 @@ export function useFundingSync() {
     try {
       const results: CurrentFundingRate[] = [];
       for (const ex of EXCHANGES) {
+        if (useSettingsStore.getState().useMockData) return;
         try {
           const rates = await FundingService.fetchCurrentFundingRates(ex);
           results.push(...rates);
@@ -379,7 +385,9 @@ export function useFundingSync() {
       // Only overwrite if we got at least some data; otherwise keep the stale
       // snapshot so scheduleNextAutoSync() can still work on the next tick.
       if (results.length > 0) {
-        useFundingStore.setState({ currentRates: results });
+        if (!useSettingsStore.getState().useMockData) {
+          useFundingStore.setState({ currentRates: results });
+        }
       }
     } finally {
       fetchingRef.current = false;
@@ -540,6 +548,10 @@ export function useFundingSync() {
 
   // Expose manual trigger (enforces singleton + restart-rest logic)
   const forceSync = useCallback(async () => {
+    if (useMockData) {
+      LogManager.info('FundingSync', 'Mock mode active, skipping manual sync.');
+      return;
+    }
     // If a sync is already running, flag a restart instead of silently ignoring
     if (syncInProgressRef.current) {
       LogManager.info('FundingSync', 'Sync already in progress — will restart after completion');

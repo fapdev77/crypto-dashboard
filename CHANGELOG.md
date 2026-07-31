@@ -1,10 +1,3 @@
-# [1.7.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.6.0...v1.7.0) (2026-07-31)
-
-
-### Features
-
-* add funding fees dashboard and audit tools ([d33acbb](https://github.com/fapdev77/crypto-dashboard/commit/d33acbb1affbf3986caad382bf33971c9a4f6235))
-
 # 1.0.0 (2026-07-26)
 
 
