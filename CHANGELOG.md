@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.8.0...v1.9.0) (2026-07-31)
+
+
+### Features
+
+* add security and backup management ([6d83504](https://github.com/fapdev77/crypto-dashboard/commit/6d8350496fc89f9b6b3d4af2ff32917828498ead))
+
 # 1.0.0 (2026-07-26)
 
 
