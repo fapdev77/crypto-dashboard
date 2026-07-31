@@ -187,6 +187,7 @@ export function ExportImportKeysModal({ isOpen, onClose }: ExportImportKeysModal
         setLocalPassphrase('');
         setLocalSecurityError('');
         onClose();
+        window.location.reload();
       } catch (err) {
         setLocalSecurityError('Invalid passphrase');
       }
@@ -199,6 +200,7 @@ export function ExportImportKeysModal({ isOpen, onClose }: ExportImportKeysModal
       setLocalPassphrase('');
       setLocalSecurityError('');
       onClose();
+      window.location.reload();
     }
   };
 
