@@ -1,10 +1,3 @@
-# [1.6.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.5.0...v1.6.0) (2026-07-31)
-
-
-### Features
-
-* **security:** implement global encryption unlock screen ([d965ad8](https://github.com/fapdev77/crypto-dashboard/commit/d965ad86de13420e0cbdf780a35bdd7cc8582598))
-
 # 1.0.0 (2026-07-26)
 
 

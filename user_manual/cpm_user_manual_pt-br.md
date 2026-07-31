@@ -97,9 +97,13 @@ Monitoramento em tempo real de suas posições ativas de derivativos (Futuros):
 - **Preço de Liquidação e Margem**: Alertas visuais mudam de cor conforme a posição se aproxima do preço de liquidação.
 - **Coin Icon Auto-Fallback**: Componente unificado que categoriza e renderiza o logo correto de cada criptoativo com fallbacks dinâmicos.
 
-### 📂 Closed Positions & Order History (Históricos)
+### 📂 Closed Positions (Histórico de Posições)
 - **Análise Estatística**: Exibe métricas de desempenho chave como **Win Rate %**, **Profit Factor**, Médias de Ganho/Perda e Maior Trade Executado.
-- **Histórico de Ordens**: Tabela interativa com busca regex avançada local, permitindo expandir linhas para ver as taxas operacionais (fees) pagas à corretora.
+- **Auditoria de PnL**: Visualize o PnL final consolidado por posição, tempo em que a posição ficou aberta e taxa de ROE%.
+
+### 📝 Order Reports (Ordens Abertas e Histórico de Ordens)
+- **Open Orders**: Monitore todas as suas ordens pendentes (Limit, Stop Loss, Take Profit) através de uma tabela consolidada, visualizando o status atual, quantidades e gatilhos de preço em tempo real.
+- **Order History**: Tabela interativa com busca regex avançada local para todas as ordens já preenchidas ou canceladas, permitindo expandir linhas para ver detalhes de execução.
 
 ### 🔄 Trade History (Histórico de Execuções)
 Uma visualização detalhada de todas as execuções de ordens e trades preenchidos nas corretoras.
