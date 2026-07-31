@@ -1,10 +1,3 @@
-# [1.8.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.7.0...v1.8.0) (2026-07-31)
-
-
-### Features
-
-* **funding:** add mock data support to funding module ([b4ae91f](https://github.com/fapdev77/crypto-dashboard/commit/b4ae91f1f59b24f029434098ea4b9e3c7f2dd1ed))
-
 # 1.0.0 (2026-07-26)
 
 

@@ -42,6 +42,28 @@ export default function App() {
 
   const { isEncrypted, isUnlocked } = useApiKeysStore();
 
+  // Listen for global tab navigation requests
+  useEffect(() => {
+    const handleNavigate = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      setActiveTab(customEvent.detail);
+      if (customEvent.detail === 'settings') {
+        setTimeout(() => {
+          const el = document.getElementById('security-settings-card');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]');
+            setTimeout(() => {
+              el.classList.remove('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]');
+            }, 3000);
+          }
+        }, 150);
+      }
+    };
+    window.addEventListener('navigate-to-tab', handleNavigate);
+    return () => window.removeEventListener('navigate-to-tab', handleNavigate);
+  }, []);
+
   // Trigger welcome modal on app load if enabled
   useEffect(() => {
     const shouldShow = useSettingsStore.getState().showWelcomeOnStartup;

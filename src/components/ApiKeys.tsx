@@ -6,7 +6,6 @@ import { clearConnectionData } from '../store/crossStoreCleanup';
 import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { ApiKeyModal } from './ApiKeyModal';
-import { ExportImportKeysModal } from './ExportImportKeysModal';
 import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 
@@ -25,8 +24,6 @@ export function ApiKeys() {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedKey, setSelectedKey] = useState<ApiCredentials | undefined>();
   const [keyToDelete, setKeyToDelete] = useState<string | null>(null);
-
-  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     bitget: false,
@@ -69,11 +66,11 @@ export function ApiKeys() {
             <h2 className="text-xl font-medium text-white">API Connections and status:</h2>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setExportModalOpen(true)}
+                onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'settings' }))}
                 className="flex items-center gap-2 py-2 px-3 bg-[#1a1b1e] border border-[#2a2b30] hover:bg-[#202125] text-white text-sm font-medium rounded-lg transition-colors shrink-0"
               >
                 <Shield className="w-4 h-4 text-[#2F6BFF]" />
-                <span className="hidden sm:inline">Security & Backup</span>
+                <span className="hidden sm:inline">API Key Import/Export</span>
               </button>
               <div className="flex items-center gap-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-1">
                 <button
@@ -236,10 +233,6 @@ export function ApiKeys() {
         onClose={() => setModalOpen(false)}
         mode={modalMode}
         existingKey={selectedKey}
-      />
-      <ExportImportKeysModal
-        isOpen={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
       />
     </div>
   );
