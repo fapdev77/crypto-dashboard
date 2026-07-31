@@ -1,10 +1,3 @@
-# [1.4.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.3.1...v1.4.0) (2026-07-30)
-
-
-### Features
-
-* **analytics:** add syncing indicator to dashboard components ([87c664f](https://github.com/fapdev77/crypto-dashboard/commit/87c664fc9e9d30ff5f7af3efb74eb978a2d0c8c1))
-
 # 1.0.0 (2026-07-26)
 
 

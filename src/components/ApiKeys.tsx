@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Plus, Power, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Power, Edit2, Trash2, ShieldAlert, Shield, Unlock } from 'lucide-react';
 import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
 import { useConnectionStore } from '../store/connectionStore';
 import { clearConnectionData } from '../store/crossStoreCleanup';
 import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { ApiKeyModal } from './ApiKeyModal';
+import { ExportImportKeysModal } from './ExportImportKeysModal';
 import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 
@@ -16,7 +17,7 @@ const EXCHANGES: { id: Exchange; name: string }[] = [
 ];
 
 export function ApiKeys() {
-  const { keys, toggleKey, removeKey } = useApiKeysStore();
+  const { keys, isEncrypted, isUnlocked, unlock, toggleKey, removeKey } = useApiKeysStore();
   const { statuses } = useConnectionStore();
   const useMockData = useSettingsStore(state => state.useMockData);
 
@@ -24,6 +25,11 @@ export function ApiKeys() {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedKey, setSelectedKey] = useState<ApiCredentials | undefined>();
   const [keyToDelete, setKeyToDelete] = useState<string | null>(null);
+
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  
+  const [unlockPassphrase, setUnlockPassphrase] = useState('');
+  const [unlockError, setUnlockError] = useState('');
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     bitget: false,
@@ -57,6 +63,55 @@ export function ApiKeys() {
     setModalOpen(true);
   };
 
+  const handleUnlock = async () => {
+    if (!unlockPassphrase) return;
+    const success = await unlock(unlockPassphrase);
+    if (!success) {
+      setUnlockError('Incorrect passphrase or corrupted data.');
+    } else {
+      setUnlockError('');
+      setUnlockPassphrase('');
+    }
+  };
+
+  if (isEncrypted && !isUnlocked) {
+    return (
+      <div className="flex flex-col h-full bg-[#111216] overflow-hidden rounded-xl border border-[#2a2b30] items-center justify-center">
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-8 max-w-sm w-full shadow-2xl">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 bg-[#FF4444]/10 rounded-full">
+              <ShieldAlert className="w-8 h-8 text-[#FF4444]" />
+            </div>
+          </div>
+          <h2 className="text-xl font-medium text-white text-center mb-2">Encrypted Storage</h2>
+          <p className="text-sm text-[#8E9299] text-center mb-6">
+            Your API keys are encrypted locally. Please enter your passphrase to unlock them.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={unlockPassphrase}
+                onChange={(e) => setUnlockPassphrase(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#2F6BFF]"
+                placeholder="Enter passphrase"
+              />
+              {unlockError && <p className="text-[#FF4444] text-xs mt-1">{unlockError}</p>}
+            </div>
+            <button
+              onClick={handleUnlock}
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white font-medium rounded-lg transition-colors"
+            >
+              <Unlock className="w-4 h-4" />
+              Unlock Keys
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-[#111216] overflow-hidden rounded-xl border border-[#2a2b30]">
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6">
@@ -65,6 +120,13 @@ export function ApiKeys() {
           <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
             <h2 className="text-xl font-medium text-white">API Connections and status:</h2>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setExportModalOpen(true)}
+                className="flex items-center gap-2 py-2 px-3 bg-[#1a1b1e] border border-[#2a2b30] hover:bg-[#202125] text-white text-sm font-medium rounded-lg transition-colors shrink-0"
+              >
+                <Shield className="w-4 h-4 text-[#2F6BFF]" />
+                <span className="hidden sm:inline">Security & Backup</span>
+              </button>
               <div className="flex items-center gap-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-1">
                 <button
                   onClick={expandAll}
@@ -226,6 +288,10 @@ export function ApiKeys() {
         onClose={() => setModalOpen(false)}
         mode={modalMode}
         existingKey={selectedKey}
+      />
+      <ExportImportKeysModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
       />
     </div>
   );
