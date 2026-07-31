@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.4.0...v1.5.0) (2026-07-31)
+
+
+### Features
+
+* add encryption support to API key store ([9822c72](https://github.com/fapdev77/crypto-dashboard/commit/9822c7244b2827a51a33e3da0e87ee3ad8146e66))
+
 # 1.0.0 (2026-07-26)
 
 
