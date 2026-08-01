@@ -41,15 +41,19 @@ export function StatusBar() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-xs font-medium border-r border-[#1f2937]/50 pr-4 mr-1">
               {isEncrypted ? (
+                <>
                 <div className="flex items-center gap-1.5 text-[#00C853] bg-[#00C853]/10 px-2 py-0.5 rounded border border-[#00C853]/20">
                   <Lock className="w-3.5 h-3.5" />
-                  <span>Encryption: ON</span>
                 </div>
+                  <span className="text-gray-500">Encryption: </span> <span className="text-white">ON</span>
+                </>
               ) : (
-                <div className="flex items-center gap-1.5 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                <>
+                <div className="flex items-center gap-1.5 text-amber-500 font-semibold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                   <Unlock className="w-3.5 h-3.5" />
-                  <span>Encryption: OFF</span>
                 </div>
+                <span className="text-gray-500">Encryption: </span> <span className="text-white">OFF</span>
+                </>
               )}
             </div>
             <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
