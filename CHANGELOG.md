@@ -1,10 +1,3 @@
-## [1.9.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.9.0...v1.9.1) (2026-08-01)
-
-
-### Bug Fixes
-
-* use UTC hours for date range calculations ([f98c50f](https://github.com/fapdev77/crypto-dashboard/commit/f98c50fabc97aa0e6ca037d598daa1728a6d90f8))
-
 # 1.0.0 (2026-07-26)
 
 

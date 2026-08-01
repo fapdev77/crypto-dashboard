@@ -71,7 +71,7 @@ export const KpiRankingList = ({
                     </span>
                   )}
                 </div>
-                <span className={`text-xs font-mono font-medium ${textColor} shrink-0 ml-2`}>
+                <span className={`text-xs font-mono font-medium shrink-0 ml-2 ${item.rate > 0 ? 'text-green-400' : item.rate < 0 ? 'text-red-400' : 'text-gray-400'}`}>
                   {formatRate(item.rate)}
                 </span>
               </div>
