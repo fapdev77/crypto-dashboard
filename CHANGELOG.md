@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.10.0...v1.11.0) (2026-08-03)
+
+
+### Features
+
+* add USD calculation state to Bybit transactions ([bf00431](https://github.com/fapdev77/crypto-dashboard/commit/bf004318944eeb89ce3bb5a2573211a6a5248658))
+
 # 1.0.0 (2026-07-26)
 
 
