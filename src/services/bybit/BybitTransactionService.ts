@@ -297,6 +297,8 @@ export class BybitTransactionService {
 
     const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD'].includes(currency.toUpperCase());
 
+    const latestBalance: Record<string, { time: number; balance: Big }> = {};
+
     for (const e of entries) {
       typeBreakdown[e.type] = (typeBreakdown[e.type] || 0) + 1;
 
@@ -307,20 +309,22 @@ export class BybitTransactionService {
       bucket.totalFees = bucket.totalFees.plus(new Big(e.fee || '0'));
       bucket.totalCashFlow = bucket.totalCashFlow.plus(new Big(e.cashFlow || '0'));
       bucket.totalChange = bucket.totalChange.plus(new Big(e.change || '0'));
+
+      const balKey = `${e.connectionId}-${e.currency}`;
+      if (!latestBalance[balKey] || e.transactionTime > latestBalance[balKey].time) {
+        latestBalance[balKey] = { time: e.transactionTime, balance: new Big(e.cashBalance || '0') };
+      }
     }
 
-    // Final balance is cashBalance of the most recent entry per currency
-    const stableEntries = entries.filter(e => isStable(e.currency));
-    if (stableEntries.length > 0) {
-      const sorted = [...stableEntries].sort((a, b) => b.transactionTime - a.transactionTime);
-      stable.finalBalance = new Big(sorted[0].cashBalance || '0');
-    }
-
-    for (const currency of Object.keys(perCurrency)) {
-      const currencyEntries = entries.filter(e => e.currency === currency);
-      if (currencyEntries.length > 0) {
-        const sorted = [...currencyEntries].sort((a, b) => b.transactionTime - a.transactionTime);
-        perCurrency[currency].finalBalance = new Big(sorted[0].cashBalance || '0');
+    for (const [key, data] of Object.entries(latestBalance)) {
+      const dashIndex = key.lastIndexOf('-');
+      const currency = key.substring(dashIndex + 1);
+      if (!currency) continue;
+      
+      if (isStable(currency)) {
+        stable.finalBalance = stable.finalBalance.plus(data.balance);
+      } else if (perCurrency[currency]) {
+        perCurrency[currency].finalBalance = perCurrency[currency].finalBalance.plus(data.balance);
       }
     }
 
