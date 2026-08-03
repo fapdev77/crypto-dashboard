@@ -25,15 +25,31 @@ export function StatusBar() {
 
   if (activeKeys.length === 0 && !useMockData) {
     return (
-      <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center justify-between px-4 text-xs text-gray-500 shrink-0 select-none">
-        <span>No connected accounts.</span>
-        <span className="text-xs font-mono text-[#8E9299] flex items-center gap-4 pr-2">
-          <span className="opacity-50 text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
+      <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 text-xs text-gray-500 shrink-0 select-none">
+        {isEncrypted ? (
+          <>
+            <div className="flex items-center gap-1.5 text-[#00C853] bg-[#00C853]/10 px-2 py-0.5 rounded border border-[#00C853]/20">
+              <Lock className="w-3.5 h-3.5" />
+            </div>
+            <span className="text-gray-500 ml-1.5">Encryption: </span>
+            <span className="text-white ml-1">ON</span>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-1.5 text-amber-500 font-semibold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+              <Unlock className="w-3.5 h-3.5" />
+            </div>
+            <span className="text-gray-500 ml-1.5">Encryption: </span>
+            <span className="text-white ml-1">OFF</span>
+          </>
+        )}
+        <span className="ml-4">No connected accounts.</span>
+        <span className="text-xs font-mono text-white flex items-center pr-2 ml-auto">
+          <span className="text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
         </span>
       </div>
     );
   }
-
   return (
     <div className="min-h-8 py-1 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 flex-wrap shrink-0 select-none">
       <div className="flex items-center justify-between gap-6 w-full">
@@ -42,17 +58,17 @@ export function StatusBar() {
             <div className="flex items-center gap-1.5 text-xs font-medium border-r border-[#1f2937]/50 pr-4 mr-1">
               {isEncrypted ? (
                 <>
-                <div className="flex items-center gap-1.5 text-[#00C853] bg-[#00C853]/10 px-2 py-0.5 rounded border border-[#00C853]/20">
-                  <Lock className="w-3.5 h-3.5" />
-                </div>
+                  <div className="flex items-center gap-1.5 text-[#00C853] bg-[#00C853]/10 px-2 py-0.5 rounded border border-[#00C853]/20">
+                    <Lock className="w-3.5 h-3.5" />
+                  </div>
                   <span className="text-gray-500">Encryption: </span> <span className="text-white">ON</span>
                 </>
               ) : (
                 <>
-                <div className="flex items-center gap-1.5 text-amber-500 font-semibold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                  <Unlock className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-gray-500">Encryption: </span> <span className="text-white">OFF</span>
+                  <div className="flex items-center gap-1.5 text-amber-500 font-semibold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                    <Unlock className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-gray-500">Encryption: </span> <span className="text-white">OFF</span>
                 </>
               )}
             </div>
@@ -128,7 +144,9 @@ export function StatusBar() {
 
         <span className="text-xs font-mono text-[#8E9299] flex items-center gap-4 pr-2">
           <span>Connections: <span className="text-[#00C853]">{activeCount} Active</span></span>
-          <span className="opacity-50 text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
+          <span className="text-xs font-mono text-white flex items-center pr-2 ml-auto">
+            <span className="text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
+          </span>
         </span>
       </div>
     </div>
