@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.9.1...v1.10.0) (2026-08-03)
+
+
+### Features
+
+* **analytics:** aggregate funding in USD ([8589d09](https://github.com/fapdev77/crypto-dashboard/commit/8589d09025f7b8d369f1b5a9d9f8780f41d14ae5))
+
 # 1.0.0 (2026-07-26)
 
 
