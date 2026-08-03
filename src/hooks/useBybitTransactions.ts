@@ -7,6 +7,8 @@ import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { BybitTransactionService } from '../services/bybit/BybitTransactionService';
 import { getBybitTxLogCache } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
+import { fetchTokenUsdPrice } from './useTokenUsdPrice';
+import Big from 'big.js';
 
 export interface TxFilters {
   search: string;
@@ -37,19 +39,28 @@ export interface CurrencyStats {
 export interface TxStats {
   totalCount: number;
   typeBreakdown: Record<string, number>;
-  /** Aggregated stablecoin values (USDT, USDC) — used for USD display */
+  /** Aggregated stablecoin values (USDT, USDC) */
   stable: CurrencyStats;
   /** Per-currency breakdown for non-stable coins (BTC, ETH, etc.) */
   perCurrency: Record<string, CurrencyStats>;
+  /** 
+   * Grand total in USD (combines stable + dynamically fetched prices for non-stable).
+   * Note: uses CURRENT market price, not historical transaction price.
+   */
+  aggregatedUsd: CurrencyStats;
 }
 
 export function useBybitTransactions(filters: TxFilters = defaultFilters) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
   const syncStore = useSyncCoordinatorStore();
+
   const [entries, setEntries] = useState<BybitTransactionLogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // State to hold the current USD rates of non-stable currencies
+  const [tokenRates, setTokenRates] = useState<Record<string, number>>({});
 
   // Load from cache (or mock data) + sync in background
   useEffect(() => {
@@ -84,8 +95,9 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
           const cached = await getBybitTxLogCache(key.id);
           allEntries.push(...cached);
         }
-        allEntries.sort((a, b) => b.transactionTime - a.transactionTime);
 
+        allEntries.sort((a, b) => b.transactionTime - a.transactionTime);
+        
         if (isMounted) {
           setEntries(allEntries);
           useSyncCoordinatorStore.getState().setCachedTxLog(allEntries as any);
@@ -127,16 +139,73 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
     });
   }, [entries, filters]);
 
-  // Compute stats
-  const stats = useMemo<TxStats>(() => {
-    const raw = BybitTransactionService.computeStats(filteredEntries);
-    return {
-      totalCount: raw.totalCount,
-      typeBreakdown: raw.typeBreakdown,
-      stable: raw.stable,
-      perCurrency: raw.perCurrency,
-    };
+  // Compute raw stats
+  const rawStats = useMemo(() => {
+    return BybitTransactionService.computeStats(filteredEntries);
   }, [filteredEntries]);
+
+  // Fetch prices for any non-stable currencies we have in rawStats.perCurrency
+  useEffect(() => {
+    let isMounted = true;
+    const currencies = Object.keys(rawStats.perCurrency);
+    
+    if (currencies.length === 0) return;
+
+    const fetchRates = async () => {
+      const newRates = { ...tokenRates };
+      let updated = false;
+
+      for (const ccy of currencies) {
+        if (newRates[ccy] === undefined) {
+          const price = await fetchTokenUsdPrice(ccy);
+          if (price !== null) {
+            newRates[ccy] = price;
+            updated = true;
+          }
+        }
+      }
+
+      if (isMounted && updated) {
+        setTokenRates(newRates);
+      }
+    };
+
+    fetchRates();
+    // We intentionally only depend on the keys of perCurrency, not the whole object, to avoid refetches
+  }, [Object.keys(rawStats.perCurrency).join(',')]); 
+
+  // Combine raw stats with dynamic USD equivalents
+  const stats = useMemo<TxStats>(() => {
+    let totalFundingUsd = new Big(rawStats.stable.totalFunding);
+    let totalFeesUsd = new Big(rawStats.stable.totalFees);
+    let totalCashFlowUsd = new Big(rawStats.stable.totalCashFlow);
+    let totalChangeUsd = new Big(rawStats.stable.totalChange);
+    let finalBalanceUsd = new Big(rawStats.stable.finalBalance);
+
+    for (const [ccy, vals] of Object.entries(rawStats.perCurrency)) {
+      const rate = tokenRates[ccy] || 0; // If rate isn't loaded yet, it contributes 0 to USD
+      
+      totalFundingUsd = totalFundingUsd.plus(new Big(vals.totalFunding).times(rate));
+      totalFeesUsd = totalFeesUsd.plus(new Big(vals.totalFees).times(rate));
+      totalCashFlowUsd = totalCashFlowUsd.plus(new Big(vals.totalCashFlow).times(rate));
+      totalChangeUsd = totalChangeUsd.plus(new Big(vals.totalChange).times(rate));
+      finalBalanceUsd = finalBalanceUsd.plus(new Big(vals.finalBalance).times(rate));
+    }
+
+    return {
+      totalCount: rawStats.totalCount,
+      typeBreakdown: rawStats.typeBreakdown,
+      stable: rawStats.stable,
+      perCurrency: rawStats.perCurrency,
+      aggregatedUsd: {
+        totalFunding: totalFundingUsd.toString(),
+        totalFees: totalFeesUsd.toString(),
+        totalCashFlow: totalCashFlowUsd.toString(),
+        totalChange: totalChangeUsd.toString(),
+        finalBalance: finalBalanceUsd.toString(),
+      }
+    };
+  }, [rawStats, tokenRates]);
 
   return {
     entries,

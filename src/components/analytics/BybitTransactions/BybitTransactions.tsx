@@ -169,18 +169,18 @@ export function BybitTransactions() {
             </div>
           </div>
 
-          {/* Card 2: Total Funding (stable only) */}
+          {/* Card 2: Total Funding (aggregated USD) */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-[#00C853] shrink-0" />
-              <AppTooltip description="Sum of funding fees in USD stablecoins (USDT/USDC). Non-stable values shown separately.">
+              <AppTooltip description="Sum of funding fees in USD (combines stablecoins and real-time USD equivalent of non-stables).">
                 <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
                   Total Funding (USD)
                 </span>
               </AppTooltip>
             </div>
-            <span className={`text-xl font-bold ${new Big(stats.stable.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-              {maskVal(stats.stable.totalFunding)} USD
+            <span className={`text-xl font-bold ${new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+              {maskVal(stats.aggregatedUsd.totalFunding)} USD
             </span>
             {Object.entries(stats.perCurrency).length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
@@ -194,23 +194,23 @@ export function BybitTransactions() {
               </div>
             )}
             <span className="text-[10px] text-[#8E9299] mt-1">
-              Funding {new Big(stats.stable.totalFunding).gte(0) ? 'received' : 'paid'}
+              Funding {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'received' : 'paid'}
             </span>
           </div>
 
-          {/* Card 3: Total Fees (stable only) */}
+          {/* Card 3: Total Fees (aggregated USD) */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="w-4 h-4 text-[#FF4444] shrink-0" />
-              <AppTooltip description="Sum of trading fees in USD stablecoins (USDT/USDC). Non-stable values shown separately.">
+              <AppTooltip description="Sum of trading fees in USD (combines stablecoins and real-time USD equivalent of non-stables).">
                 <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
                   Total Fees (USD)
                 </span>
               </AppTooltip>
             </div>
-            <span className={`text-xl font-bold ${new Big(stats.stable.totalFees).gte(0) ? 'text-[#FF4444]' : 'text-[#00C853]'}`}>
+            <span className={`text-xl font-bold ${new Big(stats.aggregatedUsd.totalFees).gte(0) ? 'text-[#FF4444]' : 'text-[#00C853]'}`}>
               {(() => {
-                const feeBig = new Big(stats.stable.totalFees);
+                const feeBig = new Big(stats.aggregatedUsd.totalFees);
                 if (feeBig.abs().toString() === '0') return '0.00 USD';
                 if (feeBig.gte(0)) return `-${maskVal(feeBig.toString())} USD`;
                 return `+${maskVal(feeBig.abs().toString())} USD`;
@@ -236,22 +236,22 @@ export function BybitTransactions() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-2">
             <div className="flex items-center gap-2">
               <Wallet className="w-4 h-4 text-[#8E9299] shrink-0" />
-              <AppTooltip description="Net change and wallet balance in USD stablecoins. Non-stable balances shown separately.">
+              <AppTooltip description="Net change in USD (stablecoins + non-stables value).">
                 <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
                   Net Change (USD)
                 </span>
               </AppTooltip>
             </div>
-            <span className={`text-lg font-bold ${new Big(stats.stable.totalChange).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-              {maskVal(stats.stable.totalChange)} USD
+            <span className={`text-lg font-bold ${new Big(stats.aggregatedUsd.totalChange).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+              {maskVal(stats.aggregatedUsd.totalChange)} USD
             </span>
             <div className="border-t border-[#2a2b30] pt-2 flex flex-col">
-              <AppTooltip description="Wallet balance after the most recent stablecoin transaction.">
+              <AppTooltip description="Aggregated final wallet balance across currencies.">
                 <span className="text-[9px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
                   Wallet Balance (USD)
                 </span>
               </AppTooltip>
-              <span className="text-[13px] font-bold text-white mt-0.5">{maskVal(stats.stable.finalBalance)} USD</span>
+              <span className="text-[13px] font-bold text-white mt-0.5">{maskVal(stats.aggregatedUsd.finalBalance)} USD</span>
               {Object.entries(stats.perCurrency).length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1">
                   {Object.entries(stats.perCurrency).map(([cur, vals]) => (
