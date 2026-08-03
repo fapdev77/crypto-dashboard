@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Big from 'big.js';
-import { FileText, Download, ChevronDown, Activity, TrendingUp, CreditCard, Wallet } from 'lucide-react';
+import { FileText, Download, ChevronDown, Activity, TrendingUp, CreditCard, Wallet, Loader2 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useBybitTransactions, TxFilters } from '../../../hooks/useBybitTransactions';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
@@ -27,7 +27,7 @@ export function BybitTransactions() {
 
   // ── Refresh animation indicator key ──
   const filterMonitorKey = `${filters.category}-${filters.type}-${filters.currency}-${filters.accountId}-${filters.timePeriod}`;
-  const { filteredEntries, isLoading, isSyncing, progress, error, stats } = useBybitTransactions(filters);
+  const { filteredEntries, isLoading, isSyncing, isCalculatingUsd, progress, error, stats } = useBybitTransactions(filters);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -193,9 +193,19 @@ export function BybitTransactions() {
                 ))}
               </div>
             )}
-            <span className="text-[10px] text-[#8E9299] mt-1">
-              Funding {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'received' : 'paid'}
-            </span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] text-[#8E9299]">
+                Funding {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'received' : 'paid'}
+              </span>
+              {isCalculatingUsd && (
+                <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
+                  <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Calculating USD...
+                  </span>
+                </AppTooltip>
+              )}
+            </div>
           </div>
 
           {/* Card 3: Total Fees (aggregated USD) */}
@@ -227,9 +237,19 @@ export function BybitTransactions() {
                 ))}
               </div>
             )}
-            <span className="text-[10px] text-[#8E9299] mt-1">
-              Trading fees paid
-            </span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] text-[#8E9299]">
+                Trading fees paid
+              </span>
+              {isCalculatingUsd && (
+                <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
+                  <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Calculating USD...
+                  </span>
+                </AppTooltip>
+              )}
+            </div>
           </div>
 
           {/* Card 4: Net Change + Wallet Balance */}
@@ -246,11 +266,13 @@ export function BybitTransactions() {
               {maskVal(stats.aggregatedUsd.totalChange)} USD
             </span>
             <div className="border-t border-[#2a2b30] pt-2 flex flex-col">
-              <AppTooltip description="Aggregated final wallet balance across currencies.">
-                <span className="text-[9px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
-                  Wallet Balance (USD)
-                </span>
-              </AppTooltip>
+              <div className="flex items-center gap-2">
+                <AppTooltip description="Aggregated final wallet balance across currencies.">
+                  <span className="text-[9px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
+                    Wallet Balance (USD)
+                  </span>
+                </AppTooltip>
+              </div>
               <span className="text-[13px] font-bold text-white mt-0.5">{maskVal(stats.aggregatedUsd.finalBalance)} USD</span>
               {Object.entries(stats.perCurrency).length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1">

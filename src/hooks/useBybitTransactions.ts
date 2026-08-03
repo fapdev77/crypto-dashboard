@@ -61,6 +61,7 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
   
   // State to hold the current USD rates of non-stable currencies
   const [tokenRates, setTokenRates] = useState<Record<string, number>>({});
+  const [isCalculatingUsd, setIsCalculatingUsd] = useState(false);
 
   // Load from cache (or mock data) + sync in background
   useEffect(() => {
@@ -149,25 +150,42 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
     let isMounted = true;
     const currencies = Object.keys(rawStats.perCurrency);
     
-    if (currencies.length === 0) return;
+    if (currencies.length === 0) {
+      if (isCalculatingUsd) setIsCalculatingUsd(false);
+      return;
+    }
 
     const fetchRates = async () => {
+      // Find currencies we don't have rates for yet
+      const missingCurrencies = currencies.filter(ccy => tokenRates[ccy] === undefined);
+      
+      if (missingCurrencies.length === 0) {
+        if (isMounted) setIsCalculatingUsd(false);
+        return;
+      }
+
+      if (isMounted) setIsCalculatingUsd(true);
+
+      const promises = missingCurrencies.map(ccy => fetchTokenUsdPrice(ccy));
+      const results = await Promise.all(promises);
+
+      if (!isMounted) return;
+
       const newRates = { ...tokenRates };
       let updated = false;
 
-      for (const ccy of currencies) {
-        if (newRates[ccy] === undefined) {
-          const price = await fetchTokenUsdPrice(ccy);
-          if (price !== null) {
-            newRates[ccy] = price;
-            updated = true;
-          }
+      missingCurrencies.forEach((ccy, index) => {
+        const price = results[index];
+        if (price !== null) {
+          newRates[ccy] = price;
+          updated = true;
         }
-      }
+      });
 
-      if (isMounted && updated) {
+      if (updated) {
         setTokenRates(newRates);
       }
+      setIsCalculatingUsd(false);
     };
 
     fetchRates();
@@ -212,6 +230,7 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
     filteredEntries,
     isLoading,
     isSyncing: syncStore.isBybitTxSyncing,
+    isCalculatingUsd,
     progress: syncStore.bybitTxProgress,
     error,
     stats,
