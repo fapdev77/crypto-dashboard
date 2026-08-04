@@ -8,7 +8,7 @@ import { CoinIcon } from '../../ui/CoinIcon';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { ChevronDown, ChevronUp, Hash, FileText, Percent, Gift } from 'lucide-react';
-import { TX_TYPES } from './BybitTransactionFilters';
+import { TX_TYPES, typeColorMap } from './BybitTransactionFilters';
 
 interface Props {
   entry: BybitTransactionLogEntry;
@@ -79,30 +79,6 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
     return `≈ ${formatCurrency(usdVal.toNumber(), 'usd')}`;
   };
 
-  const typeColorMap: Record<string, string> = {
-    TRADE: 'text-[#2F6BFF] bg-[#2F6BFF]/10 border-[#2F6BFF]/20',
-    SETTLEMENT: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-    DELIVERY: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
-    LIQUIDATION: 'text-[#FF4444] bg-[#FF4444]/10 border-[#FF4444]/20',
-    BONUS: 'text-[#00C853] bg-[#00C853]/10 border-[#00C853]/20',
-    TRANSFER: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20',
-    TRANSFER_IN: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20',
-    TRANSFER_OUT: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20',
-    SPOT: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20',
-    FEE_REFUND: 'text-green-400 bg-green-400/10 border-green-400/20',
-    AUTO_DEDUCTION: 'text-[#FF4444] bg-[#FF4444]/10 border-[#FF4444]/20',
-    INTEREST: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
-    CURRENCY_BUY: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20',
-    CURRENCY_SELL: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20',
-    AIRDROP: 'text-[#00C853] bg-[#00C853]/10 border-[#00C853]/20',
-    TOKENS_SUBSCRIPTION: 'text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/20',
-    TOKENS_REDEMPTION: 'text-fuchsia-400 bg-fuchsia-400/10 border-fuchsia-400/20',
-    BONUS_RECOLLECT: 'text-stone-400 bg-stone-400/10 border-stone-400/20',
-    BORROW: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
-    REPAY: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
-    ADL: 'text-rose-400 bg-rose-400/10 border-rose-400/20',
-    CONVERT: 'text-sky-400 bg-sky-400/10 border-sky-400/20',
-  };
   const typeClass = typeColorMap[entry.type] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
   const typeLabel = TX_TYPES.find(t => t.value === entry.type)?.label || entry.type;
 

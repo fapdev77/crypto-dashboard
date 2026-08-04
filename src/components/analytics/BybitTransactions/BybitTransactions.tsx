@@ -10,12 +10,12 @@ import { Pagination } from '../../ui/Pagination';
 import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { AppTooltip } from '../../ui/Tooltip';
 import { BybitTransactionRow } from './BybitTransactionRow';
-import { BybitTransactionFilters } from './BybitTransactionFilters';
+import { BybitTransactionFilters, TX_TYPES, typeColorMap, typeHexColorMap } from './BybitTransactionFilters';
 import { BybitTransactionProgress } from './BybitTransactionProgress';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { LogManager } from '../../../services/LogManager';
 
-export type DetailsModalType = 'funding' | 'fees' | 'balance' | null;
+export type DetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | null;
 
 export function BybitTransactions() {
   const [filters, setFilters] = useState<TxFilters>({
@@ -130,19 +130,23 @@ export function BybitTransactions() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#2F6BFF] shrink-0" />
-                <AppTooltip description="Total number of transactions matching the current filters.">
-                  <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
-                    Total Tx
+                <AppTooltip description="Total number of transactions matching the current filters. Click here for details.">
+                  <span onClick={() => setDetailsModalType('tx')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
+                    Total Transactions
                   </span>
                 </AppTooltip>
               </div>
               <span className="text-2xl font-bold text-white mt-1">{stats.totalCount}</span>
               <div className="flex flex-wrap gap-1 mt-2">
-                {Object.entries(stats.typeBreakdown).slice(0, 4).map(([type, count]) => (
-                  <span key={type} className="text-[8px] px-1.5 py-0.5 rounded bg-[#2a2b30] text-[#8E9299] font-mono">
-                    {type}: {count}
-                  </span>
-                ))}
+                {Object.entries(stats.typeBreakdown).slice(0, 4).map(([type, count]) => {
+                  const typeLabel = TX_TYPES.find(t => t.value === type)?.label || type;
+                  const typeClass = typeColorMap[type] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
+                  return (
+                    <span key={type} className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border ${typeClass}`}>
+                      {typeLabel}: {count}
+                    </span>
+                  );
+                })}
               </div>
             </div>
             <div className="w-20 h-20 shrink-0">
@@ -152,18 +156,22 @@ export function BybitTransactions() {
                     <Tooltip
                       contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '11px' }}
                       itemStyle={{ color: '#fff' }}
+                      formatter={(value, name) => {
+                        const typeLabel = TX_TYPES.find(t => t.value === name)?.label || name;
+                        return [value, typeLabel];
+                      }}
                     />
                     <Pie
-                      data={Object.entries(stats.typeBreakdown).slice(0, 5).map(([type, count], i) => ({
+                      data={Object.entries(stats.typeBreakdown).map(([type, count]) => ({
                         name: type,
                         value: count,
-                        color: ['#2F6BFF', '#FF9C2E', '#00C853', '#FF4444', '#A855F7'][i % 5]
+                        color: typeHexColorMap[type] || '#8E9299'
                       }))}
                       cx="50%" cy="50%" innerRadius="55%" outerRadius="100%"
                       dataKey="value" stroke="none"
                     >
-                      {Object.entries(stats.typeBreakdown).slice(0, 5).map((_, i) => (
-                        <Cell key={i} fill={['#2F6BFF', '#FF9C2E', '#00C853', '#FF4444', '#A855F7'][i % 5]} />
+                      {Object.entries(stats.typeBreakdown).map(([type, _], i) => (
+                        <Cell key={i} fill={typeHexColorMap[type] || '#8E9299'} />
                       ))}
                     </Pie>
                   </PieChart>
@@ -341,6 +349,7 @@ export function BybitTransactions() {
                 {detailsModalType === 'funding' && 'Funding Breakdown'}
                 {detailsModalType === 'fees' && 'Fees Breakdown'}
                 {detailsModalType === 'balance' && 'Wallet Balance Breakdown'}
+                {detailsModalType === 'tx' && 'Total Transactions Breakdown'}
               </h3>
               <button 
                 onClick={() => setDetailsModalType(null)}
@@ -351,69 +360,100 @@ export function BybitTransactions() {
             </div>
             
             <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3">
-              {/* Stablecoin segment */}
-              {(() => {
-                let val = '0';
-                if (detailsModalType === 'funding') val = stats.stable.totalFunding;
-                if (detailsModalType === 'fees') val = stats.stable.totalFees;
-                if (detailsModalType === 'balance') val = stats.stable.finalBalance;
-                
-                const valBig = new Big(val);
-                if (valBig.eq(0)) return null;
+              {detailsModalType === 'tx' ? (
+                <>
+                  {Object.entries(stats.typeBreakdown).length === 0 && (
+                    <div className="text-[#8E9299] text-sm text-center py-4">No data available</div>
+                  )}
+                  {Object.entries(stats.typeBreakdown)
+                    .sort((a, b) => b[1] - a[1]) // Sort by count descending
+                    .map(([type, count]) => {
+                      const typeLabel = TX_TYPES.find(t => t.value === type)?.label || type;
+                      const typeClass = typeColorMap[type] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
+                      
+                      return (
+                        <div key={type} className="flex items-center justify-between bg-[#1e232b] p-3 rounded-lg border border-[#2a2b30]/50">
+                          <span className={`w-max px-2 py-0.5 text-[10px] rounded font-semibold border ${typeClass}`}>
+                            {typeLabel}
+                          </span>
+                          <span className="font-mono font-medium text-white">
+                            {count}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </>
+              ) : (
+                <>
+                  {/* Stablecoin segment */}
+                  {(() => {
+                    let val = '0';
+                    if (detailsModalType === 'funding') val = stats.stable.totalFunding;
+                    if (detailsModalType === 'fees') val = stats.stable.totalFees;
+                    if (detailsModalType === 'balance') val = stats.stable.finalBalance;
+                    
+                    const valBig = new Big(val);
+                    if (valBig.eq(0)) return null;
 
-                const isPositive = valBig.gte(0);
-                const colorClass = detailsModalType === 'fees' 
-                  ? 'text-[#FF4444]' 
-                  : (isPositive ? 'text-[#00C853]' : 'text-[#FF4444]');
+                    const isPositive = valBig.gte(0);
+                    const colorClass = detailsModalType === 'fees' 
+                      ? 'text-[#FF4444]' 
+                      : (isPositive ? 'text-[#00C853]' : 'text-[#FF4444]');
+                      
+                    return (
+                      <div className="flex items-center justify-between bg-[#1e232b] p-3 rounded-lg border border-[#2a2b30]/50">
+                        <span className="text-[#8E9299] text-sm">Stablecoins (USDT, USDC, etc.)</span>
+                        <span className={`font-mono font-medium ${colorClass}`}>
+                          {detailsModalType === 'fees' 
+                            ? (valBig.eq(0) ? '0.00' : (valBig.gte(0) ? `-${valBig.toFixed(4)}` : `+${valBig.abs().toFixed(4)}`))
+                            : (isPositive ? `+${valBig.toFixed(4)}` : valBig.toFixed(4))}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Per-currency segment */}
+                  {Object.entries(stats.perCurrency).length === 0 && new Big(stats.stable[detailsModalType === 'funding' ? 'totalFunding' : detailsModalType === 'fees' ? 'totalFees' : 'finalBalance' as any]).eq(0) && (
+                    <div className="text-[#8E9299] text-sm text-center py-4">No data available</div>
+                  )}
                   
-                return (
-                  <div className="flex items-center justify-between bg-[#1e232b] p-3 rounded-lg border border-[#2a2b30]/50">
-                    <span className="text-[#8E9299] text-sm">Stablecoins (USDT, USDC, etc.)</span>
-                    <span className={`font-mono font-medium ${colorClass}`}>
-                      {detailsModalType === 'fees' 
-                        ? (valBig.eq(0) ? '0.00' : (valBig.gte(0) ? `-${valBig.toFixed(4)}` : `+${valBig.abs().toFixed(4)}`))
-                        : (isPositive ? `+${valBig.toFixed(4)}` : valBig.toFixed(4))}
-                    </span>
-                  </div>
-                );
-              })()}
+                  {Object.entries(stats.perCurrency).map(([cur, vals]) => {
+                    let val = '0';
+                    if (detailsModalType === 'funding') val = vals.totalFunding;
+                    if (detailsModalType === 'fees') val = vals.totalFees;
+                    if (detailsModalType === 'balance') val = vals.finalBalance;
+                    
+                    const valBig = new Big(val);
+                    if (valBig.eq(0)) return null;
 
-              {/* Per-currency segment */}
-              {Object.entries(stats.perCurrency).length === 0 && new Big(stats.stable[detailsModalType === 'funding' ? 'totalFunding' : detailsModalType === 'fees' ? 'totalFees' : 'finalBalance']).eq(0) && (
-                <div className="text-[#8E9299] text-sm text-center py-4">No data available</div>
+                    const isPositive = valBig.gte(0);
+                    const colorClass = detailsModalType === 'fees' 
+                      ? 'text-[#FF4444]' 
+                      : (isPositive ? 'text-[#00C853]' : 'text-[#FF4444]');
+
+                    return (
+                      <div key={cur} className="flex items-center justify-between bg-[#1e232b] p-3 rounded-lg border border-[#2a2b30]/50">
+                        <span className="text-[#8E9299] text-sm font-bold">{cur}</span>
+                        <span className={`font-mono font-medium ${colorClass}`}>
+                          {detailsModalType === 'fees' 
+                            ? (valBig.eq(0) ? '0.00' : (valBig.gte(0) ? `-${valBig.toFixed(8)}` : `+${valBig.abs().toFixed(8)}`))
+                            : (isPositive ? `+${valBig.toFixed(8)}` : valBig.toFixed(8))} {cur}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </>
               )}
-              
-              {Object.entries(stats.perCurrency).map(([cur, vals]) => {
-                let val = '0';
-                if (detailsModalType === 'funding') val = vals.totalFunding;
-                if (detailsModalType === 'fees') val = vals.totalFees;
-                if (detailsModalType === 'balance') val = vals.finalBalance;
-                
-                const valBig = new Big(val);
-                if (valBig.eq(0)) return null;
-
-                const isPositive = valBig.gte(0);
-                const colorClass = detailsModalType === 'fees' 
-                  ? 'text-[#FF4444]' 
-                  : (isPositive ? 'text-[#00C853]' : 'text-[#FF4444]');
-
-                return (
-                  <div key={cur} className="flex items-center justify-between bg-[#1e232b] p-3 rounded-lg border border-[#2a2b30]/50">
-                    <span className="text-[#8E9299] text-sm font-bold">{cur}</span>
-                    <span className={`font-mono font-medium ${colorClass}`}>
-                      {detailsModalType === 'fees' 
-                        ? (valBig.eq(0) ? '0.00' : (valBig.gte(0) ? `-${valBig.toFixed(8)}` : `+${valBig.abs().toFixed(8)}`))
-                        : (isPositive ? `+${valBig.toFixed(8)}` : valBig.toFixed(8))} {cur}
-                    </span>
-                  </div>
-                );
-              })}
             </div>
             
             <div className="p-4 border-t border-[#2a2b30] flex items-center justify-between">
-              <span className="text-[#8E9299] text-sm uppercase tracking-wider">Total (USD Eq.)</span>
+              <span className="text-[#8E9299] text-sm uppercase tracking-wider">
+                {detailsModalType === 'tx' ? 'Total Transactions' : 'Total (USD Eq.)'}
+              </span>
               <span className="text-white font-bold font-mono text-lg">
                 {(() => {
+                  if (detailsModalType === 'tx') return stats.totalCount;
+
                   let val = '0';
                   if (detailsModalType === 'funding') val = stats.aggregatedUsd.totalFunding;
                   if (detailsModalType === 'fees') val = stats.aggregatedUsd.totalFees;
