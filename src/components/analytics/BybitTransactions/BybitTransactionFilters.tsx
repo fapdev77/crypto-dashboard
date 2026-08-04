@@ -3,8 +3,36 @@ import { TxFilters } from '../../../hooks/useBybitTransactions';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { FilterBar } from '../../ui/FilterBar';
 
-const TX_TYPES = ['All', 'TRADE', 'SETTLEMENT', 'DELIVERY', 'LIQUIDATION', 'BONUS', 'TRANSFER', 'SPOT'];
-const CATEGORIES = ['All', 'linear', 'inverse', 'spot', 'option'];
+const TX_TYPES = [
+  { value: 'All', label: 'All Types', tooltip: 'All transaction types.' },
+  { value: 'TRANSFER_IN', label: 'Transfer in', tooltip: 'Assets that transferred into Unified wallet' },
+  { value: 'TRANSFER_OUT', label: 'Transfer out', tooltip: 'Assets that transferred out from Unified wallet' },
+  { value: 'TRADE', label: 'Trade', tooltip: 'Trade execution' },
+  { value: 'SETTLEMENT', label: 'Funding Fee', tooltip: 'USDT Perp funding settlement, and USDC Perp funding settlement + USDC 8-hour session settlement' },
+  { value: 'DELIVERY', label: 'Delivery', tooltip: 'USDC Futures, Option delivery' },
+  { value: 'LIQUIDATION', label: 'Liquidation', tooltip: 'Liquidation' },
+  { value: 'BONUS', label: 'Bonus Claimed', tooltip: 'Bonus claimed' },
+  { value: 'FEE_REFUND', label: 'Fee Refund', tooltip: 'Trading fee refunded' },
+  { value: 'AUTO_DEDUCTION', label: 'Auto Deduction', tooltip: 'Asset auto deducted by system (roll back)' },
+  { value: 'INTEREST', label: 'Interest', tooltip: 'Interest occurred due to borrowing' },
+  { value: 'CURRENCY_BUY', label: 'Currency Buy', tooltip: 'Currency convert, and the liquidation for borrowing asset(UTA loan)' },
+  { value: 'CURRENCY_SELL', label: 'Currency Sell', tooltip: 'Currency convert, and the liquidation for borrowing asset(UTA loan)' },
+  { value: 'AIRDROP', label: 'Airdrop', tooltip: 'Airdrop' },
+  { value: 'TOKENS_SUBSCRIPTION', label: 'Subscription (Leveraged Tokens)', tooltip: 'Spot leverage token subscription' },
+  { value: 'TOKENS_REDEMPTION', label: 'Redemption (Leveraged Tokens)', tooltip: 'Spot leverage token redemption' },
+  { value: 'BONUS_RECOLLECT', label: 'Bonus Expired', tooltip: 'Bonus expired' },
+  { value: 'BORROW', label: 'Borrow', tooltip: 'Manual loan borrow and auto loan borrow' },
+  { value: 'REPAY', label: 'Repay', tooltip: 'Manual loan repay and auto loan repay' },
+  { value: 'ADL', label: 'Auto-Deleveraging', tooltip: 'ADL Auto-Deleveraging' },
+  { value: 'CONVERT', label: 'Convert Buy/Sell', tooltip: 'Currency convert repayment' }
+];
+const CATEGORIES = [
+  { value: 'All', label: 'All Categories', tooltip: 'Show all categories.' },
+  { value: 'spot', label: 'Spot', tooltip: 'Mercado a vista Spot.' },
+  { value: 'linear', label: 'Linear', tooltip: 'USDT perpetual, USDT Futures and USDC contract, including USDC perp, USDC futures.' },
+  { value: 'inverse', label: 'Inverse', tooltip: 'Inverse contracts including Inverse perpetual and Inverse futures.' },
+  { value: 'option', label: 'Options', tooltip: 'Options contracts.' }
+];
 const CURRENCIES = [
   { value: 'USDT', label: 'USDT' },
   { value: 'USDC', label: 'USDC' },
