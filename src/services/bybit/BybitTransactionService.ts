@@ -53,7 +53,7 @@ export class BybitTransactionService {
   async syncIncremental(key: ApiCredentials, latestTime: number): Promise<BybitTransactionLogEntry[]> {
     const now = Date.now();
     let allNew: BybitTransactionLogEntry[] = [];
-    const categories = ['linear', 'inverse', 'spot'];
+    const categories = [''];
     let hasError = false;
 
     for (const category of categories) {
@@ -123,7 +123,7 @@ export class BybitTransactionService {
   ): Promise<void> {
     const now = Date.now();
     let twoYearsAgo = now - TWO_YEARS_MS;
-    const categories = ['linear', 'inverse', 'spot'];
+    const categories = [''];
     let totalNew = 0;
     const targetStart = twoYearsAgo;
 

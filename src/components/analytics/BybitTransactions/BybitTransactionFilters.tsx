@@ -3,7 +3,7 @@ import { TxFilters } from '../../../hooks/useBybitTransactions';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { FilterBar } from '../../ui/FilterBar';
 
-const TX_TYPES = [
+export const TX_TYPES = [
   { value: 'All', label: 'All Types', tooltip: 'All transaction types.' },
   { value: 'TRANSFER_IN', label: 'Transfer in', tooltip: 'Assets that transferred into Unified wallet' },
   { value: 'TRANSFER_OUT', label: 'Transfer out', tooltip: 'Assets that transferred out from Unified wallet' },
