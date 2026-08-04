@@ -27,7 +27,7 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
   const d = new Date(entry.transactionTime);
   const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const dateStr = d.toLocaleDateString([], { month: 'numeric', day: 'numeric', year: 'numeric' });
 
   const isBuy = entry.side === 'Buy';
   const sideColor = isBuy ? 'text-[#00C853]' : entry.side === 'Sell' ? 'text-[#FF4444]' : 'text-[#8E9299]';

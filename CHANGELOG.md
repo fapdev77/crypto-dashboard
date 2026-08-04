@@ -1,10 +1,3 @@
-# [1.12.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.11.0...v1.12.0) (2026-08-03)
-
-
-### Features
-
-* **analytics:** add balance tracking state for Bybit ([b8e6327](https://github.com/fapdev77/crypto-dashboard/commit/b8e63276bc35d2544cca8550f27cf002069fa476))
-
 # 1.0.0 (2026-07-26)
 
 
