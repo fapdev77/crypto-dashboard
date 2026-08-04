@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.12.0...v1.13.0) (2026-08-04)
+
+
+### Features
+
+* **analytics:** update date format in BybitTransactionRow ([5a933e4](https://github.com/fapdev77/crypto-dashboard/commit/5a933e42809f88031ec0c740e4e0243b7cc43fc4))
+
 # 1.0.0 (2026-07-26)
 
 
