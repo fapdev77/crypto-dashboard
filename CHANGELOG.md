@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.14.0...v1.15.0) (2026-08-04)
+
+
+### Features
+
+* **analytics:** expand Bybit transaction support ([50ef9ee](https://github.com/fapdev77/crypto-dashboard/commit/50ef9eeb3fb190673b7e48d417f48e930e71c440))
+
 # 1.0.0 (2026-07-26)
 
 
