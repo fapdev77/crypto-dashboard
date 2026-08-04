@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.13.0...v1.14.0) (2026-08-04)
+
+
+### Features
+
+* **analytics:** enhance transaction filter UI ([689ef2f](https://github.com/fapdev77/crypto-dashboard/commit/689ef2f702ca9ce3ef9aa34634526d30e7df4cb7))
+
 # 1.0.0 (2026-07-26)
 
 
