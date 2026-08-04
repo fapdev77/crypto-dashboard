@@ -29,8 +29,8 @@ export function useBillsHistory(period: '1w' | '2w' | '1m' | 'custom', customSta
       const now = Date.now();
       
       if (period === 'custom' && customStart && customEnd) {
-        start = new Date(customStart).setHours(0, 0, 0, 0);
-        end = new Date(customEnd).setHours(23, 59, 59, 999);
+        start = new Date(customStart).setUTCHours(0, 0, 0, 0);
+        end = new Date(customEnd).setUTCHours(23, 59, 59, 999);
       } else if (period === '1w') {
         start = now - 7 * 24 * 60 * 60 * 1000;
         end = now;

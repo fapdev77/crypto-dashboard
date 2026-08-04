@@ -8,6 +8,7 @@ import { CoinIcon } from '../../ui/CoinIcon';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { ChevronDown, ChevronUp, Hash, FileText, Percent, Gift } from 'lucide-react';
+import { TX_TYPES, typeColorMap } from './BybitTransactionFilters';
 
 interface Props {
   entry: BybitTransactionLogEntry;
@@ -27,7 +28,7 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
   const d = new Date(entry.transactionTime);
   const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const dateStr = d.toLocaleDateString([], { month: 'numeric', day: 'numeric', year: 'numeric' });
 
   const isBuy = entry.side === 'Buy';
   const sideColor = isBuy ? 'text-[#00C853]' : entry.side === 'Sell' ? 'text-[#FF4444]' : 'text-[#8E9299]';
@@ -78,16 +79,8 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
     return `≈ ${formatCurrency(usdVal.toNumber(), 'usd')}`;
   };
 
-  const typeColorMap: Record<string, string> = {
-    TRADE: 'text-[#2F6BFF] bg-[#2F6BFF]/10 border-[#2F6BFF]/20',
-    SETTLEMENT: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-    DELIVERY: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
-    LIQUIDATION: 'text-[#FF4444] bg-[#FF4444]/10 border-[#FF4444]/20',
-    BONUS: 'text-[#00C853] bg-[#00C853]/10 border-[#00C853]/20',
-    TRANSFER: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20',
-    SPOT: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20',
-  };
   const typeClass = typeColorMap[entry.type] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
+  const typeLabel = TX_TYPES.find(t => t.value === entry.type)?.label || entry.type;
 
   return (
     <div
@@ -133,7 +126,7 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
             </span>
           </AppTooltip>
           <span className={`w-max px-1.5 py-0.5 text-[9px] rounded font-semibold border ${typeClass}`}>
-            {entry.type}
+            {typeLabel}
           </span>
           {entry.category && (
             <span className="text-[9px] text-[#8E9299] uppercase tracking-wider">{entry.category}</span>

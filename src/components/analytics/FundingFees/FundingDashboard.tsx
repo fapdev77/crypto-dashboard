@@ -121,12 +121,14 @@ const FundingTable = ({
   title, 
   data, 
   filterKey,
-  defaultExpanded = true 
+  defaultExpanded = true,
+  isSyncing = false
 }: { 
   title: string, 
   data: FundingFeeAggregated[], 
   filterKey?: string,
-  defaultExpanded?: boolean 
+  defaultExpanded?: boolean,
+  isSyncing?: boolean
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [expandedCoins, setExpandedCoins] = useState<Record<string, boolean>>({});
@@ -163,13 +165,19 @@ const FundingTable = ({
   return (
     <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden mb-6">
       <div 
-        className="px-6 py-4 flex items-center justify-between cursor-pointer bg-[#1A1C20] hover:bg-[#202226] transition-colors"
+        className="relative px-6 py-4 flex items-center justify-between cursor-pointer bg-[#1A1C20] hover:bg-[#202226] transition-colors overflow-hidden"
         onClick={() => setExpanded(!expanded)}
       >
         <h3 className="text-sm font-semibold text-white flex items-center gap-2">
           {expanded ? <ChevronDown className="w-4 h-4 text-[#8E9299]" /> : <ChevronRight className="w-4 h-4 text-[#8E9299]" />}
           {title} <span className="text-[#8E9299] text-xs font-normal">({groupedByCoin.length} Coins)</span>
         </h3>
+        {isSyncing && (
+           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-xs font-medium animate-pulse">
+             <Loader2 className="w-3 h-3 animate-spin" />
+             Please wait, rates update in progress...
+           </div>
+        )}
       </div>
       
       {expanded && (
@@ -639,6 +647,7 @@ export const FundingDashboard = () => {
       <MarketOverviewCards
         marketMetrics={marketMetrics}
         rankings={rankings}
+        isSyncing={isSyncing}
       />
 
       {isLoading && aggregatedData.length === 0 ? (
@@ -654,7 +663,8 @@ export const FundingDashboard = () => {
               title={groupTitle} 
               data={rows} 
               filterKey={`${searchTerm}-${exchangeFilter}-${instrumentFilter}-${showFavoritesOnly}-${showOpenPositionsOnly}`}
-              defaultExpanded={expandAll} 
+              defaultExpanded={expandAll}
+              isSyncing={isSyncing}
             />
           ))}
           {filteredData.length === 0 && (

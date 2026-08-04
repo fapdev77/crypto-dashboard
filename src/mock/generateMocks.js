@@ -260,7 +260,83 @@ function generate() {
     }
   });
 
-  // Generate Bills (Deposits / Withdrawals)
+
+  // Generate Funding Summaries
+  const fundingSummaries = [];
+  const bybitTransactions = [];
+  let txIdCounter = 1;
+  let summaryIdCounter = 1;
+
+  exchanges.forEach(exchange => {
+    for (let i = 1; i <= ACCOUNTS_PER_EXCHANGE; i++) {
+      const connectionId = `mocked-data-${exchange}-${i}`;
+      const label = `Mock ${exchange.toUpperCase()} ${i}`;
+
+      for (let j = 0; j < 5; j++) {
+        const symbol = randomItem(symbols);
+        const instType = randomItem(['USDT-M', 'COIN-M']);
+        const last12 = randomNum(-500, 500);
+        const last6 = last12 * randomNum(0.3, 0.7);
+        const last3 = last6 * randomNum(0.3, 0.7);
+        const last1 = last3 * randomNum(0.3, 0.7);
+        const current = last1 * randomNum(0.1, 0.9);
+        const today = current * randomNum(0, 0.2);
+
+        fundingSummaries.push({
+          id: `${exchange}-${symbol}`,
+          exchange,
+          symbol,
+          instrumentType: instType,
+          last12MonthsFundingRate: exchange === 'bybit' ? last12.toFixed(8) : undefined,
+          last6MonthsFundingRate: exchange === 'bybit' ? last6.toFixed(8) : undefined,
+          last3MonthsFundingRate: last3.toFixed(8),
+          lastMonthFundingRate: last1.toFixed(8),
+          currentMonthFundingRate: current.toFixed(8),
+          todayFundingRate: today.toFixed(8),
+          lastFundingRate: (today * randomNum(0.1, 0.5)).toFixed(8),
+          lastFundingTime: String(Date.now() - randomNum(0, 8 * 60 * 60 * 1000)),
+          updatedAt: Date.now()
+        });
+      }
+
+      if (exchange === 'bybit') {
+        for (let j = 0; j < 20; j++) {
+          const transTime = Date.now() - randomNum(0, 30 * 24 * 60 * 60 * 1000);
+          bybitTransactions.push({
+            id: `${connectionId}-raw-${txIdCounter}-${transTime}`,
+            connectionId,
+            exchange: 'bybit',
+            label,
+            rawId: `raw-${txIdCounter}`,
+            symbol: randomItem(symbols),
+            category: randomItem(['linear', 'inverse', 'spot']),
+            side: randomItem(['Buy', 'Sell', 'None']),
+            transactionTime: transTime,
+            type: randomItem(['TRADE', 'SETTLEMENT', 'TRANSFER']),
+            transSubType: '',
+            qty: String(randomNum(0.1, 10)),
+            size: String(randomNum(0.1, 10)),
+            currency: randomItem(['USDT', 'USDC', 'BTC', 'ETH']),
+            tradePrice: String(randomNum(100, 60000)),
+            funding: String(randomNum(-10, 10)),
+            fee: String(randomNum(-5, -0.1)),
+            cashFlow: String(randomNum(-1000, 1000)),
+            change: String(randomNum(-1000, 1000)),
+            cashBalance: String(randomNum(1000, 20000)),
+            feeRate: '0.0006',
+            bonusChange: '0',
+            tradeId: `trade-${txIdCounter}`,
+            orderId: `order-${txIdCounter}`,
+            orderLinkId: `my-order-${txIdCounter}`,
+            raw: { mockData: true }
+          });
+          txIdCounter++;
+        }
+      }
+    }
+  });
+
+    // Generate Bills (Deposits / Withdrawals)
   const bills = [];
   let billIdCounter = 1;
   const billTypes = ['deposit', 'withdrawal'];
@@ -302,6 +378,8 @@ function generate() {
   fs.writeFileSync(path.join(outDir, 'history.json'), JSON.stringify(history, null, 2));
   fs.writeFileSync(path.join(outDir, 'orders.json'), JSON.stringify(orders, null, 2));
   fs.writeFileSync(path.join(outDir, 'bills.json'), JSON.stringify(bills, null, 2));
+  fs.writeFileSync(path.join(outDir, 'funding.json'), JSON.stringify(fundingSummaries, null, 2));
+  fs.writeFileSync(path.join(outDir, 'bybit-transactions.json'), JSON.stringify(bybitTransactions, null, 2));
 
   console.log('Mock files generated successfully.');
 }

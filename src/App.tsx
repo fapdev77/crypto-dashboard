@@ -31,12 +31,38 @@ import { useSettingsStore } from './store/settingsStore';
 import { HelpToggleButton } from './components/HelpToggleButton';
 import { WelcomeHelpModal } from './components/WelcomeHelpModal';
 import { UpdateNotification } from './components/UpdateNotification';
+import { useApiKeysStore } from './store/apiKeysStore';
+import { GlobalUnlockScreen } from './components/GlobalUnlockScreen';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+
+  const { isEncrypted, isUnlocked } = useApiKeysStore();
+
+  // Listen for global tab navigation requests
+  useEffect(() => {
+    const handleNavigate = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      setActiveTab(customEvent.detail);
+      if (customEvent.detail === 'settings') {
+        setTimeout(() => {
+          const el = document.getElementById('security-settings-card');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]');
+            setTimeout(() => {
+              el.classList.remove('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]');
+            }, 3000);
+          }
+        }, 150);
+      }
+    };
+    window.addEventListener('navigate-to-tab', handleNavigate);
+    return () => window.removeEventListener('navigate-to-tab', handleNavigate);
+  }, []);
 
   // Trigger welcome modal on app load if enabled
   useEffect(() => {
@@ -45,6 +71,10 @@ export default function App() {
       setIsWelcomeOpen(true);
     }
   }, []);
+
+  if (isEncrypted && !isUnlocked) {
+    return <GlobalUnlockScreen />;
+  }
 
   let activeTabName = activeTab.replace('analytics-', '').replace('-', ' ');
   if (activeTab === 'api-keys') activeTabName = 'API Keys Manager';

@@ -58,15 +58,15 @@ export const useFundingStore = create<FundingState>()(
       favorites: [],
       toggleFavorite: (id: string) => {
         const { favorites } = get();
-        let newFavorites = [...favorites];
         
         // Extract coin symbol if it's the new composite format (e.g. BTC_USDT-M)
         const parts = id.split('_');
         const coinSymbol = parts[0]; 
 
-        // If the legacy coin symbol exists, remove it
-        if (newFavorites.includes(coinSymbol)) {
-          newFavorites = newFavorites.filter(f => f !== coinSymbol);
+        // If the legacy coin symbol exists AND it's not the id being toggled right now, remove it
+        let newFavorites = favorites;
+        if (coinSymbol !== id && favorites.includes(coinSymbol)) {
+          newFavorites = favorites.filter(f => f !== coinSymbol);
         }
 
         if (newFavorites.includes(id)) {

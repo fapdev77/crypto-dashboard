@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Power, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Power, Edit2, Trash2, Shield } from 'lucide-react';
 import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
 import { useConnectionStore } from '../store/connectionStore';
 import { clearConnectionData } from '../store/crossStoreCleanup';
@@ -65,6 +65,13 @@ export function ApiKeys() {
           <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
             <h2 className="text-xl font-medium text-white">API Connections and status:</h2>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'settings' }))}
+                className="flex items-center gap-2 py-2 px-3 bg-[#1a1b1e] border border-[#2a2b30] hover:bg-[#202125] text-white text-sm font-medium rounded-lg transition-colors shrink-0"
+              >
+                <Shield className="w-4 h-4 text-[#2F6BFF]" />
+                <span className="hidden sm:inline">API Key Import/Export</span>
+              </button>
               <div className="flex items-center gap-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-1">
                 <button
                   onClick={expandAll}

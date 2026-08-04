@@ -97,9 +97,13 @@ Monitor your active derivatives contracts in real-time:
 - **Liquidation Price & Margin**: Gauges turning amber/red when a position approaches its liquidation threshold.
 - **Coin Icon Component**: Renders custom official logos for each ticker with robust local fallback logic.
 
-### 📂 Closed Positions & Order History
+### 📂 Closed Positions
 - **Operational Metrics**: Displays your global **Win Rate %**, **Profit Factor**, Average profit/loss margins, and your biggest profitable trade.
-- **Order Reports**: Search open or historical orders with regex filters, and expand rows to review exchange order IDs and cumulative commissions (fees).
+- **PnL Auditing**: View the consolidated final PnL per position, total time the position remained open, and ROE% rates.
+
+### 📝 Order Reports (Open & History)
+- **Open Orders**: Monitor all your pending orders (Limit, Stop Loss, Take Profit) across connected exchanges in a unified table, visualizing current status, quantities, and price triggers in real-time.
+- **Order History**: Search historical and canceled orders with regex filters, and expand rows to review exchange order IDs and cumulative commissions.
 
 ### 🔄 Trade History
 A detailed view of all individual order executions and filled trades across your connected exchanges.
