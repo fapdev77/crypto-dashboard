@@ -1,10 +1,3 @@
-# [1.18.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.17.1...v1.18.0) (2026-08-05)
-
-
-### Features
-
-* track total records synced in Bybit hook ([8407e2c](https://github.com/fapdev77/crypto-dashboard/commit/8407e2ce3a010fad3b9a13377a1239bafef7b402))
-
 # 1.0.0 (2026-07-26)
 
 

@@ -16,7 +16,7 @@ import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../
 import { LogManager } from '../../../services/LogManager';
 import { CoinIcon } from '../../ui/CoinIcon';
 
-export type DetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | null;
+export type DetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
 export function BybitTransactions() {
   const [filters, setFilters] = useState<TxFilters>({
@@ -31,12 +31,13 @@ export function BybitTransactions() {
   // ── Refresh animation indicator key ──
   const filterMonitorKey = `${filters.category}-${filters.type}-${filters.currency}-${filters.accountId}-${filters.timePeriod}`;
   
-  const { entries, filteredEntries, isLoading, isSyncing, isCalculatingUsd, progress, error, stats } = useBybitTransactions(filters);
+  const { entries, filteredEntries, isLoading, isSyncing, isCalculatingUsd, progress, error, stats, tokenRates } = useBybitTransactions(filters);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [detailsModalType, setDetailsModalType] = useState<DetailsModalType>(null);
+  const [expandedReportCurrencies, setExpandedReportCurrencies] = useState<Record<string, boolean>>({});
 
   const availableCurrencies = useMemo(() => {
     const currencies = new Set<string>();
@@ -58,6 +59,102 @@ export function BybitTransactions() {
     if (isPrivateMode) return '****';
     return formatCurrency(Number(val), 'usd');
   };
+
+  const currencyReports = useMemo(() => {
+    if (filteredEntries.length === 0) return [];
+    
+    const grouped: Record<string, typeof filteredEntries> = {};
+    filteredEntries.forEach(e => {
+      if (e.currency) {
+        if (!grouped[e.currency]) grouped[e.currency] = [];
+        grouped[e.currency].push(e);
+      }
+    });
+    
+    const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD'].includes(currency.toUpperCase());
+    
+    return Object.entries(grouped).map(([cur, curEntries]) => {
+      const sorted = [...curEntries].sort((a, b) => a.transactionTime - b.transactionTime);
+      const earliestTx = sorted[0];
+      const latestTx = sorted[sorted.length - 1];
+      
+      const earliestTime = earliestTx?.transactionTime || Date.now();
+      const latestTime = latestTx?.transactionTime || Date.now();
+      const days = Math.max(1, Math.ceil((latestTime - earliestTime) / (1000 * 60 * 60 * 24)));
+      
+      const stableMatch = isStable(cur);
+      const curStats = stableMatch ? stats.stable : (stats.perCurrency[cur] || {
+        totalFunding: '0',
+        totalFees: '0',
+        totalCashFlow: '0',
+        totalChange: '0',
+        finalBalance: '0'
+      });
+      
+      const totalChange = curStats.totalChange;
+      const finalBalance = curStats.finalBalance;
+      const initialBalance = new Big(finalBalance).minus(new Big(totalChange)).toString();
+      
+      const initBig = new Big(initialBalance);
+      const changeBig = new Big(totalChange);
+      let ganhoPercentual = 0;
+      if (initBig.gt(0)) {
+        ganhoPercentual = changeBig.div(initBig).times(100).toNumber();
+      } else if (initBig.eq(0) && changeBig.gt(0)) {
+        ganhoPercentual = 100;
+      }
+      
+      const rate = stableMatch ? 1 : (tokenRates[cur] || 0);
+      const ganhoAbsolutoUSD = changeBig.times(rate).toString();
+      
+      const totalTrades = curEntries.filter(e => e.type === 'TRADE').length;
+      const buysCount = curEntries.filter(e => e.type === 'TRADE' && e.side === 'Buy').length;
+      const sellsCount = curEntries.filter(e => e.type === 'TRADE' && e.side === 'Sell').length;
+      const buysPct = totalTrades > 0 ? (buysCount / totalTrades) * 100 : 0;
+      const sellsPct = totalTrades > 0 ? (sellsCount / totalTrades) * 100 : 0;
+      const tradesPerDay = totalTrades / days;
+      
+      const tradesLiquido = curEntries
+        .filter(e => e.type === 'TRADE')
+        .reduce((sum, e) => sum.plus(new Big(e.change || '0')), new Big(0))
+        .toString();
+        
+      const fundingRate = curStats.totalFunding;
+      const cashFlowTotal = curStats.totalCashFlow;
+      const feesPagos = curStats.totalFees;
+      
+      const roiMedioDiario = days > 0 ? (ganhoPercentual / days) : 0;
+      
+      return {
+        currency: cur,
+        initialBalance,
+        finalBalance,
+        ganhoPercentual,
+        ganhoAbsoluto: totalChange,
+        ganhoAbsolutoUSD,
+        earliestTime,
+        latestTime,
+        days,
+        totalTrades,
+        buysCount,
+        sellsCount,
+        buysPct,
+        sellsPct,
+        tradesPerDay,
+        tradesLiquido,
+        fundingRate,
+        cashFlowTotal,
+        feesPagos,
+        roiMedioDiario,
+        isStable: stableMatch,
+      };
+    }).sort((a, b) => {
+      // Sort stablecoins to the end, higher absolute USD value to the front
+      if (a.isStable && !b.isStable) return 1;
+      if (!a.isStable && b.isStable) return -1;
+      return Math.abs(Number(b.ganhoAbsolutoUSD)) - Math.abs(Number(a.ganhoAbsolutoUSD));
+    });
+  }, [filteredEntries, stats, tokenRates, isPrivateMode]);
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
@@ -261,8 +358,8 @@ export function BybitTransactions() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-2">
             <div className="flex items-center gap-2">
               <Wallet className="w-4 h-4 text-[#8E9299] shrink-0" />
-              <AppTooltip description="Net change in USD (stablecoins + non-stables value).">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
+              <AppTooltip description="Net change in USD (stablecoins + non-stables value). Click here for details.">
+                <span onClick={() => setDetailsModalType('netchange')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
                   Net Change (USD)
                 </span>
               </AppTooltip>
@@ -357,12 +454,13 @@ export function BybitTransactions() {
       {/* Details Modal */}
       {detailsModalType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-[#161b22] border border-[#2a2b30] rounded-xl w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
+          <div className={`bg-[#161b22] border border-[#2a2b30] rounded-xl w-full shadow-2xl flex flex-col max-h-[85vh] transition-all duration-200 ${detailsModalType === 'netchange' ? 'max-w-4xl' : 'max-w-md'}`}>
             <div className="flex items-center justify-between p-4 border-b border-[#2a2b30]">
               <h3 className="text-white font-medium">
                 {detailsModalType === 'funding' && 'Funding Breakdown'}
                 {detailsModalType === 'fees' && 'Fees Breakdown'}
                 {detailsModalType === 'balance' && 'Wallet Balance Breakdown'}
+                {detailsModalType === 'netchange' && 'Net Change Report (USD)'}
                 {detailsModalType === 'tx' && 'Total Transactions Breakdown'}
               </h3>
               <button 
@@ -372,9 +470,210 @@ export function BybitTransactions() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
-            <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3">
-              {detailsModalType === 'tx' ? (
+                  <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-4">
+              {detailsModalType === 'netchange' ? (
+                <div className="flex flex-col gap-4 text-white">
+                  <p className="text-xs text-[#8E9299]">
+                    Detailed operational performance by asset, calculating absolute returns, trade distributions, funding impact, and fees.
+                  </p>
+                  
+                  {currencyReports.length === 0 ? (
+                    <div className="text-[#8E9299] text-sm text-center py-8">No transaction data available for report.</div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <div className="flex justify-end gap-2.5 text-xs border-b border-[#2a2b30]/30 pb-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const allExpanded: Record<string, boolean> = {};
+                            currencyReports.forEach(r => {
+                              allExpanded[r.currency] = true;
+                            });
+                            setExpandedReportCurrencies(allExpanded);
+                          }}
+                          className="text-[#F0B90B] hover:text-[#f3c73e] transition-colors font-medium px-2.5 py-1 rounded bg-[#2a2b30]/40 hover:bg-[#2a2b30]/70 cursor-pointer"
+                        >
+                          Expand All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedReportCurrencies({})}
+                          className="text-[#8E9299] hover:text-white transition-colors font-medium px-2.5 py-1 rounded bg-[#2a2b30]/40 hover:bg-[#2a2b30]/70 cursor-pointer"
+                        >
+                          Collapse All
+                        </button>
+                      </div>
+
+                      {currencyReports.map((report) => {
+                        const isPositive = new Big(report.ganhoAbsoluto).gte(0);
+                        const hasTrades = report.totalTrades > 0;
+                        const feesBig = new Big(report.feesPagos);
+                        const isExpanded = !!expandedReportCurrencies[report.currency];
+                        
+                        return (
+                          <div 
+                            key={report.currency} 
+                            className="bg-[#1e232b] rounded-lg border border-[#2a2b30] overflow-hidden transition-all duration-200"
+                          >
+                            {/* Header Panel (Accordion Trigger) */}
+                            <div 
+                              onClick={() => {
+                                setExpandedReportCurrencies(prev => ({
+                                  ...prev,
+                                  [report.currency]: !prev[report.currency]
+                                }));
+                              }}
+                              className={`p-3.5 bg-[#161b22]/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-[#1f2631] transition-colors select-none ${isExpanded ? 'border-b border-[#2a2b30]' : ''}`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <CoinIcon symbol={report.currency} size={22} />
+                                <div>
+                                  <span className="font-bold text-white text-[15px]">{report.currency}</span>
+                                  <span className="text-[10px] text-[#8E9299] ml-2 font-mono">
+                                    {report.days} {report.days === 1 ? 'day' : 'days'} period
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center justify-between sm:justify-end gap-3.5 font-mono w-full sm:w-auto">
+                                <div className="text-right">
+                                  <div className={`text-sm font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                    {isPositive ? '+' : ''}{Number(report.ganhoAbsoluto).toFixed(6)} {report.currency}
+                                  </div>
+                                  <div className="text-xs text-[#8E9299]">
+                                    ~ {maskVal(report.ganhoAbsolutoUSD)}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2.5">
+                                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${isPositive ? 'bg-[#00C853]/10 text-[#00C853] border border-[#00C853]/20' : 'bg-[#FF4444]/10 text-[#FF4444] border border-[#FF4444]/20'}`}>
+                                    {isPositive ? '+' : ''}{report.ganhoPercentual.toFixed(2)}%
+                                  </span>
+                                  <ChevronDown className={`w-4 h-4 text-[#8E9299] shrink-0 transition-transform duration-200 ${isExpanded ? 'transform rotate-180 text-white' : ''}`} />
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Report Tables Grid (Accordion Content) */}
+                            {isExpanded && (
+                              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#181a1e]/40 animate-fadeIn">
+                                
+                                {/* Left Column: Resultado Principal */}
+                                <div className="flex flex-col gap-2">
+                                  <h4 className="text-[11px] font-bold text-[#8E9299] uppercase tracking-wider mb-1 border-b border-[#2a2b30]/40 pb-1 flex items-center justify-between">
+                                    <span>Resultado Principal</span>
+                                    <span className="text-[9px] text-[#8E9299]/70 capitalize font-normal">Asset Summary</span>
+                                  </h4>
+                                  <div className="flex flex-col gap-1.5 text-xs font-mono">
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Saldo Inicial</span>
+                                      <span className="text-[#d1d5db] font-medium">{Number(report.initialBalance).toFixed(6)} {report.currency}</span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Saldo Final</span>
+                                      <span className="text-white font-bold">{Number(report.finalBalance).toFixed(6)} {report.currency}</span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Ganho Percentual</span>
+                                      <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                        {isPositive ? '+' : ''}{report.ganhoPercentual.toFixed(2)}%
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Ganho Absoluto</span>
+                                      <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                        {isPositive ? '+' : ''}{Number(report.ganhoAbsoluto).toFixed(6)} {report.currency}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5">
+                                      <span className="text-[#8E9299]">Ganho Absoluto em USD</span>
+                                      <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                        {isPositive ? '+' : ''}{maskVal(report.ganhoAbsolutoUSD)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Right Column: Resultado das Operações */}
+                                <div className="flex flex-col gap-2">
+                                  <h4 className="text-[11px] font-bold text-[#8E9299] uppercase tracking-wider mb-1 border-b border-[#2a2b30]/40 pb-1 flex items-center justify-between">
+                                    <span>Resultado das Operações</span>
+                                    <span className="text-[9px] text-[#8E9299]/70 capitalize font-normal">Trades & Metrics</span>
+                                  </h4>
+                                  <div className="flex flex-col gap-1.5 text-xs font-mono">
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Período</span>
+                                      <span className="text-[#d1d5db] font-medium text-[10px] text-right">
+                                        {new Date(report.earliestTime).toLocaleDateString()} a {new Date(report.latestTime).toLocaleDateString()} ({report.days} {report.days === 1 ? 'dia' : 'dias'})
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Total de Trades</span>
+                                      <span className="text-white font-medium">{report.totalTrades}</span>
+                                    </div>
+                                    
+                                    {hasTrades && (
+                                      <>
+                                        <div className="flex justify-between py-1 border-b border-[#2a2b30]/20 pl-1.5">
+                                          <span className="text-[#8E9299]/80">─ Compras (BUY)</span>
+                                          <span className="text-[#00C853] font-medium">
+                                            {report.buysCount} ({report.buysPct.toFixed(1)}%)
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between py-1 border-b border-[#2a2b30]/20 pl-1.5">
+                                          <span className="text-[#8E9299]/80">─ Vendas (SELL)</span>
+                                          <span className="text-[#FF4444] font-medium">
+                                            {report.sellsCount} ({report.sellsPct.toFixed(1)}%)
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between py-1 border-b border-[#2a2b30]/20 pl-1.5">
+                                          <span className="text-[#8E9299]/80">─ Média por Dia</span>
+                                          <span className="text-[#d1d5db] font-medium">{report.tradesPerDay.toFixed(2)} trades/dia</span>
+                                        </div>
+                                        <div className="flex justify-between py-1 border-b border-[#2a2b30]/30 pl-1.5">
+                                          <span className="text-[#8E9299]/80">─ Trades Líquido</span>
+                                          <span className={`font-medium ${new Big(report.tradesLiquido).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                            {new Big(report.tradesLiquido).gt(0) ? '+' : ''}{Number(report.tradesLiquido).toFixed(6)} {report.currency}
+                                          </span>
+                                        </div>
+                                      </>
+                                    )}
+                                    
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Funding Rate</span>
+                                      <span className={`font-medium ${new Big(report.fundingRate).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                        {new Big(report.fundingRate).gt(0) ? '+' : ''}{Number(report.fundingRate).toFixed(6)} {report.currency}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Cash Flow Total</span>
+                                      <span className="text-[#d1d5db] font-medium">
+                                        {Number(report.cashFlowTotal).toFixed(6)} {report.currency}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Fees Pagos</span>
+                                      <span className="text-[#FF4444] font-medium">
+                                        {feesBig.gt(0) ? '-' : ''}{Number(report.feesPagos).toFixed(6)} {report.currency}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5">
+                                      <span className="text-[#8E9299]">ROI Médio Diário</span>
+                                      <span className={`font-bold ${report.roiMedioDiario >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                        {report.roiMedioDiario >= 0 ? '+' : ''}{report.roiMedioDiario.toFixed(4)}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : detailsModalType === 'tx' ? (
                 <>
                   {Object.entries(stats.typeBreakdown).length === 0 && (
                     <div className="text-[#8E9299] text-sm text-center py-4">No data available</div>
@@ -472,6 +771,7 @@ export function BybitTransactions() {
                   if (detailsModalType === 'funding') val = stats.aggregatedUsd.totalFunding;
                   if (detailsModalType === 'fees') val = stats.aggregatedUsd.totalFees;
                   if (detailsModalType === 'balance') val = stats.aggregatedUsd.finalBalance;
+                  if (detailsModalType === 'netchange') val = stats.aggregatedUsd.totalChange;
                   
                   const valBig = new Big(val);
                   
