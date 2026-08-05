@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Big from 'big.js';
 import { FileText, Download, ChevronDown, Activity, TrendingUp, CreditCard, Wallet, Loader2, X } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
@@ -14,6 +14,7 @@ import { BybitTransactionFilters, TX_TYPES, typeColorMap, typeHexColorMap } from
 import { BybitTransactionProgress } from './BybitTransactionProgress';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { LogManager } from '../../../services/LogManager';
+import { CoinIcon } from '../../ui/CoinIcon';
 
 export type DetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | null;
 
@@ -29,12 +30,25 @@ export function BybitTransactions() {
 
   // ── Refresh animation indicator key ──
   const filterMonitorKey = `${filters.category}-${filters.type}-${filters.currency}-${filters.accountId}-${filters.timePeriod}`;
-  const { filteredEntries, isLoading, isSyncing, isCalculatingUsd, progress, error, stats } = useBybitTransactions(filters);
+  
+  const { entries, filteredEntries, isLoading, isSyncing, isCalculatingUsd, progress, error, stats } = useBybitTransactions(filters);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [detailsModalType, setDetailsModalType] = useState<DetailsModalType>(null);
+
+  const availableCurrencies = useMemo(() => {
+    const currencies = new Set<string>();
+    entries.forEach(e => {
+      if (e.currency) currencies.add(e.currency);
+    });
+    return Array.from(currencies).sort().map(c => ({ 
+      value: c, 
+      label: c,
+      icon: <CoinIcon symbol={c} size={16} /> 
+    }));
+  }, [entries]);
 
   const { page: currentPage, setPage: setCurrentPage, paginated: paginatedEntries, totalItems: entriesTotal } = usePagination(
     filteredEntries, 50, [filters]
@@ -120,7 +134,7 @@ export function BybitTransactions() {
       </div>
 
       {/* Filters */}
-      <BybitTransactionFilters filters={filters} setFilters={setFilters} />
+      <BybitTransactionFilters filters={filters} setFilters={setFilters} availableCurrencies={availableCurrencies} />
 
       {/* Stats Cards */}
       {filteredEntries.length > 0 && (

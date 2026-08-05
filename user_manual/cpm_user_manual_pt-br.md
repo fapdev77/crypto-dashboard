@@ -7,14 +7,15 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
 ---
 
 ## 📌 Sumário
+
 1. [Arquitetura de Segurança Zero-Trust](#1-arquitetura-de-segurança-zero-trust)
 2. [Configuração Inicial e Chaves de API](#2-configuração-inicial-e-chaves-de-api)
 3. [Modo Simulação (Mock Data)](#3-modo-simulação-mock-data)
-4. [Análise de Latência e Desempenho via REST](#4-análise-de-latência-e-desempenho-via-rest)
-5. [Terminal de Logs Integrado (Connection Logs)](#5-terminal-de-logs-integrado-connection-logs)
-6. [Sincronização Avançada com Cache IndexedDB](#6-sincronização-avançada-com-cache-indexeddb)
-7. [Guia de Telas e Navegação Diária](#7-guia-de-telas-e-navegação-diária)
-8. [Exportação de Relatórios Operacionais](#8-exportação-de-relatórios-operacionais)
+4. [Terminal de Logs Integrado (Connection Logs)](#4-terminal-de-logs-integrado-connection-logs)
+5. [Sincronização e Configurações de Cache (Settings)](#5-sincronização-e-configurações-de-cache-settings)
+6. [Guia de Telas e Navegação Diária](#6-guia-de-telas-e-navegação-diária)
+7. [Exportação de Relatórios Operacionais](#7-exportação-de-relatórios-operacionais)
+8. [Suporte a PWA (Instalar App)](#8-suporte-a-pwa-instalar-app)
 9. [Solução de Problemas Comuns (FAQ)](#9-solução-de-problemas-comuns-faq)
 
 ---
@@ -79,6 +80,7 @@ Para garantir um carregamento ultrarrápido das suas informações e evitar que 
 Através da tela **Settings** no menu lateral, você pode controlar o funcionamento do aplicativo:
 - **Intervalos de Atualização (Polling)**: Ajuste com que frequência o sistema busca novas ordens, posições ou taxas de financiamento. Isso é útil caso você queira atualizações mais rápidas ou prefira reduzir o consumo de internet.
 - **Limpeza de Cache (Clear Data)**: Caso você sinta que o aplicativo está exibindo dados desatualizados, ordens travadas ou inconsistências após operar diretamente na corretora, você pode usar os botões de limpeza (ex: *Clear Orders Cache*, *Clear Funding Cache*). Isso forçará o aplicativo a baixar todo o seu histórico novamente na próxima sincronização.
+- **Wipe All Local Client Data (Apagar Tudo)**: Na Danger Zone, você pode redefinir o aplicativo para as configurações de fábrica. Isso apagará todas as chaves de API armazenadas, caches históricos e preferências do usuário do seu navegador, retornando o aplicativo ao seu estado limpo original.
 - **Simulation Mode**: Ative ou desative o modo de simulação a qualquer momento para testar a interface com dados fictícios.
 
 ---
@@ -143,7 +145,13 @@ Deseja realizar auditorias externas ou arquivar seus relatórios? Acesse a aba *
 
 ---
 
-## 8. Solução de Problemas Comuns (FAQ)
+## 8. Suporte a PWA (Instalar App)
+
+O CPM é construído como um Progressive Web App (PWA). Você pode instalá-lo em seu Desktop ou dispositivo móvel para executá-lo como um aplicativo nativo autônomo. Para instalá-lo, procure o ícone de instalação na barra de endereços do seu navegador (Chrome/Edge) ou use a opção "Adicionar à Tela Inicial" no Safari iOS.
+
+---
+
+## 9. Solução de Problemas Comuns (FAQ)
 
 ### Minhas chaves de API não conectam. O que fazer?
 1. Verifique se copiou a chave sem espaços extras no início ou fim.
