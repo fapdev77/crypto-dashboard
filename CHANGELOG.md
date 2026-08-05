@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.15.0...v1.16.0) (2026-08-05)
+
+
+### Features
+
+* **analytics:** make currency filter dynamic ([bb0b57a](https://github.com/fapdev77/crypto-dashboard/commit/bb0b57a1479c053b64aa5c7e704d833da12b5634))
+
 # 1.0.0 (2026-07-26)
 
 
