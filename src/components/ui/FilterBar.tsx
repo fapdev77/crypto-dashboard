@@ -45,14 +45,14 @@ export interface FilterBarProps {
   period?: {
     value: string;
     onChange: (val: any) => void;
-    options: Array<{ value: string; label: string }>;
+    options: Array<{ value: string; label: string; icon?: React.ReactNode }>;
   };
 
   // Side Filter
   side?: {
     value: string;
     onChange: (val: string) => void;
-    options: Array<{ value: string; label: string }>;
+    options: Array<{ value: string; label: string; icon?: React.ReactNode }>;
     labelAll?: string; // Defaults to "All Sides"
   };
 
@@ -88,6 +88,7 @@ export function FilterBar({
   const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [isInstrumentDropdownOpen, setIsInstrumentDropdownOpen] = useState(false);
+  const [isSideDropdownOpen, setIsSideDropdownOpen] = useState(false);
 
   // Extract unique active exchanges from keys or options
   const activeExchanges = useMemo(() => {
@@ -277,18 +278,74 @@ export function FilterBar({
 
       {/* 4. Side Select */}
       {side && (
-        <select
-          value={side.value}
-          onChange={(e) => side.onChange(e.target.value)}
-          className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer"
-        >
-          <option value="All">{side.labelAll || 'All Sides'}</option>
-          {side.options.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative z-20">
+          <button
+            type="button"
+            onClick={() => setIsSideDropdownOpen(!isSideDropdownOpen)}
+            className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between min-w-[140px] cursor-pointer"
+          >
+            <span className="truncate max-w-[120px] flex items-center gap-2">
+              {(() => {
+                if (!side.value || side.value === 'All') return side.labelAll || 'All Sides';
+                const opt = side.options.find(o => o.value === side.value);
+                return (
+                  <>
+                    {opt?.icon}
+                    {opt ? opt.label : side.value}
+                  </>
+                );
+              })()}
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
+                isSideDropdownOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+          
+          {isSideDropdownOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setIsSideDropdownOpen(false)}
+              />
+              <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => {
+                    side.onChange('All');
+                    setIsSideDropdownOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
+                    side.value === 'All' || !side.value
+                      ? 'bg-[#2F6BFF] text-white'
+                      : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                  }`}
+                >
+                  <span>{side.labelAll || 'All Sides'}</span>
+                </button>
+                {side.options.map((opt, i) => (
+                  <button
+                    key={`${opt.value}-${i}`}
+                    type="button"
+                    onClick={() => {
+                      side.onChange(opt.value);
+                      setIsSideDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
+                      side.value === opt.value
+                        ? 'bg-[#2F6BFF] text-white'
+                        : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                    }`}
+                  >
+                    {opt.icon && <span className="shrink-0">{opt.icon}</span>}
+                    <span className="truncate">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       {/* 5. Type Select */}

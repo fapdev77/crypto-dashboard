@@ -83,13 +83,6 @@ const CATEGORIES = [
   { value: 'inverse', label: 'Inverse', tooltip: 'Inverse contracts including Inverse perpetual and Inverse futures.' },
   { value: 'option', label: 'Options', tooltip: 'Options contracts.' }
 ];
-const CURRENCIES = [
-  { value: 'USDT', label: 'USDT' },
-  { value: 'USDC', label: 'USDC' },
-  { value: 'BTC', label: 'BTC' },
-  { value: 'ETH', label: 'ETH' },
-  { value: 'SOL', label: 'SOL' },
-];
 const TIME_PERIODS = [
   { label: 'All Time', ms: 0 },
   { label: 'Today', ms: 24 * 60 * 60 * 1000 },
@@ -105,9 +98,10 @@ const TIME_PERIODS = [
 interface Props {
   filters: TxFilters;
   setFilters: React.Dispatch<React.SetStateAction<TxFilters>>;
+  availableCurrencies: { value: string; label: string; icon?: React.ReactNode }[];
 }
 
-export function BybitTransactionFilters({ filters, setFilters }: Props) {
+export function BybitTransactionFilters({ filters, setFilters, availableCurrencies }: Props) {
   const { keys } = useApiKeysStore();
   const bybitKeys = keys.filter(k => k.exchange === 'bybit' && k.isActive);
 
@@ -136,7 +130,7 @@ export function BybitTransactionFilters({ filters, setFilters }: Props) {
       side={{
         value: filters.currency,
         onChange: (val) => setFilters(p => ({ ...p, currency: val })),
-        options: CURRENCIES,
+        options: availableCurrencies,
         labelAll: 'All Currencies',
       }}
       // Account filter
