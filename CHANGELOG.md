@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.16.0...v1.17.0) (2026-08-05)
+
+
+### Features
+
+* add PWA support for native-like experience ([697ae65](https://github.com/fapdev77/crypto-dashboard/commit/697ae65822f6ae853bae1cf65e73895e834c385e))
+
 # 1.0.0 (2026-07-26)
 
 
