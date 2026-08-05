@@ -1,10 +1,3 @@
-## [1.17.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.17.0...v1.17.1) (2026-08-05)
-
-
-### Bug Fixes
-
-* **ui:** update Bybit transaction row labels and styling ([4de4f4c](https://github.com/fapdev77/crypto-dashboard/commit/4de4f4c523dbbfd16d40d008c2faa90b8a61bda3))
-
 # 1.0.0 (2026-07-26)
 
 
