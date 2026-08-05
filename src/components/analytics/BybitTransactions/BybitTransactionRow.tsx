@@ -103,14 +103,14 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
         <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
           <AppTooltip description={`Currency (${entry.currency}) and contract symbol`}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
-              Currency · Symbol
+              Currency & Symbol
             </span>
           </AppTooltip>
           <div className="flex items-center gap-2">
             <CoinIcon symbol={entry.symbol || entry.currency} size={20} className="w-5 h-5 shrink-0" />
             <div className="flex flex-col">
               <span className="text-white text-xs font-semibold">{entry.currency}</span>
-              {entry.symbol && <span className="text-[10px] text-[#8E9299] truncate max-w-[80px]">{entry.symbol}</span>}
+              {entry.symbol && <span className="text-[10px] text-white/80 truncate max-w-[80px]">{entry.symbol}</span>}
             </div>
           </div>
           <span className="w-max px-1.5 py-0.5 text-[9px] rounded font-semibold border text-white bg-white/10 border-white/20">
@@ -122,14 +122,14 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
         <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
           <AppTooltip description="Transaction type and product category">
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
-              Type · Category
+              Type & Category
             </span>
           </AppTooltip>
           <span className={`w-max px-1.5 py-0.5 text-[9px] rounded font-semibold border ${typeClass}`}>
             {typeLabel}
           </span>
           {entry.category && (
-            <span className="text-[9px] text-[#8E9299] uppercase tracking-wider">{entry.category}</span>
+            <span className="text-[9px] text-white/80 uppercase tracking-wider">{entry.category}</span>
           )}
         </div>
 
@@ -137,44 +137,44 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
         <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
           <AppTooltip description={`Trade direction and quantity ${isInverse ? '(in USD)' : `(in ${entry.currency || 'coin'})`}`}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
-              Dir · Qty
+              Side & Qty
             </span>
           </AppTooltip>
           <span className={`text-xs font-mono ${sideColor}`}>
             {entry.side === 'None' ? '-' : entry.side}
           </span>
-          <span className="text-[10px] font-mono text-[#8E9299]">{fmtQty()}</span>
+          <span className="text-[10px] font-mono text-white/80">{fmtQty()}</span>
         </div>
 
         {/* Col 5: Filled Price (tradePrice) + Position (size) */}
         <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
           <AppTooltip description={`Trade execution price and remaining position size ${isInverse ? '(in USD)' : `(in ${entry.currency || 'coin'})`}`}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
-              Price · Size
+              Filled Price & Size
             </span>
           </AppTooltip>
           <span className="text-xs text-white font-mono">{fmtPrice()}</span>
-          <span className="text-[10px] font-mono text-[#8E9299]">{fmtSize()}</span>
+          <span className="text-[10px] font-mono text-white/80">{fmtSize()}</span>
         </div>
 
         {/* Col 6: Funding + Fee */}
         <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
           <AppTooltip description={`Funding fee and trading fee. Values in ${isInverse ? entry.currency : 'USD'}${isInverse && usdPrice ? `. 1 ${entry.currency} ≈ ${formatCurrency(usdPrice, 'usd')}` : ''}.`}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
-              Funding · Fee
+              Funding & Trade Fee
             </span>
           </AppTooltip>
           <span className={`text-xs font-mono ${fundingNum.gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
             {fmtFinancial(fundingNum)}
           </span>
           {isInverse && fmtUsdApprox(fundingNum) && (
-            <span className="text-[8px] font-mono text-[#8E9299]">{fmtUsdApprox(fundingNum)}</span>
+            <span className="text-[8px] font-mono text-white/80">{fmtUsdApprox(fundingNum)}</span>
           )}
           <span className={`text-[10px] font-mono ${feeNum.gte(0) ? 'text-[#FF4444]' : 'text-[#00C853]'}`}>
             {fmtFinancial(feeNum)}
           </span>
           {isInverse && fmtUsdApprox(feeNum) && (
-            <span className="text-[8px] font-mono text-[#8E9299]">{fmtUsdApprox(feeNum)}</span>
+            <span className="text-[8px] font-mono text-white/80">{fmtUsdApprox(feeNum)}</span>
           )}
         </div>
 
@@ -182,20 +182,20 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
         <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
           <AppTooltip description={`Cash flow and Net change (cashFlow + funding - fee). Values in ${isInverse ? entry.currency : 'USD'}${isInverse && usdPrice ? `. USD approx: multiply by ${formatCurrency(usdPrice, 'usd')}` : ''}.`}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
-              Cash Flow · Change
+              Cash Flow & Change
             </span>
           </AppTooltip>
           <span className={`text-xs font-mono ${cashFlowNum.gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
             {fmtFinancial(cashFlowNum)}
           </span>
           {isInverse && fmtUsdApprox(cashFlowNum) && (
-            <span className="text-[8px] font-mono text-[#8E9299]">{fmtUsdApprox(cashFlowNum)}</span>
+            <span className="text-[8px] font-mono text-white/80">{fmtUsdApprox(cashFlowNum)}</span>
           )}
           <span className={`text-[10px] font-mono ${changeNum.gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
             {fmtFinancial(changeNum)}
           </span>
           {isInverse && fmtUsdApprox(changeNum) && (
-            <span className="text-[8px] font-mono text-[#8E9299]">{fmtUsdApprox(changeNum)}</span>
+            <span className="text-[8px] font-mono text-white/80">{fmtUsdApprox(changeNum)}</span>
           )}
         </div>
 
@@ -217,7 +217,7 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
             {fmtFinancial(balanceNum)}
           </span>
           {isInverse && fmtUsdApprox(balanceNum) && (
-            <span className="text-[9px] font-mono text-[#8E9299]">{fmtUsdApprox(balanceNum)}</span>
+            <span className="text-[9px] font-mono text-white/80">{fmtUsdApprox(balanceNum)}</span>
           )}
           <span className="text-[9px] text-[#8E9299] font-mono">{entry.currency}</span>
         </div>
