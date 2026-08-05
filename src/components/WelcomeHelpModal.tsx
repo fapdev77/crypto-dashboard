@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe, ShieldAlert, Compass, AlertTriangle, BookOpen } from 'lucide-react';
+import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe, ShieldAlert, Compass, AlertTriangle, BookOpen, Smartphone } from 'lucide-react';
 import { useSettingsStore } from '../store/settingsStore';
 import { UserManualModal } from './UserManualModal';
 
@@ -31,6 +31,8 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       feature3Desc: <>Click the <strong>Eye Icon</strong> in the header to toggle Privacy Mode. This hides balance, size, and PnL values for safe public sharing or streaming.</>,
       feature4Title: "Automatic Syncing & Cache",
       feature4Desc: <>Position, Order, and Funding histories run on a background cache. Customize update intervals or trigger a manual sync under the <strong>Settings</strong> page.</>,
+      feature5Title: "PWA Support",
+      feature5Desc: <>Install the application as a Progressive Web App (PWA) on your mobile or desktop device for a native experience.</>,
       showOnStartup: "Show on startup",
       getStarted: "Get Started",
       disclaimerTitle: "Beta Phase & Data Accuracy Disclaimer",
@@ -51,6 +53,8 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
       feature3Desc: <>Clique no <strong>Ícone de Olho</strong> no cabeçalho para alternar o Modo Privacidade. Isso oculta os valores de saldo, tamanho e PnL para compartilhamento público ou transmissões seguras.</>,
       feature4Title: "Sincronização Automática e Cache",
       feature4Desc: <>O histórico de posições, ordens e funding é executado em um cache em segundo plano. Personalize os intervalos de atualização ou acione uma sincronização manual na página <strong>Settings</strong>.</>,
+      feature5Title: "Suporte a PWA",
+      feature5Desc: <>Instale o aplicativo como um Progressive Web App (PWA) em seu dispositivo móvel ou desktop para uma experiência nativa e rápida.</>,
       showOnStartup: "Mostrar ao iniciar",
       getStarted: "Começar",
       disclaimerTitle: "Fase Beta e Aviso sobre Precisão de Dados",
@@ -227,6 +231,19 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 <h4 className="text-white font-medium text-sm">{t.feature4Title}</h4>
                 <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
                   {t.feature4Desc}
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 5 */}
+            <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
+              <div className="w-8 h-8 rounded-lg bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center shrink-0 mt-0.5">
+                <Smartphone className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div>
+                <h4 className="text-white font-medium text-sm">{t.feature5Title}</h4>
+                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
+                  {t.feature5Desc}
                 </p>
               </div>
             </div>
