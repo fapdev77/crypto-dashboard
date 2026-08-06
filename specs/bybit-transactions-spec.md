@@ -349,6 +349,8 @@ Main page component, matching the style of `OrderHistory.tsx`.
 | `BybitTransactionRow.tsx` | `BybitTransactionRow` | Single row + expand details |
 | `BybitTransactionFilters.tsx` | `BybitTransactionFilters` | Filter bar adapter |
 | `BybitTransactionProgress.tsx` | `BybitTransactionProgress` | Dynamic sync progress badge |
+| `BybitTransactionDetailsModal.tsx` | `BybitTransactionDetailsModal` | Modal displaying detailed stats and reports |
+| `BybitTransactionNetChangeReport.tsx`| `BybitTransactionNetChangeReport` | Detailed operational performance and ROI report |
 
 ### 6.3. Column Layout
 
