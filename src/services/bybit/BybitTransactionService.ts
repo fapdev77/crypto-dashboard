@@ -305,10 +305,14 @@ export class BybitTransactionService {
       const stableMatch = isStable(e.currency);
       const bucket = stableMatch ? stable : (perCurrency[e.currency] || (perCurrency[e.currency] = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0) }));
 
+      const isTransfer = ['TRANSFER', 'TRANSFER_IN', 'TRANSFER_OUT'].includes(e.type.toUpperCase());
+
       bucket.totalFunding = bucket.totalFunding.plus(new Big(e.funding || '0'));
       bucket.totalFees = bucket.totalFees.plus(new Big(e.fee || '0'));
-      bucket.totalCashFlow = bucket.totalCashFlow.plus(new Big(e.cashFlow || '0'));
-      bucket.totalChange = bucket.totalChange.plus(new Big(e.change || '0'));
+      if (!isTransfer) {
+        bucket.totalCashFlow = bucket.totalCashFlow.plus(new Big(e.cashFlow || '0'));
+        bucket.totalChange = bucket.totalChange.plus(new Big(e.change || '0'));
+      }
 
       const balKey = `${e.connectionId}-${e.currency}`;
       if (!latestBalance[balKey] || e.transactionTime > latestBalance[balKey].time) {
