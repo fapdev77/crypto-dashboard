@@ -1,3 +1,12 @@
+# [1.20.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.19.0...v1.20.0) (2026-08-06)
+
+
+### Features
+
+* add total inflow and outflow to transaction stats ([11fea3b](https://github.com/fapdev77/crypto-dashboard/commit/11fea3b82664cc0b6aefe5c8d6d7b6c1140449ef))
+* **analytics:** implement private mode in Bybit report ([bbc631e](https://github.com/fapdev77/crypto-dashboard/commit/bbc631e2a62e9abace4148d935aadea59344f6e4))
+* **analytics:** move balance calculation to service ([5761151](https://github.com/fapdev77/crypto-dashboard/commit/57611516b75b2fcd9ba7cef660eb23442a14ccd2))
+
 # 1.0.0 (2026-07-26)
 
 
