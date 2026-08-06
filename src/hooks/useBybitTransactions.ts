@@ -234,5 +234,6 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
     progress: syncStore.bybitTxProgress,
     error,
     stats,
+    tokenRates,
   };
 }

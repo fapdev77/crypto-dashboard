@@ -1,9 +1,9 @@
-## [1.17.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.17.0...v1.17.1) (2026-08-05)
+# [1.19.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.18.0...v1.19.0) (2026-08-05)
 
 
-### Bug Fixes
+### Features
 
-* **ui:** update Bybit transaction row labels and styling ([4de4f4c](https://github.com/fapdev77/crypto-dashboard/commit/4de4f4c523dbbfd16d40d008c2faa90b8a61bda3))
+* exclude transfer types from cash flow and change stats ([e54ed96](https://github.com/fapdev77/crypto-dashboard/commit/e54ed963d3e0fbbb96252ebd714666cec2ba5df4))
 
 # 1.0.0 (2026-07-26)
 
