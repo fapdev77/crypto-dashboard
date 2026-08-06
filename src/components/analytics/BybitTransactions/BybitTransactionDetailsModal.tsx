@@ -15,6 +15,7 @@ interface BybitTransactionDetailsModalProps {
   filteredEntries: BybitTransactionLogEntry[];
   tokenRates: Record<string, number>;
   maskVal: (val: string | number) => string;
+  isPrivateMode: boolean;
 }
 
 export function BybitTransactionDetailsModal({
@@ -24,6 +25,7 @@ export function BybitTransactionDetailsModal({
   filteredEntries,
   tokenRates,
   maskVal,
+  isPrivateMode,
 }: BybitTransactionDetailsModalProps) {
   if (!detailsModalType) return null;
 
@@ -51,7 +53,8 @@ export function BybitTransactionDetailsModal({
             <BybitTransactionNetChangeReport 
               filteredEntries={filteredEntries} 
               stats={stats} 
-              tokenRates={tokenRates} 
+              tokenRates={tokenRates}
+              isPrivateMode={isPrivateMode} 
             />
           ) : detailsModalType === 'tx' ? (
             <>
@@ -97,9 +100,7 @@ export function BybitTransactionDetailsModal({
                   <div className="flex items-center justify-between bg-[#1e232b] p-3 rounded-lg border border-[#2a2b30]/50">
                     <span className="text-[#8E9299] text-sm">Stablecoins (USDT, USDC, etc.)</span>
                     <span className={`font-mono font-medium ${colorClass}`}>
-                      {detailsModalType === 'fees' 
-                         ? (valBig.eq(0) ? '0.00' : (valBig.gte(0) ? `-${valBig.toFixed(4)}` : `+${valBig.abs().toFixed(4)}`))
-                        : (isPositive ? `+${valBig.toFixed(4)}` : valBig.toFixed(4))}
+                      {isPrivateMode ? '****' : (detailsModalType === 'fees' ? (valBig.eq(0) ? '0.00' : (valBig.gte(0) ? `-${valBig.toFixed(4)}` : `+${valBig.abs().toFixed(4)}`)) : (isPositive ? `+${valBig.toFixed(4)}` : valBig.toFixed(4)))}
                     </span>
                   </div>
                 );
@@ -128,9 +129,7 @@ export function BybitTransactionDetailsModal({
                   <div key={cur} className="flex items-center justify-between bg-[#1e232b] p-3 rounded-lg border border-[#2a2b30]/50">
                     <span className="text-[#8E9299] text-sm font-bold">{cur}</span>
                     <span className={`font-mono font-medium ${colorClass}`}>
-                      {detailsModalType === 'fees' 
-                         ? (valBig.eq(0) ? '0.00' : (valBig.gte(0) ? `-${valBig.toFixed(8)}` : `+${valBig.abs().toFixed(8)}`))
-                        : (isPositive ? `+${valBig.toFixed(8)}` : valBig.toFixed(8))} {cur}
+                      {isPrivateMode ? '****' : (detailsModalType === 'fees' ? (valBig.eq(0) ? '0.00' : (valBig.gte(0) ? `-${valBig.toFixed(8)}` : `+${valBig.abs().toFixed(8)}`)) : (isPositive ? `+${valBig.toFixed(8)}` : valBig.toFixed(8)))} {isPrivateMode ? '' : cur}
                     </span>
                   </div>
                 );

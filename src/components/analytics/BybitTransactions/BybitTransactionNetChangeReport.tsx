@@ -7,12 +7,14 @@ interface BybitTransactionNetChangeReportProps {
   filteredEntries: BybitTransactionLogEntry[];
   stats: TxStats;
   tokenRates: Record<string, number>;
+  isPrivateMode?: boolean;
 }
 
 export function BybitTransactionNetChangeReport({
   filteredEntries,
   stats,
   tokenRates,
+  isPrivateMode = false,
 }: BybitTransactionNetChangeReportProps) {
   const [expandedReportCurrencies, setExpandedReportCurrencies] = useState<Record<string, boolean>>({});
 
@@ -179,7 +181,7 @@ export function BybitTransactionNetChangeReport({
                         {isPositive ? '+' : ''}{report.ganhoPercentual.toFixed(2)}%
                       </span>
                       <span className="text-xs text-[#8E9299] font-mono">
-                        {isPositive ? '+' : ''}{Number(report.ganhoAbsolutoUSD).toFixed(2)} USD
+                        {isPrivateMode ? "****" : `${isPositive ? "+" : ""}${Number(report.ganhoAbsolutoUSD).toFixed(2)} USD`}
                       </span>
                     </div>
                     <svg 
@@ -205,19 +207,19 @@ export function BybitTransactionNetChangeReport({
                         <div className="flex flex-col gap-1.5 text-xs font-mono">
                           <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                             <span className="text-[#8E9299]">Saldo Inicial</span>
-                            <span className="text-[#d1d5db] font-medium">{Number(report.initialBalance).toFixed(6)} {report.currency}</span>
+                            <span className="text-[#d1d5db] font-medium">{isPrivateMode ? "****" : `${Number(report.initialBalance).toFixed(6)} ${report.currency}`}</span>
                           </div>
                           <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                             <span className="text-[#8E9299]">Total Inflow</span>
-                            <span className="text-[#00C853] font-medium">+{Number(report.totalInflow).toFixed(6)} {report.currency}</span>
+                            <span className="text-[#00C853] font-medium">{isPrivateMode ? "****" : `+${Number(report.totalInflow).toFixed(6)} ${report.currency}`}</span>
                           </div>
                           <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                             <span className="text-[#8E9299]">Total Outflow</span>
-                            <span className="text-[#FF4444] font-medium">-{Number(report.totalOutflow).toFixed(6)} {report.currency}</span>
+                            <span className="text-[#FF4444] font-medium">{isPrivateMode ? "****" : `-${Number(report.totalOutflow).toFixed(6)} ${report.currency}`}</span>
                           </div>
                           <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                             <span className="text-[#8E9299]">Saldo Final</span>
-                            <span className="text-white font-bold">{Number(report.finalBalance).toFixed(6)} {report.currency}</span>
+                            <span className="text-white font-bold">{isPrivateMode ? "****" : `${Number(report.finalBalance).toFixed(6)} ${report.currency}`}</span>
                           </div>
                           <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                             <span className="text-[#8E9299]">Ganho Percentual</span>
@@ -228,13 +230,13 @@ export function BybitTransactionNetChangeReport({
                           <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                             <span className="text-[#8E9299]">Ganho Absoluto</span>
                             <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                              {isPositive ? '+' : ''}{Number(report.ganhoAbsoluto).toFixed(6)} {report.currency}
+                              {isPrivateMode ? "****" : `${isPositive ? "+" : ""}${Number(report.ganhoAbsoluto).toFixed(6)} ${report.currency}`}
                             </span>
                           </div>
                           <div className="flex justify-between py-1.5">
                             <span className="text-[#8E9299]">Ganho Absoluto em USD</span>
                             <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                              {isPositive ? '+$' : '-$'}{Math.abs(Number(report.ganhoAbsolutoUSD)).toFixed(2)}
+                              {isPrivateMode ? "****" : `${isPositive ? "+$" : "-$"}${Math.abs(Number(report.ganhoAbsolutoUSD)).toFixed(2)}`}
                             </span>
                           </div>
                         </div>
@@ -273,7 +275,7 @@ export function BybitTransactionNetChangeReport({
                               <div className="flex justify-between py-1 border-b border-[#2a2b30]/30 pl-1.5">
                                 <span className="text-[#8E9299]/80">─ Trades Líquido</span>
                                 <span className={`font-medium ${new Big(report.tradesLiquido).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                                  {new Big(report.tradesLiquido).gt(0) ? '+' : ''}{Number(report.tradesLiquido).toFixed(6)} {report.currency}
+                                  {isPrivateMode ? "****" : `${new Big(report.tradesLiquido).gt(0) ? "+" : ""}${Number(report.tradesLiquido).toFixed(6)} ${report.currency}`}
                                 </span>
                               </div>
                             </>
@@ -282,19 +284,19 @@ export function BybitTransactionNetChangeReport({
                           <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                             <span className="text-[#8E9299]">Funding Rate</span>
                             <span className={`font-medium ${new Big(report.fundingRate).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                              {new Big(report.fundingRate).gt(0) ? '+' : ''}{Number(report.fundingRate).toFixed(6)} {report.currency}
+                              {isPrivateMode ? "****" : `${new Big(report.fundingRate).gt(0) ? "+" : ""}${Number(report.fundingRate).toFixed(6)} ${report.currency}`}
                             </span>
                           </div>
                           <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                             <span className="text-[#8E9299]">Cash Flow Total</span>
                             <span className="text-[#d1d5db] font-medium">
-                              {Number(report.cashFlowTotal).toFixed(6)} {report.currency}
+                              {isPrivateMode ? "****" : `${Number(report.cashFlowTotal).toFixed(6)} ${report.currency}`}
                             </span>
                           </div>
                           <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                             <span className="text-[#8E9299]">Fees Pagos</span>
                             <span className="text-[#FF4444] font-medium">
-                              {feesBig.gt(0) ? '-' : ''}{Number(report.feesPagos).toFixed(6)} {report.currency}
+                              {isPrivateMode ? "****" : `${feesBig.gt(0) ? "-" : ""}${Number(report.feesPagos).toFixed(6)} ${report.currency}`}
                             </span>
                           </div>
                           <div className="flex justify-between py-1.5">
