@@ -88,19 +88,30 @@ export function BybitTransactions() {
         totalFees: '0',
         totalCashFlow: '0',
         totalChange: '0',
-        finalBalance: '0'
+        finalBalance: '0',
+        totalInflow: '0',
+        totalOutflow: '0'
       });
       
       const totalChange = curStats.totalChange;
       const finalBalance = curStats.finalBalance;
-      const initialBalance = new Big(finalBalance).minus(new Big(totalChange)).toString();
+      const totalInflow = curStats.totalInflow;
+      const totalOutflow = curStats.totalOutflow;
+
+      // Initial Balance = Final Balance - Trading Change - Inflows + Outflows
+      const initialBalance = new Big(finalBalance)
+        .minus(new Big(totalChange))
+        .minus(new Big(totalInflow))
+        .plus(new Big(totalOutflow))
+        .toString();
       
       const initBig = new Big(initialBalance);
       const changeBig = new Big(totalChange);
+      const basisBig = initBig.plus(new Big(totalInflow));
       let ganhoPercentual = 0;
-      if (initBig.gt(0)) {
-        ganhoPercentual = changeBig.div(initBig).times(100).toNumber();
-      } else if (initBig.eq(0) && changeBig.gt(0)) {
+      if (basisBig.gt(0)) {
+        ganhoPercentual = changeBig.div(basisBig).times(100).toNumber();
+      } else if (basisBig.eq(0) && changeBig.gt(0)) {
         ganhoPercentual = 100;
       }
       
@@ -129,6 +140,8 @@ export function BybitTransactions() {
         currency: cur,
         initialBalance,
         finalBalance,
+        totalInflow,
+        totalOutflow,
         ganhoPercentual,
         ganhoAbsoluto: totalChange,
         ganhoAbsolutoUSD,
@@ -567,6 +580,14 @@ export function BybitTransactions() {
                                     <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                                       <span className="text-[#8E9299]">Saldo Inicial</span>
                                       <span className="text-[#d1d5db] font-medium">{Number(report.initialBalance).toFixed(6)} {report.currency}</span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Total Inflow</span>
+                                      <span className="text-[#00C853] font-medium">+{Number(report.totalInflow).toFixed(6)} {report.currency}</span>
+                                    </div>
+                                    <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                                      <span className="text-[#8E9299]">Total Outflow</span>
+                                      <span className="text-[#FF4444] font-medium">-{Number(report.totalOutflow).toFixed(6)} {report.currency}</span>
                                     </div>
                                     <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                                       <span className="text-[#8E9299]">Saldo Final</span>

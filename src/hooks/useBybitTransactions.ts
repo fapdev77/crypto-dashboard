@@ -34,6 +34,8 @@ export interface CurrencyStats {
   totalCashFlow: string;
   totalChange: string;
   finalBalance: string;
+  totalInflow: string;
+  totalOutflow: string;
 }
 
 export interface TxStats {
@@ -199,6 +201,8 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
     let totalCashFlowUsd = new Big(rawStats.stable.totalCashFlow);
     let totalChangeUsd = new Big(rawStats.stable.totalChange);
     let finalBalanceUsd = new Big(rawStats.stable.finalBalance);
+    let totalInflowUsd = new Big(rawStats.stable.totalInflow);
+    let totalOutflowUsd = new Big(rawStats.stable.totalOutflow);
 
     for (const [ccy, vals] of Object.entries(rawStats.perCurrency)) {
       const rate = tokenRates[ccy] || 0; // If rate isn't loaded yet, it contributes 0 to USD
@@ -208,6 +212,8 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
       totalCashFlowUsd = totalCashFlowUsd.plus(new Big(vals.totalCashFlow).times(rate));
       totalChangeUsd = totalChangeUsd.plus(new Big(vals.totalChange).times(rate));
       finalBalanceUsd = finalBalanceUsd.plus(new Big(vals.finalBalance).times(rate));
+      totalInflowUsd = totalInflowUsd.plus(new Big(vals.totalInflow).times(rate));
+      totalOutflowUsd = totalOutflowUsd.plus(new Big(vals.totalOutflow).times(rate));
     }
 
     return {
@@ -221,6 +227,8 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
         totalCashFlow: totalCashFlowUsd.toString(),
         totalChange: totalChangeUsd.toString(),
         finalBalance: finalBalanceUsd.toString(),
+        totalInflow: totalInflowUsd.toString(),
+        totalOutflow: totalOutflowUsd.toString(),
       }
     };
   }, [rawStats, tokenRates]);
