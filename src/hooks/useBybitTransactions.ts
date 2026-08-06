@@ -36,6 +36,8 @@ export interface CurrencyStats {
   finalBalance: string;
   totalInflow: string;
   totalOutflow: string;
+  initialBalance: string;
+  percentageChange: number;
 }
 
 export interface TxStats {
@@ -216,6 +218,16 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
       totalOutflowUsd = totalOutflowUsd.plus(new Big(vals.totalOutflow).times(rate));
     }
 
+    const initialBalanceUsd = finalBalanceUsd.minus(totalChangeUsd).minus(totalInflowUsd).plus(totalOutflowUsd);
+    
+    const basisUsd = initialBalanceUsd.plus(totalInflowUsd);
+    let percentageChangeUsd = 0;
+    if (basisUsd.gt(0)) {
+      percentageChangeUsd = totalChangeUsd.div(basisUsd).times(100).toNumber();
+    } else if (basisUsd.eq(0) && totalChangeUsd.gt(0)) {
+      percentageChangeUsd = 100;
+    }
+
     return {
       totalCount: rawStats.totalCount,
       typeBreakdown: rawStats.typeBreakdown,
@@ -229,6 +241,8 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
         finalBalance: finalBalanceUsd.toString(),
         totalInflow: totalInflowUsd.toString(),
         totalOutflow: totalOutflowUsd.toString(),
+        initialBalance: initialBalanceUsd.toString(),
+        percentageChange: percentageChangeUsd,
       }
     };
   }, [rawStats, tokenRates]);

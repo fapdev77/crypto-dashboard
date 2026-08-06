@@ -90,30 +90,19 @@ export function BybitTransactions() {
         totalChange: '0',
         finalBalance: '0',
         totalInflow: '0',
-        totalOutflow: '0'
+        totalOutflow: '0',
+        initialBalance: '0',
+        percentageChange: 0
       });
       
       const totalChange = curStats.totalChange;
       const finalBalance = curStats.finalBalance;
       const totalInflow = curStats.totalInflow;
       const totalOutflow = curStats.totalOutflow;
-
-      // Initial Balance = Final Balance - Trading Change - Inflows + Outflows
-      const initialBalance = new Big(finalBalance)
-        .minus(new Big(totalChange))
-        .minus(new Big(totalInflow))
-        .plus(new Big(totalOutflow))
-        .toString();
+      const initialBalance = curStats.initialBalance;
+      const ganhoPercentual = curStats.percentageChange;
       
-      const initBig = new Big(initialBalance);
       const changeBig = new Big(totalChange);
-      const basisBig = initBig.plus(new Big(totalInflow));
-      let ganhoPercentual = 0;
-      if (basisBig.gt(0)) {
-        ganhoPercentual = changeBig.div(basisBig).times(100).toNumber();
-      } else if (basisBig.eq(0) && changeBig.gt(0)) {
-        ganhoPercentual = 100;
-      }
       
       const rate = stableMatch ? 1 : (tokenRates[cur] || 0);
       const ganhoAbsolutoUSD = changeBig.times(rate).toString();

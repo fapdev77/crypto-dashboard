@@ -287,9 +287,9 @@ export class BybitTransactionService {
     totalCount: number;
     typeBreakdown: Record<string, number>;
     /** Stablecoin totals (USDT, USDC) — displayed as USD */
-    stable: { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string; totalInflow: string; totalOutflow: string };
+    stable: { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string; totalInflow: string; totalOutflow: string; initialBalance: string; percentageChange: number };
     /** Per-currency breakdown for non-stable (e.g. BTC, ETH) */
-    perCurrency: Record<string, { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string; totalInflow: string; totalOutflow: string }>;
+    perCurrency: Record<string, { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string; totalInflow: string; totalOutflow: string; initialBalance: string; percentageChange: number }>;
   } {
     const typeBreakdown: Record<string, number> = {};
     const stable = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) };
@@ -357,6 +357,21 @@ export class BybitTransactionService {
       }
     }
 
+    const calcDerived = (bucket: any) => {
+      const initialBalance = bucket.finalBalance.minus(bucket.totalChange).minus(bucket.totalInflow).plus(bucket.totalOutflow);
+      const basisBig = initialBalance.plus(bucket.totalInflow);
+      let percentageChange = 0;
+      if (basisBig.gt(0)) {
+        percentageChange = bucket.totalChange.div(basisBig).times(100).toNumber();
+      } else if (basisBig.eq(0) && bucket.totalChange.gt(0)) {
+        percentageChange = 100;
+      }
+      return {
+        initialBalance: initialBalance.toString(),
+        percentageChange
+      };
+    };
+
     return {
       totalCount: entries.length,
       typeBreakdown,
@@ -368,6 +383,7 @@ export class BybitTransactionService {
         finalBalance: stable.finalBalance.toString(),
         totalInflow: stable.totalInflow.toString(),
         totalOutflow: stable.totalOutflow.toString(),
+        ...calcDerived(stable)
       },
       perCurrency: Object.fromEntries(
         Object.entries(perCurrency).map(([cur, vals]) => [cur, {
@@ -378,6 +394,7 @@ export class BybitTransactionService {
           finalBalance: vals.finalBalance.toString(),
           totalInflow: vals.totalInflow.toString(),
           totalOutflow: vals.totalOutflow.toString(),
+          ...calcDerived(vals)
         }])
       ),
     };
