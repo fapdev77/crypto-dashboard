@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Download, AlertTriangle, Shield, Check, FileDown, FileUp, Lock, Unlock } from 'lucide-react';
+import { Upload, Download, AlertTriangle, Shield, Check, FileDown, FileUp, Lock, Unlock, Eye, EyeOff } from 'lucide-react';
 import { useApiKeysStore, ApiCredentials, Exchange } from '../store/apiKeysStore';
 import { encryptData, decryptData } from '../utils/cryptoLib';
 import { ExchangeIcon } from './ui/ExchangeIcon';
@@ -13,10 +13,12 @@ export function SecurityBackupCard() {
 
   // Export State
   const [exportPassphrase, setExportPassphrase] = useState('');
+  const [showExportPassphrase, setShowExportPassphrase] = useState(false);
   const [selectedForExport, setSelectedForExport] = useState<Set<string>>(new Set(keys.map(k => k.id)));
   
   // Import State
   const [importPassphrase, setImportPassphrase] = useState('');
+  const [showImportPassphrase, setShowImportPassphrase] = useState(false);
   const [importedData, setImportedData] = useState<ApiCredentials[] | null>(null);
   const [importError, setImportError] = useState('');
   const [selectedForImport, setSelectedForImport] = useState<Set<string>>(new Set());
@@ -26,6 +28,7 @@ export function SecurityBackupCard() {
 
   // Local Security State
   const [localPassphrase, setLocalPassphrase] = useState('');
+  const [showLocalPassphrase, setShowLocalPassphrase] = useState(false);
   const [localSecurityError, setLocalSecurityError] = useState('');
 
   // Sync selectedForExport when keys list changes
@@ -263,13 +266,22 @@ export function SecurityBackupCard() {
                 <label className="block text-[11px] text-[#8E9299] mb-1">
                   {isEncrypted ? 'Enter Passphrase to Disable' : 'Set Encryption Passphrase (min. 4 chars)'}
                 </label>
-                <input
-                  type="password"
-                  value={localPassphrase}
-                  onChange={(e) => setLocalPassphrase(e.target.value)}
-                  className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF]"
-                  placeholder="Passphrase"
-                />
+                <div className="relative">
+                  <input
+                    type={showLocalPassphrase ? 'text' : 'password'}
+                    value={localPassphrase}
+                    onChange={(e) => setLocalPassphrase(e.target.value)}
+                    className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-1.5 pr-9 text-sm text-white focus:outline-none focus:border-[#2F6BFF]"
+                    placeholder="Passphrase"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLocalPassphrase(!showLocalPassphrase)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9299] hover:text-[#e1e2e6] transition-colors"
+                  >
+                    {showLocalPassphrase ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
                 {localSecurityError && <p className="text-[#FF4444] text-[11px] mt-1">{localSecurityError}</p>}
               </div>
 
@@ -327,13 +339,22 @@ export function SecurityBackupCard() {
             <div className="space-y-3">
               <div>
                 <label className="block text-[11px] text-[#8E9299] mb-1">Passphrase (Required to Decrypt/Import)</label>
-                <input
-                  type="password"
-                  value={exportPassphrase}
-                  onChange={(e) => setExportPassphrase(e.target.value)}
-                  className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF]"
-                  placeholder="Strong passphrase"
-                />
+                <div className="relative">
+                  <input
+                    type={showExportPassphrase ? 'text' : 'password'}
+                    value={exportPassphrase}
+                    onChange={(e) => setExportPassphrase(e.target.value)}
+                    className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-1.5 pr-9 text-sm text-white focus:outline-none focus:border-[#2F6BFF]"
+                    placeholder="Strong passphrase"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowExportPassphrase(!showExportPassphrase)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9299] hover:text-[#e1e2e6] transition-colors"
+                  >
+                    {showExportPassphrase ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -365,13 +386,22 @@ export function SecurityBackupCard() {
                 
                 <div>
                   <label className="block text-[11px] text-[#8E9299] mb-1">Passphrase</label>
-                  <input
-                    type="password"
-                    value={importPassphrase}
-                    onChange={(e) => setImportPassphrase(e.target.value)}
-                    className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF]"
-                    placeholder="Backup passphrase"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showImportPassphrase ? 'text' : 'password'}
+                      value={importPassphrase}
+                      onChange={(e) => setImportPassphrase(e.target.value)}
+                      className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-1.5 pr-9 text-sm text-white focus:outline-none focus:border-[#2F6BFF]"
+                      placeholder="Backup passphrase"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowImportPassphrase(!showImportPassphrase)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9299] hover:text-[#e1e2e6] transition-colors"
+                    >
+                      {showImportPassphrase ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                   {importError && <p className="text-[#FF4444] text-xs mt-1">{importError}</p>}
                 </div>
 
