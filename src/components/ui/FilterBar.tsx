@@ -204,7 +204,7 @@ export function FilterBar({
           >
             <span className="truncate max-w-[120px]">
               {(() => {
-                if (!instrument.value || instrument.value === 'All') return instrument.labelAll || 'All Instruments';
+                if (!instrument.value || instrument.value.toUpperCase() === 'ALL') return instrument.labelAll || 'All Instruments';
                 const opt = instrument.options.find(o => typeof o === 'object' ? o.value === instrument.value : o === instrument.value);
                 return typeof opt === 'object' ? opt.label : opt;
               })()}
@@ -230,7 +230,7 @@ export function FilterBar({
                     setIsInstrumentDropdownOpen(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
-                    instrument.value === 'All' || !instrument.value
+                    instrument.value.toUpperCase() === 'ALL' || !instrument.value
                       ? 'bg-[#2F6BFF] text-white'
                       : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
                   }`}
