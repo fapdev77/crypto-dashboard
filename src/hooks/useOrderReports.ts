@@ -181,14 +181,14 @@ export function useOrderReports(filters: OrderFilters) {
       const now = Date.now();
 
       const filtered = rawOrders.filter(order => {
-        if (filters.exchange !== 'All' && order.exchange !== filters.exchange) return false;
+        if (filters.exchange.toLowerCase() !== 'all' && order.exchange.toLowerCase() !== filters.exchange.toLowerCase()) return false;
         if (filters.status === 'CLOSED' && order.createdTime < now - filters.timePeriod) return false;
         if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
-        if (filters.type !== 'All' && filters.type !== order.type) return false;
-        if (filters.side !== 'All' && order.side !== filters.side) return false;
-        if (filters.instrument !== 'All' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
-        if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
-        if (filters.status === 'CLOSED' && filters.historyStatus && filters.historyStatus !== 'All' && order.status !== filters.historyStatus) return false;
+        if (filters.type.toLowerCase() !== 'all' && filters.type.toLowerCase() !== order.type.toLowerCase()) return false;
+        if (filters.side.toLowerCase() !== 'all' && order.side.toLowerCase() !== filters.side.toLowerCase()) return false;
+        if (filters.instrument.toLowerCase() !== 'all' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
+        if (filters.accountId.toLowerCase() !== 'all' && order.connectionId !== filters.accountId) return false;
+        if (filters.status === 'CLOSED' && filters.historyStatus && filters.historyStatus.toLowerCase() !== 'all' && order.status.toLowerCase() !== filters.historyStatus.toLowerCase()) return false;
         return true;
       });
 
@@ -212,14 +212,14 @@ export function useOrderReports(filters: OrderFilters) {
       // Rule: Do not display orders for inactive/deactivated API keys
       if (!activeKeyIds.has(order.connectionId)) return false;
 
-      if (filters.exchange !== 'All' && order.exchange !== filters.exchange) return false;
+      if (filters.exchange.toLowerCase() !== 'all' && order.exchange.toLowerCase() !== filters.exchange.toLowerCase()) return false;
       if (filters.status === 'CLOSED' && order.createdTime < now - filters.timePeriod) return false;
       if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
-      if (filters.type !== 'All' && filters.type !== order.type) return false;
-      if (filters.side !== 'All' && order.side !== filters.side) return false;
-      if (filters.instrument !== 'All' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
-      if (filters.accountId !== 'All' && order.connectionId !== filters.accountId) return false;
-      if (filters.status === 'CLOSED' && filters.historyStatus && filters.historyStatus !== 'All' && order.status !== filters.historyStatus) return false;
+      if (filters.type.toLowerCase() !== 'all' && filters.type.toLowerCase() !== order.type.toLowerCase()) return false;
+      if (filters.side.toLowerCase() !== 'all' && order.side.toLowerCase() !== filters.side.toLowerCase()) return false;
+      if (filters.instrument.toLowerCase() !== 'all' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
+      if (filters.accountId.toLowerCase() !== 'all' && order.connectionId !== filters.accountId) return false;
+      if (filters.status === 'CLOSED' && filters.historyStatus && filters.historyStatus.toLowerCase() !== 'all' && order.status.toLowerCase() !== filters.historyStatus.toLowerCase()) return false;
       return true;
     });
 

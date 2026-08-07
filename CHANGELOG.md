@@ -1,9 +1,9 @@
-# [1.21.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.20.0...v1.21.0) (2026-08-07)
+## [1.21.2](https://github.com/fapdev77/crypto-dashboard/compare/v1.21.1...v1.21.2) (2026-08-07)
 
 
-### Features
+### Bug Fixes
 
-* **ui:** add password visibility toggle and auto-focus ([10942f4](https://github.com/fapdev77/crypto-dashboard/commit/10942f46d58f453db076729b4721c72f93b1cb3e))
+* ensure case-insensitive filtering throughout ([bac2885](https://github.com/fapdev77/crypto-dashboard/commit/bac28854901105a3d17fac515ea98a169194112a))
 
 # 1.0.0 (2026-07-26)
 

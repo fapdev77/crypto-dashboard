@@ -515,8 +515,8 @@ export const FundingDashboard = () => {
       const hasOpenPos = openPositionKeys.has(`${row.exchange}|${coin}|${row.instrumentType}`);
       if (showOpenPositionsOnly && !hasOpenPos) return false;
       
-      if (exchangeFilter.toLowerCase() !== 'all' && row.exchange !== exchangeFilter.toLowerCase()) return false;
-      if (instrumentFilter.toLowerCase() !== 'all' && row.instrumentType !== instrumentFilter) return false;
+      if (exchangeFilter.toLowerCase() !== 'all' && row.exchange?.toLowerCase() !== exchangeFilter.toLowerCase()) return false;
+      if (instrumentFilter.toLowerCase() !== 'all' && row.instrumentType?.toLowerCase() !== instrumentFilter.toLowerCase()) return false;
       if (searchTerm && !row.symbol.toLowerCase().includes(searchTerm.toLowerCase()) && !coin.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       return true;
     });
@@ -636,7 +636,7 @@ export const FundingDashboard = () => {
           }}
           instrument={{
             value: instrumentFilter,
-            onChange: (val) => setInstrumentFilter(val === 'All' ? 'all' : val),
+            onChange: (val) => setInstrumentFilter(val.toLowerCase() === 'all' ? 'all' : val),
             options: ['All', 'USDT-M', 'COIN-M'],
             labelAll: 'All Instruments'
           }}

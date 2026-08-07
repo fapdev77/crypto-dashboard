@@ -19,10 +19,12 @@ export function detectQtyIsCoin(params: {
   const { exchange, qty, price, value } = params;
   if (price <= 0) return false;
 
-  if (exchange === 'bitget') {
+  const ex = (exchange || '').toLowerCase();
+
+  if (ex === 'bitget') {
     return true;
   }
-  if (exchange === 'okx' || exchange === 'bybit') {
+  if (ex === 'okx' || ex === 'bybit') {
     return false;
   }
 
@@ -92,7 +94,9 @@ export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
   let positionValueUsd = pos.notionalUsd || 0;
   let actualCoinSize = pos.size || 0;
 
-  if (pos.exchange === 'okx' && (pos.raw?.pnl as string | undefined)) {
+  const posEx = (pos.exchange || '').toLowerCase();
+
+  if (posEx === 'okx' && (pos.raw?.pnl as string | undefined)) {
     const priceDiff = Math.abs((pos.closePrice || 0) - (pos.entryPrice || 0));
     const purePnl = Math.abs(parseFloat(pos.raw?.pnl as string));
     if (priceDiff > 0) {
@@ -102,7 +106,7 @@ export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
       positionValueUsd = (pos.entryPrice || 0) * (pos.size || 0);
       actualCoinSize = pos.size || 0;
     }
-  } else if (pos.exchange === 'bybit') {
+  } else if (posEx === 'bybit') {
     if (isInverse) {
       // For Bybit Inverse:
       // - cumEntryValue is in COIN (e.g. 0.00021896 BTC)
@@ -116,7 +120,7 @@ export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
       positionValueUsd = parseFloat((pos.raw?.cumEntryValue as string | undefined) || '0') || ((pos.size || 0) * (pos.entryPrice || 0));
       actualCoinSize = pos.size || 0;
     }
-  } else if (pos.exchange === 'bitget') {
+  } else if (posEx === 'bitget') {
     // For Bitget, whether inverse or not, pos.size is already the coin size!
     actualCoinSize = pos.size || 0;
     positionValueUsd = (pos.size || 0) * (pos.entryPrice || 0);

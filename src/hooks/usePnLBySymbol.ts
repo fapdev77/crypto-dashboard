@@ -63,8 +63,8 @@ export function usePnLBySymbol(
       return;
     }
 
-    const activeBybitKeys = keys.filter(k => k.exchange === 'bybit' && k.isActive);
-    if (activeBybitKeys.length === 0 || (exchangeFilter !== 'All' && exchangeFilter.toLowerCase() !== 'bybit')) {
+    const activeBybitKeys = keys.filter(k => k.exchange.toLowerCase() === 'bybit' && k.isActive);
+    if (activeBybitKeys.length === 0 || (exchangeFilter.toLowerCase() !== 'all' && exchangeFilter.toLowerCase() !== 'bybit')) {
       setBybitRealPnL({});
       setIsBybitLoading(false);
       return;
@@ -132,12 +132,13 @@ export function usePnLBySymbol(
     const symbolMap = new Map<string, SymbolPnLRecord>();
 
     for (const pos of positions) {
-      if (exchangeFilter !== 'All' && pos.exchange.toLowerCase() !== exchangeFilter.toLowerCase()) {
+      if (exchangeFilter.toLowerCase() !== 'all' && pos.exchange.toLowerCase() !== exchangeFilter.toLowerCase()) {
         continue;
       }
 
       let instrument = 'Unknown';
-      if (pos.exchange === 'bitget') {
+      const posEx = pos.exchange.toLowerCase();
+      if (posEx === 'bitget') {
         const pType = pos.raw?.productType as string | undefined;
         if (pType === 'USDT-FUTURES') instrument = 'USDT-M';
         else if (pType === 'COIN-FUTURES') instrument = 'Coin-M';
@@ -146,18 +147,18 @@ export function usePnLBySymbol(
         else if (pos.symbol.endsWith('USDC')) instrument = 'USDC-M';
         else if (pos.symbol.endsWith('USD')) instrument = 'Coin-M';
         else instrument = pType || (pos.raw?.marginCoin as string | undefined) || 'Futures';
-      } else if (pos.exchange === 'bybit') {
+      } else if (posEx === 'bybit') {
         if (pos.symbol.endsWith('USDT') || pos.symbol.endsWith('USDC') || pos.symbol.includes('USDC-') || pos.symbol.includes('USDT-')) instrument = 'Linear';
         else if (pos.symbol.endsWith('USD') || pos.symbol.includes('USD-') || pos.symbol.match(/USD[A-Z0-9]+$/)) instrument = 'Inverse';
         else instrument = (pos.raw?.category as string | undefined) || 'Perpetual';
-      } else if (pos.exchange === 'okx') {
+      } else if (posEx === 'okx') {
         if (pos.symbol.includes('-USDT')) instrument = 'USDT-margined';
         else if (pos.symbol.includes('-USDC')) instrument = 'USDC-margined';
         else if (pos.symbol.includes('-USD')) instrument = 'Coin-margined';
         else instrument = (pos.raw?.instType as string | undefined) || 'SWAP';
       }
 
-      if (instrumentFilter !== 'All' && instrument.toLowerCase() !== instrumentFilter.toLowerCase()) {
+      if (instrumentFilter.toLowerCase() !== 'all' && instrument.toLowerCase() !== instrumentFilter.toLowerCase()) {
         continue;
       }
 
