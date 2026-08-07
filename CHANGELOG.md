@@ -1,3 +1,10 @@
+## [1.21.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.21.0...v1.21.1) (2026-08-07)
+
+
+### Bug Fixes
+
+* handle case-insensitive filter values ([deffd74](https://github.com/fapdev77/crypto-dashboard/commit/deffd74643d4fe686379312d1cbb0e2fcb1a7de5))
+
 # 1.0.0 (2026-07-26)
 
 
