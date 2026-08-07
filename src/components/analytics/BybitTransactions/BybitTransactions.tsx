@@ -237,7 +237,7 @@ export function BybitTransactions() {
             <span className={`text-xl font-bold ${new Big(stats.aggregatedUsd.totalFees).gte(0) ? 'text-[#FF4444]' : 'text-[#00C853]'}`}>
               {(() => {
                 const feeBig = new Big(stats.aggregatedUsd.totalFees);
-                if (feeBig.abs().toString() === '0') return `${maskVal(feeBig.toString('0.00'))} USD`;
+                if (feeBig.abs().toString() === '0') return `${maskVal(feeBig.toFixed(2))} USD`;
                 if (feeBig.gte(0)) return `-${maskVal(feeBig.toString())} USD`;
                 return `+${maskVal(feeBig.abs().toString())} USD`;
               })()}

@@ -135,10 +135,10 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
 
     return BybitTransactionService.filterEntries(entries, {
       search: filters.search || undefined,
-      category: filters.category !== 'All' ? filters.category : undefined,
-      type: filters.type !== 'All' ? filters.type : undefined,
-      currency: filters.currency !== 'All' ? filters.currency : undefined,
-      accountId: filters.accountId !== 'All' ? filters.accountId : undefined,
+      category: filters.category.toLowerCase() !== 'all' ? filters.category : undefined,
+      type: filters.type.toLowerCase() !== 'all' ? filters.type : undefined,
+      currency: filters.currency.toLowerCase() !== 'all' ? filters.currency : undefined,
+      accountId: filters.accountId.toLowerCase() !== 'all' ? filters.accountId : undefined,
       startTime,
       endTime,
     });

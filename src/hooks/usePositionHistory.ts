@@ -53,7 +53,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
     let filtered = [...positionsList];
     
     // Filter by exchange
-    if (exchange && exchange !== 'All') {
+    if (exchange && exchange.toLowerCase() !== 'all') {
       filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchange.toLowerCase());
     }
     

@@ -239,7 +239,7 @@ export function FilterBar({
                 </button>
                 {instrument.options.map((opt, i) => {
                   const val = typeof opt === 'object' ? opt.value : (opt as string);
-                  if (val === 'All') return null; // handled above
+                  if (val.toUpperCase() === 'ALL') return null; // handled above
                   const label = typeof opt === 'object' ? opt.label : (opt as string);
                   const tooltip = typeof opt === 'object' ? opt.tooltip : undefined;
                   
