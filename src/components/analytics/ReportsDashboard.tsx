@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { usePositionHistory, PositionHistoryPeriod } from '../../hooks/usePositionHistory';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../utils/exportUtils';
 import { Download, ChevronDown, FileText } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatIsoDateTime, formatDateTime } from '../../utils/formatters';
 import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { getHistoryInverseUsdValues } from '../../utils/inverseUtils';
@@ -21,7 +21,7 @@ export function ReportsDashboard() {
     const rows = history.map(pos => {
       const { realizedPnl, fundingFee, tradingFee } = getHistoryInverseUsdValues(pos);
       return [
-        format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm'),
+        formatIsoDateTime(pos.closeUpdateTime, true, false),
         pos.exchange,
         pos.symbol,
         pos.side.toUpperCase(),
@@ -35,7 +35,7 @@ export function ReportsDashboard() {
     });
     return {
       title: 'Trading Performance Report',
-      filename: `trading_report_${format(new Date(), 'yyyy-MM-dd')}`,
+      filename: `trading_report_${formatIsoDateTime(Date.now(), false)}`,
       headers,
       rows
     };
@@ -132,7 +132,9 @@ export function ReportsDashboard() {
                   const net = realizedPnl + (fundingFee || 0) + (tradingFee || 0);
                   return (
                     <tr key={pos.id} className="border-b border-[#2a2b30]/50 hover:bg-[#2a2b30]/20 transition-colors">
-                      <td className="px-4 py-3 text-[#8E9299]">{format(new Date(pos.closeUpdateTime), 'MMM dd, HH:mm')}</td>
+                      <td className="px-4 py-3 text-[#8E9299]">
+                        {formatDateTime(pos.closeUpdateTime).fullStr}
+                      </td>
                       <td data-theme={pos.exchange.toLowerCase()} className="px-4 py-3 capitalize text-white">{pos.exchange}</td>
                       <td className="px-4 py-3 font-medium text-white">{pos.symbol}</td>
                       <td className="px-4 py-3">
