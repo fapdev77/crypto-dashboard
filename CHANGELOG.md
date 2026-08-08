@@ -1,10 +1,3 @@
-# [1.23.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.22.0...v1.23.0) (2026-08-08)
-
-
-### Features
-
-* **ui:** add pulse animation to smooth scroll target ([4e307dd](https://github.com/fapdev77/crypto-dashboard/commit/4e307dd96bcc638f2834a2a9167ac7763301a0f6))
-
 # [1.22.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.21.2...v1.22.0) (2026-08-08)
 
 

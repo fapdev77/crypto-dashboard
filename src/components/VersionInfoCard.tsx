@@ -4,29 +4,28 @@ import { Tag, Github, ExternalLink, Calendar, GitCommit, Sparkles, FileText, Che
 export function VersionInfoCard() {
   const [showFullChangelog, setShowFullChangelog] = useState(false);
 
-  const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.6.0';
-  const releaseDate = '2026-03-24';
+  const releaseInfo = typeof __APP_RELEASE_INFO__ !== 'undefined' ? __APP_RELEASE_INFO__ : null;
+
+  const version = releaseInfo?.version || (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.22.0');
+  const releaseDate = releaseInfo?.releaseDate || new Date().toISOString().split('T')[0];
   const githubUrl = 'https://github.com/fapdev77/crypto-dashboard';
 
-  const recentChanges = [
-    {
-      category: 'Features',
-      items: [
-        'Dynamic Funding History Sync & Global Cache Integration across Bybit, OKX, and Bitget.',
-        'Added PnL by Symbol Dashboard & Bybit Transactions Net Change Report.',
-        'Added Security Backup & Encrypted API Key Export/Import.',
-        'PWA support with automatic update notifications.'
-      ]
-    },
-    {
-      category: 'Improvements & Fixes',
-      items: [
-        'Adjusted inverse contract volume detection and valuation for futures balances.',
-        'Improved order history sync, pagination and error handling across exchanges.',
-        'Enhanced UI responsiveness, scrollbars, and dark mode contrast.'
-      ]
-    }
-  ];
+  const recentChanges = releaseInfo?.recentChanges?.length
+    ? releaseInfo.recentChanges
+    : [
+        {
+          category: 'Features & Updates',
+          items: [
+            'Added version info card and navigation support.',
+            'Dynamic Funding History Sync & Global Cache Integration across Bybit, OKX, and Bitget.',
+            'Added PnL by Symbol Dashboard & Bybit Transactions Net Change Report.',
+            'Added Security Backup & Encrypted API Key Export/Import.',
+            'PWA support with automatic update notifications.'
+          ]
+        }
+      ];
+
+  const previousChanges = releaseInfo?.previousChanges;
 
   return (
     <div
@@ -96,7 +95,7 @@ export function VersionInfoCard() {
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 Latest Release Highlights (v{version})
               </h4>
-              <span className="text-[10px] text-[#8E9299]">March 2026</span>
+              <span className="text-[10px] text-[#8E9299] font-mono">{releaseDate}</span>
             </div>
 
             <div className="space-y-3">
@@ -117,16 +116,29 @@ export function VersionInfoCard() {
 
             {showFullChangelog && (
               <div className="mt-4 pt-3 border-t border-[#2a2b30] space-y-3">
-                <span className="text-[11px] font-medium text-amber-400 block">Previous Version Highlights (v1.5.0)</span>
+                <span className="text-[11px] font-medium text-amber-400 block">
+                  Previous Release Highlights {previousChanges?.version ? `(v${previousChanges.version})` : ''} {previousChanges?.date ? `- ${previousChanges.date}` : ''}
+                </span>
                 <ul className="space-y-1">
-                  <li className="text-xs text-gray-400 flex items-start gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
-                    <span>Added Funding Fees Dashboard & Market Overview.</span>
-                  </li>
-                  <li className="text-xs text-gray-400 flex items-start gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
-                    <span>Added Order Reports & Live Connection Telemetry logs.</span>
-                  </li>
+                  {previousChanges?.items?.length ? (
+                    previousChanges.items.map((item, itemIdx) => (
+                      <li key={itemIdx} className="text-xs text-gray-400 flex items-start gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <>
+                      <li className="text-xs text-gray-400 flex items-start gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
+                        <span>Added Funding Fees Dashboard & Market Overview.</span>
+                      </li>
+                      <li className="text-xs text-gray-400 flex items-start gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
+                        <span>Added Order Reports & Live Connection Telemetry logs.</span>
+                      </li>
+                    </>
+                  )}
                 </ul>
               </div>
             )}
