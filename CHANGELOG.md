@@ -1,3 +1,10 @@
+# [1.22.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.21.2...v1.22.0) (2026-08-08)
+
+
+### Features
+
+* add version info card and navigation support ([0af6746](https://github.com/fapdev77/crypto-dashboard/commit/0af674627252902e5ac8b87f366053dd17604afe))
+
 # 1.0.0 (2026-07-26)
 
 
