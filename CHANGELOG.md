@@ -1,3 +1,17 @@
+# [1.24.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.23.0...v1.24.0) (2026-08-08)
+
+
+### Features
+
+* add navigation handlers to StatusBar ([64e4975](https://github.com/fapdev77/crypto-dashboard/commit/64e4975f0179180c560047d9235f389596f7508c))
+
+# [1.22.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.21.2...v1.22.0) (2026-08-08)
+
+
+### Features
+
+* add version info card and navigation support ([0af6746](https://github.com/fapdev77/crypto-dashboard/commit/0af674627252902e5ac8b87f366053dd17604afe))
+
 # 1.0.0 (2026-07-26)
 
 
