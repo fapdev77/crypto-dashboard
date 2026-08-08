@@ -24,6 +24,12 @@ export function StatusBar() {
     return groups;
   }, [keys]);
 
+  const handleVersionClick = () => {
+    window.dispatchEvent(new CustomEvent('navigate-to-tab', {
+      detail: { tab: 'settings', targetId: 'version-info-card' }
+    }));
+  };
+
   if (keys.length === 0 && !useMockData) {
     return (
       <div className="h-8 bg-[#0b0c10] border-t border-[#1f2937] flex items-center px-4 shrink-0 select-none overflow-x-auto hide-scrollbar">
@@ -38,9 +44,14 @@ export function StatusBar() {
             <div className="w-px h-4 bg-[#1f2937]/50" />
             <span className="text-[10px] text-gray-500">No connected accounts.</span>
           </div>
-          <span className="text-xs font-mono text-gray-500 flex items-center">
-            <span className="text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
-          </span>
+          <AppTooltip description="View Version & Release Notes">
+            <button
+              onClick={handleVersionClick}
+              className="text-[10px] font-mono text-gray-400 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+            >
+              v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}
+            </button>
+          </AppTooltip>
         </div>
       </div>
     );
@@ -127,9 +138,14 @@ export function StatusBar() {
           </div>
         </div>
 
-        <span className="text-xs font-mono text-gray-500 flex items-center pr-2 ml-4 shrink-0">
-          <span className="text-[10px]">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}</span>
-        </span>
+        <AppTooltip description="View Version & Release Notes">
+          <button
+            onClick={handleVersionClick}
+            className="text-[10px] font-mono text-gray-400 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-gray-700 ml-4 shrink-0"
+          >
+            v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}
+          </button>
+        </AppTooltip>
       </div>
     </div>
   );
