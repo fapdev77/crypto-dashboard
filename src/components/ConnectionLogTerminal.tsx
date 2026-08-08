@@ -3,6 +3,7 @@ import { useLogStore, LogLevel } from '../store/logStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { Search, ChevronDown, ArrowDownToLine } from 'lucide-react';
+import { formatIsoDateTime } from '../utils/formatters';
 
 export function ConnectionLogTerminal() {
   const { entries, maxEntries, clearLogs } = useLogStore();
@@ -87,10 +88,7 @@ export function ConnectionLogTerminal() {
 
   // Format Date
   const formatDate = (ts: number) => {
-    const d = new Date(ts);
-    const date = d.toISOString().split('T')[0];
-    const time = d.toISOString().split('T')[1].slice(0, 12);
-    return `${date} ${time}`;
+    return formatIsoDateTime(ts);
   };
 
   const getLevelColor = (level: LogLevel) => {
