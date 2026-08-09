@@ -3,21 +3,22 @@ import { UnifiedInstrumentType, ExchangeName } from '../types';
 export function mapInstrumentType(exchange: ExchangeName, rawType: string, ccy?: string): UnifiedInstrumentType {
   const typeStr = (rawType || '').toUpperCase();
   const currency = (ccy || '').toUpperCase();
+  const ex = (exchange || '').toLowerCase();
 
-  if (exchange === 'bybit') {
+  if (ex === 'bybit') {
     if (typeStr === 'LINEAR') return 'PERP';
     if (typeStr === 'INVERSE') return 'INVERSE';
     if (typeStr === 'SPOT') return 'SPOT';
     if (typeStr === 'OPTION') return 'OPTION';
   }
 
-  if (exchange === 'bitget') {
+  if (ex === 'bitget') {
     if (typeStr.includes('USDT-FUTURES') || typeStr.includes('USDC-FUTURES')) return 'PERP';
     if (typeStr.includes('COIN-FUTURES')) return 'INVERSE';
     if (typeStr === 'SPOT') return 'SPOT';
   }
 
-  if (exchange === 'okx') {
+  if (ex === 'okx') {
     if (typeStr === 'SPOT' || typeStr === 'MARGIN') return 'SPOT';
     if (typeStr === 'OPTION') return 'OPTION';
     if (typeStr === 'SWAP') {

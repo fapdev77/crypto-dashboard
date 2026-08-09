@@ -16,6 +16,7 @@ import { FilterBar } from '../../ui/FilterBar';
 import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { Pagination } from '../../ui/Pagination';
 import { usePagination } from '../../../hooks/usePagination';
+import { formatDateTime } from '../../../utils/formatters';
 import clsx from 'clsx';
 
 const COINS_PER_PAGE = 25;
@@ -372,19 +373,12 @@ const FundingTable = ({
                                     description="Estimated time of the next funding settlement."
                                     rows={[{
                                       label: 'Full Date',
-                                      value: new Date(row.nextFundingTime).toLocaleString([], {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        second: '2-digit',
-                                      }),
+                                      value: formatDateTime(row.nextFundingTime, { monthFormat: "long" }).fullStr,
                                     }]}
                                   >
                                     <span className="inline-flex items-center gap-1 text-[10px] text-[#8E9299] cursor-help border-b border-dashed border-[#8E9299]/30">
                                       <Clock className="w-3 h-3" />
-                                      {new Date(row.nextFundingTime).toLocaleString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                      {formatDateTime(row.nextFundingTime, { includeYear: false, includeSeconds: false }).fullStr}
                                     </span>
                                   </AppTooltip>
                                 )}
@@ -515,8 +509,8 @@ export const FundingDashboard = () => {
       const hasOpenPos = openPositionKeys.has(`${row.exchange}|${coin}|${row.instrumentType}`);
       if (showOpenPositionsOnly && !hasOpenPos) return false;
       
-      if (exchangeFilter.toLowerCase() !== 'all' && row.exchange !== exchangeFilter.toLowerCase()) return false;
-      if (instrumentFilter.toLowerCase() !== 'all' && row.instrumentType !== instrumentFilter) return false;
+      if (exchangeFilter.toLowerCase() !== 'all' && row.exchange?.toLowerCase() !== exchangeFilter.toLowerCase()) return false;
+      if (instrumentFilter.toLowerCase() !== 'all' && row.instrumentType?.toLowerCase() !== instrumentFilter.toLowerCase()) return false;
       if (searchTerm && !row.symbol.toLowerCase().includes(searchTerm.toLowerCase()) && !coin.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       return true;
     });
@@ -636,7 +630,7 @@ export const FundingDashboard = () => {
           }}
           instrument={{
             value: instrumentFilter,
-            onChange: (val) => setInstrumentFilter(val === 'All' ? 'all' : val),
+            onChange: (val) => setInstrumentFilter(val.toLowerCase() === 'all' ? 'all' : val),
             options: ['All', 'USDT-M', 'COIN-M'],
             labelAll: 'All Instruments'
           }}

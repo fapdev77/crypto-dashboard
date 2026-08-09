@@ -45,17 +45,38 @@ export default function App() {
   // Listen for global tab navigation requests
   useEffect(() => {
     const handleNavigate = (e: Event) => {
-      const customEvent = e as CustomEvent<string>;
-      setActiveTab(customEvent.detail);
-      if (customEvent.detail === 'settings') {
+      const customEvent = e as CustomEvent<string | { tab: string; targetId?: string }>;
+      let tab = '';
+      let targetId = '';
+
+      if (typeof customEvent.detail === 'string') {
+        if (customEvent.detail === 'settings-version') {
+          tab = 'settings';
+          targetId = 'version-info-card';
+        } else if (customEvent.detail === 'settings') {
+          tab = 'settings';
+          targetId = 'security-settings-card';
+        } else {
+          tab = customEvent.detail;
+        }
+      } else if (customEvent.detail && typeof customEvent.detail === 'object') {
+        tab = customEvent.detail.tab;
+        targetId = customEvent.detail.targetId || '';
+      }
+
+      if (tab) {
+        setActiveTab(tab);
+      }
+
+      if (targetId) {
         setTimeout(() => {
-          const el = document.getElementById('security-settings-card');
+          const el = document.getElementById(targetId);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]');
+            el.classList.add('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
             setTimeout(() => {
-              el.classList.remove('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]');
-            }, 3000);
+              el.classList.remove('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
+            }, 2000);
           }
         }, 150);
       }

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ShieldAlert, Unlock, HelpCircle, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ShieldAlert, Unlock, HelpCircle, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { AppTooltip, TooltipProvider } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
@@ -7,8 +7,17 @@ import { LogManager } from '../services/LogManager';
 export function GlobalUnlockScreen() {
   const { unlock } = useApiKeysStore();
   const [unlockPassphrase, setUnlockPassphrase] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [unlockError, setUnlockError] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Focus the input when the component mounts
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const handleUnlock = async () => {
     if (!unlockPassphrase) return;
@@ -56,14 +65,24 @@ export function GlobalUnlockScreen() {
           </p>
           <div className="space-y-4">
             <div>
-              <input
-                type="password"
-                value={unlockPassphrase}
-                onChange={(e) => setUnlockPassphrase(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#2F6BFF]"
-                placeholder="Enter passphrase"
-              />
+              <div className="relative">
+                <input
+                  ref={inputRef}
+                  type={showPassword ? 'text' : 'password'}
+                  value={unlockPassphrase}
+                  onChange={(e) => setUnlockPassphrase(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                  className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-2 pr-10 text-white focus:outline-none focus:border-[#2F6BFF]"
+                  placeholder="Enter passphrase"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E9299] hover:text-[#e1e2e6] transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {unlockError && <p className="text-[#FF4444] text-xs mt-1">{unlockError}</p>}
             </div>
             <button

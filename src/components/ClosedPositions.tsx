@@ -1,10 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
+import { formatValue, formatCrypto, formatPrice, formatDateTime, formatIsoDateTime } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
 import { usePagination } from '../hooks/usePagination';
 import { Loader2, History, Download, ChevronDown } from 'lucide-react';
-import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
@@ -86,12 +85,8 @@ export function ClosedPositions() {
       
       const pnlCurrency = pos.ccy || pos.baseCoin || 'USDT';
       
-      const openTimeStr = pos.createdTime && !isNaN(pos.createdTime) 
-        ? format(new Date(pos.createdTime), 'yyyy-MM-dd HH:mm:ss') 
-        : '--';
-      const closeTimeStr = pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) 
-        ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd HH:mm:ss') 
-        : '--';
+      const openTimeStr = formatIsoDateTime(pos.createdTime);
+      const closeTimeStr = formatIsoDateTime(pos.closeUpdateTime);
 
       const { actualCoinSize, positionValueUsd } = getHistoryPositionSizeAndValue(pos);
 
@@ -546,10 +541,10 @@ export function ClosedPositions() {
                       <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Open Time</span>
                     </AppTooltip>
                     <span className="font-mono text-white text-sm">
-                      {pos.createdTime && !isNaN(pos.createdTime) ? format(new Date(pos.createdTime), 'yyyy-MM-dd') : '--'}
+                      {formatDateTime(pos.createdTime).dateStr}
                     </span>
                     <span className="font-mono text-[#8E9299] text-xs">
-                      {pos.createdTime && !isNaN(pos.createdTime) ? format(new Date(pos.createdTime), 'HH:mm:ss') : '--'}
+                      {formatDateTime(pos.createdTime).timeStr}
                     </span>
                   </div>
 
@@ -559,10 +554,10 @@ export function ClosedPositions() {
                       <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Closed Time</span>
                     </AppTooltip>
                     <span className="font-mono text-white text-sm">
-                      {pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) ? format(new Date(pos.closeUpdateTime), 'yyyy-MM-dd') : '--'}
+                      {formatDateTime(pos.closeUpdateTime).dateStr}
                     </span>
                     <span className="font-mono text-[#8E9299] text-xs">
-                      {pos.closeUpdateTime && !isNaN(pos.closeUpdateTime) ? format(new Date(pos.closeUpdateTime), 'HH:mm:ss') : '--'}
+                      {formatDateTime(pos.closeUpdateTime).timeStr}
                     </span>
                   </div>
 

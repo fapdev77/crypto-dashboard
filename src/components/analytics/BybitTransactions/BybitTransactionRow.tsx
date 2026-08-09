@@ -9,6 +9,7 @@ import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { ChevronDown, ChevronUp, Hash, FileText, Percent, Gift } from 'lucide-react';
 import { TX_TYPES, typeColorMap } from './BybitTransactionFilters';
+import { formatDateTime } from '../../../utils/formatters';
 
 interface Props {
   entry: BybitTransactionLogEntry;
@@ -26,9 +27,7 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
   // Inverse detection: category='inverse' or non-USD currency (BTC, ETH, SOL)
   const isInverse = entry.category === 'inverse' || (entry.currency !== 'USDT' && entry.currency !== 'USDC' && entry.currency !== '');
 
-  const d = new Date(entry.transactionTime);
-  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dateStr = d.toLocaleDateString([], { month: 'numeric', day: 'numeric', year: 'numeric' });
+  const { dateStr, timeStr } = formatDateTime(entry.transactionTime);
 
   const isBuy = entry.side === 'Buy';
   const sideColor = isBuy ? 'text-[#00C853]' : entry.side === 'Sell' ? 'text-[#FF4444]' : 'text-[#8E9299]';
