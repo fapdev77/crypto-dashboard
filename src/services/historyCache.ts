@@ -507,7 +507,8 @@ export async function saveFundingSummariesBatch(summaries: FundingRateSummary[])
 
 export async function getFundingMeta(exchange: string, symbol: string): Promise<FundingMeta | undefined> {
   const db = await getDB();
-  return db.get(FUNDING_META_STORE, `${exchange}-${symbol}`);
+  const meta = await db.get(FUNDING_META_STORE, `${exchange}-${symbol}`);
+  return meta as FundingMeta | undefined;
 }
 
 /**

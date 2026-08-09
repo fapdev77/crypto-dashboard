@@ -53,7 +53,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
     let filtered = [...positionsList];
     
     // Filter by exchange
-    if (exchange && exchange !== 'All') {
+    if (exchange && exchange.toLowerCase() !== 'all') {
       filtered = filtered.filter(pos => pos.exchange.toLowerCase() === exchange.toLowerCase());
     }
     
@@ -190,7 +190,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
     const now = Date.now();
     const periodStartMap: Record<string, number | undefined> = {
-      today: new Date(now).setHours(0, 0, 0, 0),
+      today: new Date(now).setUTCHours(0, 0, 0, 0),
       '7d': now - 7 * 24 * 60 * 60 * 1000,
       '14d': now - 14 * 24 * 60 * 60 * 1000,
       '30d': now - 30 * 24 * 60 * 60 * 1000,

@@ -62,10 +62,14 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 5. Volte para a rota principal "Dashboard", agora deverá ver seus saldos totais atualizando globalmente.
 
 ## 🛠 Features e UI/UX Recentes
+- ✅ **Dashboard Multi-Período de Funding Fees (Taxas de Financiamento):** Consolidação profunda do histórico (via IndexedDB) de cobranças/recebimentos de Funding em contratos perpétuos e inversos, categorizados temporalmente e apoiados por cartões de métricas (Market Overview).
+- ✅ **Auditoria Contábil Pessoal (Bybit Transactions & PnL by Symbol):** Uma central unificada que isola o histórico contínuo da corretora para gerar extrações rigorosas de Taxas (Trading Fees), Realized PnL (Lucros Realizados Isolados) baseados integralmente em fluxo de caixa (Cashflow).
+- ✅ **Relatórios Consolidados de Ordens (Order Reports):** Rastreio avançado separando ordens abertas de ordens finalizadas (History), equipadas com filtragem multicritério e extrações analíticas.
 - ✅ **Integração OKX Dual-Wallet (Trading + Funding Account):**
   - **Saldos Unificados e de Financiamento:** O `OkxAdapter` foi expandido para ler de forma concorrente tanto a conta unificada de trading (`/api/v5/account/balance`) quanto a conta de financiamento/funding (`/api/v5/asset/balances`).
   - **Avaliação Patrimonial Precisa:** Ativos na carteira de funding são dinamicamente avaliados com base nos preços da conta de trading (ou fallbacks estáveis de $1.00 para stablecoins) e agregados ao patrimônio líquido (`totalEquity`) e saldo de carteira (`walletBalance`) globais da conexão.
   - **Visual Segregation:** No frontend, saldos originários da carteira de funding são distinguidos visualmente através da tag `FUNDING` (fundo verde-azulado/teal), enquanto saldos de trading recebem a tag `UNIFIED` (fundo cinza/unified), permitindo controle transparente e granular de ativos.
+- ✅ **Suporte PWA (Progressive Web App):** Instalação nativa via navegador com cache offline garantindo acesso ultra-rápido, notificações locais e funcionamento como aplicativo independente no Desktop e Mobile.
 - ✅ **Tipagem Estrita de Respostas de Corretores (Raw Type-Safety):**
   - **Tipos Isolados (`src/types/raw.ts`):** Centralização e declaração estrita de interfaces TypeScript para todas as respostas brutas ("Raw Responses") das corretoras (ex: `RawPositionData`, `RawOrderData`, `RawHistoryPositionData`, `RawBalanceItem`), banindo o uso de tipos frouxos como `any` ou `Record<string, unknown>` no campo `raw`.
   - **Previsibilidade e Robustez:** Isso previne quebras em tempo de compilação, otimiza o autocompletion nos adaptadores e assegura total segurança de dados na manipulação dos metadados originais das exchanges.

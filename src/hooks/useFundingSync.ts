@@ -139,6 +139,54 @@ function buildSyncReport(
   return lines.join('\n');
 }
 
+// ── Fixed Sync Schedule Logic ───────────────────────────────────────
+
+/**
+ * Returns the 3 fixed UTC sync times (00:01, 08:01, 16:01) for the given date.
+ */
+function getFixedSyncTimes(dateMs: number): number[] {
+  const d = new Date(dateMs);
+  const base = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return [
+    base + 1 * 60 * 1000, // 00:01 UTC
+    base + 8 * 60 * 60 * 1000 + 1 * 60 * 1000, // 08:01 UTC
+    base + 16 * 60 * 60 * 1000 + 1 * 60 * 1000, // 16:01 UTC
+  ];
+}
+
+/**
+ * Returns the most recent fixed sync time that has already passed.
+ */
+function getMostRecentFixedSyncTime(nowMs: number): number {
+  const todayTimes = getFixedSyncTimes(nowMs);
+  const yesterdayTimes = getFixedSyncTimes(nowMs - 24 * 60 * 60 * 1000);
+  const allTimes = [...yesterdayTimes, ...todayTimes];
+  
+  let mostRecent = 0;
+  for (const t of allTimes) {
+    if (t <= nowMs && t > mostRecent) {
+      mostRecent = t;
+    }
+  }
+  return mostRecent;
+}
+
+/**
+ * Returns the next fixed sync time that is in the future.
+ */
+function getNextFixedSyncTime(nowMs: number): number {
+  const todayTimes = getFixedSyncTimes(nowMs);
+  const tomorrowTimes = getFixedSyncTimes(nowMs + 24 * 60 * 60 * 1000);
+  const allTimes = [...todayTimes, ...tomorrowTimes];
+  
+  for (const t of allTimes) {
+    if (t > nowMs) {
+      return t;
+    }
+  }
+  return allTimes[0]; // fallback
+}
+
 // ── Sync one exchange's stale symbols ──────────────────────────────
 
 async function syncExchange(
@@ -171,6 +219,11 @@ async function syncExchange(
   onProgress(0, `${exchange}: ${totalStale} symbols to sync...`);
 
   await asyncPool(staleRates, CONCURRENCY[exchange], async (rate) => {
+    // ABORT IF MOCK DATA WAS TOGGLED ON MID-SYNC
+    if (useSettingsStore.getState().useMockData) {
+      errors++;
+      return;
+    }
     const symbolStartMs = performance.now();
 
     try {
@@ -239,6 +292,7 @@ export function useFundingSync() {
 
   const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autoSyncTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fixedSyncTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── Mirror lastHistoryFetch in a ref to break the effect re-trigger cycle ──
   const lastHistoryFetchRef = useRef(lastHistoryFetch);
@@ -319,6 +373,7 @@ export function useFundingSync() {
     try {
       const results: CurrentFundingRate[] = [];
       for (const ex of EXCHANGES) {
+        if (useSettingsStore.getState().useMockData) return;
         try {
           const rates = await FundingService.fetchCurrentFundingRates(ex);
           results.push(...rates);
@@ -330,7 +385,9 @@ export function useFundingSync() {
       // Only overwrite if we got at least some data; otherwise keep the stale
       // snapshot so scheduleNextAutoSync() can still work on the next tick.
       if (results.length > 0) {
-        useFundingStore.setState({ currentRates: results });
+        if (!useSettingsStore.getState().useMockData) {
+          useFundingStore.setState({ currentRates: results });
+        }
       }
     } finally {
       fetchingRef.current = false;
@@ -490,7 +547,11 @@ export function useFundingSync() {
   }, [useMockData, fundingHistoryInterval, setLastHistoryFetch, setLastSyncTime, setSyncStatus, scheduleNextAutoSync]);
 
   // Expose manual trigger (enforces singleton + restart-rest logic)
-  const forceSync = async () => {
+  const forceSync = useCallback(async () => {
+    if (useMockData) {
+      LogManager.info('FundingSync', 'Mock mode active, skipping manual sync.');
+      return;
+    }
     // If a sync is already running, flag a restart instead of silently ignoring
     if (syncInProgressRef.current) {
       LogManager.info('FundingSync', 'Sync already in progress — will restart after completion');
@@ -506,21 +567,50 @@ export function useFundingSync() {
       lastHistoryFetchRef.current = 0;
       await syncHistoricalRates(rates);
     }
-  };
+  }, [fetchCurrentRates, syncHistoricalRates, setLastHistoryFetch]);
 
   // Main loop
   useEffect(() => {
     if (useMockData) return;
 
+    // Check if the last sync is older than the most recent fixed schedule time
+    const nowMs = Date.now();
+    const mostRecentFixed = getMostRecentFixedSyncTime(nowMs);
+    let forceDueToFixedSchedule = false;
+    if (lastHistoryFetchRef.current > 0 && lastHistoryFetchRef.current < mostRecentFixed) {
+      LogManager.info('FundingSync', `App opened: Last sync is older than the most recent fixed schedule (${new Date(mostRecentFixed).toLocaleString('en-US')}). Forcing sync.`);
+      forceDueToFixedSchedule = true;
+    }
+
     // Initial fetch
     fetchCurrentRates().then(() => {
       const rates = useFundingStore.getState().currentRates;
       if (rates && rates.length > 0) {
+        if (forceDueToFixedSchedule) {
+          useFundingStore.getState().setLastHistoryFetch(0);
+          lastHistoryFetchRef.current = 0;
+        }
         syncHistoricalRates(rates);
       }
       // Schedule auto-sync based on next funding payment time
       scheduleNextAutoSync();
     });
+
+    // Schedule the independent fixed UTC timers
+    const scheduleFixedSync = () => {
+      const nextFixedMs = getNextFixedSyncTime(Date.now());
+      const delay = nextFixedMs - Date.now();
+      
+      LogManager.info('FundingSync', `Independent fixed sync scheduled for: ${new Date(nextFixedMs).toLocaleString('en-US')} (in ${(delay / 60000).toFixed(1)}m)`);
+      
+      fixedSyncTimerRef.current = setTimeout(() => {
+        LogManager.info('FundingSync', 'Independent fixed schedule triggered');
+        useFundingStore.getState().setLastHistoryFetch(0);
+        window.dispatchEvent(new CustomEvent('funding-cache-cleared'));
+        scheduleFixedSync();
+      }, delay);
+    };
+    scheduleFixedSync();
 
     // Polling setup — re-schedule auto-sync on each polling tick
     const intervalMs = fundingPollingInterval * 60 * 1000;
@@ -539,9 +629,10 @@ export function useFundingSync() {
     return () => {
       if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
       if (autoSyncTimerRef.current) clearTimeout(autoSyncTimerRef.current);
+      if (fixedSyncTimerRef.current) clearTimeout(fixedSyncTimerRef.current);
       window.removeEventListener('funding-cache-cleared', onCacheCleared);
     };
-  }, [useMockData, fundingPollingInterval, fetchCurrentRates, syncHistoricalRates, scheduleNextAutoSync]);
+  }, [useMockData, fundingPollingInterval, fetchCurrentRates, syncHistoricalRates, scheduleNextAutoSync, forceSync]);
 
   return { forceSync };
 }

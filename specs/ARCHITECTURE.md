@@ -97,6 +97,50 @@ Para garantir total previsibilidade de tipos em tempo de compilação sem abdica
 
 O Crypto Portfolio Manager opera uma via de sincronização otimizada projetada para garantir performance fluida com baixo overhead de rede e sem atingir rate-limits agressivos (HTTP 429).
 
+### 5.1. Engine de Sincronização e Cache SWR (Stale-While-Revalidate)
+
+```
+[UI Components] 
+       │
+       ├─► (Immediate Load) ──► [IndexedDB History Cache] (crypto-dashboard-cache)
+       │                              ▲
+       └─► (Trigger Polling) ──┐      │ (Save/Merge Deltas)
+                               ▼      │
+                      [ExchangeAggregator]
+                               │
+                       (CORS proxyFetch)
+                               │
+                               ▼
+                    [Exchanges API REST]
+```
+
+Para contornar as severas restrições de chamadas consecutivas impostas por Bybit, OKX e Bitget, o sistema implementa um ecossistema de caching híbrido:
+1.  **Carregamento Imediato via IndexedDB:** No momento de montagem de telas como Analytics e Relatórios de Histórico, os Hooks principais (`usePositionHistory`, `useOrderReports`) lêem instantaneamente o dataset persistido localmente no IndexedDB (`crypto-dashboard-cache`). O usuário visualiza gráficos e tabelas com latência zero.
+2.  **Sincronização em Segundo Plano (Background Delta Fetching):** Silenciosamente, o hook dispara chamadas REST incrementais. Ele recupera apenas os registros mais recentes (deltas) criados após o último timestamp cacheado. Esses deltas são mesclados diretamente na base local e a UI re-renderiza fluidamente.
+3.  **Coordenação Global de Sincronização (`lastSyncTime`):** A fim de evitar disparos redundantes de requisições concorrentes, o estado global de sincronização é coordenado no `useSettingsStore` via `lastSyncTime`. Se o usuário alternar entre as abas de Histórico de Ordens, Histórico de Posições Fechadas e PnL por Símbolo, o sistema verifica se uma sincronização recente já ocorreu globalmente. Em caso positivo, o fetch externo é travado e o cache local é reaproveitado na totalidade.
+4.  **Simulation Mode (Mock Data) Guards:** Quando o modo de simulação está ativo, botões de sincronização manual são visualmente desativados no header com alertas claros, prevenindo requisições acidentais a chaves reais e garantindo integridade visual constante das simulações.
+
+### 5.2. WebSockets (Isolated Diagnostic API Tester)
+1. WebSocket technology is completely isolated from the main dashboard views and runs strictly within the **API Tester** screen to verify API keys connectivity, latency, and real-time streaming health.
+2. Browser opens WebSockets for diagnostic validation:
+   - `wss://ws.okx.com:8443/ws/v5/private`
+   - `wss://ws.bitget.com/v2/ws/private`
+   - `wss://stream.bybit.com/v5/private`
+3. `src/services/adapters/BybitAdapter.ts`, `OkxAdapter.ts`, and `BitgetAdapter.ts` provide static helper routines to sign authorization payloads.
+4. During testing, the WebSocket establishes connection, logs handshakes directly to the local connection log database, and safely tears down on screen exit to prevent memory leaks and redundant threads.
+
+### 5.3. REST API (Initial Snapshots & Historical Logs & caching)
+1. Fetching historical data requires specific `GET` requests via the Orchestrator/Factory services (`PositionHistoryService` and `BillsHistoryService`).
+2. The orchestrator delegates the request to the specific `IExchangeAdapter` (e.g. `BybitAdapter`, `OkxAdapter`).
+3. The adapter generates signatures and HTTP headers for the specific Timestamp + Endpoint path.
+4. The adapter sends requests to the local backend proxy at `/api/proxy` via `hybridFetch`.
+5. Express Proxy forwards to the authentic endpoint (`api.bitget.com`, `api.bybit.com`, etc.) and streams the data back.
+6. The adapter parses and normalizes the Raw API response into the unified format (`UnifiedHistoryPosition`, `UnifiedBillRecord`).
+7. **Local Caching & SWR (Stale-While-Revalidate):** To bypass aggressive exchange rate limits and decouple UI analytics delays from network latency, historical operations query a robust **IndexedDB Database** (`crypto-dashboard-cache`).
+   - Hooks like `usePositionHistory` and `useOrderReports` implement a strict **SWR (Stale-While-Revalidate)** pattern: they immediately load and render stale cached data from IndexedDB (Step 1), then trigger a background incremental fetch to exchanges (Step 2) that seamlessly pulls delta records, updates the cache, and re-renders the UI with the freshest data.
+   - A periodic background synchronization task (`useHistoryCachePolling`) continuously keeps the cache warm based on user-defined intervals.
+   - *Note:* `useBillsHistory` handles highly mutable deposit/withdrawal/transfer logs and thus bypasses IndexedDB, fetching directly from the Live APIs to ensure transactional accuracy.
+
 ### 5.4. Bybit Transaction Log Sync Engine
 
 O módulo **BybitTransactions** adiciona uma engine de sincronização dedicada para o endpoint `GET /v5/account/transaction-log` da Bybit (UTA), permitindo auditoria completa de até 2 anos de transações.
@@ -172,50 +216,6 @@ const restartRequestedRef = { current: false };
 |-------|-----|---------|-----------|
 | `funding-summaries` | `id` (exchange-symbol) | `by-exchange`, `by-symbol` | Somatórios pré-calculados |
 | `funding-meta` | `id` (exchange-symbol) | `by-exchange` | Metadados de cobertura (freshness guard) |
-
-### 5.1. Engine de Sincronização e Cache SWR (Stale-While-Revalidate)
-
-```
-[UI Components] 
-       │
-       ├─► (Immediate Load) ──► [IndexedDB History Cache] (crypto-dashboard-cache)
-       │                              ▲
-       └─► (Trigger Polling) ──┐      │ (Save/Merge Deltas)
-                               ▼      │
-                      [ExchangeAggregator]
-                               │
-                       (CORS proxyFetch)
-                               │
-                               ▼
-                    [Exchanges API REST]
-```
-
-Para contornar as severas restrições de chamadas consecutivas impostas por Bybit, OKX e Bitget, o sistema implementa um ecossistema de caching híbrido:
-1.  **Carregamento Imediato via IndexedDB:** No momento de montagem de telas como Analytics e Relatórios de Histórico, os Hooks principais (`usePositionHistory`, `useOrderReports`) lêem instantaneamente o dataset persistido localmente no IndexedDB (`crypto-dashboard-cache`). O usuário visualiza gráficos e tabelas com latência zero.
-2.  **Sincronização em Segundo Plano (Background Delta Fetching):** Silenciosamente, o hook dispara chamadas REST incrementais. Ele recupera apenas os registros mais recentes (deltas) criados após o último timestamp cacheado. Esses deltas são mesclados diretamente na base local e a UI re-renderiza fluidamente.
-3.  **Coordenação Global de Sincronização (`lastSyncTime`):** A fim de evitar disparos redundantes de requisições concorrentes, o estado global de sincronização é coordenado no `useSettingsStore` via `lastSyncTime`. Se o usuário alternar entre as abas de Histórico de Ordens, Histórico de Posições Fechadas e PnL por Símbolo, o sistema verifica se uma sincronização recente já ocorreu globalmente. Em caso positivo, o fetch externo é travado e o cache local é reaproveitado na totalidade.
-4.  **Simulation Mode (Mock Data) Guards:** Quando o modo de simulação está ativo, botões de sincronização manual são visualmente desativados no header com alertas claros, prevenindo requisições acidentais a chaves reais e garantindo integridade visual constante das simulações.
-
-### 5.2. WebSockets (Isolated Diagnostic API Tester)
-1. WebSocket technology is completely isolated from the main dashboard views and runs strictly within the **API Tester** screen to verify API keys connectivity, latency, and real-time streaming health.
-2. Browser opens WebSockets for diagnostic validation:
-   - `wss://ws.okx.com:8443/ws/v5/private`
-   - `wss://ws.bitget.com/v2/ws/private`
-   - `wss://stream.bybit.com/v5/private`
-3. `src/services/adapters/BybitAdapter.ts`, `OkxAdapter.ts`, and `BitgetAdapter.ts` provide static helper routines to sign authorization payloads.
-4. During testing, the WebSocket establishes connection, logs handshakes directly to the local connection log database, and safely tears down on screen exit to prevent memory leaks and redundant threads.
-
-### 5.3. REST API (Initial Snapshots & Historical Logs & caching)
-1. Fetching historical data requires specific `GET` requests via the Orchestrator/Factory services (`PositionHistoryService` and `BillsHistoryService`).
-2. The orchestrator delegates the request to the specific `IExchangeAdapter` (e.g. `BybitAdapter`, `OkxAdapter`).
-3. The adapter generates signatures and HTTP headers for the specific Timestamp + Endpoint path.
-4. The adapter sends requests to the local backend proxy at `/api/proxy` via `hybridFetch`.
-5. Express Proxy forwards to the authentic endpoint (`api.bitget.com`, `api.bybit.com`, etc.) and streams the data back.
-6. The adapter parses and normalizes the Raw API response into the unified format (`UnifiedHistoryPosition`, `UnifiedBillRecord`).
-7. **Local Caching & SWR (Stale-While-Revalidate):** To bypass aggressive exchange rate limits and decouple UI analytics delays from network latency, historical operations query a robust **IndexedDB Database** (`crypto-dashboard-cache`).
-   - Hooks like `usePositionHistory` and `useOrderReports` implement a strict **SWR (Stale-While-Revalidate)** pattern: they immediately load and render stale cached data from IndexedDB (Step 1), then trigger a background incremental fetch to exchanges (Step 2) that seamlessly pulls delta records, updates the cache, and re-renders the UI with the freshest data.
-   - A periodic background synchronization task (`useHistoryCachePolling`) continuously keeps the cache warm based on user-defined intervals.
-   - *Note:* `useBillsHistory` handles highly mutable deposit/withdrawal/transfer logs and thus bypasses IndexedDB, fetching directly from the Live APIs to ensure transactional accuracy.
 
 ## 6. State Management Models
 

@@ -95,7 +95,7 @@ export function useKpiMetrics(
 
     // Average (Big.js)
     const sum = todayValues.reduce((acc, v) => acc.plus(v), new Big(0));
-    const avg = parseFloat(sum.div(todayValues.length).toFixed(12));
+    const avg = todayValues.length > 0 ? parseFloat(sum.div(todayValues.length).toFixed(12)) : 0;
 
     // Standard deviation
     const sd = todayValues.length > 0 ? stdDev(todayValues, avg) : 0;

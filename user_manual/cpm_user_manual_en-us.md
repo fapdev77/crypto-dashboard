@@ -7,14 +7,15 @@ Our absolute highest priority is **zero-trust client security** and **strict pri
 ---
 
 ## 📌 Table of Contents
+
 1. [Zero-Trust Security Architecture](#1-zero-trust-security-architecture)
 2. [Initial Configuration & API Keys Setup](#2-initial-configuration--api-keys-setup)
 3. [Simulation Mode (Mock Data)](#3-simulation-mode-mock-data)
-4. [Latency & Performance Analysis via REST](#4-latency--performance-analysis-via-rest)
-5. [Integrated Log Terminal (Connection Logs)](#5-integrated-log-terminal-connection-logs)
-6. [Advanced Synchronization with IndexedDB Caching](#6-advanced-synchronization-with-indexeddb-caching)
-7. [Screens & Daily Usability Guide](#7-screens--daily-usability-guide)
-8. [Exporting Operational Reports](#8-exporting-operational-reports)
+4. [Integrated Log Terminal (Connection Logs)](#4-integrated-log-terminal-connection-logs)
+5. [Synchronization & Cache Settings](#5-synchronization--cache-settings)
+6. [Screens & Daily Usability Guide](#6-screens--daily-usability-guide)
+7. [Exporting Operational Reports](#7-exporting-operational-reports)
+8. [PWA Support (Install App)](#8-pwa-support-install-app)
 9. [Frequently Asked Questions (FAQ)](#9-frequently-asked-questions-faq)
 
 ---
@@ -79,6 +80,7 @@ To ensure lightning-fast load times and prevent exchanges from blocking your acc
 Through the **Settings** screen in the sidebar, you can easily control how the application behaves:
 - **Update Intervals (Polling)**: Adjust how often the system fetches new orders, positions, or funding fees. This is useful if you want faster updates or prefer to reduce network consumption.
 - **Clear Cache (Clear Data)**: If you feel the application is displaying outdated data, stuck orders, or inconsistencies after trading directly on the exchange, you can use the clear cache buttons (e.g., *Clear Orders Cache*, *Clear Funding Cache*). This will force the application to redownload your entire history on the next synchronization.
+- **Wipe All Local Client Data**: In the Danger Zone, you can completely factory reset the application. This will wipe all stored API keys, historical caches, and user preferences from your browser, returning the application to its original clean state.
 - **Simulation Mode**: Toggle the mock data simulation on or off at any time to test the interface without using real API keys.
 
 ---
@@ -97,9 +99,13 @@ Monitor your active derivatives contracts in real-time:
 - **Liquidation Price & Margin**: Gauges turning amber/red when a position approaches its liquidation threshold.
 - **Coin Icon Component**: Renders custom official logos for each ticker with robust local fallback logic.
 
-### 📂 Closed Positions & Order History
+### 📂 Closed Positions
 - **Operational Metrics**: Displays your global **Win Rate %**, **Profit Factor**, Average profit/loss margins, and your biggest profitable trade.
-- **Order Reports**: Search open or historical orders with regex filters, and expand rows to review exchange order IDs and cumulative commissions (fees).
+- **PnL Auditing**: View the consolidated final PnL per position, total time the position remained open, and ROE% rates.
+
+### 📝 Order Reports (Open & History)
+- **Open Orders**: Monitor all your pending orders (Limit, Stop Loss, Take Profit) across connected exchanges in a unified table, visualizing current status, quantities, and price triggers in real-time.
+- **Order History**: Search historical and canceled orders with regex filters, and expand rows to review exchange order IDs and cumulative commissions.
 
 ### 🔄 Trade History
 A detailed view of all individual order executions and filled trades across your connected exchanges.
@@ -139,7 +145,13 @@ When auditing accounts or archiving tax reports, navigate to **Reports** in the 
 
 ---
 
-## 8. Frequently Asked Questions (FAQ)
+## 8. PWA Support (Install App)
+
+CPM is built as a Progressive Web App (PWA). You can install it on your Desktop or Mobile device to run it as a standalone native app. To install it, look for the install icon in your browser address bar (Chrome/Edge) or use the "Add to Home Screen" option on Safari iOS.
+
+---
+
+## 9. Frequently Asked Questions (FAQ)
 
 ### My API Key status is failing. How can I fix it?
 1. Verify that there are no leading or trailing blank spaces in the copied keys.
