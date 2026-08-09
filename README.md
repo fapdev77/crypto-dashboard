@@ -116,8 +116,11 @@ Caso deseja escalonar o dashboard:
 Este projeto adota o modelo **Spec-Driven Development (SDD)** e está preparado para recriação ou refatoração por IAs Generativas (ex: Antigravity, Claude, ChatGPT). 
 
 Todos os documentos e diagramas arquiteturais estão disponíveis no diretório `/specs`:
-- [PRD (Desenvolvimento de Produto)](./specs/PRD.md): Regras de negócio originais.
+- [PRD (Regras de Negócio)](./specs/PRD.md): Product Requirements Document com o escopo, regras de negócio e requisitos do produto.
 - [Arquitetura e Fluxo de Dados](./specs/ARCHITECTURE.md): Diagrama estático e funcionamento híbrido Proxy-Frontend.
-- [Prompt Engineering](./specs/PROMPT_ENGINEERING.md): O prompt base ideal para alimentar uma IA para recriar ou entender todo o escopo do projeto do zero.
-
-(Para documentação legada de requisitos, consulte também [`requirements.md`](./requirements.md) na raiz do projeto).
+- [Evolução e Refatorações](./specs/EVOLUTION_TASKS.md): Histórico de refatorações estruturais, melhorias de qualidade e segurança (auditoria técnica).
+- [Interfaces Unificadas](./specs/unified-interfaces.md): Especificação dos tipos e interfaces normalizadas (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, etc.) — fonte única de verdade para a UI.
+- [Funding Fees Dashboard](./specs/FUNDING_FEES_DASHBOARD.md): Especificação de design do dashboard de taxas de financiamento (v3.0).
+- [Transações Bybit](./specs/bybit-transactions-spec.md): Especificação técnica do módulo de auditoria de transações da Bybit (`/v5/account/transaction-log`).
+- [KPI Funding Cards](./specs/kpi-funding-cards.md): Especificação dos cards de KPI de mercado do Funding Dashboard.
+- [Documentação das APIs](./specs/bybit_v5_api_doc.md): Referências técnicas oficiais das corretoras integradas (Bybit V5, [OKX V5](./specs/okx_v5_api_doc.md) e [Bitget Classic](./specs/bitget_classic_api_doc.md)).
