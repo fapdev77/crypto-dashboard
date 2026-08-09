@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Big from 'big.js';
-import { FileText, Download, ChevronDown, Activity, TrendingUp, CreditCard, Wallet } from 'lucide-react';
+import { FileText, Download, ChevronDown, Activity, TrendingUp, CreditCard, Wallet, Loader2, X } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { useBybitTransactions, TxFilters } from '../../../hooks/useBybitTransactions';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
@@ -10,10 +10,13 @@ import { Pagination } from '../../ui/Pagination';
 import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { AppTooltip } from '../../ui/Tooltip';
 import { BybitTransactionRow } from './BybitTransactionRow';
-import { BybitTransactionFilters } from './BybitTransactionFilters';
+import { BybitTransactionFilters, TX_TYPES, typeColorMap, typeHexColorMap } from './BybitTransactionFilters';
 import { BybitTransactionProgress } from './BybitTransactionProgress';
+import { BybitTransactionDetailsModal, DetailsModalType } from './BybitTransactionDetailsModal';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { LogManager } from '../../../services/LogManager';
+import { CoinIcon } from '../../ui/CoinIcon';
+
 
 export function BybitTransactions() {
   const [filters, setFilters] = useState<TxFilters>({
@@ -27,11 +30,25 @@ export function BybitTransactions() {
 
   // ── Refresh animation indicator key ──
   const filterMonitorKey = `${filters.category}-${filters.type}-${filters.currency}-${filters.accountId}-${filters.timePeriod}`;
-  const { filteredEntries, isLoading, isSyncing, progress, error, stats } = useBybitTransactions(filters);
+  
+  const { entries, filteredEntries, isLoading, isSyncing, isCalculatingUsd, progress, error, stats, tokenRates } = useBybitTransactions(filters);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [detailsModalType, setDetailsModalType] = useState<DetailsModalType>(null);
+
+  const availableCurrencies = useMemo(() => {
+    const currencies = new Set<string>();
+    entries.forEach(e => {
+      if (e.currency) currencies.add(e.currency);
+    });
+    return Array.from(currencies).sort().map(c => ({ 
+      value: c, 
+      label: c,
+      icon: <CoinIcon symbol={c} size={16} /> 
+    }));
+  }, [entries]);
 
   const { page: currentPage, setPage: setCurrentPage, paginated: paginatedEntries, totalItems: entriesTotal } = usePagination(
     filteredEntries, 50, [filters]
@@ -41,6 +58,7 @@ export function BybitTransactions() {
     if (isPrivateMode) return '****';
     return formatCurrency(Number(val), 'usd');
   };
+
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
@@ -117,7 +135,7 @@ export function BybitTransactions() {
       </div>
 
       {/* Filters */}
-      <BybitTransactionFilters filters={filters} setFilters={setFilters} />
+      <BybitTransactionFilters filters={filters} setFilters={setFilters} availableCurrencies={availableCurrencies} />
 
       {/* Stats Cards */}
       {filteredEntries.length > 0 && (
@@ -127,19 +145,23 @@ export function BybitTransactions() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#2F6BFF] shrink-0" />
-                <AppTooltip description="Total number of transactions matching the current filters.">
-                  <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
-                    Total Tx
+                <AppTooltip description="Total number of transactions matching the current filters. Click here for details.">
+                  <span onClick={() => setDetailsModalType('tx')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
+                    Total Transactions
                   </span>
                 </AppTooltip>
               </div>
               <span className="text-2xl font-bold text-white mt-1">{stats.totalCount}</span>
               <div className="flex flex-wrap gap-1 mt-2">
-                {Object.entries(stats.typeBreakdown).slice(0, 4).map(([type, count]) => (
-                  <span key={type} className="text-[8px] px-1.5 py-0.5 rounded bg-[#2a2b30] text-[#8E9299] font-mono">
-                    {type}: {count}
-                  </span>
-                ))}
+                {Object.entries(stats.typeBreakdown).slice(0, 4).map(([type, count]) => {
+                  const typeLabel = TX_TYPES.find(t => t.value === type)?.label || type;
+                  const typeClass = typeColorMap[type] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
+                  return (
+                    <span key={type} className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border ${typeClass}`}>
+                      {typeLabel}: {count}
+                    </span>
+                  );
+                })}
               </div>
             </div>
             <div className="w-20 h-20 shrink-0">
@@ -149,18 +171,22 @@ export function BybitTransactions() {
                     <Tooltip
                       contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '11px' }}
                       itemStyle={{ color: '#fff' }}
+                      formatter={(value, name) => {
+                        const typeLabel = TX_TYPES.find(t => t.value === name)?.label || name;
+                        return [value, typeLabel];
+                      }}
                     />
                     <Pie
-                      data={Object.entries(stats.typeBreakdown).slice(0, 5).map(([type, count], i) => ({
+                      data={Object.entries(stats.typeBreakdown).map(([type, count]) => ({
                         name: type,
                         value: count,
-                        color: ['#2F6BFF', '#FF9C2E', '#00C853', '#FF4444', '#A855F7'][i % 5]
+                        color: typeHexColorMap[type] || '#8E9299'
                       }))}
                       cx="50%" cy="50%" innerRadius="55%" outerRadius="100%"
                       dataKey="value" stroke="none"
                     >
-                      {Object.entries(stats.typeBreakdown).slice(0, 5).map((_, i) => (
-                        <Cell key={i} fill={['#2F6BFF', '#FF9C2E', '#00C853', '#FF4444', '#A855F7'][i % 5]} />
+                      {Object.entries(stats.typeBreakdown).map(([type, _], i) => (
+                        <Cell key={i} fill={typeHexColorMap[type] || '#8E9299'} />
                       ))}
                     </Pie>
                   </PieChart>
@@ -169,100 +195,92 @@ export function BybitTransactions() {
             </div>
           </div>
 
-          {/* Card 2: Total Funding (stable only) */}
+          {/* Card 2: Total Funding (aggregated USD) */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-[#00C853] shrink-0" />
-              <AppTooltip description="Sum of funding fees in USD stablecoins (USDT/USDC). Non-stable values shown separately.">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
+              <AppTooltip description="Sum of funding fees in USD. Click here for details.">
+                <span onClick={() => setDetailsModalType('funding')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
                   Total Funding (USD)
                 </span>
               </AppTooltip>
             </div>
-            <span className={`text-xl font-bold ${new Big(stats.stable.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-              {maskVal(stats.stable.totalFunding)} USD
+            <span className={`text-xl font-bold ${new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+              {maskVal(stats.aggregatedUsd.totalFunding)} USD
             </span>
-            {Object.entries(stats.perCurrency).length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {Object.entries(stats.perCurrency).map(([cur, vals]) => (
-                  <AppTooltip key={cur} description={`Funding in ${cur}`}>
-                    <span className={`text-[8px] px-1 py-0.5 rounded font-mono ${new Big(vals.totalFunding).gte(0) ? 'text-[#00C853] bg-[#00C853]/10' : 'text-[#FF4444] bg-[#FF4444]/10'}`}>
-                      {new Big(vals.totalFunding).toFixed(8)} {cur}
-                    </span>
-                  </AppTooltip>
-                ))}
-              </div>
-            )}
-            <span className="text-[10px] text-[#8E9299] mt-1">
-              Funding {new Big(stats.stable.totalFunding).gte(0) ? 'received' : 'paid'}
-            </span>
+            
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] text-[#8E9299]">
+                Funding {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'received' : 'paid'}
+              </span>
+              {isCalculatingUsd && (
+                <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
+                  <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Calculating USD...
+                  </span>
+                </AppTooltip>
+              )}
+            </div>
           </div>
 
-          {/* Card 3: Total Fees (stable only) */}
+          {/* Card 3: Total Fees (aggregated USD) */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="w-4 h-4 text-[#FF4444] shrink-0" />
-              <AppTooltip description="Sum of trading fees in USD stablecoins (USDT/USDC). Non-stable values shown separately.">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
+              <AppTooltip description="Sum of trading fees in USD. Click here for details.">
+                <span onClick={() => setDetailsModalType('fees')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
                   Total Fees (USD)
                 </span>
               </AppTooltip>
             </div>
-            <span className={`text-xl font-bold ${new Big(stats.stable.totalFees).gte(0) ? 'text-[#FF4444]' : 'text-[#00C853]'}`}>
+            <span className={`text-xl font-bold ${new Big(stats.aggregatedUsd.totalFees).gte(0) ? 'text-[#FF4444]' : 'text-[#00C853]'}`}>
               {(() => {
-                const feeBig = new Big(stats.stable.totalFees);
-                if (feeBig.abs().toString() === '0') return '0.00 USD';
+                const feeBig = new Big(stats.aggregatedUsd.totalFees);
+                if (feeBig.abs().toString() === '0') return `${maskVal(feeBig.toFixed(2))} USD`;
                 if (feeBig.gte(0)) return `-${maskVal(feeBig.toString())} USD`;
                 return `+${maskVal(feeBig.abs().toString())} USD`;
               })()}
             </span>
-            {Object.entries(stats.perCurrency).length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {Object.entries(stats.perCurrency).map(([cur, vals]) => (
-                  <AppTooltip key={cur} description={`Fees in ${cur}`}>
-                    <span className="text-[8px] px-1 py-0.5 rounded font-mono text-[#FF4444] bg-[#FF4444]/10">
-                      {new Big(vals.totalFees).abs().toFixed(8)} {cur}
-                    </span>
-                  </AppTooltip>
-                ))}
-              </div>
-            )}
-            <span className="text-[10px] text-[#8E9299] mt-1">
-              Trading fees paid
-            </span>
+            
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] text-[#8E9299]">
+                Trading fees paid
+              </span>
+              {isCalculatingUsd && (
+                <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
+                  <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Calculating USD...
+                  </span>
+                </AppTooltip>
+              )}
+            </div>
           </div>
 
           {/* Card 4: Net Change + Wallet Balance */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-2">
             <div className="flex items-center gap-2">
               <Wallet className="w-4 h-4 text-[#8E9299] shrink-0" />
-              <AppTooltip description="Net change and wallet balance in USD stablecoins. Non-stable balances shown separately.">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
+              <AppTooltip description="Net change in USD (stablecoins + non-stables value). Click here for details.">
+                <span onClick={() => setDetailsModalType('netchange')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
                   Net Change (USD)
                 </span>
               </AppTooltip>
             </div>
-            <span className={`text-lg font-bold ${new Big(stats.stable.totalChange).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-              {maskVal(stats.stable.totalChange)} USD
+            <span className={`text-lg font-bold ${new Big(stats.aggregatedUsd.totalChange).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+              {maskVal(stats.aggregatedUsd.totalChange)} USD
             </span>
             <div className="border-t border-[#2a2b30] pt-2 flex flex-col">
-              <AppTooltip description="Wallet balance after the most recent stablecoin transaction.">
-                <span className="text-[9px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">
-                  Wallet Balance (USD)
-                </span>
-              </AppTooltip>
-              <span className="text-[13px] font-bold text-white mt-0.5">{maskVal(stats.stable.finalBalance)} USD</span>
-              {Object.entries(stats.perCurrency).length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {Object.entries(stats.perCurrency).map(([cur, vals]) => (
-                    <AppTooltip key={cur} description={`Balance in ${cur}`}>
-                      <span className="text-[8px] px-1 py-0.5 rounded font-mono bg-[#2a2b30] text-[#8E9299]">
-                        {new Big(vals.finalBalance).toFixed(8)} {cur}
-                      </span>
-                    </AppTooltip>
-                  ))}
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <AppTooltip description="Aggregated final wallet balance across currencies. Click here for details.">
+                  <span onClick={() => setDetailsModalType('balance')} className="text-[9px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
+                    Wallet Balance (USD)
+                  </span>
+                </AppTooltip>
+              </div>
+              <span className="text-[13px] font-bold text-white mt-0.5">{maskVal(stats.aggregatedUsd.finalBalance)} USD</span>
+              
             </div>
           </div>
         </div>
@@ -336,6 +354,18 @@ export function BybitTransactions() {
           )}
         </div>
       )}
+
+      {/* Details Modal */}
+      {/* Details Modal */}
+      <BybitTransactionDetailsModal
+        detailsModalType={detailsModalType}
+        setDetailsModalType={setDetailsModalType}
+        stats={stats}
+        filteredEntries={filteredEntries}
+        tokenRates={tokenRates}
+        isPrivateMode={isPrivateMode}
+        maskVal={maskVal}
+      />
     </div>
   );
 }

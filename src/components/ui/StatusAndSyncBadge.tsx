@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { RefreshCw, CheckCircle2, Clock, Play } from 'lucide-react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { AppTooltip } from './Tooltip';
-import { format } from 'date-fns';
+import { formatTimeOnly } from '../../utils/dateTimeHelper';
 
 interface StatusAndSyncBadgeProps {
   isSyncing: boolean;
@@ -78,7 +78,7 @@ export function StatusAndSyncBadge({
 
   // Format last sync time safely
   const formattedLastSync = actualLastSync > 0 
-    ? format(new Date(actualLastSync), 'HH:mm:ss')
+    ? formatTimeOnly(actualLastSync)
     : 'Never';
 
   const handleManualSync = () => {
@@ -133,7 +133,7 @@ export function StatusAndSyncBadge({
         rows={[
           { label: 'Interval Settings', value: overrideIntervalMs ? `${Math.round(overrideIntervalMs / 60000)} min` : `${historyCacheInterval} min` },
           { label: 'Last Completed', value: formattedLastSync },
-          { label: 'Next Scheduled', value: format(new Date(nextSyncTime), 'HH:mm:ss') }
+          { label: 'Next Scheduled', value: formatTimeOnly(nextSyncTime) }
         ]}
       >
         <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-[#2a2b30] bg-[#1a1b1e] text-[#8E9299] select-none">

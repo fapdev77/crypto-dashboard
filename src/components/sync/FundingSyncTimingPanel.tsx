@@ -4,6 +4,7 @@ import { useLogStore } from '../../store/logStore';
 import { useFundingStore } from '../../store/fundingStore';
 import { clearFundingSummariesCache } from '../../services/historyCache';
 import { AppTooltip } from '../ui/Tooltip';
+import { formatTimeOnly as formatTime, formatTimeUTC, timeAgo } from '../../utils/dateTimeHelper';
 import {
   Clock, BarChart3, Zap, AlertTriangle,
   RefreshCw, Database, Play, Loader2, Trash2, Info, Bell,
@@ -65,23 +66,6 @@ function parseOverallLine(msg: string): OverallTiming | null {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
-
-function formatTime(ts: number): string {
-  const d = new Date(ts);
-  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function formatTimeUTC(ts: number): string {
-  const d = new Date(ts);
-  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hour12: false });
-}
-
-function timeAgo(ts: number): string {
-  const diff = Date.now() - ts;
-  if (diff < 60_000) return `${Math.round(diff / 1000)}s ago`;
-  if (diff < 3600_000) return `${Math.round(diff / 60_000)}m ago`;
-  return `${(diff / 3600_000).toFixed(1)}h ago`;
-}
 
 const EXCHANGE_COLORS: Record<string, string> = {
   bybit: '#ff9c2e',

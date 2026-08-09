@@ -17,6 +17,8 @@ import mockAccountsData from '../mock/accounts.json';
 import mockBalancesData from '../mock/balances.json';
 import mockPositionsData from '../mock/positions.json';
 import mockOrdersData from '../mock/orders.json';
+import mockFundingData from '../mock/funding.json';
+import { useFundingStore } from '../store/fundingStore';
 
 export function useMockDataInjector() {
   const useMockData = useSettingsStore((state) => state.useMockData);
@@ -33,6 +35,7 @@ export function useMockDataInjector() {
         clearConnectionData(acc.connectionId);
         useOrdersStore.getState().clearConnectionOrders(acc.connectionId);
       });
+      useFundingStore.setState({ currentRates: [] });
       return;
     }
 
@@ -59,5 +62,14 @@ export function useMockDataInjector() {
       );
       useOrdersStore.getState().updateOpenOrders(connectionId, openOrders as any);
     });
+    
+    const mockCurrentRates = mockFundingData.map((s: any) => ({
+      exchange: s.exchange,
+      symbol: s.symbol,
+      instrumentType: s.instrumentType,
+      fundingRate: Number(s.todayFundingRate) * 0.1,
+      nextFundingTime: Date.now() + 4 * 60 * 60 * 1000
+    }));
+    useFundingStore.setState({ currentRates: mockCurrentRates as any });
   }, [useMockData, keys, setConnectionStatus]);
 }

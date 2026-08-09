@@ -31,6 +31,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const [error, setError] = useState('');
+
   useEffect(() => {
     if (isOpen) {
       if (mode === 'edit' && existingKey) {
@@ -48,6 +50,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
       }
       setShowDeleteConfirm(false);
       setShowSecret(false);
+      setError('');
     }
   }, [isOpen, mode, existingKey]);
 
@@ -57,6 +60,27 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (label.trim().length < 3) {
+      setError('The connection label must have at least 3 characters.');
+      return;
+    }
+
+    // Check for duplicate names
+    const { keys } = useApiKeysStore.getState();
+    const isDuplicate = keys.some(k => 
+      k.label.trim().toLowerCase() === label.trim().toLowerCase() && 
+      k.exchange === exchange &&
+      (mode === 'create' || k.id !== existingKey?.id)
+    );
+
+    if (isDuplicate) {
+      setError('An API connection with this label already exists for this exchange.');
+      return;
+    }
+    
+    setError('');
+
     if (mode === 'create') {
       addKey({
         exchange,
@@ -100,6 +124,11 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
 
         <form onSubmit={handleSave} className="p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {error && (
+              <div className="col-span-1 sm:col-span-2 bg-[#FF4444]/10 border border-[#FF4444]/20 rounded-lg p-3">
+                <p className="text-[#FF4444] text-sm text-center">{error}</p>
+              </div>
+            )}
             <div>
               <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2">Exchange</label>
               {mode === 'edit' ? (

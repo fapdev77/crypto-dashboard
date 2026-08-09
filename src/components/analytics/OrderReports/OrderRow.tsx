@@ -10,6 +10,7 @@ import { AssetClassifierAggregator } from '../../../services/AssetClassifierAggr
 import { extractBaseCoin } from '../../../utils/unifiers';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
 import { usePositionsStore } from '../../../store/positionsStore';
+import { formatDateTime, formatFullDateTime } from '../../../utils/formatters';
 
 interface Props {
   key?: React.Key;
@@ -51,9 +52,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
   const progress = order.qty > 0 ? new Big(order.filledQty).div(new Big(order.qty)).times(100).toNumber() : 0;
 
-  const d = new Date(order.createdTime);
-  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const { dateStr, timeStr } = formatDateTime(order.createdTime);
 
   const category = AssetClassifierAggregator.getGlobalCategorySync(order.symbol);
 
@@ -304,7 +303,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
             <div className="flex flex-col gap-1">
               <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Updated Time</span>
-              <span className="text-white font-mono text-sm">{new Date(order.updatedTime).toLocaleString()}</span>
+              <span className="text-white font-mono text-sm">{formatFullDateTime(order.updatedTime)}</span>
             </div>
           </div>
         </div>

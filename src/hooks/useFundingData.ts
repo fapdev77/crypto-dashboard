@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useFundingStore } from '../store/fundingStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { getAllFundingSummaries } from '../services/historyCache';
 import { FundingRateSummary, FundingFeeAggregated } from '../types';
 import { LogManager } from '../services/LogManager';
@@ -8,12 +9,26 @@ export function useFundingData() {
   const [summaries, setSummaries] = useState<FundingRateSummary[]>([]);
   const { currentRates, isSyncing } = useFundingStore();
   const [isLoading, setIsLoading] = useState(true);
+  const useMockData = useSettingsStore(state => state.useMockData);
 
   // Poll IndexedDB for new summaries every few seconds while syncing, or just once if not syncing
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
     const fetchSummaries = async () => {
+      if (useMockData) {
+        try {
+          const mod = await import('../mock/funding.json');
+          setSummaries(mod.default as any);
+        } catch (err) {
+          LogManager.error('FundingData', 'Failed to load mock funding summaries:', err);
+          setSummaries([]);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
       try {
         const data = await getAllFundingSummaries();
         setSummaries(data);
@@ -27,14 +42,14 @@ export function useFundingData() {
 
     fetchSummaries();
 
-    if (isSyncing) {
+    if (isSyncing && !useMockData) {
       interval = setInterval(fetchSummaries, 5000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isSyncing]);
+  }, [isSyncing, useMockData]);
 
   // Lightweight mapping: seed from currentRates, overwrite from pre-computed summaries
   const aggregatedData = useMemo(() => {

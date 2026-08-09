@@ -31,12 +31,59 @@ import { useSettingsStore } from './store/settingsStore';
 import { HelpToggleButton } from './components/HelpToggleButton';
 import { WelcomeHelpModal } from './components/WelcomeHelpModal';
 import { UpdateNotification } from './components/UpdateNotification';
+import { useApiKeysStore } from './store/apiKeysStore';
+import { GlobalUnlockScreen } from './components/GlobalUnlockScreen';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+
+  const { isEncrypted, isUnlocked } = useApiKeysStore();
+
+  // Listen for global tab navigation requests
+  useEffect(() => {
+    const handleNavigate = (e: Event) => {
+      const customEvent = e as CustomEvent<string | { tab: string; targetId?: string }>;
+      let tab = '';
+      let targetId = '';
+
+      if (typeof customEvent.detail === 'string') {
+        if (customEvent.detail === 'settings-version') {
+          tab = 'settings';
+          targetId = 'version-info-card';
+        } else if (customEvent.detail === 'settings') {
+          tab = 'settings';
+          targetId = 'security-settings-card';
+        } else {
+          tab = customEvent.detail;
+        }
+      } else if (customEvent.detail && typeof customEvent.detail === 'object') {
+        tab = customEvent.detail.tab;
+        targetId = customEvent.detail.targetId || '';
+      }
+
+      if (tab) {
+        setActiveTab(tab);
+      }
+
+      if (targetId) {
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
+            setTimeout(() => {
+              el.classList.remove('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
+            }, 2000);
+          }
+        }, 150);
+      }
+    };
+    window.addEventListener('navigate-to-tab', handleNavigate);
+    return () => window.removeEventListener('navigate-to-tab', handleNavigate);
+  }, []);
 
   // Trigger welcome modal on app load if enabled
   useEffect(() => {
@@ -45,6 +92,10 @@ export default function App() {
       setIsWelcomeOpen(true);
     }
   }, []);
+
+  if (isEncrypted && !isUnlocked) {
+    return <GlobalUnlockScreen />;
+  }
 
   let activeTabName = activeTab.replace('analytics-', '').replace('-', ' ');
   if (activeTab === 'api-keys') activeTabName = 'API Keys Manager';
