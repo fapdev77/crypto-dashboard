@@ -1,3 +1,4 @@
+import { useSettingsStore } from '../../store/settingsStore';
 import Big from 'big.js';
 import { BybitTransactionLogEntry } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
@@ -52,7 +53,7 @@ export class BybitTransactionService {
   async syncIncremental(key: ApiCredentials, latestTime: number): Promise<BybitTransactionLogEntry[]> {
     const now = Date.now();
     let allNew: BybitTransactionLogEntry[] = [];
-    const categories = ['linear', 'inverse', 'spot'];
+    const categories = [''];
     let hasError = false;
 
     for (const category of categories) {
@@ -122,7 +123,7 @@ export class BybitTransactionService {
   ): Promise<void> {
     const now = Date.now();
     let twoYearsAgo = now - TWO_YEARS_MS;
-    const categories = ['linear', 'inverse', 'spot'];
+    const categories = [''];
     let totalNew = 0;
     const targetStart = twoYearsAgo;
 
@@ -286,42 +287,90 @@ export class BybitTransactionService {
     totalCount: number;
     typeBreakdown: Record<string, number>;
     /** Stablecoin totals (USDT, USDC) — displayed as USD */
-    stable: { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string };
+    stable: { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string; totalInflow: string; totalOutflow: string; initialBalance: string; percentageChange: number };
     /** Per-currency breakdown for non-stable (e.g. BTC, ETH) */
-    perCurrency: Record<string, { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string }>;
+    perCurrency: Record<string, { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string; totalInflow: string; totalOutflow: string; initialBalance: string; percentageChange: number }>;
   } {
     const typeBreakdown: Record<string, number> = {};
-    const stable = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0) };
-    const perCurrency: Record<string, { totalFunding: Big; totalFees: Big; totalCashFlow: Big; totalChange: Big; finalBalance: Big }> = {};
+    const stable = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) };
+    const perCurrency: Record<string, { totalFunding: Big; totalFees: Big; totalCashFlow: Big; totalChange: Big; finalBalance: Big; totalInflow: Big; totalOutflow: Big }> = {};
 
     const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD'].includes(currency.toUpperCase());
+
+    const latestBalance: Record<string, { time: number; balance: Big }> = {};
+
+    const INFLOW_TYPES = ['TRANSFER_IN', 'DEPOSIT', 'AIRDROP', 'BONUS', 'FIAT_DEPOSIT'];
+    const OUTFLOW_TYPES = ['TRANSFER_OUT', 'WITHDRAW', 'FIAT_WITHDRAW', 'BONUS_RECOLLECT', 'AUTO_DEDUCTION'];
+    const EXCHANGE_TYPES = ['SPOT', 'CONVERT', 'CURRENCY_BUY', 'CURRENCY_SELL'];
 
     for (const e of entries) {
       typeBreakdown[e.type] = (typeBreakdown[e.type] || 0) + 1;
 
       const stableMatch = isStable(e.currency);
-      const bucket = stableMatch ? stable : (perCurrency[e.currency] || (perCurrency[e.currency] = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0) }));
+      const bucket = stableMatch ? stable : (perCurrency[e.currency] || (perCurrency[e.currency] = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) }));
+
+      const typeUpper = e.type.toUpperCase();
+      const changeBig = new Big(e.change || '0');
+      
+      let isInflow = INFLOW_TYPES.includes(typeUpper);
+      let isOutflow = OUTFLOW_TYPES.includes(typeUpper);
+      
+      const isExchange = EXCHANGE_TYPES.includes(typeUpper) || (e.category?.toLowerCase() === 'spot' && typeUpper === 'TRADE');
+      
+      if (typeUpper === 'TRANSFER' || isExchange) {
+         if (changeBig.gt(0)) isInflow = true;
+         if (changeBig.lt(0)) isOutflow = true;
+      }
+      
+      const isTransferOrExchange = isInflow || isOutflow || typeUpper === 'TRANSFER';
 
       bucket.totalFunding = bucket.totalFunding.plus(new Big(e.funding || '0'));
       bucket.totalFees = bucket.totalFees.plus(new Big(e.fee || '0'));
-      bucket.totalCashFlow = bucket.totalCashFlow.plus(new Big(e.cashFlow || '0'));
-      bucket.totalChange = bucket.totalChange.plus(new Big(e.change || '0'));
-    }
+      
+      if (isInflow) {
+        bucket.totalInflow = bucket.totalInflow.plus(changeBig.abs());
+      }
+      if (isOutflow) {
+        bucket.totalOutflow = bucket.totalOutflow.plus(changeBig.abs());
+      }
 
-    // Final balance is cashBalance of the most recent entry per currency
-    const stableEntries = entries.filter(e => isStable(e.currency));
-    if (stableEntries.length > 0) {
-      const sorted = [...stableEntries].sort((a, b) => b.transactionTime - a.transactionTime);
-      stable.finalBalance = new Big(sorted[0].cashBalance || '0');
-    }
+      if (!isTransferOrExchange) {
+        bucket.totalCashFlow = bucket.totalCashFlow.plus(new Big(e.cashFlow || '0'));
+        bucket.totalChange = bucket.totalChange.plus(changeBig);
+      }
 
-    for (const currency of Object.keys(perCurrency)) {
-      const currencyEntries = entries.filter(e => e.currency === currency);
-      if (currencyEntries.length > 0) {
-        const sorted = [...currencyEntries].sort((a, b) => b.transactionTime - a.transactionTime);
-        perCurrency[currency].finalBalance = new Big(sorted[0].cashBalance || '0');
+      const balKey = `${e.connectionId}-${e.currency}`;
+      if (!latestBalance[balKey] || e.transactionTime > latestBalance[balKey].time) {
+        latestBalance[balKey] = { time: e.transactionTime, balance: new Big(e.cashBalance || '0') };
       }
     }
+
+    for (const [key, data] of Object.entries(latestBalance)) {
+      const dashIndex = key.lastIndexOf('-');
+      const currency = key.substring(dashIndex + 1);
+      if (!currency) continue;
+      
+      if (isStable(currency)) {
+        stable.finalBalance = stable.finalBalance.plus(data.balance);
+      } else if (perCurrency[currency]) {
+        perCurrency[currency].finalBalance = perCurrency[currency].finalBalance.plus(data.balance);
+      }
+    }
+
+    const calcDerived = (bucket: any) => {
+      const initialBalance = bucket.finalBalance.minus(bucket.totalChange).minus(bucket.totalInflow).plus(bucket.totalOutflow);
+      const basisBig = initialBalance.plus(bucket.totalInflow);
+      let percentageChange = 0;
+      if (basisBig.gt(0)) {
+        percentageChange = bucket.totalChange.div(basisBig).times(100).toNumber();
+      } else if (basisBig.eq(0) && bucket.totalChange.gt(0)) {
+        percentageChange = 100;
+      }
+      return {
+        initialBalance: initialBalance.toString(),
+        percentageChange
+      };
+    };
 
     return {
       totalCount: entries.length,
@@ -332,6 +381,9 @@ export class BybitTransactionService {
         totalCashFlow: stable.totalCashFlow.toString(),
         totalChange: stable.totalChange.toString(),
         finalBalance: stable.finalBalance.toString(),
+        totalInflow: stable.totalInflow.toString(),
+        totalOutflow: stable.totalOutflow.toString(),
+        ...calcDerived(stable)
       },
       perCurrency: Object.fromEntries(
         Object.entries(perCurrency).map(([cur, vals]) => [cur, {
@@ -340,6 +392,9 @@ export class BybitTransactionService {
           totalCashFlow: vals.totalCashFlow.toString(),
           totalChange: vals.totalChange.toString(),
           finalBalance: vals.finalBalance.toString(),
+          totalInflow: vals.totalInflow.toString(),
+          totalOutflow: vals.totalOutflow.toString(),
+          ...calcDerived(vals)
         }])
       ),
     };

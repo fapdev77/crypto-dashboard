@@ -12,6 +12,8 @@ import {
 import { LogManager } from '../services/LogManager';
 import { AppTooltip } from './ui/Tooltip';
 import { FundingSyncTimingPanel } from './sync/FundingSyncTimingPanel';
+import { SecurityBackupCard } from './SecurityBackupCard';
+import { VersionInfoCard } from './VersionInfoCard';
 
 export function Settings() {
   const {
@@ -215,6 +217,12 @@ export function Settings() {
             </div>
           </div>
         </div>
+
+        {/* Card 1.5: Security & Backup */}
+        <SecurityBackupCard />
+
+        {/* Card 1.8: Version & Changelog Details */}
+        <VersionInfoCard />
 
         {/* Card 2: History Cache Management */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">

@@ -15,7 +15,7 @@ import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { AssetClassifierAggregator } from '../../services/AssetClassifierAggregator';
 import { extractBaseCoin } from '../../utils/unifiers';
-import { format } from 'date-fns';
+import { formatIsoDateTime, formatDateTime } from '../../utils/formatters';
 import { Pagination } from '../ui/Pagination';
 import { usePagination } from '../../hooks/usePagination';
 
@@ -192,7 +192,7 @@ export function TradeHistory() {
         ? (isInverse ? `${Math.abs(t.fees).toFixed(8)} ${symbolSuffix}` : `${Math.abs(t.fees).toFixed(6)} USDT`)
         : '0.00';
 
-      const timeStr = format(new Date(t.updatedTime || t.createdTime), 'yyyy-MM-dd HH:mm:ss');
+      const timeStr = formatIsoDateTime(t.updatedTime || t.createdTime);
 
       return [
         t.symbol,
@@ -400,9 +400,9 @@ export function TradeHistory() {
 
             filledQtyStr = `${formatCurrency(actualFilledCoinSize, 'crypto')} ${symbolSuffix}`;
             filledValueStr = `${formatCurrency(filledValUsd, 'usd')} USD`;
-            const d = new Date(trade.updatedTime || trade.createdTime);
-            const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            const dtFormatted = formatDateTime(trade.updatedTime || trade.createdTime);
+            const timeStr = dtFormatted.timeStr;
+            const dateStr = dtFormatted.dateStr;
 
             return (
               <div

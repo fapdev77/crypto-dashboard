@@ -276,5 +276,30 @@ describe('BybitTransactionService', () => {
       // No per-currency breakdown for this test (all USDT)
       expect(stats.perCurrency).toEqual({});
     });
+
+    it('should exclude TRANSFER, TRANSFER_IN, and TRANSFER_OUT from totalChange and totalCashFlow but include in finalBalance', () => {
+      const entries = [
+        makeMockEntry({ id: 'tx-1', type: 'TRANSFER_IN', funding: '0', fee: '0', cashFlow: '100', change: '100', cashBalance: '100', currency: 'NEAR', transactionTime: 1710000000000 }),
+        makeMockEntry({ id: 'tx-2', type: 'TRADE', funding: '0', fee: '-1', cashFlow: '5', change: '5', cashBalance: '104', currency: 'NEAR', transactionTime: 1710000001000 }),
+        makeMockEntry({ id: 'tx-3', type: 'TRANSFER_OUT', funding: '0', fee: '0', cashFlow: '-20', change: '-20', cashBalance: '84', currency: 'NEAR', transactionTime: 1710000002000 }),
+      ];
+
+      const stats = BybitTransactionService.computeStats(entries);
+
+      expect(stats.totalCount).toBe(3);
+      expect(stats.typeBreakdown).toEqual({ TRANSFER_IN: 1, TRADE: 1, TRANSFER_OUT: 1 });
+      
+      const nearStats = stats.perCurrency.NEAR;
+      expect(nearStats).toBeDefined();
+      
+      // Fees paid: -1
+      expect(nearStats.totalFees).toBe('-1');
+      // Only the TRADE's change (5) is added to totalChange (excluding TRANSFER_IN of 100 and TRANSFER_OUT of -20)
+      expect(nearStats.totalChange).toBe('5');
+      // Only the TRADE's cashFlow (5) is added to totalCashFlow (excluding TRANSFER_IN of 100 and TRANSFER_OUT of -20)
+      expect(nearStats.totalCashFlow).toBe('5');
+      // The final balance matches the latest entry's balance
+      expect(nearStats.finalBalance).toBe('84');
+    });
   });
 });

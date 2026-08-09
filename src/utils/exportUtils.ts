@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { format } from 'date-fns';
+import { formatIsoDateTime } from './dateTimeHelper';
 
 export interface ExportConfig {
   title: string;
@@ -45,7 +45,7 @@ export const exportToPDF = (config: ExportConfig) => {
   
   doc.text(title, 14, 15);
   doc.setFontSize(10);
-  doc.text(`Generated: ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
+  doc.text(`Generated: ${formatIsoDateTime(Date.now(), true, false)}`, 14, 22);
 
   autoTable(doc, {
     head: [headers],

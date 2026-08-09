@@ -16,6 +16,7 @@ import { FilterBar } from '../../ui/FilterBar';
 import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { Pagination } from '../../ui/Pagination';
 import { usePagination } from '../../../hooks/usePagination';
+import { formatDateTime } from '../../../utils/formatters';
 import clsx from 'clsx';
 
 const COINS_PER_PAGE = 25;
@@ -121,12 +122,14 @@ const FundingTable = ({
   title, 
   data, 
   filterKey,
-  defaultExpanded = true 
+  defaultExpanded = true,
+  isSyncing = false
 }: { 
   title: string, 
   data: FundingFeeAggregated[], 
   filterKey?: string,
-  defaultExpanded?: boolean 
+  defaultExpanded?: boolean,
+  isSyncing?: boolean
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [expandedCoins, setExpandedCoins] = useState<Record<string, boolean>>({});
@@ -163,13 +166,19 @@ const FundingTable = ({
   return (
     <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden mb-6">
       <div 
-        className="px-6 py-4 flex items-center justify-between cursor-pointer bg-[#1A1C20] hover:bg-[#202226] transition-colors"
+        className="relative px-6 py-4 flex items-center justify-between cursor-pointer bg-[#1A1C20] hover:bg-[#202226] transition-colors overflow-hidden"
         onClick={() => setExpanded(!expanded)}
       >
         <h3 className="text-sm font-semibold text-white flex items-center gap-2">
           {expanded ? <ChevronDown className="w-4 h-4 text-[#8E9299]" /> : <ChevronRight className="w-4 h-4 text-[#8E9299]" />}
           {title} <span className="text-[#8E9299] text-xs font-normal">({groupedByCoin.length} Coins)</span>
         </h3>
+        {isSyncing && (
+           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-xs font-medium animate-pulse">
+             <Loader2 className="w-3 h-3 animate-spin" />
+             Please wait, rates update in progress...
+           </div>
+        )}
       </div>
       
       {expanded && (
@@ -364,19 +373,12 @@ const FundingTable = ({
                                     description="Estimated time of the next funding settlement."
                                     rows={[{
                                       label: 'Full Date',
-                                      value: new Date(row.nextFundingTime).toLocaleString([], {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        second: '2-digit',
-                                      }),
+                                      value: formatDateTime(row.nextFundingTime, { monthFormat: "long" }).fullStr,
                                     }]}
                                   >
                                     <span className="inline-flex items-center gap-1 text-[10px] text-[#8E9299] cursor-help border-b border-dashed border-[#8E9299]/30">
                                       <Clock className="w-3 h-3" />
-                                      {new Date(row.nextFundingTime).toLocaleString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                      {formatDateTime(row.nextFundingTime, { includeYear: false, includeSeconds: false }).fullStr}
                                     </span>
                                   </AppTooltip>
                                 )}
@@ -507,8 +509,8 @@ export const FundingDashboard = () => {
       const hasOpenPos = openPositionKeys.has(`${row.exchange}|${coin}|${row.instrumentType}`);
       if (showOpenPositionsOnly && !hasOpenPos) return false;
       
-      if (exchangeFilter.toLowerCase() !== 'all' && row.exchange !== exchangeFilter.toLowerCase()) return false;
-      if (instrumentFilter.toLowerCase() !== 'all' && row.instrumentType !== instrumentFilter) return false;
+      if (exchangeFilter.toLowerCase() !== 'all' && row.exchange?.toLowerCase() !== exchangeFilter.toLowerCase()) return false;
+      if (instrumentFilter.toLowerCase() !== 'all' && row.instrumentType?.toLowerCase() !== instrumentFilter.toLowerCase()) return false;
       if (searchTerm && !row.symbol.toLowerCase().includes(searchTerm.toLowerCase()) && !coin.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       return true;
     });
@@ -628,7 +630,7 @@ export const FundingDashboard = () => {
           }}
           instrument={{
             value: instrumentFilter,
-            onChange: (val) => setInstrumentFilter(val === 'All' ? 'all' : val),
+            onChange: (val) => setInstrumentFilter(val.toLowerCase() === 'all' ? 'all' : val),
             options: ['All', 'USDT-M', 'COIN-M'],
             labelAll: 'All Instruments'
           }}
@@ -639,6 +641,7 @@ export const FundingDashboard = () => {
       <MarketOverviewCards
         marketMetrics={marketMetrics}
         rankings={rankings}
+        isSyncing={isSyncing}
       />
 
       {isLoading && aggregatedData.length === 0 ? (
@@ -654,7 +657,8 @@ export const FundingDashboard = () => {
               title={groupTitle} 
               data={rows} 
               filterKey={`${searchTerm}-${exchangeFilter}-${instrumentFilter}-${showFavoritesOnly}-${showOpenPositionsOnly}`}
-              defaultExpanded={expandAll} 
+              defaultExpanded={expandAll}
+              isSyncing={isSyncing}
             />
           ))}
           {filteredData.length === 0 && (

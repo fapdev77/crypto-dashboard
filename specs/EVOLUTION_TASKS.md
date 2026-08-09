@@ -100,3 +100,19 @@ Este documento consolida o histórico de refatorações estruturais, melhorias d
 **3. Reconhecimento Automático e Visualização no Painel de Ordens** [✓]
 *   **Ação Aplicada:** O componente de linha de ordens (`OrderRow.tsx`) agora utiliza as relações matemáticas corretas (`qtyIsCoin` detectado como `true` para Bitget) para extrair o tamanho real da moeda e o volume estimado em USD. Isso garante uma renderização perfeita da quantidade de moedas (e.g. `0.03 ETH`) e de seu valor nocional em USD nas telas de Ordens Abertas e Histórico de Ordens.
 
+---
+
+## Sprint Atual: Funding Fees e Expansão Analítica [CONCLUÍDO]
+
+**1. Dashboard de Taxas de Financiamento (Funding Fees Dashboard)** [✓]
+*   **Ação Aplicada:** Desenvolvimento de um robusto dashboard analítico para monitoramento de *Funding Rates* (COIN-M e USDT-M). Inclui comparação multi-período (Hoje, Mês Atual, 3 Meses, 6 Meses, 1 Ano), e sincronização em segundo plano (Background Sync Engine) utilizando *IndexedDB* (DB_VERSION 10 com `funding-summaries`).
+
+**2. KPI Market Overview Cards** [✓]
+*   **Ação Aplicada:** Implementação de cards de KPI de mercado (`MarketOverviewCards.tsx`) fornecendo métricas agregadas instantâneas, breakdown de COIN-M vs USDT-M, taxas médias (Avg/StdDev) baseadas em `Big.js` para altíssima precisão, além de Mini-listas rankeadas indicando os Top Payers e Highest Volatility do mercado de futuros.
+
+**3. Histórico de Transações Bybit (BybitTransactionService)** [✓]
+*   **Ação Aplicada:** Construção de uma *Sync Engine* dedicada para auditar o log de transações bruto da Bybit (`/v5/account/transaction-log`). Implementação de um fluxo resiliente de paginação e armazenamento no IndexedDB (`bybit-transaction-log`), permitindo o cálculo absoluto do PnL Realizado via deduções precisas de taxas (Trading Fees, Funding Fees e Net Cashflow).
+
+**4. Otimização de Relatórios de Ordens (Order Reports)** [✓]
+*   **Ação Aplicada:** Desacoplamento da antiga view mista para abas dedicadas (`OpenOrders.tsx` e `OrderHistory.tsx`). Refinamento nos filtros locais (`OrderFilters.tsx`) e na tabela de componentes, garantindo melhor legibilidade para transações longas e curtas através das exchanges.
+
