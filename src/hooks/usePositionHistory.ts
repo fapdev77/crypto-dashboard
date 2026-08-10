@@ -7,6 +7,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getCachedHistory } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
+import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
 
 /** Time period presets for position history queries. */
 export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d' | '120d' | '180d' | '365d' | 'all';
@@ -190,7 +191,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
     const now = Date.now();
     const periodStartMap: Record<string, number | undefined> = {
-      today: new Date(now).setUTCHours(0, 0, 0, 0),
+      today: getStartOfTodayInMs(),
       '7d': now - 7 * 24 * 60 * 60 * 1000,
       '14d': now - 14 * 24 * 60 * 60 * 1000,
       '30d': now - 30 * 24 * 60 * 60 * 1000,
