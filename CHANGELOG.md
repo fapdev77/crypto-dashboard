@@ -1,3 +1,31 @@
+## [1.27.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.27.0...v1.27.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **utils:** improve inverse short entry value logic ([9c8e3ba](https://github.com/fapdev77/crypto-dashboard/commit/9c8e3ba040006bad5ee81ee0873141d63a0c900a))
+
+# [1.27.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.26.0...v1.27.0) (2026-08-10)
+
+
+### Features
+
+* calculate inverse short hedge using entry price ([b703c82](https://github.com/fapdev77/crypto-dashboard/commit/b703c82257eb47b23a589a77d127d8c62638a8e4))
+
+# [1.26.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.25.0...v1.26.0) (2026-08-10)
+
+
+### Features
+
+* **bitget:** support reduceOnly orders ([dc7d8d6](https://github.com/fapdev77/crypto-dashboard/commit/dc7d8d6ed045282fdc61cb5dcc4751e49a5d3068))
+
+# [1.25.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.24.0...v1.25.0) (2026-08-10)
+
+
+### Features
+
+* add responsive layout and sidebar accordion ([ebba986](https://github.com/fapdev77/crypto-dashboard/commit/ebba9868fe7c5dab4d14d063a6154fd0daaf4103))
+
 # [1.24.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.23.0...v1.24.0) (2026-08-08)
 
 
