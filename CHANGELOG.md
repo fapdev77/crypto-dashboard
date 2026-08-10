@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.26.0...v1.27.0) (2026-08-10)
+
+
+### Features
+
+* calculate inverse short hedge using entry price ([b703c82](https://github.com/fapdev77/crypto-dashboard/commit/b703c82257eb47b23a589a77d127d8c62638a8e4))
+
 # [1.26.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.25.0...v1.26.0) (2026-08-10)
 
 
