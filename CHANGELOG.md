@@ -1,3 +1,10 @@
+## [1.27.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.27.0...v1.27.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **utils:** improve inverse short entry value logic ([9c8e3ba](https://github.com/fapdev77/crypto-dashboard/commit/9c8e3ba040006bad5ee81ee0873141d63a0c900a))
+
 # [1.27.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.26.0...v1.27.0) (2026-08-10)
 
 
