@@ -89,6 +89,31 @@ export function getOpenPositionSizeAndValue(pos: UnifiedPosition) {
   };
 }
 
+/**
+ * Retorna o valor fixo em USD no preço de entrada (entryPrice) de uma posição Inverse Short.
+ * O valor protegido por um Hedge Inverse é travado em USD no momento da abertura (entryPrice),
+ * e NÃO deve flutuar com o markPrice.
+ */
+export function getInverseShortUsdEntryValue(pos: UnifiedPosition): number {
+  if (pos.side !== 'short' || pos.instrumentType !== 'INVERSE') return 0;
+
+  const entryPrice = pos.entryPrice || pos.markPrice || 0;
+
+  if (pos.notionalUsd && pos.notionalUsd > 0) {
+    const calcFromCoin = (pos.size || 0) * entryPrice;
+    if (entryPrice > 0 && calcFromCoin > 0 && Math.abs(calcFromCoin - pos.notionalUsd) / pos.notionalUsd < 0.15) {
+      return calcFromCoin;
+    }
+    return pos.notionalUsd;
+  }
+
+  if (entryPrice > 0) {
+    return (pos.size || 0) * entryPrice;
+  }
+
+  return pos.notionalUsd || pos.size || 0;
+}
+
 export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
   const isInverse = pos.instrumentType === 'INVERSE';
   let positionValueUsd = pos.notionalUsd || 0;

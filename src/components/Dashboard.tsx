@@ -12,7 +12,7 @@ import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
 import { ExchangeHierarchyTable } from './ExchangeHierarchyTable';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
-import { getInverseUsdValues } from '../utils/inverseUtils';
+import { getInverseUsdValues, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
 
 export function Dashboard() {
   const balances = useBalancesStore(state => state.balances);
@@ -79,7 +79,7 @@ export function Dashboard() {
 
   const totalProtected = Number(inversePositions.reduce((acc, pos) => {
     if (pos.side === 'short') {
-      return acc.plus(new Big(pos.margin || 0).times(pos.markPrice || 0));
+      return acc.plus(getInverseShortUsdEntryValue(pos));
     }
     return acc;
   }, new Big(0)));
