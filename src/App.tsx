@@ -85,6 +85,24 @@ export default function App() {
     return () => window.removeEventListener('navigate-to-tab', handleNavigate);
   }, []);
 
+  // Handle responsive layout transitions for mobile, tablet, and desktop/wide screens
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        setIsMobileMenuOpen(false);
+      } else if (width >= 768 && width < 1024) {
+        setIsSidebarCollapsed(true);
+      } else {
+        // Expand on large screens by default for optimal navigation
+        setIsSidebarCollapsed(false);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Trigger welcome modal on app load if enabled
   useEffect(() => {
     const shouldShow = useSettingsStore.getState().showWelcomeOnStartup;
