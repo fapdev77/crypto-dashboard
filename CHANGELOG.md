@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.25.0...v1.26.0) (2026-08-10)
+
+
+### Features
+
+* **bitget:** support reduceOnly orders ([dc7d8d6](https://github.com/fapdev77/crypto-dashboard/commit/dc7d8d6ed045282fdc61cb5dcc4751e49a5d3068))
+
 # [1.25.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.24.0...v1.25.0) (2026-08-10)
 
 
