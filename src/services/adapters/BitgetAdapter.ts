@@ -487,6 +487,12 @@ export class BitgetAdapter extends BaseExchangeAdapter implements IExchangeAdapt
         filledQty,
         value,
         triggerPrice: o.triggerPrice ? parseFloat(o.triggerPrice) : undefined,
+        reduceOnly:
+          o.reduceOnly === 'YES' ||
+          o.reduceOnly === 'yes' ||
+          o.reduceOnly === 'true' ||
+          o.reduceOnly === true ||
+          o.tradeSide?.toLowerCase() === 'close',
         timeInForce: o.timeInForce || o.force,
         createdTime: parseInt(o.cTime || '0', 10),
         updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
