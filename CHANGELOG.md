@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.24.0...v1.25.0) (2026-08-10)
+
+
+### Features
+
+* add responsive layout and sidebar accordion ([ebba986](https://github.com/fapdev77/crypto-dashboard/commit/ebba9868fe7c5dab4d14d063a6154fd0daaf4103))
+
 # [1.24.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.23.0...v1.24.0) (2026-08-08)
 
 
