@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.27.1...v1.28.0) (2026-08-11)
+
+
+### Features
+
+* update inverse position exposure calculations ([757b13c](https://github.com/fapdev77/crypto-dashboard/commit/757b13cfb4dc51f3e6448b4c51e971196a8471e4))
+
 ## [1.27.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.27.0...v1.27.1) (2026-08-10)
 
 
