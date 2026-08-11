@@ -7,7 +7,7 @@ import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
-import { getInverseUsdValues, getOpenPositionSizeAndValue } from '../utils/inverseUtils';
+import { getInverseUsdValues, getOpenPositionSizeAndValue, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
 import { useBalancesStore } from '../store/balancesStore';
 import { AlertTriangle } from 'lucide-react';
 
@@ -54,25 +54,39 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy.toUpperCase()
   );
   const totalAssetBal = matchingBalance ? matchingBalance.amount : 0;
-  const openPosSize = pos.markPrice > 0 ? (sizeValUsd / pos.markPrice) : Math.abs(pos.size);
+  const markPrice = pos.markPrice || 0;
+  const assetBalUsd = totalAssetBal * markPrice;
+  const openPosSize = markPrice > 0 ? (sizeValUsd / markPrice) : Math.abs(pos.size);
 
   let protectedPct = 0;
   let exposedPct = 100;
   let protectedAmount = 0;
-  let exposedAmount = totalAssetBal > 0 ? totalAssetBal : openPosSize;
+  let exposedAmount = totalAssetBal;
+  let protectedUsd = 0;
+  let exposedUsd = assetBalUsd;
 
   if (pos.instrumentType === 'INVERSE' && totalAssetBal > 0) {
     if (isShort) {
-      protectedAmount = Math.min(openPosSize, totalAssetBal);
-      exposedAmount = Math.max(0, totalAssetBal - openPosSize);
-      protectedPct = (protectedAmount / totalAssetBal) * 100;
-      exposedPct = (exposedAmount / totalAssetBal) * 100;
+      const usdValAtEntry = getInverseShortUsdEntryValue(pos);
+      protectedUsd = Math.min(usdValAtEntry, assetBalUsd > 0 ? assetBalUsd : usdValAtEntry);
+      exposedUsd = Math.max(0, assetBalUsd - usdValAtEntry);
+
+      protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 0;
+      exposedPct = assetBalUsd > 0 ? (exposedUsd / assetBalUsd) * 100 : 0;
+
+      protectedAmount = markPrice > 0 ? protectedUsd / markPrice : 0;
+      exposedAmount = markPrice > 0 ? exposedUsd / markPrice : Math.max(0, totalAssetBal - protectedAmount);
     } else {
-      const totalExposureAmount = totalAssetBal + openPosSize;
-      protectedAmount = 0;
-      exposedAmount = totalExposureAmount;
+      // Long Inverse position
+      const longSizeUsd = openPosSize * markPrice;
+      exposedUsd = assetBalUsd + longSizeUsd;
+      protectedUsd = 0;
+
       protectedPct = 0;
-      exposedPct = (totalExposureAmount / totalAssetBal) * 100;
+      exposedPct = assetBalUsd > 0 ? (exposedUsd / assetBalUsd) * 100 : 100;
+
+      protectedAmount = 0;
+      exposedAmount = markPrice > 0 ? exposedUsd / markPrice : (totalAssetBal + openPosSize);
     }
   }
 
@@ -467,21 +481,21 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                     <div className="flex flex-col">
                       <span className="text-[10px] text-[#8E9299]">Balance:</span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(totalAssetBal * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                        {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(assetBalUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
                       <span className="text-[10px] text-[#00C853]">Protected: {protectedPct.toFixed(2)}%</span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(protectedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                        {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(protectedUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
                       <span className="text-[10px] text-[#FF4444]">Exposed: {exposedPct.toFixed(2)}%</span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(exposedAmount * (pos.markPrice || 0), 'usd', 2)} USD</span>
+                        {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(exposedUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
                   </div>
