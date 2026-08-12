@@ -1,3 +1,10 @@
+## [1.29.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.29.0...v1.29.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* **deps:** correct package name and update assets ([5ca2b4d](https://github.com/fapdev77/crypto-dashboard/commit/5ca2b4db7fac160c0de7147d0888312c0c8ba263))
+
 # [1.29.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.28.0...v1.29.0) (2026-08-12)
 
 
