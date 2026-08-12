@@ -1,3 +1,10 @@
+# [1.30.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.29.1...v1.30.0) (2026-08-12)
+
+
+### Features
+
+* add PWA manifest support ([47ac203](https://github.com/fapdev77/crypto-dashboard/commit/47ac20304944fd52622df3b81a017794b2349b98))
+
 ## [1.29.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.29.0...v1.29.1) (2026-08-12)
 
 
