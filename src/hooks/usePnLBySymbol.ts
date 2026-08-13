@@ -8,6 +8,7 @@ import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { BybitTransactionService } from '../services/bybit/BybitTransactionService';
 import { getBybitTxLogCache } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
+import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
 
 /**
  * Aggregates PnL data broken down by symbol, exchange, and instrument type.
@@ -75,7 +76,7 @@ export function usePnLBySymbol(
         // Calculate period time range
         const now = Date.now();
         const periodStartMap: Record<string, number | undefined> = {
-          today: new Date(now).setUTCHours(0, 0, 0, 0),
+          today: getStartOfTodayInMs(),
           '7d': now - 7 * 24 * 60 * 60 * 1000,
           '14d': now - 14 * 24 * 60 * 60 * 1000,
           '30d': now - 30 * 24 * 60 * 60 * 1000,

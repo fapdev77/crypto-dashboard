@@ -207,3 +207,29 @@ export function timeAgo(ts: number | undefined | null): string {
   const absDay = Math.floor(absHour / 24);
   return isFuture ? `in ${absDay}d` : `${absDay}d ago`;
 }
+
+/**
+ * Returns the Unix timestamp (ms) for the start of today (00:00:00.000) in local timezone.
+ */
+export function getStartOfTodayInMs(): number {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
+}
+
+/**
+ * Returns the Unix timestamp (ms) for the end of today (23:59:59.999) in local timezone.
+ */
+export function getEndOfTodayInMs(): number {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+}
+
+/**
+ * Returns an object containing startMs and endMs for today in local timezone.
+ */
+export function getTodayRange(): { startMs: number; endMs: number } {
+  return {
+    startMs: getStartOfTodayInMs(),
+    endMs: getEndOfTodayInMs(),
+  };
+}

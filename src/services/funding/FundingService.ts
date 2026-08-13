@@ -2,6 +2,7 @@ import Big from 'big.js';
 import { ExchangeName, FundingRateSummary } from '../../types';
 import { hybridFetch } from '../../utils/proxyFetch';
 import { LogManager } from '../logger';
+import { getStartOfTodayInMs } from '../../utils/dateTimeHelper';
 
 export interface CurrentFundingRate {
   exchange: ExchangeName;
@@ -124,7 +125,7 @@ export class FundingService {
   private static buildAggregationBoundaries(): AggregationBoundaries {
     const now = new Date();
     return {
-      todayStart: new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(),
+      todayStart: getStartOfTodayInMs(),
       currentMonthStart: new Date(now.getFullYear(), now.getMonth(), 1).getTime(),
       lastMonthStart: new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime(),
       last3MStart: new Date(now.getFullYear(), now.getMonth() - 3, 1).getTime(),
