@@ -37,7 +37,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 1024);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -110,40 +110,20 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   }, [activeTab]);
 
   const toggleAccordion = (item: NavItem) => {
-    const hasActiveSub = item.subItems?.some(sub => sub.id === activeTab);
-
     if (collapsed) {
       // 1. Expand sidebar first so accordion and subitems are visible
       setIsCollapsed?.(false);
       // 2. Open accordion for this section
       setExpandedItems(prev => ({ ...prev, [item.id]: true }));
-      // 3. Set focus and active tab to first sub-item if none of its subitems are currently active
-      if (item.subItems && item.subItems.length > 0 && !hasActiveSub) {
-        handleTabClick(item.subItems[0].id);
-      }
     } else {
-      const isCurrentlyExpanded = Boolean(expandedItems[item.id]);
-
-      if (!isCurrentlyExpanded) {
-        // Opening accordion: expand & activate first sub-item if none active
-        setExpandedItems(prev => ({ ...prev, [item.id]: true }));
-        if (item.subItems && item.subItems.length > 0 && !hasActiveSub) {
-          handleTabClick(item.subItems[0].id);
-        }
-      } else {
-        // Clicking header of already expanded item
-        if (!hasActiveSub && item.subItems && item.subItems.length > 0) {
-          handleTabClick(item.subItems[0].id);
-        } else {
-          setExpandedItems(prev => ({ ...prev, [item.id]: !prev[item.id] }));
-        }
-      }
+      // Just toggle the accordion state
+      setExpandedItems(prev => ({ ...prev, [item.id]: !prev[item.id] }));
     }
   };
 
   return (
-    <aside className={`fixed md:static inset-y-0 left-0 z-40 ${collapsed ? 'w-20' : 'w-64'} bg-[#151619] border-r border-[#2a2b30] flex flex-col h-full transform transition-all duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className={`p-4 md:p-5 border-b border-[#2a2b30] flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative shrink-0`}>
+    <aside className={`fixed lg:static inset-y-0 left-0 z-40 ${collapsed ? 'w-20' : 'w-64'} bg-[#151619] border-r border-[#2a2b30] flex flex-col h-full transform transition-all duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`p-4 lg:p-5 border-b border-[#2a2b30] flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative shrink-0`}>
         {!collapsed ? (
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-white flex flex-col gap-1">
@@ -163,7 +143,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         {/* Mobile Close Button */}
         <button
           onClick={() => setIsMobileMenuOpen?.(false)}
-          className="md:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#2a2b30] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="lg:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#2a2b30] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Close menu"
         >
           <X className="w-5 h-5" />
@@ -172,7 +152,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         {/* Desktop Collapse Toggle */}
         <button
           onClick={() => setIsCollapsed?.(!isCollapsed)}
-          className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-[#1a1b1e] border border-[#2a2b30] rounded-full items-center justify-center text-gray-400 hover:text-white hover:bg-[#2a2b30] transition-colors z-50"
+          className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-[#1a1b1e] border border-[#2a2b30] rounded-full items-center justify-center text-gray-400 hover:text-white hover:bg-[#2a2b30] transition-colors z-50"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -180,7 +160,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         </button>
       </div>
 
-      <nav className={`flex-1 p-3 md:p-4 space-y-1.5 ${collapsed ? 'px-3 overflow-visible' : 'overflow-y-auto'} hide-scrollbar`}>
+      <nav className={`flex-1 p-3 lg:p-4 space-y-1.5 ${collapsed ? 'px-3 overflow-visible' : 'overflow-y-auto'} hide-scrollbar`}>
         {navItems.map((item) => {
           const hasSubItems = Boolean(item.subItems && item.subItems.length > 0);
           const isParentActive = hasSubItems && item.subItems?.some(sub => sub.id === activeTab);
@@ -248,7 +228,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                       <button
                         key={sub.id}
                         onClick={() => handleTabClick(sub.id)}
-                        className={`flex items-center justify-between text-left text-xs md:text-sm py-2 px-3 rounded-md transition-colors ${
+                        className={`flex items-center justify-between text-left text-xs lg:text-sm py-2 px-3 rounded-md transition-colors ${
                           isSubActive
                             ? 'text-white bg-[#2a2b30] font-medium'
                             : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/40'
@@ -280,7 +260,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                       <button
                         key={sub.id}
                         onClick={() => handleTabClick(sub.id)}
-                        className={`w-full text-left text-xs md:text-sm py-2 px-3.5 transition-colors flex items-center justify-between ${
+                        className={`w-full text-left text-xs lg:text-sm py-2 px-3.5 transition-colors flex items-center justify-between ${
                           isSubActive
                             ? 'text-[#2F6BFF] bg-[#2F6BFF]/10 font-semibold'
                             : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/50'
@@ -304,7 +284,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         })}
       </nav>
 
-      <div className={`p-3 md:p-4 border-t border-[#2a2b30] shrink-0 ${collapsed ? 'px-3' : ''}`}>
+      <div className={`p-3 lg:p-4 border-t border-[#2a2b30] shrink-0 ${collapsed ? 'px-3' : ''}`}>
         {[
           { id: 'api-keys', label: 'API Keys', icon: KeyRound },
           { id: 'logs', label: 'Logs', icon: AlignLeft },
