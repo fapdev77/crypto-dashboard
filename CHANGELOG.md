@@ -1,3 +1,59 @@
+# [1.30.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.29.1...v1.30.0) (2026-08-12)
+
+
+### Features
+
+* add PWA manifest support ([47ac203](https://github.com/fapdev77/crypto-dashboard/commit/47ac20304944fd52622df3b81a017794b2349b98))
+
+## [1.29.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.29.0...v1.29.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* **deps:** correct package name and update assets ([5ca2b4d](https://github.com/fapdev77/crypto-dashboard/commit/5ca2b4db7fac160c0de7147d0888312c0c8ba263))
+
+# [1.29.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.28.0...v1.29.0) (2026-08-12)
+
+
+### Features
+
+* configure PWA manifest and icons ([d5318d4](https://github.com/fapdev77/crypto-dashboard/commit/d5318d481f80bc2ddedb5b48ecdacde82d860f0a))
+
+# [1.28.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.27.1...v1.28.0) (2026-08-11)
+
+
+### Features
+
+* update inverse position exposure calculations ([757b13c](https://github.com/fapdev77/crypto-dashboard/commit/757b13cfb4dc51f3e6448b4c51e971196a8471e4))
+
+## [1.27.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.27.0...v1.27.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **utils:** improve inverse short entry value logic ([9c8e3ba](https://github.com/fapdev77/crypto-dashboard/commit/9c8e3ba040006bad5ee81ee0873141d63a0c900a))
+
+# [1.27.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.26.0...v1.27.0) (2026-08-10)
+
+
+### Features
+
+* calculate inverse short hedge using entry price ([b703c82](https://github.com/fapdev77/crypto-dashboard/commit/b703c82257eb47b23a589a77d127d8c62638a8e4))
+
+# [1.26.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.25.0...v1.26.0) (2026-08-10)
+
+
+### Features
+
+* **bitget:** support reduceOnly orders ([dc7d8d6](https://github.com/fapdev77/crypto-dashboard/commit/dc7d8d6ed045282fdc61cb5dcc4751e49a5d3068))
+
+# [1.25.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.24.0...v1.25.0) (2026-08-10)
+
+
+### Features
+
+* add responsive layout and sidebar accordion ([ebba986](https://github.com/fapdev77/crypto-dashboard/commit/ebba9868fe7c5dab4d14d063a6154fd0daaf4103))
+
 # [1.24.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.23.0...v1.24.0) (2026-08-08)
 
 

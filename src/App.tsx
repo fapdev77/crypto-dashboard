@@ -85,6 +85,22 @@ export default function App() {
     return () => window.removeEventListener('navigate-to-tab', handleNavigate);
   }, []);
 
+  // Handle responsive layout transitions for mobile, tablet, and desktop/wide screens
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 1024) {
+        setIsMobileMenuOpen(false);
+      } else {
+        // Expand on large screens by default for optimal navigation
+        setIsSidebarCollapsed(false);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Trigger welcome modal on app load if enabled
   useEffect(() => {
     const shouldShow = useSettingsStore.getState().showWelcomeOnStartup;
@@ -151,12 +167,12 @@ export default function App() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setIsMobileMenuOpen(true)}
-                      className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-[#2a2b30] rounded-lg transition-colors"
+                      className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-[#2a2b30] rounded-lg transition-colors"
                       aria-label="Open menu"
                     >
                       <Menu className="w-5 h-5" />
                     </button>
-                    <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-white capitalize">
+                    <h2 className="text-xl lg:text-2xl font-semibold tracking-tight text-white capitalize">
                       {activeTabName}
                     </h2>
                   </div>
@@ -187,7 +203,7 @@ export default function App() {
               {/* Mobile Overlay */}
               {isMobileMenuOpen && (
                 <div
-                  className="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm"
+                  className="fixed inset-0 bg-black/60 z-30 lg:hidden backdrop-blur-sm"
                   onClick={() => setIsMobileMenuOpen(false)}
                 />
               )}

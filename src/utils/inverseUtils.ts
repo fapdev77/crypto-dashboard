@@ -89,6 +89,41 @@ export function getOpenPositionSizeAndValue(pos: UnifiedPosition) {
   };
 }
 
+/**
+ * Retorna o valor fixo em USD no preço de entrada (entryPrice) de uma posição Inverse Short.
+ * O valor protegido por um Hedge Inverse é travado em USD no momento da abertura (entryPrice),
+ * e NÃO deve flutuar com o markPrice.
+ */
+export function getInverseShortUsdEntryValue(pos: UnifiedPosition): number {
+  if (pos.side !== 'short' || pos.instrumentType !== 'INVERSE') return 0;
+
+  const ex = (pos.exchange || '').toLowerCase();
+  const entryPrice = pos.entryPrice || pos.markPrice || 0;
+
+  // Para Bybit e OKX: notionalUsd representa o valor fixo em contratos USD (ex: $10.000 USD).
+  // Não flutua com a variação do preço de mercado.
+  if ((ex === 'bybit' || ex === 'okx') && pos.notionalUsd && pos.notionalUsd > 0) {
+    return pos.notionalUsd;
+  }
+
+  // Para Bitget: pos.size é a quantidade fixa na moeda (ex: BTC), então o valor em USD no entryPrice
+  // é calculado multiplicando pos.size * entryPrice.
+  if (ex === 'bitget' && entryPrice > 0 && pos.size && pos.size > 0) {
+    return pos.size * entryPrice;
+  }
+
+  // Fallback genérico para outras exchanges / mock data:
+  if (pos.notionalUsd && pos.notionalUsd > 0) {
+    return pos.notionalUsd;
+  }
+
+  if (entryPrice > 0 && pos.size && pos.size > 0) {
+    return pos.size * entryPrice;
+  }
+
+  return pos.notionalUsd || 0;
+}
+
 export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
   const isInverse = pos.instrumentType === 'INVERSE';
   let positionValueUsd = pos.notionalUsd || 0;

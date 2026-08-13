@@ -12,3 +12,14 @@ nul
 .agent/
 .kiro/
 fable-method/
+
+# IDE / Editores
+.vscode/
+.trae/
+.idea/
+
+# Cache e artefatos de ferramentas
+*.tsbuildinfo
+.eslintcache
+*.local
+.vercel/
