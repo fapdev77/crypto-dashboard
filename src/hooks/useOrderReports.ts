@@ -8,6 +8,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { OrderHistoryService } from '../services/orders/OrderHistoryService';
 import { LogManager } from '../services/LogManager';
+import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
 import mockOrdersData from '../mock/orders.json';
 
 /** Filter configuration for the Order Reports view. */
@@ -179,10 +180,12 @@ export function useOrderReports(filters: OrderFilters) {
 
       const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
       const now = Date.now();
+      const isToday = filters.timePeriod === 24 * 60 * 60 * 1000;
+      const cutoffTime = isToday ? getStartOfTodayInMs() : now - filters.timePeriod;
 
       const filtered = rawOrders.filter(order => {
         if (filters.exchange.toLowerCase() !== 'all' && order.exchange.toLowerCase() !== filters.exchange.toLowerCase()) return false;
-        if (filters.status === 'CLOSED' && order.createdTime < now - filters.timePeriod) return false;
+        if (filters.status === 'CLOSED' && order.createdTime < cutoffTime) return false;
         if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
         if (filters.type.toLowerCase() !== 'all' && filters.type.toLowerCase() !== order.type.toLowerCase()) return false;
         if (filters.side.toLowerCase() !== 'all' && order.side.toLowerCase() !== filters.side.toLowerCase()) return false;
@@ -207,13 +210,15 @@ export function useOrderReports(filters: OrderFilters) {
 
     const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
     const now = Date.now();
+    const isToday = filters.timePeriod === 24 * 60 * 60 * 1000;
+    const cutoffTime = isToday ? getStartOfTodayInMs() : now - filters.timePeriod;
 
     const filtered = rawOrders.filter(order => {
       // Rule: Do not display orders for inactive/deactivated API keys
       if (!activeKeyIds.has(order.connectionId)) return false;
 
       if (filters.exchange.toLowerCase() !== 'all' && order.exchange.toLowerCase() !== filters.exchange.toLowerCase()) return false;
-      if (filters.status === 'CLOSED' && order.createdTime < now - filters.timePeriod) return false;
+      if (filters.status === 'CLOSED' && order.createdTime < cutoffTime) return false;
       if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
       if (filters.type.toLowerCase() !== 'all' && filters.type.toLowerCase() !== order.type.toLowerCase()) return false;
       if (filters.side.toLowerCase() !== 'all' && order.side.toLowerCase() !== filters.side.toLowerCase()) return false;

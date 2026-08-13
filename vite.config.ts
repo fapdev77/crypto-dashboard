@@ -119,6 +119,29 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,ico,png,svg}'], // Cacheia os assets básicos
           maximumFileSizeToCacheInBytes: 5000000,
         },
+        manifest: {
+          name: 'Cripto Dashboard',
+          short_name: 'CriptoDash',
+          description: 'Dashboard de gerenciamento de criptomoedas',
+          theme_color: '#0f172a',
+          background_color: '#0f172a',
+          display: 'standalone',
+          start_url: '/',
+          icons: [
+            {
+              src: 'pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any maskable'
+            },
+            {
+              src: 'pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any maskable'
+            }
+          ]
+        },
       }),
     ],
     define: {
@@ -136,6 +159,14 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: true,
       setupFiles: [],
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/cypress/**',
+        '**/.{idea,git,cache,output,temp}/**',
+        '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+        '**/.agent/**',
+      ],
       coverage: {
         provider: 'v8',
         reporter: ['text', 'text-summary'],

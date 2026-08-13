@@ -8,6 +8,7 @@ import { BybitTransactionService } from '../services/bybit/BybitTransactionServi
 import { getBybitTxLogCache } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
 import { fetchTokenUsdPrice } from './useTokenUsdPrice';
+import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
 import Big from 'big.js';
 
 export interface TxFilters {
@@ -129,7 +130,11 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
 
     // timePeriod === 0 means "All Time" — no time filter
     if (filters.timePeriod > 0) {
-      startTime = now - filters.timePeriod;
+      if (filters.timePeriod === 24 * 60 * 60 * 1000) {
+        startTime = getStartOfTodayInMs();
+      } else {
+        startTime = now - filters.timePeriod;
+      }
       endTime = now;
     }
 
