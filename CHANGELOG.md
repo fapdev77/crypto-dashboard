@@ -1,3 +1,10 @@
+# [1.31.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.30.0...v1.31.0) (2026-08-13)
+
+
+### Features
+
+* add pagination to open positions and orders ([bc302e1](https://github.com/fapdev77/crypto-dashboard/commit/bc302e1343a528963bb3564bc416d54f0e2b1a84))
+
 # [1.30.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.29.1...v1.30.0) (2026-08-12)
 
 
