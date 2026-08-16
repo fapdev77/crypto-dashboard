@@ -47,7 +47,7 @@ async function syncRestData(config: ApiCredentials): Promise<void> {
 }
 
 /**
- * Tear down a connection: clear poll timer, remove orders & connection state.
+ * Tear down a connection: clear poll timer, remove orders, balances, positions & connection state.
  */
 function disconnect(
   id: string,
@@ -60,6 +60,7 @@ function disconnect(
     clearTimeout(pollTimer);
     delete intervals[id + '-poll'];
   }
+  clearConnectionData(id);
   useOrdersStore.getState().clearConnectionOrders(id);
   setStatus(id, 'disconnected', null);
   setError(id, null);
@@ -188,6 +189,7 @@ export function useMultiExchangeWS() {
     allExisting.forEach((cid) => {
       if (cid.startsWith('mocked-data') || activeIds.has(cid)) return;
       clearConnectionData(cid);
+      useOrdersStore.getState().clearConnectionOrders(cid);
     });
   }, [keys, useMockData, setConnectionStatus, setConnectionError]);
 

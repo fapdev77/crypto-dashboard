@@ -26,18 +26,21 @@ export function Dashboard() {
   const [hideSmallBalances, setHideSmallBalances] = useState(true);
   const balancesList = Object.values(balances);
   const positionsList = Object.values(positions);
+  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
   const activeBalances = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
-      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data'));
-  }, [balancesList, useMockData]);
+      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
+  }, [balancesList, useMockData, activeKeyIds]);
 
   const activePositions = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data'));
-  }, [positionsList, useMockData]);
+      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data') && activeKeyIds.has(pos.connectionId));
+  }, [positionsList, useMockData, activeKeyIds]);
 
   const totalEquity = useMemo(() => {
     return Number(activeBalances.reduce((acc, curr) => acc.plus(curr.usdValue || 0), new Big(0)));
