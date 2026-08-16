@@ -67,7 +67,7 @@ export function useMockDataInjector() {
       exchange: s.exchange,
       symbol: s.symbol,
       instrumentType: s.instrumentType,
-      fundingRate: Number(s.todayFundingRate) * 0.1,
+      fundingRate: Number(s.lastFundingRate),
       nextFundingTime: Date.now() + 4 * 60 * 60 * 1000
     }));
     useFundingStore.setState({ currentRates: mockCurrentRates as any });
