@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Activity } from 'lucide-react';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useApiKeysStore } from '../store/apiKeysStore';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues } from '../utils/inverseUtils';
@@ -11,10 +12,12 @@ import { FilterBar } from './ui/FilterBar';
 import { PositionCard } from './PositionCard';
 import { usePagination } from '../hooks/usePagination';
 import { Pagination } from './ui/Pagination';
+import { SimulationModeBadge } from './ui/SimulationModeBadge';
 
 export function OpenPositions() {
   const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
 
@@ -27,12 +30,17 @@ export function OpenPositions() {
   };
 
   const positionsList = Object.values(positions);
+  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
   const activePositions = useMemo(() => {
-    // First, filter by mock connection rule
+    if (!useMockData && activeKeyIds.size === 0) {
+      return [];
+    }
+
+    // First, filter by mock or active API connection
     let filtered = useMockData
       ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data'));
+      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data') && activeKeyIds.has(pos.connectionId));
 
     // Then, apply size filter
     filtered = filtered.filter(pos => Math.abs(pos.size) > 0);
@@ -51,7 +59,7 @@ export function OpenPositions() {
     }
 
     return filtered.sort((a, b) => a.id.localeCompare(b.id));
-  }, [positionsList, filterText, exchangeFilter, useMockData]);
+  }, [positionsList, filterText, exchangeFilter, useMockData, activeKeyIds]);
 
   const { longs, shorts } = useMemo(() => {
     let longsCount = 0;
@@ -87,16 +95,21 @@ export function OpenPositions() {
   const { page: currentPage, setPage: setCurrentPage, paginated: paginatedPositions, totalItems } = usePagination(
     activePositions,
     50,
-    [filterText, exchangeFilter, useMockData]
+    [filterText, exchangeFilter, useMockData, keys]
   );
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-          <Activity className="w-5 h-5 text-[#2F6BFF]" />
-          Open Positions
-        </h2>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+              <Activity className="w-5 h-5 text-[#2F6BFF]" />
+              Open Positions
+            </h2>
+            <SimulationModeBadge />
+          </div>
+        </div>
       </div>
 
       {/* Header Controls */}

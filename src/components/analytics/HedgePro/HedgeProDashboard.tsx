@@ -4,9 +4,11 @@ import { ShieldCheck, Activity } from 'lucide-react';
 import { usePositionsStore } from '../../../store/positionsStore';
 import { useBalancesStore } from '../../../store/balancesStore';
 import { useSettingsStore } from '../../../store/settingsStore';
+import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import { getHedgeCoinSummaries, getHedgeTotals } from '../../../utils/hedgeUtils';
 import { FilterBar } from '../../ui/FilterBar';
+import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
 import { HedgeProKpis } from './HedgeProKpis';
 import { HedgeProCoinSummary } from './HedgeProCoinSummary';
 import { HedgeProBreakdownChart } from './HedgeProBreakdownChart';
@@ -22,6 +24,7 @@ export function HedgeProDashboard() {
   const balances = useBalancesStore(state => state.balances);
   const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
 
   const [search, setSearch] = useState('');
@@ -30,18 +33,21 @@ export function HedgeProDashboard() {
 
   const balancesList = useMemo(() => Object.values(balances), [balances]);
   const positionsList = useMemo(() => Object.values(positions), [positions]);
+  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
   const activeBalances = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
-      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data'));
-  }, [balancesList, useMockData]);
+      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
+  }, [balancesList, useMockData, activeKeyIds]);
 
   const activePositions = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? positionsList.filter(p => p.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(p => !p.connectionId.startsWith('mocked-data'));
-  }, [positionsList, useMockData]);
+      : positionsList.filter(p => !p.connectionId.startsWith('mocked-data') && activeKeyIds.has(p.connectionId));
+  }, [positionsList, useMockData, activeKeyIds]);
 
   // Same totalEquity source as the main dashboard (Σ balance usdValue).
   const totalEquity = useMemo(() => {
@@ -108,10 +114,13 @@ export function HedgeProDashboard() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            Hedge Pro
-          </h2>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              Hedge Pro
+            </h2>
+            <SimulationModeBadge />
+          </div>
           <p className="text-xs text-[#8E9299] mt-0.5">
             Capital protection in inverse (Coin-M) contracts: shorts lock USD at entry; longs and uncovered balance stay exposed.
           </p>

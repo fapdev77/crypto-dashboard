@@ -1,3 +1,10 @@
+# [1.34.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.33.0...v1.34.0) (2026-08-16)
+
+
+### Features
+
+* filter data by active API keys ([bee9627](https://github.com/fapdev77/crypto-dashboard/commit/bee962749fe0e3901dbe77913be2592dda51f99b))
+
 # [1.33.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.32.0...v1.33.0) (2026-08-16)
 
 
