@@ -629,16 +629,31 @@ Transient fields (`currentRates`, `isSyncing`, etc.) are NOT persisted to localS
 ### 12.4 Metadata Schema (unchanged)
 
 ```typescript
-interface FundingMeta {
+export interface FundingMeta {
   id: string;                 // "exchange-symbol"
   exchange: ExchangeName;
   symbol: string;
   oldestTimestamp: number;    // oldest cached record (used for depth checks)
   latestTimestamp: number;    // most recent cached record (used for freshness guard)
-  recordCount: number;
+  recordCount?: number;
   updatedAt: number;
 }
 ```
+
+### 12.5 Global IndexedDB Cache Database Architecture (`crypto-dashboard-cache` - DB_VERSION 10)
+
+| Store Name | Key Path | Indexes | Associated Unified Interface |
+|---|---|---|---|
+| `positionHistory` | `id` | `by-connectionId`, `by-closeUpdateTime` | `UnifiedHistoryPosition` |
+| `cacheMeta` | `connectionId` | — | `{ connectionId, lastFetchTimestamp, updatedAt }` |
+| `assetMetadata` | `id` | — | `{ id, category: UnifiedAssetCategory, updatedAt }` |
+| `orderHistory` | `id` | `by-connectionId`, `by-createdTime` | `UnifiedOrder` |
+| `orderCacheMeta` | `connectionId` | — | `{ connectionId, lastFetchTimestamp, updatedAt }` |
+| `bybitRealPnL` | `id` | — | `{ id, connectionId, period, pnlData, updatedAt }` |
+| `bybit-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | `BybitTransactionLogEntry` |
+| `bybit-transaction-meta` | `connectionId` | — | `{ connectionId, oldestTransactionTime, latestTransactionTime, totalRecords, updatedAt }` |
+| `funding-summaries` | `id` | `by-exchange`, `by-symbol` | `FundingRateSummary` |
+| `funding-meta` | `id` | `by-exchange` | `FundingMeta` |
 
 ---
 

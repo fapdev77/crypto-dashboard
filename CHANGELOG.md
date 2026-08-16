@@ -1,3 +1,10 @@
+# [1.33.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.32.0...v1.33.0) (2026-08-16)
+
+
+### Features
+
+* update mock data and architecture docs ([9385512](https://github.com/fapdev77/crypto-dashboard/commit/9385512eaeb408d1ac8f2e65887fd7c87e085312))
+
 # [1.32.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.31.0...v1.32.0) (2026-08-16)
 
 
