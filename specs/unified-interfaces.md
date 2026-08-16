@@ -753,3 +753,45 @@ Para sanar o problema de as corretoras reportarem tamanhos e volumes em unidades
 *   **Ativos Base e Cotação (`extractBaseCoin` & `extractQuoteCoin`):** 
     *   OKX: Realiza o split por hífen (ex: `BTC-USDT-SWAP` -> Base: `BTC`, Quote: `USDT`).
     *   Bybit & Bitget: Filtra sub-caracteres (como `_` em spot) e fatias de strings conhecidas (sufixos `USDT`, `USDC`, `USD`, `PERP`) de forma determinística para isolar os tickers reais das moedas.
+*   **Moeda de Liquidação (`extractCcy`):** Extrai a moeda de liquidação/margem apropriada com fallback para a moeda de cotação.
+
+### 14.3. Detecção de Quantidade em Ordens (`detectQtyIsCoin`)
+Localizado em `src/utils/inverseUtils.ts`, resolve ambiguidades de representação de ordens em contratos inversos:
+*   **Bitget:** `qtyIsCoin = true` (tamanho já vem expresso na moeda subjacente).
+*   **OKX & Bybit (Inversos):** `qtyIsCoin = false` (tamanho expresso em contratos cotados em USD).
+*   **Outras / Mocks:** Heurística comparativa calculando a proximidade matemática entre `actualVal` e as projeções `qty * price` vs `qty`.
+
+### 14.4. Mapeamento Unificado de Tipos de Instrumentos (`mapInstrumentType`)
+Localizado em `src/utils/instrumentTypeMapper.ts`, mapeia categorias nativas das corretoras para `UnifiedInstrumentType` (`'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN'`):
+*   **Bybit:** `LINEAR` -> `PERP`, `INVERSE` -> `INVERSE`, `SPOT` -> `SPOT`, `OPTION` -> `OPTION`.
+*   **Bitget:** `USDT-FUTURES` / `USDC-FUTURES` -> `PERP`, `COIN-FUTURES` -> `INVERSE`, `SPOT` -> `SPOT`.
+*   **OKX:** `SWAP` com USDT/USDC -> `PERP`, `SWAP` com coin margin -> `INVERSE`, `FUTURES` com USDT/USDC -> `FUTURES`, `FUTURES` com coin margin -> `INVERSE`, `SPOT`/`MARGIN` -> `SPOT`, `OPTION` -> `OPTION`.
+
+---
+
+## 15. Modelo Matemático de Exposição do Hedge Pro (`src/utils/hedgeUtils.ts`)
+
+O módulo `hedgeUtils.ts` define a matemática autoritativa do **Hedge Pro Dashboard** para monitoramento de risco e proteção de capital através de contratos inversos (COIN-M).
+
+### 15.1. Princípio Fundamental de Proteção (Inverse Short)
+*   **Inverse Short (Perna Protegida):** Trava o valor em USD no preço de entrada (`entryPrice`) através da função `getInverseShortUsdEntryValue(pos)`:
+    *   **Bybit / OKX:** O `notionalUsd` representa o valor nominal contratual fixo em USD e não oscila com o `markPrice`.
+    *   **Bitget:** O valor protegido é calculado multiplicando a quantidade em moeda (`size`) pelo preço de entrada (`entryPrice`).
+    *   O montante protegido é limitado (capped) pelo saldo total existente na mesma moeda (`totalAssetBal`).
+*   **Inverse Long (Perna Exposta e Alavancada):** Não oferece proteção de capital; a totalidade do saldo da moeda mais o valor alavancado da posição sofrem variação com a oscilação do ativo.
+
+### 15.2. Fórmulas de Exposição e Níveis por Posição (`HedgePositionLevels`)
+Para cada posição ativa associada ao saldo da moeda:
+1.  **Valor da Posição em USD (`positionValueUsd`):** `notionalUsd` ou `size * markPrice`.
+2.  **Entrada em USD (`entryUsd`):** Para Shorts = `getInverseShortUsdEntryValue(pos)`; Para Longs = `0`.
+3.  **Valor Protegido (`protectedUsd`):** Para Shorts = `min(entryUsd, assetBalUsd)`; Para Longs = `0`.
+4.  **Valor Exposto Base (`exposedBaseUsd`):** `max(0, assetBalUsd - protectedUsd)`.
+5.  **Valor Alavancado (`leveragedUsd`):** Para Longs = `positionValueUsd`; Para Shorts = `0`.
+6.  **Valor Total Exposto (`exposedUsd`):** `exposedBaseUsd + leveragedUsd`.
+7.  **Condição de Sobre-exposição (`overexposed`):** Ativada se `exposedPct > 100%` (posições Long) ou se a posição não possui saldo de cobertura associado (`totalAssetBal <= 0`).
+
+### 15.3. Modelo de Portfólio Além de 100% (Beyond-100% Model)
+A barra global de exposição consolida o capital do portfólio usando como base de 100% o **Total Equity** (`Σ balance usdValue`):
+*   `Protected % = (Total Protected / Total Equity) * 100`
+*   `Exposed % = (max(0, Total Equity - Total Protected) / Total Equity) * 100`
+*   `Leveraged % = (Total Leveraged / Total Equity) * 100` (estende além dos 100% da barra para indicar risco de alavancagem direcional).
