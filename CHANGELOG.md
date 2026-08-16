@@ -1,4 +1,4 @@
-# [1.31.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.30.0...v1.31.0) (2026-08-16)
+# [1.32.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.30.0...v1.31.0) (2026-08-16)
 
 
 ### Features
