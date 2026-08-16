@@ -1,3 +1,25 @@
+# [1.32.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.31.0...v1.32.0) (2026-08-16)
+
+
+### Features
+
+* add Hedge Pro dashboard and update version ([ebcc738](https://github.com/fapdev77/crypto-dashboard/commit/ebcc7384fa49f22eba198182a5109e5e679b8c0d))
+
+# [1.32.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.30.0...v1.31.0) (2026-08-16)
+
+
+### Features
+
+* add Hedge Pro dashboard and navigation ([be502bc](https://github.com/fapdev77/crypto-dashboard/commit/be502bc933fc208ec4b1a93aa3577793130b2ef8))
+* add pagination to open positions and orders ([bc302e1](https://github.com/fapdev77/crypto-dashboard/commit/bc302e1343a528963bb3564bc416d54f0e2b1a84))
+
+# [1.31.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.30.0...v1.31.0) (2026-08-13)
+
+
+### Features
+
+* add pagination to open positions and orders ([bc302e1](https://github.com/fapdev77/crypto-dashboard/commit/bc302e1343a528963bb3564bc416d54f0e2b1a84))
+
 # [1.30.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.29.1...v1.30.0) (2026-08-12)
 
 

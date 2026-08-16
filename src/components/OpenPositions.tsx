@@ -9,6 +9,8 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 import { PositionCard } from './PositionCard';
+import { usePagination } from '../hooks/usePagination';
+import { Pagination } from './ui/Pagination';
 
 export function OpenPositions() {
   const positions = usePositionsStore(state => state.positions);
@@ -81,6 +83,12 @@ export function OpenPositions() {
     });
     return { totalUnrealizedPnl: Number(uPnl), totalRealizedPnl: Number(rPnl) };
   }, [activePositions]);
+
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedPositions, totalItems } = usePagination(
+    activePositions,
+    50,
+    [filterText, exchangeFilter, useMockData]
+  );
 
   return (
     <div className="space-y-4">
@@ -167,8 +175,19 @@ export function OpenPositions() {
             );
           })()}
 
-          <div className="flex flex-col gap-3">
-            {activePositions.map((pos) => (
+          {totalItems > 5 && (
+            <div className="mb-2 mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                itemsPerPage={50}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3 mt-4">
+            {paginatedPositions.map((pos) => (
               <PositionCard
                 key={pos.id}
                 pos={pos}
@@ -177,6 +196,17 @@ export function OpenPositions() {
               />
             ))}
           </div>
+
+          {totalItems > 0 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                itemsPerPage={50}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </>
       )}
     </div>
