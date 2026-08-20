@@ -5,7 +5,7 @@ import { useBalancesStore } from '../store/balancesStore';
 import { usePositionsStore } from '../store/positionsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { DollarSign, TrendingUp, TrendingDown, BarChart2, Activity } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, BarChart2, Activity, ArrowUpRight } from 'lucide-react';
 import { Sparkline } from './ui/Sparkline';
 import { MacroCapitalChart } from './analytics/MacroCapitalChart';
 import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
@@ -26,18 +26,21 @@ export function Dashboard() {
   const [hideSmallBalances, setHideSmallBalances] = useState(true);
   const balancesList = Object.values(balances);
   const positionsList = Object.values(positions);
+  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
   const activeBalances = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
-      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data'));
-  }, [balancesList, useMockData]);
+      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
+  }, [balancesList, useMockData, activeKeyIds]);
 
   const activePositions = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data'));
-  }, [positionsList, useMockData]);
+      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data') && activeKeyIds.has(pos.connectionId));
+  }, [positionsList, useMockData, activeKeyIds]);
 
   const totalEquity = useMemo(() => {
     return Number(activeBalances.reduce((acc, curr) => acc.plus(curr.usdValue || 0), new Big(0)));
@@ -87,6 +90,12 @@ export function Dashboard() {
 
   const protectedPercent = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
   const exposedPercent = totalEquity > 0 ? (totalExposed / totalEquity) * 100 : 0;
+
+  const handleHedgeProClick = () => {
+    window.dispatchEvent(new CustomEvent('navigate-to-tab', {
+      detail: 'analytics-hedge-pro'
+    }));
+  };
 
   const filteredBalances = useMemo(() => {
     let filtered = activeBalances;
@@ -361,11 +370,19 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Lado Direito: Hedge Mode (Inverse) */}
-          <div className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6">
+          {/* Lado Direito: Hedge Mode (Inverse) — clique leva ao Hedge Pro */}
+          <button
+            type="button"
+            onClick={handleHedgeProClick}
+            title="Open Hedge Pro dashboard"
+            className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6 text-left cursor-pointer group rounded-lg transition-colors"
+          >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Hedge Mode (Inverse)</span>
+                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
+                  Hedge Mode (Inverse)
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-emerald-500">Longs: {inverseLongCount}</span>
                   <span className="text-xs font-bold ">|</span>
@@ -402,7 +419,7 @@ export function Dashboard() {
               </div>
 
             </div>
-          </div>
+          </button>
         </div>
       </div>
 

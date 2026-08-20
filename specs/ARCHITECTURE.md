@@ -27,7 +27,9 @@ A stack atual repousa sobre fundações modernas, possuindo os seguintes pontos 
   - *Risk:* Over-frequent REST Polling cycles could cause unnecessary re-renders. Mitigated by memoization and SWR cache-comparison checks in the polling hooks.
 - **Security & Cryptography Engine:** Web Crypto API (`window.crypto.subtle`).
   - *Risk (Mitigated):* Replaced bloated third-party crypto libraries to ensure native cryptographic performance for HMAC-SHA256 and Base64 signatures.
-- **Networking:** Native `fetch` API (`hybridFetch`), Express Proxy (`http-proxy-middleware`), and isolated WebSockets (for AP## 4. Normalization Layer (Unified Interfaces vs Real Implementation)
+- **Networking:** Native `fetch` API (`hybridFetch`), Express Proxy (`http-proxy-middleware`), and isolated WebSockets (for API Tester connection diagnostics).
+
+## 4. Normalization Layer (Unified Interfaces vs Real Implementation)
 
 O projeto adota o **Padrão Adapter** com subagregadores na camada `src/services/adapters/`. Esta camada é a barreira técnica que protege o restante do aplicativo da extrema heterogeneidade das APIs das corretoras, assegurando conformidade estrita com o princípio SRP (Single Responsibility Principle) e o padrão Strategy.
 
@@ -211,43 +213,73 @@ const fetchingRef = { current: false };
 const restartRequestedRef = { current: false };
 ```
 
-**IndexedDB stores (DB_VERSION 10):**
-| Store | Key | Indexes | Descrição |
-|-------|-----|---------|-----------|
-| `funding-summaries` | `id` (exchange-symbol) | `by-exchange`, `by-symbol` | Somatórios pré-calculados |
-| `funding-meta` | `id` (exchange-symbol) | `by-exchange` | Metadados de cobertura (freshness guard) |
+**IndexedDB Schema Overview (DB_VERSION 10):**
 
-## 6. State Management Models
+A base local IndexedDB (`crypto-dashboard-cache`) consolida 10 object stores estruturadas:
 
-O CPM adota uma arquitetura de micro-stores modularizadas para garantir que as atualizações de saldo, posições, conexões e ordens não causem re-renderizações em cascata desnecessárias (Princípio SRP e Alta Coesão):
+| Store Name | Key Path | Indexes | Descrição |
+|---|---|---|---|
+| `positionHistory` | `id` | `by-connectionId`, `by-closeUpdateTime` | Histórico de posições fechadas normalizado (`UnifiedHistoryPosition`) |
+| `cacheMeta` | `connectionId` | — | Metadados de sincronização e último timestamp de histórico de posições |
+| `assetMetadata` | `id` (`exchange_symbol`) | — | Metadados e categorização pública de ativos (`UnifiedAssetCategory`) |
+| `orderHistory` | `id` | `by-connectionId`, `by-createdTime` | Histórico de ordens fechadas/canceladas (`UnifiedOrder`) |
+| `orderCacheMeta` | `connectionId` | — | Metadados de sincronização do histórico de ordens |
+| `bybitRealPnL` | `id` (`connectionId-period`) | — | PnL realizado consolidado por período da Bybit |
+| `bybit-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | Extrato transacional bruto normalizado da Bybit (`BybitTransactionLogEntry`) |
+| `bybit-transaction-meta` | `connectionId` | — | Metadados de sincronização e checkpoint do Transaction Log Bybit |
+| `funding-summaries` | `id` (`exchange-symbol`) | `by-exchange`, `by-symbol` | Somatórios e agregações pré-calculadas de taxas de financiamento (`FundingRateSummary`) |
+| `funding-meta` | `id` (`exchange-symbol`) | `by-exchange` | Metadados de cobertura e guardião de frescor (8h) para funding rates |
 
-- **`useApiKeysStore`:** 
+## 6. State Management & Micro-Stores Architecture
+
+O CPM adota uma arquitetura de micro-stores modularizadas com Zustand 5.0 para garantir isolamento de responsabilidades, alta coesão e evitar renderizações em cascata:
+
+- **`useApiKeysStore` (Zero-Trust Security):** 
   - Mantém e persiste as credenciais de API (`id`, `exchange`, `apiKey`, `apiSecret`, `passphrase`, `label`, `isActive`).
+  - Suporta criptografia nativa no navegador via **Web Crypto API (PBKDF2 + AES-GCM 256-bit)** com passphrase master opcional, bloqueando o acesso sem senha e apresentando o `GlobalUnlockScreen`.
   - Persistência automática no `localStorage`.
 - **`useConnectionStore`:**
   - Gerencia o status de conectividade em tempo real para cada chave de API (`'connecting' | 'connected' | 'disconnected' | 'error'`) e mensagens de erro de bootload.
 - **`useBalancesStore`:**
   - Armazena as fatias de saldo de conta (`UnifiedBalance[]`) segmentadas por ID de conexão.
-  - Utilizado pelo `ExchangeHierarchyTable` para renderizar a distribuição patrimonial.
+  - Utilizado pelo `ExchangeHierarchyTable`, `Dashboard` e `HedgeProDashboard` para consolidação patrimonial.
 - **`usePositionsStore`:**
   - Gerencia as posições abertas e ativas (`UnifiedPosition[]`) recuperadas das exchanges em ciclos de polling.
 - **`useOrdersStore`:**
   - Gerencia as ordens ativas e abertas (`UnifiedOrder[]`) para cada conexão ativa.
-- **`crossStoreCleanup.ts` (`clearConnectionData`):**
-  - Utilitário centralizado de limpeza que desliga e limpa simultaneamente os dados de uma conexão específica através das stores de Balanço, Posição, e Conexão, garantindo integridade de dados ao desativar uma chave de API.
-- **`useMockDataInjector`:**
-  - Hook isolado e especializado (SRP) encarregado de injetar payloads mockados estáticos (`accounts.json`, `balances.json`, `positions.json`, `orders.json`) quando o Modo Simulação estiver ativo, mantendo a engine principal de rede (`useMultiExchangeWS`) focada estritamente em requisições de produção.
-- **`PrivacyContext`:** 
-  - Context API nativo que envelopa a aplicação para controlar a visibilidade (`isPrivateMode`) de valores monetários sensíveis em todas as tabelas e cards, persistindo a escolha no `localStorage`.
-- **`useSettingsStore`:** 
-  - Gerencia configurações globais como `useMockData` (Modo Simulação), `pollingInterval` (intervalo de polling padrão das APIs REST, ex: 5s), `historyCacheInterval` (tempo para expiração do cache IndexedDB), `fundingPollingInterval` (polling de current funding rates), e `fundingHistoryInterval` (intervalo mínimo entre syncs históricos de funding, range 4-8h).
-  - Persistido no `localStorage` do navegador.
+- **`useSyncCoordinatorStore`:**
+  - Coordenador de sincronização em memória que compartilha snapshots de cache e timestamps de sincronização entre as visões de Histórico de Posições, PnL por Símbolo, Relatórios de Ordens e Bybit Transactions, evitando múltiplos fetches concorrentes durante a navegação entre abas.
+- **`useLogStore`:**
+  - Terminal de logs do sistema em tempo real com severidades (`INFO`, `WARN`, `ERROR`, `DATA`, `SYSTEM`) e retenção de até 10.000 entradas em memória.
 - **`useFundingStore`:**
   - Gerencia o estado do módulo de Funding Rates: `currentRates` (taxas ao vivo), `isSyncing`/`syncProgress`/`syncMessage` (status de sincronização), `favorites` (moedas favoritadas), `lastHistoryFetch` (timestamp do último sync), `lastSyncPerformance` (métricas de performance do último sync), `lastExchangeTimings` (timing por exchange), `nextFundingTime` (próximo pagamento de funding), `nextScheduledSyncTime` (próximo auto-sync agendado).
   - `favorites`, `lastHistoryFetch`, `lastSyncPerformance`, `lastExchangeTimings`, `nextFundingTime`, e `nextScheduledSyncTime` são persistidos no `localStorage` via middleware `persist`.
   - Campos transientes (`currentRates`, `isSyncing`, `syncProgress`, `syncMessage`) NÃO são persistidos.
+- **`useSettingsStore`:** 
+  - Gerencia configurações globais como `useMockData` (Modo Simulação), `pollingInterval` (intervalo de polling padrão das APIs REST, ex: 5s), `historyCacheInterval` (tempo para expiração do cache IndexedDB), `fundingPollingInterval` (polling de current funding rates), `fundingHistoryInterval` (intervalo mínimo entre syncs históricos de funding, range 4-8h), e `showWelcomeOnStartup`.
+  - Persistido no `localStorage` do navegador.
+- **`crossStoreCleanup.ts` (`clearConnectionData`):**
+  - Utilitário centralizado de limpeza que desliga e limpa simultaneamente os dados de uma conexão específica através das stores de Balanço, Posição, e Conexão, garantindo integridade de dados ao desativar uma chave de API.
+- **`useMockDataInjector`:**
+  - Hook isolado e especializado (SRP) encarregado de injetar payloads mockados calibrados (`accounts.json`, `balances.json`, `positions.json`, `history.json`, `orders.json`, `funding.json`, `bybit-transactions.json`, `bills.json`) quando o Modo Simulação estiver ativo.
+- **`PrivacyContext`:** 
+  - Context API nativo que envelopa a aplicação para controlar a visibilidade (`isPrivateMode`) de valores monetários sensíveis em todas as tabelas e cards, persistindo a escolha no `localStorage`.
 
-## 7. Mocks, Types & Schema Consistency Protocol
+## 7. Application Views & Navigation Modules
+
+A aplicação estrutura seus módulos funcionais através da `Sidebar` responsiva:
+
+1. **Dashboard (`Dashboard.tsx`):** Visão executiva consolidada com métricas de patrimônio total (Equity), margens utilizadas, PnL flutuante diário, distribuição por exchange e tabela hierárquica de contas/moedas.
+2. **Positions (`OpenPositions.tsx` & `ClosedPositions.tsx`):** Posições em aberto com cálculo de ROE, alavancagem, preço de liquidação, margem e histórico contábil de posições fechadas.
+3. **Analytics:**
+   - **PnL by Symbol (`PnLBySymbol.tsx`):** Lucro e prejuízo consolidado por ativo negociado (Long vs Short).
+   - **Bybit Transactions (`BybitTransactions.tsx`):** Auditoria profunda do transaction log da Bybit com cálculo de PnL real (`cashFlow + funding - fee`).
+   - **Funding Fees (`FundingDashboard.tsx`):** Monitoramento em tempo real e agregação histórica multissímbolo de taxas de financiamento.
+   - **Hedge Pro (`HedgeProDashboard.tsx`):** Painel de gestão de risco e monitoramento de exposição protegida, exposta e alavancada para estratégias Delta Neutral em contratos inversos (COIN-M).
+4. **Reports & Orders (`ReportsDashboard.tsx`, `OpenOrders.tsx`, `OrderHistory.tsx`, `TradeHistory.tsx`):** Relatórios de execução de ordens ativas, histórico de trades e extratos de fluxo de caixa (depósitos e saques).
+5. **System & Diagnostic (`ApiKeys.tsx`, `ConnectionLogTerminal.tsx`, `Settings.tsx`, `ApiTester.tsx`):** Gerenciamento de chaves, auditoria de conexões WebSocket isoladas, configurações de rede/cache e terminal de logs.
+
+## 8. Mocks, Types & Schema Consistency Protocol
 It is mandatory to uphold strict synchronization across the entire stack when modifying unified interfaces (e.g., `UnifiedHistoryPosition`, `UnifiedPosition`, `UnifiedBalance`).
 
 If a property name or data type is altered (e.g., changing `closeTime` to `closeUpdateTime`), developers MUST systematically update:

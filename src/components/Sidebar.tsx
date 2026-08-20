@@ -3,6 +3,7 @@ import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
+import { useApiKeysStore } from '../store/apiKeysStore';
 import logo1 from '../assets/CriptoDashboard-logo1.PNG';
 
 interface SubItem {
@@ -31,9 +32,12 @@ interface SidebarProps {
 export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
   const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
-  const openOrdersCount = useOrdersStore(state => Object.keys(state.openOrders).length);
+  const openOrders = useOrdersStore(state => state.openOrders);
+  const keys = useApiKeysStore(state => state.keys);
 
   const [isMobile, setIsMobile] = useState(false);
+
+  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -54,11 +58,25 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   };
 
   const openCount = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return 0;
     const list = Object.values(positions);
     return list.filter(pos =>
-      (useMockData ? pos.connectionId.startsWith('mocked-data') : !pos.connectionId.startsWith('mocked-data')) && Math.abs(pos.size) > 0
+      (useMockData
+        ? pos.connectionId.startsWith('mocked-data')
+        : !pos.connectionId.startsWith('mocked-data') && activeKeyIds.has(pos.connectionId)
+      ) && Math.abs(pos.size) > 0
     ).length;
-  }, [positions, useMockData]);
+  }, [positions, useMockData, activeKeyIds]);
+
+  const openOrdersCount = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return 0;
+    const list = Object.values(openOrders);
+    return list.filter(o =>
+      useMockData
+        ? o.connectionId.startsWith('mocked-data')
+        : !o.connectionId.startsWith('mocked-data') && activeKeyIds.has(o.connectionId)
+    ).length;
+  }, [openOrders, useMockData, activeKeyIds]);
 
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -83,7 +101,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
         { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
         { id: 'analytics-bybit-tx', label: 'Bybit Transactions' },
-        { id: 'analytics-funding', label: 'Funding Fees' }
+        { id: 'analytics-funding', label: 'Funding Fees' },
+        { id: 'analytics-hedge-pro', label: 'Hedge Pro' }
       ]
     },
     { id: 'reports', label: 'Reports', icon: FileText },
