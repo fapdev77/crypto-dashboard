@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, AlertTriangle } from 'lucide-react';
 import { HedgeCoinSummary, getExchangeDisplayName } from '../../../utils/hedgeUtils';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
+import { AccountTypeBadge } from '../../ui/AccountTypeBadge';
 import { AppTooltip } from '../../ui/Tooltip';
 import { HedgePositionLevelRow } from './HedgeProPositionsTable';
 import { HedgeExposureBar } from './HedgeExposureBar';
@@ -73,11 +74,15 @@ export function HedgeProCoinSummary({ summaries, formatCurrency }: HedgeProCoinS
                   >
                     <span className="text-sm font-medium text-white leading-tight cursor-help">{coin.baseCoin}</span>
                   </AppTooltip>
-                  <span className="flex items-center gap-1 text-[10px] text-[#8E9299] min-w-0">
+                  <span className="flex items-center gap-1 text-[10px] text-[#8E9299] min-w-0 flex-wrap">
                     <ExchangeIcon exchange={coin.exchange} className="w-3 h-3 shrink-0" />
                     <span className="truncate">
                       {getExchangeDisplayName(coin.exchange)} · {coin.accountLabel}
                     </span>
+                    <AccountTypeBadge
+                      exchange={coin.exchange}
+                      accountType={coin.accountType}
+                    />
                   </span>
                 </div>
               </div>

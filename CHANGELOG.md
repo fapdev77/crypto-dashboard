@@ -1,3 +1,24 @@
+# [1.35.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.34.0...v1.35.0) (2026-08-20)
+
+
+### Features
+
+* **account:** add support for Bitget UTA accounts ([1ad4ed7](https://github.com/fapdev77/crypto-dashboard/commit/1ad4ed7568c1f3b5a8f52527ee54746f9e328c40))
+
+# [1.34.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.33.0...v1.34.0) (2026-08-16)
+
+
+### Features
+
+* filter data by active API keys ([bee9627](https://github.com/fapdev77/crypto-dashboard/commit/bee962749fe0e3901dbe77913be2592dda51f99b))
+
+# [1.33.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.32.0...v1.33.0) (2026-08-16)
+
+
+### Features
+
+* update mock data and architecture docs ([9385512](https://github.com/fapdev77/crypto-dashboard/commit/9385512eaeb408d1ac8f2e65887fd7c87e085312))
+
 # [1.32.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.31.0...v1.32.0) (2026-08-16)
 
 

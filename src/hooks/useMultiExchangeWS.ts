@@ -31,11 +31,13 @@ const RETRY_DELAY_MS = 5000;
  */
 async function syncRestData(config: ApiCredentials): Promise<void> {
   try {
-    const adapter = ExchangeAggregator.getAdapter(config.exchange);
+    const adapter = ExchangeAggregator.getAdapter(config);
+    const balancePromise = adapter.getBalance ? adapter.getBalance(config) : Promise.resolve([]);
+    const positionsPromise = adapter.getOpenPositions ? adapter.getOpenPositions(config) : Promise.resolve([]);
     const openOrdersPromise = adapter.getOpenOrders ? adapter.getOpenOrders(config) : Promise.resolve([]);
     const [balances, positions, openOrders] = await Promise.all([
-      adapter.getBalance(config),
-      adapter.getOpenPositions(config),
+      balancePromise,
+      positionsPromise,
       openOrdersPromise,
     ]);
     useBalancesStore.getState().updateBalances(config.id, balances as any);
@@ -47,7 +49,7 @@ async function syncRestData(config: ApiCredentials): Promise<void> {
 }
 
 /**
- * Tear down a connection: clear poll timer, remove orders & connection state.
+ * Tear down a connection: clear poll timer, remove orders, balances, positions & connection state.
  */
 function disconnect(
   id: string,
@@ -60,6 +62,7 @@ function disconnect(
     clearTimeout(pollTimer);
     delete intervals[id + '-poll'];
   }
+  clearConnectionData(id);
   useOrdersStore.getState().clearConnectionOrders(id);
   setStatus(id, 'disconnected', null);
   setError(id, null);
@@ -188,6 +191,7 @@ export function useMultiExchangeWS() {
     allExisting.forEach((cid) => {
       if (cid.startsWith('mocked-data') || activeIds.has(cid)) return;
       clearConnectionData(cid);
+      useOrdersStore.getState().clearConnectionOrders(cid);
     });
   }, [keys, useMockData, setConnectionStatus, setConnectionError]);
 

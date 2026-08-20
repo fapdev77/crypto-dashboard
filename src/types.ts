@@ -23,6 +23,7 @@ export interface UnifiedBalance {
   id: string; // e.g., 'connId-ccy'
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
   label: string;
   ccy: string;
   amount: number;
@@ -39,6 +40,7 @@ export interface UnifiedOrder {
   exchangeOrderId: string;
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
   label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
@@ -66,6 +68,7 @@ export interface UnifiedPosition {
   id: string; // Ex: 'connId-okx-BTC-USDT-long'
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
   label: string; // Account label/name
   symbol: string;
   baseCoin: string; // E.g., 'BTC'
@@ -100,6 +103,7 @@ export interface UnifiedHistoryPosition {
   id: string;
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
   label: string;
   symbol: string;
   baseCoin: string;
@@ -128,6 +132,7 @@ export interface UnifiedBillRecord {
   id: string;
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
   label: string;
   type: BillType;
   amount: number;
