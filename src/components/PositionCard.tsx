@@ -11,7 +11,7 @@ import { getInverseUsdValues, getOpenPositionSizeAndValue, getInverseShortUsdEnt
 import { useBalancesStore } from '../store/balancesStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ExternalLink } from 'lucide-react';
 
 interface PositionCardProps {
   pos: UnifiedPosition;
@@ -99,6 +99,20 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
       'Perpetual';
   const posTitle = `${pos.symbol} ${posTypeStr}`;
   const baseCoinClean = pos.baseCoin || pos.symbol.replace(/USDT|USDC|USD|EUR|BUSD|BTC$/i, '');
+
+  const handleNavigateToHedgePro = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const targetCoin = (pos.baseCoin || baseCoinClean).toUpperCase();
+    const targetId = `hedge-row-${pos.connectionId}:${targetCoin}`;
+    window.dispatchEvent(
+      new CustomEvent('navigate-to-tab', {
+        detail: {
+          tab: 'analytics-hedge-pro',
+          targetId: targetId,
+        },
+      })
+    );
+  };
 
   const entryPriceTooltipProps = {
     side: "top" as const,
@@ -225,6 +239,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
   return (
     <div
+      id={`pos-card-${pos.id}`}
       className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]"
       onClick={onToggle}
     >
@@ -376,16 +391,35 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
         {/* Inverse - Protected / Exposed */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <AppTooltip description="Position hedge/exposure level">
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Hedge / Exposure</span>
-          </AppTooltip>
           {pos.instrumentType === 'INVERSE' ? (
-            <>
+            <AppTooltip description="Click to view in Hedge Pro dashboard">
+              <button
+                type="button"
+                onClick={handleNavigateToHedgePro}
+                className="text-[10px] text-[#8E9299] hover:text-emerald-400 uppercase w-fit cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:border-emerald-400 transition-colors flex items-center gap-1 group text-left"
+              >
+                <span>Hedge / Exposure</span>
+                <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-400" />
+              </button>
+            </AppTooltip>
+          ) : (
+            <AppTooltip description="Position hedge/exposure level">
+              <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">
+                Hedge / Exposure
+              </span>
+            </AppTooltip>
+          )}
+          {pos.instrumentType === 'INVERSE' ? (
+            <div
+              onClick={handleNavigateToHedgePro}
+              className="cursor-pointer group/hedge hover:opacity-90 transition-opacity"
+              title="Click to view in Hedge Pro"
+            >
               <div className="flex items-center justify-between text-[10px] font-mono leading-none">
                 <span className="text-[#00C853]">{protectedPct.toFixed(1)}%</span>
                 <span className={exposedPct > 0 && exposedPct <= 100 ? "text-[#8E9299]" : "text-[#FF4444]"}>{exposedPct.toFixed(1)}%</span>
               </div>
-              <div className="flex h-1.5 rounded-full overflow-hidden w-full bg-[#2a2b30] mt-0.5 mb-0.5">
+              <div className="flex h-1.5 rounded-full overflow-hidden w-full bg-[#2a2b30] mt-0.5 mb-0.5 group-hover/hedge:ring-1 group-hover/hedge:ring-emerald-400/40 transition-all">
                 <div className="bg-[#00C853] h-full transition-all duration-300" style={{ width: `${Math.min(100, protectedPct)}%` }} />
                 <div className={`${exposedPct > 0 && exposedPct <= 100 ? "bg-[#8E9299]" : "bg-[#FF4444]"} h-full transition-all duration-300`} style={{ width: `${Math.min(100, Math.max(0, exposedPct))}%` }} />
               </div>
@@ -393,7 +427,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                 <span>Bal: {formatCcy(totalAssetBal)}</span>
                 <span>Pos: {formatCcy(openPosSize)}</span>
               </div>
-            </>
+            </div>
           ) : (
             <div className="flex flex-1 items-center h-full">
               <span className="text-[#8E9299] font-mono">—</span>
@@ -482,8 +516,15 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             {pos.instrumentType === 'INVERSE' ? (
               <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
-                  <AppTooltip description="Hedge position details">
-                    <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help">Hedge Pro Details</span>
+                  <AppTooltip description="Click to view details in Hedge Pro">
+                    <button
+                      type="button"
+                      onClick={handleNavigateToHedgePro}
+                      className="text-[#8E9299] hover:text-emerald-400 text-xs w-max border-b border-dashed border-[#8E9299]/50 hover:border-emerald-400 cursor-pointer flex items-center gap-1.5 transition-colors group"
+                    >
+                      <span>Hedge Pro Details</span>
+                      <ExternalLink className="w-3 h-3 text-emerald-400 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    </button>
                   </AppTooltip>
 
                   <div className="flex flex-col gap-3 mt-1">
