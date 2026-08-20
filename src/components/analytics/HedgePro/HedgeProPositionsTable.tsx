@@ -5,6 +5,7 @@ import { usePagination } from '../../../hooks/usePagination';
 import { Pagination } from '../../ui/Pagination';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
+import { AccountTypeBadge } from '../../ui/AccountTypeBadge';
 import { AppTooltip } from '../../ui/Tooltip';
 import { formatPrice } from '../../../utils/formatters';
 import { HedgeExposureBar } from './HedgeExposureBar';
@@ -69,13 +70,22 @@ export function HedgePositionLevelRow({ level, formatCurrency, variant = 'table'
     <div className="px-4 py-3 flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
         {/* Symbol + side */}
-        <div className="flex items-center gap-2 min-w-[150px]">
+        <div className="flex items-center gap-2 min-w-[150px] flex-wrap">
           <CoinIcon symbol={level.symbol} className="w-5 h-5" />
           <span className="text-white font-medium">{level.symbol}</span>
           <ExchangeIcon exchange={level.exchange} className="w-4 h-4" />
           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap ${isLong ? 'bg-emerald-500/10' : 'bg-red-500/10'} ${sideColor}`}>
             {sideLabel}
           </span>
+          {level.label && (
+            <span className="text-[10px] font-medium text-[#c0c5cc] bg-[#1a1c20] border border-[#2d3036] py-0.5 px-1.5 rounded-[4px] truncate max-w-[110px]">
+              {level.label}
+            </span>
+          )}
+          <AccountTypeBadge
+            exchange={level.exchange}
+            accountType={level.accountType}
+          />
         </div>
 
         {/* Entry / Mark */}
@@ -253,13 +263,17 @@ export function HedgeProPositionsTable({ levels, formatCurrency }: HedgeProPosit
               onClick={() => toggle(level.positionId)}
               className="w-full flex items-center justify-between gap-2 px-4 py-2 text-left hover:bg-[#1a1b1e] transition-colors cursor-pointer"
             >
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-wrap">
                 <CoinIcon symbol={level.symbol} className="w-4 h-4 shrink-0" />
                 <span className="text-xs font-medium text-[#c9cbcf]">{level.symbol}</span>
                 <ExchangeIcon exchange={level.exchange} className="w-3.5 h-3.5 shrink-0" />
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap ${isLong ? 'bg-emerald-500/10' : 'bg-red-500/10'} ${sideColor}`}>
                   {sideLabel}
                 </span>
+                <AccountTypeBadge
+                  exchange={level.exchange}
+                  accountType={level.accountType}
+                />
               </div>
               {expanded[level.positionId] ? (
                 <ChevronDown className="w-4 h-4 text-[#8E9299] shrink-0" />

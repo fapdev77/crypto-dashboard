@@ -5,6 +5,7 @@ import { useConnectionStore } from '../store/connectionStore';
 import { clearConnectionData } from '../store/crossStoreCleanup';
 import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
+import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import { ApiKeyModal } from './ApiKeyModal';
 import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
@@ -145,6 +146,10 @@ export function ApiKeys() {
                                 <span className="text-sm font-medium text-white truncate" title={apiKey.label}>
                                   {apiKey.label}
                                 </span>
+                                <AccountTypeBadge
+                                  exchange={apiKey.exchange}
+                                  accountType={apiKey.accountType}
+                                />
                               </div>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono leading-none border uppercase tracking-wider shrink-0 ${!apiKey.isActive ? 'bg-[#8E9299]/10 text-[#8E9299] border-[#8E9299]/20' :
                                 status === 'connected' ? 'bg-[#00C853]/10 text-[#00C853] border-[#00C853]/30' :
