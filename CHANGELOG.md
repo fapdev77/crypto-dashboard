@@ -1,3 +1,10 @@
+# [1.35.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.34.0...v1.35.0) (2026-08-20)
+
+
+### Features
+
+* **account:** add support for Bitget UTA accounts ([1ad4ed7](https://github.com/fapdev77/crypto-dashboard/commit/1ad4ed7568c1f3b5a8f52527ee54746f9e328c40))
+
 # [1.34.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.33.0...v1.34.0) (2026-08-16)
 
 
