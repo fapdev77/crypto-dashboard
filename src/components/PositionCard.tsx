@@ -9,6 +9,8 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
 import { getInverseUsdValues, getOpenPositionSizeAndValue, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
 import { useBalancesStore } from '../store/balancesStore';
+import { useApiKeysStore } from '../store/apiKeysStore';
+import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import { AlertTriangle } from 'lucide-react';
 
 interface PositionCardProps {
@@ -19,6 +21,7 @@ interface PositionCardProps {
 
 export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const balances = useBalancesStore(state => state.balances);
+  const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
 
@@ -253,9 +256,15 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             <span className={`text-xs mt-0.5 font-medium ${sideColor}`}>
               {sideLabel} <span className="mx-0.5 text-[#8E9299]">·</span> {pos.leverage}x <span className="mx-0.5 text-[#8E9299]">·</span> {marginModeLabel}
             </span>
-            <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
-              {pos.label}
-            </span>
+            <div className="flex items-center gap-1 mt-2 flex-wrap">
+              <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] capitalize">
+                {pos.label}
+              </span>
+              <AccountTypeBadge
+                exchange={pos.exchange}
+                accountType={pos.accountType || keys.find(k => k.id === pos.connectionId)?.accountType}
+              />
+            </div>
           </div>
         </div>
 
