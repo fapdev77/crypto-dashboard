@@ -1,3 +1,10 @@
+# [1.36.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.35.0...v1.36.0) (2026-08-20)
+
+
+### Features
+
+* **analytics:** add HedgePro dashboard coin rows ([5478674](https://github.com/fapdev77/crypto-dashboard/commit/5478674ea4dfefab6864fb0b71e5fb34b6301a5d))
+
 # [1.35.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.34.0...v1.35.0) (2026-08-20)
 
 
