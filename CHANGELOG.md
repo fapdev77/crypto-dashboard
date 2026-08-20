@@ -1,3 +1,10 @@
+# [1.37.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.36.0...v1.37.0) (2026-08-20)
+
+
+### Features
+
+* **ui:** display application version in modal and unlock screen ([d9529bd](https://github.com/fapdev77/crypto-dashboard/commit/d9529bdae0d24a1e165e808720a60dbacc0642e8))
+
 # [1.36.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.35.0...v1.36.0) (2026-08-20)
 
 
