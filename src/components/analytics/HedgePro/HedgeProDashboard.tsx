@@ -10,9 +10,8 @@ import { getHedgeCoinSummaries, getHedgeTotals } from '../../../utils/hedgeUtils
 import { FilterBar } from '../../ui/FilterBar';
 import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
 import { HedgeProKpis } from './HedgeProKpis';
-import { HedgeProCoinSummary } from './HedgeProCoinSummary';
+import { HedgeProCoinRows } from './HedgeProCoinRows';
 import { HedgeProBreakdownChart } from './HedgeProBreakdownChart';
-import { HedgeProPositionsTable } from './HedgeProPositionsTable';
 import { HedgeExposureBar } from './HedgeExposureBar';
 
 /**
@@ -81,10 +80,6 @@ export function HedgeProDashboard() {
       return true;
     });
   }, [coinSummaries, exchange, side, search]);
-
-  const filteredLevels = useMemo(() => {
-    return filteredSummaries.flatMap(c => c.positions);
-  }, [filteredSummaries]);
 
   const filteredTotals = useMemo(() => getHedgeTotals(filteredSummaries, totalEquity), [filteredSummaries, totalEquity]);
 
@@ -170,14 +165,17 @@ export function HedgeProDashboard() {
         side={{ value: side, onChange: setSide, options: sideOptions, labelAll: 'All Sides' }}
       />
 
-      {/* Protected vs Exposed breakdown per coin (chart) */}
-      <HedgeProBreakdownChart summaries={filteredSummaries} formatCurrency={formatCurrency} />
+      {/* Grouped Coin Hedge Section: Breakdown Chart + Per-Coin Hedge Rows */}
+      <div
+        id="hedge-coins-group"
+        className="bg-[#121316]/60 border border-[#26282d] rounded-2xl p-3 sm:p-4 flex flex-col gap-4"
+      >
+        {/* Protected vs Exposed breakdown per coin (chart) */}
+        <HedgeProBreakdownChart summaries={filteredSummaries} formatCurrency={formatCurrency} />
 
-      {/* Per-coin summaries */}
-      <HedgeProCoinSummary summaries={filteredSummaries} formatCurrency={formatCurrency} />
-
-      {/* Per-position levels table */}
-      <HedgeProPositionsTable levels={filteredLevels} formatCurrency={formatCurrency} />
+        {/* Per-coin summaries (Row View modeled after Open Orders) */}
+        <HedgeProCoinRows summaries={filteredSummaries} formatCurrency={formatCurrency} />
+      </div>
 
       {/* Filtered totals footnote */}
       {filteredSummaries.length !== coinSummaries.length && (

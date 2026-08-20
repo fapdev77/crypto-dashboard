@@ -116,6 +116,10 @@ export interface HedgeCoinSummary {
   unrealizedPnl: number;
   /** Σ unrealizedPnlUsd across the coin's positions, in USD. */
   unrealizedPnlUsd: number;
+  /** Σ realizedPnl across the coin's positions (short + long), in coin. */
+  realizedPnl: number;
+  /** Σ realizedPnlUsd across the coin's positions, in USD. */
+  realizedPnlUsd: number;
   /** min(Σ short protected, balanceUsd) — you can't protect more than you hold. */
   protectedUsd: number;
   /** Σ short position sizes in coin (the protected leg — the short's size). */
@@ -144,6 +148,8 @@ export interface HedgeCoinSummary {
   coveragePct: number;
   /** Aggregated ROI of the coin = Σ unrealizedPnlUsd / walletBalanceUsd × 100. */
   roiPct: number;
+  /** Aggregated Realized ROI of the coin = Σ realizedPnlUsd / walletBalanceUsd × 100. */
+  realizedRoiPct: number;
   positionCount: number;
   longCount: number;
   shortCount: number;
@@ -378,6 +384,16 @@ export function getHedgeCoinSummaries(
       new Big(0),
     ).toNumber();
 
+    // Total realized PnL of the coin = short's + long's, in coin and USD.
+    const realizedPnl = group.levels.reduce(
+      (acc, l) => acc.plus(l.realizedPnl || 0),
+      new Big(0),
+    ).toNumber();
+    const realizedPnlUsd = group.levels.reduce(
+      (acc, l) => acc.plus(l.realizedPnlUsd || 0),
+      new Big(0),
+    ).toNumber();
+
     // Net Balance (USD) — the account equity (wallet + unrealized PnL), the real
     // value if all positions were closed now. For Bitget coin-m the store amount
     // is accountEquity (already includes unrealized PnL), so the position
@@ -442,6 +458,7 @@ export function getHedgeCoinSummaries(
     // Aggregated ROI of the coin — unrealized PnL relative to the fixed wallet
     // (mirrors the exchange's Assets screen: unrealized ÷ wallet balance).
     const roiPct = walletBalanceUsd > 0 ? (unrealizedPnlUsd / walletBalanceUsd) * 100 : 0;
+    const realizedRoiPct = walletBalanceUsd > 0 ? (realizedPnlUsd / walletBalanceUsd) * 100 : 0;
 
     summaries.push({
       key,
@@ -457,6 +474,8 @@ export function getHedgeCoinSummaries(
       netBalanceUsd,
       unrealizedPnl,
       unrealizedPnlUsd,
+      realizedPnl,
+      realizedPnlUsd,
       protectedUsd,
       protectedSize,
       exposedBaseUsd,
@@ -468,6 +487,7 @@ export function getHedgeCoinSummaries(
       exposedUsd,
       coveragePct,
       roiPct,
+      realizedRoiPct,
       positionCount,
       longCount,
       shortCount,
