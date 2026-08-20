@@ -31,11 +31,13 @@ const RETRY_DELAY_MS = 5000;
  */
 async function syncRestData(config: ApiCredentials): Promise<void> {
   try {
-    const adapter = ExchangeAggregator.getAdapter(config.exchange);
+    const adapter = ExchangeAggregator.getAdapter(config);
+    const balancePromise = adapter.getBalance ? adapter.getBalance(config) : Promise.resolve([]);
+    const positionsPromise = adapter.getOpenPositions ? adapter.getOpenPositions(config) : Promise.resolve([]);
     const openOrdersPromise = adapter.getOpenOrders ? adapter.getOpenOrders(config) : Promise.resolve([]);
     const [balances, positions, openOrders] = await Promise.all([
-      adapter.getBalance(config),
-      adapter.getOpenPositions(config),
+      balancePromise,
+      positionsPromise,
       openOrdersPromise,
     ]);
     useBalancesStore.getState().updateBalances(config.id, balances as any);

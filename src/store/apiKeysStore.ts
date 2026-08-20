@@ -4,6 +4,7 @@ import { ExchangeName } from '../types';
 import { encryptData, decryptData } from '../utils/cryptoLib';
 
 export type Exchange = ExchangeName;
+export type AccountType = 'classic' | 'uta';
 
 /** Credentials for a single exchange API connection. */
 export interface ApiCredentials {
@@ -14,6 +15,7 @@ export interface ApiCredentials {
   apiSecret: string;
   passphrase?: string;
   isActive: boolean;
+  accountType?: AccountType;
 }
 
 interface ApiKeysState {
@@ -53,10 +55,11 @@ export const useApiKeysStore = create<ApiKeysState>()(
       isUnlocked: true,
 
       addKey: (credentials) => {
+        const accountType = credentials.accountType || (credentials.exchange === 'bitget' ? 'classic' : undefined);
         set((state) => ({
           keys: [
             ...state.keys,
-            { ...credentials, id: crypto.randomUUID(), isActive: true },
+            { ...credentials, accountType, id: crypto.randomUUID(), isActive: true },
           ],
         }));
         const state = get();
@@ -96,8 +99,12 @@ export const useApiKeysStore = create<ApiKeysState>()(
         }
       },
       importKeys: (newKeys) => {
+        const normalized = newKeys.map(k => ({
+          ...k,
+          accountType: k.accountType || (k.exchange === 'bitget' ? 'classic' : undefined)
+        }));
         set((state) => ({
-          keys: [...state.keys, ...newKeys],
+          keys: [...state.keys, ...normalized],
         }));
         const state = get();
         if (state.isEncrypted && currentPassphrase) {

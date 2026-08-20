@@ -37,6 +37,8 @@ export interface HedgeBalanceInput {
 /** Per-position hedge level result (mirrors PositionCard math). */
 export interface HedgePositionLevels {
   positionId: string;
+  connectionId?: string;
+  accountType?: 'classic' | 'uta';
   symbol: string;
   baseCoin: string;
   exchange: ExchangeName;
@@ -90,6 +92,7 @@ export interface HedgePositionLevels {
 export interface HedgeCoinSummary {
   key: string;
   connectionId: string;
+  accountType?: 'classic' | 'uta';
   baseCoin: string;
   exchange: ExchangeName;
   /** Human-readable account label for this connection (e.g. 'Mock BITGET 1'). */
@@ -255,6 +258,8 @@ export function getHedgePositionLevels(
 
   return {
     positionId: pos.id,
+    connectionId: pos.connectionId,
+    accountType: pos.accountType,
     symbol: pos.symbol,
     baseCoin: pos.baseCoin,
     exchange: pos.exchange,
@@ -441,6 +446,7 @@ export function getHedgeCoinSummaries(
     summaries.push({
       key,
       connectionId: group.connectionId,
+      accountType: group.levels[0]?.accountType,
       baseCoin: group.baseCoin,
       exchange: group.exchange,
       accountLabel: group.levels[0]?.label || '',

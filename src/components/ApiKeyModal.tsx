@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Save, X, Trash2 } from 'lucide-react';
-import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
+import { useApiKeysStore, Exchange, AccountType, ApiCredentials } from '../store/apiKeysStore';
 import { LogManager } from '../services/LogManager';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AppTooltip } from './ui/Tooltip';
@@ -22,6 +22,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
   const { addKey, removeKey } = useApiKeysStore();
   
   const [exchange, setExchange] = useState<Exchange>('bitget');
+  const [accountType, setAccountType] = useState<AccountType>('classic');
   const [label, setLabel] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
@@ -30,19 +31,20 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       if (mode === 'edit' && existingKey) {
         setExchange(existingKey.exchange);
+        setAccountType(existingKey.accountType || 'classic');
         setLabel(existingKey.label);
         setApiKey(existingKey.apiKey);
         setApiSecret(''); 
         setPassphrase('');
       } else {
         setExchange('bitget');
+        setAccountType('classic');
         setLabel('');
         setApiKey('');
         setApiSecret('');
@@ -84,18 +86,23 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
     if (mode === 'create') {
       addKey({
         exchange,
+        accountType: exchange === 'bitget' ? accountType : undefined,
         label,
         apiKey,
         apiSecret,
         passphrase,
       });
-      LogManager.info('ApiKeys', `New API key added: ${label} (${exchange})`);
+      LogManager.info('ApiKeys', `New API key added: ${label} (${exchange}${exchange === 'bitget' ? ` - ${accountType}` : ''})`);
     } else if (mode === 'edit' && existingKey) {
       const keys = useApiKeysStore.getState().keys;
       useApiKeysStore.setState({
-        keys: keys.map(k => k.id === existingKey.id ? { ...k, label } : k)
+        keys: keys.map(k => k.id === existingKey.id ? {
+          ...k,
+          label,
+          accountType: k.exchange === 'bitget' ? accountType : k.accountType
+        } : k)
       });
-      LogManager.info('ApiKeys', `API key edited: ${label}`);
+      LogManager.info('ApiKeys', `API key edited: ${label} (${existingKey.exchange}${existingKey.exchange === 'bitget' ? ` - ${accountType}` : ''})`);
     }
     onClose();
   };
@@ -191,6 +198,53 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
               />
             </div>
           </div>
+
+          {/* Account Type Selector for Bitget */}
+          {exchange === 'bitget' && (
+            <div className="bg-[#1a1b1e]/80 border border-[#2a2b30] rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <AppTooltip description="Select whether this API Key is for a Bitget Classic account (v2) or Unified Trading Account (UTA / v3).">
+                  <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+                    Account Type / Mode
+                  </label>
+                </AppTooltip>
+                <span className="text-[11px] text-[#8E9299] font-mono">Bitget Architecture</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setAccountType('classic')}
+                  className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all ${
+                    accountType === 'classic'
+                      ? 'bg-[#2F6BFF]/15 border-[#2F6BFF] text-white shadow-sm'
+                      : 'bg-[#151619] border-[#2a2b30] text-[#8E9299] hover:text-white hover:border-[#3a3b40]'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-medium text-xs">
+                    <span className={`w-2 h-2 rounded-full ${accountType === 'classic' ? 'bg-[#2F6BFF]' : 'bg-[#8E9299]'}`} />
+                    Classic (Standard)
+                  </div>
+                  <span className="text-[10px] text-[#8E9299] mt-1 leading-tight">Legacy v2 Account</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAccountType('uta')}
+                  className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all ${
+                    accountType === 'uta'
+                      ? 'bg-[#2F6BFF]/15 border-[#2F6BFF] text-white shadow-sm'
+                      : 'bg-[#151619] border-[#2a2b30] text-[#8E9299] hover:text-white hover:border-[#3a3b40]'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-medium text-xs">
+                    <span className={`w-2 h-2 rounded-full ${accountType === 'uta' ? 'bg-[#00C853]' : 'bg-[#8E9299]'}`} />
+                    UTA (Unified)
+                  </div>
+                  <span className="text-[10px] text-[#8E9299] mt-1 leading-tight">Unified Trading Account (v3)</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           <div>
             <AppTooltip description="Your exchange API key. It is stored securely in your local browser and never sent to our servers.">
