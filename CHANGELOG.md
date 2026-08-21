@@ -1,3 +1,10 @@
+# [1.38.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.37.1...v1.38.0) (2026-08-21)
+
+
+### Features
+
+* improve PWA update flow and cache control ([845f25f](https://github.com/fapdev77/crypto-dashboard/commit/845f25fd167d4642db82a0b76c56787269ce6354))
+
 ## [1.37.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.37.0...v1.37.1) (2026-08-21)
 
 
