@@ -1,3 +1,10 @@
+## [1.37.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.37.0...v1.37.1) (2026-08-21)
+
+
+### Bug Fixes
+
+* refine hedge exposure and balance calculations ([d7dc16e](https://github.com/fapdev77/crypto-dashboard/commit/d7dc16e834014d7b78b47262761e3d534353f8c1))
+
 # [1.37.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.36.0...v1.37.0) (2026-08-20)
 
 
