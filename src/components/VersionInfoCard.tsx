@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Tag, Github, ExternalLink, Calendar, GitCommit, Sparkles, FileText, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import { Tag, Github, ExternalLink, Calendar, GitCommit, Sparkles, FileText, ChevronDown, ChevronUp, CheckCircle2, RefreshCw } from 'lucide-react';
+import { usePwaUpdateStore } from '../store/pwaUpdateStore';
 
 export function VersionInfoCard() {
   const [showFullChangelog, setShowFullChangelog] = useState(false);
+  const { needRefresh, isUpdating, triggerUpdate } = usePwaUpdateStore();
 
   const releaseInfo = typeof __APP_RELEASE_INFO__ !== 'undefined' ? __APP_RELEASE_INFO__ : null;
 
@@ -41,9 +43,37 @@ export function VersionInfoCard() {
           v{version}
         </span>
       </div>
-      <p className="text-[#8E9299] text-xs mb-5">
+      <p className="text-[#8E9299] text-xs mb-4">
         Application metadata, GitHub repository source, and latest release notes
       </p>
+
+      {/* New Version Ready Banner */}
+      {needRefresh && (
+        <div className="mb-4 p-3.5 rounded-lg bg-blue-950/40 border border-blue-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md shadow-blue-950/50 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-[#2F6BFF]/20 text-[#2F6BFF] shrink-0 border border-[#2F6BFF]/30">
+              <Sparkles className="w-4 h-4 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">New Version Available</h4>
+                <span className="text-[10px] font-mono bg-blue-500/20 text-blue-300 px-1.5 py-0.2 rounded font-semibold">Ready</span>
+              </div>
+              <p className="text-[11px] text-gray-300 mt-0.5">
+                A new software build is cached and ready to activate.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => triggerUpdate()}
+            disabled={isUpdating}
+            className="w-full sm:w-auto px-3.5 py-2 bg-[#2F6BFF] hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg cursor-pointer transition-colors shrink-0 flex items-center justify-center gap-2 shadow-md shadow-blue-500/20"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
+            <span>{isUpdating ? 'Updating Application...' : 'Update Now'}</span>
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 flex-1">
         {/* Info Grid */}

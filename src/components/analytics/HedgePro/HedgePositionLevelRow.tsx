@@ -46,7 +46,7 @@ export function HedgePositionLevelRow({ level, formatCurrency, variant = 'table'
     capitalRef > 0 ? (level.leveragedUsd / capitalRef) * 100 : level.leveragedUsd > 0 ? 100 : 0;
 
   // Exposed quantity in the asset (exposed USD at mark price).
-  const exposedQty = level.markPrice > 0 ? level.exposedUsd / level.markPrice : 0;
+  const exposedQty = level.markPrice > 0 ? level.exposedBaseUsd / level.markPrice : 0;
   const protectedAmount = level.markPrice > 0 ? level.protectedUsd / level.markPrice : 0;
 
   const handleNavigateToOpenPositions = (e: React.MouseEvent) => {
@@ -124,7 +124,7 @@ export function HedgePositionLevelRow({ level, formatCurrency, variant = 'table'
           <div className="flex flex-col">
             <span className="text-[10px] text-white uppercase tracking-wider">Exposed</span>
             <span className="font-semibold text-white">
-              {formatCurrency(level.exposedUsd, 'usd', 2)}{' '}
+              {formatCurrency(level.exposedBaseUsd, 'usd', 2)}{' '}
               <span className="text-[10px] font-normal text-[#8E9299]">({exposedPct.toFixed(1)}%)</span>
             </span>
             <span className="text-[10px] text-[#8E9299]">
@@ -165,7 +165,7 @@ export function HedgePositionLevelRow({ level, formatCurrency, variant = 'table'
               Protected: <span className="font-mono text-emerald-400">{formatCurrency(level.protectedUsd, 'usd', 2)}</span>
             </span>
             <span className="text-[#8E9299]">
-              Exposed: <span className="font-mono text-white">{formatCurrency(level.exposedUsd, 'usd', 2)}</span>
+              Exposed: <span className="font-mono text-white">{formatCurrency(level.exposedBaseUsd, 'usd', 2)}</span>
             </span>
             {!level.isShort && (
               <span className="text-[#8E9299]">
