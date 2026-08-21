@@ -278,13 +278,12 @@ describe('getHedgeCoinSummaries', () => {
   it('should expose wallet + long when there is NO short to hedge (long only)', () => {
     const summaries = getHedgeCoinSummaries([LONG_BTC], [BTC_BALANCE]);
     const coin = summaries[0];
-    // No short → nothing is protected, so Exposed = wallet balance + long size.
+    // No short → nothing is protected, so Exposed Base = wallet balance.
     expect(coin.shortCount).toBe(0);
     expect(coin.protectedUsd).toBe(0);
-    expect(coin.exposedSize).toBeCloseTo(5 + 2, 10);           // wallet 5 + leveraged size 2
-    expect(coin.exposedBaseUsd).toBeCloseTo(7 * 55000, 6);     // 385000
-    // No short → the long is ALREADY inside the Exposed (wallet + long), so Total
-    // Exposed = Exposed alone — adding Leveraged again would double-count (5+2+2).
+    expect(coin.exposedSize).toBeCloseTo(5, 10);               // physical wallet only
+    expect(coin.exposedBaseUsd).toBeCloseTo(5 * 55000, 6);     // 275000
+    // Total Exposed = Exposed Base + Leveraged
     expect(coin.totalExposedSize).toBeCloseTo(7, 10);          // wallet 5 + long 2
     expect(coin.totalExposedUsd).toBeCloseTo(385000, 6);
     expect(coin.leveragedSize).toBeCloseTo(2, 10);             // still shown separately
@@ -338,6 +337,79 @@ describe('getHedgeCoinSummaries', () => {
     // Net = wallet + unrealized (0) — must be positive, not 0 + PnL.
     expect(summaries[0].netBalance).toBe(5);
     expect(summaries[0].netBalanceUsd).toBe(275000);
+  });
+
+  it('should correctly compute gross Wallet Balance and liquid Net Balance for Bybit with positive PnL', () => {
+    const bybitPos = makePos({
+      ...SHORT_BTC,
+      id: 'bybit-pos-1',
+      connectionId: 'bybit-conn',
+      exchange: 'bybit',
+      size: 33332,
+      notionalUsd: 33332,
+      entryPrice: 69164.22,
+      markPrice: 68450,
+      unrealizedPnl: 0.005028,
+    });
+    const bybitBal = makeBal({
+      id: 'bybit-conn-BTC',
+      connectionId: 'bybit-conn',
+      exchange: 'bybit',
+      ccy: 'BTC',
+      amount: 0.65,
+      walletBalance: 0.65,
+      usdValue: 44492.5,
+    });
+
+    const summaries = getHedgeCoinSummaries([bybitPos], [bybitBal]);
+    const coin = summaries[0];
+
+    // Wallet Balance is the gross balance before unrealized PnL
+    expect(coin.walletBalance).toBe(0.65);
+    expect(coin.walletBalanceUsd).toBe(44492.5);
+
+    // Net Balance is the liquid equity (Wallet Balance + Unrealized PnL)
+    expect(coin.netBalance).toBeCloseTo(0.655028, 6);
+    expect(coin.netBalanceUsd).toBeCloseTo(44492.5 + (0.005028 * 68450), 2);
+
+    // Protected = entry value capped by balance: min(33332, 44492.5) = 33332
+    expect(coin.protectedUsd).toBe(33332);
+    // Exposed Base = 44492.5 - 33332 = 11160.5
+    expect(coin.exposedBaseUsd).toBeCloseTo(11160.5, 2);
+  });
+
+  it('should correctly compute gross Wallet Balance and liquid Net Balance for Bybit with negative PnL', () => {
+    const bybitPos = makePos({
+      ...SHORT_BTC,
+      id: 'bybit-pos-2',
+      connectionId: 'bybit-conn',
+      exchange: 'bybit',
+      size: 33332,
+      notionalUsd: 33332,
+      entryPrice: 65000,
+      markPrice: 68450,
+      unrealizedPnl: -0.02,
+    });
+    const bybitBal = makeBal({
+      id: 'bybit-conn-BTC',
+      connectionId: 'bybit-conn',
+      exchange: 'bybit',
+      ccy: 'BTC',
+      amount: 0.65,
+      walletBalance: 0.65,
+      usdValue: 44492.5,
+    });
+
+    const summaries = getHedgeCoinSummaries([bybitPos], [bybitBal]);
+    const coin = summaries[0];
+
+    // Wallet Balance remains gross (0.65)
+    expect(coin.walletBalance).toBe(0.65);
+    expect(coin.walletBalanceUsd).toBe(44492.5);
+
+    // Net Balance reflects unrealized loss: 0.65 + (-0.02) = 0.63
+    expect(coin.netBalance).toBeCloseTo(0.63, 6);
+    expect(coin.netBalanceUsd).toBeCloseTo(44492.5 + (-0.02 * 68450), 2);
   });
 
   it('should separate the same baseCoin across different connections', () => {
@@ -452,14 +524,14 @@ describe('getHedgeTotals', () => {
     const totals = getHedgeTotals(summaries, 500000);
 
     expect(totals.totalProtected).toBe(100000);
-    expect(totals.totalExposed).toBe(285000);
+    expect(totals.totalExposed).toBe(175000); // 275000 wallet - 100000 protected
     expect(totals.totalLeveraged).toBe(110000);
     expect(totals.totalBalance).toBe(275000);
     // coverage = (protected − leveraged) / equity = (100000 − 110000) / 500000
     expect(totals.coveragePct).toBeCloseTo(((100000 - 110000) / 500000) * 100, 3); // -2
     expect(totals.totalEquity).toBe(500000);
     expect(totals.protectedOfEquityPct).toBeCloseTo(20, 3);
-    expect(totals.exposedOfEquityPct).toBeCloseTo(57, 3);
+    expect(totals.exposedOfEquityPct).toBeCloseTo(35, 3);
     expect(totals.inversePositionCount).toBe(2);
     expect(totals.inverseLongCount).toBe(1);
     expect(totals.inverseShortCount).toBe(1);
