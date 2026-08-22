@@ -7,65 +7,27 @@ import { AccountTypeBadge } from '../../ui/AccountTypeBadge';
 import { AppTooltip } from '../../ui/Tooltip';
 import { HedgeExposureBar } from './HedgeExposureBar';
 import { HedgePositionLevelRow } from './HedgePositionLevelRow';
+import { HedgeProCoinDrawerMetrics } from './HedgeProCoinDrawerMetrics';
 
 interface HedgeProCoinRowProps {
   coin: HedgeCoinSummary;
   isExpanded: boolean;
   onToggle: () => void;
-  formatCurrency: (value: number | undefined | null, type?: 'usd' | 'crypto' | 'price' | 'compact', decimalsOrSymbol?: number | string) => string;
-}
-
-/** Format coin crypto value nicely */
-function formatCoinValue(
-  value: number | undefined | null,
-  coin: string,
-  formatCurrency: HedgeProCoinRowProps['formatCurrency']
-): string {
-  const isFiat = /USD|USDT|USDC|EUR|BRL/i.test(coin);
-  return formatCurrency(value, 'crypto', isFiat ? 2 : 8);
+  formatCurrency: (
+    value: number | undefined | null,
+    type?: 'usd' | 'crypto' | 'price' | 'compact',
+    decimalsOrSymbol?: number | string,
+  ) => string;
 }
 
 /**
  * HedgeProCoinRow — Row-based layout for per-coin hedge summary:
  * - Line 1: Asset info, tags, exchange, account, position counters & risk alert icon.
  * - Line 2: Dedicated exposure & protection visual bar with leverage metrics.
- * - Expanded Drawer: 6 analytical summary cards (Wallet, Net, Protected, Exposed, Unrealized PnL, Realized PnL) + interactive position rows with direct navigation to Open Positions.
+ * - Expanded Drawer: 8 analytical summary cards + interactive position rows with direct navigation to Open Positions.
  */
 export function HedgeProCoinRow({ coin, isExpanded, onToggle, formatCurrency }: HedgeProCoinRowProps) {
-  // Exposure calculations
-  const exposedBaseUsd = Math.max(0, coin.balanceUsd - coin.protectedUsd);
-  const capitalRef = coin.balanceUsd > 0 ? coin.balanceUsd : coin.protectedUsd + exposedBaseUsd;
-  const barTotal = capitalRef + coin.leveragedUsd;
-  const balanceWidthPct = barTotal > 0 ? (capitalRef / barTotal) * 100 : 0;
-  const leveragedWidthPct = barTotal > 0 ? (coin.leveragedUsd / barTotal) * 100 : 0;
-  const protectedPct = capitalRef > 0 ? (coin.protectedUsd / capitalRef) * 100 : 0;
-  const exposedPct = capitalRef > 0 ? (exposedBaseUsd / capitalRef) * 100 : 0;
-  const leveragedOfBalancePct =
-    capitalRef > 0 ? (coin.leveragedUsd / capitalRef) * 100 : coin.leveragedUsd > 0 ? 100 : 0;
-
-  // Mini-Consolidated Metrics (matching HedgeProKpis logic per coin)
-  const netBalanceUsd = coin.netBalanceUsd;
-  const denomUsd = netBalanceUsd > 0 ? netBalanceUsd : (coin.walletBalanceUsd > 0 ? coin.walletBalanceUsd : 1);
-  
-  // Real Hedge Protected = (Protected - Leveraged) / Net Balance
-  const netProtectedUsd = coin.protectedUsd - coin.leveragedUsd;
-  const netProtectedSize = coin.protectedSize - coin.leveragedSize;
-  const realHedgeProtectedPct = (netProtectedUsd / denomUsd) * 100;
-  const isNetProtectedPositive = netProtectedUsd >= 0;
-
-  // Protected of Equity = Protected / Net Balance
-  const protectedOfEquityPct = (coin.protectedUsd / denomUsd) * 100;
-
-  // Leveraged of Equity = Leveraged / Net Balance
-  const leveragedOfEquityPct = (coin.leveragedUsd / denomUsd) * 100;
-
-  const isUplPositive = coin.unrealizedPnlUsd > 0;
-  const isUplNegative = coin.unrealizedPnlUsd < 0;
-  const uplColor = isUplPositive ? 'text-[#00C853]' : isUplNegative ? 'text-[#FF4444]' : 'text-[#8E9299]';
-
-  const isRplPositive = coin.realizedPnlUsd > 0;
-  const isRplNegative = coin.realizedPnlUsd < 0;
-  const rplColor = isRplPositive ? 'text-[#00C853]' : isRplNegative ? 'text-[#FF4444]' : 'text-[#8E9299]';
+  const { barMetrics } = coin;
 
   return (
     <div
@@ -172,14 +134,14 @@ export function HedgeProCoinRow({ coin, isExpanded, onToggle, formatCurrency }: 
             <span className="text-emerald-400">
               {formatCurrency(coin.protectedUsd, 'usd', 2)}{' '}
               <span className="text-[11px] sm:text-xs font-medium text-emerald-400/80 font-mono">
-                ({protectedPct.toFixed(1)}%)
+                ({barMetrics.protectedPct.toFixed(1)}%)
               </span>
             </span>
 
             <span className="text-white">
               {formatCurrency(coin.exposedBaseUsd, 'usd', 2)}{' '}
               <span className="text-[11px] sm:text-xs font-medium text-[#a0a5ad] font-mono">
-                ({exposedPct.toFixed(1)}%)
+                ({barMetrics.exposedPct.toFixed(1)}%)
               </span>
             </span>
 
@@ -187,7 +149,7 @@ export function HedgeProCoinRow({ coin, isExpanded, onToggle, formatCurrency }: 
               <span className="text-amber-400">
                 +{formatCurrency(coin.leveragedUsd, 'usd', 2)}{' '}
                 <span className="text-[11px] sm:text-xs font-medium text-amber-400/80 font-mono">
-                  (+{leveragedOfBalancePct.toFixed(1)}%)
+                  (+{(barMetrics.leveragedOfBalancePct ?? 0).toFixed(1)}%)
                 </span>
               </span>
             ) : (
@@ -199,10 +161,10 @@ export function HedgeProCoinRow({ coin, isExpanded, onToggle, formatCurrency }: 
 
           {/* Sub-line 3: The visual bar */}
           <HedgeExposureBar
-            protectedPct={protectedPct}
-            exposedPct={exposedPct}
-            balanceWidthPct={balanceWidthPct}
-            leveragedWidthPct={leveragedWidthPct}
+            protectedPct={barMetrics.protectedPct}
+            exposedPct={barMetrics.exposedPct}
+            balanceWidthPct={barMetrics.balanceWidthPct}
+            leveragedWidthPct={barMetrics.leveragedWidthPct}
           />
         </div>
       </div>
@@ -214,215 +176,7 @@ export function HedgeProCoinRow({ coin, isExpanded, onToggle, formatCurrency }: 
           onClick={e => e.stopPropagation()}
         >
           {/* Header Summary Cards for this specific coin (8 Mini-Consolidated Cards) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
-            {/* Card 1: Wallet Balance */}
-            <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
-              <AppTooltip
-                description="Fixed gross wallet balance in futures account without unrealized PnL (initial deposit + accumulated realized PnL)."
-                side="top"
-              >
-                <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
-                  Wallet Balance
-                </span>
-              </AppTooltip>
-              <div className="mt-1">
-                <div className="font-mono text-white text-sm font-semibold">
-                  {formatCurrency(coin.walletBalanceUsd, 'usd', 2)}
-                </div>
-                <div className="font-mono text-[11px] text-[#8E9299] truncate">
-                  {formatCoinValue(coin.walletBalance, coin.baseCoin, formatCurrency)} {coin.baseCoin}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2: Net Balance */}
-            <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
-              <AppTooltip
-                description="Liquid equity value of this coin if all positions were closed right now (Wallet Balance + Unrealized PnL)."
-                side="top"
-              >
-                <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
-                  Net Balance
-                </span>
-              </AppTooltip>
-              <div className="mt-1">
-                <div className="font-mono text-white text-sm font-semibold">
-                  {formatCurrency(coin.netBalanceUsd, 'usd', 2)}
-                </div>
-                <div className="font-mono text-[11px] text-[#8E9299] truncate">
-                  {formatCoinValue(coin.netBalance, coin.baseCoin, formatCurrency)} {coin.baseCoin}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Real Hedge Protected */}
-            <div className={`p-2.5 rounded-lg border flex flex-col justify-between ${
-              isNetProtectedPositive
-                ? 'bg-emerald-500/5 border-emerald-500/20'
-                : 'bg-red-500/5 border-red-500/20'
-            }`}>
-              <div className="flex items-center justify-between">
-                <AppTooltip
-                  description="Real net protection of this coin = (Protected USD − Total Leveraged USD) ÷ Net Balance USD. Negative values indicate long leverage exceeds short protection."
-                  side="top"
-                >
-                  <span className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${
-                    isNetProtectedPositive ? 'text-emerald-400 border-emerald-500/40' : 'text-red-400 border-red-500/40'
-                  }`}>
-                    Real Hedge
-                  </span>
-                </AppTooltip>
-                <span className={`text-[10px] font-mono font-semibold ${
-                  isNetProtectedPositive ? 'text-emerald-400' : 'text-red-400'
-                }`}>
-                  {realHedgeProtectedPct.toFixed(1)}%
-                </span>
-              </div>
-              <div className="mt-1">
-                <div className={`font-mono text-sm font-semibold ${
-                  isNetProtectedPositive ? 'text-emerald-400' : 'text-red-400'
-                }`}>
-                  {formatCurrency(netProtectedUsd, 'usd', 2)}
-                </div>
-                <div className="font-mono text-[11px] text-[#8E9299] truncate">
-                  {formatCoinValue(netProtectedSize, coin.baseCoin, formatCurrency)} {coin.baseCoin}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 4: Protected of Equity */}
-            <div className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <AppTooltip
-                  description="Portion of this coin's equity locked in USD by short hedge positions (Protected USD ÷ Net Balance USD)."
-                  side="top"
-                >
-                  <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider cursor-help border-b border-dashed border-emerald-500/40">
-                    Prot. of Eq.
-                  </span>
-                </AppTooltip>
-                <span className="text-[10px] font-mono font-semibold text-emerald-400">
-                  {protectedOfEquityPct.toFixed(1)}%
-                </span>
-              </div>
-              <div className="mt-1">
-                <div className="font-mono text-emerald-400 text-sm font-semibold">
-                  {formatCurrency(coin.protectedUsd, 'usd', 2)}
-                </div>
-                <div className="font-mono text-[11px] text-[#8E9299] truncate">
-                  {formatCoinValue(coin.protectedSize, coin.baseCoin, formatCurrency)} {coin.baseCoin}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 5: Total Leveraged */}
-            <div className={`p-2.5 rounded-lg border flex flex-col justify-between ${
-              coin.leveragedUsd > 0
-                ? 'bg-amber-500/5 border-amber-500/20'
-                : 'bg-[#151619] border-[#26282d]'
-            }`}>
-              <div className="flex items-center justify-between">
-                <AppTooltip
-                  description="Total notional value of inverse long positions for this coin. Longs represent directional leverage and add market risk."
-                  side="top"
-                >
-                  <span className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${
-                    coin.leveragedUsd > 0 ? 'text-amber-400 border-amber-500/40' : 'text-[#8E9299] border-[#8E9299]/50'
-                  }`}>
-                    Leveraged
-                  </span>
-                </AppTooltip>
-                <span className={`text-[10px] font-mono font-semibold ${
-                  coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-[#8E9299]'
-                }`}>
-                  {leveragedOfEquityPct.toFixed(1)}%
-                </span>
-              </div>
-              <div className="mt-1">
-                <div className={`font-mono text-sm font-semibold ${
-                  coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-white'
-                }`}>
-                  {coin.leveragedUsd > 0 ? '+' : ''}{formatCurrency(coin.leveragedUsd, 'usd', 2)}
-                </div>
-                <div className="font-mono text-[11px] text-[#8E9299] truncate">
-                  {formatCoinValue(coin.leveragedSize, coin.baseCoin, formatCurrency)} {coin.baseCoin}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 6: Exposed */}
-            <div className="p-2.5 rounded-lg bg-[#151619] border border-[#2a2b30] flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <AppTooltip
-                  description="Uncovered coin balance not hedged by shorts (Exposed USD ÷ Net Balance USD). Fully exposed to spot market volatility."
-                  side="top"
-                >
-                  <span className="text-[10px] uppercase font-bold text-white tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                    Exposed
-                  </span>
-                </AppTooltip>
-                <span className="text-[10px] font-mono font-semibold text-white">{exposedPct.toFixed(1)}%</span>
-              </div>
-              <div className="mt-1">
-                <div className="font-mono text-white text-sm font-semibold">
-                  {formatCurrency(coin.exposedBaseUsd, 'usd', 2)}
-                </div>
-                <div className="font-mono text-[11px] text-[#8E9299] truncate">
-                  {formatCoinValue(coin.exposedSize, coin.baseCoin, formatCurrency)} {coin.baseCoin}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 7: Unrealized PnL & ROI */}
-            <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <AppTooltip
-                  description="Aggregated unrealized profit/loss across all short and long positions for this coin, plus total ROI relative to wallet balance."
-                  side="top"
-                >
-                  <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50">
-                    Unrealized PnL
-                  </span>
-                </AppTooltip>
-                <span className={`text-[10px] font-mono font-semibold ${uplColor}`}>
-                  {coin.roiPct > 0 ? '+' : ''}{coin.roiPct.toFixed(2)}%
-                </span>
-              </div>
-              <div className="mt-1">
-                <div className={`font-mono text-sm font-semibold ${uplColor}`}>
-                  {isUplPositive ? '+' : ''}{formatCurrency(coin.unrealizedPnlUsd, 'usd', 2)}
-                </div>
-                <div className={`font-mono text-[11px] truncate ${uplColor}`}>
-                  {isUplPositive ? '+' : ''}{formatCoinValue(coin.unrealizedPnl, coin.baseCoin, formatCurrency)} {coin.baseCoin}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 8: Realized PnL & ROI */}
-            <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <AppTooltip
-                  description="Aggregated realized profit/loss across all positions for this coin (funding fees, trade commissions, closed legs), plus ROI relative to wallet balance."
-                  side="top"
-                >
-                  <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50">
-                    Realized PnL
-                  </span>
-                </AppTooltip>
-                <span className={`text-[10px] font-mono font-semibold ${rplColor}`}>
-                  {coin.realizedRoiPct > 0 ? '+' : ''}{coin.realizedRoiPct.toFixed(2)}%
-                </span>
-              </div>
-              <div className="mt-1">
-                <div className={`font-mono text-sm font-semibold ${rplColor}`}>
-                  {isRplPositive ? '+' : ''}{formatCurrency(coin.realizedPnlUsd, 'usd', 2)}
-                </div>
-                <div className={`font-mono text-[11px] truncate ${rplColor}`}>
-                  {isRplPositive ? '+' : ''}{formatCoinValue(coin.realizedPnl, coin.baseCoin, formatCurrency)} {coin.baseCoin}
-                </div>
-              </div>
-            </div>
-          </div>
+          <HedgeProCoinDrawerMetrics coin={coin} formatCurrency={formatCurrency} />
 
           {/* Positions Under This Coin */}
           <div className="border border-[#26282d] rounded-lg bg-[#151619] overflow-hidden divide-y divide-[#222429]">
