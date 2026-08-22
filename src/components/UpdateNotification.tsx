@@ -10,7 +10,7 @@ const TICK_INTERVAL_MS = 50;
 
 export function UpdateNotification() {
   const {
-    needRefresh: [needRefresh, setNeedRefresh],
+    needRefresh: [needRefresh],
     offlineReady: [offlineReady, setOfflineReady],
     updateServiceWorker,
   } = useRegisterSW({
@@ -41,12 +41,14 @@ export function UpdateNotification() {
   } = usePwaUpdateStore();
 
   const [timeLeftMs, setTimeLeftMs] = useState(AUTO_UPDATE_DELAY_MS);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isCountdownCancelled, setIsCountdownCancelled] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Synchronize SW states to global store
   useEffect(() => {
-    setNeedRefreshStore(needRefresh);
+    if (needRefresh) {
+      setNeedRefreshStore(true);
+    }
   }, [needRefresh, setNeedRefreshStore]);
 
   useEffect(() => {
@@ -84,21 +86,34 @@ export function UpdateNotification() {
     }
   }, []);
 
+  // Cancel countdown handler
+  const cancelCountdown = useCallback(() => {
+    if (!isCountdownCancelled) {
+      setIsCountdownCancelled(true);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+  }, [isCountdownCancelled]);
+
   // Countdown timer for automatic update
   useEffect(() => {
-    if (!needRefresh || isDismissed || isUpdating) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-
-    if (isPaused) {
+    if (!needRefresh || isDismissed || isUpdating || isCountdownCancelled) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       return;
     }
 
     timerRef.current = setInterval(() => {
       setTimeLeftMs((prev) => {
         if (prev <= TICK_INTERVAL_MS) {
-          if (timerRef.current) clearInterval(timerRef.current);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           triggerUpdate();
           return 0;
         }
@@ -107,17 +122,25 @@ export function UpdateNotification() {
     }, TICK_INTERVAL_MS);
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
-  }, [needRefresh, isDismissed, isUpdating, isPaused, triggerUpdate]);
+  }, [needRefresh, isDismissed, isUpdating, isCountdownCancelled, triggerUpdate]);
 
-  const handleDismiss = useCallback(() => {
+  const handleDismiss = useCallback((e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setIsDismissed(true);
-    setNeedRefresh(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-  }, [setIsDismissed, setNeedRefresh]);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [setIsDismissed]);
 
-  const handleViewChangelog = () => {
+  const handleViewChangelog = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    cancelCountdown();
     window.dispatchEvent(
       new CustomEvent('navigate-to-tab', {
         detail: { tab: 'settings', targetId: 'version-info-card' },
@@ -132,9 +155,9 @@ export function UpdateNotification() {
 
   return (
     <div
-      className="fixed bottom-12 left-4 right-4 md:left-auto md:w-96 bg-[#1a1b1e] border border-[#2a2b30] rounded-xl shadow-2xl z-[9999] overflow-hidden shadow-black/80 transition-all animate-in fade-in slide-in-from-bottom-4 duration-300"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      className="fixed bottom-12 left-4 right-4 md:left-auto md:w-96 bg-[#1a1b1e] border border-[#2a2b30] rounded-xl shadow-2xl z-[9999] overflow-hidden shadow-black/80 transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-default"
+      onMouseEnter={cancelCountdown}
+      onClick={cancelCountdown}
       role="alertdialog"
       aria-labelledby="pwa-update-title"
     >
@@ -147,11 +170,7 @@ export function UpdateNotification() {
             <h3 id="pwa-update-title" className="text-[14px] font-semibold text-white tracking-wide">
               Update Available
             </h3>
-            {isPaused ? (
-              <span className="text-[10px] font-mono font-medium text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded flex items-center gap-1 border border-amber-400/20">
-                <Pause className="w-2.5 h-2.5" /> Paused
-              </span>
-            ) : (
+            {!isCountdownCancelled && (
               <span className="text-[10px] font-mono text-gray-400">
                 in {secondsRemaining}s
               </span>
@@ -178,15 +197,15 @@ export function UpdateNotification() {
         </button>
       </div>
 
-      {/* Progress Bar for Auto-Update */}
-      <div className="h-1 w-full bg-[#2a2b30]/60 relative overflow-hidden">
-        <div
-          className={`h-full transition-[width] duration-75 ease-linear ${
-            isPaused ? 'bg-amber-400' : 'bg-[#2F6BFF]'
-          }`}
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
+      {/* Progress Bar for Auto-Update (hidden when countdown is cancelled) */}
+      {!isCountdownCancelled && (
+        <div className="h-1 w-full bg-[#2a2b30]/60 relative overflow-hidden">
+          <div
+            className="h-full bg-[#2F6BFF] transition-[width] duration-75 ease-linear"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex border-t border-[#2a2b30] divide-x divide-[#2a2b30] bg-[#16171a]">
@@ -197,7 +216,10 @@ export function UpdateNotification() {
           Not Now
         </button>
         <button
-          onClick={() => triggerUpdate()}
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerUpdate();
+          }}
           disabled={isUpdating}
           className="flex-1 py-2.5 text-xs font-medium text-[#2F6BFF] hover:text-blue-300 hover:bg-[#2a2b30]/50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
         >

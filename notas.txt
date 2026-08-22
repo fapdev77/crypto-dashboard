@@ -1,2 +1,2 @@
 Anotações para futuras implementações de Ideias e melhorias:
-- bitget UTA
+- Em busca de Novas Ideias
