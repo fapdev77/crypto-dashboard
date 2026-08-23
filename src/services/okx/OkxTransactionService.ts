@@ -3,6 +3,7 @@ import { OkxTransactionLogEntry } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { OkxAdapter } from '../adapters/OkxAdapter';
+import { matchUniversalTxType } from '../../utils/transactionTypeMapper';
 import {
   getOkxTxLogCache,
   saveOkxTxLogCache,
@@ -245,8 +246,8 @@ export class OkxTransactionService {
       filtered = filtered.filter(e => e.category.toLowerCase() === filters.category!.toLowerCase());
     }
 
-    if (filters.type && filters.type !== 'All') {
-      filtered = filtered.filter(e => e.type === filters.type || (e.subType && e.subType === filters.type) || (e.transSubType && e.transSubType === filters.type));
+    if (filters.type && filters.type !== 'All' && filters.type !== 'ALL') {
+      filtered = filtered.filter(e => matchUniversalTxType('okx', e, filters.type!));
     }
 
     if (filters.currency && filters.currency !== 'All') {

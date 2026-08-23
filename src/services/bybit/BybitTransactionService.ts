@@ -4,6 +4,7 @@ import { BybitTransactionLogEntry } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { BybitAdapter } from '../adapters/BybitAdapter';
+import { matchUniversalTxType } from '../../utils/transactionTypeMapper';
 import {
   getBybitTxLogCache,
   saveBybitTxLogCache,
@@ -254,8 +255,8 @@ export class BybitTransactionService {
       filtered = filtered.filter(e => e.category.toLowerCase() === filters.category!.toLowerCase());
     }
 
-    if (filters.type && filters.type !== 'All') {
-      filtered = filtered.filter(e => e.type === filters.type);
+    if (filters.type && filters.type !== 'All' && filters.type !== 'ALL') {
+      filtered = filtered.filter(e => matchUniversalTxType('bybit', e, filters.type!));
     }
 
     if (filters.currency && filters.currency !== 'All') {

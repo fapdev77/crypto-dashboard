@@ -10,6 +10,7 @@ import { usePrivacy } from '../../../context/PrivacyContext';
 import { ChevronDown, ChevronUp, Hash, FileText, Percent, Gift } from 'lucide-react';
 import { OKX_TX_TYPES, okxTypeColorMap } from './OkxTransactionFilters';
 import { formatDateTime } from '../../../utils/formatters';
+import { getUniversalBadge } from '../../../utils/transactionTypeMapper';
 
 interface Props {
   entry: OkxTransactionLogEntry;
@@ -75,8 +76,7 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
     return `≈ ${formatCurrency(usdVal.toNumber(), 'usd')}`;
   };
 
-  const typeClass = okxTypeColorMap[entry.type] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
-  const typeLabel = OKX_TX_TYPES.find(t => t.value === entry.type)?.label || (entry.type ? entry.type.replace(/_/g, ' ') : '-');
+  const badge = getUniversalBadge('okx', entry);
 
   return (
     <div
@@ -121,8 +121,8 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
               Type & Category
             </span>
           </AppTooltip>
-          <span className={`w-max px-1.5 py-0.5 text-[9px] rounded font-semibold border ${typeClass}`}>
-            {typeLabel}
+          <span className={`w-max px-2 py-0.5 text-[9px] rounded font-semibold border ${badge.textColor} ${badge.bgColor} ${badge.borderColor}`}>
+            {badge.label}
           </span>
           {entry.category && (
             <span className="text-[9px] text-white/80 uppercase tracking-wider">{entry.category}</span>

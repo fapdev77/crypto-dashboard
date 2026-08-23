@@ -5,6 +5,7 @@ import { OkxTxStats } from '../../../hooks/useOkxTransactions';
 import { OkxTransactionLogEntry } from '../../../types';
 import { OkxTransactionNetChangeReport } from './OkxTransactionNetChangeReport';
 import { OKX_TX_TYPES, okxTypeColorMap } from './OkxTransactionFilters';
+import { getOkxUniversalType, UNIVERSAL_BADGE_STYLE } from '../../../utils/transactionTypeMapper';
 
 export type OkxDetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -62,11 +63,12 @@ export function OkxTransactionDetailsModal({
                 <span className="text-xs text-[#8E9299]">Count by Type</span>
                 <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
                   {Object.entries(stats.typeBreakdown).map(([t, count]) => {
-                    const label = OKX_TX_TYPES.find(item => item.value === t)?.label || t;
-                    const colorClass = okxTypeColorMap[t] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
+                    const uniType = getOkxUniversalType(t);
+                    const badge = UNIVERSAL_BADGE_STYLE[uniType] || UNIVERSAL_BADGE_STYLE.OTHERS;
+                    const label = t ? t.replace(/_/g, ' ') : badge.label;
                     return (
                       <div key={t} className="flex items-center justify-between p-2 rounded bg-[#111215] border border-[#2a2b30] text-xs">
-                        <span className={`px-2 py-0.5 rounded border text-[11px] font-medium ${colorClass}`}>{label}</span>
+                        <span className={`px-2 py-0.5 rounded border text-[11px] font-medium ${badge.textColor} ${badge.bgColor} ${badge.borderColor}`}>{label}</span>
                         <span className="text-white font-mono font-medium">{count.toLocaleString()}</span>
                       </div>
                     );

@@ -5,6 +5,7 @@ import { BitgetTxStats } from '../../../hooks/useBitgetTransactions';
 import { BitgetTransactionLogEntry } from '../../../types';
 import { BitgetTransactionNetChangeReport } from './BitgetTransactionNetChangeReport';
 import { BITGET_TX_TYPES, bitgetTypeColorMap } from './BitgetTransactionFilters';
+import { getBitgetUniversalType, UNIVERSAL_BADGE_STYLE } from '../../../utils/transactionTypeMapper';
 
 export type BitgetDetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -62,11 +63,11 @@ export function BitgetTransactionDetailsModal({
                 <span className="text-xs text-[#8E9299]">Count by Type</span>
                 <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
                   {Object.entries(stats.typeBreakdown).map(([t, count]) => {
-                    const label = BITGET_TX_TYPES.find(item => item.value === t)?.label || (t ? t.replace(/_/g, ' ') : '-');
-                    const colorClass = bitgetTypeColorMap[t] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
+                    const uniType = getBitgetUniversalType(t);
+                    const badge = UNIVERSAL_BADGE_STYLE[uniType] || UNIVERSAL_BADGE_STYLE.OTHERS;
                     return (
-                      <div key={t} className="flex items-center justify-between p-2 rounded bg-[#111215] border border-[#2a2b30] text-xs">
-                        <span className={`px-2 py-0.5 rounded border text-[11px] font-medium ${colorClass}`}>{label}</span>
+                      <div key={t} className="flex items-center justify-between p-2.5 rounded-lg bg-[#1e232b] border border-[#2a2b30]/50 text-xs">
+                        <span className={`px-2 py-0.5 rounded font-semibold border text-[10px] ${badge.textColor} ${badge.bgColor} ${badge.borderColor}`}>{badge.label}</span>
                         <span className="text-white font-mono font-medium">{count.toLocaleString()}</span>
                       </div>
                     );

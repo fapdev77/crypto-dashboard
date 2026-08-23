@@ -4,6 +4,7 @@ import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { BitgetUTAAdapter } from '../adapters/BitgetUTAAdapter';
 import { BitgetClassicAdapter } from '../adapters/BitgetClassicAdapter';
+import { matchUniversalTxType } from '../../utils/transactionTypeMapper';
 import {
   getBitgetTxLogCache,
   saveBitgetTxLogCache,
@@ -285,58 +286,8 @@ export class BitgetTransactionService {
       });
     }
 
-    if (filters.type && filters.type !== 'All') {
-      const targetType = filters.type.toUpperCase();
-      filtered = filtered.filter(e => {
-        const eType = (e.type || '').toUpperCase();
-        if (eType === targetType) return true;
-
-        // Grouped aliases
-        if (targetType === 'FUNDING_FEE' || targetType === 'SETTLE_FEE' || targetType === 'CONTRACT_MAIN_SETTLE_FEE') {
-          return eType.includes('FUNDING') || eType.includes('SETTLE_FEE') || eType.includes('SETTLE');
-        }
-        if (targetType === 'TRADE') {
-          return (
-            eType === 'TRADE' ||
-            eType.startsWith('ORDER_DEALT') ||
-            eType === 'OPEN_LONG' ||
-            eType === 'OPEN_SHORT' ||
-            eType === 'CLOSE_LONG' ||
-            eType === 'CLOSE_SHORT'
-          );
-        }
-        if (targetType === 'TRANSFER_IN') {
-          return eType === 'TRANSFER_IN' || eType === 'TRANS_FROM_EXCHANGE' || eType === 'TRACE_TRANSFER_USER_IN';
-        }
-        if (targetType === 'TRANSFER_OUT') {
-          return eType === 'TRANSFER_OUT' || eType === 'TRANS_TO_EXCHANGE' || eType === 'TRACE_TRANSFER_USER_OUT';
-        }
-        if (targetType === 'TRANSFER') {
-          return eType.includes('TRANSFER') || eType === 'CONTRACT_EXCHANGE';
-        }
-        if (targetType === 'BONUS') {
-          return eType === 'BONUS' || eType.includes('TRIAL_FUND') || eType === 'BONUS_CLAIM';
-        }
-        if (targetType === 'BONUS_RECOLLECT') {
-          return eType === 'BONUS_RECOLLECT' || eType.includes('RECYCLE') || eType.includes('RECOLLECT');
-        }
-        if (targetType === 'CONVERT') {
-          return eType === 'CONVERT' || eType.startsWith('EXCHANGE_');
-        }
-        if (targetType === 'REALIZED_PNL') {
-          return eType === 'REALIZED_PNL' || eType === 'CLOSE_PNL' || eType === 'PNL';
-        }
-        if (targetType === 'DELIVERY' || targetType === 'DELIVERY_FEE') {
-          return eType.includes('DELIVERY');
-        }
-        if (targetType === 'AUTO_DEDUCTION') {
-          return eType === 'AUTO_DEDUCTION' || eType.includes('DEDUCTION');
-        }
-        if (targetType === 'FEE_REFUND') {
-          return eType === 'FEE_REFUND' || eType.includes('REBATE');
-        }
-        return false;
-      });
+    if (filters.type && filters.type !== 'All' && filters.type !== 'ALL') {
+      filtered = filtered.filter(e => matchUniversalTxType('bitget', e, filters.type!));
     }
 
     if (filters.currency && filters.currency !== 'All') {
