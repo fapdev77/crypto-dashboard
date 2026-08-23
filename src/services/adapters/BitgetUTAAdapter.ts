@@ -465,4 +465,84 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
     }
     return 'NOT_FOUND';
   }
+
+  // ── Transaction Log (UTA Financial Records) ──
+  public async getTransactionLog(
+    key: ApiCredentials,
+    startTime: number,
+    endTime: number,
+    category: string = 'USDT-FUTURES',
+    cursor?: string
+  ): Promise<{ list: any[]; nextPageCursor: string }> {
+    const query = new URLSearchParams();
+    const effectiveCategory = category ? category.toUpperCase() : 'USDT-FUTURES';
+    query.append('category', effectiveCategory);
+    query.append('startTime', startTime.toString());
+    query.append('endTime', endTime.toString());
+    query.append('limit', '100');
+    if (cursor) query.append('cursor', cursor);
+
+    const endpoint = `/api/v3/account/financial-records?${query.toString()}`;
+    const url = `https://api.bitget.com${endpoint}`;
+
+    const headers = await BitgetUTAAdapter.getHeaders(
+      key.apiKey,
+      key.apiSecret,
+      key.passphrase || '',
+      'GET',
+      endpoint
+    );
+
+    const res = await proxyFetch({ targetUrl: url, method: 'GET', headers });
+    if (res.code !== '00000') {
+      throw new Error(`Bitget financial-records API error (${res.code}): ${res.msg}`);
+    }
+
+    return {
+      list: res.data?.list || [],
+      nextPageCursor: res.data?.cursor || '',
+    };
+  }
+
+  public static normalizeTxLogEntry(raw: any, key: ApiCredentials): import('../../types').BitgetTransactionLogEntry {
+    const transactionTime = parseInt(String(raw.ts || raw.cTime || raw.uTime || '0'), 10);
+    const amount = raw.amount || raw.size || '0';
+    const fee = raw.fee || raw.fees || '0';
+    const balance = raw.balance || raw.accountBalance || '0';
+    const positionAmount = raw.positionAmount || raw.posAmount || '0';
+    const positionBalance = raw.positionBalance || raw.posBalance || '0';
+    const cleanSymbol = (raw.symbol || '').replace(/_(UMCBL|DMCBL|CMCBL)$/, '');
+    const normalizedType = String(raw.type || raw.businessType || raw.billType || '').toUpperCase();
+    const normalizedCategory = (raw.category || 'OTHER').toLowerCase();
+
+    return {
+      id: `${key.id}-${raw.id || raw.billId || transactionTime}-${transactionTime}`,
+      connectionId: key.id,
+      exchange: 'bitget',
+      label: key.label,
+      rawId: String(raw.id || raw.billId || ''),
+      symbol: cleanSymbol,
+      category: normalizedCategory,
+      side: raw.side || '',
+      type: normalizedType,
+      groupType: raw.groupType || '',
+      positionType: raw.positionType || '',
+      currency: raw.coin || raw.currency || raw.ccy || '',
+      amount: String(amount),
+      change: String(raw.change || amount),
+      cashFlow: String(raw.cashFlow || amount),
+      cashBalance: String(balance),
+      balance: String(balance),
+      fee: String(fee),
+      feeCurrency: raw.feeCoin || raw.feeCurrency || raw.coin || '',
+      positionAmount: String(positionAmount),
+      positionBalance: String(positionBalance),
+      transactionTime,
+      tradeId: raw.tradeId || '',
+      orderId: raw.orderId || '',
+      orderLinkId: raw.orderLinkId || '',
+      extra: raw.extra || (raw.memo ? raw.memo : undefined),
+      raw,
+    };
+  }
 }

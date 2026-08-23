@@ -101,6 +101,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
         { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
         { id: 'analytics-bybit-tx', label: 'Bybit Transactions' },
+        { id: 'analytics-bitget-tx', label: 'Bitget Transactions' },
+        { id: 'analytics-okx-tx', label: 'OKX Transactions' },
         { id: 'analytics-funding', label: 'Funding Fees' },
         { id: 'analytics-hedge-pro', label: 'Hedge Pro' }
       ]

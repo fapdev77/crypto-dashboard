@@ -1,2 +1,2 @@
 Anotações para futuras implementações de Ideias e melhorias:
-- Implementar melhorias no hedge pro
+- implementar bitget e okx transactions 

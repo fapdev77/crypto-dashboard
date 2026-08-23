@@ -143,27 +143,39 @@ Para contornar as severas restrições de chamadas consecutivas impostas por Byb
    - A periodic background synchronization task (`useHistoryCachePolling`) continuously keeps the cache warm based on user-defined intervals.
    - *Note:* `useBillsHistory` handles highly mutable deposit/withdrawal/transfer logs and thus bypasses IndexedDB, fetching directly from the Live APIs to ensure transactional accuracy.
 
-### 5.4. Bybit Transaction Log Sync Engine
+### 5.4. Transaction Log Sync Engines (Bybit, Bitget, OKX)
 
-O módulo **BybitTransactions** adiciona uma engine de sincronização dedicada para o endpoint `GET /v5/account/transaction-log` da Bybit (UTA), permitindo auditoria completa de até 2 anos de transações.
+O CPM possui engines dedicadas para auditoria profunda de transações e fluxo de caixa (cash flow / PnL real) para as três principais exchanges integradas:
 
-- **Progressive Deep Sync:** Na inicialização da aplicação, o `useBybitTransactionSync` (montado no `WorkSpace.tsx`) dispara um backfill progressivo começando dos registros mais recentes em chunks de 7 dias, percorrendo as categorias linear, inverse e spot. Cada chunk é salvo no IndexedDB como checkpoint, e o progresso é reportado via `syncCoordinatorStore`.
-- **Incremental Delta Sync:** Após o deep sync inicial, sincronizações periódicas (no intervalo configurado em `historyCacheInterval`) buscam apenas registros com `transactionTime > latestTransactionTime + 1`.
-- **Cache:** Duas novas stores no IndexedDB: `bybit-transaction-log` (dados com índices por connectionId, transactionTime, symbol, type, currency, category) e `bybit-transaction-meta` (metadados de sincronização por connectionId). DB_VERSION incrementado para 8.
-- **UI SWR:** O hook `useBybitTransactions` carrega o cache instantaneamente, aplica filtros em memória (sem latência de rede), e exibe badges de progresso durante o sync.
-- **Serviço:** `BybitTransactionService` encapsula toda a lógica de paginação, chunking temporal, retry com exponential backoff e normalização de dados brutos da Bybit para `BybitTransactionLogEntry`.
+#### 5.4.1. Bybit Transaction Log Sync Engine
+- **Endpoint:** `GET /v5/account/transaction-log` (UTA).
+- **Progressive Deep Sync:** `useBybitTransactionSync` realiza backfill progressivo em chunks de 7 dias pelas categorias linear, inverse e spot.
+- **Stores IndexedDB:** `bybit-transaction-log` e `bybit-transaction-meta`.
+- **Serviço:** `BybitTransactionService` encapsula paginação, rate-limiting, retry e agregação.
+
+#### 5.4.2. Bitget Transaction Log Sync Engine
+- **Endpoints:** Suporte híbrido tanto para contas Classic (Mix/Futures `GET /api/v2/mix/account/bill` e Spot/Account `GET /api/v2/spot/account/bills`) quanto para contas UTA (`GET /api/v2/user/bills-record`).
+- **Progressive Deep Sync:** `useBitgetTransactionSync` realiza backfill progressivo com paginação baseada em timestamps e ID cursors (`lastEndId`).
+- **Stores IndexedDB:** `bitget-transaction-log` (índices: `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category`) e `bitget-transaction-meta`.
+- **Serviço:** `BitgetTransactionService` encapsula a paginação, filtragem, agrupamento de moedas estáveis vs não estáveis e métricas de ROI e Cash Flow.
+
+#### 5.4.3. OKX Transaction Log Sync Engine
+- **Endpoints:** `GET /api/v5/account/bills` (últimos 7 dias) e `GET /api/v5/account/bills-archive` (até 3 meses).
+- **Progressive Deep Sync:** `useOkxTransactionSync` varre períodos de 7 dias com paginação via cursors `after` (`billId`), garantindo deduplicação automática no IndexedDB.
+- **Stores IndexedDB:** `okx-transaction-log` (índices: `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category`) e `okx-transaction-meta`.
+- **Serviço:** `OkxTransactionService` normaliza as dezenas de códigos de tipos e subtipos da OKX, calculando variações patrimoniais (`balChg`), PnL e taxas.
 
 ```
-[BybitTransactions.tsx] ← [useBybitTransactions] ← [BybitTransactionService]
-       │                          │                          │
-       │ (instant load)           │ (SWR cache)             ├─ syncAll() [deep sync]
-       │ (filters in memo)        │ (stats in memo)         ├─ syncIncremental()
-       │ (export / pagination)    │                          ├─ filterEntries()
-       │                          │                          └─ computeStats()
-       │                    [IndexedDB]                 [BybitAdapter.getTransactionLog]
-       │                  bybit-transaction-log                │
-       │                  bybit-transaction-meta        [hybridFetch → /api/proxy]
-       │                                                    [Bybit API V5]
+[ExchangeTransactions.tsx] ← [useExchangeTransactions] ← [ExchangeTransactionService]
+       │                                │                                │
+       │ (instant load)                 │ (SWR cache)                   ├─ syncAll() [deep sync]
+       │ (filters in memo)              │ (stats in memo)               ├─ syncIncremental()
+       │ (export / pagination)          │                                ├─ filterEntries()
+       │                                │                                └─ computeStats()
+       │                          [IndexedDB]                 [ExchangeAdapter.getTransactionLog]
+       │                    exchange-transaction-log                     │
+       │                    exchange-transaction-meta             [hybridFetch → /api/proxy]
+       │                                                             [Exchange REST API]
 ```
 
 ### 5.5. Funding Sync Engine
@@ -213,9 +225,9 @@ const fetchingRef = { current: false };
 const restartRequestedRef = { current: false };
 ```
 
-**IndexedDB Schema Overview (DB_VERSION 10):**
+**IndexedDB Schema Overview (DB_VERSION 12):**
 
-A base local IndexedDB (`crypto-dashboard-cache`) consolida 10 object stores estruturadas:
+A base local IndexedDB (`crypto-dashboard-cache`) consolida 14 object stores estruturadas:
 
 | Store Name | Key Path | Indexes | Descrição |
 |---|---|---|---|
@@ -227,6 +239,10 @@ A base local IndexedDB (`crypto-dashboard-cache`) consolida 10 object stores est
 | `bybitRealPnL` | `id` (`connectionId-period`) | — | PnL realizado consolidado por período da Bybit |
 | `bybit-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | Extrato transacional bruto normalizado da Bybit (`BybitTransactionLogEntry`) |
 | `bybit-transaction-meta` | `connectionId` | — | Metadados de sincronização e checkpoint do Transaction Log Bybit |
+| `bitget-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | Extrato transacional bruto normalizado da Bitget (`BitgetTransactionLogEntry`) |
+| `bitget-transaction-meta` | `connectionId` | — | Metadados de sincronização e checkpoint do Transaction Log Bitget |
+| `okx-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | Extrato transacional bruto normalizado da OKX (`OkxTransactionLogEntry`) |
+| `okx-transaction-meta` | `connectionId` | — | Metadados de sincronização e checkpoint do Transaction Log OKX |
 | `funding-summaries` | `id` (`exchange-symbol`) | `by-exchange`, `by-symbol` | Somatórios e agregações pré-calculadas de taxas de financiamento (`FundingRateSummary`) |
 | `funding-meta` | `id` (`exchange-symbol`) | `by-exchange` | Metadados de cobertura e guardião de frescor (8h) para funding rates |
 
@@ -274,6 +290,8 @@ A aplicação estrutura seus módulos funcionais através da `Sidebar` responsiv
 3. **Analytics:**
    - **PnL by Symbol (`PnLBySymbol.tsx`):** Lucro e prejuízo consolidado por ativo negociado (Long vs Short).
    - **Bybit Transactions (`BybitTransactions.tsx`):** Auditoria profunda do transaction log da Bybit com cálculo de PnL real (`cashFlow + funding - fee`).
+   - **Bitget Transactions (`BitgetTransactions.tsx`):** Auditoria profunda do extrato transacional da Bitget (Classic e UTA) com categorização, taxas e PnL por símbolo.
+   - **OKX Transactions (`OkxTransactions.tsx`):** Auditoria profunda do extrato financeiro da OKX (`bills` e `bills-archive`) com normalização de tipos/subtipos e balanço patrimonial.
    - **Funding Fees (`FundingDashboard.tsx`):** Monitoramento em tempo real e agregação histórica multissímbolo de taxas de financiamento.
    - **Hedge Pro (`HedgeProDashboard.tsx`):** Painel de gestão de risco e monitoramento de exposição protegida, exposta e alavancada para estratégias Delta Neutral em contratos inversos (COIN-M).
 4. **Reports & Orders (`ReportsDashboard.tsx`, `OpenOrders.tsx`, `OrderHistory.tsx`, `TradeHistory.tsx`):** Relatórios de execução de ordens ativas, histórico de trades e extratos de fluxo de caixa (depósitos e saques).

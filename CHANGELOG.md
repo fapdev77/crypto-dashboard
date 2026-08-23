@@ -1,3 +1,11 @@
+# [1.39.0] (2026-08-22)
+
+### Features
+
+* **analytics:** add Bitget Transactions and OKX Transactions deep sync engines and analytics dashboards
+* **storage:** upgrade IndexedDB cache schema to DB_VERSION 12 with dedicated stores for Bitget and OKX transaction logs and metadata
+* **adapters:** normalize transaction logs and cash balance across Bitget (Classic & UTA) and OKX APIs
+
 # [1.38.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.37.1...v1.38.0) (2026-08-21)
 
 

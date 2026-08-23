@@ -87,13 +87,27 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 4. **Controles manuais:** Settings permitem purgar o cache (Clear Local Cache) e re-sincronizar (Force Sync), com feedback via Toast UI.
 5. **Bills (depósitos/saques):** altamente mutáveis → ignoram o IndexedDB e são buscados direto nas APIs para garantir precisão transacional.
 
-### 6.4. Módulo de Transações Bybit (Auditoria Contábil)
+### 6.4. Módulos de Transações / Transaction Logs (Auditoria Contábil)
 
-1. **Deep Sync Progressivo:** na inicialização, `useBybitTransactionSync` faz backfill do `/v5/account/transaction-log` em chunks de 7 dias (categorias linear, inverse e spot), com checkpoints no IndexedDB.
-2. **Sync Incremental:** após o deep sync, busca apenas registros com `transactionTime > latestTransactionTime + 1`.
-3. **PnL Realizado:** calculado pelo fluxo de caixa — `change = cashFlow + funding − fee` — excluindo transfers dos totais de cash flow.
-4. **Cache:** stores `bybit-transaction-log` (indexada por connectionId, transactionTime, symbol, type, currency, category) e `bybit-transaction-meta`.
-5. **UI SWR:** filtros aplicados em memória (sem latência de rede) e badges de progresso durante o sync.
+1. **Bybit Transactions:**
+   - **Deep Sync Progressivo:** na inicialização, `useBybitTransactionSync` faz backfill do `/v5/account/transaction-log` em chunks de 7 dias (categorias linear, inverse e spot), com checkpoints no IndexedDB.
+   - **Sync Incremental:** após o deep sync, busca apenas registros com `transactionTime > latestTransactionTime + 1`.
+   - **PnL Realizado:** calculado pelo fluxo de caixa — `change = cashFlow + funding − fee` — excluindo transfers dos totais de cash flow.
+   - **Cache:** stores `bybit-transaction-log` (indexada por connectionId, transactionTime, symbol, type, currency, category) e `bybit-transaction-meta`.
+
+2. **Bitget Transactions:**
+   - **Deep Sync Progressivo:** `useBitgetTransactionSync` suporta contas Classic (`/mix/account/bill`, `/spot/account/bills`) e UTA (`/user/bills-record`), com paginação temporal e por cursors `lastEndId`.
+   - **Sync Incremental:** busca incremental após o maior timestamp cacheado.
+   - **Métricas:** Cash Flow, Fees, Net Change, PnL por símbolo e histórico com agrupamento de Stablecoins vs Moedas Nativas.
+   - **Cache:** stores `bitget-transaction-log` e `bitget-transaction-meta`.
+
+3. **OKX Transactions:**
+   - **Deep Sync Progressivo:** `useOkxTransactionSync` varre endpoints `/api/v5/account/bills` (recente) e `/api/v5/account/bills-archive` (histórico até 3 meses) em janelas de 7 dias com cursors `after` (`billId`).
+   - **Sync Incremental:** atualizações frequentes via `/bills` recente.
+   - **Métricas:** Normalização dos dezenas de tipos/subtipos operacionais da OKX, balanço patrimonial após transação (`bal`) e variação de saldo (`balChg`).
+   - **Cache:** stores `okx-transaction-log` e `okx-transaction-meta`.
+
+4. **UI SWR Comum:** Todas as 3 abas de transações carregam dados instantaneamente do IndexedDB, executam filtros em memória sem latência de rede, mostram badges de progresso de sync, relatórios de Net Change / ROI e suporte a exportação em CSV, Excel e PDF.
 
 ### 6.5. Funding Fees Dashboard
 

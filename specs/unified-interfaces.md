@@ -652,14 +652,20 @@ export interface FundingMeta {
 | `bybitRealPnL` | `id` | — | `{ id, connectionId, period, pnlData, updatedAt }` |
 | `bybit-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | `BybitTransactionLogEntry` |
 | `bybit-transaction-meta` | `connectionId` | — | `{ connectionId, oldestTransactionTime, latestTransactionTime, totalRecords, updatedAt }` |
+| `bitget-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | `BitgetTransactionLogEntry` |
+| `bitget-transaction-meta` | `connectionId` | — | `{ connectionId, oldestTransactionTime, latestTransactionTime, totalRecords, updatedAt }` |
+| `okx-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | `OkxTransactionLogEntry` |
+| `okx-transaction-meta` | `connectionId` | — | `{ connectionId, oldestTransactionTime, latestTransactionTime, totalRecords, updatedAt }` |
 | `funding-summaries` | `id` | `by-exchange`, `by-symbol` | `FundingRateSummary` |
 | `funding-meta` | `id` | `by-exchange` | `FundingMeta` |
 
 ---
 
-## 13. Bybit Transaction Log Entry (`BybitTransactionLogEntry`)
+## 13. Transaction Log Interfaces (Bybit, Bitget, OKX)
 
-Captures the full raw payload from Bybit's `/v5/account/transaction-log` endpoint after normalization. Unlike other unified interfaces which normalize into abstract fields, `BybitTransactionLogEntry` preserves the complete Bybit schema because its fields are used directly by the transaction log filtering, computation, and display components.
+### 13.1. Bybit Transaction Log Entry (`BybitTransactionLogEntry`)
+
+Captures the full raw payload from Bybit's `/v5/account/transaction-log` endpoint after normalization.
 
 ```typescript
 export interface BybitTransactionLogEntry {
@@ -691,6 +697,83 @@ export interface BybitTransactionLogEntry {
   tradeId: string;
   orderId: string;
   orderLinkId: string;
+
+  raw: Record<string, unknown>;
+}
+```
+
+### 13.2. Bitget Transaction Log Entry (`BitgetTransactionLogEntry`)
+
+Captures transaction logs and bills across Bitget Classic (`/api/v2/mix/account/bill`, `/api/v2/spot/account/bills`) and UTA (`/api/v2/user/bills-record`).
+
+```typescript
+export interface BitgetTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId || id}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'bitget';
+  label: string;
+
+  rawId: string;
+  billId?: string;
+  symbol: string;
+  category: string;        // usdt-futures, coin-futures, usdc-futures, spot, uta
+  side: 'Buy' | 'Sell' | 'None';
+  transactionTime: number; // ms timestamp
+  type: string;            // trade, transfer, fee, funding, settle, pnl, etc.
+  transSubType?: string;
+  qty: string;
+  size?: string;
+  currency: string;
+  tradePrice?: string;
+  funding: string;
+  fee: string;
+  cashFlow: string;
+  change: string;
+  cashBalance?: string;
+  balance?: string;
+  positionBalance?: string;
+  feeRate?: string;
+  orderId?: string;
+
+  raw: Record<string, unknown>;
+}
+```
+
+### 13.3. OKX Transaction Log Entry (`OkxTransactionLogEntry`)
+
+Captures financial and account bills from OKX (`/api/v5/account/bills` e `/api/v5/account/bills-archive`).
+
+```typescript
+export interface OkxTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId || billId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'okx';
+  label: string;
+
+  rawId: string;
+  billId?: string;
+  symbol: string;
+  category: string;        // swap, futures, spot, margin, funding
+  side: 'Buy' | 'Sell' | 'None';
+  transactionTime: number; // ms timestamp
+  type: string;            // 1: transfer, 2: trade, 8: fee, 14: funding, etc.
+  transSubType?: string;   // subType ID (e.g. 110, 111, 112, etc.)
+  subType?: string;
+  qty: string;
+  size?: string;
+  currency: string;
+  tradePrice?: string;
+  funding: string;
+  fee: string;
+  cashFlow: string;
+  change: string;
+  cashBalance?: string;
+  balance?: string;
+  positionBalance?: string;
+  feeRate?: string;
+  orderId?: string;
 
   raw: Record<string, unknown>;
 }
