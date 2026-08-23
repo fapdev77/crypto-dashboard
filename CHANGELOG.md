@@ -1,3 +1,10 @@
+# [1.39.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.38.0...v1.39.0) (2026-08-23)
+
+
+### Features
+
+* add Bitget and OKX transaction sync engines ([030d815](https://github.com/fapdev77/crypto-dashboard/commit/030d815148cbf0b509cc47662403ce0989759767))
+
 # [1.39.0] (2026-08-22)
 
 ### Features
