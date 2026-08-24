@@ -1,3 +1,10 @@
+# [1.41.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.40.0...v1.41.0) (2026-08-24)
+
+
+### Features
+
+* add long-term duration filters to OKX txs ([1469fd7](https://github.com/fapdev77/crypto-dashboard/commit/1469fd774906fe7b3dd108d7029923612ee15659))
+
 # [1.40.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.39.0...v1.40.0) (2026-08-24)
 
 
