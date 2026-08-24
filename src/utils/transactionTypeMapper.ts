@@ -320,6 +320,64 @@ export function getBitgetUniversalType(
 }
 
 /**
+ * Formats a raw Bitget transaction type code into a clean, human-readable label
+ */
+export function formatBitgetType(rawType: string): string {
+  if (!rawType) return '--';
+  const t = rawType.toUpperCase().trim();
+
+  const TYPE_LABELS: Record<string, string> = {
+    ORDER_DEALT_IN: 'Order Executed (In)',
+    ORDER_DEALT_OUT: 'Order Executed (Out)',
+    OPEN_LONG: 'Open Long',
+    CLOSE_LONG: 'Close Long',
+    OPEN_SHORT: 'Open Short',
+    CLOSE_SHORT: 'Close Short',
+    CONTRACT_OPEN_LONG: 'Futures Open Long',
+    CONTRACT_CLOSE_LONG: 'Futures Close Long',
+    CONTRACT_OPEN_SHORT: 'Futures Open Short',
+    CONTRACT_CLOSE_SHORT: 'Futures Close Short',
+    FUTURES_OPEN_LONG: 'Futures Open Long',
+    FUTURES_CLOSE_LONG: 'Futures Close Long',
+    FUTURES_OPEN_SHORT: 'Futures Open Short',
+    FUTURES_CLOSE_SHORT: 'Futures Close Short',
+    CONTRACT_CLOSE_PNL_LONG: 'Realized PnL (Long Close)',
+    CONTRACT_CLOSE_PNL_SHORT: 'Realized PnL (Short Close)',
+    CLOSE_PNL: 'Realized PnL',
+    REALIZED_PNL: 'Realized PnL',
+    FUNDING_FEE: 'Funding Fee',
+    SETTLE_FEE: 'Settlement Fee',
+    CONTRACT_MAIN_SETTLE_FEE: 'Contract Settlement Fee',
+    SETTLE_FEE_USER_IN: 'Settlement Fee In',
+    SETTLE_FEE_USER_OUT: 'Settlement Fee Out',
+    TRANSFER_IN: 'Transfer In',
+    TRANSFER_OUT: 'Transfer Out',
+    TRANS_FROM_EXCHANGE: 'Transfer From Spot',
+    TRANS_TO_EXCHANGE: 'Transfer To Spot',
+    LIQUIDATION: 'Liquidation',
+    ADL: 'Auto-Deleveraging (ADL)',
+    BONUS: 'Trading Bonus',
+    BONUS_RECOLLECT: 'Bonus Reclaim',
+    TRIAL_FUND: 'Trial Fund',
+    TRIAL_FUND_RECYCLE: 'Trial Fund Reclaim',
+    AIRDROP: 'Airdrop',
+    REBATE_REWARDS: 'Fee Rebate',
+    DELIVERY: 'Futures Delivery',
+    DELIVERY_SETTLE: 'Delivery Settlement',
+    INTEREST: 'Interest',
+    MARGIN_INTEREST: 'Margin Interest',
+  };
+
+  if (TYPE_LABELS[t]) return TYPE_LABELS[t];
+
+  return t
+    .toLowerCase()
+    .split('_')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+/**
  * Maps OKX raw transaction type / subType / strings to universal type
  */
 export function getOkxUniversalType(entry: string | {

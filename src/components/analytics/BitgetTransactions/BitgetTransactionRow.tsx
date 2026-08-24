@@ -10,7 +10,7 @@ import { usePrivacy } from '../../../context/PrivacyContext';
 import { ChevronDown, ChevronUp, Hash, FileText, Percent, Gift } from 'lucide-react';
 import { BITGET_TX_TYPES, bitgetTypeColorMap } from './BitgetTransactionFilters';
 import { formatDateTime } from '../../../utils/formatters';
-import { getUniversalBadge } from '../../../utils/transactionTypeMapper';
+import { getUniversalBadge, formatBitgetType } from '../../../utils/transactionTypeMapper';
 
 interface Props {
   entry: BitgetTransactionLogEntry;
@@ -30,10 +30,30 @@ export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
   const { dateStr, timeStr } = formatDateTime(entry.transactionTime);
 
-  const sideLower = (entry.side || '').toLowerCase();
-  const isBuy = sideLower.includes('buy') || sideLower.includes('long') || sideLower.includes('in');
-  const isSell = sideLower.includes('sell') || sideLower.includes('short') || sideLower.includes('out');
-  const sideColor = isBuy ? 'text-[#00C853]' : isSell ? 'text-[#FF4444]' : 'text-[#8E9299]';
+  const getSideBadgeInfo = () => {
+    const s = (entry.side || '').toLowerCase().trim();
+    if (s === 'open long' || s === 'open_long') {
+      return { label: 'Open Long', color: 'text-[#00C853]' };
+    }
+    if (s === 'close long' || s === 'close_long' || s === 'reduce long' || s.includes('close long') || s.includes('reduce long')) {
+      return { label: 'Close Long', color: 'text-[#FFB74D]' };
+    }
+    if (s === 'open short' || s === 'open_short') {
+      return { label: 'Open Short', color: 'text-[#FF4444]' };
+    }
+    if (s === 'close short' || s === 'close_short' || s === 'reduce short' || s.includes('close short') || s.includes('reduce short')) {
+      return { label: 'Close Short', color: 'text-[#26C6DA]' };
+    }
+    if (s === 'buy' || s.includes('buy') || s.includes('in')) {
+      return { label: entry.side || 'Buy', color: 'text-[#00C853]' };
+    }
+    if (s === 'sell' || s.includes('sell') || s.includes('out')) {
+      return { label: entry.side || 'Sell', color: 'text-[#FF4444]' };
+    }
+    return { label: entry.side === 'None' || !entry.side ? '-' : entry.side, color: 'text-[#8E9299]' };
+  };
+
+  const sideInfo = getSideBadgeInfo();
 
   const fundingNum = new Big(entry.funding || '0');
   const feeNum = new Big(entry.fee || '0');
@@ -137,8 +157,8 @@ export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
               Side & Qty
             </span>
           </AppTooltip>
-          <span className={`text-xs font-mono uppercase ${sideColor}`}>
-            {entry.side === 'None' || !entry.side ? '-' : entry.side}
+          <span className={`text-xs font-mono font-medium uppercase ${sideInfo.color}`}>
+            {sideInfo.label}
           </span>
           <span className="text-[10px] font-mono text-white/80">{fmtQty()}</span>
         </div>
@@ -261,6 +281,16 @@ export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
                 <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Bonus / Extra</span>
               </div>
               <span className="text-white font-mono text-xs">{entry.bonusChange || entry.extra || '--'}</span>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Position Action</span>
+              <span className="text-white font-mono text-xs">{entry.positionType || sideInfo.label || '--'}</span>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Execution Type</span>
+              <span className="text-white font-mono text-xs">{formatBitgetType(entry.type)}</span>
             </div>
 
             <div className="flex flex-col gap-1">
