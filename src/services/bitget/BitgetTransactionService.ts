@@ -267,7 +267,13 @@ export class BitgetTransactionService {
       const term = filters.search.trim().toLowerCase();
       filtered = filtered.filter(e => 
         (e.symbol && e.symbol.toLowerCase().includes(term)) ||
-        (e.currency && e.currency.toLowerCase().includes(term))
+        (e.currency && e.currency.toLowerCase().includes(term)) ||
+        (e.side && e.side.toLowerCase().includes(term)) ||
+        (e.positionType && e.positionType.toLowerCase().includes(term)) ||
+        (e.type && e.type.toLowerCase().includes(term)) ||
+        (e.tradeId && e.tradeId.toLowerCase().includes(term)) ||
+        (e.orderId && e.orderId.toLowerCase().includes(term)) ||
+        (e.orderLinkId && e.orderLinkId.toLowerCase().includes(term))
       );
     }
 

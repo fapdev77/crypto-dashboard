@@ -1,3 +1,10 @@
+# [1.42.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.41.0...v1.42.0) (2026-08-24)
+
+
+### Features
+
+* **exchange:** standardize trade side normalization ([6a5553a](https://github.com/fapdev77/crypto-dashboard/commit/6a5553aa4bd9a6e549b90eac99e27a37e7754b5c))
+
 # [1.41.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.40.0...v1.41.0) (2026-08-24)
 
 
