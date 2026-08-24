@@ -3,6 +3,8 @@ import { OkxTransactionService } from '../OkxTransactionService';
 import { OkxTransactionLogEntry } from '../../../types';
 
 function makeMockOkxEntry(overrides: Partial<OkxTransactionLogEntry> = {}): OkxTransactionLogEntry {
+  const balance = overrides.balance ?? '6000';
+  const cashBalance = overrides.cashBalance ?? balance;
   return {
     id: 'okx-mock-1',
     connectionId: 'conn-okx-1',
@@ -20,7 +22,8 @@ function makeMockOkxEntry(overrides: Partial<OkxTransactionLogEntry> = {}): OkxT
     fee: '-0.05',
     cashFlow: '100',
     change: '100',
-    balance: '6000',
+    balance,
+    cashBalance,
     billId: 'bill-001',
     tradeId: 'okx-tr-001',
     orderId: 'okx-ord-001',

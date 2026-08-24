@@ -702,6 +702,111 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       category = 'usdt-futures';
     }
 
+    // Smart Side & Position action normalization
+    const rawSide = String(raw.side || '').toLowerCase().trim();
+    const rawTradeSide = String(raw.tradeSide || '').toLowerCase().trim();
+    const rawPosSide = String(raw.posSide || raw.holdSide || raw.positionType || raw.posMode || '').toLowerCase().trim();
+    const typeUpper = rawType.toUpperCase();
+
+    let normalizedSide = 'None';
+    let normalizedPositionType = String(raw.positionType || raw.posSide || raw.holdSide || '').trim();
+
+    // 1. Check explicit type keywords
+    if (
+      typeUpper.includes('OPEN_LONG') || 
+      typeUpper.includes('OPEN-LONG') || 
+      rawSide === 'open_long' || 
+      rawSide === 'buy_open' || 
+      rawSide === 'open_buy' ||
+      (rawTradeSide === 'open' && rawPosSide.includes('long'))
+    ) {
+      normalizedSide = 'Open Long';
+      normalizedPositionType = 'Long (Open)';
+    } else if (
+      typeUpper.includes('CLOSE_LONG') || 
+      typeUpper.includes('CLOSE-LONG') || 
+      typeUpper.includes('REDUCE_LONG') || 
+      rawSide === 'close_long' || 
+      rawSide === 'sell_close' || 
+      rawSide === 'close_sell' ||
+      (rawTradeSide === 'close' && rawPosSide.includes('long'))
+    ) {
+      normalizedSide = 'Close Long';
+      normalizedPositionType = 'Long (Close/Reduce)';
+    } else if (
+      typeUpper.includes('OPEN_SHORT') || 
+      typeUpper.includes('OPEN-SHORT') || 
+      rawSide === 'open_short' || 
+      rawSide === 'sell_open' || 
+      rawSide === 'open_sell' ||
+      (rawTradeSide === 'open' && rawPosSide.includes('short'))
+    ) {
+      normalizedSide = 'Open Short';
+      normalizedPositionType = 'Short (Open)';
+    } else if (
+      typeUpper.includes('CLOSE_SHORT') || 
+      typeUpper.includes('CLOSE-SHORT') || 
+      typeUpper.includes('REDUCE_SHORT') || 
+      rawSide === 'close_short' || 
+      rawSide === 'buy_close' || 
+      rawSide === 'close_buy' ||
+      (rawTradeSide === 'close' && rawPosSide.includes('short'))
+    ) {
+      normalizedSide = 'Close Short';
+      normalizedPositionType = 'Short (Close/Reduce)';
+    }
+    // 2. Check position side combined with trade execution direction
+    else if (rawPosSide.includes('long')) {
+      if (rawSide.includes('sell') || rawSide.includes('out') || typeUpper === 'ORDER_DEALT_OUT' || typeUpper.includes('CLOSE')) {
+        normalizedSide = 'Close Long';
+        normalizedPositionType = 'Long (Close/Reduce)';
+      } else if (rawSide.includes('buy') || rawSide.includes('in') || typeUpper === 'ORDER_DEALT_IN' || typeUpper.includes('OPEN')) {
+        normalizedSide = 'Open Long';
+        normalizedPositionType = 'Long (Open)';
+      } else {
+        normalizedSide = 'Buy';
+        normalizedPositionType = 'Long';
+      }
+    } else if (rawPosSide.includes('short')) {
+      if (rawSide.includes('buy') || rawSide.includes('in') || typeUpper === 'ORDER_DEALT_IN' || typeUpper.includes('CLOSE')) {
+        normalizedSide = 'Close Short';
+        normalizedPositionType = 'Short (Close/Reduce)';
+      } else if (rawSide.includes('sell') || rawSide.includes('out') || typeUpper === 'ORDER_DEALT_OUT' || typeUpper.includes('OPEN')) {
+        normalizedSide = 'Open Short';
+        normalizedPositionType = 'Short (Open)';
+      } else {
+        normalizedSide = 'Sell';
+        normalizedPositionType = 'Short';
+      }
+    }
+    // 3. Fallback to tradeSide open/close
+    else if (rawTradeSide === 'open') {
+      normalizedSide = rawSide.includes('sell') ? 'Open Short' : 'Open Long';
+    } else if (rawTradeSide === 'close') {
+      normalizedSide = rawSide.includes('buy') ? 'Close Short' : 'Close Long';
+    }
+    // 4. Standard spot Buy / Sell or fallback
+    else if (rawSide.includes('buy') || rawSide.includes('in') || typeUpper === 'ORDER_DEALT_IN' || typeUpper === 'BUY') {
+      normalizedSide = 'Buy';
+    } else if (rawSide.includes('sell') || rawSide.includes('out') || typeUpper === 'ORDER_DEALT_OUT' || typeUpper === 'SELL') {
+      normalizedSide = 'Sell';
+    } else if (rawSide) {
+      normalizedSide = raw.side;
+    }
+
+    // Trade ID and Order ID mapping
+    const tradeId = raw.tradeId || raw.trade_id || raw.fillId || raw.fill_id || '';
+    const orderId = raw.orderId || raw.order_id || raw.ordId || raw.ord_id || '';
+    const orderLinkId = raw.orderLinkId || raw.order_link_id || raw.clientOid || raw.client_oid || raw.clOrdId || '';
+
+    // Qty, Size, tradePrice, funding
+    const qty = String(raw.qty || raw.size || raw.amount || amount || '0');
+    const size = String(raw.size || raw.qty || raw.amount || amount || '0');
+    const tradePrice = String(raw.tradePrice || raw.price || raw.avgPrice || raw.fillPrice || '0');
+
+    const isFunding = rawType.includes('FUNDING') || rawType.includes('SETTLE_FEE') || rawType.includes('SETTLEMENT');
+    const funding = isFunding ? String(raw.change || amount) : '0';
+
     return {
       id: `${key.id}-${raw.id || raw.billId || transactionTime}-${transactionTime}`,
       connectionId: key.id,
@@ -710,11 +815,15 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       rawId: String(raw.id || raw.billId || ''),
       symbol: cleanSymbol,
       category,
-      side: raw.side || '',
+      side: normalizedSide,
       type: rawType,
       groupType: raw.groupType || '',
-      positionType: raw.positionType || '',
+      positionType: normalizedPositionType,
+      qty,
+      size,
       currency: raw.coin || raw.currency || raw.ccy || raw.coinName || '',
+      tradePrice,
+      funding,
       amount: String(amount),
       change: String(raw.change || amount),
       cashFlow: String(raw.cashFlow || amount),
@@ -725,9 +834,9 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       positionAmount: String(positionAmount),
       positionBalance: String(positionBalance),
       transactionTime,
-      tradeId: raw.tradeId || '',
-      orderId: raw.orderId || '',
-      orderLinkId: raw.orderLinkId || '',
+      tradeId,
+      orderId,
+      orderLinkId,
       extra: raw.extra || (raw.memo ? raw.memo : undefined),
       raw,
     };
