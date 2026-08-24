@@ -7,7 +7,8 @@ import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
-import { getInverseUsdValues, getOpenPositionSizeAndValue, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
+import { getInverseUsdValues, getOpenPositionSizeAndValue } from '../utils/inverseUtils';
+import { getHedgePositionLevels } from '../utils/hedgeUtils';
 import { useBalancesStore } from '../store/balancesStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
@@ -52,46 +53,11 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
   const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
-  // Inverse Protection / Exposure logic
+  // Inverse Protection / Exposure logic via centralized hedgeUtils
   const matchingBalance = Object.values(balances).find(
     b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy.toUpperCase()
   );
-  const totalAssetBal = matchingBalance ? matchingBalance.amount : 0;
-  const markPrice = pos.markPrice || 0;
-  const assetBalUsd = totalAssetBal * markPrice;
-  const openPosSize = markPrice > 0 ? (sizeValUsd / markPrice) : Math.abs(pos.size);
-
-  let protectedPct = 0;
-  let exposedPct = 100;
-  let protectedAmount = 0;
-  let exposedAmount = totalAssetBal;
-  let protectedUsd = 0;
-  let exposedUsd = assetBalUsd;
-
-  if (pos.instrumentType === 'INVERSE' && totalAssetBal > 0) {
-    if (isShort) {
-      const usdValAtEntry = getInverseShortUsdEntryValue(pos);
-      protectedUsd = Math.min(usdValAtEntry, assetBalUsd > 0 ? assetBalUsd : usdValAtEntry);
-      exposedUsd = Math.max(0, assetBalUsd - usdValAtEntry);
-
-      protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 0;
-      exposedPct = assetBalUsd > 0 ? (exposedUsd / assetBalUsd) * 100 : 0;
-
-      protectedAmount = markPrice > 0 ? protectedUsd / markPrice : 0;
-      exposedAmount = markPrice > 0 ? exposedUsd / markPrice : Math.max(0, totalAssetBal - protectedAmount);
-    } else {
-      // Long Inverse position
-      const longSizeUsd = openPosSize * markPrice;
-      exposedUsd = assetBalUsd + longSizeUsd;
-      protectedUsd = 0;
-
-      protectedPct = 0;
-      exposedPct = assetBalUsd > 0 ? (exposedUsd / assetBalUsd) * 100 : 100;
-
-      protectedAmount = 0;
-      exposedAmount = markPrice > 0 ? exposedUsd / markPrice : (totalAssetBal + openPosSize);
-    }
-  }
+  const hedgeLevels = getHedgePositionLevels(pos, matchingBalance);
 
   const posTypeStr = pos.instrumentType === 'INVERSE' ? 'CM Perpetual Inverse' :
     (pos.instrumentType && pos.instrumentType !== 'PERP') ?
@@ -224,7 +190,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
       },
       {
         label: 'Total crypto',
-        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(openPosSize, 'crypto', 8) : formatCurrency(Math.abs(pos.size), 'crypto')} ${baseCoinClean}`,
+        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(hedgeLevels.openPosSize, 'crypto', 8) : formatCurrency(Math.abs(pos.size), 'crypto')} ${baseCoinClean}`,
         labelClassName: 'text-[12px] text-[#8E9299]',
         valueClassName: 'text-[12px] font-mono text-white'
       },
@@ -416,16 +382,16 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               title="Click to view in Hedge Pro"
             >
               <div className="flex items-center justify-between text-[10px] font-mono leading-none">
-                <span className="text-[#00C853]">{protectedPct.toFixed(1)}%</span>
-                <span className={exposedPct > 0 && exposedPct <= 100 ? "text-[#8E9299]" : "text-[#FF4444]"}>{exposedPct.toFixed(1)}%</span>
+                <span className="text-[#00C853]">{hedgeLevels.protectedPct.toFixed(1)}%</span>
+                <span className={hedgeLevels.exposedPct > 0 && hedgeLevels.exposedPct <= 100 ? "text-[#8E9299]" : "text-[#FF4444]"}>{hedgeLevels.exposedPct.toFixed(1)}%</span>
               </div>
               <div className="flex h-1.5 rounded-full overflow-hidden w-full bg-[#2a2b30] mt-0.5 mb-0.5 group-hover/hedge:ring-1 group-hover/hedge:ring-emerald-400/40 transition-all">
-                <div className="bg-[#00C853] h-full transition-all duration-300" style={{ width: `${Math.min(100, protectedPct)}%` }} />
-                <div className={`${exposedPct > 0 && exposedPct <= 100 ? "bg-[#8E9299]" : "bg-[#FF4444]"} h-full transition-all duration-300`} style={{ width: `${Math.min(100, Math.max(0, exposedPct))}%` }} />
+                <div className="bg-[#00C853] h-full transition-all duration-300" style={{ width: `${Math.min(100, hedgeLevels.protectedPct)}%` }} />
+                <div className={`${hedgeLevels.exposedPct > 0 && hedgeLevels.exposedPct <= 100 ? "bg-[#8E9299]" : "bg-[#FF4444]"} h-full transition-all duration-300`} style={{ width: `${Math.min(100, Math.max(0, hedgeLevels.exposedPct))}%` }} />
               </div>
               <div className="flex justify-between text-[9px] font-mono text-[#8E9299] leading-none text-opacity-80">
-                <span>Bal: {formatCcy(totalAssetBal)}</span>
-                <span>Pos: {formatCcy(openPosSize)}</span>
+                <span>Bal: {formatCcy(hedgeLevels.balanceAmount)}</span>
+                <span>Pos: {formatCcy(hedgeLevels.openPosSize)}</span>
               </div>
             </div>
           ) : (
@@ -531,21 +497,21 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                     <div className="flex flex-col">
                       <span className="text-[10px] text-[#8E9299]">Balance:</span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(assetBalUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.balanceAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.balanceUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#00C853]">Protected: {protectedPct.toFixed(2)}%</span>
+                      <span className="text-[10px] text-[#00C853]">Protected: {hedgeLevels.protectedPct.toFixed(2)}%</span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(protectedUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.protectedUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#FF4444]">Exposed: {exposedPct.toFixed(2)}%</span>
+                      <span className="text-[10px] text-[#FF4444]">Exposed: {hedgeLevels.exposedPct.toFixed(2)}%</span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(exposedUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.exposedUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
                   </div>

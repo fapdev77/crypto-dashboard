@@ -35,19 +35,16 @@ export function HedgePositionLevelRow({ level, formatCurrency, variant = 'table'
   const sideColor = isLong ? 'text-[#00C853]' : 'text-[#FF4444]';
   const isFiatPair = /USD|USDT|USDC|EUR|BRL/i.test(level.symbol);
 
-  // Capital & exposure calculations
-  const capitalRef = level.assetBalUsd > 0 ? level.assetBalUsd : level.protectedUsd + level.exposedBaseUsd;
-  const barTotal = capitalRef + level.leveragedUsd;
-  const balanceWidthPct = barTotal > 0 ? (capitalRef / barTotal) * 100 : 0;
-  const leveragedWidthPct = barTotal > 0 ? (level.leveragedUsd / barTotal) * 100 : 0;
-  const protectedPct = capitalRef > 0 ? (level.protectedUsd / capitalRef) * 100 : 0;
-  const exposedPct = capitalRef > 0 ? (level.exposedBaseUsd / capitalRef) * 100 : 0;
-  const leveragedOfBalancePct =
-    capitalRef > 0 ? (level.leveragedUsd / capitalRef) * 100 : level.leveragedUsd > 0 ? 100 : 0;
+  // Pre-calculated bar and exposure metrics from hedgeUtils
+  const {
+    balanceWidthPct,
+    leveragedWidthPct,
+    protectedPct,
+    exposedPct,
+  } = level.barMetrics;
 
-  // Exposed quantity in the asset (exposed USD at mark price).
-  const exposedQty = level.markPrice > 0 ? level.exposedBaseUsd / level.markPrice : 0;
-  const protectedAmount = level.markPrice > 0 ? level.protectedUsd / level.markPrice : 0;
+  const exposedQty = level.exposedAmount;
+  const protectedAmount = level.protectedAmount;
 
   const handleNavigateToOpenPositions = (e: React.MouseEvent) => {
     e.stopPropagation();
