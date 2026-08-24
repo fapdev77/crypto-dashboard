@@ -1,3 +1,10 @@
+# [1.40.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.39.0...v1.40.0) (2026-08-24)
+
+
+### Features
+
+* implement multi-exchange analytics support and standardize transaction type mapping ([dcc3e1d](https://github.com/fapdev77/crypto-dashboard/commit/dcc3e1d21a379b612a1f54d1e3373e32d641bc10))
+
 # [1.39.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.38.0...v1.39.0) (2026-08-23)
 
 
