@@ -600,4 +600,86 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     return 'NOT_FOUND';
   }
 
+  // ── Transaction Log (OKX Account Bills) ──
+  public async getTransactionLog(
+    key: ApiCredentials,
+    startTime: number,
+    endTime: number,
+    category: string = '',
+    cursor?: string
+  ): Promise<{ list: any[]; nextPageCursor: string }> {
+    const query = new URLSearchParams();
+    if (category) query.append('instType', category);
+    if (startTime) query.append('begin', startTime.toString());
+    if (endTime) query.append('end', endTime.toString());
+    query.append('limit', '100');
+    if (cursor) query.append('after', cursor);
+
+    // Try recent bills first
+    let path = `/api/v5/account/bills?${query.toString()}`;
+    let headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+    let res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+
+    // If recent bills is empty and startTime is more than 7 days ago, try bills-archive
+    const isOlderThan7Days = Date.now() - startTime > 7 * 24 * 60 * 60 * 1000;
+    if ((!res.data || res.data.length === 0) && isOlderThan7Days) {
+      path = `/api/v5/account/bills-archive?${query.toString()}`;
+      headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+    }
+
+    if (res.code && res.code !== '0') {
+      throw new Error(`OKX bills API error (${res.code}): ${res.msg}`);
+    }
+
+    const list = res.data || [];
+    // In OKX, 'after' cursor is the billId of the last record when pagination has more
+    const nextPageCursor = list.length >= 100 ? (list[list.length - 1]?.billId || '') : '';
+
+    return {
+      list,
+      nextPageCursor,
+    };
+  }
+
+  public static normalizeTxLogEntry(raw: any, key: ApiCredentials): import('../../types').OkxTransactionLogEntry {
+    const transactionTime = parseInt(raw.ts || '0', 10);
+    const amount = raw.sz || raw.balChg || '0';
+    const fee = raw.fee || '0';
+    const balance = raw.bal || '0';
+    const positionBalance = raw.posBal || '0';
+
+    return {
+      id: `${key.id}-${raw.billId || transactionTime}-${transactionTime}`,
+      connectionId: key.id,
+      exchange: 'okx',
+      label: key.label,
+      rawId: String(raw.billId || ''),
+      billId: String(raw.billId || ''),
+      symbol: raw.instId || '',
+      category: raw.instType || 'OTHER',
+      side: raw.subType ? String(raw.subType) : 'None',
+      type: raw.type ? String(raw.type) : '',
+      transSubType: raw.subType ? String(raw.subType) : '',
+      subType: raw.subType ? String(raw.subType) : '',
+      typeCode: raw.type ? String(raw.type) : '',
+      subTypeCode: raw.subType ? String(raw.subType) : '',
+      currency: raw.ccy || '',
+      amount: String(amount),
+      change: String(raw.balChg || amount),
+      cashFlow: String(raw.balChg || amount),
+      cashBalance: String(balance),
+      balance: String(balance),
+      fee: String(fee),
+      feeCurrency: raw.ccy || '',
+      positionBalance: String(positionBalance),
+      transactionTime,
+      tradeId: raw.tradeId || '',
+      orderId: raw.ordId || '',
+      orderLinkId: raw.clOrdId || '',
+      pnl: String(raw.pnl || '0'),
+      extra: raw.notes || raw.execType || undefined,
+      raw,
+    };
+  }
 }

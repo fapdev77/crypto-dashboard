@@ -40,7 +40,7 @@ export interface HedgePositionLevels {
   connectionId?: string;
   accountType?: 'classic' | 'uta';
   symbol: string;
-  baseCoin: string;
+  baseCoin?: string;
   exchange: ExchangeName;
   /** Account label (e.g. 'Mock BITGET 1'). */
   label: string;
@@ -58,8 +58,12 @@ export interface HedgePositionLevels {
   markPrice: number;
   /** USD protected (capped by the same-coin balance) for shorts; 0 for longs. */
   protectedUsd: number;
+  /** Amount in coin protected; 0 for longs. */
+  protectedAmount: number;
   /** USD exposed: shorts → balance − protected; longs → balance + position value. */
   exposedUsd: number;
+  /** Amount in coin exposed. */
+  exposedAmount: number;
   /** USD exposed excluding the leveraged portion (uncovered balance). */
   exposedBaseUsd: number;
   /** USD leveraged portion of exposure (long position value; 0 for shorts). */
@@ -86,6 +90,24 @@ export interface HedgePositionLevels {
   realizedPnlUsd: number;
   /** Long with exposedPct > 100, or any position with no covering balance. */
   overexposed: boolean;
+  /** Alias for totalAssetBal */
+  balanceAmount: number;
+  /** Alias for assetBalUsd */
+  balanceUsd: number;
+  /** Alias for overexposed */
+  isOverexposed: boolean;
+  /** Visual bar metrics */
+  barMetrics: HedgeBarMetrics;
+}
+
+/** Visual bar metrics for per-coin or portfolio level display. */
+export interface HedgeBarMetrics {
+  balanceWidthPct: number;
+  leveragedWidthPct: number;
+  protectedPct: number;
+  exposedPct: number;
+  leveragedOfBalancePct?: number;
+  leveragedPct?: number;
 }
 
 /** Per-coin rollup (key = `${connectionId}:${baseCoin}`). */
@@ -116,10 +138,26 @@ export interface HedgeCoinSummary {
   unrealizedPnl: number;
   /** Σ unrealizedPnlUsd across the coin's positions, in USD. */
   unrealizedPnlUsd: number;
+  /** Σ realizedPnl across the coin's positions (short + long), in coin. */
+  realizedPnl: number;
+  /** Σ realizedPnlUsd across the coin's positions, in USD. */
+  realizedPnlUsd: number;
   /** min(Σ short protected, balanceUsd) — you can't protect more than you hold. */
   protectedUsd: number;
   /** Σ short position sizes in coin (the protected leg — the short's size). */
   protectedSize: number;
+  /** Net protected in USD = protectedUsd − leveragedUsd */
+  netProtectedUsd: number;
+  /** Net protected in coin size = protectedSize − leveragedSize */
+  netProtectedSize: number;
+  /** Real Hedge Protected % = (netProtectedUsd / netBalanceUsd) × 100 */
+  realHedgeProtectedPct: number;
+  /** Protected of Equity % = (protectedUsd / netBalanceUsd) × 100 */
+  protectedOfEquityPct: number;
+  /** Leveraged of Equity % = (leveragedUsd / netBalanceUsd) × 100 */
+  leveragedOfEquityPct: number;
+  /** Visual bar metrics calculated pure helper */
+  barMetrics: HedgeBarMetrics;
   /** Uncovered exposure WITHOUT leverage. With a short: balance − protected (short
    *  side only). With NO short (long only): wallet balance + leveraged — nothing is
    *  hedged, so the whole wallet and the long are exposed. */
@@ -144,6 +182,8 @@ export interface HedgeCoinSummary {
   coveragePct: number;
   /** Aggregated ROI of the coin = Σ unrealizedPnlUsd / walletBalanceUsd × 100. */
   roiPct: number;
+  /** Aggregated Realized ROI of the coin = Σ realizedPnlUsd / walletBalanceUsd × 100. */
+  realizedRoiPct: number;
   positionCount: number;
   longCount: number;
   shortCount: number;
@@ -169,6 +209,15 @@ export interface HedgeTotals {
   inversePositionCount: number;
   inverseLongCount: number;
   inverseShortCount: number;
+  /** Portfolio summary bar metrics (beyond-100% model) */
+  summaryCapital: number;
+  summaryExposed: number;
+  summaryBarTotal: number;
+  balanceWidthPct: number;
+  leveragedWidthPct: number;
+  protectedPct: number;
+  exposedPct: number;
+  leveragedPct: number;
 }
 
 // ── Keys ──
@@ -203,18 +252,28 @@ function getPosCcy(pos: UnifiedPosition): string {
  */
 export function getHedgePositionLevels(
   pos: UnifiedPosition,
-  balances: HedgeBalanceInput[],
+  balances: HedgeBalanceInput[] | HedgeBalanceInput | Record<string, HedgeBalanceInput> = [],
 ): HedgePositionLevels {
   const isShort = pos.side === 'short';
   const posCcy = getPosCcy(pos);
   const inverseVals = getInverseUsdValues(pos);
 
-  const matchingBalance = balances.find(
+  const balanceList: HedgeBalanceInput[] = Array.isArray(balances)
+    ? balances
+    : balances && typeof balances === 'object'
+    ? (('ccy' in balances && 'connectionId' in balances)
+        ? [balances as HedgeBalanceInput]
+        : Object.values(balances))
+    : [];
+
+  const matchingBalance = balanceList.find(
     b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy
   );
-  const totalAssetBal = matchingBalance ? matchingBalance.amount : 0;
+  const totalAssetBal = matchingBalance ? (matchingBalance.amount || 0) : 0;
   const markPrice = pos.markPrice || 0;
-  const assetBalUsd = totalAssetBal * markPrice;
+  const assetBalUsd = markPrice > 0
+    ? totalAssetBal * markPrice
+    : (matchingBalance?.usdValue || 0);
   const { positionValueUsd } = getOpenPositionSizeAndValue(pos);
   const openPosSize = markPrice > 0 ? positionValueUsd / markPrice : Math.abs(pos.size);
 
@@ -230,12 +289,12 @@ export function getHedgePositionLevels(
   if (pos.instrumentType === 'INVERSE') {
     if (isShort) {
       entryUsd = getInverseShortUsdEntryValue(pos);
-      if (totalAssetBal > 0) {
+      if (totalAssetBal > 0 || assetBalUsd > 0) {
         protectedUsd = Math.min(entryUsd, assetBalUsd);
         exposedBaseUsd = Math.max(0, assetBalUsd - protectedUsd);
         exposedUsd = exposedBaseUsd;
-        protectedPct = (protectedUsd / assetBalUsd) * 100;
-        exposedPct = (exposedUsd / assetBalUsd) * 100;
+        protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 0;
+        exposedPct = assetBalUsd > 0 ? (exposedBaseUsd / assetBalUsd) * 100 : 0;
       } else {
         // No covering balance found — the short still locks USD at entry (uncapped).
         protectedUsd = entryUsd;
@@ -256,6 +315,21 @@ export function getHedgePositionLevels(
     }
   }
 
+  const protectedAmount = markPrice > 0 ? protectedUsd / markPrice : 0;
+  const exposedAmount = markPrice > 0
+    ? exposedUsd / markPrice
+    : (isShort ? Math.max(0, totalAssetBal - protectedAmount) : totalAssetBal + openPosSize);
+
+  const capitalRef = assetBalUsd > 0 ? assetBalUsd : protectedUsd + exposedBaseUsd;
+  const barTotal = capitalRef + leveragedUsd;
+  const barMetrics: HedgeBarMetrics = {
+    balanceWidthPct: barTotal > 0 ? (capitalRef / barTotal) * 100 : 0,
+    leveragedWidthPct: barTotal > 0 ? (leveragedUsd / barTotal) * 100 : 0,
+    protectedPct: capitalRef > 0 ? (protectedUsd / capitalRef) * 100 : 0,
+    exposedPct: capitalRef > 0 ? (exposedBaseUsd / capitalRef) * 100 : 0,
+    leveragedOfBalancePct: capitalRef > 0 ? (leveragedUsd / capitalRef) * 100 : leveragedUsd > 0 ? 100 : 0,
+  };
+
   return {
     positionId: pos.id,
     connectionId: pos.connectionId,
@@ -272,7 +346,9 @@ export function getHedgePositionLevels(
     entryPrice: pos.entryPrice || 0,
     markPrice: pos.markPrice || 0,
     protectedUsd,
+    protectedAmount,
     exposedUsd,
+    exposedAmount,
     exposedBaseUsd,
     leveragedUsd,
     positionValueUsd,
@@ -287,6 +363,10 @@ export function getHedgePositionLevels(
     realizedPnl: pos.realizedPnl || 0,
     realizedPnlUsd: inverseVals.realizedPnl,
     overexposed,
+    balanceAmount: totalAssetBal,
+    balanceUsd: assetBalUsd,
+    isOverexposed: overexposed,
+    barMetrics,
   };
 }
 
@@ -337,13 +417,12 @@ export function getHedgeCoinSummaries(
     // only a fallback: Bitget coin-m adapters report walletBalance: 0 even when
     // the account holds coins, so the position reconstruction below is the
     // authoritative source for the wallet quantity.
+    const refPrice = group.levels[0]?.markPrice || 0;
     let balanceAmount = 0;
     const balanceUsd = balances.reduce((acc, b) => {
       if (b.connectionId === group.connectionId && group.ccies.has(b.ccy.toUpperCase())) {
-        balanceAmount = new Big(balanceAmount).plus(
-          b.walletBalance && b.walletBalance > 0 ? b.walletBalance : (b.amount || 0)
-        ).toNumber();
-        return acc.plus(b.usdValue || 0);
+        balanceAmount = new Big(balanceAmount).plus(b.amount || 0).toNumber();
+        return acc.plus(b.usdValue || (refPrice > 0 ? (b.amount || 0) * refPrice : 0));
       }
       return acc;
     }, new Big(0)).toNumber();
@@ -360,7 +439,9 @@ export function getHedgeCoinSummaries(
 
     // Can't protect more than the coin balance actually holds.
     const protectedUsd = balanceUsd > 0 ? Math.min(sumShortProtected, balanceUsd) : sumShortProtected;
-    const exposedUsd = Math.max(0, balanceUsd - protectedUsd) + leveragedUsd;
+    const exposedBaseUsd = Math.max(0, balanceUsd - protectedUsd);
+    const totalExposedUsd = exposedBaseUsd + leveragedUsd;
+    const exposedUsd = totalExposedUsd;
     const coveragePct = balanceUsd > 0 ? (protectedUsd / balanceUsd) * 100 : 0;
 
     const positionCount = group.levels.length;
@@ -378,38 +459,58 @@ export function getHedgeCoinSummaries(
       new Big(0),
     ).toNumber();
 
-    // Net Balance (USD) — the account equity (wallet + unrealized PnL), the real
-    // value if all positions were closed now. For Bitget coin-m the store amount
-    // is accountEquity (already includes unrealized PnL), so the position
-    // reconstruction below equals the equity at the coin's mark price (the store
-    // usdValue is a placeholder in mock data):
-    //  - short (protection) → Size + Exposed: USD locked at entry + uncovered
-    //    balance reconstructs the balance at the position's mark price
-    //  - long → Exposed − Size: total exposure minus the leveraged leg
-    const refPrice = group.levels[0]?.markPrice || 0;
-    let netBalanceUsd = balanceUsd;
+    // Total realized PnL of the coin = short's + long's, in coin and USD.
+    const realizedPnl = group.levels.reduce(
+      (acc, l) => acc.plus(l.realizedPnl || 0),
+      new Big(0),
+    ).toNumber();
+    const realizedPnlUsd = group.levels.reduce(
+      (acc, l) => acc.plus(l.realizedPnlUsd || 0),
+      new Big(0),
+    ).toNumber();
+
+    // The base value for the coin. Depending on the exchange, the API returns
+    // either the Account Equity (Bitget) or the Wallet Balance (Bybit/OKX) in
+    // the amount field. We reconstruct the exact USD value at the current mark
+    // price using the position levels to avoid stale mock data.
+    let reconstructedUsd = balanceUsd;
+    
     if (positionCount > 0 && refPrice > 0) {
       // Every level on the same coin shares the same balance; each reconstruction
       // yields the same value, so take the max (avoids double-counting across
       // multiple positions of the same coin).
       const derivedPerLevel = group.levels.map(l =>
         l.isShort
-          ? l.protectedUsd + l.exposedUsd            // Size + Exposed
+          ? l.protectedUsd + l.exposedBaseUsd          // Size + Exposed Base
           : Math.max(0, l.exposedUsd - l.leveragedUsd) // Exposed − Size
       );
-      netBalanceUsd = Math.max(...derivedPerLevel);
+      if (derivedPerLevel.length > 0 && Math.max(...derivedPerLevel) > 0) {
+        reconstructedUsd = Math.max(...derivedPerLevel);
+      }
     }
 
-    // Net Balance quantity — the same reconstruction divided by the mark price
-    // (falls back to Σ balance quantities when no mark price is available).
-    const netBalance = refPrice > 0 ? netBalanceUsd / refPrice : balanceAmount;
+    const reconstructedAmount = refPrice > 0 ? reconstructedUsd / refPrice : balanceAmount;
 
-    // Wallet Balance = Net Balance − unrealized PnL: the fixed assets WITHOUT
-    // unrealized PnL (deposit amount + total realized PnL). Net = Wallet +
-    // Unrealized, so Wallet = Net − Unrealized — e.g. Net 1,130.24 + unrealized
-    // −195.77 = Wallet 1,326.00.
-    const walletBalance = new Big(netBalance).minus(unrealizedPnl).toNumber();
-    const walletBalanceUsd = new Big(netBalanceUsd).minus(unrealizedPnlUsd).toNumber();
+    let netBalance: number;
+    let netBalanceUsd: number;
+    let walletBalance: number;
+    let walletBalanceUsd: number;
+
+    if (group.exchange.toLowerCase() === 'bitget') {
+      // Bitget coin-m provides Account Equity (already includes unrealized PnL).
+      // Wallet = Net − Unrealized.
+      netBalance = reconstructedAmount;
+      netBalanceUsd = reconstructedUsd;
+      walletBalance = new Big(netBalance).minus(unrealizedPnl).toNumber();
+      walletBalanceUsd = new Big(netBalanceUsd).minus(unrealizedPnlUsd).toNumber();
+    } else {
+      // Bybit and OKX provide Wallet Balance (does not include unrealized PnL).
+      // Net = Wallet + Unrealized.
+      walletBalance = reconstructedAmount;
+      walletBalanceUsd = reconstructedUsd;
+      netBalance = new Big(walletBalance).plus(unrealizedPnl).toNumber();
+      netBalanceUsd = new Big(walletBalanceUsd).plus(unrealizedPnlUsd).toNumber();
+    }
 
     // Coin sizes (in coin, at the coin's mark price): shorts' size = the protected
     // leg; longs' size = the leveraged leg. Exposed Size is the part of the coin
@@ -425,23 +526,38 @@ export function getHedgeCoinSummaries(
       (acc, l) => (l.isShort ? acc : acc.plus(l.openPosSize || 0)),
       new Big(0),
     ).toNumber();
-    const hasShort = shortCount > 0;
-    const exposedSize = hasShort
-      ? (refPrice > 0 ? Math.max(0, balanceUsd - protectedUsd) / refPrice : 0)
-      : new Big(walletBalance || 0).plus(leveragedSize || 0).toNumber();
-    const exposedBaseUsd = refPrice > 0 ? exposedSize * refPrice : Math.max(0, balanceUsd - protectedUsd);
-    // Total Exposed = Exposed + Leveraged when a short hedges the coin (the long adds
-    // exposure on top of the uncovered balance). With NO short there is nothing
-    // hedged — the Exposed is already the whole wallet PLUS the long, so adding the
-    // Leveraged leg again would double-count the position (wallet + long + long).
-    const totalExposedUsd = hasShort ? exposedBaseUsd + leveragedUsd : exposedBaseUsd;
-    const totalExposedSize = hasShort
-      ? new Big(exposedSize).plus(leveragedSize).toNumber()
-      : exposedSize;
+    
+    // Exposed Size is the part of the coin that is NOT protected (uncovered base).
+    const exposedSize = refPrice > 0 
+      ? exposedBaseUsd / refPrice 
+      : Math.max(0, new Big(walletBalance || 0).minus(protectedSize).toNumber());
+
+    // Total Exposed Size = Exposed + Leveraged.
+    const totalExposedSize = new Big(exposedSize).plus(leveragedSize).toNumber();
 
     // Aggregated ROI of the coin — unrealized PnL relative to the fixed wallet
     // (mirrors the exchange's Assets screen: unrealized ÷ wallet balance).
     const roiPct = walletBalanceUsd > 0 ? (unrealizedPnlUsd / walletBalanceUsd) * 100 : 0;
+    const realizedRoiPct = walletBalanceUsd > 0 ? (realizedPnlUsd / walletBalanceUsd) * 100 : 0;
+
+    // Mini-Consolidated Metrics (matching HedgeProKpis logic per coin)
+    const denomUsd = netBalanceUsd > 0 ? netBalanceUsd : (walletBalanceUsd > 0 ? walletBalanceUsd : 1);
+    const netProtectedUsd = protectedUsd - leveragedUsd;
+    const netProtectedSize = protectedSize - leveragedSize;
+    const realHedgeProtectedPct = (netProtectedUsd / denomUsd) * 100;
+    const protectedOfEquityPct = (protectedUsd / denomUsd) * 100;
+    const leveragedOfEquityPct = (leveragedUsd / denomUsd) * 100;
+
+    // Visual bar metrics for coin
+    const capitalRef = balanceUsd > 0 ? balanceUsd : protectedUsd + exposedBaseUsd;
+    const barTotal = capitalRef + leveragedUsd;
+    const barMetrics: HedgeBarMetrics = {
+      balanceWidthPct: barTotal > 0 ? (capitalRef / barTotal) * 100 : 0,
+      leveragedWidthPct: barTotal > 0 ? (leveragedUsd / barTotal) * 100 : 0,
+      protectedPct: capitalRef > 0 ? (protectedUsd / capitalRef) * 100 : 0,
+      exposedPct: capitalRef > 0 ? (exposedBaseUsd / capitalRef) * 100 : 0,
+      leveragedOfBalancePct: capitalRef > 0 ? (leveragedUsd / capitalRef) * 100 : leveragedUsd > 0 ? 100 : 0,
+    };
 
     summaries.push({
       key,
@@ -457,8 +573,16 @@ export function getHedgeCoinSummaries(
       netBalanceUsd,
       unrealizedPnl,
       unrealizedPnlUsd,
+      realizedPnl,
+      realizedPnlUsd,
       protectedUsd,
       protectedSize,
+      netProtectedUsd,
+      netProtectedSize,
+      realHedgeProtectedPct,
+      protectedOfEquityPct,
+      leveragedOfEquityPct,
+      barMetrics,
       exposedBaseUsd,
       exposedSize,
       leveragedUsd,
@@ -468,6 +592,7 @@ export function getHedgeCoinSummaries(
       exposedUsd,
       coveragePct,
       roiPct,
+      realizedRoiPct,
       positionCount,
       longCount,
       shortCount,
@@ -588,7 +713,7 @@ export function getHedgeTotals(
     coinSummaries.reduce((acc, c) => acc.plus(selector(c) || 0), new Big(0)).toNumber();
 
   const totalProtected = sum(c => c.protectedUsd);
-  const totalExposed = sum(c => c.exposedUsd);
+  const totalExposed = sum(c => c.exposedBaseUsd);
   const totalLeveraged = sum(c => c.leveragedUsd);
   const totalBalance = sum(c => c.balanceUsd);
 
@@ -604,6 +729,20 @@ export function getHedgeTotals(
   const inverseLongCount = coinSummaries.reduce((acc, c) => acc + c.longCount, 0);
   const inverseShortCount = coinSummaries.reduce((acc, c) => acc + c.shortCount, 0);
 
+  // Portfolio summary bar (beyond-100% model): the hedge protects the WHOLE capital,
+  // so the 100% reference is Total Equity (Σ balance usdValue) — not just the hedged
+  // coin balances. Protected + Exposed = 100% of equity; Leveraged (longs) extends
+  // beyond. Percentages are of the equity reference.
+  const summaryCapital = totalEquity > 0 ? totalEquity : totalProtected;
+  const summaryExposed = Math.max(0, summaryCapital - totalProtected);
+  const summaryBarTotal = summaryCapital + totalLeveraged;
+  const balanceWidthPct = summaryBarTotal > 0 ? (summaryCapital / summaryBarTotal) * 100 : 0;
+  const leveragedWidthPct = summaryBarTotal > 0 ? (totalLeveraged / summaryBarTotal) * 100 : 0;
+  const protectedPct = summaryCapital > 0 ? (totalProtected / summaryCapital) * 100 : 0;
+  const exposedPct = summaryCapital > 0 ? (summaryExposed / summaryCapital) * 100 : 0;
+  const leveragedPct =
+    summaryCapital > 0 ? (totalLeveraged / summaryCapital) * 100 : totalLeveraged > 0 ? 100 : 0;
+
   return {
     totalProtected,
     totalExposed,
@@ -616,5 +755,13 @@ export function getHedgeTotals(
     inversePositionCount,
     inverseLongCount,
     inverseShortCount,
+    summaryCapital,
+    summaryExposed,
+    summaryBarTotal,
+    balanceWidthPct,
+    leveragedWidthPct,
+    protectedPct,
+    exposedPct,
+    leveragedPct,
   };
 }
