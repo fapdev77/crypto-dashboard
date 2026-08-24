@@ -3,7 +3,7 @@ import { OkxTransactionLogEntry } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { OkxAdapter } from '../adapters/OkxAdapter';
-import { matchUniversalTxType } from '../../utils/transactionTypeMapper';
+import { matchUniversalTxType, getOkxUniversalType } from '../../utils/transactionTypeMapper';
 import {
   getOkxTxLogCache,
   saveOkxTxLogCache,
@@ -295,8 +295,8 @@ export class OkxTransactionService {
 
     for (const e of entries) {
       const sub = e.subType || e.transSubType || '';
-      const typeKey = e.type || sub || 'OTHER';
-      typeBreakdown[typeKey] = (typeBreakdown[typeKey] || 0) + 1;
+      const uType = getOkxUniversalType(e);
+      typeBreakdown[uType] = (typeBreakdown[uType] || 0) + 1;
 
       const stableMatch = isStable(e.currency);
       const bucket = stableMatch ? stable : (perCurrency[e.currency] || (perCurrency[e.currency] = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) }));

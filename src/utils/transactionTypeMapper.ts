@@ -103,6 +103,19 @@ export const UNIVERSAL_BADGE_STYLE: Record<UniversalTxType, UniversalBadgeConfig
   }
 };
 
+export const UNIVERSAL_HEX_COLOR_MAP: Record<UniversalTxType, string> = {
+  ALL: '#ffffff',
+  TRADE: '#3B82F6',
+  FUNDING_FEE: '#A855F7',
+  TRANSFER_IN: '#10B981',
+  TRANSFER_OUT: '#F59E0B',
+  LIQUIDATION: '#F43F5E',
+  INTEREST: '#F97316',
+  REWARDS: '#EAB308',
+  DELIVERY: '#06B6D4',
+  OTHERS: '#64748B',
+};
+
 /**
  * Maps Bybit raw transaction type or entry to universal type
  */
@@ -121,7 +134,12 @@ export function getBybitUniversalType(
     f = Number(funding || 0);
   }
 
-  // 1. Funding Fee: Bybit uses SETTLEMENT for 8-hour funding fee settlements, or any type with FUNDING / SETTLE, or non-zero funding field
+  // 1. Trades & Orders (Spot, Futures, Perpetual trades)
+  if (t === 'TRADE' || t === 'CURRENCY_BUY' || t === 'CURRENCY_SELL' || t === 'SPOT') {
+    return 'TRADE';
+  }
+
+  // 2. Funding Fee: Bybit uses SETTLEMENT for 8-hour funding fee settlements, or any type with FUNDING / SETTLE
   if (
     t === 'SETTLEMENT' ||
     t === 'FUNDING' ||
@@ -129,14 +147,9 @@ export function getBybitUniversalType(
     t === 'SETTLE_FEE' ||
     t.includes('FUNDING') ||
     t.includes('SETTLE') ||
-    f !== 0
+    (f !== 0 && !t)
   ) {
     return 'FUNDING_FEE';
-  }
-
-  // 2. Trades & Orders
-  if (t === 'TRADE' || t === 'CURRENCY_BUY' || t === 'CURRENCY_SELL' || t === 'SPOT') {
-    return 'TRADE';
   }
 
   // 3. Transfers
@@ -191,21 +204,7 @@ export function getBitgetUniversalType(
     f = Number(funding || 0);
   }
 
-  // Funding fees
-  if (
-    f !== 0 ||
-    t === 'FUNDING_FEE' ||
-    t === 'SETTLE_FEE' ||
-    t === 'CONTRACT_MAIN_SETTLE_FEE' ||
-    t === 'SETTLE_FEE_USER_IN' ||
-    t === 'SETTLE_FEE_USER_OUT' ||
-    t.includes('SETTLE_FEE') ||
-    t.includes('FUNDING')
-  ) {
-    return 'FUNDING_FEE';
-  }
-
-  // Trades
+  // 1. Trades
   if (
     t === 'TRADE' ||
     t === 'ORDER_DEALT_IN' ||
@@ -223,6 +222,20 @@ export function getBitgetUniversalType(
     t.includes('DEALT')
   ) {
     return 'TRADE';
+  }
+
+  // 2. Funding fees
+  if (
+    t === 'FUNDING_FEE' ||
+    t === 'SETTLE_FEE' ||
+    t === 'CONTRACT_MAIN_SETTLE_FEE' ||
+    t === 'SETTLE_FEE_USER_IN' ||
+    t === 'SETTLE_FEE_USER_OUT' ||
+    t.includes('SETTLE_FEE') ||
+    t.includes('FUNDING') ||
+    (f !== 0 && !t)
+  ) {
+    return 'FUNDING_FEE';
   }
 
   // Transfer in / deposits
@@ -338,25 +351,12 @@ export function getOkxUniversalType(entry: string | {
   const transSubType = String(entry.transSubType || '').trim().toUpperCase();
   const f = Number(entry.fundingFee || 0);
 
-  if (f !== 0 || typeCode === '8' || subTypeCode === '100' || subTypeCode === '101' || transSubType.includes('FUNDING')) {
+  // 1. Funding Fee (type 8, non-zero funding, or funding keywords)
+  if (f !== 0 || typeCode === '8' || transSubType.includes('FUNDING') || transType.includes('FUNDING')) {
     return 'FUNDING_FEE';
   }
 
-  // Trade (type: 2, 14, or trade subTypes)
-  if (
-    typeCode === '2' ||
-    typeCode === '14' ||
-    ['1', '2', '3', '4', '5', '6'].includes(subTypeCode) ||
-    transType.includes('TRADE') ||
-    transSubType.includes('BUY') ||
-    transSubType.includes('SELL') ||
-    transSubType.includes('OPEN') ||
-    transSubType.includes('CLOSE')
-  ) {
-    return 'TRADE';
-  }
-
-  // Liquidation / ADL (type: 5, 9, 10 or subTypes 100-107, 125-128, 160-162, 170-171)
+  // 2. Liquidation / ADL (type: 5, 9, 10 or liquidation subTypes)
   if (
     typeCode === '5' ||
     typeCode === '9' ||
@@ -368,6 +368,20 @@ export function getOkxUniversalType(entry: string | {
     transSubType.includes('ADL')
   ) {
     return 'LIQUIDATION';
+  }
+
+  // 3. Trade (type: 2, 14, or trade subTypes)
+  if (
+    typeCode === '2' ||
+    typeCode === '14' ||
+    ['1', '2', '3', '4', '5', '6'].includes(subTypeCode) ||
+    transType.includes('TRADE') ||
+    transSubType.includes('BUY') ||
+    transSubType.includes('SELL') ||
+    transSubType.includes('OPEN') ||
+    transSubType.includes('CLOSE')
+  ) {
+    return 'TRADE';
   }
 
   // Transfer in (type: 1 with subType: 11, or deposit subtypes)
@@ -442,16 +456,27 @@ export function matchUniversalTxType(
   if (!filterType || filterType.toUpperCase() === 'ALL') return true;
 
   let resolvedUniversal: UniversalTxType;
+  let targetUniversal: UniversalTxType;
 
   if (exchange === 'bybit') {
     resolvedUniversal = getBybitUniversalType(entry.type, entry.funding ?? entry.fundingFee);
+    targetUniversal = getBybitUniversalType(filterType);
   } else if (exchange === 'bitget') {
     resolvedUniversal = getBitgetUniversalType(entry.type, entry.funding ?? entry.fundingFee);
+    targetUniversal = getBitgetUniversalType(filterType);
   } else {
     resolvedUniversal = getOkxUniversalType(entry);
+    targetUniversal = getOkxUniversalType(filterType);
   }
 
-  return resolvedUniversal === filterType;
+  const rawEntryType = String(entry.type || entry.businessType || entry.transType || '').trim().toUpperCase();
+  const rawFilterType = filterType.trim().toUpperCase();
+
+  return (
+    resolvedUniversal === filterType ||
+    resolvedUniversal === targetUniversal ||
+    rawEntryType === rawFilterType
+  );
 }
 
 /**

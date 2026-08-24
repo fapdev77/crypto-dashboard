@@ -4,7 +4,7 @@ import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { BitgetUTAAdapter } from '../adapters/BitgetUTAAdapter';
 import { BitgetClassicAdapter } from '../adapters/BitgetClassicAdapter';
-import { matchUniversalTxType } from '../../utils/transactionTypeMapper';
+import { matchUniversalTxType, getBitgetUniversalType } from '../../utils/transactionTypeMapper';
 import {
   getBitgetTxLogCache,
   saveBitgetTxLogCache,
@@ -334,7 +334,8 @@ export class BitgetTransactionService {
     const EXCHANGE_TYPES = ['SPOT', 'CONVERT', 'CURRENCY_BUY', 'CURRENCY_SELL'];
 
     for (const e of entries) {
-      typeBreakdown[e.type] = (typeBreakdown[e.type] || 0) + 1;
+      const uType = getBitgetUniversalType(e.type, e.funding || (e.type?.toUpperCase().includes('SETTLE_FEE') ? e.change : 0));
+      typeBreakdown[uType] = (typeBreakdown[uType] || 0) + 1;
 
       const stableMatch = isStable(e.currency);
       const bucket = stableMatch ? stable : (perCurrency[e.currency] || (perCurrency[e.currency] = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) }));

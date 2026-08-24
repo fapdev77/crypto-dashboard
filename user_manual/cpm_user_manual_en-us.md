@@ -174,11 +174,23 @@ A comprehensive dashboard providing a unified view of real-time and historical f
 - **Visual Indicators**: Flashing animations for rate updates and tooltips explaining funding direction (Longs paying Shorts vs Shorts paying Longs).
 - *Note on OKX*: OKX API restricts historical data to ~3 months, and is automatically excluded from 6M and 1Y averages to preserve market accuracy.
 
-### 📜 Bybit Transactions Log
-A specialized tracking tool specifically built for Bybit users to download, store, and analyze the full raw transaction log directly from the exchange:
-- **Deep Syncing**: Downloads your entire history of settlements, funding fees, and trading fees into local IndexedDB cache.
-- **Realized PnL Calculation**: Computes exact realized gains and losses based on cash flow, funding, and fees (`cashFlow + funding - fee`).
-- **Incremental Updates**: Syncs only new records following initial sync.
+### 📜 Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)
+Specialized financial audit modules providing full access to raw transaction logs directly from Bybit, Bitget, and OKX:
+- **Deep & Incremental Syncing**: Downloads your entire history of trades, funding fees, settlements, liquidations, transfers, deposits, withdrawals, and margin interest, persistently cached in local IndexedDB.
+- **Unified Transaction Filters (Universal Transaction Mapper)**: Standardized filtering system and badges across 10 universal transaction types:
+  1. *Trade & Orders* (Spot & futures trades, executions, and close PnL)
+  2. *Funding Fee* (Periodic funding fee payments and receipts)
+  3. *Transfer In / Deposit* (Deposits and incoming subaccount/wallet transfers)
+  4. *Transfer Out / Withdraw* (Withdrawals and outgoing subaccount/wallet transfers)
+  5. *Liquidation & ADL* (Forced liquidations and auto-deleveraging events)
+  6. *Interest & Loans* (Margin interest, borrow, and loan repayments)
+  7. *Rewards & Bonus* (Trial funds, coupons, trading bonuses, and airdrops)
+  8. *Delivery & Settle* (Futures delivery settlements and option exercises)
+  9. *Others* (Currency conversions, auto-deductions, and miscellaneous entries)
+  10. *All Types* (Unfiltered complete transaction view)
+- **Additional Multi-Criteria Filters**: Filter by instrument category (Spot, Linear, Inverse, Option, Margin), Currency/Coin, Account/Subaccount, Timeframe, and Symbol search.
+- **Cash Flow & Realized PnL Calculation**: Computes exact realized net changes based on standard cash flow accounting (`cashFlow + funding - fee`) and reconciles with wallet balance (`walletBalance`).
+- **Interactive KPI Cards & Distribution Visuals**: Track total transactions, aggregated USD funding fees, net trading fees paid/rebated, and net period portfolio changes.
 
 ### ⚡ API Tester (REST & WebSocket Diagnostics)
 Developer and diagnostic utility for testing direct connectivity with exchanges:

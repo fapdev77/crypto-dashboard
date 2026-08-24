@@ -62,17 +62,18 @@ export function OkxTransactionDetailsModal({
               <div className="flex flex-col gap-2">
                 <span className="text-xs text-[#8E9299]">Count by Type</span>
                 <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
-                  {Object.entries(stats.typeBreakdown).map(([t, count]) => {
-                    const uniType = getOkxUniversalType(t);
-                    const badge = UNIVERSAL_BADGE_STYLE[uniType] || UNIVERSAL_BADGE_STYLE.OTHERS;
-                    const label = t ? t.replace(/_/g, ' ') : badge.label;
-                    return (
-                      <div key={t} className="flex items-center justify-between p-2 rounded bg-[#111215] border border-[#2a2b30] text-xs">
-                        <span className={`px-2 py-0.5 rounded border text-[11px] font-medium ${badge.textColor} ${badge.bgColor} ${badge.borderColor}`}>{label}</span>
-                        <span className="text-white font-mono font-medium">{count.toLocaleString()}</span>
-                      </div>
-                    );
-                  })}
+                  {Object.entries(stats.typeBreakdown)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([t, count]) => {
+                      const uniType = getOkxUniversalType(t);
+                      const badge = UNIVERSAL_BADGE_STYLE[uniType] || UNIVERSAL_BADGE_STYLE.OTHERS;
+                      return (
+                        <div key={t} className="flex items-center justify-between p-2 rounded bg-[#111215] border border-[#2a2b30] text-xs">
+                          <span className={`px-2 py-0.5 rounded border text-[11px] font-medium ${badge.textColor} ${badge.bgColor} ${badge.borderColor}`}>{badge.label}</span>
+                          <span className="text-white font-mono font-medium">{count.toLocaleString()}</span>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </>
