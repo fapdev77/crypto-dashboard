@@ -71,6 +71,9 @@ const TIME_PERIODS = [
   { label: '14 Days', ms: 14 * 24 * 60 * 60 * 1000 },
   { label: '30 Days', ms: 30 * 24 * 60 * 60 * 1000 },
   { label: '90 Days', ms: 90 * 24 * 60 * 60 * 1000 },
+  { label: '120 Days', ms: 120 * 24 * 60 * 60 * 1000 },
+  { label: '6 Months', ms: 180 * 24 * 60 * 60 * 1000 },
+  { label: '1 Year', ms: 365 * 24 * 60 * 60 * 1000 },
 ];
 
 interface Props {
