@@ -1,12 +1,7 @@
-import React, { useMemo, useState } from 'react';
-import Big from 'big.js';
+import React from 'react';
 import { ShieldCheck, Activity } from 'lucide-react';
-import { usePositionsStore } from '../../../store/positionsStore';
-import { useBalancesStore } from '../../../store/balancesStore';
-import { useSettingsStore } from '../../../store/settingsStore';
-import { useApiKeysStore } from '../../../store/apiKeysStore';
+import { useHedgeData } from '../../../hooks/useHedgeData';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
-import { getHedgeCoinSummaries, getHedgeTotals } from '../../../utils/hedgeUtils';
 import { FilterBar } from '../../ui/FilterBar';
 import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
 import { HedgeProKpis } from './HedgeProKpis';
@@ -16,93 +11,25 @@ import { HedgeExposureBar } from './HedgeExposureBar';
 
 /**
  * Hedge Pro — dashboard de acompanhamento de posições em hedge (contratos
- * inversos / Coin-M). Pura derivação: lê as stores já sincronizadas e calcula
- * protegido/exposto/alavancado em memória (sem novas chamadas de API).
+ * inversos / Coin-M). Pura derivação desacoplada via hook useHedgeData.
  */
 export function HedgeProDashboard() {
-  const balances = useBalancesStore(state => state.balances);
-  const positions = usePositionsStore(state => state.positions);
-  const useMockData = useSettingsStore(state => state.useMockData);
-  const keys = useApiKeysStore(state => state.keys);
+  const {
+    search,
+    setSearch,
+    exchange,
+    setExchange,
+    side,
+    setSide,
+    exchanges,
+    coinSummaries,
+    totals,
+    filteredSummaries,
+    filteredTotals,
+    sideOptions,
+  } = useHedgeData();
+
   const formatCurrency = useFormatCurrency();
-
-  const [search, setSearch] = useState('');
-  const [exchange, setExchange] = useState('All');
-  const [side, setSide] = useState('All');
-
-  const balancesList = useMemo(() => Object.values(balances), [balances]);
-  const positionsList = useMemo(() => Object.values(positions), [positions]);
-  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
-
-  const activeBalances = useMemo(() => {
-    if (!useMockData && activeKeyIds.size === 0) return [];
-    return useMockData
-      ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
-      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
-  }, [balancesList, useMockData, activeKeyIds]);
-
-  const activePositions = useMemo(() => {
-    if (!useMockData && activeKeyIds.size === 0) return [];
-    return useMockData
-      ? positionsList.filter(p => p.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(p => !p.connectionId.startsWith('mocked-data') && activeKeyIds.has(p.connectionId));
-  }, [positionsList, useMockData, activeKeyIds]);
-
-  // Same totalEquity source as the main dashboard (Σ balance usdValue).
-  const totalEquity = useMemo(() => {
-    return Number(activeBalances.reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)));
-  }, [activeBalances]);
-
-  const coinSummaries = useMemo(
-    () => getHedgeCoinSummaries(activePositions, activeBalances),
-    [activePositions, activeBalances],
-  );
-
-  const totals = useMemo(() => getHedgeTotals(coinSummaries, totalEquity), [coinSummaries, totalEquity]);
-
-  // ── Filters ──
-  const exchanges = useMemo(() => Array.from(new Set(coinSummaries.map(c => c.exchange))), [coinSummaries]);
-
-  const filteredSummaries = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return coinSummaries.filter(c => {
-      if (exchange !== 'All' && c.exchange !== exchange) return false;
-      if (side !== 'All') {
-        if (side === 'long' && c.longCount === 0) return false;
-        if (side === 'short' && c.shortCount === 0) return false;
-      }
-      if (
-        q &&
-        !c.baseCoin.toLowerCase().includes(q) &&
-        !c.accountLabel.toLowerCase().includes(q) &&
-        !c.exchange.toLowerCase().includes(q)
-      ) return false;
-      return true;
-    });
-  }, [coinSummaries, exchange, side, search]);
-
-  const filteredTotals = useMemo(() => getHedgeTotals(filteredSummaries, totalEquity), [filteredSummaries, totalEquity]);
-
-  // Portfolio summary bar (beyond-100% model): the hedge protects the WHOLE capital,
-  // so the 100% reference is Total Equity (Σ balance usdValue) — not just the hedged
-  // coin balances. Protected + Exposed = 100% of equity; Leveraged (longs) extends
-  // beyond. Percentages are of the equity reference.
-  const summaryCapital = totals.totalEquity > 0 ? totals.totalEquity : totals.totalProtected;
-  const summaryExposed = Math.max(0, summaryCapital - totals.totalProtected);
-  const summaryBarTotal = summaryCapital + totals.totalLeveraged;
-  const summaryBalanceWidthPct = summaryBarTotal > 0 ? (summaryCapital / summaryBarTotal) * 100 : 0;
-  const summaryLeveragedWidthPct = summaryBarTotal > 0 ? (totals.totalLeveraged / summaryBarTotal) * 100 : 0;
-  const summaryProtectedPct = summaryCapital > 0 ? (totals.totalProtected / summaryCapital) * 100 : 0;
-  const summaryExposedPct = summaryCapital > 0 ? (summaryExposed / summaryCapital) * 100 : 0;
-  const summaryLeveragedPct =
-    summaryCapital > 0 ? (totals.totalLeveraged / summaryCapital) * 100 : totals.totalLeveraged > 0 ? 100 : 0;
-
-  // Note: the 'All Sides' option is rendered automatically by FilterBar
-  // (labelAll) — passing an 'All' entry here would duplicate it in the menu.
-  const sideOptions = [
-    { value: 'long', label: 'Longs' },
-    { value: 'short', label: 'Shorts' },
-  ];
 
   return (
     <div className="flex flex-col gap-5">
@@ -140,20 +67,20 @@ export function HedgeProDashboard() {
         </div>
         <div className="flex justify-between text-[15px] font-semibold font-mono">
           <span className="text-emerald-500/90">{formatCurrency(totals.totalProtected, 'usd', 2)}</span>
-          <span className="text-white font-semibold">{formatCurrency(summaryExposed, 'usd', 2)}</span>
+          <span className="text-white font-semibold">{formatCurrency(totals.summaryExposed, 'usd', 2)}</span>
           <span className="text-amber-400 font-semibold">{formatCurrency(totals.totalLeveraged, 'usd', 2)}</span>
         </div>
         <HedgeExposureBar
-          protectedPct={summaryProtectedPct}
-          exposedPct={summaryExposedPct}
-          balanceWidthPct={summaryBalanceWidthPct}
-          leveragedWidthPct={summaryLeveragedWidthPct}
+          protectedPct={totals.protectedPct}
+          exposedPct={totals.exposedPct}
+          balanceWidthPct={totals.balanceWidthPct}
+          leveragedWidthPct={totals.leveragedWidthPct}
         />
         <div className="flex justify-between text-[15px] font-semibold font-mono">
-          <span className="text-emerald-500/90">P {summaryProtectedPct.toFixed(2)}%</span>
-          <span className="text-white font-semibold">E {summaryExposedPct.toFixed(2)}%</span>
-          {summaryLeveragedPct > 0 && (
-            <span className="text-amber-400 font-semibold">L +{summaryLeveragedPct.toFixed(2)}%</span>
+          <span className="text-emerald-500/90">P {totals.protectedPct.toFixed(2)}%</span>
+          <span className="text-white font-semibold">E {totals.exposedPct.toFixed(2)}%</span>
+          {totals.leveragedPct > 0 && (
+            <span className="text-amber-400 font-semibold">L +{totals.leveragedPct.toFixed(2)}%</span>
           )}
         </div>
       </div>

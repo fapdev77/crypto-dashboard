@@ -10,12 +10,13 @@ import { Pagination } from '../../ui/Pagination';
 import { StatusAndSyncBadge } from '../../ui/StatusAndSyncBadge';
 import { AppTooltip } from '../../ui/Tooltip';
 import { BybitTransactionRow } from './BybitTransactionRow';
-import { BybitTransactionFilters, TX_TYPES, typeColorMap, typeHexColorMap } from './BybitTransactionFilters';
+import { BybitTransactionFilters } from './BybitTransactionFilters';
 import { BybitTransactionProgress } from './BybitTransactionProgress';
 import { BybitTransactionDetailsModal, DetailsModalType } from './BybitTransactionDetailsModal';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { LogManager } from '../../../services/LogManager';
 import { CoinIcon } from '../../ui/CoinIcon';
+import { UNIVERSAL_BADGE_STYLE, UNIVERSAL_HEX_COLOR_MAP, UniversalTxType } from '../../../utils/transactionTypeMapper';
 
 
 export function BybitTransactions() {
@@ -153,15 +154,17 @@ export function BybitTransactions() {
               </div>
               <span className="text-2xl font-bold text-white mt-1">{stats.totalCount}</span>
               <div className="flex flex-wrap gap-1 mt-2">
-                {Object.entries(stats.typeBreakdown).slice(0, 4).map(([type, count]) => {
-                  const typeLabel = TX_TYPES.find(t => t.value === type)?.label || type;
-                  const typeClass = typeColorMap[type] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
-                  return (
-                    <span key={type} className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border ${typeClass}`}>
-                      {typeLabel}: {count}
-                    </span>
-                  );
-                })}
+                {Object.entries(stats.typeBreakdown)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 4)
+                  .map(([type, count]) => {
+                    const badge = UNIVERSAL_BADGE_STYLE[type as UniversalTxType] || UNIVERSAL_BADGE_STYLE.OTHERS;
+                    return (
+                      <span key={type} className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border ${badge.textColor} ${badge.bgColor} ${badge.borderColor}`}>
+                        {badge.label}: {count}
+                      </span>
+                    );
+                  })}
               </div>
             </div>
             <div className="w-20 h-20 shrink-0">
@@ -172,21 +175,21 @@ export function BybitTransactions() {
                       contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '11px' }}
                       itemStyle={{ color: '#fff' }}
                       formatter={(value, name) => {
-                        const typeLabel = TX_TYPES.find(t => t.value === name)?.label || name;
-                        return [value, typeLabel];
+                        const badge = UNIVERSAL_BADGE_STYLE[name as UniversalTxType] || UNIVERSAL_BADGE_STYLE.OTHERS;
+                        return [value, badge.label];
                       }}
                     />
                     <Pie
                       data={Object.entries(stats.typeBreakdown).map(([type, count]) => ({
                         name: type,
                         value: count,
-                        color: typeHexColorMap[type] || '#8E9299'
+                        color: UNIVERSAL_HEX_COLOR_MAP[type as UniversalTxType] || '#8E9299'
                       }))}
                       cx="50%" cy="50%" innerRadius="55%" outerRadius="100%"
                       dataKey="value" stroke="none"
                     >
                       {Object.entries(stats.typeBreakdown).map(([type, _], i) => (
-                        <Cell key={i} fill={typeHexColorMap[type] || '#8E9299'} />
+                        <Cell key={i} fill={UNIVERSAL_HEX_COLOR_MAP[type as UniversalTxType] || '#8E9299'} />
                       ))}
                     </Pie>
                   </PieChart>

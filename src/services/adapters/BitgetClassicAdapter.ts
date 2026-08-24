@@ -527,4 +527,209 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
     }
     return 'NOT_FOUND';
   }
+
+  // ── Transaction Log (Classic Bills / Financial Records) ──
+  public async getTransactionLog(
+    key: ApiCredentials,
+    startTime: number,
+    endTime: number,
+    category: string = 'USDT-FUTURES',
+    cursor?: string
+  ): Promise<{ list: any[]; nextPageCursor: string }> {
+    const effectiveCategory = category ? category.toUpperCase() : 'USDT-FUTURES';
+
+    // Try V3 financial-records first
+    try {
+      const query = new URLSearchParams();
+      query.append('category', effectiveCategory);
+      query.append('startTime', startTime.toString());
+      query.append('endTime', endTime.toString());
+      query.append('limit', '100');
+      if (cursor) query.append('cursor', cursor);
+
+      const endpoint = `/api/v3/account/financial-records?${query.toString()}`;
+      const url = `https://api.bitget.com${endpoint}`;
+
+      const headers = await BitgetClassicAdapter.getHeaders(
+        key.apiKey,
+        key.apiSecret,
+        key.passphrase || '',
+        'GET',
+        endpoint
+      );
+
+      const res = await proxyFetch({ targetUrl: url, method: 'GET', headers });
+      if (res.code === '00000' && res.data) {
+        return {
+          list: (res.data.list || []).map((item: any) => ({ ...item, category: item.category || effectiveCategory })),
+          nextPageCursor: res.data.cursor || '',
+        };
+      }
+    } catch {
+      // Fallback to V2 endpoints based on category
+    }
+
+    // Fallback: V2 Spot Bills
+    if (effectiveCategory === 'SPOT') {
+      try {
+        const spotQuery = new URLSearchParams();
+        spotQuery.append('startTime', startTime.toString());
+        spotQuery.append('endTime', endTime.toString());
+        spotQuery.append('limit', '100');
+        if (cursor) spotQuery.append('idLessThan', cursor);
+
+        const spotEndpoint = `/api/v2/spot/account/bills?${spotQuery.toString()}`;
+        const spotUrl = `https://api.bitget.com${spotEndpoint}`;
+        const spotHeaders = await BitgetClassicAdapter.getHeaders(
+          key.apiKey,
+          key.apiSecret,
+          key.passphrase || '',
+          'GET',
+          spotEndpoint
+        );
+
+        const spotRes = await proxyFetch({ targetUrl: spotUrl, method: 'GET', headers: spotHeaders });
+        if (spotRes.code === '00000' && Array.isArray(spotRes.data)) {
+          const list = spotRes.data.map((item: any) => ({ ...item, category: 'spot' }));
+          const nextCursor = list.length === 100 ? (list[list.length - 1].id || list[list.length - 1].billId || '') : '';
+          return { list, nextPageCursor: nextCursor };
+        }
+      } catch {
+        return { list: [], nextPageCursor: '' };
+      }
+    }
+
+    // Fallback: V2 Margin Records
+    if (effectiveCategory === 'MARGIN') {
+      try {
+        const marginQuery = new URLSearchParams();
+        marginQuery.append('startTime', startTime.toString());
+        marginQuery.append('endTime', endTime.toString());
+        marginQuery.append('limit', '100');
+        if (cursor) marginQuery.append('idLessThan', cursor);
+
+        const marginEndpoint = `/api/v2/margin/isolated/financial-records?${marginQuery.toString()}`;
+        const marginUrl = `https://api.bitget.com${marginEndpoint}`;
+        const marginHeaders = await BitgetClassicAdapter.getHeaders(
+          key.apiKey,
+          key.apiSecret,
+          key.passphrase || '',
+          'GET',
+          marginEndpoint
+        );
+
+        const marginRes = await proxyFetch({ targetUrl: marginUrl, method: 'GET', headers: marginHeaders });
+        if (marginRes.code === '00000') {
+          const list = (marginRes.data?.list || marginRes.data || []).map((item: any) => ({ ...item, category: 'margin' }));
+          const nextCursor = list.length === 100 ? (list[list.length - 1].id || '') : '';
+          return { list, nextPageCursor: nextCursor };
+        }
+      } catch {
+        return { list: [], nextPageCursor: '' };
+      }
+    }
+
+    // Fallback: V2 Mix (Futures) Bills
+    try {
+      const productType = effectiveCategory.includes('COIN')
+        ? 'COIN-FUTURES'
+        : effectiveCategory.includes('USDC')
+        ? 'USDC-FUTURES'
+        : 'USDT-FUTURES';
+
+      const mixQuery = new URLSearchParams();
+      mixQuery.append('productType', productType);
+      mixQuery.append('startTime', startTime.toString());
+      mixQuery.append('endTime', endTime.toString());
+      mixQuery.append('pageSize', '100');
+      if (cursor) mixQuery.append('lastEndId', cursor);
+
+      const mixEndpoint = `/api/v2/mix/account/bill?${mixQuery.toString()}`;
+      const mixUrl = `https://api.bitget.com${mixEndpoint}`;
+      const mixHeaders = await BitgetClassicAdapter.getHeaders(
+        key.apiKey,
+        key.apiSecret,
+        key.passphrase || '',
+        'GET',
+        mixEndpoint
+      );
+
+      const mixRes = await proxyFetch({ targetUrl: mixUrl, method: 'GET', headers: mixHeaders });
+      if (mixRes.code === '00000') {
+        const rawList = mixRes.data?.bills || mixRes.data || [];
+        const list = Array.isArray(rawList)
+          ? rawList.map((item: any) => ({ ...item, category: effectiveCategory.toLowerCase() }))
+          : [];
+        return {
+          list,
+          nextPageCursor: mixRes.data?.nextFlag ? (mixRes.data?.lastEndId || '') : '',
+        };
+      }
+    } catch {
+      // Return empty if mix bills query failed
+    }
+
+    return { list: [], nextPageCursor: '' };
+  }
+
+  public static normalizeTxLogEntry(raw: any, key: ApiCredentials): import('../../types').BitgetTransactionLogEntry {
+    const transactionTime = parseInt(String(raw.cTime || raw.ts || raw.uTime || '0'), 10);
+    const amount = raw.amount || raw.size || '0';
+    const fee = raw.fee || raw.fees || '0';
+    const balance = raw.balance || raw.accountBalance || '0';
+    const positionAmount = raw.positionAmount || raw.posAmount || '0';
+    const positionBalance = raw.positionBalance || raw.posBalance || '0';
+
+    const cleanSymbol = (raw.symbol || '').replace(/_(UMCBL|DMCBL|CMCBL)$/, '');
+    
+    // Normalize raw type string
+    let rawType = String(raw.type || raw.businessType || raw.business || raw.billType || '').toUpperCase();
+    if (rawType === 'TRANS_FROM_EXCHANGE') rawType = 'TRANSFER_IN';
+    if (rawType === 'TRANS_TO_EXCHANGE') rawType = 'TRANSFER_OUT';
+    if (rawType === 'CONTRACT_EXCHANGE') rawType = 'TRANSFER';
+    if (rawType === 'TRIAL_FUND') rawType = 'BONUS';
+    if (rawType === 'TRIAL_FUND_RECYCLE') rawType = 'BONUS_RECOLLECT';
+    if (rawType === 'DELIVERY_SETTLE') rawType = 'DELIVERY';
+
+    let category = 'other';
+    if (raw.category) {
+      category = String(raw.category).toLowerCase();
+    } else if (raw.symbol?.includes('_DMCBL')) {
+      category = 'coin-futures';
+    } else if (raw.symbol?.includes('_CMCBL')) {
+      category = 'usdc-futures';
+    } else if (raw.businessType || raw.symbol?.includes('_UMCBL')) {
+      category = 'usdt-futures';
+    }
+
+    return {
+      id: `${key.id}-${raw.id || raw.billId || transactionTime}-${transactionTime}`,
+      connectionId: key.id,
+      exchange: 'bitget',
+      label: key.label,
+      rawId: String(raw.id || raw.billId || ''),
+      symbol: cleanSymbol,
+      category,
+      side: raw.side || '',
+      type: rawType,
+      groupType: raw.groupType || '',
+      positionType: raw.positionType || '',
+      currency: raw.coin || raw.currency || raw.ccy || raw.coinName || '',
+      amount: String(amount),
+      change: String(raw.change || amount),
+      cashFlow: String(raw.cashFlow || amount),
+      cashBalance: String(balance),
+      balance: String(balance),
+      fee: String(fee),
+      feeCurrency: raw.feeCoin || raw.feeCurrency || raw.coin || raw.coinName || '',
+      positionAmount: String(positionAmount),
+      positionBalance: String(positionBalance),
+      transactionTime,
+      tradeId: raw.tradeId || '',
+      orderId: raw.orderId || '',
+      orderLinkId: raw.orderLinkId || '',
+      extra: raw.extra || (raw.memo ? raw.memo : undefined),
+      raw,
+    };
+  }
 }

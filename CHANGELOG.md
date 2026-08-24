@@ -1,3 +1,39 @@
+# [1.41.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.40.0...v1.41.0) (2026-08-24)
+
+
+### Features
+
+* add long-term duration filters to OKX txs ([1469fd7](https://github.com/fapdev77/crypto-dashboard/commit/1469fd774906fe7b3dd108d7029923612ee15659))
+
+# [1.40.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.39.0...v1.40.0) (2026-08-24)
+
+
+### Features
+
+* implement multi-exchange analytics support and standardize transaction type mapping ([dcc3e1d](https://github.com/fapdev77/crypto-dashboard/commit/dcc3e1d21a379b612a1f54d1e3373e32d641bc10))
+
+# [1.39.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.38.0...v1.39.0) (2026-08-23)
+
+
+### Features
+
+* add Bitget and OKX transaction sync engines ([030d815](https://github.com/fapdev77/crypto-dashboard/commit/030d815148cbf0b509cc47662403ce0989759767))
+
+# [1.39.0] (2026-08-22)
+
+### Features
+
+* **analytics:** add Bitget Transactions and OKX Transactions deep sync engines and analytics dashboards
+* **storage:** upgrade IndexedDB cache schema to DB_VERSION 12 with dedicated stores for Bitget and OKX transaction logs and metadata
+* **adapters:** normalize transaction logs and cash balance across Bitget (Classic & UTA) and OKX APIs
+
+# [1.38.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.37.1...v1.38.0) (2026-08-21)
+
+
+### Features
+
+* improve PWA update flow and cache control ([845f25f](https://github.com/fapdev77/crypto-dashboard/commit/845f25fd167d4642db82a0b76c56787269ce6354))
+
 ## [1.37.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.37.0...v1.37.1) (2026-08-21)
 
 
