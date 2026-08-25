@@ -9,6 +9,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
 import { getInverseUsdValues, getOpenPositionSizeAndValue } from '../utils/inverseUtils';
 import { getHedgePositionLevels } from '../utils/hedgeUtils';
+import { HedgeExposureBar } from './analytics/HedgePro/HedgeExposureBar';
 import { useBalancesStore } from '../store/balancesStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
@@ -54,10 +55,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
   // Inverse Protection / Exposure logic via centralized hedgeUtils
-  const matchingBalance = Object.values(balances).find(
-    b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy.toUpperCase()
-  );
-  const hedgeLevels = getHedgePositionLevels(pos, matchingBalance);
+  const hedgeLevels = getHedgePositionLevels(pos, Object.values(balances));
 
   const posTypeStr = pos.instrumentType === 'INVERSE' ? 'CM Perpetual Inverse' :
     (pos.instrumentType && pos.instrumentType !== 'PERP') ?
@@ -358,7 +356,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         {/* Inverse - Protected / Exposed */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           {pos.instrumentType === 'INVERSE' ? (
-            <AppTooltip description="Click to view in Hedge Pro dashboard">
+            <AppTooltip description="Indicates the Hedge protection based on Total Gross Assets, not considering the position's PNL (Wallet Balance - Position = Gross Exposed Balance). Click to view more details in Hedge Pro dashboard.">
               <button
                 type="button"
                 onClick={handleNavigateToHedgePro}
@@ -382,12 +380,23 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               title="Click to view in Hedge Pro"
             >
               <div className="flex items-center justify-between text-[10px] font-mono leading-none">
-                <span className="text-[#00C853]">{hedgeLevels.protectedPct.toFixed(1)}%</span>
-                <span className={hedgeLevels.exposedPct > 0 && hedgeLevels.exposedPct <= 100 ? "text-[#8E9299]" : "text-[#FF4444]"}>{hedgeLevels.exposedPct.toFixed(1)}%</span>
+                <span className="text-[#00C853]">{hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-white">{hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
+                  {hedgeLevels.barMetrics.leveragedWidthPct > 0 && (
+                    <span className="text-amber-400 font-semibold" title="Leveraged long exposure">
+                      +{((hedgeLevels.barMetrics.leveragedOfBalancePct || 0)).toFixed(0)}%
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex h-1.5 rounded-full overflow-hidden w-full bg-[#2a2b30] mt-0.5 mb-0.5 group-hover/hedge:ring-1 group-hover/hedge:ring-emerald-400/40 transition-all">
-                <div className="bg-[#00C853] h-full transition-all duration-300" style={{ width: `${Math.min(100, hedgeLevels.protectedPct)}%` }} />
-                <div className={`${hedgeLevels.exposedPct > 0 && hedgeLevels.exposedPct <= 100 ? "bg-[#8E9299]" : "bg-[#FF4444]"} h-full transition-all duration-300`} style={{ width: `${Math.min(100, Math.max(0, hedgeLevels.exposedPct))}%` }} />
+              <div className="mt-1 mb-1 group-hover/hedge:ring-1 group-hover/hedge:ring-emerald-400/40 rounded-full transition-all">
+                <HedgeExposureBar
+                  protectedPct={hedgeLevels.barMetrics.protectedPct}
+                  exposedPct={hedgeLevels.barMetrics.exposedPct}
+                  balanceWidthPct={hedgeLevels.barMetrics.balanceWidthPct}
+                  leveragedWidthPct={hedgeLevels.barMetrics.leveragedWidthPct}
+                />
               </div>
               <div className="flex justify-between text-[9px] font-mono text-[#8E9299] leading-none text-opacity-80">
                 <span>Bal: {formatCcy(hedgeLevels.balanceAmount)}</span>
@@ -480,7 +489,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             </AppTooltip>
 
             {pos.instrumentType === 'INVERSE' ? (
-              <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-4">
+              <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
                   <AppTooltip description="Click to view details in Hedge Pro">
                     <button
@@ -493,34 +502,49 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                     </button>
                   </AppTooltip>
 
-                  <div className="flex flex-col gap-3 mt-1">
+                  <div className="flex flex-col gap-2.5 mt-1.5">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#8E9299]">Balance:</span>
+                      <span className="text-[10px] text-[#8E9299]">Wallet Balance:</span>
                       <span className="font-mono text-white text-[13px]">
                         {formatCcy(hedgeLevels.balanceAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.balanceUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#00C853]">Protected: {hedgeLevels.protectedPct.toFixed(2)}%</span>
+                      <span className="text-[10px] text-emerald-400 font-medium">Protected: {hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
                       <span className="font-mono text-white text-[13px]">
                         {formatCcy(hedgeLevels.protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.protectedUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#FF4444]">Exposed: {hedgeLevels.exposedPct.toFixed(2)}%</span>
+                      <span className="text-[10px] text-white font-medium">Exposed (Base): {hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(hedgeLevels.exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.exposedUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.markPrice > 0 ? hedgeLevels.exposedBaseUsd / hedgeLevels.markPrice : 0)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.exposedBaseUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
+
+                    {!isShort && hedgeLevels.leveragedUsd > 0 && (
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-amber-400 font-medium">
+                          Leveraged (Long): +{(hedgeLevels.barMetrics.leveragedOfBalancePct || 0).toFixed(1)}%
+                        </span>
+                        <span className="font-mono text-white text-[13px]">
+                          {formatCcy(hedgeLevels.openPosSize)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.leveragedUsd, 'usd', 2)} USD</span>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {!isShort && (
-                  <div className="flex items-start gap-1 py-1.5 px-2 bg-orange-500/10 border border-orange-500/20 rounded">
-                    <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
-                    <span className="text-[9.5px] text-orange-300 font-medium leading-tight">Overexposed! Focus on risk management! Always have a stop in place!</span>
+                {hedgeLevels.overexposed && (
+                  <div className="flex items-start gap-1 py-1.5 px-2 bg-amber-500/10 border border-amber-500/20 rounded">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                    <span className="text-[9.5px] text-amber-300 font-medium leading-tight">
+                      {isShort
+                        ? 'No matching coin balance found — this position has no identified coverage.'
+                        : 'Leveraged! Focus on risk management! Always have a stop in place!'}
+                    </span>
                   </div>
                 )}
               </div>
