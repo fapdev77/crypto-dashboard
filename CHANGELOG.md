@@ -1,3 +1,10 @@
+# [1.43.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.42.0...v1.43.0) (2026-08-25)
+
+
+### Features
+
+* **ui:** add HedgeExposureBar to PositionCard ([0ff3c83](https://github.com/fapdev77/crypto-dashboard/commit/0ff3c832590b99836275594c143fb6fdd1ae1080))
+
 # [1.42.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.41.0...v1.42.0) (2026-08-24)
 
 
