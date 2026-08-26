@@ -10,6 +10,8 @@ import { AppTooltip } from './ui/Tooltip';
 import { getInverseUsdValues, getOpenPositionSizeAndValue } from '../utils/inverseUtils';
 import { getHedgePositionLevels } from '../utils/hedgeUtils';
 import { HedgeExposureBar } from './analytics/HedgePro/HedgeExposureBar';
+import { usePositionsStore } from '../store/positionsStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { useBalancesStore } from '../store/balancesStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
@@ -23,6 +25,8 @@ interface PositionCardProps {
 
 export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const balances = useBalancesStore(state => state.balances);
+  const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
+  const setHedgeExposedMode = useSettingsStore(state => state.setHedgeExposedMode);
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
@@ -54,8 +58,8 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
   const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
-  // Inverse Protection / Exposure logic via centralized hedgeUtils
-  const hedgeLevels = getHedgePositionLevels(pos, Object.values(balances));
+  // Inverse Protection / Exposure logic via centralized hedgeUtils with active mode
+  const hedgeLevels = getHedgePositionLevels(pos, Object.values(balances), hedgeExposedMode);
 
   const posTypeStr = pos.instrumentType === 'INVERSE' ? 'CM Perpetual Inverse' :
     (pos.instrumentType && pos.instrumentType !== 'PERP') ?
@@ -356,16 +360,35 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         {/* Inverse - Protected / Exposed */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           {pos.instrumentType === 'INVERSE' ? (
-            <AppTooltip description="Indicates the Hedge protection based on Total Gross Assets, not considering the position's PNL (Wallet Balance - Position = Gross Exposed Balance). Click to view more details in Hedge Pro dashboard.">
+            <div className="flex items-center gap-1">
+              <AppTooltip
+                description={
+                  hedgeExposedMode === 'net'
+                    ? "Indicates the Hedge protection based on Net Equity (Net Balance [Wallet + PnL] - Position = Net Exposed Balance), considering the position's unrealized PnL. Click to view more details in Hedge Pro Dashboard."
+                    : "Indicates the Hedge protection based on Total Gross Assets (Wallet Balance - Position = Gross Exposed Balance), not considering the position's PnL. Click to view more details in Hedge Pro Dashboard."
+                }
+              >
+                <button
+                  type="button"
+                  onClick={handleNavigateToHedgePro}
+                  className="text-[10px] text-[#8E9299] hover:text-emerald-400 uppercase w-fit cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:border-emerald-400 transition-colors flex items-center gap-1 group text-left"
+                >
+                  <span>Hedge / Exposure</span>
+                  <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-400" />
+                </button>
+              </AppTooltip>
               <button
                 type="button"
-                onClick={handleNavigateToHedgePro}
-                className="text-[10px] text-[#8E9299] hover:text-emerald-400 uppercase w-fit cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:border-emerald-400 transition-colors flex items-center gap-1 group text-left"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHedgeExposedMode(hedgeExposedMode === 'gross' ? 'net' : 'gross');
+                }}
+                className="text-[9px] px-1 py-0.2 rounded bg-[#2a2b30] hover:bg-[#3a3b40] text-[#8E9299] hover:text-white font-mono lowercase border border-transparent hover:border-[#4a4b50] transition-colors cursor-pointer"
+                title={`Current mode: ${hedgeExposedMode}. Click to switch to ${hedgeExposedMode === 'gross' ? 'net' : 'gross'}.`}
               >
-                <span>Hedge / Exposure</span>
-                <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-400" />
+                {hedgeExposedMode}
               </button>
-            </AppTooltip>
+            </div>
           ) : (
             <AppTooltip description="Position hedge/exposure level">
               <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">
@@ -399,7 +422,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                 />
               </div>
               <div className="flex justify-between text-[9px] font-mono text-[#8E9299] leading-none text-opacity-80">
-                <span>Bal: {formatCcy(hedgeLevels.balanceAmount)}</span>
+                <span>{hedgeExposedMode === 'net' ? 'Net:' : 'Bal:'} {formatCcy(hedgeLevels.balanceAmount)}</span>
                 <span>Pos: {formatCcy(hedgeLevels.openPosSize)}</span>
               </div>
             </div>
@@ -491,20 +514,22 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             {pos.instrumentType === 'INVERSE' ? (
               <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
-                  <AppTooltip description="Click to view details in Hedge Pro">
+                  <AppTooltip description="Click to view details in Hedge Pro Dashboard">
                     <button
                       type="button"
                       onClick={handleNavigateToHedgePro}
                       className="text-[#8E9299] hover:text-emerald-400 text-xs w-max border-b border-dashed border-[#8E9299]/50 hover:border-emerald-400 cursor-pointer flex items-center gap-1.5 transition-colors group"
                     >
-                      <span>Hedge Pro Details</span>
+                      <span>Hedge Pro Details ({hedgeExposedMode.toUpperCase()})</span>
                       <ExternalLink className="w-3 h-3 text-emerald-400 opacity-70 group-hover:opacity-100 transition-opacity" />
                     </button>
                   </AppTooltip>
 
                   <div className="flex flex-col gap-2.5 mt-1.5">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#8E9299]">Wallet Balance:</span>
+                      <span className="text-[10px] text-[#8E9299]">
+                        {hedgeExposedMode === 'net' ? 'Net Balance (Equity):' : 'Wallet Balance (Gross):'}
+                      </span>
                       <span className="font-mono text-white text-[13px]">
                         {formatCcy(hedgeLevels.balanceAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.balanceUsd, 'usd', 2)} USD</span>
                       </span>

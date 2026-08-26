@@ -94,6 +94,16 @@ export interface HedgePositionLevels {
   balanceAmount: number;
   /** Alias for assetBalUsd */
   balanceUsd: number;
+  /** Gross (Wallet Balance) in coin */
+  grossBalanceAmount: number;
+  /** Gross (Wallet Balance) in USD */
+  grossBalanceUsd: number;
+  /** Net (Equity) in coin */
+  netBalanceAmount: number;
+  /** Net (Equity) in USD */
+  netBalanceUsd: number;
+  /** Mode used for calculation */
+  mode: 'gross' | 'net';
   /** Alias for overexposed */
   isOverexposed: boolean;
   /** Visual bar metrics */
@@ -253,6 +263,7 @@ function getPosCcy(pos: UnifiedPosition): string {
 export function getHedgePositionLevels(
   pos: UnifiedPosition,
   balances: HedgeBalanceInput[] | HedgeBalanceInput | Record<string, HedgeBalanceInput> = [],
+  mode: 'gross' | 'net' = 'gross',
 ): HedgePositionLevels {
   const isShort = pos.side === 'short';
   const posCcy = getPosCcy(pos);
@@ -269,11 +280,40 @@ export function getHedgePositionLevels(
   const matchingBalance = balanceList.find(
     b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy
   );
-  const totalAssetBal = matchingBalance ? (matchingBalance.amount || 0) : 0;
+  const rawBalanceAmount = matchingBalance ? (matchingBalance.amount || 0) : 0;
   const markPrice = pos.markPrice || 0;
-  const assetBalUsd = markPrice > 0
-    ? totalAssetBal * markPrice
+  const rawBalanceUsd = markPrice > 0
+    ? rawBalanceAmount * markPrice
     : (matchingBalance?.usdValue || 0);
+
+  const posUnrealizedPnlCoin = pos.unrealizedPnl || 0;
+  const posUnrealizedPnlUsd = inverseVals.unrealizedPnl || 0;
+
+  // Determine Gross (Wallet Balance) vs Net (Equity)
+  const isBitget = (pos.exchange || '').toLowerCase().includes('bitget');
+  let grossBalanceAmount: number;
+  let grossBalanceUsd: number;
+  let netBalanceAmount: number;
+  let netBalanceUsd: number;
+
+  if (isBitget) {
+    // Bitget Coin-M balances report Account Equity (Net) in `amount`.
+    netBalanceAmount = rawBalanceAmount;
+    netBalanceUsd = rawBalanceUsd;
+    grossBalanceAmount = new Big(netBalanceAmount).minus(posUnrealizedPnlCoin).toNumber();
+    grossBalanceUsd = new Big(netBalanceUsd).minus(posUnrealizedPnlUsd).toNumber();
+  } else {
+    // Bybit and OKX report Wallet Balance (Gross) in `amount`.
+    grossBalanceAmount = rawBalanceAmount;
+    grossBalanceUsd = rawBalanceUsd;
+    netBalanceAmount = new Big(grossBalanceAmount).plus(posUnrealizedPnlCoin).toNumber();
+    netBalanceUsd = new Big(grossBalanceUsd).plus(posUnrealizedPnlUsd).toNumber();
+  }
+
+  // Active balance used for protection/exposure computation based on mode
+  const totalAssetBal = mode === 'net' ? Math.max(0, netBalanceAmount) : Math.max(0, grossBalanceAmount);
+  const assetBalUsd = mode === 'net' ? Math.max(0, netBalanceUsd) : Math.max(0, grossBalanceUsd);
+
   const { positionValueUsd } = getOpenPositionSizeAndValue(pos);
   const openPosSize = markPrice > 0 ? positionValueUsd / markPrice : Math.abs(pos.size);
 
@@ -289,19 +329,43 @@ export function getHedgePositionLevels(
   if (pos.instrumentType === 'INVERSE') {
     if (isShort) {
       entryUsd = getInverseShortUsdEntryValue(pos);
-      if (totalAssetBal > 0 || assetBalUsd > 0) {
-        protectedUsd = Math.min(entryUsd, assetBalUsd);
-        exposedBaseUsd = Math.max(0, assetBalUsd - protectedUsd);
-        exposedUsd = exposedBaseUsd;
-        protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 0;
-        exposedPct = assetBalUsd > 0 ? (exposedBaseUsd / assetBalUsd) * 100 : 0;
+      const isBitgetGross = isBitget && mode === 'gross';
+
+      if (isBitgetGross) {
+        // Bitget Gross Mode:
+        // In gross mode for Bitget, the protected coin amount is the position size (pos.size),
+        // and its USD value reflects the coin at current mark price (positionValueUsd), capped by gross balance.
+        const positionNotionalAtMark = markPrice > 0 ? openPosSize * markPrice : entryUsd;
+        if (totalAssetBal > 0 || assetBalUsd > 0) {
+          protectedUsd = Math.min(positionNotionalAtMark, assetBalUsd);
+          exposedBaseUsd = Math.max(0, assetBalUsd - protectedUsd);
+          exposedUsd = exposedBaseUsd;
+          protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 0;
+          exposedPct = assetBalUsd > 0 ? (exposedBaseUsd / assetBalUsd) * 100 : 0;
+        } else {
+          protectedUsd = positionNotionalAtMark;
+          exposedBaseUsd = 0;
+          exposedUsd = 0;
+          protectedPct = 100;
+          exposedPct = 0;
+        }
       } else {
-        // No covering balance found — the short still locks USD at entry (uncapped).
-        protectedUsd = entryUsd;
-        exposedBaseUsd = 0;
-        exposedUsd = 0;
-        protectedPct = 100;
-        exposedPct = 0;
+        // Standard Inverse Short behavior (Bybit, OKX, and Bitget Net mode):
+        // Protected USD locks at entryUsd, capped by active balance.
+        if (totalAssetBal > 0 || assetBalUsd > 0) {
+          protectedUsd = Math.min(entryUsd, assetBalUsd);
+          exposedBaseUsd = Math.max(0, assetBalUsd - protectedUsd);
+          exposedUsd = exposedBaseUsd;
+          protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 0;
+          exposedPct = assetBalUsd > 0 ? (exposedBaseUsd / assetBalUsd) * 100 : 0;
+        } else {
+          // No covering balance found — the short still locks USD at entry (uncapped).
+          protectedUsd = entryUsd;
+          exposedBaseUsd = 0;
+          exposedUsd = 0;
+          protectedPct = 100;
+          exposedPct = 0;
+        }
       }
     } else {
       // Long inverse — fully exposed: balance (base) + leveraged position value.
@@ -315,7 +379,11 @@ export function getHedgePositionLevels(
     }
   }
 
-  const protectedAmount = markPrice > 0 ? protectedUsd / markPrice : 0;
+  const protectedAmount = markPrice > 0
+    ? (isBitget && mode === 'gross' && isShort
+        ? Math.min(openPosSize, totalAssetBal > 0 ? totalAssetBal : openPosSize)
+        : protectedUsd / markPrice)
+    : 0;
   const exposedAmount = markPrice > 0
     ? exposedUsd / markPrice
     : (isShort ? Math.max(0, totalAssetBal - protectedAmount) : totalAssetBal + openPosSize);
@@ -365,6 +433,11 @@ export function getHedgePositionLevels(
     overexposed,
     balanceAmount: totalAssetBal,
     balanceUsd: assetBalUsd,
+    grossBalanceAmount,
+    grossBalanceUsd,
+    netBalanceAmount,
+    netBalanceUsd,
+    mode,
     isOverexposed: overexposed,
     barMetrics,
   };
@@ -406,7 +479,7 @@ export function getHedgeCoinSummaries(
       groups.set(key, group);
     }
     group.ccies.add(getPosCcy(pos));
-    group.levels.push(getHedgePositionLevels(pos, balances));
+    group.levels.push(getHedgePositionLevels(pos, balances, 'net'));
   }
 
   const summaries: HedgeCoinSummary[] = [];
@@ -504,10 +577,10 @@ export function getHedgeCoinSummaries(
       walletBalance = new Big(netBalance).minus(unrealizedPnl).toNumber();
       walletBalanceUsd = new Big(netBalanceUsd).minus(unrealizedPnlUsd).toNumber();
     } else {
-      // Bybit and OKX provide Wallet Balance (does not include unrealized PnL).
+      // Bybit and OKX provide Wallet Balance (does not include unrealized PnL) in `amount`.
       // Net = Wallet + Unrealized.
-      walletBalance = reconstructedAmount;
-      walletBalanceUsd = reconstructedUsd;
+      walletBalance = balanceAmount > 0 ? balanceAmount : reconstructedAmount;
+      walletBalanceUsd = balanceUsd > 0 ? balanceUsd : reconstructedUsd;
       netBalance = new Big(walletBalance).plus(unrealizedPnl).toNumber();
       netBalanceUsd = new Big(walletBalanceUsd).plus(unrealizedPnlUsd).toNumber();
     }
