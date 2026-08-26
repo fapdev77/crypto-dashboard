@@ -1,3 +1,10 @@
+# [1.44.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.43.0...v1.44.0) (2026-08-26)
+
+
+### Features
+
+* add gross/net toggle for hedge exposure ([6611b17](https://github.com/fapdev77/crypto-dashboard/commit/6611b17aed2dfd4dff8487febda4aba1361ca12e))
+
 # [1.43.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.42.0...v1.43.0) (2026-08-25)
 
 
