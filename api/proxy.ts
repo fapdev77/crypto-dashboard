@@ -30,9 +30,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // SSRF prevention: Domain validation (Allowlist)
     const allowedDomains = [
       'api.bybit.com',
+      'api.bytick.com',
+      'api-testnet.bybit.com',
+      'api.bybit.nl',
+      'api.bybit.tr',
+      'api.bybit.kz',
+      'api.bybitgeorgia.ge',
+      'api.bybit.ae',
+      'api.bybit.eu',
+      'api.bybit.id',
+      'api.manepa.jp',
+      'api-testnet.manepa.jp',
+      'api.spark-fintech.com',
+      'api-testnet.spark-fintech.com',
       'api.bitget.com',
       'www.okx.com',
-      'api.okx.com'
+      'api.okx.com',
+      'aws.okx.com',
     ];
 
     try {

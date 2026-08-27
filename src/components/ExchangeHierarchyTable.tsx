@@ -220,10 +220,17 @@ export function ExchangeHierarchyTable({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{cleanAccountLabel(accData.label)}</span>
-                        <AccountTypeBadge
-                          exchange={exchange}
-                          accountType={keys.find(k => k.id === connId)?.accountType}
-                        />
+                        {(() => {
+                          const matchedKey = keys.find(k => k.id === connId);
+                          return (
+                            <AccountTypeBadge
+                              exchange={exchange}
+                              accountType={matchedKey?.accountType}
+                              environment={matchedKey?.environment}
+                              bybitRegion={matchedKey?.bybitRegion}
+                            />
+                          );
+                        })()}
                       </div>
                     </div>
                     <span className="text-sm font-bold text-white font-mono">{formatCurrency(accData.total, 'usd')}</span>

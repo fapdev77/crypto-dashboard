@@ -243,10 +243,17 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] capitalize">
                 {pos.label}
               </span>
-              <AccountTypeBadge
-                exchange={pos.exchange}
-                accountType={pos.accountType || keys.find(k => k.id === pos.connectionId)?.accountType}
-              />
+              {(() => {
+                const matchedKey = keys.find(k => k.id === pos.connectionId);
+                return (
+                  <AccountTypeBadge
+                    exchange={pos.exchange}
+                    accountType={pos.accountType || matchedKey?.accountType}
+                    environment={matchedKey?.environment}
+                    bybitRegion={matchedKey?.bybitRegion}
+                  />
+                );
+              })()}
             </div>
           </div>
         </div>
