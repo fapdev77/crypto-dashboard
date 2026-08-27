@@ -1,3 +1,10 @@
+# [1.45.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.44.0...v1.45.0) (2026-08-27)
+
+
+### Features
+
+* add support for Bybit regional endpoints ([c25d5cc](https://github.com/fapdev77/crypto-dashboard/commit/c25d5cca5ccdcf02af519960bca2169a90b090f1))
+
 # [1.44.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.43.0...v1.44.0) (2026-08-26)
 
 
