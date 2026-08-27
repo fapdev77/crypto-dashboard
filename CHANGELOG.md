@@ -1,3 +1,10 @@
+# [1.46.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.45.0...v1.46.0) (2026-08-27)
+
+
+### Features
+
+* update Bybit adapter and roadmap ([f2124a0](https://github.com/fapdev77/crypto-dashboard/commit/f2124a08a1cc753c1d477864c674d59935638f99))
+
 # [1.45.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.44.0...v1.45.0) (2026-08-27)
 
 
