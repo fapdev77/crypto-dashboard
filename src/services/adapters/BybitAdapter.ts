@@ -10,6 +10,7 @@ import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { getBybitBaseUrl, getBybitCustomHeaders } from '../../utils/bybitEndpoints';
+import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -59,41 +60,141 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     };
   }
 
+  private async getCoinPrice(coin: string, baseUrl: string, knownPrices: Record<string, number>): Promise<number> {
+    const c = coin.toUpperCase();
+    if (knownPrices[c] !== undefined && knownPrices[c] > 0) return knownPrices[c];
+    if (['USDT', 'USDC', 'USD', 'DAI', 'USDE', 'FDUSD', 'PYUSD'].includes(c)) return 1.0;
 
-  // REST Balances
+    try {
+      const tickerUrl = `${baseUrl}/v5/market/tickers?category=spot&symbol=${c}USDT`;
+      const res = await hybridFetch(tickerUrl, 'GET', {});
+      if (res?.retCode === 0 && Array.isArray(res.result?.list) && res.result.list.length > 0) {
+        const item = res.result.list[0];
+        const p = parseFloat(item.lastPrice || item.usdIndexPrice || '0');
+        if (p > 0) {
+          knownPrices[c] = p;
+          return p;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
+      const okxPrice = await fetchTokenUsdPrice(c);
+      if (okxPrice && okxPrice > 0) {
+        knownPrices[c] = okxPrice;
+        return okxPrice;
+      }
+    } catch {
+      // ignore
+    }
+
+    return 0;
+  }
+
+  // REST Balances (UNIFIED + FUNDING)
   public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
-    const query = 'accountType=UNIFIED';
-    const targetUrl = `${baseUrl}/v5/account/wallet-balance?${query}`;
-    const headers = await BybitAdapter.getHeaders(key, query);
+    const balances: UnifiedBalance[] = [];
+    const coinPrices: Record<string, number> = {
+      USDT: 1.0,
+      USDC: 1.0,
+      USD: 1.0,
+      DAI: 1.0,
+      USDE: 1.0,
+      FDUSD: 1.0,
+      PYUSD: 1.0,
+    };
 
     LogManager.info(
       'BybitAdapter.Balance',
       `[${key.label}] Fetching wallet balance from ${baseUrl} (env: ${key.environment || 'mainnet'}, region: ${key.bybitRegion || 'global'}${key.bybitRegion === 'brazil_int' || key.bybitRegion === 'argentina_int' ? ', X-Site-Id applied' : ''})`
     );
 
-    const response = await hybridFetch(targetUrl, 'GET', headers);
-    if (response.retCode !== 0) {
-      throw new Error(`Bybit balance API Error (${response.retCode}): ${response.retMsg}`);
+    // 1. Fetch Unified Trading Account (UTA) Balances
+    try {
+      const query = 'accountType=UNIFIED';
+      const targetUrl = `${baseUrl}/v5/account/wallet-balance?${query}`;
+      const headers = await BybitAdapter.getHeaders(key, query);
+
+      const response = await hybridFetch(targetUrl, 'GET', headers);
+      if (response.retCode === 0) {
+        const wallet = response.result?.list?.[0];
+        if (wallet && wallet.coin) {
+          for (const item of wallet.coin) {
+            const amount = parseFloat(item.walletBalance || item.equity || '0');
+            const usdValue = parseFloat(item.usdValue || '0');
+
+            if (amount > 0 && usdValue > 0) {
+              coinPrices[item.coin] = usdValue / amount;
+            }
+
+            if (amount > 0 || Math.abs(parseFloat(item.unrealisedPnl || '0')) > 0) {
+              balances.push({
+                id: `${key.id}-UNIFIED-${item.coin}`,
+                connectionId: key.id,
+                exchange: 'bybit',
+                label: `${key.label} (UNIFIED)`,
+                ccy: item.coin,
+                amount,
+                usdValue,
+                totalEquity: parseFloat(wallet.totalEquity || '0'),
+                walletBalance: parseFloat(wallet.totalWalletBalance || '0'),
+                availableMargin: parseFloat(wallet.totalAvailableBalance || '0'),
+                unrealizedPnl: parseFloat(wallet.totalPerpUPL || '0'),
+                raw: item
+              });
+            }
+          }
+        }
+      } else {
+        throw new Error(`Bybit balance API Error (${response.retCode}): ${response.retMsg}`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      LogManager.error('BybitAdapter.Balance', `Failed to fetch UNIFIED balance: ${msg}`, { error: err });
+      throw err;
     }
 
-    const wallet = response.result?.list?.[0];
-    if (!wallet || !wallet.coin) return [];
+    // 2. Fetch Funding Account Balances
+    try {
+      const fundQuery = 'accountType=FUND';
+      const fundTargetUrl = `${baseUrl}/v5/asset/transfer/query-account-coins-balance?${fundQuery}`;
+      const fundHeaders = await BybitAdapter.getHeaders(key, fundQuery);
 
-    return wallet.coin.map((item: any) => ({
-      id: `${key.id}-UNIFIED-${item.coin}`,
-      connectionId: key.id,
-      exchange: 'bybit',
-      label: `${key.label} (UNIFIED)`,
-      ccy: item.coin,
-      amount: parseFloat(item.walletBalance || item.equity || '0'),
-      usdValue: parseFloat(item.usdValue || '0'),
-      totalEquity: parseFloat(wallet.totalEquity || '0'),
-      walletBalance: parseFloat(wallet.totalWalletBalance || '0'),
-      availableMargin: parseFloat(wallet.totalAvailableBalance || '0'),
-      unrealizedPnl: parseFloat(wallet.totalPerpUPL || '0'),
-      raw: item
-    }));
+      const fundResponse = await hybridFetch(fundTargetUrl, 'GET', fundHeaders);
+      if (fundResponse.retCode === 0) {
+        const fundBalances = fundResponse.result?.balance || [];
+        for (const item of fundBalances) {
+          const amount = parseFloat(item.walletBalance || '0');
+          if (amount > 0) {
+            const price = await this.getCoinPrice(item.coin, baseUrl, coinPrices);
+            const usdValue = amount * price;
+
+            balances.push({
+              id: `${key.id}-FUNDING-${item.coin}`,
+              connectionId: key.id,
+              exchange: 'bybit',
+              label: `${key.label} (Funding)`,
+              ccy: item.coin,
+              amount,
+              usdValue,
+              availableMargin: parseFloat(item.transferBalance || '0'),
+              unrealizedPnl: 0,
+              raw: item,
+            });
+          }
+        }
+      } else {
+        LogManager.warn('BybitAdapter.Balance', `Failed to fetch Funding balance (${fundResponse.retCode}): ${fundResponse.retMsg}`);
+      }
+    } catch (fundingErr: unknown) {
+      const fundMsg = fundingErr instanceof Error ? fundingErr.message : String(fundingErr);
+      LogManager.warn('BybitAdapter.Balance', `Non-critical error fetching Funding balance: ${fundMsg}`);
+    }
+
+    return balances;
   }
 
   // REST Positions

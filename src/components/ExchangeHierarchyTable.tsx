@@ -16,13 +16,6 @@ const cleanAccountLabel = (label: string) => {
 };
 
 const getAssetOrigin = (b: BalanceItem) => {
-  const ex = b.exchange.toLowerCase();
-
-  if (ex === 'bybit') {
-    return 'UNIFIED';
-  }
-
-  // Bitget and OKX logic
   const connId = b.connectionId;
   const prefix = connId + '-';
   if (b.id.startsWith(prefix)) {

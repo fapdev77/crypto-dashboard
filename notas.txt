@@ -1,2 +1,2 @@
 Anotações para futuras implementações de Ideias e melhorias:
-- implementar bitget e okx transactions 
+- implementar conta de fundos da bybit e conta internacional 
