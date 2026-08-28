@@ -1,3 +1,10 @@
+## [1.46.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.0...v1.46.1) (2026-08-28)
+
+
+### Bug Fixes
+
+* **hedge:** adjust net balance calculation for inverse shorts ([6771d3e](https://github.com/fapdev77/crypto-dashboard/commit/6771d3edd196db69a8b8356abc7860436df7bcae))
+
 # [1.46.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.45.0...v1.46.0) (2026-08-27)
 
 
