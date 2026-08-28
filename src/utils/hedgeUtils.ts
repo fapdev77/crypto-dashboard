@@ -314,8 +314,15 @@ export function getHedgePositionLevels(
     // Bybit and OKX report Wallet Balance (Gross) in `amount`.
     grossBalanceAmount = rawBalanceAmount;
     grossBalanceUsd = rawBalanceUsd;
-    netBalanceAmount = new Big(grossBalanceAmount).plus(posUnrealizedPnlCoin).toNumber();
-    netBalanceUsd = new Big(grossBalanceUsd).plus(posUnrealizedPnlUsd).toNumber();
+    if (isShort) {
+      // For inverse short hedge: The true Net Balance in USD is protected USD + exposed USD.
+      // The accounting coin PnL preserves the locked USD value and is not a capital loss.
+      netBalanceAmount = grossBalanceAmount;
+      netBalanceUsd = grossBalanceUsd;
+    } else {
+      netBalanceAmount = new Big(grossBalanceAmount).plus(posUnrealizedPnlCoin).toNumber();
+      netBalanceUsd = new Big(grossBalanceUsd).plus(posUnrealizedPnlUsd).toNumber();
+    }
   }
 
   // Active balance used for protection/exposure computation based on mode
@@ -370,6 +377,13 @@ export function getHedgePositionLevels(
         exposedUsd = 0;
         protectedPct = 100;
         exposedPct = 0;
+      }
+
+      // For inverse short hedge on Bybit / OKX: The true Net Balance in USD is protected USD + exposed USD.
+      // The accounting coin PnL preserves the locked USD value and is not a capital loss.
+      if (!isBitget) {
+        netBalanceUsd = new Big(protectedUsd).plus(exposedBaseUsd).toNumber();
+        netBalanceAmount = markPrice > 0 ? new Big(netBalanceUsd).div(markPrice).toNumber() : grossBalanceAmount;
       }
     } else {
       // Long inverse — fully exposed: balance (base) + leveraged position value.
@@ -576,11 +590,16 @@ export function getHedgeCoinSummaries(
       walletBalanceUsd = new Big(netBalanceUsd).minus(unrealizedPnlUsd).toNumber();
     } else {
       // Bybit and OKX provide Wallet Balance (does not include unrealized PnL) in `amount`.
-      // Net = Wallet + Unrealized.
       walletBalance = balanceAmount > 0 ? balanceAmount : (refPrice > 0 ? balanceUsd / refPrice : (group.levels[0]?.grossBalanceAmount ?? 0));
       walletBalanceUsd = balanceUsd > 0 ? balanceUsd : (refPrice > 0 ? walletBalance * refPrice : (group.levels[0]?.grossBalanceUsd ?? 0));
-      netBalance = new Big(walletBalance).plus(unrealizedPnl).toNumber();
-      netBalanceUsd = new Big(walletBalanceUsd).plus(unrealizedPnlUsd).toNumber();
+      if (shortCount > 0) {
+        // For inverse short hedges, the locked USD is preserved; net equity is derived from the hedged + exposed balance
+        netBalance = walletBalance;
+        netBalanceUsd = walletBalanceUsd;
+      } else {
+        netBalance = new Big(walletBalance).plus(unrealizedPnl).toNumber();
+        netBalanceUsd = new Big(walletBalanceUsd).plus(unrealizedPnlUsd).toNumber();
+      }
     }
 
     // Active balance based on selected mode (gross = walletBalance, net = netBalance/equity)
@@ -607,6 +626,15 @@ export function getHedgeCoinSummaries(
     const exposedBaseUsd = refPrice > 0
       ? new Big(exposedSize).times(refPrice).toNumber()
       : Math.max(0, activeBalanceUsd - protectedUsd);
+
+    // For INVERSE positions with short hedges on Bybit and OKX:
+    // When short hedges exist, the real Net Equity in USD is: protectedUsd + exposedBaseUsd + (longs unrealized PnL).
+    // This avoids deducting the accounting coin PnL twice in USD when holding a synthetic USD hedge.
+    if (shortCount > 0 && group.exchange.toLowerCase() !== 'bitget') {
+      const longUplUsd = group.levels.filter(l => !l.isShort).reduce((acc, l) => acc.plus(l.unrealizedPnlUsd || 0), new Big(0));
+      netBalanceUsd = new Big(protectedUsd).plus(exposedBaseUsd).plus(longUplUsd).toNumber();
+      netBalance = refPrice > 0 ? new Big(netBalanceUsd).div(refPrice).toNumber() : (walletBalance || activeBalanceAmount);
+    }
 
     const leveragedSize = group.levels.reduce(
       (acc, l) => (l.isShort ? acc : acc.plus(l.openPosSize || 0)),

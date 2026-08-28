@@ -218,7 +218,7 @@ describe('getHedgePositionLevels — short inverse', () => {
 
     // For Bybit: amount is Gross (Wallet). unrealizedPnl is +0.5 BTC.
     // In gross mode: balanceAmount = Gross = 5 BTC.
-    // In net mode: balanceAmount = Gross + PnL = 5 + 0.5 = 5.5 BTC.
+    // For inverse short hedge: netBalanceAmount reflects the protected + exposed value (5 BTC).
     const bybitPosWithPnl = makePos({
       ...SHORT_BTC,
       id: 'pos-bybit-pnl',
@@ -232,13 +232,13 @@ describe('getHedgePositionLevels — short inverse', () => {
     expect(bybitLvlGross.mode).toBe('gross');
     expect(bybitLvlGross.balanceAmount).toBeCloseTo(5.0, 10);
     expect(bybitLvlGross.grossBalanceAmount).toBeCloseTo(5.0, 10);
-    expect(bybitLvlGross.netBalanceAmount).toBeCloseTo(5.5, 10);
+    expect(bybitLvlGross.netBalanceAmount).toBeCloseTo(5.0, 10);
 
     const bybitLvlNet = getHedgePositionLevels(bybitPosWithPnl, [BTC_BALANCE], 'net');
     expect(bybitLvlNet.mode).toBe('net');
-    expect(bybitLvlNet.balanceAmount).toBeCloseTo(5.5, 10);
+    expect(bybitLvlNet.balanceAmount).toBeCloseTo(5.0, 10);
     expect(bybitLvlNet.grossBalanceAmount).toBeCloseTo(5.0, 10);
-    expect(bybitLvlNet.netBalanceAmount).toBeCloseTo(5.5, 10);
+    expect(bybitLvlNet.netBalanceAmount).toBeCloseTo(5.0, 10);
   });
 });
 
@@ -440,9 +440,9 @@ describe('getHedgeCoinSummaries', () => {
     expect(coin.walletBalance).toBe(0.65);
     expect(coin.walletBalanceUsd).toBe(44492.5);
 
-    // Net Balance is the liquid equity (Wallet Balance + Unrealized PnL)
-    expect(coin.netBalance).toBeCloseTo(0.655028, 6);
-    expect(coin.netBalanceUsd).toBeCloseTo(44492.5 + (0.005028 * 68450), 2);
+    // Net Balance is the true net equity in USD (Protected USD + Exposed USD)
+    expect(coin.netBalance).toBeCloseTo(0.65, 6);
+    expect(coin.netBalanceUsd).toBeCloseTo(44492.5, 2);
 
     // Protected = entry value capped by balance: min(33332, 44492.5) = 33332
     expect(coin.protectedUsd).toBe(33332);
@@ -479,9 +479,9 @@ describe('getHedgeCoinSummaries', () => {
     expect(coin.walletBalance).toBe(0.65);
     expect(coin.walletBalanceUsd).toBe(44492.5);
 
-    // Net Balance reflects unrealized loss: 0.65 + (-0.02) = 0.63
-    expect(coin.netBalance).toBeCloseTo(0.63, 6);
-    expect(coin.netBalanceUsd).toBeCloseTo(44492.5 + (-0.02 * 68450), 2);
+    // Net Balance for inverse short hedge preserves locked USD: 33332 protected + 11160.5 exposed = 44492.5
+    expect(coin.netBalance).toBeCloseTo(0.65, 6);
+    expect(coin.netBalanceUsd).toBeCloseTo(44492.5, 2);
   });
 
   it('should adjust balanceUsd and exposure according to gross and net modes', () => {
@@ -514,13 +514,13 @@ describe('getHedgeCoinSummaries', () => {
     expect(grossCoin.exposedBaseUsd).toBeCloseTo(30000, 2);
     expect(grossCoin.positions[0].exposedBaseUsd).toBeCloseTo(30000, 2);
 
-    // Net mode: uses net balance / liquid equity ($66,000)
+    // Net mode: uses net balance / liquid equity ($60,000 for inverse short)
     const netSummaries = getHedgeCoinSummaries([bybitPos], [bybitBal], 'net');
     const netCoin = netSummaries[0];
-    expect(netCoin.balanceUsd).toBe(66000);
+    expect(netCoin.balanceUsd).toBe(60000);
     expect(netCoin.protectedUsd).toBe(30000);
-    expect(netCoin.exposedBaseUsd).toBeCloseTo(36000, 2);
-    expect(netCoin.positions[0].exposedBaseUsd).toBeCloseTo(36000, 2);
+    expect(netCoin.exposedBaseUsd).toBeCloseTo(30000, 2);
+    expect(netCoin.positions[0].exposedBaseUsd).toBeCloseTo(30000, 2);
   });
 
   it('should separate the same baseCoin across different connections', () => {
@@ -736,20 +736,20 @@ describe('getHedgeTotals', () => {
 
     expect(coinGross.walletBalance).toBeCloseTo(0.11376289, 8);
     expect(coinGross.walletBalanceUsd).toBeCloseTo(0.11376289 * 79996.92, 2);
-    // Protected USD should be the full 8800.00 USD (not capped at net equity)
+    // Protected USD should be the full 8800.00 USD
     expect(coinGross.protectedUsd).toBe(8800);
     // Protected size in BTC at current mark price = 8800 / 79996.92
     expect(coinGross.protectedSize).toBeCloseTo(8800 / 79996.92, 8);
-    // Net balance = 0.11376289 - 0.0251045 = 0.08865839 BTC
-    expect(coinGross.netBalance).toBeCloseTo(0.08865839, 8);
+    // Net balance in USD is 8800 + exposed USD ($300.68) = $9,100.68 (0.11376289 BTC)
+    expect(coinGross.netBalance).toBeCloseTo(0.11376289, 8);
+    expect(coinGross.netBalanceUsd).toBeCloseTo(0.11376289 * 79996.92, 2);
     expect(coinGross.unrealizedPnl).toBeCloseTo(-0.0251045, 7);
 
     // In Net mode
     const netSummaries = getHedgeCoinSummaries([bybitInversePos], [bybitBalance], 'net');
     const coinNet = netSummaries[0];
-    // Net equity USD = 0.08865839 * 79996.92 = $7,092.40
-    expect(coinNet.balanceUsd).toBeCloseTo(0.08865839 * 79996.92, 2);
-    // In net mode, protected is capped at the net liquid equity
-    expect(coinNet.protectedUsd).toBeCloseTo(0.08865839 * 79996.92, 2);
+    expect(coinNet.balanceUsd).toBeCloseTo(0.11376289 * 79996.92, 2);
+    expect(coinNet.protectedUsd).toBe(8800);
+    expect(coinNet.netBalance).toBeCloseTo(0.11376289, 8);
   });
 });
