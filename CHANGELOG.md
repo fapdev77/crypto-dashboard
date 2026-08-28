@@ -1,3 +1,10 @@
+## [1.46.3](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.2...v1.46.3) (2026-08-28)
+
+
+### Bug Fixes
+
+* include assets with value equal to 1 in charts ([19d6d8f](https://github.com/fapdev77/crypto-dashboard/commit/19d6d8f73bce315d2709119da95b3a31d71465f7))
+
 ## [1.46.2](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.1...v1.46.2) (2026-08-28)
 
 
