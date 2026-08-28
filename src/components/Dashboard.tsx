@@ -150,7 +150,7 @@ export function Dashboard() {
     const dataMap: Record<string, Big> = {};
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
-      if (val > 1) { // Ignore dust
+      if (val >= 1) { // Ignore dust
         if (!dataMap[b.exchange]) dataMap[b.exchange] = new Big(0);
         dataMap[b.exchange] = dataMap[b.exchange].plus(val);
       }
@@ -166,7 +166,7 @@ export function Dashboard() {
 
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
-      if (val > 1) { // ignore dust
+      if (val >= 1) { // ignore dust
         if (!exchangesMap[b.exchange]) exchangesMap[b.exchange] = { total: new Big(0), assetsMap: {} };
         exchangesMap[b.exchange].total = exchangesMap[b.exchange].total.plus(val);
         if (!exchangesMap[b.exchange].assetsMap[b.ccy]) exchangesMap[b.exchange].assetsMap[b.ccy] = new Big(0);
