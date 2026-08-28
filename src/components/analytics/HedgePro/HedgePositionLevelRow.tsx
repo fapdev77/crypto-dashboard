@@ -100,10 +100,12 @@ export function HedgePositionLevelRow({ level, formatCurrency, variant = 'table'
       {variant === 'card' ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-[#23252a] text-xs font-mono">
           <div className="flex flex-col">
-            <span className="text-[10px] text-[#8E9299] uppercase tracking-wider">Position Value</span>
-            <span className="font-semibold text-white">{formatCurrency(level.positionValueUsd, 'usd', 2)}</span>
+            <span className="text-[10px] text-[#8E9299] uppercase tracking-wider">Initial Position Value</span>
+            <span className="font-semibold text-white">
+              {formatCurrency(level.initialValueUsd ?? level.entryUsd ?? level.positionValueUsd, 'usd', 2)}
+            </span>
             <span className="text-[10px] text-[#8E9299]">
-              {formatCoin(level.openPosSize, level.ccy, formatCurrency)} {level.ccy}
+              {formatCoin(level.initialSizeInCoin ?? level.openPosSize, level.ccy, formatCurrency)} {level.ccy}
             </span>
           </div>
 

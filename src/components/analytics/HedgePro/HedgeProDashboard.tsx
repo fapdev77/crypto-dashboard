@@ -85,7 +85,7 @@ export function HedgeProDashboard() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters with Exchange Selection */}
       <FilterBar
         search={{ value: search, onChange: setSearch, placeholder: 'Search coin / account...' }}
         exchange={{ value: exchange, onChange: setExchange, options: exchanges }}

@@ -124,11 +124,24 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         if (wallet && wallet.coin) {
           for (const item of wallet.coin) {
             const amount = parseFloat(item.walletBalance || item.equity || '0');
-            const usdValue = parseFloat(item.usdValue || '0');
+            const rawEquity = parseFloat(item.equity || '0');
+            const rawUsdVal = parseFloat(item.usdValue || '0');
 
-            if (amount > 0 && usdValue > 0) {
-              coinPrices[item.coin] = usdValue / amount;
+            // In Bybit UTA, item.usdValue represents the USD valuation of item.equity (net balance).
+            // Derive the real coin price in USD:
+            let coinPrice = 0;
+            if (rawEquity > 0 && rawUsdVal > 0) {
+              coinPrice = rawUsdVal / rawEquity;
+            } else if (rawUsdVal > 0 && amount > 0) {
+              coinPrice = rawUsdVal / amount;
             }
+
+            if (coinPrice > 0) {
+              coinPrices[item.coin] = coinPrice;
+            }
+
+            // Wallet balance (amount) in USD must reflect amount * coinPrice:
+            const usdValue = coinPrice > 0 ? amount * coinPrice : rawUsdVal;
 
             if (amount > 0 || Math.abs(parseFloat(item.unrealisedPnl || '0')) > 0) {
               balances.push({

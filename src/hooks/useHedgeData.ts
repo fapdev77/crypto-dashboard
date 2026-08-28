@@ -31,7 +31,8 @@ export interface UseHedgeDataReturn {
  * useHedgeData — Custom hook decoupling store subscriptions and filtering logic
  * from presentation components in the Hedge Pro analytical dashboard.
  *
- * Derives inverse (Coin-M) positions, matching balances, totals and filters in memory.
+ * Derives inverse (Coin-M) positions, matching balances, totals and filters in memory
+ * strictly based on Gross (wallet balance) values.
  */
 export function useHedgeData(): UseHedgeDataReturn {
   const balances = useBalancesStore(state => state.balances);
@@ -76,7 +77,7 @@ export function useHedgeData(): UseHedgeDataReturn {
   }, [activeBalances]);
 
   const coinSummaries = useMemo(
-    () => getHedgeCoinSummaries(activePositions, activeBalances),
+    () => getHedgeCoinSummaries(activePositions, activeBalances, 'gross'),
     [activePositions, activeBalances],
   );
 
