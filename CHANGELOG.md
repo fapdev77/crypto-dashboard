@@ -1,3 +1,10 @@
+## [1.46.2](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.1...v1.46.2) (2026-08-28)
+
+
+### Bug Fixes
+
+* calculate protected amount at mark price for Bitget ([4e1419b](https://github.com/fapdev77/crypto-dashboard/commit/4e1419b704f47b0bcf3f0c076f16a4c965a1daf7))
+
 ## [1.46.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.0...v1.46.1) (2026-08-28)
 
 
