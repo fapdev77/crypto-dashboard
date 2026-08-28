@@ -88,7 +88,7 @@ describe('getHedgePositionLevels — short inverse', () => {
     expect(lvl.initialValueUsd).toBe(100000);
     expect(lvl.initialSizeInCoin).toBe(2);
     expect(lvl.protectedUsd).toBe(100000);           // min(2 * 50000, 275000)
-    expect(lvl.protectedAmount).toBe(2);             // size in coin hedged
+    expect(lvl.protectedAmount).toBeCloseTo(100000 / 55000, 8); // size in coin hedged at market price
     expect(lvl.exposedAmount).toBe(3);               // 5 BTC balance - 2 BTC hedged = 3 BTC uncovered
     expect(lvl.exposedBaseUsd).toBe(3 * 55000);      // 165000 (uncovered balance at mark price)
     expect(lvl.exposedUsd).toBe(3 * 55000);
@@ -112,7 +112,7 @@ describe('getHedgePositionLevels — short inverse', () => {
     const lvlNet = getHedgePositionLevels(SHORT_BTC, [BTC_BALANCE], 'net');
     expect(lvlNet.entryUsd).toBe(100000);
     expect(lvlNet.protectedUsd).toBe(100000);
-    expect(lvlNet.protectedAmount).toBe(2);
+    expect(lvlNet.protectedAmount).toBeCloseTo(100000 / 55000, 8);
   });
 
   it('should convert inverse PnL to USD using the mark price', () => {
@@ -281,7 +281,7 @@ describe('getHedgeCoinSummaries', () => {
     expect(coin.unrealizedPnl).toBe(0);
     expect(coin.unrealizedPnlUsd).toBe(0);
     expect(coin.protectedUsd).toBe(100000);                  // min(Σ shorts, balance)
-    expect(coin.protectedSize).toBeCloseTo(2, 10);           // short size in coin
+    expect(coin.protectedSize).toBeCloseTo(100000 / 55000, 10); // Bitget protected coin size at mark price
     expect(coin.exposedBaseUsd).toBe(3 * 55000);             // 165000 uncovered balance at mark (5 - 2 = 3 BTC)
     expect(coin.exposedSize).toBeCloseTo(3, 10);
     expect(coin.leveragedUsd).toBe(110000);                  // long position value
@@ -751,5 +751,50 @@ describe('getHedgeTotals', () => {
     expect(coinNet.balanceUsd).toBeCloseTo(0.11376289 * 79996.92, 2);
     expect(coinNet.protectedUsd).toBe(8800);
     expect(coinNet.netBalance).toBeCloseTo(0.11376289, 8);
+  });
+
+  it('should correctly calculate Bitget Inverse Short with mark price converted protected ETH size', () => {
+    // Exact user scenario:
+    // Bitget ETH Inverse Short:
+    // Entry: 2166.09, Mark: 2497.01, Size: 4.42 ETH.
+    // Initial / Protected USD: 4.42 * 2166.09 = $9,574.13
+    // At mark price ($2,497.01), Protected ETH quantity = 9574.13 / 2497.01 = 3.83424175 ETH
+    // Net Balance / Equity = 4.33992764 ETH ($10,835.39)
+    // Wallet Balance = 4.92568838 ETH ($12,298.04)
+    // Unrealized PnL = -0.58576074 ETH (-$1,462.65)
+    const bitgetEthPos = makePos({
+      id: 'bitget-eth-pos',
+      connectionId: 'bitget-main',
+      exchange: 'bitget',
+      symbol: 'ETHUSD',
+      baseCoin: 'ETH',
+      ccy: 'ETH',
+      side: 'short',
+      size: 4.42,
+      entryPrice: 2166.09,
+      markPrice: 2497.01,
+      unrealizedPnl: -0.58576074,
+    });
+
+    const bitgetEthBal = makeBal({
+      id: 'bitget-eth-bal',
+      connectionId: 'bitget-main',
+      exchange: 'bitget',
+      ccy: 'ETH',
+      amount: 4.33992764,       // Bitget reports net equity in amount
+      walletBalance: 4.92568838,
+      usdValue: 10835.39,
+    });
+
+    const lvl = getHedgePositionLevels(bitgetEthPos, [bitgetEthBal]);
+    expect(lvl.initialSizeInCoin).toBe(4.42);
+    expect(lvl.protectedUsd).toBeCloseTo(4.42 * 2166.09, 2); // 9574.1178
+    expect(lvl.protectedAmount).toBeCloseTo((4.42 * 2166.09) / 2497.01, 4); // 3.8342 ETH
+
+    const summaries = getHedgeCoinSummaries([bitgetEthPos], [bitgetEthBal]);
+    const coin = summaries[0];
+    expect(coin.protectedUsd).toBeCloseTo(4.42 * 2166.09, 2);
+    expect(coin.protectedSize).toBeCloseTo(3.83424175, 4); // 3.8342 ETH
+    expect(coin.netProtectedSize).toBeCloseTo(3.83424175, 4); // Real Hedge card
   });
 });

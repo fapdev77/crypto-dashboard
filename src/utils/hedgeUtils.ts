@@ -397,11 +397,14 @@ export function getHedgePositionLevels(
     }
   }
 
-  const protectedAmount = isShort
+  const rawProtAmount = isShort
     ? Math.min(openPosSize, totalAssetBal > 0 ? totalAssetBal : openPosSize)
     : 0;
+  const protectedAmount = (isBitget && isShort && markPrice > 0)
+    ? Math.min(new Big(protectedUsd).div(markPrice).toNumber(), totalAssetBal > 0 ? totalAssetBal : openPosSize)
+    : rawProtAmount;
   const exposedAmount = isShort
-    ? Math.max(0, totalAssetBal - protectedAmount)
+    ? Math.max(0, totalAssetBal - (isBitget ? rawProtAmount : protectedAmount))
     : (totalAssetBal + openPosSize);
 
   const capitalRef = assetBalUsd > 0 ? assetBalUsd : protectedUsd + exposedBaseUsd;
@@ -611,16 +614,23 @@ export function getHedgeCoinSummaries(
       (acc, l) => (l.isShort ? acc.plus(l.openPosSize || 0) : acc),
       new Big(0),
     ).toNumber();
-    const protectedSize = activeBalanceAmount > 0
-      ? Math.min(rawProtectedSize, activeBalanceAmount)
-      : rawProtectedSize;
 
     // 2. Protected USD locked at entry (capped by active balance USD)
     const protectedUsd = activeBalanceUsd > 0 ? Math.min(sumShortProtected, activeBalanceUsd) : sumShortProtected;
 
-    // 3. Exposed coin size is the uncovered physical coin balance (Wallet/Active Balance - Protected Size)
-    // This value is CONSTANT in coin and does NOT fluctuate with mark price changes!
-    const exposedSize = Math.max(0, new Big(activeBalanceAmount || 0).minus(protectedSize).toNumber());
+    // For Bitget, the protected value in coin at mark price (e.g. $9,574.13 / $2,497.01 = 3.8342 ETH).
+    // For other exchanges, protectedSize corresponds to raw protected position size.
+    const computedProtectedSize = (group.exchange.toLowerCase() === 'bitget' && refPrice > 0)
+      ? new Big(protectedUsd).div(refPrice).toNumber()
+      : rawProtectedSize;
+
+    const protectedSize = activeBalanceAmount > 0
+      ? Math.min(computedProtectedSize, activeBalanceAmount)
+      : computedProtectedSize;
+
+    // 3. Exposed coin size is the uncovered physical coin balance (Wallet/Active Balance - Raw Hedged Size)
+    // Uncovered coin balance remains (Total Balance - Short Position Size) in coin
+    const exposedSize = Math.max(0, new Big(activeBalanceAmount || 0).minus(rawProtectedSize).toNumber());
 
     // 4. Exposed USD accompanies the current mark price of the uncovered coin quantity
     const exposedBaseUsd = refPrice > 0
