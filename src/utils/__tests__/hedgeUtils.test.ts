@@ -148,13 +148,13 @@ describe('getHedgePositionLevels — short inverse', () => {
     expect(lvl.exposedUsd).toBeCloseTo(155000, 1);
   });
 
-  it('should cap protection at the balance (over-protected short)', () => {
+  it('should keep locked entry USD fixed even if position size exceeds current balance', () => {
     const smallBalance = makeBal({ id: 'conn1-BTC', connectionId: 'conn1', ccy: 'BTC', amount: 1, usdValue: 55000 });
     const lvl = getHedgePositionLevels(SHORT_BTC, [smallBalance]);
 
-    expect(lvl.protectedUsd).toBe(50000);            // (1 / 2) * 100000 = 50000 (1 BTC covered at entry $50,000)
+    expect(lvl.protectedUsd).toBe(100000);           // 2 BTC * $50,000 = $100,000 locked USD (fixed)
     expect(lvl.exposedUsd).toBe(0);
-    expect(lvl.protectedPct).toBeCloseTo((50000 / 55000) * 100, 3);
+    expect(lvl.protectedPct).toBeCloseTo((100000 / 55000) * 100, 3);
     expect(lvl.exposedPct).toBe(0);
   });
 
@@ -548,13 +548,13 @@ describe('getHedgeCoinSummaries', () => {
     expect(summaries).toHaveLength(0);
   });
 
-  it('should cap total protection at the coin balance for multiple shorts', () => {
+  it('should sum total fixed protection from multiple shorts without capping by coin balance', () => {
     const short2 = makePos({ ...SHORT_BTC, id: 'pos-short-2', size: 8, entryPrice: 60000 });
-    // Σ entry = 2×50000 + 8×60000 = 580000 > balance 275000 → protected capped at 275000
+    // Σ entry = 2×50000 + 8×60000 = 580000
     const summaries = getHedgeCoinSummaries([SHORT_BTC, short2], [BTC_BALANCE]);
-    expect(summaries[0].protectedUsd).toBe(275000);
+    expect(summaries[0].protectedUsd).toBe(580000);
     expect(summaries[0].exposedUsd).toBe(0);
-    expect(summaries[0].coveragePct).toBe(100);
+    expect(summaries[0].coveragePct).toBeCloseTo((580000 / 275000) * 100, 3);
   });
 
   it('should return empty array for no inverse positions', () => {

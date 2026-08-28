@@ -357,22 +357,19 @@ export function getHedgePositionLevels(
       // How much coin is protected by this short position (capped by total asset balance)
       const protCoin = Math.min(openPosSize, totalAssetBal > 0 ? totalAssetBal : openPosSize);
 
-      // Protected USD locks at entry (the real locked USD hedge value), capped if balance is less than position size
-      if (totalAssetBal > 0 || assetBalUsd > 0) {
-        protectedUsd = (openPosSize > 0 && totalAssetBal < openPosSize)
-          ? (totalAssetBal / openPosSize) * entryUsd
-          : entryUsd;
+      // Protected USD locks at entry (the real locked USD hedge value, fixed and not capped by balance fluctuations)
+      protectedUsd = entryUsd;
 
+      if (totalAssetBal > 0 || assetBalUsd > 0) {
         // The remaining coin balance uncovered by the short hedge is physical coin quantity (constant, does not fluctuate with mark price)
         const expCoin = Math.max(0, totalAssetBal - protCoin);
         exposedBaseUsd = markPrice > 0 ? expCoin * markPrice : Math.max(0, assetBalUsd - protectedUsd);
         exposedUsd = exposedBaseUsd;
 
-        protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 0;
+        protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 100;
         exposedPct = assetBalUsd > 0 ? (exposedBaseUsd / assetBalUsd) * 100 : 0;
       } else {
-        // No covering balance found — the short still locks USD at entry (uncapped).
-        protectedUsd = entryUsd;
+        // No covering balance found — the short still locks USD at entry.
         exposedBaseUsd = 0;
         exposedUsd = 0;
         protectedPct = 100;
@@ -615,8 +612,8 @@ export function getHedgeCoinSummaries(
       new Big(0),
     ).toNumber();
 
-    // 2. Protected USD locked at entry (capped by active balance USD)
-    const protectedUsd = activeBalanceUsd > 0 ? Math.min(sumShortProtected, activeBalanceUsd) : sumShortProtected;
+    // 2. Protected USD locked at entry (fixed locked USD value)
+    const protectedUsd = sumShortProtected;
 
     // For Bitget, the protected value in coin at mark price (e.g. $9,574.13 / $2,497.01 = 3.8342 ETH).
     // For other exchanges, protectedSize corresponds to raw protected position size.
