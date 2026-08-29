@@ -790,11 +790,14 @@ describe('getHedgeTotals', () => {
     expect(lvl.initialSizeInCoin).toBe(4.42);
     expect(lvl.protectedUsd).toBeCloseTo(4.42 * 2166.09, 2); // 9574.1178
     expect(lvl.protectedAmount).toBeCloseTo((4.42 * 2166.09) / 2497.01, 4); // 3.8342 ETH
+    expect(lvl.barMetrics.protectedPct + lvl.barMetrics.exposedPct).toBeCloseTo(100, 1);
 
     const summaries = getHedgeCoinSummaries([bitgetEthPos], [bitgetEthBal]);
     const coin = summaries[0];
     expect(coin.protectedUsd).toBeCloseTo(4.42 * 2166.09, 2);
     expect(coin.protectedSize).toBeCloseTo(3.83424175, 4); // 3.8342 ETH
     expect(coin.netProtectedSize).toBeCloseTo(3.83424175, 4); // Real Hedge card
+    expect(coin.barMetrics.protectedPct + coin.barMetrics.exposedPct).toBeCloseTo(100, 1);
+    expect(coin.barMetrics.protectedPct).toBeCloseTo((9574.1178 / 10835.39) * 100, 1); // ~88.4%
   });
 });

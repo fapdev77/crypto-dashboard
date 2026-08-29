@@ -366,8 +366,13 @@ export function getHedgePositionLevels(
         exposedBaseUsd = markPrice > 0 ? expCoin * markPrice : Math.max(0, assetBalUsd - protectedUsd);
         exposedUsd = exposedBaseUsd;
 
-        protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 100;
-        exposedPct = assetBalUsd > 0 ? (exposedBaseUsd / assetBalUsd) * 100 : 0;
+        if (isBitget && netBalanceUsd > 0) {
+          protectedPct = (protectedUsd / netBalanceUsd) * 100;
+          exposedPct = (exposedBaseUsd / netBalanceUsd) * 100;
+        } else {
+          protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 100;
+          exposedPct = assetBalUsd > 0 ? (exposedBaseUsd / assetBalUsd) * 100 : 0;
+        }
       } else {
         // No covering balance found — the short still locks USD at entry.
         exposedBaseUsd = 0;
@@ -404,7 +409,10 @@ export function getHedgePositionLevels(
     ? Math.max(0, totalAssetBal - (isBitget ? rawProtAmount : protectedAmount))
     : (totalAssetBal + openPosSize);
 
-  const capitalRef = assetBalUsd > 0 ? assetBalUsd : protectedUsd + exposedBaseUsd;
+  const isBitgetPos = (pos.exchange || '').toLowerCase().includes('bitget');
+  const capitalRef = (isBitgetPos && netBalanceUsd > 0)
+    ? netBalanceUsd
+    : (assetBalUsd > 0 ? assetBalUsd : protectedUsd + exposedBaseUsd);
   const barTotal = capitalRef + leveragedUsd;
   const barMetrics: HedgeBarMetrics = {
     balanceWidthPct: barTotal > 0 ? (capitalRef / barTotal) * 100 : 0,
@@ -668,8 +676,11 @@ export function getHedgeCoinSummaries(
     const protectedOfEquityPct = (protectedUsd / denomUsd) * 100;
     const leveragedOfEquityPct = (leveragedUsd / denomUsd) * 100;
 
-    // Visual bar metrics for coin
-    const capitalRef = activeBalanceUsd > 0 ? activeBalanceUsd : protectedUsd + exposedBaseUsd;
+    // Visual bar metrics for coin (for Bitget use netBalanceUsd to avoid gap from gross balance)
+    const isBitgetCoin = (group.exchange || '').toLowerCase().includes('bitget');
+    const capitalRef = (isBitgetCoin && netBalanceUsd > 0)
+      ? netBalanceUsd
+      : (activeBalanceUsd > 0 ? activeBalanceUsd : protectedUsd + exposedBaseUsd);
     const barTotal = capitalRef + leveragedUsd;
     const barMetrics: HedgeBarMetrics = {
       balanceWidthPct: barTotal > 0 ? (capitalRef / barTotal) * 100 : 0,
