@@ -1,3 +1,10 @@
+## [1.46.4](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.3...v1.46.4) (2026-08-29)
+
+
+### Bug Fixes
+
+* **hedge:** adjust Bybit hedge position logic ([3e7b9a5](https://github.com/fapdev77/crypto-dashboard/commit/3e7b9a5ca3ebeedb722b86a0e76a54ba72beb420))
+
 ## [1.46.3](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.2...v1.46.3) (2026-08-28)
 
 
