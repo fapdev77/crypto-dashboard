@@ -1,3 +1,10 @@
+# [1.48.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.47.0...v1.48.0) (2026-08-29)
+
+
+### Features
+
+* **analytics:** add HedgePnlConceptMode support ([65f5e5d](https://github.com/fapdev77/crypto-dashboard/commit/65f5e5d6b018a40de4ffa90b574b56dada713e23))
+
 # [1.47.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.4...v1.47.0) (2026-08-29)
 
 
