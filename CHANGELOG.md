@@ -1,3 +1,10 @@
+# [1.47.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.4...v1.47.0) (2026-08-29)
+
+
+### Features
+
+* **okx:** enhance transaction processing and hedge metrics ([8afa6b9](https://github.com/fapdev77/crypto-dashboard/commit/8afa6b9313b788dcc5564a80071570f3f43d4d74))
+
 ## [1.46.4](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.3...v1.46.4) (2026-08-29)
 
 
