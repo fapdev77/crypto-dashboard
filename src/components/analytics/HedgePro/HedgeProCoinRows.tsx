@@ -3,11 +3,13 @@ import { HedgeCoinSummary } from '../../../utils/hedgeUtils';
 import { HedgeProCoinRow } from './HedgeProCoinRow';
 import { usePagination } from '../../../hooks/usePagination';
 import { Pagination } from '../../ui/Pagination';
+import { HedgePnlConceptMode } from './HedgeProDashboard';
 
 interface HedgeProCoinRowsProps {
   summaries: HedgeCoinSummary[];
   formatCurrency: (value: number | undefined | null, type?: 'usd' | 'crypto' | 'price' | 'compact', decimalsOrSymbol?: number | string) => string;
   itemsPerPage?: number;
+  pnlConceptMode?: HedgePnlConceptMode;
 }
 
 /**
@@ -17,6 +19,7 @@ export function HedgeProCoinRows({
   summaries,
   formatCurrency,
   itemsPerPage = 25,
+  pnlConceptMode = 'hedge',
 }: HedgeProCoinRowsProps) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
@@ -47,6 +50,7 @@ export function HedgeProCoinRows({
           isExpanded={expandedKey === coin.key}
           onToggle={() => handleToggle(coin.key)}
           formatCurrency={formatCurrency}
+          pnlConceptMode={pnlConceptMode}
         />
       ))}
 
