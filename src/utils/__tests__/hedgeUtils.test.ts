@@ -580,13 +580,16 @@ describe('getHedgeCoinChartRows', () => {
     expect(rows).toHaveLength(1); // one row per coin, NOT one per account
     expect(rows[0].baseCoin).toBe('BTC');
     expect(rows[0].accountCount).toBe(2);
-    expect(rows[0].balanceUsd).toBe(275000 + 600000);
-    // conn1: min(2×50000, 275000) = 100000; conn2: min(3×60000, 600000) = 180000
+    // conn1: 2 BTC protected ($100k) + 3 BTC exposed ($165k) = $265k (since entry was 50k vs mark 55k)
+    // conn2: 3 BTC protected ($180k) + 7 BTC exposed ($385k) = $565k (since entry was 60k vs mark 55k)
+    // Total effective balance = protected ($280,000) + exposed ($550,000) = $830,000
+    expect(rows[0].balanceUsd).toBe(280000 + 550000);
+    // conn1: 2×50000 = 100000; conn2: 3×60000 = 180000
     expect(rows[0].protectedUsd).toBe(100000 + 180000);
     expect(rows[0].exposedUsd).toBe(550000); // 10 BTC exposed * 55000
     expect(rows[0].exposedBaseUsd).toBe(550000); // no leveraged
     expect(rows[0].leveragedUsd).toBe(0);
-    expect(rows[0].coveragePct).toBeCloseTo((280000 / 875000) * 100, 3);
+    expect(rows[0].coveragePct).toBeCloseTo((280000 / 830000) * 100, 3);
     expect(rows[0].overexposed).toBe(false);
     expect(rows[0].accounts).toHaveLength(2);
     expect(rows[0].accounts.map(a => a.exchange).sort()).toEqual(['bitget', 'bybit']);

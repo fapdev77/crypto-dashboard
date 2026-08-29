@@ -806,7 +806,12 @@ export function getHedgeCoinChartRows(summaries: HedgeCoinSummary[]): HedgeCoinC
       byCoin.set(coin, row);
     }
 
-    row.balanceUsd = new Big(row.balanceUsd).plus(s.balanceUsd || 0).toNumber();
+    // Use effective capital (protected + exposed base) to prevent empty gaps caused by gross wallet balance
+    const effectiveCoinBalance = (s.protectedUsd + s.exposedBaseUsd > 0)
+      ? (s.protectedUsd + s.exposedBaseUsd)
+      : (s.balanceUsd || 0);
+
+    row.balanceUsd = new Big(row.balanceUsd).plus(effectiveCoinBalance).toNumber();
     row.protectedUsd = new Big(row.protectedUsd).plus(s.protectedUsd || 0).toNumber();
     row.exposedUsd = new Big(row.exposedUsd).plus(s.exposedUsd || 0).toNumber();
     row.exposedBaseUsd = new Big(row.exposedBaseUsd).plus(s.exposedBaseUsd || 0).toNumber();
@@ -816,7 +821,7 @@ export function getHedgeCoinChartRows(summaries: HedgeCoinSummary[]): HedgeCoinC
     row.accounts.push({
       exchange: s.exchange,
       accountLabel: s.accountLabel,
-      balanceUsd: s.balanceUsd,
+      balanceUsd: effectiveCoinBalance,
       protectedUsd: s.protectedUsd,
       exposedBaseUsd: s.exposedBaseUsd,
       exposedUsd: s.exposedUsd,
