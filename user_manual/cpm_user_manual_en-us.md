@@ -24,7 +24,7 @@ Our absolute highest priority is **zero-trust client security** and **strict pri
    - [Trade History](#-trade-history)
    - [PnL by Symbol](#-pnl-by-symbol)
    - [Funding Fees Dashboard](#-funding-fees-dashboard)
-   - [Bybit Transactions Log](#-bybit-transactions-log)
+   - [Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)](#-multi-exchange-transactions-log-bybit-bitget--okx-transactions)
    - [API Tester (REST & WebSocket Diagnostics)](#-api-tester-rest--websocket-diagnostics)
    - [Privacy Mode](#-privacy-mode)
 8. [Inverse Contract Normalization & Smart Pagination](#8-inverse-contract-normalization--smart-pagination)
