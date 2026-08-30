@@ -49,8 +49,9 @@ export const usePwaUpdateStore = create<PwaUpdateState>((set, get) => ({
 
     try {
       localStorage.setItem('app-updated', 'true');
+      sessionStorage.setItem('pwa_last_update_attempt', Date.now().toString());
     } catch {
-      // Ignore localStorage access errors
+      // Ignore storage access errors
     }
 
     LogManager.info('PWA', 'Triggering application update and reload...');
@@ -64,8 +65,8 @@ export const usePwaUpdateStore = create<PwaUpdateState>((set, get) => ({
       }
     };
 
-    // Safety timeout: if service worker transition or controllerchange doesn't reload within 800ms, force it
-    const fallbackTimer = setTimeout(forceReload, 800);
+    // Safety timeout: if service worker transition or controllerchange doesn't reload within 4000ms, force it as fallback
+    const fallbackTimer = setTimeout(forceReload, 4000);
 
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener(
@@ -79,10 +80,15 @@ export const usePwaUpdateStore = create<PwaUpdateState>((set, get) => ({
     }
 
     try {
+      // 1. Explicitly post SKIP_WAITING to waiting worker if available
+      if (registration?.waiting) {
+        LogManager.info('PWA', 'Sending SKIP_WAITING directly to waiting worker');
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+
+      // 2. Execute updateServiceWorker function from virtual:pwa-register
       if (updateServiceWorkerFn) {
         await updateServiceWorkerFn(true);
-      } else if (registration?.waiting) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       } else if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.getRegistration();
         if (reg?.waiting) {

@@ -44,6 +44,27 @@ export function UpdateNotification() {
   const [isCountdownCancelled, setIsCountdownCancelled] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Loop guard: if an update attempt happened in the last 20 seconds, cancel auto-countdown to prevent loop
+  const hasRecentUpdateAttempt = useCallback(() => {
+    try {
+      const lastAttempt = sessionStorage.getItem('pwa_last_update_attempt');
+      if (lastAttempt) {
+        const elapsed = Date.now() - parseInt(lastAttempt, 10);
+        return elapsed < 20000;
+      }
+    } catch {
+      // ignore
+    }
+    return false;
+  }, []);
+
+  useEffect(() => {
+    if (needRefresh && hasRecentUpdateAttempt()) {
+      setIsCountdownCancelled(true);
+      LogManager.warn('ServiceWorker', 'Loop guard activated: auto-countdown paused due to recent update attempt.');
+    }
+  }, [needRefresh, hasRecentUpdateAttempt]);
+
   // Synchronize SW states to global store
   useEffect(() => {
     if (needRefresh) {
