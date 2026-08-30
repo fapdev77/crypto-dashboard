@@ -1,3 +1,10 @@
+# [1.50.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.49.0...v1.50.0) (2026-08-30)
+
+
+### Features
+
+* **pwa:** improve update stability and prevent loops ([a08c8cd](https://github.com/fapdev77/crypto-dashboard/commit/a08c8cd50ccf8276df8b2f7ead595cccdbe4f724))
+
 # [1.49.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.48.0...v1.49.0) (2026-08-30)
 
 
