@@ -113,7 +113,7 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'prompt', // IMPORTANTE: Abre espaço para criarmos o Card de aviso
         devOptions: {
-          enabled: false // Desabilitado em dev para evitar falsos alertas de update no HMR
+          enabled: true // Permite que o plugin funcione no build local
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg}'], // Cacheia os assets básicos
