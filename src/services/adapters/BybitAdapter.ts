@@ -9,6 +9,8 @@ import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
+import { getBybitBaseUrl, getBybitCustomHeaders } from '../../utils/bybitEndpoints';
+import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -21,8 +23,29 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     return null;
   }
 
-  public static async getHeaders(apiKey: string, apiSecret: string, query: string = ''): Promise<Record<string, string>> {
+  public static async getHeaders(
+    keyOrApiKey: string | ApiCredentials,
+    secretOrQuery?: string,
+    queryParam: string = ''
+  ): Promise<Record<string, string>> {
     await this.syncTime();
+
+    let apiKey: string;
+    let apiSecret: string;
+    let query: string = '';
+    let customHeaders: Record<string, string> = {};
+
+    if (typeof keyOrApiKey === 'object' && keyOrApiKey !== null) {
+      apiKey = keyOrApiKey.apiKey;
+      apiSecret = keyOrApiKey.apiSecret;
+      query = secretOrQuery || '';
+      customHeaders = getBybitCustomHeaders(keyOrApiKey.bybitRegion);
+    } else {
+      apiKey = keyOrApiKey;
+      apiSecret = secretOrQuery || '';
+      query = queryParam;
+    }
+
     const timestamp = (Date.now() + this.timeOffset).toString();
     const recvWindow = '20000';
     const prehash = timestamp + apiKey + recvWindow + query;
@@ -33,46 +56,167 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       'X-BAPI-SIGN': signature,
       'X-BAPI-TIMESTAMP': timestamp,
       'X-BAPI-RECV-WINDOW': recvWindow,
+      ...customHeaders,
     };
   }
 
+  private async getCoinPrice(coin: string, baseUrl: string, knownPrices: Record<string, number>): Promise<number> {
+    const c = coin.toUpperCase();
+    if (knownPrices[c] !== undefined && knownPrices[c] > 0) return knownPrices[c];
+    if (['USDT', 'USDC', 'USD', 'DAI', 'USDE', 'FDUSD', 'PYUSD'].includes(c)) return 1.0;
 
-  // REST Balances
-  public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
-    const query = 'accountType=UNIFIED';
-    const targetUrl = `https://api.bybit.com/v5/account/wallet-balance?${query}`;
-    const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
-
-    const response = await hybridFetch(targetUrl, 'GET', headers);
-    if (response.retCode !== 0) {
-      throw new Error(`Bybit balance API Error (${response.retCode}): ${response.retMsg}`);
+    try {
+      const tickerUrl = `${baseUrl}/v5/market/tickers?category=spot&symbol=${c}USDT`;
+      const res = await hybridFetch(tickerUrl, 'GET', {});
+      if (res?.retCode === 0 && Array.isArray(res.result?.list) && res.result.list.length > 0) {
+        const item = res.result.list[0];
+        const p = parseFloat(item.lastPrice || item.usdIndexPrice || '0');
+        if (p > 0) {
+          knownPrices[c] = p;
+          return p;
+        }
+      }
+    } catch {
+      // ignore
     }
 
-    const wallet = response.result?.list?.[0];
-    if (!wallet || !wallet.coin) return [];
+    try {
+      const okxPrice = await fetchTokenUsdPrice(c);
+      if (okxPrice && okxPrice > 0) {
+        knownPrices[c] = okxPrice;
+        return okxPrice;
+      }
+    } catch {
+      // ignore
+    }
 
-    return wallet.coin.map((item: any) => ({
-      id: `${key.id}-UNIFIED-${item.coin}`,
-      connectionId: key.id,
-      exchange: 'bybit',
-      label: `${key.label} (UNIFIED)`,
-      ccy: item.coin,
-      amount: parseFloat(item.walletBalance || item.equity || '0'),
-      usdValue: parseFloat(item.usdValue || '0'),
-      totalEquity: parseFloat(wallet.totalEquity || '0'),
-      walletBalance: parseFloat(wallet.totalWalletBalance || '0'),
-      availableMargin: parseFloat(wallet.totalAvailableBalance || '0'),
-      unrealizedPnl: parseFloat(wallet.totalPerpUPL || '0'),
-      raw: item
-    }));
+    return 0;
+  }
+
+  // REST Balances (UNIFIED + FUNDING)
+  public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
+    const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
+    const balances: UnifiedBalance[] = [];
+    const coinPrices: Record<string, number> = {
+      USDT: 1.0,
+      USDC: 1.0,
+      USD: 1.0,
+      DAI: 1.0,
+      USDE: 1.0,
+      FDUSD: 1.0,
+      PYUSD: 1.0,
+    };
+
+    LogManager.info(
+      'BybitAdapter.Balance',
+      `[${key.label}] Fetching wallet balance from ${baseUrl} (env: ${key.environment || 'mainnet'}, region: ${key.bybitRegion || 'global'}${key.bybitRegion === 'brazil_int' || key.bybitRegion === 'argentina_int' ? ', X-Site-Id applied' : ''})`
+    );
+
+    // 1. Fetch Unified Trading Account (UTA) Balances
+    try {
+      const query = 'accountType=UNIFIED';
+      const targetUrl = `${baseUrl}/v5/account/wallet-balance?${query}`;
+      const headers = await BybitAdapter.getHeaders(key, query);
+
+      const response = await hybridFetch(targetUrl, 'GET', headers);
+      if (response.retCode === 0) {
+        const wallet = response.result?.list?.[0];
+        if (wallet && wallet.coin) {
+          for (const item of wallet.coin) {
+            const amount = parseFloat(item.walletBalance || item.equity || '0');
+            const rawEquity = parseFloat(item.equity || '0');
+            const rawUsdVal = parseFloat(item.usdValue || '0');
+
+            // In Bybit UTA, item.usdValue represents the USD valuation of item.equity (net balance).
+            // Derive the real coin price in USD:
+            let coinPrice = 0;
+            if (rawEquity > 0 && rawUsdVal > 0) {
+              coinPrice = rawUsdVal / rawEquity;
+            } else if (rawUsdVal > 0 && amount > 0) {
+              coinPrice = rawUsdVal / amount;
+            }
+
+            if (coinPrice > 0) {
+              coinPrices[item.coin] = coinPrice;
+            }
+
+            // Wallet balance (amount) in USD must reflect amount * coinPrice:
+            const usdValue = coinPrice > 0 ? amount * coinPrice : rawUsdVal;
+
+            if (amount > 0 || Math.abs(parseFloat(item.unrealisedPnl || '0')) > 0) {
+              balances.push({
+                id: `${key.id}-UNIFIED-${item.coin}`,
+                connectionId: key.id,
+                exchange: 'bybit',
+                label: `${key.label} (UNIFIED)`,
+                ccy: item.coin,
+                amount,
+                usdValue,
+                totalEquity: parseFloat(wallet.totalEquity || '0'),
+                walletBalance: parseFloat(wallet.totalWalletBalance || '0'),
+                availableMargin: parseFloat(wallet.totalAvailableBalance || '0'),
+                unrealizedPnl: parseFloat(wallet.totalPerpUPL || '0'),
+                raw: item
+              });
+            }
+          }
+        }
+      } else {
+        throw new Error(`Bybit balance API Error (${response.retCode}): ${response.retMsg}`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      LogManager.error('BybitAdapter.Balance', `Failed to fetch UNIFIED balance: ${msg}`, { error: err });
+      throw err;
+    }
+
+    // 2. Fetch Funding Account Balances
+    try {
+      const fundQuery = 'accountType=FUND';
+      const fundTargetUrl = `${baseUrl}/v5/asset/transfer/query-account-coins-balance?${fundQuery}`;
+      const fundHeaders = await BybitAdapter.getHeaders(key, fundQuery);
+
+      const fundResponse = await hybridFetch(fundTargetUrl, 'GET', fundHeaders);
+      if (fundResponse.retCode === 0) {
+        const fundBalances = fundResponse.result?.balance || [];
+        for (const item of fundBalances) {
+          const amount = parseFloat(item.walletBalance || '0');
+          if (amount > 0) {
+            const price = await this.getCoinPrice(item.coin, baseUrl, coinPrices);
+            const usdValue = amount * price;
+
+            balances.push({
+              id: `${key.id}-FUNDING-${item.coin}`,
+              connectionId: key.id,
+              exchange: 'bybit',
+              label: `${key.label} (Funding)`,
+              ccy: item.coin,
+              amount,
+              usdValue,
+              availableMargin: parseFloat(item.transferBalance || '0'),
+              unrealizedPnl: 0,
+              raw: item,
+            });
+          }
+        }
+      } else {
+        LogManager.warn('BybitAdapter.Balance', `Failed to fetch Funding balance (${fundResponse.retCode}): ${fundResponse.retMsg}`);
+      }
+    } catch (fundingErr: unknown) {
+      const fundMsg = fundingErr instanceof Error ? fundingErr.message : String(fundingErr);
+      LogManager.warn('BybitAdapter.Balance', `Non-critical error fetching Funding balance: ${fundMsg}`);
+    }
+
+    return balances;
   }
 
   // REST Positions
   public async getOpenPositions(key: ApiCredentials): Promise<UnifiedPosition[]> {
+    const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
     let accountMarginMode: UnifiedMarginMode = 'unknown';
     try {
-      const accUrl = `https://api.bybit.com/v5/account/info`;
-      const accHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret);
+      const accUrl = `${baseUrl}/v5/account/info`;
+      const accHeaders = await BybitAdapter.getHeaders(key);
       const accRes = await hybridFetch(accUrl, 'GET', accHeaders);
       if (accRes?.retCode === 0 && accRes?.result?.marginMode) {
         const mm = accRes.result.marginMode;
@@ -89,9 +233,14 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       { category: 'linear', queryStr: 'category=linear&settleCoin=USDC&limit=200' }
     ];
 
+    LogManager.info(
+      'BybitAdapter.Positions',
+      `[${key.label}] Fetching open positions from ${baseUrl} (env: ${key.environment || 'mainnet'}, region: ${key.bybitRegion || 'global'})`
+    );
+
     const requests = queries.map(async ({ category, queryStr }) => {
-      const targetUrl = `https://api.bybit.com/v5/position/list?${queryStr}`;
-      const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryStr);
+      const targetUrl = `${baseUrl}/v5/position/list?${queryStr}`;
+      const headers = await BybitAdapter.getHeaders(key, queryStr);
       const response = await hybridFetch(targetUrl, 'GET', headers);
 
       if (response.retCode === 10001) {
@@ -126,6 +275,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     endTime: number,
     onProgress?: (msg: string) => void
   ): Promise<Record<string, string>> {
+    const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
     const symbolPnL: Record<string, Big> = {};
     const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
     const categories = ['linear', 'inverse'];
@@ -138,12 +288,12 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           if (catEnd > endTime) catEnd = endTime;
 
           if (onProgress) {
-            onProgress(`Aguarde: sincronizando Bybit ${category} (${key.label})...`);
+            onProgress(`Please wait: syncing Bybit ${category} (${key.label})...`);
           }
 
           const queryUrl = `limit=50&category=${category}&startTime=${catStart}&endTime=${catEnd}`;
-          const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${queryUrl}`;
-          const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+          const targetUrl = `${baseUrl}/v5/account/transaction-log?${queryUrl}`;
+          const headers = await BybitAdapter.getHeaders(key, queryUrl);
 
           let cursor = '';
           let pages = 0;
@@ -151,8 +301,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           do {
             let thisQuery = queryUrl;
             if (cursor) thisQuery += `&cursor=${cursor}`;
-            const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
-            const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
+            const thisTargetUrl = `${baseUrl}/v5/account/transaction-log?${thisQuery}`;
+            const thisHeaders = await BybitAdapter.getHeaders(key, thisQuery);
 
             const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
             if (res.retCode !== 0) break;
@@ -186,6 +336,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   }
 
   private async fetchBybitAccumulatedFees(key: ApiCredentials, symbol: string, startTime: number): Promise<{ accumulatedFunding: string; accumulatedTradingFee: string }> {
+    const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
     let accumulatedFunding = new Big(0);
     let accumulatedTradingFee = new Big(0);
     let currentStart = startTime;
@@ -200,8 +351,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         if (currentEnd > now) currentEnd = now;
 
         const queryUrl = `limit=50&category=${targetCategory}&symbol=${symbol}&startTime=${currentStart}&endTime=${currentEnd}`;
-        const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${queryUrl}`;
-        const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+        const targetUrl = `${baseUrl}/v5/account/transaction-log?${queryUrl}`;
+        const headers = await BybitAdapter.getHeaders(key, queryUrl);
 
         let cursor = '';
         let pages = 0;
@@ -209,8 +360,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         do {
           let thisQuery = queryUrl;
           if (cursor) thisQuery += `&cursor=${cursor}`;
-          const thisTargetUrl = `https://api.bybit.com/v5/account/transaction-log?${thisQuery}`;
-          const thisHeaders = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, thisQuery);
+          const thisTargetUrl = `${baseUrl}/v5/account/transaction-log?${thisQuery}`;
+          const thisHeaders = await BybitAdapter.getHeaders(key, thisQuery);
 
           const res = await hybridFetch(thisTargetUrl, 'GET', thisHeaders);
           if (res.retCode !== 0) break;
@@ -325,8 +476,14 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
 
   // REST Closed PnL History
   public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
+    const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
     await BybitAdapter.syncTime();
     const categories = ['linear', 'inverse'];
+
+    LogManager.info(
+      'BybitAdapter.History',
+      `[${key.label}] Fetching closed PnL history from ${baseUrl} (env: ${key.environment || 'mainnet'}, region: ${key.bybitRegion || 'global'})`
+    );
 
     const fetchCategory = async (category: string) => {
       let list: any[] = [];
@@ -339,8 +496,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           if (end) query += `&endTime=${end}`;
           if (cursor) query += `&cursor=${cursor}`;
 
-          const targetUrl = `https://api.bybit.com/v5/position/closed-pnl?${query}`;
-          const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+          const targetUrl = `${baseUrl}/v5/position/closed-pnl?${query}`;
+          const headers = await BybitAdapter.getHeaders(key, query);
           const res = await hybridFetch(targetUrl, 'GET', headers);
 
           if (res.retCode !== 0) throw new Error(res.retMsg);
@@ -396,6 +553,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
 
   // REST Deposits / Withdrawals (Bills)
   public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+    const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
     await BybitAdapter.syncTime();
     const fetchRecords = async (type: 'deposit' | 'withdraw') => {
       const endpoint = type === 'deposit' ? '/v5/asset/deposit/query-record' : '/v5/asset/withdraw/query-record';
@@ -410,8 +568,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
           if (end) query += `&endTime=${end}`;
           if (cursor) query += `&cursor=${cursor}`;
 
-          const targetUrl = `https://api.bybit.com${endpoint}?${query}`;
-          const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+          const targetUrl = `${baseUrl}${endpoint}?${query}`;
+          const headers = await BybitAdapter.getHeaders(key, query);
           const response = await hybridFetch(targetUrl, 'GET', headers);
 
           if (response.retCode !== 0) throw new Error(response.retMsg);
@@ -448,6 +606,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
 
   // Orders
   public async getOpenOrders(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]> {
+    const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
     const categories = ['spot', 'inverse', 'linear-usdt', 'linear-usdc'];
     let allOrders: any[] = [];
 
@@ -468,8 +627,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
             query += `&cursor=${cursor}`;
           }
 
-          const targetUrl = `https://api.bybit.com/v5/order/realtime?${query}`;
-          const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+          const targetUrl = `${baseUrl}/v5/order/realtime?${query}`;
+          const headers = await BybitAdapter.getHeaders(key, query);
 
           const res = await hybridFetch(targetUrl, 'GET', headers);
           if (res.retCode === 0 && res.result?.list) {
@@ -489,6 +648,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   }
 
   public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
+    const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
     const categories = ['linear', 'spot', 'inverse'];
     let allOrders: any[] = [];
 
@@ -514,8 +674,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
               queryUrl += `&cursor=${cursor}`;
             }
 
-            const targetUrl = `https://api.bybit.com/v5/order/history?${queryUrl}`;
-            const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, queryUrl);
+            const targetUrl = `${baseUrl}/v5/order/history?${queryUrl}`;
+            const headers = await BybitAdapter.getHeaders(key, queryUrl);
 
             const res = await hybridFetch(targetUrl, 'GET', headers);
             if (res.retCode === 0 && res.result?.list) {
@@ -603,14 +763,15 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     category: string = '',
     cursor?: string
   ): Promise<{ list: any[]; nextPageCursor: string }> {
+    const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
     await BybitAdapter.syncTime();
     let query = `limit=50`;
     if (category) query += `&category=${category}`;
     query += `&startTime=${startTime}&endTime=${endTime}`;
     if (cursor) query += `&cursor=${cursor}`;
 
-    const targetUrl = `https://api.bybit.com/v5/account/transaction-log?${query}`;
-    const headers = await BybitAdapter.getHeaders(key.apiKey, key.apiSecret, query);
+    const targetUrl = `${baseUrl}/v5/account/transaction-log?${query}`;
+    const headers = await BybitAdapter.getHeaders(key, query);
     const res = await hybridFetch(targetUrl, 'GET', headers);
 
     if (res.retCode !== 0) {

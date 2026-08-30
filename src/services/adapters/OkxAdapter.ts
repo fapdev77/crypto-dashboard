@@ -9,6 +9,7 @@ import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
+import { calculateOkxTradeDetails } from '../../utils/okxUtils';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -608,6 +609,8 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     category: string = '',
     cursor?: string
   ): Promise<{ list: any[]; nextPageCursor: string }> {
+    await OkxAdapter.ensureInstrumentsLoaded().catch(() => {});
+
     const query = new URLSearchParams();
     if (category) query.append('instType', category);
     if (startTime) query.append('begin', startTime.toString());
@@ -664,10 +667,30 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       else if (rs.includes('sell') || rs.includes('short') || rs.includes('out')) normalizedSide = 'Sell';
     }
 
-    // Trade price, qty, size normalization
-    const qty = String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
-    const size = String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
+    // Trade price, contracts, qty, size normalization
     const tradePrice = String(raw.px || raw.price || raw.avgPrice || raw.fillPx || raw.fillPrice || '0');
+    
+    // Calculate accurate contract & crypto values
+    const tradeDetails = calculateOkxTradeDetails({
+      symbol: raw.instId,
+      category: raw.instType,
+      sz: raw.sz,
+      tradePrice,
+      currency: raw.ccy,
+      raw,
+      cachedInsts: OkxAdapter.cachedInstruments
+    });
+
+    const qty = tradeDetails.isDerivative
+      ? String(tradeDetails.cryptoQty)
+      : String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
+    const size = tradeDetails.isDerivative
+      ? String(tradeDetails.cryptoQty)
+      : String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
+    const contracts = tradeDetails.isDerivative ? String(tradeDetails.contracts) : undefined;
+    const contractVal = tradeDetails.isDerivative ? String(tradeDetails.ctVal) : undefined;
+    const cryptoQty = String(tradeDetails.cryptoQty);
+    const totalValueUsd = tradeDetails.totalValueUsd > 0 ? String(tradeDetails.totalValueUsd) : undefined;
 
     // Funding mapping (type 8 is funding fee)
     const isFunding = String(raw.type || '') === '8';
@@ -690,6 +713,10 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       subTypeCode: raw.subType ? String(raw.subType) : '',
       qty,
       size,
+      contracts,
+      contractVal,
+      cryptoQty,
+      totalValueUsd,
       currency: raw.ccy || '',
       tradePrice,
       funding,

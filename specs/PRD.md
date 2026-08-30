@@ -153,6 +153,10 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 | FR-11 | Exibir telemetria e latência das conexões | Connection Logs |
 | FR-12 | Ticker de mercado em tempo real (marquee) das posições abertas | Positions Ticker |
 | FR-13 | PWA: instalação, cache offline e notificação de atualização | PWA |
+| FR-14 | Auditar extrato transacional e bills da Bitget (Classic e UTA) | Bitget Transactions |
+| FR-15 | Auditar extrato e bills archive da OKX com reconciliação contábil | OKX Transactions |
+| FR-16 | Mapeamento universal de transações (10 categorias universais e badges padronizados) | Universal Tx Mapper |
+| FR-17 | Modo Hedge Pro com monitoramento de delta, ratio de hedge e alertas de risco | Hedge Monitoring |
 
 ## 8. Requisitos Não-Funcionais
 

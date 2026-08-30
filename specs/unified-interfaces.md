@@ -1,6 +1,6 @@
 # Unified Interfaces Specification (`unified-interfaces.md`)
 
-This document defines the unified interfaces (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, `UnifiedBillRecord`, `SymbolPnLRecord`, `UnifiedOrder`, `FundingFeeAggregated`, `FundingRateSummary`, and `BybitTransactionLogEntry`) to serve as the single source of truth for the frontend UI. It maps exchange-specific API payloads to normalized fields as defined in `src/types.ts`.
+This document defines the unified interfaces (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, `UnifiedBillRecord`, `SymbolPnLRecord`, `UnifiedOrder`, `FundingFeeAggregated`, `FundingRateSummary`, `BybitTransactionLogEntry`, `BitgetTransactionLogEntry`, `OkxTransactionLogEntry`, and `UniversalTxType`) to serve as the single source of truth for the frontend UI. It maps exchange-specific API payloads to normalized fields as defined in `src/types.ts`.
 
 ---
 
@@ -779,38 +779,66 @@ export interface OkxTransactionLogEntry {
 }
 ```
 
-### Key Fields for Funding Analysis
+### 13.4. Universal Transaction Mapper (`UniversalTxType` & `transactionTypeMapper.ts`)
+
+To provide consistent visualization, badge coloring, and cross-exchange transaction analysis across Bybit, Bitget, and OKX, CPM normalizes hundreds of exchange-specific event codes into 10 universal categories:
+
+```typescript
+export type UniversalTxType =
+  | 'ALL'
+  | 'TRADE'
+  | 'FUNDING_FEE'
+  | 'TRANSFER_IN'
+  | 'TRANSFER_OUT'
+  | 'LIQUIDATION'
+  | 'INTEREST'
+  | 'REWARDS'
+  | 'DELIVERY'
+  | 'OTHERS';
+```
+
+| Universal Type | Badge Label | Bybit Source Types | Bitget Source Types | OKX Source Codes / Subtypes | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `TRADE` | Trade | `TRADE` | `ORDER_DEALT_IN`, `ORDER_DEALT_OUT`, `TRANSACTION_FEE` | `2` (Trade), buy/sell executions, close PnL | Trades and order executions |
+| `FUNDING_FEE` | Funding Fee | `SETTLEMENT` | `FUNDING_FEE_IN`, `FUNDING_FEE_OUT` | `14` (Funding Fee), funding expense/income | Periodic swap funding payments and receipts |
+| `TRANSFER_IN` | Transfer In | `TRANSFER` (cashFlow > 0) | `TRANSFER_IN`, `DEPOSIT` | `1` (Transfer), `20` (Deposit), incoming subaccount | Deposits and incoming transfers |
+| `TRANSFER_OUT` | Transfer Out | `TRANSFER` (cashFlow < 0) | `TRANSFER_OUT`, `WITHDRAW` | `1` (Transfer), `21` (Withdrawal), outgoing subaccount | Withdrawals and outgoing transfers |
+| `LIQUIDATION` | Liquidation | `LIQUIDATION`, `ADL` | `LIQUIDATION`, `FORCE_CLOSE` | `3` (Delivery), forced close, auto-deleveraging | Forced liquidations and ADL events |
+| `INTEREST` | Interest | `INTEREST` | `INTEREST`, `BORROW_FEE` | `7` (Interest), borrow charges and loan deductions | Margin interest and borrowing fees |
+| `REWARDS` | Rewards | `BONUS`, `AIRDROP` | `REWARD_BONUS`, `COUPON` | `13` (Claim), trial funds, vouchers, fee rebates | Bonuses, trial funds, and fee rebates |
+| `DELIVERY` | Delivery | `DELIVERY` | `SETTLE_DELIVERY` | `3` (Delivery), futures delivery and option exercises | Contract expirations and settlements |
+| `OTHERS` | Others | `CONVERT`, `OTHER` | `OTHER`, `SYSTEM_ADJUST` | `8` (Fee deduction), conversions, misc. entries | Miscellaneous system adjustments |
+
+### Key Fields for Financial Auditing
 
 | Field | Description | Used By |
 |-------|-------------|---------|
 | `transactionTime` | Timestamp of the event | Sorting, grouping, period filtering |
-| `type` | Event type (`SETTLEMENT` = funding settlement) | `filterEntries()` for funding-specific aggregation |
-| `funding` | Funding fee amount (positive = received, negative = paid) | PnL computation, `computeRealPnL()` |
-| `fee` | Trading fee amount | PnL computation |
+| `type` | Native or standardized event type | Filtering and universal category classification |
+| `funding` | Funding fee amount (positive = received, negative = paid) | KPI cards, PnL computation, `computeRealPnL()` |
+| `fee` | Trading fee amount | Net fee auditing, PnL computation |
 | `cashFlow` | Cash flow component of the transaction | `computeRealPnL()` — `cashFlow + funding - fee` |
-| `change` | Net change to cash balance (`cashFlow + funding - fee`) | Verification, reconciliation |
+| `change` | Net change to wallet balance (`cashFlow + funding - fee`) | Reconciliation with exchange wallet balance |
 
-### Sync & Cache
+### Sync & Cache Services
 
-| Function | Location | Description |
-|----------|----------|-------------|
-| `syncWithCache(key)` | BybitTransactionService | Initial full sync: fetches all pages from Bybit, deduplicates, writes to IndexedDB |
-| `syncIncremental(key, latestTime)` | BybitTransactionService | Incremental sync: fetches only records since `latestTime`, deduplicates, appends to cache |
-| `getBybitTxLogCache(connectionId)` | historyCache.ts | Read all entries for a connection from IndexedDB |
-| `getAllBybitTxLogCache()` | historyCache.ts | Read ALL entries across all connections |
-| `saveBybitTxLogCache(entries)` | historyCache.ts | Bulk upsert to IndexedDB `bybitTxLog` store |
+| Service | IndexedDB Store | Functions |
+|---------|-----------------|-----------|
+| `BybitTransactionService` | `bybit-transaction-log`, `bybit-transaction-meta` | `syncWithCache()`, `syncIncremental()`, `computeStats()`, `filterEntries()` |
+| `BitgetTransactionService` | `bitget-transaction-log`, `bitget-transaction-meta` | `syncWithCache()`, `syncIncremental()`, `computeStats()`, `filterEntries()` |
+| `OkxTransactionService` | `okx-transaction-log`, `okx-transaction-meta` | `syncWithCache()`, `syncIncremental()`, `computeStats()`, `filterEntries()` |
 
-### Computed Statistics (`BybitTransactionService.computeStats`)
+### Computed Statistics (`computeStats`)
 
-Returns derived metrics from filtered entries:
+Returns derived metrics from filtered entries for each exchange:
 
 ```typescript
 {
-  totalFunding: number;      // Sum of `funding` field
-  totalFees: number;         // Sum of `fee` field
-  totalRealized: number;     // Sum of `change` field (cashFlow + funding - fee)
-  tradeCount: number;        // Count of `TRADE` type entries
-  fundingCount: number;      // Count of `SETTLEMENT` type entries
+  totalCount: number;
+  typeBreakdown: Record<string, number>;
+  stable: CurrencyStats;
+  perCurrency: Record<string, CurrencyStats>;
+  aggregatedUsd: CurrencyStats;
 }
 ```
 
