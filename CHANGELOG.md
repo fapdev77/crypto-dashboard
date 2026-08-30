@@ -1,3 +1,10 @@
+# [1.49.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.48.0...v1.49.0) (2026-08-30)
+
+
+### Features
+
+* implement multi-exchange transaction auditing ([c798ece](https://github.com/fapdev77/crypto-dashboard/commit/c798ece5033abb92b0c94903b7c10363ced03343))
+
 # [1.48.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.47.0...v1.48.0) (2026-08-29)
 
 
