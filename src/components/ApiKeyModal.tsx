@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Save, X, Trash2 } from 'lucide-react';
-import { useApiKeysStore, Exchange, AccountType, ApiCredentials } from '../store/apiKeysStore';
+import React, { useState, useEffect, useRef } from 'react';
+import { Eye, EyeOff, Save, Trash2, Globe, Server, ChevronDown, Check, Info, X } from 'lucide-react';
+import { useApiKeysStore, Exchange, AccountType, ApiEnvironment, BybitRegion, ApiCredentials } from '../store/apiKeysStore';
 import { LogManager } from '../services/LogManager';
+import { BYBIT_REGIONS, getBybitRegionOption, getBybitBaseUrl } from '../utils/bybitEndpoints';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AppTooltip } from './ui/Tooltip';
 
@@ -23,21 +24,44 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
   
   const [exchange, setExchange] = useState<Exchange>('bitget');
   const [accountType, setAccountType] = useState<AccountType>('classic');
+  const [environment, setEnvironment] = useState<ApiEnvironment>('mainnet');
+  const [bybitRegion, setBybitRegion] = useState<BybitRegion>('global');
+  
   const [label, setLabel] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [passphrase, setPassphrase] = useState('');
   const [showSecret, setShowSecret] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
+  const [isRegionDropdownOpen, setIsRegionDropdownOpen] = useState(false);
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState('');
+
+  const regionDropdownRef = useRef<HTMLDivElement>(null);
+  const exchangeDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (regionDropdownRef.current && !regionDropdownRef.current.contains(event.target as Node)) {
+        setIsRegionDropdownOpen(false);
+      }
+      if (exchangeDropdownRef.current && !exchangeDropdownRef.current.contains(event.target as Node)) {
+        setIsExchangeDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       if (mode === 'edit' && existingKey) {
         setExchange(existingKey.exchange);
         setAccountType(existingKey.accountType || 'classic');
+        setEnvironment(existingKey.environment || 'mainnet');
+        setBybitRegion(existingKey.bybitRegion || 'global');
         setLabel(existingKey.label);
         setApiKey(existingKey.apiKey);
         setApiSecret(''); 
@@ -45,6 +69,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
       } else {
         setExchange('bitget');
         setAccountType('classic');
+        setEnvironment('mainnet');
+        setBybitRegion('global');
         setLabel('');
         setApiKey('');
         setApiSecret('');
@@ -52,6 +78,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
       }
       setShowDeleteConfirm(false);
       setShowSecret(false);
+      setIsExchangeDropdownOpen(false);
+      setIsRegionDropdownOpen(false);
       setError('');
     }
   }, [isOpen, mode, existingKey]);
@@ -59,6 +87,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
   if (!isOpen) return null;
 
   const activeEx = EXCHANGES.find(e => e.id === exchange)!;
+  const currentRegionOpt = getBybitRegionOption(bybitRegion);
+  const resolvedBaseUrl = getBybitBaseUrl(environment, bybitRegion);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,22 +117,36 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
       addKey({
         exchange,
         accountType: exchange === 'bitget' ? accountType : undefined,
+        environment: exchange === 'bybit' ? environment : undefined,
+        bybitRegion: exchange === 'bybit' ? bybitRegion : undefined,
         label,
         apiKey,
         apiSecret,
         passphrase,
       });
-      LogManager.info('ApiKeys', `New API key added: ${label} (${exchange}${exchange === 'bitget' ? ` - ${accountType}` : ''})`);
+      const extraMeta = exchange === 'bitget' 
+        ? ` - ${accountType.toUpperCase()}` 
+        : exchange === 'bybit' 
+          ? ` - ${environment.toUpperCase()} / ${currentRegionOpt.name}${currentRegionOpt.badge ? ` [${currentRegionOpt.badge}]` : ''}` 
+          : '';
+      LogManager.info('ApiKeys', `New API key added: ${label} (${exchange}${extraMeta})`);
     } else if (mode === 'edit' && existingKey) {
-      const keys = useApiKeysStore.getState().keys;
+      const allKeys = useApiKeysStore.getState().keys;
       useApiKeysStore.setState({
-        keys: keys.map(k => k.id === existingKey.id ? {
+        keys: allKeys.map(k => k.id === existingKey.id ? {
           ...k,
           label,
-          accountType: k.exchange === 'bitget' ? accountType : k.accountType
+          accountType: k.exchange === 'bitget' ? accountType : k.accountType,
+          environment: k.exchange === 'bybit' ? environment : k.environment,
+          bybitRegion: k.exchange === 'bybit' ? bybitRegion : k.bybitRegion,
         } : k)
       });
-      LogManager.info('ApiKeys', `API key edited: ${label} (${existingKey.exchange}${existingKey.exchange === 'bitget' ? ` - ${accountType}` : ''})`);
+      const extraMeta = existingKey.exchange === 'bitget' 
+        ? ` - ${accountType.toUpperCase()}` 
+        : existingKey.exchange === 'bybit' 
+          ? ` - ${environment.toUpperCase()} / ${currentRegionOpt.name}${currentRegionOpt.badge ? ` [${currentRegionOpt.badge}]` : ''}` 
+          : '';
+      LogManager.info('ApiKeys', `API key edited: ${label} (${existingKey.exchange}${extraMeta})`);
     }
     onClose();
   };
@@ -116,87 +160,93 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      
-      <div className="relative bg-[#151619] border border-[#2a2b30] rounded-xl shadow-2xl w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-200">
-        <div className="flex items-center justify-between p-4 border-b border-[#2a2b30]">
-          <h3 className="text-lg font-medium text-white">
-            {mode === 'create' ? 'New API Connection' : 'Edit Connection'}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-[#151619] border border-[#2a2b30] rounded-xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-8">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2b30] bg-[#111216]">
+          <h3 className="font-semibold text-white text-base">
+            {mode === 'create' ? 'Add API Connection' : `Edit Connection: ${existingKey?.label}`}
           </h3>
-          <button onClick={onClose} className="text-[#8E9299] hover:text-white transition-colors">
-             <X className="w-5 h-5" />
+          <button
+            onClick={onClose}
+            className="text-[#8E9299] hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {error && (
-              <div className="col-span-1 sm:col-span-2 bg-[#FF4444]/10 border border-[#FF4444]/20 rounded-lg p-3">
-                <p className="text-[#FF4444] text-sm text-center">{error}</p>
+        <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+          {error && (
+            <div className="bg-[#FF4444]/10 border border-[#FF4444]/20 rounded-lg p-3 text-xs text-[#FF4444]">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <AppTooltip description="A friendly name to identify this API connection across the dashboard.">
+              <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Connection Label</label>
+            </AppTooltip>
+            <input
+              type="text"
+              required
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
+              placeholder="e.g., Main Bybit Account, Scalp Bot, etc."
+            />
+          </div>
+
+          <div>
+            <AppTooltip description="Select the cryptocurrency exchange platform you are connecting to.">
+              <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Exchange</label>
+            </AppTooltip>
+            {mode === 'edit' ? (
+              <div className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 flex items-center justify-between opacity-80 select-none">
+                <div className="flex items-center gap-3">
+                  <ExchangeIcon exchange={exchange} className="w-5 h-5" />
+                  <span className="text-white text-sm font-medium">{activeEx.name}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="relative" ref={exchangeDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsExchangeDropdownOpen(!isExchangeDropdownOpen)}
+                  className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 flex items-center justify-between hover:border-[#3a3b40] focus:outline-none focus:border-[#2F6BFF] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <ExchangeIcon exchange={exchange} className="w-5 h-5" />
+                    <span className="text-white text-sm font-medium">{activeEx.name}</span>
+                  </div>
+                  <ChevronDownIcon isOpen={isExchangeDropdownOpen} />
+                </button>
+
+                {isExchangeDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden z-20">
+                    {EXCHANGES.map((ex) => (
+                      <button
+                        key={ex.id}
+                        type="button"
+                        onClick={() => {
+                          setExchange(ex.id);
+                          setIsExchangeDropdownOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 flex items-center justify-between hover:bg-[#202125] transition-colors ${
+                          exchange === ex.id ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]' : 'text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <ExchangeIcon exchange={ex.id} className="w-5 h-5" />
+                          <span className="text-sm font-medium">{ex.name}</span>
+                        </div>
+                        {exchange === ex.id && <div className="w-1.5 h-1.5 rounded-full bg-[#2F6BFF]" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-            <div>
-              <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2">Exchange</label>
-              {mode === 'edit' ? (
-                 <div className="flex items-center gap-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2.5 opacity-70">
-                    <ExchangeIcon exchange={exchange} className="w-5 h-5" />
-                    <span className="text-sm text-white">{activeEx.name}</span>
-                 </div>
-              ) : (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors appearance-none text-left flex items-center justify-between"
-                  >
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <ExchangeIcon exchange={exchange} className="w-5 h-5" />
-                    </div>
-                    <span>{activeEx.name}</span>
-                    <ChevronDownIcon isOpen={isDropdownOpen} />
-                  </button>
-
-                  {isDropdownOpen && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
-                      <div className="absolute z-20 w-full mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-lg overflow-hidden">
-                        {EXCHANGES.map(ex => (
-                          <button
-                            key={ex.id}
-                            type="button"
-                            onClick={() => {
-                              setExchange(ex.id as Exchange);
-                              setIsDropdownOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                              exchange === ex.id ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
-                            }`}
-                          >
-                            <ExchangeIcon exchange={ex.id} className="w-5 h-5" />
-                            <span>{ex.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <AppTooltip description="A custom name to identify this connection (e.g. 'Main Account', 'Scalp Bot').">
-                <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Label</label>
-              </AppTooltip>
-              <input
-                type="text"
-                required
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
-                placeholder="e.g. Scalp Bot"
-              />
-            </div>
           </div>
 
           {/* Account Type Selector for Bitget */}
@@ -242,6 +292,157 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                   </div>
                   <span className="text-[10px] text-[#8E9299] mt-1 leading-tight">Unified Trading Account (v3)</span>
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Connection Settings for Bybit (Environment & Region) */}
+          {exchange === 'bybit' && (
+            <div className="bg-[#1a1b1e]/90 border border-[#2a2b30] rounded-xl p-4 space-y-3.5">
+              
+              {/* Environment Selector */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <AppTooltip description="Select Mainnet for live trading or Testnet for simulated environment.">
+                    <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+                      Network / Environment
+                    </label>
+                  </AppTooltip>
+                  <span className="text-[11px] text-[#8E9299] font-mono">Bybit v5 REST</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEnvironment('mainnet')}
+                    className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
+                      environment === 'mainnet'
+                        ? 'bg-[#2F6BFF]/15 border-[#2F6BFF] text-white shadow-sm'
+                        : 'bg-[#151619] border-[#2a2b30] text-[#8E9299] hover:text-white hover:border-[#3a3b40]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Server className="w-4 h-4 text-[#2F6BFF]" />
+                      <div>
+                        <div className="font-medium text-xs text-white">Mainnet</div>
+                        <div className="text-[10px] text-[#8E9299]">Live Production</div>
+                      </div>
+                    </div>
+                    {environment === 'mainnet' && <div className="w-1.5 h-1.5 rounded-full bg-[#2F6BFF]" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEnvironment('testnet')}
+                    className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
+                      environment === 'testnet'
+                        ? 'bg-[#F2C94C]/15 border-[#F2C94C] text-white shadow-sm'
+                        : 'bg-[#151619] border-[#2a2b30] text-[#8E9299] hover:text-white hover:border-[#3a3b40]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-[#F2C94C]" />
+                      <div>
+                        <div className="font-medium text-xs text-[#F2C94C]">Testnet</div>
+                        <div className="text-[10px] text-[#8E9299]">Simulated Network</div>
+                      </div>
+                    </div>
+                    {environment === 'testnet' && <div className="w-1.5 h-1.5 rounded-full bg-[#F2C94C]" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Region / Origin Selector */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <AppTooltip description="Select the origin or region for your Bybit account. For international accounts from Brazil or Argentina, the appropriate X-Site-Id header is automatically applied. For regions with dedicated regulatory domains (NL, TR, KZ, etc.), the official local endpoint is used.">
+                    <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+                      Account Region / Origin
+                    </label>
+                  </AppTooltip>
+                  {currentRegionOpt.badge && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[#2F6BFF]/40 bg-[#2F6BFF]/10 text-[#60A5FA]">
+                      Badge: {currentRegionOpt.badge}
+                    </span>
+                  )}
+                </div>
+
+                <div className="relative" ref={regionDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsRegionDropdownOpen(!isRegionDropdownOpen)}
+                    className="w-full bg-[#151619] border border-[#2a2b30] rounded-lg px-3.5 py-2.5 flex items-center justify-between hover:border-[#3a3b40] focus:outline-none focus:border-[#2F6BFF] transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <Globe className="w-4 h-4 text-[#8E9299] shrink-0" />
+                      <div className="flex flex-col items-start truncate">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-white truncate">{currentRegionOpt.name}</span>
+                          {currentRegionOpt.badge && (
+                            <span className="text-[9px] font-mono font-bold px-1 rounded bg-[#2a2b30] text-[#D1D5DB] border border-[#3a3b40]">
+                              {currentRegionOpt.badge}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-[#8E9299] font-mono truncate">{resolvedBaseUrl}</span>
+                      </div>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-[#8E9299] shrink-0 transition-transform ${isRegionDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <div className="relative">
+                    {isRegionDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#151619] border border-[#2a2b30] rounded-lg shadow-2xl max-h-56 overflow-y-auto z-30 divide-y divide-[#202125]">
+                        {BYBIT_REGIONS.map((reg) => {
+                          const isSelected = bybitRegion === reg.id;
+                          return (
+                            <button
+                              key={reg.id}
+                              type="button"
+                              onClick={() => {
+                                setBybitRegion(reg.id);
+                                setIsRegionDropdownOpen(false);
+                              }}
+                              className={`w-full px-3.5 py-2.5 flex items-center justify-between text-left hover:bg-[#1a1b1e] transition-colors ${
+                                isSelected ? 'bg-[#2F6BFF]/10' : ''
+                              }`}
+                            >
+                              <div className="flex flex-col gap-0.5 truncate pr-2">
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-xs font-medium ${isSelected ? 'text-[#2F6BFF]' : 'text-white'}`}>
+                                    {reg.name}
+                                  </span>
+                                  {reg.badge && (
+                                    <span className={`text-[9px] font-mono font-bold px-1 rounded border ${
+                                      isSelected
+                                        ? 'bg-[#2F6BFF]/20 text-[#60A5FA] border-[#2F6BFF]/40'
+                                        : 'bg-[#202125] text-[#8E9299] border-[#2a2b30]'
+                                    }`}>
+                                      {reg.badge}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-[#8E9299] leading-tight truncate">
+                                  {reg.description}
+                                </span>
+                              </div>
+                              {isSelected && <Check className="w-4 h-4 text-[#2F6BFF] shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* International account note */}
+                {(bybitRegion === 'brazil_int' || bybitRegion === 'argentina_int') && (
+                  <div className="mt-2 p-2 bg-[#2F6BFF]/10 border border-[#2F6BFF]/25 rounded-lg flex items-start gap-2 text-[11px] text-[#93C5FD]">
+                    <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#60A5FA]" />
+                    <span>
+                      International account configured: The system will automatically inject the <code className="bg-[#111216] px-1 py-0.5 rounded font-mono text-[#60A5FA]">x-site-id: {currentRegionOpt.headers?.['x-site-id'] || currentRegionOpt.headers?.['X-Site-Id']}</code> header into Bybit v5 REST requests.
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}

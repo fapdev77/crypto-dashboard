@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import mockBitgetTxData from '../mock/bitget-transactions.json';
 import { BitgetTransactionLogEntry } from '../types';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -74,6 +75,15 @@ export function useBitgetTransactions(filters: BitgetTxFilters = defaultFilters)
     const load = async () => {
       setIsLoading(true);
       setError(null);
+
+      if (useMockData) {
+        const sorted = [...mockBitgetTxData].sort((a: any, b: any) => b.transactionTime - a.transactionTime) as unknown as BitgetTransactionLogEntry[];
+        if (isMounted) {
+          setEntries(sorted);
+          setIsLoading(false);
+        }
+        return;
+      }
 
       const bitgetKeys = keys.filter(k => k.exchange === 'bitget' && k.isActive);
       if (bitgetKeys.length === 0) {

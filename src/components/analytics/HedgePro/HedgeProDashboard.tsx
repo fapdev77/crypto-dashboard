@@ -1,13 +1,16 @@
-import React from 'react';
-import { ShieldCheck, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShieldCheck, Activity, Layers, Scale } from 'lucide-react';
 import { useHedgeData } from '../../../hooks/useHedgeData';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import { FilterBar } from '../../ui/FilterBar';
 import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
+import { AppTooltip } from '../../ui/Tooltip';
 import { HedgeProKpis } from './HedgeProKpis';
 import { HedgeProCoinRows } from './HedgeProCoinRows';
 import { HedgeProBreakdownChart } from './HedgeProBreakdownChart';
 import { HedgeExposureBar } from './HedgeExposureBar';
+
+export type HedgePnlConceptMode = 'standard' | 'hedge';
 
 /**
  * Hedge Pro — dashboard de acompanhamento de posições em hedge (contratos
@@ -31,6 +34,25 @@ export function HedgeProDashboard() {
 
   const formatCurrency = useFormatCurrency();
 
+  // Toggle for PnL Concept Mode ('standard' = Classic PnL vs 'hedge' = Opportunity Cost / Accumulated Asset)
+  const [pnlConceptMode, setPnlConceptMode] = useState<HedgePnlConceptMode>(() => {
+    try {
+      const saved = localStorage.getItem('hedge_pro_pnl_mode');
+      return saved === 'standard' ? 'standard' : 'hedge';
+    } catch {
+      return 'hedge';
+    }
+  });
+
+  const handleTogglePnlConcept = (mode: HedgePnlConceptMode) => {
+    setPnlConceptMode(mode);
+    try {
+      localStorage.setItem('hedge_pro_pnl_mode', mode);
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <div className="flex flex-col gap-5">
       {/* Header */}
@@ -46,6 +68,43 @@ export function HedgeProDashboard() {
           <p className="text-xs text-[#8E9299] mt-0.5">
             Capital protection in inverse (Coin-M) contracts: shorts lock USD at entry; longs and uncovered balance stay exposed.
           </p>
+        </div>
+
+        {/* PnL Concept Mode Toggle */}
+        <div className="flex items-center bg-[#151619] border border-[#26282d] p-0.5 rounded-lg text-xs">
+          <AppTooltip
+            description="Displays traditional accounting Unrealized PnL and ROI relative to wallet balance."
+            side="bottom"
+          >
+            <button
+              onClick={() => handleTogglePnlConcept('standard')}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+                pnlConceptMode === 'standard'
+                  ? 'bg-[#26282d] text-white shadow-sm'
+                  : 'text-[#8E9299] hover:text-white'
+              }`}
+            >
+              <Layers className="w-3 h-3" />
+              <span>Classic PnL</span>
+            </button>
+          </AppTooltip>
+
+          <AppTooltip
+            description="Hedge Concept: Frame PnL as Opportunity Cost (uncaptured upside when market rises) or Asset Accumulation (gaining coin units when market drops)."
+            side="bottom"
+          >
+            <button
+              onClick={() => handleTogglePnlConcept('hedge')}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+                pnlConceptMode === 'hedge'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
+                  : 'text-[#8E9299] hover:text-white'
+              }`}
+            >
+              <Scale className="w-3 h-3" />
+              <span>Hedge Concept</span>
+            </button>
+          </AppTooltip>
         </div>
       </div>
 
@@ -85,7 +144,7 @@ export function HedgeProDashboard() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters with Exchange Selection */}
       <FilterBar
         search={{ value: search, onChange: setSearch, placeholder: 'Search coin / account...' }}
         exchange={{ value: exchange, onChange: setExchange, options: exchanges }}
@@ -101,7 +160,11 @@ export function HedgeProDashboard() {
         <HedgeProBreakdownChart summaries={filteredSummaries} formatCurrency={formatCurrency} />
 
         {/* Per-coin summaries (Row View modeled after Open Orders) */}
-        <HedgeProCoinRows summaries={filteredSummaries} formatCurrency={formatCurrency} />
+        <HedgeProCoinRows
+          summaries={filteredSummaries}
+          formatCurrency={formatCurrency}
+          pnlConceptMode={pnlConceptMode}
+        />
       </div>
 
       {/* Filtered totals footnote */}

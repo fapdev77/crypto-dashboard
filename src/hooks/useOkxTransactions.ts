@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import mockOkxTxData from '../mock/okx-transactions.json';
 import { OkxTransactionLogEntry } from '../types';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -74,6 +75,15 @@ export function useOkxTransactions(filters: OkxTxFilters = defaultFilters) {
     const load = async () => {
       setIsLoading(true);
       setError(null);
+
+      if (useMockData) {
+        const sorted = [...mockOkxTxData].sort((a: any, b: any) => b.transactionTime - a.transactionTime) as unknown as OkxTransactionLogEntry[];
+        if (isMounted) {
+          setEntries(sorted);
+          setIsLoading(false);
+        }
+        return;
+      }
 
       const okxKeys = keys.filter(k => k.exchange === 'okx' && k.isActive);
       if (okxKeys.length === 0) {

@@ -1,3 +1,80 @@
+# [1.49.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.48.0...v1.49.0) (2026-08-30)
+
+
+### Features
+
+* implement multi-exchange transaction auditing ([c798ece](https://github.com/fapdev77/crypto-dashboard/commit/c798ece5033abb92b0c94903b7c10363ced03343))
+
+# [1.48.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.47.0...v1.48.0) (2026-08-29)
+
+
+### Features
+
+* **analytics:** add HedgePnlConceptMode support ([65f5e5d](https://github.com/fapdev77/crypto-dashboard/commit/65f5e5d6b018a40de4ffa90b574b56dada713e23))
+
+# [1.47.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.4...v1.47.0) (2026-08-29)
+
+
+### Features
+
+* **okx:** enhance transaction processing and hedge metrics ([8afa6b9](https://github.com/fapdev77/crypto-dashboard/commit/8afa6b9313b788dcc5564a80071570f3f43d4d74))
+
+## [1.46.4](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.3...v1.46.4) (2026-08-29)
+
+
+### Bug Fixes
+
+* **hedge:** adjust Bybit hedge position logic ([3e7b9a5](https://github.com/fapdev77/crypto-dashboard/commit/3e7b9a5ca3ebeedb722b86a0e76a54ba72beb420))
+
+## [1.46.3](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.2...v1.46.3) (2026-08-28)
+
+
+### Bug Fixes
+
+* include assets with value equal to 1 in charts ([19d6d8f](https://github.com/fapdev77/crypto-dashboard/commit/19d6d8f73bce315d2709119da95b3a31d71465f7))
+
+## [1.46.2](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.1...v1.46.2) (2026-08-28)
+
+
+### Bug Fixes
+
+* calculate protected amount at mark price for Bitget ([4e1419b](https://github.com/fapdev77/crypto-dashboard/commit/4e1419b704f47b0bcf3f0c076f16a4c965a1daf7))
+
+## [1.46.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.46.0...v1.46.1) (2026-08-28)
+
+
+### Bug Fixes
+
+* **hedge:** adjust net balance calculation for inverse shorts ([6771d3e](https://github.com/fapdev77/crypto-dashboard/commit/6771d3edd196db69a8b8356abc7860436df7bcae))
+
+# [1.46.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.45.0...v1.46.0) (2026-08-27)
+
+
+### Features
+
+* update Bybit adapter and roadmap ([f2124a0](https://github.com/fapdev77/crypto-dashboard/commit/f2124a08a1cc753c1d477864c674d59935638f99))
+
+# [1.45.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.44.0...v1.45.0) (2026-08-27)
+
+
+### Features
+
+* add support for Bybit regional endpoints ([c25d5cc](https://github.com/fapdev77/crypto-dashboard/commit/c25d5cca5ccdcf02af519960bca2169a90b090f1))
+
+# [1.44.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.43.0...v1.44.0) (2026-08-26)
+
+
+### Features
+
+* add gross/net toggle for hedge exposure ([6611b17](https://github.com/fapdev77/crypto-dashboard/commit/6611b17aed2dfd4dff8487febda4aba1361ca12e))
+
+# [1.43.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.42.0...v1.43.0) (2026-08-25)
+
+
+### Features
+
+* **ui:** add HedgeExposureBar to PositionCard ([0ff3c83](https://github.com/fapdev77/crypto-dashboard/commit/0ff3c832590b99836275594c143fb6fdd1ae1080))
+
 # [1.42.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.41.0...v1.42.0) (2026-08-24)
 
 

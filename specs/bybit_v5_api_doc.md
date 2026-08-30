@@ -29,6 +29,7 @@ IP addresses located in the US or Mainland China are restricted and will return 
 
 ## Authentication[​](#authentication "Direct link to heading")
 
+
 info
 
 Please visit Bybit's  [**testnet**](https://testnet.bybit.com/app/user/api-management) or  [**mainnet**](https://www.bybit.com/app/user/api-management) to generate an API key
@@ -41,8 +42,6 @@ REST API Base Endpoint:
   `https://api.bybit.com`  
   `https://api.bytick.com`
 
-important
-
 * **Netherlands users:** use `https://api.bybit.nl` for mainnet
 * **Turkey users:** use `https://api.bybit.tr` for mainnet
 * **Kazakhstan users:** use `https://api.bybit.kz` for mainnet
@@ -50,6 +49,10 @@ important
 * **United Arab Emirates users:** use `https://api.bybit.ae` for mainnet
 * **EEA users:** use `https://api.bybit.eu` for mainnet (EU site API only support "Connect to Third-Party Applications" feature for API broker user)
 * **Indonesia users**: use `https://api.bybit.id` for mainnet
+* **Japan users**: use api.manepa.jp for mainnet, and api-testnet.manepa.jp for testnet
+* **Brazil users**: For Brazil international account, use api.bybit.com, add x-site-id: BRA_BTL in the request header
+* **Argentina users**: For Argentina international account, use api.bybit.com, add x-site-id: ARG_BTL in the request header
+* **HongKong users**: use api.spark-fintech.com for mainnet, and api-testnet.spark-fintech.com for testnet, add x-refer-site-id: HKG in the request header
 
 ### Select Your API Key Type[​](#select-your-api-key-type "Direct link to heading")
 

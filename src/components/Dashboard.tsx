@@ -150,7 +150,7 @@ export function Dashboard() {
     const dataMap: Record<string, Big> = {};
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
-      if (val > 1) { // Ignore dust
+      if (val >= 1) { // Ignore dust
         if (!dataMap[b.exchange]) dataMap[b.exchange] = new Big(0);
         dataMap[b.exchange] = dataMap[b.exchange].plus(val);
       }
@@ -166,7 +166,7 @@ export function Dashboard() {
 
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
-      if (val > 1) { // ignore dust
+      if (val >= 1) { // ignore dust
         if (!exchangesMap[b.exchange]) exchangesMap[b.exchange] = { total: new Big(0), assetsMap: {} };
         exchangesMap[b.exchange].total = exchangesMap[b.exchange].total.plus(val);
         if (!exchangesMap[b.exchange].assetsMap[b.ccy]) exchangesMap[b.exchange].assetsMap[b.ccy] = new Big(0);
@@ -374,19 +374,19 @@ export function Dashboard() {
           <button
             type="button"
             onClick={handleHedgeProClick}
-            title="Open Hedge Pro dashboard"
+            title="Click to open Hedge Pro dashboard for detailed information about hedge"
             className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6 text-left cursor-pointer group rounded-lg transition-colors"
           >
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
                   Hedge Mode (Inverse)
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-emerald-500">Longs: {inverseLongCount}</span>
+                  <span className="text-xs font-semibold text-emerald-500">Hedged: {inverseShortCount}</span>
                   <span className="text-xs font-bold ">|</span>
-                  <span className="text-xs font-semibold text-red-500">Shorts: {inverseShortCount}</span>
+                  <span className="text-xs font-semibold text-amber-400">Leveraged: {inverseLongCount}</span>
                 </div>
               </div>
               <div className="flex items-baseline gap-1.5">
