@@ -1,3 +1,10 @@
+## [1.50.2](https://github.com/fapdev77/crypto-dashboard/compare/v1.50.1...v1.50.2) (2026-08-31)
+
+
+### Bug Fixes
+
+* **hooks:** improve resilience of REST polling ([42392da](https://github.com/fapdev77/crypto-dashboard/commit/42392da22f57366ba595f8cc91426a9dcd1452af))
+
 ## [1.50.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.50.0...v1.50.1) (2026-08-31)
 
 
