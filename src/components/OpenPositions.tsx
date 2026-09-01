@@ -118,7 +118,7 @@ export function OpenPositions() {
       <FilterBar
         prepend={
           <div className="flex items-center gap-2 mr-auto sm:mr-0">
-            <span className="text-xs text-[#8E9299] whitespace-nowrap">Show exposed balance by:</span>
+            <span className="text-xs text-[#8E9299] whitespace-nowrap">For Hedge Pro positions, show exposed balance by:</span>
             <div className="flex bg-[#0e0f11] p-1 rounded-lg border border-[#2a2b30] w-max">
               <button
                 type="button"
