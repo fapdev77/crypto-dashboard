@@ -65,7 +65,7 @@ export const usePwaUpdateStore = create<PwaUpdateState>((set, get) => ({
     };
 
     // Safety timeout: if service worker transition or controllerchange doesn't reload within 800ms, force it
-    const fallbackTimer = setTimeout(forceReload, 800);
+    const fallbackTimer = setTimeout(forceReload, 5000);
 
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener(
