@@ -36,6 +36,9 @@ interface SettingsState {
   /** Funding history fetch interval in hours (default 4). */
   fundingHistoryInterval: number;
   setFundingHistoryInterval: (interval: number) => void;
+  /** Exposed balance calculation mode for hedge positions ('gross' or 'net'). */
+  hedgeExposedMode: 'gross' | 'net';
+  setHedgeExposedMode: (mode: 'gross' | 'net') => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -61,6 +64,8 @@ export const useSettingsStore = create<SettingsState>()(
       setFundingPollingInterval: (val: number) => set({ fundingPollingInterval: Math.max(1, Math.min(60, val)) }),
       fundingHistoryInterval: 4,
       setFundingHistoryInterval: (val: number) => set({ fundingHistoryInterval: Math.max(4, Math.min(8, val)) }),
+      hedgeExposedMode: 'gross',
+      setHedgeExposedMode: (hedgeExposedMode: 'gross' | 'net') => set({ hedgeExposedMode }),
     }),
     {
       name: 'terminal-settings',

@@ -280,6 +280,10 @@ export interface OkxTransactionLogEntry {
   subTypeCode?: string;
   qty?: string;
   size?: string;
+  contracts?: string;
+  contractVal?: string;
+  cryptoQty?: string;
+  totalValueUsd?: string;
   amount?: string;
   currency: string;
   tradePrice?: string;

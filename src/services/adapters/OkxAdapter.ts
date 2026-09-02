@@ -9,6 +9,7 @@ import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
+import { calculateOkxTradeDetails } from '../../utils/okxUtils';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -608,6 +609,8 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     category: string = '',
     cursor?: string
   ): Promise<{ list: any[]; nextPageCursor: string }> {
+    await OkxAdapter.ensureInstrumentsLoaded().catch(() => {});
+
     const query = new URLSearchParams();
     if (category) query.append('instType', category);
     if (startTime) query.append('begin', startTime.toString());
@@ -649,6 +652,50 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     const balance = raw.bal || '0';
     const positionBalance = raw.posBal || '0';
 
+    // Side normalization
+    let normalizedSide = 'None';
+    const subTypeCode = String(raw.subType || '').trim();
+    if (subTypeCode === '1') normalizedSide = 'Buy';
+    else if (subTypeCode === '2') normalizedSide = 'Sell';
+    else if (subTypeCode === '3') normalizedSide = 'Open Long';
+    else if (subTypeCode === '4') normalizedSide = 'Open Short';
+    else if (subTypeCode === '5') normalizedSide = 'Close Long';
+    else if (subTypeCode === '6') normalizedSide = 'Close Short';
+    else if (raw.side) {
+      const rs = String(raw.side).toLowerCase();
+      if (rs.includes('buy') || rs.includes('long') || rs.includes('in')) normalizedSide = 'Buy';
+      else if (rs.includes('sell') || rs.includes('short') || rs.includes('out')) normalizedSide = 'Sell';
+    }
+
+    // Trade price, contracts, qty, size normalization
+    const tradePrice = String(raw.px || raw.price || raw.avgPrice || raw.fillPx || raw.fillPrice || '0');
+    
+    // Calculate accurate contract & crypto values
+    const tradeDetails = calculateOkxTradeDetails({
+      symbol: raw.instId,
+      category: raw.instType,
+      sz: raw.sz,
+      tradePrice,
+      currency: raw.ccy,
+      raw,
+      cachedInsts: OkxAdapter.cachedInstruments
+    });
+
+    const qty = tradeDetails.isDerivative
+      ? String(tradeDetails.cryptoQty)
+      : String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
+    const size = tradeDetails.isDerivative
+      ? String(tradeDetails.cryptoQty)
+      : String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
+    const contracts = tradeDetails.isDerivative ? String(tradeDetails.contracts) : undefined;
+    const contractVal = tradeDetails.isDerivative ? String(tradeDetails.ctVal) : undefined;
+    const cryptoQty = String(tradeDetails.cryptoQty);
+    const totalValueUsd = tradeDetails.totalValueUsd > 0 ? String(tradeDetails.totalValueUsd) : undefined;
+
+    // Funding mapping (type 8 is funding fee)
+    const isFunding = String(raw.type || '') === '8';
+    const funding = isFunding ? String(raw.balChg || '0') : '0';
+
     return {
       id: `${key.id}-${raw.billId || transactionTime}-${transactionTime}`,
       connectionId: key.id,
@@ -658,13 +705,21 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       billId: String(raw.billId || ''),
       symbol: raw.instId || '',
       category: raw.instType || 'OTHER',
-      side: raw.subType ? String(raw.subType) : 'None',
+      side: normalizedSide,
       type: raw.type ? String(raw.type) : '',
       transSubType: raw.subType ? String(raw.subType) : '',
       subType: raw.subType ? String(raw.subType) : '',
       typeCode: raw.type ? String(raw.type) : '',
       subTypeCode: raw.subType ? String(raw.subType) : '',
+      qty,
+      size,
+      contracts,
+      contractVal,
+      cryptoQty,
+      totalValueUsd,
       currency: raw.ccy || '',
+      tradePrice,
+      funding,
       amount: String(amount),
       change: String(raw.balChg || amount),
       cashFlow: String(raw.balChg || amount),

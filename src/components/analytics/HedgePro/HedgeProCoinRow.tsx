@@ -8,6 +8,7 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { HedgeExposureBar } from './HedgeExposureBar';
 import { HedgePositionLevelRow } from './HedgePositionLevelRow';
 import { HedgeProCoinDrawerMetrics } from './HedgeProCoinDrawerMetrics';
+import { HedgePnlConceptMode } from './HedgeProDashboard';
 
 interface HedgeProCoinRowProps {
   coin: HedgeCoinSummary;
@@ -18,6 +19,7 @@ interface HedgeProCoinRowProps {
     type?: 'usd' | 'crypto' | 'price' | 'compact',
     decimalsOrSymbol?: number | string,
   ) => string;
+  pnlConceptMode?: HedgePnlConceptMode;
 }
 
 /**
@@ -26,7 +28,13 @@ interface HedgeProCoinRowProps {
  * - Line 2: Dedicated exposure & protection visual bar with leverage metrics.
  * - Expanded Drawer: 8 analytical summary cards + interactive position rows with direct navigation to Open Positions.
  */
-export function HedgeProCoinRow({ coin, isExpanded, onToggle, formatCurrency }: HedgeProCoinRowProps) {
+export function HedgeProCoinRow({
+  coin,
+  isExpanded,
+  onToggle,
+  formatCurrency,
+  pnlConceptMode = 'hedge',
+}: HedgeProCoinRowProps) {
   const { barMetrics } = coin;
 
   return (
@@ -104,20 +112,20 @@ export function HedgeProCoinRow({ coin, isExpanded, onToggle, formatCurrency }: 
         <div className="bg-[#121317] border border-[#23252a] rounded-lg p-3 space-y-2">
           {/* Sub-line 1: Icons & Labels */}
           <div className="flex items-center justify-between gap-2 text-xs font-medium text-[#8E9299] uppercase tracking-wider">
-            <AppTooltip description="Protected capital locked in USD by inverse shorts">
+            <AppTooltip description="Protected capital locked in USD by inverse shorts at entry price">
               <span className="flex items-center gap-1.5 cursor-help">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Protected
               </span>
             </AppTooltip>
 
-            <AppTooltip description="Exposed capital subject to market fluctuations">
+            <AppTooltip description="Unhedged spot balance exposed to market price movements">
               <span className="flex items-center gap-1.5 cursor-help">
                 <Activity className="w-3.5 h-3.5 text-white" /> Exposed
               </span>
             </AppTooltip>
 
             {coin.leveragedUsd > 0 ? (
-              <AppTooltip description="Leveraged positions extending beyond base capital">
+              <AppTooltip description="Directional long positions adding leveraged market exposure">
                 <span className="flex items-center gap-1.5 cursor-help">
                   <TrendingUp className="w-3.5 h-3.5 text-amber-400" /> Leveraged
                 </span>
@@ -176,7 +184,11 @@ export function HedgeProCoinRow({ coin, isExpanded, onToggle, formatCurrency }: 
           onClick={e => e.stopPropagation()}
         >
           {/* Header Summary Cards for this specific coin (8 Mini-Consolidated Cards) */}
-          <HedgeProCoinDrawerMetrics coin={coin} formatCurrency={formatCurrency} />
+          <HedgeProCoinDrawerMetrics
+            coin={coin}
+            formatCurrency={formatCurrency}
+            pnlConceptMode={pnlConceptMode}
+          />
 
           {/* Positions Under This Coin */}
           <div className="border border-[#26282d] rounded-lg bg-[#151619] overflow-hidden divide-y divide-[#222429]">
@@ -194,6 +206,7 @@ export function HedgeProCoinRow({ coin, isExpanded, onToggle, formatCurrency }: 
                 level={pos}
                 formatCurrency={formatCurrency}
                 variant="card"
+                pnlConceptMode={pnlConceptMode}
               />
             ))}
           </div>

@@ -24,7 +24,7 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
    - [Trade History (Histórico de Execuções)](#-trade-history-histórico-de-execuções)
    - [PnL by Symbol (Lucros e Perdas por Símbolo)](#-pnl-by-symbol-lucros-e-perdas-por-símbolo)
    - [Dashboard de Taxas de Financiamento (Funding Fees)](#-dashboard-de-taxas-de-financiamento-funding-fees)
-   - [Histórico de Transações Bybit (Transaction Log)](#-histórico-de-transações-bybit-transaction-log)
+   - [Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)](#-histórico-de-transações-multi-corretora-bybit-bitget-e-okx-transactions)
    - [API Tester (Testador de Conexões e Endpoints)](#-api-tester-testador-de-conexões-e-endpoints)
    - [Modo Privacidade (Privacy Mode)](#-modo-privacidade-privacy-mode)
 8. [Padronização de Contratos Inversos e Paginação](#8-padronização-de-contratos-inversos-e-paginação)

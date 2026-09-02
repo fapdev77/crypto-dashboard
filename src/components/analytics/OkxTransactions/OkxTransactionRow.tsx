@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Big from 'big.js';
 import { OkxTransactionLogEntry } from '../../../types';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
@@ -7,10 +7,12 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { usePrivacy } from '../../../context/PrivacyContext';
-import { ChevronDown, ChevronUp, Hash, FileText, Percent, Gift } from 'lucide-react';
+import { ChevronDown, ChevronUp, Hash, FileText, Percent, Gift, Layers, DollarSign } from 'lucide-react';
 import { OKX_TX_TYPES, okxTypeColorMap } from './OkxTransactionFilters';
 import { formatDateTime } from '../../../utils/formatters';
-import { getUniversalBadge } from '../../../utils/transactionTypeMapper';
+import { getUniversalBadge, getOkxUniversalType } from '../../../utils/transactionTypeMapper';
+import { extractBaseCoin } from '../../../utils/unifiers';
+import { calculateOkxTradeDetails } from '../../../utils/okxUtils';
 
 interface Props {
   entry: OkxTransactionLogEntry;
@@ -20,12 +22,15 @@ interface Props {
 
 export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
   const formatCurrency = useFormatCurrency();
+  const baseCoin = extractBaseCoin('okx', entry.symbol) || entry.currency;
   const usdPrice = useTokenUsdPrice(entry.currency);
+  const baseUsdPrice = useTokenUsdPrice(baseCoin);
   const { keys } = useApiKeysStore();
   const { isPrivateMode } = usePrivacy();
   const connectionLabel = keys.find(k => k.id === entry.connectionId)?.label || entry.label;
 
   const isInverse = (entry.currency !== 'USDT' && entry.currency !== 'USDC' && entry.currency !== 'USD' && entry.currency !== '');
+  const isTrade = getOkxUniversalType(entry) === 'TRADE';
 
   const { dateStr, timeStr } = formatDateTime(entry.transactionTime);
 
@@ -40,13 +45,33 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
   const changeNum = new Big(entry.change || entry.amount || '0');
   const balanceNum = new Big(entry.cashBalance || entry.balance || '0');
 
-  const qtyNum = new Big(entry.qty || entry.amount || '0');
-  const sizeNum = new Big(entry.size || '0');
   const priceNum = new Big(entry.tradePrice || '0');
+
+  // Trade details calculation (handling OKX contracts -> coin size -> USD total value)
+  const tradeDetails = useMemo(() => {
+    return calculateOkxTradeDetails({
+      symbol: entry.symbol,
+      category: entry.category,
+      sz: entry.contracts || (entry.raw as any)?.sz || entry.qty,
+      tradePrice: entry.tradePrice,
+      currency: entry.currency,
+      raw: entry.raw,
+    });
+  }, [entry]);
+
+  const qtyNum = new Big(isTrade && tradeDetails.cryptoQty > 0 ? tradeDetails.cryptoQty : (entry.qty || entry.amount || '0'));
+  const sizeNum = new Big(isTrade && tradeDetails.cryptoQty > 0 ? tradeDetails.cryptoQty : (entry.size || '0'));
 
   // ─── Formatting helpers ───
   const fmtQty = () => {
     if (isPrivateMode) return '****';
+    if (isTrade) {
+      if (tradeDetails.cryptoQty > 0) {
+        return `${formatCurrency(tradeDetails.cryptoQty, 'crypto', 8)} ${tradeDetails.baseCoin || baseCoin || 'BTC'}`;
+      }
+      if (qtyNum.eq(0)) return '-';
+      return formatCurrency(qtyNum.toNumber(), 'crypto', 8) + (baseCoin ? ` ${baseCoin}` : (entry.currency ? ` ${entry.currency}` : ''));
+    }
     if (qtyNum.eq(0)) return '-';
     if (isInverse) return formatCurrency(qtyNum.toNumber(), 'usd');
     return formatCurrency(qtyNum.toNumber(), 'crypto', 8) + (entry.currency ? ` ${entry.currency}` : '');
@@ -54,6 +79,13 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
   const fmtSize = () => {
     if (isPrivateMode) return '****';
+    if (isTrade) {
+      if (tradeDetails.cryptoQty > 0) {
+        return `${formatCurrency(tradeDetails.cryptoQty, 'crypto', 8)} ${tradeDetails.baseCoin || baseCoin || 'BTC'}`;
+      }
+      if (sizeNum.eq(0)) return '-';
+      return formatCurrency(sizeNum.toNumber(), 'crypto', 8) + (baseCoin ? ` ${baseCoin}` : (entry.currency ? ` ${entry.currency}` : ''));
+    }
     if (sizeNum.eq(0)) return '-';
     if (isInverse) return formatCurrency(sizeNum.toNumber(), 'usd');
     return formatCurrency(sizeNum.toNumber(), 'crypto', 8) + (entry.currency ? ` ${entry.currency}` : '');
@@ -74,6 +106,52 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
     if (isPrivateMode || !usdPrice || val.eq(0)) return null;
     const usdVal = val.mul(usdPrice);
     return `≈ ${formatCurrency(usdVal.toNumber(), 'usd')}`;
+  };
+
+  // USD / USDT approximation for Trade Quantity
+  const fmtQtyUsdApprox = () => {
+    if (isPrivateMode) return null;
+    if (isTrade) {
+      if (tradeDetails.totalValueUsd > 0) {
+        return `≈ ${formatCurrency(tradeDetails.totalValueUsd, 'usd')}`;
+      }
+      if (qtyNum.gt(0) && priceNum.gt(0)) {
+        const usdVal = qtyNum.mul(priceNum);
+        return `≈ ${formatCurrency(usdVal.toNumber(), 'usd')}`;
+      }
+      if (qtyNum.gt(0) && baseUsdPrice && baseUsdPrice > 0) {
+        const usdVal = qtyNum.mul(baseUsdPrice);
+        return `≈ ${formatCurrency(usdVal.toNumber(), 'usd')}`;
+      }
+      return null;
+    }
+    if (isInverse && qtyNum.gt(0)) {
+      return fmtUsdApprox(qtyNum);
+    }
+    return null;
+  };
+
+  // USD / USDT approximation for Position Size
+  const fmtSizeUsdApprox = () => {
+    if (isPrivateMode) return null;
+    if (isTrade) {
+      if (tradeDetails.totalValueUsd > 0) {
+        return `≈ ${formatCurrency(tradeDetails.totalValueUsd, 'usd')}`;
+      }
+      if (sizeNum.gt(0) && priceNum.gt(0)) {
+        const usdVal = sizeNum.mul(priceNum);
+        return `≈ ${formatCurrency(usdVal.toNumber(), 'usd')}`;
+      }
+      if (sizeNum.gt(0) && baseUsdPrice && baseUsdPrice > 0) {
+        const usdVal = sizeNum.mul(baseUsdPrice);
+        return `≈ ${formatCurrency(usdVal.toNumber(), 'usd')}`;
+      }
+      return null;
+    }
+    if (isInverse && sizeNum.gt(0)) {
+      return fmtUsdApprox(sizeNum);
+    }
+    return null;
   };
 
   const badge = getUniversalBadge('okx', entry);
@@ -131,7 +209,7 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
         {/* Col 4: Direction (side) + Quantity (qty) */}
         <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
-          <AppTooltip description={`Trade direction and quantity ${isInverse ? '(in USD)' : `(in ${entry.currency || 'coin'})`}`}>
+          <AppTooltip description={`Trade direction and quantity in crypto (${tradeDetails.baseCoin || baseCoin || entry.currency || 'coin'})${isTrade ? '. Estimated total trade value in USDT/USD' : ''}`}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
               Side & Qty
             </span>
@@ -140,17 +218,23 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
             {entry.side === 'None' || !entry.side ? '-' : entry.side}
           </span>
           <span className="text-[10px] font-mono text-white/80">{fmtQty()}</span>
+          {fmtQtyUsdApprox() && (
+            <span className="text-[8px] font-mono text-white/80">{fmtQtyUsdApprox()}</span>
+          )}
         </div>
 
         {/* Col 5: Filled Price (tradePrice) + Position (size) */}
         <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
-          <AppTooltip description={`Trade execution price and size ${isInverse ? '(in USD)' : `(in ${entry.currency || 'coin'})`}`}>
+          <AppTooltip description={`Trade execution price and crypto size (${tradeDetails.baseCoin || baseCoin || entry.currency || 'coin'})${isTrade ? '. Estimated total position value in USDT/USD' : ''}`}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
               Filled Price & Size
             </span>
           </AppTooltip>
           <span className="text-xs text-white font-mono">{fmtPrice()}</span>
           <span className="text-[10px] font-mono text-white/80">{fmtSize()}</span>
+          {fmtSizeUsdApprox() && (
+            <span className="text-[8px] font-mono text-white/80">{fmtSizeUsdApprox()}</span>
+          )}
         </div>
 
         {/* Col 6: Funding + Fee */}
@@ -226,6 +310,51 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-5 gap-x-4 text-sm mt-4">
+            {/* Derivative / Contract specifics if trade */}
+            {isTrade && tradeDetails.isDerivative && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <Layers className="w-3 h-3 text-[#8E9299]" />
+                    <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Number of contracts (sz)</span>
+                  </div>
+                  <span className="text-white font-mono text-xs">
+                    {isPrivateMode ? '****' : `${tradeDetails.contracts} contracts`}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <Layers className="w-3 h-3 text-[#8E9299]" />
+                    <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Contract Value (ctVal)</span>
+                  </div>
+                  <span className="text-white font-mono text-xs">
+                    {isPrivateMode ? '****' : `${tradeDetails.ctVal} ${tradeDetails.ctType === 'inverse' ? 'USD' : (tradeDetails.baseCoin || 'BTC')}`}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <CoinIcon symbol={tradeDetails.baseCoin || 'BTC'} size={14} className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Total Crypto Amount</span>
+                  </div>
+                  <span className="text-white font-mono text-xs font-semibold text-[#00C853]">
+                    {isPrivateMode ? '****' : `${formatCurrency(tradeDetails.cryptoQty, 'crypto', 8)} ${tradeDetails.baseCoin || 'BTC'}`}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <DollarSign className="w-3 h-3 text-[#8E9299]" />
+                    <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Total Trade Value (USD/USDT)</span>
+                  </div>
+                  <span className="text-white font-mono text-xs font-semibold text-[#2F6BFF]">
+                    {isPrivateMode ? '****' : `≈ ${formatCurrency(tradeDetails.totalValueUsd, 'usd')}`}
+                  </span>
+                </div>
+              </>
+            )}
+
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1">
                 <Hash className="w-3 h-3 text-[#8E9299]" />
@@ -286,3 +415,4 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
     </div>
   );
 }
+

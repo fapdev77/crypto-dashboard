@@ -1,6 +1,7 @@
 import React from 'react';
 import { HedgeCoinSummary } from '../../../utils/hedgeUtils';
 import { AppTooltip } from '../../ui/Tooltip';
+import { HedgePnlConceptMode } from './HedgeProDashboard';
 
 interface HedgeProCoinDrawerMetricsProps {
   coin: HedgeCoinSummary;
@@ -9,6 +10,7 @@ interface HedgeProCoinDrawerMetricsProps {
     type?: 'usd' | 'crypto' | 'price' | 'compact',
     decimalsOrSymbol?: number | string,
   ) => string;
+  pnlConceptMode?: HedgePnlConceptMode;
 }
 
 /** Format coin crypto value nicely */
@@ -24,11 +26,35 @@ function formatCoinValue(
 /**
  * HedgeProCoinDrawerMetrics — Renders the 8 analytical summary cards for a specific coin in the expanded drawer.
  */
-export function HedgeProCoinDrawerMetrics({ coin, formatCurrency }: HedgeProCoinDrawerMetricsProps) {
+export function HedgeProCoinDrawerMetrics({
+  coin,
+  formatCurrency,
+  pnlConceptMode = 'hedge',
+}: HedgeProCoinDrawerMetricsProps) {
   const isNetProtectedPositive = coin.netProtectedUsd >= 0;
   const isUplPositive = coin.unrealizedPnlUsd > 0;
   const isUplNegative = coin.unrealizedPnlUsd < 0;
-  const uplColor = isUplPositive ? 'text-[#00C853]' : isUplNegative ? 'text-[#FF4444]' : 'text-[#8E9299]';
+
+  // Colors and labels depending on mode
+  let uplLabel = 'Unrealized PnL';
+  let uplTooltip = 'Aggregated unrealized profit/loss across all short and long positions for this coin, plus total ROI relative to wallet balance.';
+  let uplColor = isUplPositive ? 'text-[#00C853]' : isUplNegative ? 'text-[#FF4444]' : 'text-[#8E9299]';
+
+  if (pnlConceptMode === 'hedge') {
+    if (isUplNegative) {
+      uplLabel = 'Opportunity Cost';
+      uplColor = 'text-amber-400';
+      uplTooltip = 'In inverse hedges, short PnL drops as market rises above entry. This is not capital loss, but uncaptured upside on the USD-locked leg, while your exposed balance captured full market appreciation.';
+    } else if (isUplPositive) {
+      uplLabel = 'Accumulated Asset';
+      uplColor = 'text-[#00C853]';
+      uplTooltip = 'In inverse hedges, short PnL increases as spot price falls below entry. The position accumulates extra coin units to maintain the exact USD protection target while the exposed balance depreciated in USD.';
+    } else {
+      uplLabel = 'Hedge Balanced';
+      uplColor = 'text-[#8E9299]';
+      uplTooltip = 'Short position is currently at entry price with zero delta divergence.';
+    }
+  }
 
   const isRplPositive = coin.realizedPnlUsd > 0;
   const isRplNegative = coin.realizedPnlUsd < 0;
@@ -125,7 +151,7 @@ export function HedgeProCoinDrawerMetrics({ coin, formatCurrency }: HedgeProCoin
       <div className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip
-            description="Portion of this coin's equity locked in USD by short hedge positions (Protected USD ÷ Net Balance USD)."
+            description="Portion of this coin's equity locked in USD by short hedge positions at entry price (Protected USD ÷ Net Balance USD). This USD value is immunised from market dips."
             side="top"
           >
             <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider cursor-help border-b border-dashed border-emerald-500/40">
@@ -193,7 +219,7 @@ export function HedgeProCoinDrawerMetrics({ coin, formatCurrency }: HedgeProCoin
       <div className="p-2.5 rounded-lg bg-[#151619] border border-[#2a2b30] flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip
-            description="Uncovered coin balance not hedged by shorts (Exposed USD ÷ Net Balance USD). Fully exposed to spot market volatility."
+            description="Uncovered coin balance not hedged by shorts (Exposed USD ÷ Net Balance USD). Fully exposed to spot market appreciation and depreciation."
             side="top"
           >
             <span className="text-[10px] uppercase font-bold text-white tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
@@ -214,15 +240,12 @@ export function HedgeProCoinDrawerMetrics({ coin, formatCurrency }: HedgeProCoin
         </div>
       </div>
 
-      {/* Card 7: Unrealized PnL & ROI */}
+      {/* Card 7: Unrealized PnL / Opportunity Cost / Accumulated Asset */}
       <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
         <div className="flex items-center justify-between">
-          <AppTooltip
-            description="Aggregated unrealized profit/loss across all short and long positions for this coin, plus total ROI relative to wallet balance."
-            side="top"
-          >
-            <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50">
-              Unrealized PnL
+          <AppTooltip description={uplTooltip} side="top">
+            <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50 truncate max-w-[90px]">
+              {uplLabel}
             </span>
           </AppTooltip>
           <span className={`text-[10px] font-mono font-semibold ${uplColor}`}>
@@ -243,7 +266,7 @@ export function HedgeProCoinDrawerMetrics({ coin, formatCurrency }: HedgeProCoin
       <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip
-            description="Aggregated realized profit/loss across all positions for this coin (funding fees, trade commissions, closed legs), plus ROI relative to wallet balance."
+            description="Aggregated realized profit/loss across all positions for this coin (funding fees collected/paid, trade commissions, closed legs), plus ROI relative to wallet balance."
             side="top"
           >
             <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50">
