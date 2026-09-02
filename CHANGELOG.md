@@ -1,3 +1,10 @@
+# [1.51.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.50.2...v1.51.0) (2026-09-01)
+
+
+### Features
+
+* **ui:** update Hedge Pro balance display label ([a59b71b](https://github.com/fapdev77/crypto-dashboard/commit/a59b71be2f365e3687f07dd6fb616db08d450193))
+
 ## [1.50.2](https://github.com/fapdev77/crypto-dashboard/compare/v1.50.1...v1.50.2) (2026-08-31)
 
 
