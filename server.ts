@@ -42,6 +42,7 @@ async function startServer() {
         'www.okx.com',
         'api.okx.com',
         'aws.okx.com',
+        'api.alternative.me',
       ];
 
       try {

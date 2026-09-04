@@ -9,6 +9,7 @@ import { DollarSign, TrendingUp, TrendingDown, BarChart2, Activity, ArrowUpRight
 import { Sparkline } from './ui/Sparkline';
 import { MacroCapitalChart } from './analytics/MacroCapitalChart';
 import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
+import { MarketSentiment } from './analytics/MarketSentiment';
 import { ExchangeHierarchyTable } from './ExchangeHierarchyTable';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
@@ -423,6 +424,8 @@ export function Dashboard() {
         </div>
       </div>
 
+
+
       {donutData.length > 0 && crossExchangeAssets.data.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <MacroCapitalChart data={donutData} />
@@ -438,6 +441,9 @@ export function Dashboard() {
         hideSmallBalances={hideSmallBalances}
         setHideSmallBalances={setHideSmallBalances}
       />
+
+      {/* Market Sentiment & Fear / Greed Analysis (Positioned right below Balances table) */}
+      <MarketSentiment />
     </div>
   );
 }
