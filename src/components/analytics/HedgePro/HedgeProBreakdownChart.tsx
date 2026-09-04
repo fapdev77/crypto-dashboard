@@ -54,16 +54,19 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
 
       <div className="flex flex-col gap-2.5">
         {rows.map(row => {
-          const balancePct = pctOfBalance(row.balanceUsd, maxStack);
-          const leveragedPct = pctOfBalance(row.leveragedUsd, maxStack);
-          const protectedPct = pctOfBalance(row.protectedUsd, row.balanceUsd);
-          const exposedPct = pctOfBalance(row.exposedBaseUsd, row.balanceUsd);
-          const leveragedOfBalancePct =
-            row.balanceUsd > 0
-              ? pctOfBalance(row.leveragedUsd, row.balanceUsd)
-              : row.leveragedUsd > 0
-                ? 100
-                : 0;
+        const baseRef = (row.protectedUsd + row.exposedBaseUsd > 0)
+          ? (row.protectedUsd + row.exposedBaseUsd)
+          : row.balanceUsd;
+        const balancePct = pctOfBalance(baseRef, maxStack);
+        const leveragedPct = pctOfBalance(row.leveragedUsd, maxStack);
+        const protectedPct = pctOfBalance(row.protectedUsd, baseRef);
+        const exposedPct = pctOfBalance(row.exposedBaseUsd, baseRef);
+        const leveragedOfBalancePct =
+          baseRef > 0
+            ? pctOfBalance(row.leveragedUsd, baseRef)
+            : row.leveragedUsd > 0
+              ? 100
+              : 0;
 
           const tooltipRows = [
             {

@@ -465,4 +465,193 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
     }
     return 'NOT_FOUND';
   }
+
+  // ── Transaction Log (UTA Financial Records) ──
+  public async getTransactionLog(
+    key: ApiCredentials,
+    startTime: number,
+    endTime: number,
+    category: string = 'USDT-FUTURES',
+    cursor?: string
+  ): Promise<{ list: any[]; nextPageCursor: string }> {
+    const query = new URLSearchParams();
+    const effectiveCategory = category ? category.toUpperCase() : 'USDT-FUTURES';
+    query.append('category', effectiveCategory);
+    query.append('startTime', startTime.toString());
+    query.append('endTime', endTime.toString());
+    query.append('limit', '100');
+    if (cursor) query.append('cursor', cursor);
+
+    const endpoint = `/api/v3/account/financial-records?${query.toString()}`;
+    const url = `https://api.bitget.com${endpoint}`;
+
+    const headers = await BitgetUTAAdapter.getHeaders(
+      key.apiKey,
+      key.apiSecret,
+      key.passphrase || '',
+      'GET',
+      endpoint
+    );
+
+    const res = await proxyFetch({ targetUrl: url, method: 'GET', headers });
+    if (res.code !== '00000') {
+      throw new Error(`Bitget financial-records API error (${res.code}): ${res.msg}`);
+    }
+
+    return {
+      list: res.data?.list || [],
+      nextPageCursor: res.data?.cursor || '',
+    };
+  }
+
+  public static normalizeTxLogEntry(raw: any, key: ApiCredentials): import('../../types').BitgetTransactionLogEntry {
+    const transactionTime = parseInt(String(raw.ts || raw.cTime || raw.uTime || '0'), 10);
+    const amount = raw.amount || raw.size || '0';
+    const fee = raw.fee || raw.fees || '0';
+    const balance = raw.balance || raw.accountBalance || '0';
+    const positionAmount = raw.positionAmount || raw.posAmount || '0';
+    const positionBalance = raw.positionBalance || raw.posBalance || '0';
+    const cleanSymbol = (raw.symbol || '').replace(/_(UMCBL|DMCBL|CMCBL)$/, '');
+    const normalizedType = String(raw.type || raw.businessType || raw.billType || '').toUpperCase();
+    const normalizedCategory = (raw.category || 'OTHER').toLowerCase();
+
+    // Smart Side & Position action normalization
+    const rawSide = String(raw.side || '').toLowerCase().trim();
+    const rawTradeSide = String(raw.tradeSide || '').toLowerCase().trim();
+    const rawPosSide = String(raw.posSide || raw.holdSide || raw.positionType || raw.posMode || '').toLowerCase().trim();
+    const typeUpper = normalizedType.toUpperCase();
+
+    let normalizedSide = 'None';
+    let normalizedPositionType = String(raw.positionType || raw.posSide || raw.holdSide || '').trim();
+
+    // 1. Check explicit type keywords
+    if (
+      typeUpper.includes('OPEN_LONG') || 
+      typeUpper.includes('OPEN-LONG') || 
+      rawSide === 'open_long' || 
+      rawSide === 'buy_open' || 
+      rawSide === 'open_buy' ||
+      (rawTradeSide === 'open' && rawPosSide.includes('long'))
+    ) {
+      normalizedSide = 'Open Long';
+      normalizedPositionType = 'Long (Open)';
+    } else if (
+      typeUpper.includes('CLOSE_LONG') || 
+      typeUpper.includes('CLOSE-LONG') || 
+      typeUpper.includes('REDUCE_LONG') || 
+      rawSide === 'close_long' || 
+      rawSide === 'sell_close' || 
+      rawSide === 'close_sell' ||
+      (rawTradeSide === 'close' && rawPosSide.includes('long'))
+    ) {
+      normalizedSide = 'Close Long';
+      normalizedPositionType = 'Long (Close/Reduce)';
+    } else if (
+      typeUpper.includes('OPEN_SHORT') || 
+      typeUpper.includes('OPEN-SHORT') || 
+      rawSide === 'open_short' || 
+      rawSide === 'sell_open' || 
+      rawSide === 'open_sell' ||
+      (rawTradeSide === 'open' && rawPosSide.includes('short'))
+    ) {
+      normalizedSide = 'Open Short';
+      normalizedPositionType = 'Short (Open)';
+    } else if (
+      typeUpper.includes('CLOSE_SHORT') || 
+      typeUpper.includes('CLOSE-SHORT') || 
+      typeUpper.includes('REDUCE_SHORT') || 
+      rawSide === 'close_short' || 
+      rawSide === 'buy_close' || 
+      rawSide === 'close_buy' ||
+      (rawTradeSide === 'close' && rawPosSide.includes('short'))
+    ) {
+      normalizedSide = 'Close Short';
+      normalizedPositionType = 'Short (Close/Reduce)';
+    }
+    // 2. Check position side combined with trade execution direction
+    else if (rawPosSide.includes('long')) {
+      if (rawSide.includes('sell') || rawSide.includes('out') || typeUpper === 'ORDER_DEALT_OUT' || typeUpper.includes('CLOSE')) {
+        normalizedSide = 'Close Long';
+        normalizedPositionType = 'Long (Close/Reduce)';
+      } else if (rawSide.includes('buy') || rawSide.includes('in') || typeUpper === 'ORDER_DEALT_IN' || typeUpper.includes('OPEN')) {
+        normalizedSide = 'Open Long';
+        normalizedPositionType = 'Long (Open)';
+      } else {
+        normalizedSide = 'Buy';
+        normalizedPositionType = 'Long';
+      }
+    } else if (rawPosSide.includes('short')) {
+      if (rawSide.includes('buy') || rawSide.includes('in') || typeUpper === 'ORDER_DEALT_IN' || typeUpper.includes('CLOSE')) {
+        normalizedSide = 'Close Short';
+        normalizedPositionType = 'Short (Close/Reduce)';
+      } else if (rawSide.includes('sell') || rawSide.includes('out') || typeUpper === 'ORDER_DEALT_OUT' || typeUpper.includes('OPEN')) {
+        normalizedSide = 'Open Short';
+        normalizedPositionType = 'Short (Open)';
+      } else {
+        normalizedSide = 'Sell';
+        normalizedPositionType = 'Short';
+      }
+    }
+    // 3. Fallback to tradeSide open/close
+    else if (rawTradeSide === 'open') {
+      normalizedSide = rawSide.includes('sell') ? 'Open Short' : 'Open Long';
+    } else if (rawTradeSide === 'close') {
+      normalizedSide = rawSide.includes('buy') ? 'Close Short' : 'Close Long';
+    }
+    // 4. Standard spot Buy / Sell or fallback
+    else if (rawSide.includes('buy') || rawSide.includes('in') || typeUpper === 'ORDER_DEALT_IN' || typeUpper === 'BUY') {
+      normalizedSide = 'Buy';
+    } else if (rawSide.includes('sell') || rawSide.includes('out') || typeUpper === 'ORDER_DEALT_OUT' || typeUpper === 'SELL') {
+      normalizedSide = 'Sell';
+    } else if (rawSide) {
+      normalizedSide = raw.side;
+    }
+
+    // Trade ID and Order ID mapping
+    const tradeId = raw.tradeId || raw.trade_id || raw.fillId || raw.fill_id || '';
+    const orderId = raw.orderId || raw.order_id || raw.ordId || raw.ord_id || '';
+    const orderLinkId = raw.orderLinkId || raw.order_link_id || raw.clientOid || raw.client_oid || raw.clOrdId || '';
+
+    // Qty, Size, tradePrice, funding
+    const qty = String(raw.qty || raw.size || raw.amount || amount || '0');
+    const size = String(raw.size || raw.qty || raw.amount || amount || '0');
+    const tradePrice = String(raw.tradePrice || raw.price || raw.avgPrice || raw.fillPrice || '0');
+
+    const isFunding = normalizedType.includes('FUNDING') || normalizedType.includes('SETTLE_FEE') || normalizedType.includes('SETTLEMENT');
+    const funding = isFunding ? String(raw.change || amount) : '0';
+
+    return {
+      id: `${key.id}-${raw.id || raw.billId || transactionTime}-${transactionTime}`,
+      connectionId: key.id,
+      exchange: 'bitget',
+      label: key.label,
+      rawId: String(raw.id || raw.billId || ''),
+      symbol: cleanSymbol,
+      category: normalizedCategory,
+      side: normalizedSide,
+      type: normalizedType,
+      groupType: raw.groupType || '',
+      positionType: normalizedPositionType,
+      qty,
+      size,
+      currency: raw.coin || raw.currency || raw.ccy || '',
+      tradePrice,
+      funding,
+      amount: String(amount),
+      change: String(raw.change || amount),
+      cashFlow: String(raw.cashFlow || amount),
+      cashBalance: String(balance),
+      balance: String(balance),
+      fee: String(fee),
+      feeCurrency: raw.feeCoin || raw.feeCurrency || raw.coin || '',
+      positionAmount: String(positionAmount),
+      positionBalance: String(positionBalance),
+      transactionTime,
+      tradeId,
+      orderId,
+      orderLinkId,
+      extra: raw.extra || (raw.memo ? raw.memo : undefined),
+      raw,
+    };
+  }
 }

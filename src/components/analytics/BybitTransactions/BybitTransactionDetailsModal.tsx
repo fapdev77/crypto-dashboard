@@ -5,6 +5,7 @@ import { TxStats } from '../../../hooks/useBybitTransactions';
 import { BybitTransactionLogEntry } from '../../../types';
 import { BybitTransactionNetChangeReport } from './BybitTransactionNetChangeReport';
 import { TX_TYPES, typeColorMap } from './BybitTransactionFilters';
+import { getBybitUniversalType, UNIVERSAL_BADGE_STYLE } from '../../../utils/transactionTypeMapper';
 
 export type DetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -64,16 +65,16 @@ export function BybitTransactionDetailsModal({
               {Object.entries(stats.typeBreakdown)
                 .sort((a, b) => b[1] - a[1]) // Sort by count descending
                 .map(([type, count]) => {
-                  const typeLabel = TX_TYPES.find(t => t.value === type)?.label || type;
-                  const typeClass = typeColorMap[type] || 'text-[#8E9299] bg-[#2a2b30]/50 border-[#2a2b30]';
+                  const uniType = getBybitUniversalType(type);
+                  const badge = UNIVERSAL_BADGE_STYLE[uniType] || UNIVERSAL_BADGE_STYLE.OTHERS;
                   
                   return (
                     <div key={type} className="flex items-center justify-between bg-[#1e232b] p-3 rounded-lg border border-[#2a2b30]/50">
-                      <span className={`w-max px-2 py-0.5 text-[10px] rounded font-semibold border ${typeClass}`}>
-                        {typeLabel}
+                      <span className={`w-max px-2 py-0.5 text-[10px] rounded font-semibold border ${badge.textColor} ${badge.bgColor} ${badge.borderColor}`}>
+                        {badge.label}
                       </span>
                       <span className="font-mono font-medium text-white">
-                        {count}
+                        {count.toLocaleString()}
                       </span>
                     </div>
                   );

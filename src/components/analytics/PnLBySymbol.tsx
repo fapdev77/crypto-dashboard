@@ -252,69 +252,71 @@ export function PnLBySymbol() {
               />
             )}
             <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
-              <table className="w-full text-sm text-left">
-              <thead className="text-xs text-[#8E9299] border-b border-[#2a2b30] sticky top-0 bg-[#151619] z-10">
-                <tr>
-                  <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('exchange')}>
-                    <div className="flex items-center gap-1">Exchange <ArrowUpDown className="w-3 h-3" /></div>
-                  </th>
-                  <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('symbol')}>
-                    <div className="flex items-center gap-1">Name <ArrowUpDown className="w-3 h-3" /></div>
-                  </th>
-                  <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('instrument')}>
-                    <div className="flex items-center gap-1">Instrument <ArrowUpDown className="w-3 h-3" /></div>
-                  </th>
-                  <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('totalPnL')}>
-                    <div className="flex items-center justify-end gap-1">Total PnL <ArrowUpDown className="w-3 h-3" /></div>
-                  </th>
-                  <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('longPnL')}>
-                    <div className="flex items-center justify-end gap-1">Long PnL <ArrowUpDown className="w-3 h-3" /></div>
-                  </th>
-                  <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('shortPnL')}>
-                    <div className="flex items-center justify-end gap-1">Short PnL <ArrowUpDown className="w-3 h-3" /></div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedData.map((row) => (
-                  <tr key={`${row.exchange}-${row.symbol}-${row.instrument}`} className="border-b border-[#2a2b30]/30 hover:bg-[#2a2b30]/10 transition-colors">
-                    <td className="px-4 py-4">
-                      <div data-theme={row.exchange.toLowerCase()} className="flex items-center gap-2 font-medium">
-                        <ExchangeIcon exchange={row.exchange} className="w-5 h-5 rounded-sm shrink-0" />
-                        <span className="capitalize text-white">{row.exchange}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 font-bold text-[15px] text-white">
-                      <div className="flex items-center gap-2">
-                        <CoinIcon symbol={row.symbol} className="w-6 h-6 rounded-full shrink-0" />
-                        <span>{row.symbol}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-[#8E9299]">{row.instrument}</td>
-                    {/* TD REFINADO: Fonte pesada, fundo presente e linhas de grade verticais exclusivas */}
-                    <td
-                      className="px-4 py-4 text-right font-bold text-[15px]
-                           bg-[#1c1d22]/40 
-                           border-x border-[#2a2b30]/30"
-                    >
-                      <PnLCell value={row.totalPnL} maxAbs={maxTotal} ccy={row.ccy} />
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <PnLCell value={row.longPnL} maxAbs={maxLong} ccy={row.ccy} />
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <PnLCell value={row.shortPnL} maxAbs={maxShort} ccy={row.ccy} />
-                    </td>
-                  </tr>
-                ))}
-                {paginatedData.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-[#8E9299]">No data or nothing found for selected filters.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left min-w-[750px] whitespace-nowrap">
+                  <thead className="text-xs text-[#8E9299] border-b border-[#2a2b30] sticky top-0 bg-[#151619] z-10">
+                    <tr>
+                      <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('exchange')}>
+                        <div className="flex items-center gap-1">Exchange <ArrowUpDown className="w-3 h-3" /></div>
+                      </th>
+                      <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('symbol')}>
+                        <div className="flex items-center gap-1">Name <ArrowUpDown className="w-3 h-3" /></div>
+                      </th>
+                      <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('instrument')}>
+                        <div className="flex items-center gap-1">Instrument <ArrowUpDown className="w-3 h-3" /></div>
+                      </th>
+                      <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('totalPnL')}>
+                        <div className="flex items-center justify-end gap-1">Total PnL <ArrowUpDown className="w-3 h-3" /></div>
+                      </th>
+                      <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('longPnL')}>
+                        <div className="flex items-center justify-end gap-1">Long PnL <ArrowUpDown className="w-3 h-3" /></div>
+                      </th>
+                      <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('shortPnL')}>
+                        <div className="flex items-center justify-end gap-1">Short PnL <ArrowUpDown className="w-3 h-3" /></div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedData.map((row) => (
+                      <tr key={`${row.exchange}-${row.symbol}-${row.instrument}`} className="border-b border-[#2a2b30]/30 hover:bg-[#2a2b30]/10 transition-colors">
+                        <td className="px-4 py-4">
+                          <div data-theme={row.exchange.toLowerCase()} className="flex items-center gap-2 font-medium">
+                            <ExchangeIcon exchange={row.exchange} className="w-5 h-5 rounded-sm shrink-0" />
+                            <span className="capitalize text-white">{row.exchange}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 font-bold text-[15px] text-white">
+                          <div className="flex items-center gap-2">
+                            <CoinIcon symbol={row.symbol} className="w-6 h-6 rounded-full shrink-0" />
+                            <span>{row.symbol}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-[#8E9299]">{row.instrument}</td>
+                        {/* TD REFINADO: Fonte pesada, fundo presente e linhas de grade verticais exclusivas */}
+                        <td
+                          className="px-4 py-4 text-right font-bold text-[15px]
+                               bg-[#1c1d22]/40 
+                               border-x border-[#2a2b30]/30 min-w-[150px]"
+                        >
+                          <PnLCell value={row.totalPnL} maxAbs={maxTotal} ccy={row.ccy} />
+                        </td>
+                        <td className="px-4 py-4 text-right min-w-[140px]">
+                          <PnLCell value={row.longPnL} maxAbs={maxLong} ccy={row.ccy} />
+                        </td>
+                        <td className="px-4 py-4 text-right min-w-[140px]">
+                          <PnLCell value={row.shortPnL} maxAbs={maxShort} ccy={row.ccy} />
+                        </td>
+                      </tr>
+                    ))}
+                    {paginatedData.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-10 text-center text-[#8E9299]">No data or nothing found for selected filters.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           {sortedTotal > 0 && (
             <Pagination
               id="pnl-symbol-pagination-bottom"

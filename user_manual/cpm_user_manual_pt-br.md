@@ -24,7 +24,7 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
    - [Trade History (Histórico de Execuções)](#-trade-history-histórico-de-execuções)
    - [PnL by Symbol (Lucros e Perdas por Símbolo)](#-pnl-by-symbol-lucros-e-perdas-por-símbolo)
    - [Dashboard de Taxas de Financiamento (Funding Fees)](#-dashboard-de-taxas-de-financiamento-funding-fees)
-   - [Histórico de Transações Bybit (Transaction Log)](#-histórico-de-transações-bybit-transaction-log)
+   - [Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)](#-histórico-de-transações-multi-corretora-bybit-bitget-e-okx-transactions)
    - [API Tester (Testador de Conexões e Endpoints)](#-api-tester-testador-de-conexões-e-endpoints)
    - [Modo Privacidade (Privacy Mode)](#-modo-privacidade-privacy-mode)
 8. [Padronização de Contratos Inversos e Paginação](#8-padronização-de-contratos-inversos-e-paginação)
@@ -174,11 +174,23 @@ Um painel abrangente que consolida dados de taxas de financiamento (funding rate
 - **Indicadores Visuais**: Animações de atualização (flash) em tempo real e tooltips explicativos da direção do pagamento (Longs pagando Shorts ou vice-versa).
 - *Nota sobre a OKX*: A API da OKX limita o histórico a ~3 meses, sendo automaticamente omitida das médias de 6M e 1Y para manter a integridade dos dados.
 
-### 📜 Histórico de Transações Bybit (Transaction Log)
-Uma ferramenta especializada para usuários da Bybit, desenvolvida para baixar, armazenar e analisar o histórico completo de transações brutas diretamente da corretora:
-- **Sincronização Profunda**: Baixa histórico de liquidações, taxas de funding e taxas de trade, salvando tudo no IndexedDB local.
-- **Cálculo de PnL Realizado**: Calcula ganhos e perdas reais com base na fórmula `cashFlow + funding - fee`.
-- **Atualizações Incrementais**: Sincroniza apenas novos registros após o download inicial.
+### 📜 Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)
+Módulos especializados de auditoria contábil e histórico completo de transações brutas diretamente das corretoras (Bybit, Bitget e OKX):
+- **Sincronização Profunda & Incremental**: Baixa histórico completo de trades, taxas de funding, liquidações, transferências, depósitos, saques e juros, salvando com persistência no IndexedDB local com sincronizações incrementais ultrarrápidas.
+- **Filtros Unificados (Universal Transaction Mapper)**: Sistema de filtragem e badges padronizados em 10 categorias universais comuns às 3 corretoras:
+  1. *Trade & Orders* (Trades, ordens spot/futuros e PnL de fechamento)
+  2. *Funding Fee* (Taxas e proventos periódicos de financiamento)
+  3. *Transfer In / Deposit* (Depósitos e transferências recebidas)
+  4. *Transfer Out / Withdraw* (Saques e transferências enviadas)
+  5. *Liquidation & ADL* (Liquidações forçadas e desalavancagem automática)
+  6. *Interest & Loans* (Juros de margem, empréstimos e amortizações)
+  7. *Rewards & Bonus* (Fundos de teste, cupons, bônus e airdrops)
+  8. *Delivery & Settle* (Entregas de contratos a termo e exercícios de opções)
+  9. *Others* (Conversões de moeda, auto-deduções e ajustes)
+  10. *All Types* (Visualização integral sem filtro de tipo)
+- **Filtros Adicionais**: Categoria de instrumento (Spot, Linear, Inverse, Option, Margin), Moeda/Ativo, Conta/Subconta, Período e Busca por Símbolo.
+- **Cálculo de Fluxo de Caixa e PnL Realizado**: Calcula variações patrimoniais reais com base nas fórmulas contábeis de fluxo de caixa (`cashFlow + funding - fee`) e reconciliação com saldos de carteira (`walletBalance`).
+- **Cards de Métricas e Gráficos de Distribuição**: Total de transações, funding acumulado em USD, taxas de corretagem líquidas em USD e variação líquida do período.
 
 ### ⚡ API Tester (Testador de Conexões e Endpoints)
 Ferramenta para diagnóstico técnico e validação de conectividade com as corretoras:

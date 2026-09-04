@@ -1,113 +1,57 @@
-import React, { useMemo, useState } from 'react';
-import Big from 'big.js';
-import { ShieldCheck, Activity } from 'lucide-react';
-import { usePositionsStore } from '../../../store/positionsStore';
-import { useBalancesStore } from '../../../store/balancesStore';
-import { useSettingsStore } from '../../../store/settingsStore';
-import { useApiKeysStore } from '../../../store/apiKeysStore';
+import React, { useState } from 'react';
+import { ShieldCheck, Activity, Layers, Scale } from 'lucide-react';
+import { useHedgeData } from '../../../hooks/useHedgeData';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
-import { getHedgeCoinSummaries, getHedgeTotals } from '../../../utils/hedgeUtils';
 import { FilterBar } from '../../ui/FilterBar';
 import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
+import { AppTooltip } from '../../ui/Tooltip';
 import { HedgeProKpis } from './HedgeProKpis';
-import { HedgeProCoinSummary } from './HedgeProCoinSummary';
+import { HedgeProCoinRows } from './HedgeProCoinRows';
 import { HedgeProBreakdownChart } from './HedgeProBreakdownChart';
-import { HedgeProPositionsTable } from './HedgeProPositionsTable';
 import { HedgeExposureBar } from './HedgeExposureBar';
+
+export type HedgePnlConceptMode = 'standard' | 'hedge';
 
 /**
  * Hedge Pro — dashboard de acompanhamento de posições em hedge (contratos
- * inversos / Coin-M). Pura derivação: lê as stores já sincronizadas e calcula
- * protegido/exposto/alavancado em memória (sem novas chamadas de API).
+ * inversos / Coin-M). Pura derivação desacoplada via hook useHedgeData.
  */
 export function HedgeProDashboard() {
-  const balances = useBalancesStore(state => state.balances);
-  const positions = usePositionsStore(state => state.positions);
-  const useMockData = useSettingsStore(state => state.useMockData);
-  const keys = useApiKeysStore(state => state.keys);
+  const {
+    search,
+    setSearch,
+    exchange,
+    setExchange,
+    side,
+    setSide,
+    exchanges,
+    coinSummaries,
+    totals,
+    filteredSummaries,
+    filteredTotals,
+    sideOptions,
+  } = useHedgeData();
+
   const formatCurrency = useFormatCurrency();
 
-  const [search, setSearch] = useState('');
-  const [exchange, setExchange] = useState('All');
-  const [side, setSide] = useState('All');
+  // Toggle for PnL Concept Mode ('standard' = Classic PnL vs 'hedge' = Opportunity Cost / Accumulated Asset)
+  const [pnlConceptMode, setPnlConceptMode] = useState<HedgePnlConceptMode>(() => {
+    try {
+      const saved = localStorage.getItem('hedge_pro_pnl_mode');
+      return saved === 'standard' ? 'standard' : 'hedge';
+    } catch {
+      return 'hedge';
+    }
+  });
 
-  const balancesList = useMemo(() => Object.values(balances), [balances]);
-  const positionsList = useMemo(() => Object.values(positions), [positions]);
-  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
-
-  const activeBalances = useMemo(() => {
-    if (!useMockData && activeKeyIds.size === 0) return [];
-    return useMockData
-      ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
-      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
-  }, [balancesList, useMockData, activeKeyIds]);
-
-  const activePositions = useMemo(() => {
-    if (!useMockData && activeKeyIds.size === 0) return [];
-    return useMockData
-      ? positionsList.filter(p => p.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(p => !p.connectionId.startsWith('mocked-data') && activeKeyIds.has(p.connectionId));
-  }, [positionsList, useMockData, activeKeyIds]);
-
-  // Same totalEquity source as the main dashboard (Σ balance usdValue).
-  const totalEquity = useMemo(() => {
-    return Number(activeBalances.reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)));
-  }, [activeBalances]);
-
-  const coinSummaries = useMemo(
-    () => getHedgeCoinSummaries(activePositions, activeBalances),
-    [activePositions, activeBalances],
-  );
-
-  const totals = useMemo(() => getHedgeTotals(coinSummaries, totalEquity), [coinSummaries, totalEquity]);
-
-  // ── Filters ──
-  const exchanges = useMemo(() => Array.from(new Set(coinSummaries.map(c => c.exchange))), [coinSummaries]);
-
-  const filteredSummaries = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return coinSummaries.filter(c => {
-      if (exchange !== 'All' && c.exchange !== exchange) return false;
-      if (side !== 'All') {
-        if (side === 'long' && c.longCount === 0) return false;
-        if (side === 'short' && c.shortCount === 0) return false;
-      }
-      if (
-        q &&
-        !c.baseCoin.toLowerCase().includes(q) &&
-        !c.accountLabel.toLowerCase().includes(q) &&
-        !c.exchange.toLowerCase().includes(q)
-      ) return false;
-      return true;
-    });
-  }, [coinSummaries, exchange, side, search]);
-
-  const filteredLevels = useMemo(() => {
-    return filteredSummaries.flatMap(c => c.positions);
-  }, [filteredSummaries]);
-
-  const filteredTotals = useMemo(() => getHedgeTotals(filteredSummaries, totalEquity), [filteredSummaries, totalEquity]);
-
-  // Portfolio summary bar (beyond-100% model): the hedge protects the WHOLE capital,
-  // so the 100% reference is Total Equity (Σ balance usdValue) — not just the hedged
-  // coin balances. Protected + Exposed = 100% of equity; Leveraged (longs) extends
-  // beyond. Percentages are of the equity reference.
-  const summaryCapital = totals.totalEquity > 0 ? totals.totalEquity : totals.totalProtected;
-  const summaryExposed = Math.max(0, summaryCapital - totals.totalProtected);
-  const summaryBarTotal = summaryCapital + totals.totalLeveraged;
-  const summaryBalanceWidthPct = summaryBarTotal > 0 ? (summaryCapital / summaryBarTotal) * 100 : 0;
-  const summaryLeveragedWidthPct = summaryBarTotal > 0 ? (totals.totalLeveraged / summaryBarTotal) * 100 : 0;
-  const summaryProtectedPct = summaryCapital > 0 ? (totals.totalProtected / summaryCapital) * 100 : 0;
-  const summaryExposedPct = summaryCapital > 0 ? (summaryExposed / summaryCapital) * 100 : 0;
-  const summaryLeveragedPct =
-    summaryCapital > 0 ? (totals.totalLeveraged / summaryCapital) * 100 : totals.totalLeveraged > 0 ? 100 : 0;
-
-  // Note: the 'All Sides' option is rendered automatically by FilterBar
-  // (labelAll) — passing an 'All' entry here would duplicate it in the menu.
-  const sideOptions = [
-    { value: 'long', label: 'Longs' },
-    { value: 'short', label: 'Shorts' },
-  ];
+  const handleTogglePnlConcept = (mode: HedgePnlConceptMode) => {
+    setPnlConceptMode(mode);
+    try {
+      localStorage.setItem('hedge_pro_pnl_mode', mode);
+    } catch {
+      // ignore
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -124,6 +68,43 @@ export function HedgeProDashboard() {
           <p className="text-xs text-[#8E9299] mt-0.5">
             Capital protection in inverse (Coin-M) contracts: shorts lock USD at entry; longs and uncovered balance stay exposed.
           </p>
+        </div>
+
+        {/* PnL Concept Mode Toggle */}
+        <div className="flex items-center bg-[#151619] border border-[#26282d] p-0.5 rounded-lg text-xs">
+          <AppTooltip
+            description="Displays traditional accounting Unrealized PnL and ROI relative to wallet balance."
+            side="bottom"
+          >
+            <button
+              onClick={() => handleTogglePnlConcept('standard')}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+                pnlConceptMode === 'standard'
+                  ? 'bg-[#26282d] text-white shadow-sm'
+                  : 'text-[#8E9299] hover:text-white'
+              }`}
+            >
+              <Layers className="w-3 h-3" />
+              <span>Classic PnL</span>
+            </button>
+          </AppTooltip>
+
+          <AppTooltip
+            description="Hedge Concept: Frame PnL as Opportunity Cost (uncaptured upside when market rises) or Asset Accumulation (gaining coin units when market drops)."
+            side="bottom"
+          >
+            <button
+              onClick={() => handleTogglePnlConcept('hedge')}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+                pnlConceptMode === 'hedge'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
+                  : 'text-[#8E9299] hover:text-white'
+              }`}
+            >
+              <Scale className="w-3 h-3" />
+              <span>Hedge Concept</span>
+            </button>
+          </AppTooltip>
         </div>
       </div>
 
@@ -145,39 +126,46 @@ export function HedgeProDashboard() {
         </div>
         <div className="flex justify-between text-[15px] font-semibold font-mono">
           <span className="text-emerald-500/90">{formatCurrency(totals.totalProtected, 'usd', 2)}</span>
-          <span className="text-white font-semibold">{formatCurrency(summaryExposed, 'usd', 2)}</span>
+          <span className="text-white font-semibold">{formatCurrency(totals.summaryExposed, 'usd', 2)}</span>
           <span className="text-amber-400 font-semibold">{formatCurrency(totals.totalLeveraged, 'usd', 2)}</span>
         </div>
         <HedgeExposureBar
-          protectedPct={summaryProtectedPct}
-          exposedPct={summaryExposedPct}
-          balanceWidthPct={summaryBalanceWidthPct}
-          leveragedWidthPct={summaryLeveragedWidthPct}
+          protectedPct={totals.protectedPct}
+          exposedPct={totals.exposedPct}
+          balanceWidthPct={totals.balanceWidthPct}
+          leveragedWidthPct={totals.leveragedWidthPct}
         />
         <div className="flex justify-between text-[15px] font-semibold font-mono">
-          <span className="text-emerald-500/90">P {summaryProtectedPct.toFixed(2)}%</span>
-          <span className="text-white font-semibold">E {summaryExposedPct.toFixed(2)}%</span>
-          {summaryLeveragedPct > 0 && (
-            <span className="text-amber-400 font-semibold">L +{summaryLeveragedPct.toFixed(2)}%</span>
+          <span className="text-emerald-500/90">P {totals.protectedPct.toFixed(2)}%</span>
+          <span className="text-white font-semibold">E {totals.exposedPct.toFixed(2)}%</span>
+          {totals.leveragedPct > 0 && (
+            <span className="text-amber-400 font-semibold">L +{totals.leveragedPct.toFixed(2)}%</span>
           )}
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters with Exchange Selection */}
       <FilterBar
         search={{ value: search, onChange: setSearch, placeholder: 'Search coin / account...' }}
         exchange={{ value: exchange, onChange: setExchange, options: exchanges }}
         side={{ value: side, onChange: setSide, options: sideOptions, labelAll: 'All Sides' }}
       />
 
-      {/* Protected vs Exposed breakdown per coin (chart) */}
-      <HedgeProBreakdownChart summaries={filteredSummaries} formatCurrency={formatCurrency} />
+      {/* Grouped Coin Hedge Section: Breakdown Chart + Per-Coin Hedge Rows */}
+      <div
+        id="hedge-coins-group"
+        className="bg-[#121316]/60 border border-[#26282d] rounded-2xl p-3 sm:p-4 flex flex-col gap-4"
+      >
+        {/* Protected vs Exposed breakdown per coin (chart) */}
+        <HedgeProBreakdownChart summaries={filteredSummaries} formatCurrency={formatCurrency} />
 
-      {/* Per-coin summaries */}
-      <HedgeProCoinSummary summaries={filteredSummaries} formatCurrency={formatCurrency} />
-
-      {/* Per-position levels table */}
-      <HedgeProPositionsTable levels={filteredLevels} formatCurrency={formatCurrency} />
+        {/* Per-coin summaries (Row View modeled after Open Orders) */}
+        <HedgeProCoinRows
+          summaries={filteredSummaries}
+          formatCurrency={formatCurrency}
+          pnlConceptMode={pnlConceptMode}
+        />
+      </div>
 
       {/* Filtered totals footnote */}
       {filteredSummaries.length !== coinSummaries.length && (
