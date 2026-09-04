@@ -3,17 +3,27 @@ import toast from 'react-hot-toast';
 import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useFundingStore } from '../store/fundingStore';
-import { clearAllCache, getCacheSize, getAssetMetadataCacheSize, clearAssetMetadataCache, clearFundingSummariesCache } from '../services/historyCache';
-import { PositionHistoryService } from '../services/positions/PositionHistoryService';
+import {
+  clearAllCache,
+  getCacheSize,
+  getAssetMetadataCacheSize,
+  clearAssetMetadataCache,
+  clearFundingSummariesCache,
+  getComprehensiveCacheStats,
+  ComprehensiveCacheStats
+} from '../services/historyCache';
+import { UnifiedSyncManager } from '../services/sync/UnifiedSyncManager';
 import {
   Database, Trash2, CheckCircle2, Loader2, RefreshCw,
-  Briefcase, AlertTriangle, FlaskConical, Gauge, Settings as SettingsIcon
+  Briefcase, AlertTriangle, FlaskConical, Gauge, Settings as SettingsIcon,
+  ChevronDown, ChevronUp, Layers
 } from 'lucide-react';
 import { LogManager } from '../services/LogManager';
 import { AppTooltip } from './ui/Tooltip';
 import { FundingSyncTimingPanel } from './sync/FundingSyncTimingPanel';
 import { SecurityBackupCard } from './SecurityBackupCard';
 import { VersionInfoCard } from './VersionInfoCard';
+import { TransactionLogsCacheCard } from './sync/TransactionLogsCacheCard';
 
 export function Settings() {
   const {
@@ -32,15 +42,26 @@ export function Settings() {
   const [cleared, setCleared] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [synced, setSynced] = useState(false);
-  const [cacheSize, setCacheSize] = useState<number | null>(null);
+  const [stats, setStats] = useState<ComprehensiveCacheStats | null>(null);
+  const [showStatsBreakdown, setShowStatsBreakdown] = useState(true);
   const [metaCacheSize, setMetaCacheSize] = useState<number | null>(null);
   const [isClearingMeta, setIsClearingMeta] = useState(false);
   const [isClearingFunding, setIsClearingFunding] = useState(false);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
 
+  const refreshStats = async () => {
+    try {
+      const comprehensiveStats = await getComprehensiveCacheStats();
+      setStats(comprehensiveStats);
+      const metaSize = await getAssetMetadataCacheSize();
+      setMetaCacheSize(metaSize);
+    } catch (err) {
+      LogManager.error('Settings', 'Failed to fetch cache stats:', err);
+    }
+  };
+
   useEffect(() => {
-    getCacheSize().then(setCacheSize).catch(err => LogManager.error('Settings', 'Failed to get cache size:', err));
-    getAssetMetadataCacheSize().then(setMetaCacheSize).catch(err => LogManager.error('Settings', 'Failed to get metadata cache size:', err));
+    refreshStats();
   }, []);
 
   const handleForceSync = async () => {
@@ -52,15 +73,16 @@ export function Settings() {
     setIsSyncing(true);
     setSynced(false);
     try {
-      const service = new PositionHistoryService();
-      await Promise.all(activeKeys.map(apiKey => service.fetchWithCache(apiKey)));
-      const newSize = await getCacheSize();
-      setCacheSize(newSize);
+      const result = await UnifiedSyncManager.syncFullApplication(keys);
+      setStats(result.stats);
       setSynced(true);
-      toast.success('Cache synced successfully', { id: 'cache-sync' });
+      toast.success(
+        `Full sync completed in ${result.elapsedSeconds}s!\nPositions: ${result.positionsSynced} | Orders: ${result.ordersSynced} | Tx: ${result.totalTxSynced}`,
+        { id: 'cache-sync', duration: 4500 }
+      );
       setTimeout(() => setSynced(false), 3000);
     } catch (e: any) {
-      LogManager.error('Settings', 'Failed to sync cache:', e);
+      LogManager.error('Settings', 'Failed to sync application cache:', e);
       toast.error(`Failed to sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-sync' });
     } finally {
       setIsSyncing(false);
@@ -71,17 +93,10 @@ export function Settings() {
     setIsClearing(true);
     setCleared(false);
     try {
-      await clearAllCache();
-      setCacheSize(0);
-      const activeKeys = keys.filter(k => k.isActive);
-      if (activeKeys.length > 0) {
-        const service = new PositionHistoryService();
-        await Promise.all(activeKeys.map(apiKey => service.fetchWithCache(apiKey)));
-        const newSize = await getCacheSize();
-        setCacheSize(newSize);
-      }
+      const result = await UnifiedSyncManager.clearAndResyncAll(keys);
+      setStats(result.stats);
       setCleared(true);
-      toast.success('Cache cleared and re-synced successfully', { id: 'cache-clear' });
+      toast.success('Cache cleared and completely re-synced across all modules', { id: 'cache-clear', duration: 4000 });
       setTimeout(() => setCleared(false), 3000);
     } catch (e: any) {
       LogManager.error('Settings', 'Failed to clear and sync cache:', e);
@@ -226,13 +241,75 @@ export function Settings() {
 
         {/* Card 2: History Cache Management */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
-          <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
-            <Database className="w-4 h-4 text-blue-400" />
-            History Cache
-          </h3>
-          <p className="text-[#8E9299] text-xs mb-5">Manage local position history cache</p>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-base font-semibold text-white flex items-center gap-2">
+              <Database className="w-4 h-4 text-blue-400" />
+              History Cache
+            </h3>
+            {stats && (
+              <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
+                <span className="text-[#8E9299] text-[10px]">Total Records:</span>
+                <span className="text-blue-400 font-mono text-xs font-medium">
+                  {stats.totalRecords.toLocaleString()}
+                </span>
+              </div>
+            )}
+          </div>
+          <p className="text-[#8E9299] text-xs mb-4">
+            Global cache for Positions, Orders, Transactions & Funding
+          </p>
 
-          <div className="flex flex-col gap-5 flex-1">
+          <div className="flex flex-col gap-4 flex-1">
+            {/* Storage Breakdown Details */}
+            {stats && (
+              <div className="bg-[#0c0d0e] border border-[#2a2b30]/60 rounded-lg p-3 space-y-2">
+                <div 
+                  className="flex items-center justify-between cursor-pointer select-none"
+                  onClick={() => setShowStatsBreakdown(!showStatsBreakdown)}
+                >
+                  <span className="text-xs text-white/90 font-medium flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-blue-400" />
+                    Storage Breakdown
+                  </span>
+                  {showStatsBreakdown ? (
+                    <ChevronUp className="w-3.5 h-3.5 text-[#8E9299]" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 text-[#8E9299]" />
+                  )}
+                </div>
+
+                {showStatsBreakdown && (
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#2a2b30]/40 text-[11px]">
+                    <div className="flex justify-between text-[#8E9299]">
+                      <span>Positions:</span>
+                      <span className="font-mono text-white/90 font-medium">{stats.positionHistoryCount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-[#8E9299]">
+                      <span>Orders:</span>
+                      <span className="font-mono text-white/90 font-medium">{stats.orderHistoryCount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-[#8E9299] col-span-2">
+                      <span>Transactions (Total):</span>
+                      <span className="font-mono text-emerald-400 font-medium">
+                        {stats.totalTxCount.toLocaleString()}
+                        <span className="text-[#8E9299] text-[10px] ml-1 font-normal">
+                          (BB: {stats.bybitTxCount} | BG: {stats.bitgetTxCount} | OKX: {stats.okxTxCount})
+                        </span>
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[#8E9299]">
+                      <span>Funding Rates:</span>
+                      <span className="font-mono text-orange-400 font-medium">{stats.fundingCount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-[#8E9299]">
+                      <span>Metadata:</span>
+                      <span className="font-mono text-purple-400 font-medium">{stats.assetMetaCount.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Background Update Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
@@ -242,7 +319,7 @@ export function Settings() {
                 <span className="text-[#00C853] font-mono text-xs bg-[#00C853]/10 px-2 py-0.5 rounded-md">{historyCacheInterval}m</span>
               </div>
               <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Keeps historical PnL sync running periodically in the background. Adjust between 1 and 60 minutes.  Lower values provide faster updates but increase network consumption and Exchanges can temporarily block API calls.
+                Keeps historical sync running periodically in the background. Adjust between 1 and 60 minutes.
               </p>
               <input
                 type="range"
@@ -264,41 +341,41 @@ export function Settings() {
 
             {/* Force Sync */}
             <div>
-              <AppTooltip description="Instantly triggers a manual synchronization of your entire position history from all connected exchanges.">
-                <button
-                  onClick={handleForceSync}
-                  disabled={isSyncing || synced || isClearing || keys.length === 0}
-                  className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  {isSyncing
-                    ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
-                    : synced
-                      ? <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      : <RefreshCw className="w-4 h-4 text-blue-400" />
-                  }
-                  {isSyncing ? 'Syncing Now...' : synced ? 'Synced!' : 'Force Sync Now'}
-                </button>
-              </AppTooltip>
+              <div className="mb-2">
+                <AppTooltip description="Instantly triggers a manual synchronization of your entire position history, orders, transactions, and funding from all connected exchanges.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Force Sync All</h4>
+                </AppTooltip>
+                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
+                  Fetches the latest positions, orders, transactions, and funding data across all active exchanges simultaneously.
+                </p>
+              </div>
+              <button
+                onClick={handleForceSync}
+                disabled={isSyncing || synced || isClearing || keys.length === 0}
+                className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                {isSyncing
+                  ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                  : synced
+                    ? <CheckCircle2 className="w-4 h-4 text-green-400" />
+                    : <RefreshCw className="w-4 h-4 text-blue-400" />
+                }
+                {isSyncing ? 'Syncing All Data...' : synced ? 'All Data Synced!' : 'Force Sync Now'}
+              </button>
             </div>
 
             <div className="border-t border-[#2a2b30]" />
 
             {/* Clear Cache */}
             <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <AppTooltip description="Deletes your locally stored history records and triggers a fresh download from all connected exchanges. Useful if data appears corrupted or missing.">
+              <div className="mb-2">
+                <AppTooltip description="Wipes all local cached history tables and immediately initiates a clean download across all connected exchanges.">
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Clear Local Cache</h4>
                 </AppTooltip>
-                {cacheSize !== null && (
-                  <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
-                    <span className="text-[#8E9299] text-[10px]">Records:</span>
-                    <span className="text-blue-400 font-mono text-xs font-medium">{cacheSize}</span>
-                  </div>
-                )}
+                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
+                  Clears local IndexedDB history and initiates a full re-sync for all modules.
+                </p>
               </div>
-              <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Forces a fresh download of your entire positional history from the exchange.
-              </p>
               <button
                 onClick={handleClearCache}
                 disabled={isClearing || cleared || isSyncing}
@@ -310,11 +387,14 @@ export function Settings() {
                     ? <CheckCircle2 className="w-4 h-4 text-green-400" />
                     : <Trash2 className="w-4 h-4 text-red-400" />
                 }
-                {isClearing ? 'Clearing & Re-syncing...' : cleared ? 'Cache Cleared!' : 'Clear Cache Now'}
+                {isClearing ? 'Clearing & Re-syncing All...' : cleared ? 'All Cache Cleared!' : 'Clear Cache Now'}
               </button>
             </div>
           </div>
         </div>
+
+        {/* Card 2.5: Transaction Logs Cache (Option B Dedicated Card) */}
+        <TransactionLogsCacheCard />
 
         {/* Card 3: Exchange Specifications */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">

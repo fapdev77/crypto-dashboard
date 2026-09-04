@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useApiKeysStore } from '../store/apiKeysStore';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
 import { AppTooltip } from './ui/Tooltip';
@@ -8,12 +9,16 @@ import { AppTooltip } from './ui/Tooltip';
 export function PositionsTicker() {
   const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const keys = useApiKeysStore(state => state.keys);
+
+  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
   const activePositions = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
     const list = Object.values(positions);
     const filtered = useMockData
       ? list.filter(pos => pos.connectionId.startsWith('mocked-data'))
-      : list.filter(pos => !pos.connectionId.startsWith('mocked-data'));
+      : list.filter(pos => !pos.connectionId.startsWith('mocked-data') && activeKeyIds.has(pos.connectionId));
 
     // Sort by largest absolute PnL to show the most relevant positions first
     filtered.sort((a, b) => {
@@ -27,7 +32,7 @@ export function PositionsTicker() {
 
     // Sort to ensure stable element order for CSS animation caching
     return top20.sort((a, b) => a.id.localeCompare(b.id));
-  }, [positions, useMockData]);
+  }, [positions, useMockData, activeKeyIds]);
 
   // Se nao há posicoes abertas, retorne null
   if (activePositions.length === 0) return null;

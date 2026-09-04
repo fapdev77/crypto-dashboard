@@ -18,7 +18,10 @@ import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
 import { PnLBySymbol } from './components/analytics/PnLBySymbol';
 import { BybitTransactions } from './components/analytics/BybitTransactions/BybitTransactions';
+import { BitgetTransactions } from './components/analytics/BitgetTransactions/BitgetTransactions';
+import { OkxTransactions } from './components/analytics/OkxTransactions/OkxTransactions';
 import { FundingDashboard } from './components/analytics/FundingFees/FundingDashboard';
+import { HedgeProDashboard } from './components/analytics/HedgePro/HedgeProDashboard';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 import { PrivacyProvider } from './context/PrivacyContext';
@@ -188,7 +191,10 @@ export default function App() {
                   {activeTab === 'positions-history' && <ClosedPositions />}
                   {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
                   {activeTab === 'analytics-bybit-tx' && <BybitTransactions />}
+                  {activeTab === 'analytics-bitget-tx' && <BitgetTransactions />}
+                  {activeTab === 'analytics-okx-tx' && <OkxTransactions />}
                   {activeTab === 'analytics-funding' && <FundingDashboard />}
+                  {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
                   {activeTab === 'reports' && <ReportsDashboard />}
                   {activeTab === 'orders-open' && <OpenOrders />}
                   {activeTab === 'orders-history' && <OrderHistory />}

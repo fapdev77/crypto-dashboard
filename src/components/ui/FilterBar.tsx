@@ -27,7 +27,7 @@ export interface FilterBarProps {
   account?: {
     value: string;
     onChange: (val: string) => void;
-    options: Array<{ id: string; label: string; exchange: string }>;
+    options: Array<{ id: string; label: string; exchange: string; accountType?: string }>;
     disabled?: boolean;
     labelAll?: string; // Defaults to "All Accounts"
   };
@@ -185,11 +185,14 @@ export function FilterBar({
           className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors cursor-pointer max-w-[150px] truncate disabled:opacity-50"
         >
           <option value="All">{account.labelAll || 'All Accounts'}</option>
-          {account.options.map(k => (
-            <option key={k.id} value={k.id}>
-              {k.label || k.exchange}
-            </option>
-          ))}
+          {account.options.map(k => {
+            const extra = k.exchange === 'bitget' ? ` (${k.accountType === 'uta' ? 'UTA' : 'CLS'})` : '';
+            return (
+              <option key={k.id} value={k.id}>
+                {k.label || k.exchange}{extra}
+              </option>
+            );
+          })}
         </select>
       )}
 
@@ -358,7 +361,7 @@ export function FilterBar({
           >
             <span className="truncate max-w-[120px]">
               {(() => {
-                if (!type.value || type.value === 'All') return type.labelAll || 'All Types';
+                if (!type.value || type.value.toUpperCase() === 'ALL') return type.labelAll || 'All Types';
                 const opt = type.options.find(o => typeof o === 'object' ? o.value === type.value : o === type.value);
                 return typeof opt === 'object' ? opt.label : opt;
               })()}
@@ -380,11 +383,11 @@ export function FilterBar({
                 <button
                   type="button"
                   onClick={() => {
-                    type.onChange('All');
+                    type.onChange('ALL');
                     setIsTypeDropdownOpen(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
-                    type.value === 'All' || !type.value
+                    !type.value || type.value.toUpperCase() === 'ALL'
                       ? 'bg-[#2F6BFF] text-white'
                       : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
                   }`}
@@ -393,7 +396,7 @@ export function FilterBar({
                 </button>
                 {type.options.map((opt, i) => {
                   const val = typeof opt === 'object' ? opt.value : (opt as string);
-                  if (val === 'All') return null; // handled above
+                  if (val.toUpperCase() === 'ALL') return null; // handled by top All Types button
                   const label = typeof opt === 'object' ? opt.label : (opt as string);
                   const tooltip = typeof opt === 'object' ? opt.tooltip : undefined;
                   

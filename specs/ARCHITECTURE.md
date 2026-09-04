@@ -27,7 +27,9 @@ A stack atual repousa sobre fundações modernas, possuindo os seguintes pontos 
   - *Risk:* Over-frequent REST Polling cycles could cause unnecessary re-renders. Mitigated by memoization and SWR cache-comparison checks in the polling hooks.
 - **Security & Cryptography Engine:** Web Crypto API (`window.crypto.subtle`).
   - *Risk (Mitigated):* Replaced bloated third-party crypto libraries to ensure native cryptographic performance for HMAC-SHA256 and Base64 signatures.
-- **Networking:** Native `fetch` API (`hybridFetch`), Express Proxy (`http-proxy-middleware`), and isolated WebSockets (for AP## 4. Normalization Layer (Unified Interfaces vs Real Implementation)
+- **Networking:** Native `fetch` API (`hybridFetch`), Express Proxy (`http-proxy-middleware`), and isolated WebSockets (for API Tester connection diagnostics).
+
+## 4. Normalization Layer (Unified Interfaces vs Real Implementation)
 
 O projeto adota o **Padrão Adapter** com subagregadores na camada `src/services/adapters/`. Esta camada é a barreira técnica que protege o restante do aplicativo da extrema heterogeneidade das APIs das corretoras, assegurando conformidade estrita com o princípio SRP (Single Responsibility Principle) e o padrão Strategy.
 
@@ -141,27 +143,39 @@ Para contornar as severas restrições de chamadas consecutivas impostas por Byb
    - A periodic background synchronization task (`useHistoryCachePolling`) continuously keeps the cache warm based on user-defined intervals.
    - *Note:* `useBillsHistory` handles highly mutable deposit/withdrawal/transfer logs and thus bypasses IndexedDB, fetching directly from the Live APIs to ensure transactional accuracy.
 
-### 5.4. Bybit Transaction Log Sync Engine
+### 5.4. Transaction Log Sync Engines (Bybit, Bitget, OKX)
 
-O módulo **BybitTransactions** adiciona uma engine de sincronização dedicada para o endpoint `GET /v5/account/transaction-log` da Bybit (UTA), permitindo auditoria completa de até 2 anos de transações.
+O CPM possui engines dedicadas para auditoria profunda de transações e fluxo de caixa (cash flow / PnL real) para as três principais exchanges integradas:
 
-- **Progressive Deep Sync:** Na inicialização da aplicação, o `useBybitTransactionSync` (montado no `WorkSpace.tsx`) dispara um backfill progressivo começando dos registros mais recentes em chunks de 7 dias, percorrendo as categorias linear, inverse e spot. Cada chunk é salvo no IndexedDB como checkpoint, e o progresso é reportado via `syncCoordinatorStore`.
-- **Incremental Delta Sync:** Após o deep sync inicial, sincronizações periódicas (no intervalo configurado em `historyCacheInterval`) buscam apenas registros com `transactionTime > latestTransactionTime + 1`.
-- **Cache:** Duas novas stores no IndexedDB: `bybit-transaction-log` (dados com índices por connectionId, transactionTime, symbol, type, currency, category) e `bybit-transaction-meta` (metadados de sincronização por connectionId). DB_VERSION incrementado para 8.
-- **UI SWR:** O hook `useBybitTransactions` carrega o cache instantaneamente, aplica filtros em memória (sem latência de rede), e exibe badges de progresso durante o sync.
-- **Serviço:** `BybitTransactionService` encapsula toda a lógica de paginação, chunking temporal, retry com exponential backoff e normalização de dados brutos da Bybit para `BybitTransactionLogEntry`.
+#### 5.4.1. Bybit Transaction Log Sync Engine
+- **Endpoint:** `GET /v5/account/transaction-log` (UTA).
+- **Progressive Deep Sync:** `useBybitTransactionSync` realiza backfill progressivo em chunks de 7 dias pelas categorias linear, inverse e spot.
+- **Stores IndexedDB:** `bybit-transaction-log` e `bybit-transaction-meta`.
+- **Serviço:** `BybitTransactionService` encapsula paginação, rate-limiting, retry e agregação.
+
+#### 5.4.2. Bitget Transaction Log Sync Engine
+- **Endpoints:** Suporte híbrido tanto para contas Classic (Mix/Futures `GET /api/v2/mix/account/bill` e Spot/Account `GET /api/v2/spot/account/bills`) quanto para contas UTA (`GET /api/v2/user/bills-record`).
+- **Progressive Deep Sync:** `useBitgetTransactionSync` realiza backfill progressivo com paginação baseada em timestamps e ID cursors (`lastEndId`).
+- **Stores IndexedDB:** `bitget-transaction-log` (índices: `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category`) e `bitget-transaction-meta`.
+- **Serviço:** `BitgetTransactionService` encapsula a paginação, filtragem, agrupamento de moedas estáveis vs não estáveis e métricas de ROI e Cash Flow.
+
+#### 5.4.3. OKX Transaction Log Sync Engine
+- **Endpoints:** `GET /api/v5/account/bills` (últimos 7 dias) e `GET /api/v5/account/bills-archive` (até 3 meses).
+- **Progressive Deep Sync:** `useOkxTransactionSync` varre períodos de 7 dias com paginação via cursors `after` (`billId`), garantindo deduplicação automática no IndexedDB.
+- **Stores IndexedDB:** `okx-transaction-log` (índices: `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category`) e `okx-transaction-meta`.
+- **Serviço:** `OkxTransactionService` normaliza as dezenas de códigos de tipos e subtipos da OKX, calculando variações patrimoniais (`balChg`), PnL e taxas.
 
 ```
-[BybitTransactions.tsx] ← [useBybitTransactions] ← [BybitTransactionService]
-       │                          │                          │
-       │ (instant load)           │ (SWR cache)             ├─ syncAll() [deep sync]
-       │ (filters in memo)        │ (stats in memo)         ├─ syncIncremental()
-       │ (export / pagination)    │                          ├─ filterEntries()
-       │                          │                          └─ computeStats()
-       │                    [IndexedDB]                 [BybitAdapter.getTransactionLog]
-       │                  bybit-transaction-log                │
-       │                  bybit-transaction-meta        [hybridFetch → /api/proxy]
-       │                                                    [Bybit API V5]
+[ExchangeTransactions.tsx] ← [useExchangeTransactions] ← [ExchangeTransactionService]
+       │                                │                                │
+       │ (instant load)                 │ (SWR cache)                   ├─ syncAll() [deep sync]
+       │ (filters in memo)              │ (stats in memo)               ├─ syncIncremental()
+       │ (export / pagination)          │                                ├─ filterEntries()
+       │                                │                                └─ computeStats()
+       │                          [IndexedDB]                 [ExchangeAdapter.getTransactionLog]
+       │                    exchange-transaction-log                     │
+       │                    exchange-transaction-meta             [hybridFetch → /api/proxy]
+       │                                                             [Exchange REST API]
 ```
 
 ### 5.5. Funding Sync Engine
@@ -211,43 +225,79 @@ const fetchingRef = { current: false };
 const restartRequestedRef = { current: false };
 ```
 
-**IndexedDB stores (DB_VERSION 10):**
-| Store | Key | Indexes | Descrição |
-|-------|-----|---------|-----------|
-| `funding-summaries` | `id` (exchange-symbol) | `by-exchange`, `by-symbol` | Somatórios pré-calculados |
-| `funding-meta` | `id` (exchange-symbol) | `by-exchange` | Metadados de cobertura (freshness guard) |
+**IndexedDB Schema Overview (DB_VERSION 12):**
 
-## 6. State Management Models
+A base local IndexedDB (`crypto-dashboard-cache`) consolida 14 object stores estruturadas:
 
-O CPM adota uma arquitetura de micro-stores modularizadas para garantir que as atualizações de saldo, posições, conexões e ordens não causem re-renderizações em cascata desnecessárias (Princípio SRP e Alta Coesão):
+| Store Name | Key Path | Indexes | Descrição |
+|---|---|---|---|
+| `positionHistory` | `id` | `by-connectionId`, `by-closeUpdateTime` | Histórico de posições fechadas normalizado (`UnifiedHistoryPosition`) |
+| `cacheMeta` | `connectionId` | — | Metadados de sincronização e último timestamp de histórico de posições |
+| `assetMetadata` | `id` (`exchange_symbol`) | — | Metadados e categorização pública de ativos (`UnifiedAssetCategory`) |
+| `orderHistory` | `id` | `by-connectionId`, `by-createdTime` | Histórico de ordens fechadas/canceladas (`UnifiedOrder`) |
+| `orderCacheMeta` | `connectionId` | — | Metadados de sincronização do histórico de ordens |
+| `bybitRealPnL` | `id` (`connectionId-period`) | — | PnL realizado consolidado por período da Bybit |
+| `bybit-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | Extrato transacional bruto normalizado da Bybit (`BybitTransactionLogEntry`) |
+| `bybit-transaction-meta` | `connectionId` | — | Metadados de sincronização e checkpoint do Transaction Log Bybit |
+| `bitget-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | Extrato transacional bruto normalizado da Bitget (`BitgetTransactionLogEntry`) |
+| `bitget-transaction-meta` | `connectionId` | — | Metadados de sincronização e checkpoint do Transaction Log Bitget |
+| `okx-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | Extrato transacional bruto normalizado da OKX (`OkxTransactionLogEntry`) |
+| `okx-transaction-meta` | `connectionId` | — | Metadados de sincronização e checkpoint do Transaction Log OKX |
+| `funding-summaries` | `id` (`exchange-symbol`) | `by-exchange`, `by-symbol` | Somatórios e agregações pré-calculadas de taxas de financiamento (`FundingRateSummary`) |
+| `funding-meta` | `id` (`exchange-symbol`) | `by-exchange` | Metadados de cobertura e guardião de frescor (8h) para funding rates |
 
-- **`useApiKeysStore`:** 
+## 6. State Management & Micro-Stores Architecture
+
+O CPM adota uma arquitetura de micro-stores modularizadas com Zustand 5.0 para garantir isolamento de responsabilidades, alta coesão e evitar renderizações em cascata:
+
+- **`useApiKeysStore` (Zero-Trust Security):** 
   - Mantém e persiste as credenciais de API (`id`, `exchange`, `apiKey`, `apiSecret`, `passphrase`, `label`, `isActive`).
+  - Suporta criptografia nativa no navegador via **Web Crypto API (PBKDF2 + AES-GCM 256-bit)** com passphrase master opcional, bloqueando o acesso sem senha e apresentando o `GlobalUnlockScreen`.
   - Persistência automática no `localStorage`.
 - **`useConnectionStore`:**
   - Gerencia o status de conectividade em tempo real para cada chave de API (`'connecting' | 'connected' | 'disconnected' | 'error'`) e mensagens de erro de bootload.
 - **`useBalancesStore`:**
   - Armazena as fatias de saldo de conta (`UnifiedBalance[]`) segmentadas por ID de conexão.
-  - Utilizado pelo `ExchangeHierarchyTable` para renderizar a distribuição patrimonial.
+  - Utilizado pelo `ExchangeHierarchyTable`, `Dashboard` e `HedgeProDashboard` para consolidação patrimonial.
 - **`usePositionsStore`:**
   - Gerencia as posições abertas e ativas (`UnifiedPosition[]`) recuperadas das exchanges em ciclos de polling.
 - **`useOrdersStore`:**
   - Gerencia as ordens ativas e abertas (`UnifiedOrder[]`) para cada conexão ativa.
-- **`crossStoreCleanup.ts` (`clearConnectionData`):**
-  - Utilitário centralizado de limpeza que desliga e limpa simultaneamente os dados de uma conexão específica através das stores de Balanço, Posição, e Conexão, garantindo integridade de dados ao desativar uma chave de API.
-- **`useMockDataInjector`:**
-  - Hook isolado e especializado (SRP) encarregado de injetar payloads mockados estáticos (`accounts.json`, `balances.json`, `positions.json`, `orders.json`) quando o Modo Simulação estiver ativo, mantendo a engine principal de rede (`useMultiExchangeWS`) focada estritamente em requisições de produção.
-- **`PrivacyContext`:** 
-  - Context API nativo que envelopa a aplicação para controlar a visibilidade (`isPrivateMode`) de valores monetários sensíveis em todas as tabelas e cards, persistindo a escolha no `localStorage`.
-- **`useSettingsStore`:** 
-  - Gerencia configurações globais como `useMockData` (Modo Simulação), `pollingInterval` (intervalo de polling padrão das APIs REST, ex: 5s), `historyCacheInterval` (tempo para expiração do cache IndexedDB), `fundingPollingInterval` (polling de current funding rates), e `fundingHistoryInterval` (intervalo mínimo entre syncs históricos de funding, range 4-8h).
-  - Persistido no `localStorage` do navegador.
+- **`useSyncCoordinatorStore`:**
+  - Coordenador de sincronização em memória que compartilha snapshots de cache e timestamps de sincronização entre as visões de Histórico de Posições, PnL por Símbolo, Relatórios de Ordens e Bybit Transactions, evitando múltiplos fetches concorrentes durante a navegação entre abas.
+- **`useLogStore`:**
+  - Terminal de logs do sistema em tempo real com severidades (`INFO`, `WARN`, `ERROR`, `DATA`, `SYSTEM`) e retenção de até 10.000 entradas em memória.
 - **`useFundingStore`:**
   - Gerencia o estado do módulo de Funding Rates: `currentRates` (taxas ao vivo), `isSyncing`/`syncProgress`/`syncMessage` (status de sincronização), `favorites` (moedas favoritadas), `lastHistoryFetch` (timestamp do último sync), `lastSyncPerformance` (métricas de performance do último sync), `lastExchangeTimings` (timing por exchange), `nextFundingTime` (próximo pagamento de funding), `nextScheduledSyncTime` (próximo auto-sync agendado).
   - `favorites`, `lastHistoryFetch`, `lastSyncPerformance`, `lastExchangeTimings`, `nextFundingTime`, e `nextScheduledSyncTime` são persistidos no `localStorage` via middleware `persist`.
   - Campos transientes (`currentRates`, `isSyncing`, `syncProgress`, `syncMessage`) NÃO são persistidos.
+- **`useSettingsStore`:** 
+  - Gerencia configurações globais como `useMockData` (Modo Simulação), `pollingInterval` (intervalo de polling padrão das APIs REST, ex: 5s), `historyCacheInterval` (tempo para expiração do cache IndexedDB), `fundingPollingInterval` (polling de current funding rates), `fundingHistoryInterval` (intervalo mínimo entre syncs históricos de funding, range 4-8h), e `showWelcomeOnStartup`.
+  - Persistido no `localStorage` do navegador.
+- **`crossStoreCleanup.ts` (`clearConnectionData`):**
+  - Utilitário centralizado de limpeza que desliga e limpa simultaneamente os dados de uma conexão específica através das stores de Balanço, Posição, e Conexão, garantindo integridade de dados ao desativar uma chave de API.
+- **`useMockDataInjector`:**
+  - Hook isolado e especializado (SRP) encarregado de injetar payloads mockados calibrados (`accounts.json`, `balances.json`, `positions.json`, `history.json`, `orders.json`, `funding.json`, `bybit-transactions.json`, `bills.json`) quando o Modo Simulação estiver ativo.
+- **`PrivacyContext`:** 
+  - Context API nativo que envelopa a aplicação para controlar a visibilidade (`isPrivateMode`) de valores monetários sensíveis em todas as tabelas e cards, persistindo a escolha no `localStorage`.
 
-## 7. Mocks, Types & Schema Consistency Protocol
+## 7. Application Views & Navigation Modules
+
+A aplicação estrutura seus módulos funcionais através da `Sidebar` responsiva:
+
+1. **Dashboard (`Dashboard.tsx`):** Visão executiva consolidada com métricas de patrimônio total (Equity), margens utilizadas, PnL flutuante diário, distribuição por exchange e tabela hierárquica de contas/moedas.
+2. **Positions (`OpenPositions.tsx` & `ClosedPositions.tsx`):** Posições em aberto com cálculo de ROE, alavancagem, preço de liquidação, margem e histórico contábil de posições fechadas.
+3. **Analytics:**
+   - **PnL by Symbol (`PnLBySymbol.tsx`):** Lucro e prejuízo consolidado por ativo negociado (Long vs Short).
+   - **Bybit Transactions (`BybitTransactions.tsx`):** Auditoria profunda do transaction log da Bybit com cálculo de PnL real (`cashFlow + funding - fee`).
+   - **Bitget Transactions (`BitgetTransactions.tsx`):** Auditoria profunda do extrato transacional da Bitget (Classic e UTA) com categorização, taxas e PnL por símbolo.
+   - **OKX Transactions (`OkxTransactions.tsx`):** Auditoria profunda do extrato financeiro da OKX (`bills` e `bills-archive`) com normalização de tipos/subtipos e balanço patrimonial.
+   - **Funding Fees (`FundingDashboard.tsx`):** Monitoramento em tempo real e agregação histórica multissímbolo de taxas de financiamento.
+   - **Hedge Pro (`HedgeProDashboard.tsx`):** Painel de gestão de risco e monitoramento de exposição protegida, exposta e alavancada para estratégias Delta Neutral em contratos inversos (COIN-M).
+4. **Reports & Orders (`ReportsDashboard.tsx`, `OpenOrders.tsx`, `OrderHistory.tsx`, `TradeHistory.tsx`):** Relatórios de execução de ordens ativas, histórico de trades e extratos de fluxo de caixa (depósitos e saques).
+5. **System & Diagnostic (`ApiKeys.tsx`, `ConnectionLogTerminal.tsx`, `Settings.tsx`, `ApiTester.tsx`):** Gerenciamento de chaves, auditoria de conexões WebSocket isoladas, configurações de rede/cache e terminal de logs.
+
+## 8. Mocks, Types & Schema Consistency Protocol
 It is mandatory to uphold strict synchronization across the entire stack when modifying unified interfaces (e.g., `UnifiedHistoryPosition`, `UnifiedPosition`, `UnifiedBalance`).
 
 If a property name or data type is altered (e.g., changing `closeTime` to `closeUpdateTime`), developers MUST systematically update:

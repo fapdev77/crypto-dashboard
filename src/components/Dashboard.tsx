@@ -5,10 +5,11 @@ import { useBalancesStore } from '../store/balancesStore';
 import { usePositionsStore } from '../store/positionsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { DollarSign, TrendingUp, TrendingDown, BarChart2, Activity } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, BarChart2, Activity, ArrowUpRight } from 'lucide-react';
 import { Sparkline } from './ui/Sparkline';
 import { MacroCapitalChart } from './analytics/MacroCapitalChart';
 import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
+import { MarketSentiment } from './analytics/MarketSentiment';
 import { ExchangeHierarchyTable } from './ExchangeHierarchyTable';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
@@ -26,18 +27,21 @@ export function Dashboard() {
   const [hideSmallBalances, setHideSmallBalances] = useState(true);
   const balancesList = Object.values(balances);
   const positionsList = Object.values(positions);
+  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
   const activeBalances = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
-      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data'));
-  }, [balancesList, useMockData]);
+      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
+  }, [balancesList, useMockData, activeKeyIds]);
 
   const activePositions = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data'));
-  }, [positionsList, useMockData]);
+      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data') && activeKeyIds.has(pos.connectionId));
+  }, [positionsList, useMockData, activeKeyIds]);
 
   const totalEquity = useMemo(() => {
     return Number(activeBalances.reduce((acc, curr) => acc.plus(curr.usdValue || 0), new Big(0)));
@@ -87,6 +91,12 @@ export function Dashboard() {
 
   const protectedPercent = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
   const exposedPercent = totalEquity > 0 ? (totalExposed / totalEquity) * 100 : 0;
+
+  const handleHedgeProClick = () => {
+    window.dispatchEvent(new CustomEvent('navigate-to-tab', {
+      detail: 'analytics-hedge-pro'
+    }));
+  };
 
   const filteredBalances = useMemo(() => {
     let filtered = activeBalances;
@@ -141,7 +151,7 @@ export function Dashboard() {
     const dataMap: Record<string, Big> = {};
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
-      if (val > 1) { // Ignore dust
+      if (val >= 1) { // Ignore dust
         if (!dataMap[b.exchange]) dataMap[b.exchange] = new Big(0);
         dataMap[b.exchange] = dataMap[b.exchange].plus(val);
       }
@@ -157,7 +167,7 @@ export function Dashboard() {
 
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
-      if (val > 1) { // ignore dust
+      if (val >= 1) { // ignore dust
         if (!exchangesMap[b.exchange]) exchangesMap[b.exchange] = { total: new Big(0), assetsMap: {} };
         exchangesMap[b.exchange].total = exchangesMap[b.exchange].total.plus(val);
         if (!exchangesMap[b.exchange].assetsMap[b.ccy]) exchangesMap[b.exchange].assetsMap[b.ccy] = new Big(0);
@@ -361,15 +371,23 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Lado Direito: Hedge Mode (Inverse) */}
-          <div className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6">
+          {/* Lado Direito: Hedge Mode (Inverse) — clique leva ao Hedge Pro */}
+          <button
+            type="button"
+            onClick={handleHedgeProClick}
+            title="Click to open Hedge Pro dashboard for detailed information about hedge"
+            className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6 text-left cursor-pointer group rounded-lg transition-colors"
+          >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Hedge Mode (Inverse)</span>
+                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
+                  Hedge Mode (Inverse)
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-emerald-500">Longs: {inverseLongCount}</span>
+                  <span className="text-xs font-semibold text-emerald-500">Hedged: {inverseShortCount}</span>
                   <span className="text-xs font-bold ">|</span>
-                  <span className="text-xs font-semibold text-red-500">Shorts: {inverseShortCount}</span>
+                  <span className="text-xs font-semibold text-amber-400">Leveraged: {inverseLongCount}</span>
                 </div>
               </div>
               <div className="flex items-baseline gap-1.5">
@@ -402,9 +420,11 @@ export function Dashboard() {
               </div>
 
             </div>
-          </div>
+          </button>
         </div>
       </div>
+
+
 
       {donutData.length > 0 && crossExchangeAssets.data.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -421,6 +441,9 @@ export function Dashboard() {
         hideSmallBalances={hideSmallBalances}
         setHideSmallBalances={setHideSmallBalances}
       />
+
+      {/* Market Sentiment & Fear / Greed Analysis (Positioned right below Balances table) */}
+      <MarketSentiment />
     </div>
   );
 }

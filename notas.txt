@@ -1,2 +1,2 @@
-Anotações para futuras implementações de Ideias e melhorias:
-- buscando novas ideias
+Anotações para futuras implementações de Ideias e melhorias
+-buscando novas ideias.

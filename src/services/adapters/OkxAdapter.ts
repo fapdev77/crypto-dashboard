@@ -9,6 +9,7 @@ import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
+import { calculateOkxTradeDetails } from '../../utils/okxUtils';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -600,4 +601,140 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     return 'NOT_FOUND';
   }
 
+  // ── Transaction Log (OKX Account Bills) ──
+  public async getTransactionLog(
+    key: ApiCredentials,
+    startTime: number,
+    endTime: number,
+    category: string = '',
+    cursor?: string
+  ): Promise<{ list: any[]; nextPageCursor: string }> {
+    await OkxAdapter.ensureInstrumentsLoaded().catch(() => {});
+
+    const query = new URLSearchParams();
+    if (category) query.append('instType', category);
+    if (startTime) query.append('begin', startTime.toString());
+    if (endTime) query.append('end', endTime.toString());
+    query.append('limit', '100');
+    if (cursor) query.append('after', cursor);
+
+    // Try recent bills first
+    let path = `/api/v5/account/bills?${query.toString()}`;
+    let headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+    let res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+
+    // If recent bills is empty and startTime is more than 7 days ago, try bills-archive
+    const isOlderThan7Days = Date.now() - startTime > 7 * 24 * 60 * 60 * 1000;
+    if ((!res.data || res.data.length === 0) && isOlderThan7Days) {
+      path = `/api/v5/account/bills-archive?${query.toString()}`;
+      headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+    }
+
+    if (res.code && res.code !== '0') {
+      throw new Error(`OKX bills API error (${res.code}): ${res.msg}`);
+    }
+
+    const list = res.data || [];
+    // In OKX, 'after' cursor is the billId of the last record when pagination has more
+    const nextPageCursor = list.length >= 100 ? (list[list.length - 1]?.billId || '') : '';
+
+    return {
+      list,
+      nextPageCursor,
+    };
+  }
+
+  public static normalizeTxLogEntry(raw: any, key: ApiCredentials): import('../../types').OkxTransactionLogEntry {
+    const transactionTime = parseInt(raw.ts || '0', 10);
+    const amount = raw.sz || raw.balChg || '0';
+    const fee = raw.fee || '0';
+    const balance = raw.bal || '0';
+    const positionBalance = raw.posBal || '0';
+
+    // Side normalization
+    let normalizedSide = 'None';
+    const subTypeCode = String(raw.subType || '').trim();
+    if (subTypeCode === '1') normalizedSide = 'Buy';
+    else if (subTypeCode === '2') normalizedSide = 'Sell';
+    else if (subTypeCode === '3') normalizedSide = 'Open Long';
+    else if (subTypeCode === '4') normalizedSide = 'Open Short';
+    else if (subTypeCode === '5') normalizedSide = 'Close Long';
+    else if (subTypeCode === '6') normalizedSide = 'Close Short';
+    else if (raw.side) {
+      const rs = String(raw.side).toLowerCase();
+      if (rs.includes('buy') || rs.includes('long') || rs.includes('in')) normalizedSide = 'Buy';
+      else if (rs.includes('sell') || rs.includes('short') || rs.includes('out')) normalizedSide = 'Sell';
+    }
+
+    // Trade price, contracts, qty, size normalization
+    const tradePrice = String(raw.px || raw.price || raw.avgPrice || raw.fillPx || raw.fillPrice || '0');
+    
+    // Calculate accurate contract & crypto values
+    const tradeDetails = calculateOkxTradeDetails({
+      symbol: raw.instId,
+      category: raw.instType,
+      sz: raw.sz,
+      tradePrice,
+      currency: raw.ccy,
+      raw,
+      cachedInsts: OkxAdapter.cachedInstruments
+    });
+
+    const qty = tradeDetails.isDerivative
+      ? String(tradeDetails.cryptoQty)
+      : String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
+    const size = tradeDetails.isDerivative
+      ? String(tradeDetails.cryptoQty)
+      : String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
+    const contracts = tradeDetails.isDerivative ? String(tradeDetails.contracts) : undefined;
+    const contractVal = tradeDetails.isDerivative ? String(tradeDetails.ctVal) : undefined;
+    const cryptoQty = String(tradeDetails.cryptoQty);
+    const totalValueUsd = tradeDetails.totalValueUsd > 0 ? String(tradeDetails.totalValueUsd) : undefined;
+
+    // Funding mapping (type 8 is funding fee)
+    const isFunding = String(raw.type || '') === '8';
+    const funding = isFunding ? String(raw.balChg || '0') : '0';
+
+    return {
+      id: `${key.id}-${raw.billId || transactionTime}-${transactionTime}`,
+      connectionId: key.id,
+      exchange: 'okx',
+      label: key.label,
+      rawId: String(raw.billId || ''),
+      billId: String(raw.billId || ''),
+      symbol: raw.instId || '',
+      category: raw.instType || 'OTHER',
+      side: normalizedSide,
+      type: raw.type ? String(raw.type) : '',
+      transSubType: raw.subType ? String(raw.subType) : '',
+      subType: raw.subType ? String(raw.subType) : '',
+      typeCode: raw.type ? String(raw.type) : '',
+      subTypeCode: raw.subType ? String(raw.subType) : '',
+      qty,
+      size,
+      contracts,
+      contractVal,
+      cryptoQty,
+      totalValueUsd,
+      currency: raw.ccy || '',
+      tradePrice,
+      funding,
+      amount: String(amount),
+      change: String(raw.balChg || amount),
+      cashFlow: String(raw.balChg || amount),
+      cashBalance: String(balance),
+      balance: String(balance),
+      fee: String(fee),
+      feeCurrency: raw.ccy || '',
+      positionBalance: String(positionBalance),
+      transactionTime,
+      tradeId: raw.tradeId || '',
+      orderId: raw.ordId || '',
+      orderLinkId: raw.clOrdId || '',
+      pnl: String(raw.pnl || '0'),
+      extra: raw.notes || raw.execType || undefined,
+      raw,
+    };
+  }
 }

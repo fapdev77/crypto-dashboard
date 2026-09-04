@@ -1,11 +1,13 @@
 import { create } from 'zustand';
-import { UnifiedHistoryPosition, UnifiedOrder, BybitTransactionLogEntry } from '../types';
+import { UnifiedHistoryPosition, UnifiedOrder, BybitTransactionLogEntry, BitgetTransactionLogEntry, OkxTransactionLogEntry } from '../types';
 
-/** Sync progress info for Bybit transaction log backfill. */
-export interface BybitTxProgress {
+/** Sync progress info for transaction log backfill. */
+export interface TxSyncProgress {
   pct: number;       // 0-100
   records: number;   // total records cached so far
 }
+
+export type BybitTxProgress = TxSyncProgress;
 
 /** Synchronisation state coordinator used to share sync state across multiple history views. */
 interface SyncCoordinatorState {
@@ -50,8 +52,8 @@ interface SyncCoordinatorState {
   isBybitTxSyncing: boolean;
   setIsBybitTxSyncing: (v: boolean) => void;
   /** Sync progress info. */
-  bybitTxProgress: BybitTxProgress | null;
-  setBybitTxProgress: (p: BybitTxProgress | null) => void;
+  bybitTxProgress: TxSyncProgress | null;
+  setBybitTxProgress: (p: TxSyncProgress | null) => void;
   /** Timestamp of the last successful transaction-log sync. */
   bybitTxLastSyncTime: number;
   setBybitTxLastSyncTime: (t: number) => void;
@@ -64,6 +66,38 @@ interface SyncCoordinatorState {
   /** Total transaction records cached. */
   bybitTxTotalRecords: number;
   setBybitTxTotalRecords: (n: number) => void;
+
+  // ── 5. Bitget Transactions ──
+  cachedBitgetTxLog: BitgetTransactionLogEntry[];
+  setCachedBitgetTxLog: (entries: BitgetTransactionLogEntry[]) => void;
+  isBitgetTxSyncing: boolean;
+  setIsBitgetTxSyncing: (v: boolean) => void;
+  bitgetTxProgress: TxSyncProgress | null;
+  setBitgetTxProgress: (p: TxSyncProgress | null) => void;
+  bitgetTxLastSyncTime: number;
+  setBitgetTxLastSyncTime: (t: number) => void;
+  bitgetTxLatestTransactionTime: number;
+  setBitgetTxLatestTransactionTime: (t: number) => void;
+  bitgetTxOldestTransactionTime: number;
+  setBitgetTxOldestTransactionTime: (t: number) => void;
+  bitgetTxTotalRecords: number;
+  setBitgetTxTotalRecords: (n: number) => void;
+
+  // ── 6. OKX Transactions ──
+  cachedOkxTxLog: OkxTransactionLogEntry[];
+  setCachedOkxTxLog: (entries: OkxTransactionLogEntry[]) => void;
+  isOkxTxSyncing: boolean;
+  setIsOkxTxSyncing: (v: boolean) => void;
+  okxTxProgress: TxSyncProgress | null;
+  setOkxTxProgress: (p: TxSyncProgress | null) => void;
+  okxTxLastSyncTime: number;
+  setOkxTxLastSyncTime: (t: number) => void;
+  okxTxLatestTransactionTime: number;
+  setOkxTxLatestTransactionTime: (t: number) => void;
+  okxTxOldestTransactionTime: number;
+  setOkxTxOldestTransactionTime: (t: number) => void;
+  okxTxTotalRecords: number;
+  setOkxTxTotalRecords: (n: number) => void;
 }
 
 export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
@@ -106,4 +140,36 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setBybitTxOldestTransactionTime: (bybitTxOldestTransactionTime) => set({ bybitTxOldestTransactionTime }),
   bybitTxTotalRecords: 0,
   setBybitTxTotalRecords: (bybitTxTotalRecords) => set({ bybitTxTotalRecords }),
+
+  // 5. Bitget Transactions
+  cachedBitgetTxLog: [],
+  setCachedBitgetTxLog: (cachedBitgetTxLog) => set({ cachedBitgetTxLog }),
+  isBitgetTxSyncing: false,
+  setIsBitgetTxSyncing: (isBitgetTxSyncing) => set({ isBitgetTxSyncing }),
+  bitgetTxProgress: null,
+  setBitgetTxProgress: (bitgetTxProgress) => set({ bitgetTxProgress }),
+  bitgetTxLastSyncTime: 0,
+  setBitgetTxLastSyncTime: (bitgetTxLastSyncTime) => set({ bitgetTxLastSyncTime }),
+  bitgetTxLatestTransactionTime: 0,
+  setBitgetTxLatestTransactionTime: (bitgetTxLatestTransactionTime) => set({ bitgetTxLatestTransactionTime }),
+  bitgetTxOldestTransactionTime: 0,
+  setBitgetTxOldestTransactionTime: (bitgetTxOldestTransactionTime) => set({ bitgetTxOldestTransactionTime }),
+  bitgetTxTotalRecords: 0,
+  setBitgetTxTotalRecords: (bitgetTxTotalRecords) => set({ bitgetTxTotalRecords }),
+
+  // 6. OKX Transactions
+  cachedOkxTxLog: [],
+  setCachedOkxTxLog: (cachedOkxTxLog) => set({ cachedOkxTxLog }),
+  isOkxTxSyncing: false,
+  setIsOkxTxSyncing: (isOkxTxSyncing) => set({ isOkxTxSyncing }),
+  okxTxProgress: null,
+  setOkxTxProgress: (okxTxProgress) => set({ okxTxProgress }),
+  okxTxLastSyncTime: 0,
+  setOkxTxLastSyncTime: (okxTxLastSyncTime) => set({ okxTxLastSyncTime }),
+  okxTxLatestTransactionTime: 0,
+  setOkxTxLatestTransactionTime: (okxTxLatestTransactionTime) => set({ okxTxLatestTransactionTime }),
+  okxTxOldestTransactionTime: 0,
+  setOkxTxOldestTransactionTime: (okxTxOldestTransactionTime) => set({ okxTxOldestTransactionTime }),
+  okxTxTotalRecords: 0,
+  setOkxTxTotalRecords: (okxTxTotalRecords) => set({ okxTxTotalRecords }),
 }));
