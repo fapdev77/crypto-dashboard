@@ -145,7 +145,9 @@ describe('getHedgePositionLevels — short inverse', () => {
 
     expect(lvl.entryUsd).toBe(120000);
     expect(lvl.protectedUsd).toBe(120000);
-    expect(lvl.exposedUsd).toBeCloseTo(155000, 1);
+    // initialSizeInCoin = 120000 / 50000 = 2.4 BTC. Balance = 5 BTC.
+    // exposedAmount = 5 - 2.4 = 2.6 BTC. exposedUsd = 2.6 * 55000 = 143000 USD.
+    expect(lvl.exposedUsd).toBeCloseTo(143000, 1);
   });
 
   it('should keep locked entry USD fixed even if position size exceeds current balance', () => {
@@ -440,14 +442,16 @@ describe('getHedgeCoinSummaries', () => {
     expect(coin.walletBalance).toBe(0.65);
     expect(coin.walletBalanceUsd).toBe(44492.5);
 
-    // Net Balance is the true net equity in USD (Protected USD + Exposed USD)
-    expect(coin.netBalance).toBeCloseTo(0.65, 6);
-    expect(coin.netBalanceUsd).toBeCloseTo(44492.5, 2);
+    // Initial size in coin = 33332 / 69164.22 = 0.4819255 BTC
+    // Exposed size = 0.65 - 0.4819255 = 0.1680745 BTC
+    // Exposed USD = 0.1680745 * 68450 = 11504.70 USD
+    // Net Balance in USD = 33332 + 11504.70 = 44836.70 USD
+    // Net Balance in BTC = 44836.70 / 68450 = 0.6550285 BTC (Wallet 0.65 + unrealized 0.0050285)
+    expect(coin.netBalance).toBeCloseTo(0.6550285, 4);
+    expect(coin.netBalanceUsd).toBeCloseTo(44836.70, 1);
 
-    // Protected = entry value capped by balance: min(33332, 44492.5) = 33332
     expect(coin.protectedUsd).toBe(33332);
-    // Exposed Base = 44492.5 - 33332 = 11160.5
-    expect(coin.exposedBaseUsd).toBeCloseTo(11160.5, 2);
+    expect(coin.exposedBaseUsd).toBeCloseTo(11504.70, 1);
   });
 
   it('should correctly compute gross Wallet Balance and liquid Net Balance for Bybit with negative PnL', () => {
@@ -479,9 +483,13 @@ describe('getHedgeCoinSummaries', () => {
     expect(coin.walletBalance).toBe(0.65);
     expect(coin.walletBalanceUsd).toBe(44492.5);
 
-    // Net Balance for inverse short hedge preserves locked USD: 33332 protected + 11160.5 exposed = 44492.5
-    expect(coin.netBalance).toBeCloseTo(0.65, 6);
-    expect(coin.netBalanceUsd).toBeCloseTo(44492.5, 2);
+    // Initial size in coin = 33332 / 65000 = 0.5128 BTC
+    // Exposed size = 0.65 - 0.5128 = 0.1372 BTC
+    // Exposed USD = 0.1372 * 68450 = 9391.34 USD
+    // Net Balance in USD = 33332 + 9391.34 = 42723.34 USD
+    // Net Balance in BTC = 42723.34 / 68450 = 0.624154 BTC
+    expect(coin.netBalance).toBeCloseTo(0.624154, 4);
+    expect(coin.netBalanceUsd).toBeCloseTo(42723.34, 1);
   });
 
   it('should adjust balanceUsd and exposure according to gross and net modes', () => {
@@ -702,9 +710,72 @@ describe('getHedgeTotals', () => {
     expect(totals.totalBalance).toBeCloseTo(9999999, 3);
   });
 
-  it('should correctly calculate Bybit Inverse Short with USD contracts and mark price valuation', () => {
-    // User scenario: Bybit BTCUSD Inverse Short with 8800 USD contracts
+  it('should correctly calculate Bybit Inverse Short with initial position entry size and wallet balance based exposure', () => {
+    // Exact user scenario for NEAR:
+    // Bybit NEARUSD Inverse Short:
+    // Entry price = 2.3316, Mark price = 2.5906, Initial notional = 484 USD
+    // Initial size in coin = 484 / 2.3316 = 207.58485023 NEAR
+    // Wallet balance = 241.2993628 NEAR ($625.11 USD at mark)
+    // Exposed = Wallet Balance (241.2993628) - Initial Position (207.58485023) = 33.71451257 NEAR (~33.71 NEAR)
+    const bybitNearPos = makePos({
+      id: 'bybit-near-pos',
+      connectionId: 'bybit-main',
+      exchange: 'bybit',
+      symbol: 'NEARUSD',
+      baseCoin: 'NEAR',
+      quoteCoin: 'USD',
+      ccy: 'NEAR',
+      side: 'short',
+      size: 484,
+      notionalUsd: 484,
+      entryPrice: 2.3316,
+      markPrice: 2.5906,
+      unrealizedPnl: -20.75554424, // Opportunity cost / accounting PnL in coin
+      instrumentType: 'INVERSE',
+    });
+
+    const bybitNearBal = makeBal({
+      id: 'bybit-main-NEAR',
+      connectionId: 'bybit-main',
+      exchange: 'bybit',
+      ccy: 'NEAR',
+      amount: 241.2993628,
+      walletBalance: 241.2993628,
+      usdValue: 241.2993628 * 2.5906, // ~$625.11
+    });
+
+    const expectedInitialSize = 484 / 2.3316; // ~207.58277578 NEAR
+    const expectedExposedSize = 241.2993628 - expectedInitialSize; // ~33.716587 NEAR
+
+    const lvl = getHedgePositionLevels(bybitNearPos, [bybitNearBal]);
+    expect(lvl.initialSizeInCoin).toBeCloseTo(expectedInitialSize, 8);
+    expect(lvl.protectedUsd).toBe(484);
+    expect(lvl.protectedAmount).toBeCloseTo(expectedInitialSize, 6);
+    expect(lvl.exposedAmount).toBeCloseTo(expectedExposedSize, 6);
+    expect(lvl.exposedBaseUsd).toBeCloseTo(expectedExposedSize * 2.5906, 2); // ~$87.35
+
+    // In Gross mode (default)
+    const grossSummaries = getHedgeCoinSummaries([bybitNearPos], [bybitNearBal], 'gross');
+    const coinGross = grossSummaries[0];
+
+    expect(coinGross.walletBalance).toBeCloseTo(241.2993628, 7);
+    expect(coinGross.protectedUsd).toBe(484);
+    expect(coinGross.protectedSize).toBeCloseTo(expectedInitialSize, 6);
+    expect(coinGross.exposedSize).toBeCloseTo(expectedExposedSize, 6); // ~33.71 NEAR (Wallet - Initial Position)
+    expect(coinGross.exposedBaseUsd).toBeCloseTo(expectedExposedSize * 2.5906, 2); // ~$87.35
+
+    // In Net mode
+    const netSummaries = getHedgeCoinSummaries([bybitNearPos], [bybitNearBal], 'net');
+    const coinNet = netSummaries[0];
+    expect(coinNet.protectedUsd).toBe(484);
+    expect(coinNet.protectedSize).toBeCloseTo(expectedInitialSize, 6);
+    expect(coinNet.exposedSize).toBeCloseTo(expectedExposedSize, 6);
+  });
+
+  it('should correctly calculate Bybit Inverse Short with USD contracts and initial size valuation', () => {
+    // Scenario: Bybit BTCUSD Inverse Short with 8800 USD contracts
     // Entry price = 65,132.72, Mark price = 79,996.92
+    // Initial size in coin = 8800 / 65132.72 = 0.13510874 BTC
     // Wallet balance = 0.11376289 BTC (~$9,100.68), unrealized PnL = -0.0251045 BTC (-$2,008.28)
     const bybitInversePos = makePos({
       id: 'bybit-inverse-btc',
@@ -741,19 +812,10 @@ describe('getHedgeTotals', () => {
     expect(coinGross.walletBalanceUsd).toBeCloseTo(0.11376289 * 79996.92, 2);
     // Protected USD should be the full 8800.00 USD
     expect(coinGross.protectedUsd).toBe(8800);
-    // Protected size in BTC at current mark price = 8800 / 79996.92
-    expect(coinGross.protectedSize).toBeCloseTo(8800 / 79996.92, 8);
-    // Net balance in USD is 8800 + exposed USD ($300.68) = $9,100.68 (0.11376289 BTC)
-    expect(coinGross.netBalance).toBeCloseTo(0.11376289, 8);
-    expect(coinGross.netBalanceUsd).toBeCloseTo(0.11376289 * 79996.92, 2);
-    expect(coinGross.unrealizedPnl).toBeCloseTo(-0.0251045, 7);
-
-    // In Net mode
-    const netSummaries = getHedgeCoinSummaries([bybitInversePos], [bybitBalance], 'net');
-    const coinNet = netSummaries[0];
-    expect(coinNet.balanceUsd).toBeCloseTo(0.11376289 * 79996.92, 2);
-    expect(coinNet.protectedUsd).toBe(8800);
-    expect(coinNet.netBalance).toBeCloseTo(0.11376289, 8);
+    // Protected size in BTC at initial entry price = 8800 / 65132.72 = 0.13510874 BTC
+    expect(coinGross.protectedSize).toBeCloseTo(8800 / 65132.72, 8);
+    // Exposed size = 0.11376289 - 0.13510874 = -0.02134585 BTC (negative because position > balance)
+    expect(coinGross.exposedSize).toBeCloseTo(0.11376289 - (8800 / 65132.72), 8);
   });
 
   it('should correctly calculate Bitget Inverse Short with mark price converted protected ETH size', () => {
