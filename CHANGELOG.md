@@ -1,3 +1,10 @@
+# [1.54.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.53.0...v1.54.0) (2026-09-09)
+
+
+### Features
+
+* **hedge:** update Bybit net balance calculation ([110ae73](https://github.com/fapdev77/crypto-dashboard/commit/110ae73ee6fdf87196832b191ab9f7ffbac62663))
+
 # [1.53.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.52.0...v1.53.0) (2026-09-09)
 
 
