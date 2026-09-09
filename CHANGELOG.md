@@ -1,3 +1,10 @@
+# [1.52.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.51.0...v1.52.0) (2026-09-04)
+
+
+### Features
+
+* add market sentiment analysis dashboard ([8f0a695](https://github.com/fapdev77/crypto-dashboard/commit/8f0a6950705fb244397497192881f07d59346d26))
+
 # [1.51.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.50.2...v1.51.0) (2026-09-01)
 
 
