@@ -1,3 +1,10 @@
+# [1.53.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.52.0...v1.53.0) (2026-09-09)
+
+
+### Features
+
+* **dashboard:** use net equity for Bybit balances ([6bf61c6](https://github.com/fapdev77/crypto-dashboard/commit/6bf61c6054cabc62651130c4d1a709fe156ca075))
+
 # [1.52.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.51.0...v1.52.0) (2026-09-04)
 
 
