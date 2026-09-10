@@ -47,6 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'www.okx.com',
       'api.okx.com',
       'aws.okx.com',
+      'api.alternative.me',
     ];
 
     try {
