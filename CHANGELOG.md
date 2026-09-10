@@ -1,3 +1,10 @@
+## [1.54.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.54.0...v1.54.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **bitget:** update UTA adapter for v3 API compatibility ([9c42a52](https://github.com/fapdev77/crypto-dashboard/commit/9c42a52b6d4848ceeb4dbc80e0255260d642b720))
+
 # [1.54.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.53.0...v1.54.0) (2026-09-09)
 
 
