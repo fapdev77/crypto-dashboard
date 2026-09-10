@@ -29,19 +29,87 @@ export function Dashboard() {
   const positionsList = Object.values(positions);
   const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
-  const activeBalances = useMemo(() => {
-    if (!useMockData && activeKeyIds.size === 0) return [];
-    return useMockData
-      ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
-      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
-  }, [balancesList, useMockData, activeKeyIds]);
-
   const activePositions = useMemo(() => {
     if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
       : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data') && activeKeyIds.has(pos.connectionId));
   }, [positionsList, useMockData, activeKeyIds]);
+
+  const activeBalances = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
+    const rawList = useMockData
+      ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
+      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
+
+    // Exclusively for Bybit in Dashboard: use Net Balance (Equity) instead of Gross Wallet Balance
+    return rawList.map(b => {
+      if (b.exchange?.toLowerCase() !== 'bybit') {
+        return b;
+      }
+
+      // Check if raw data has official Bybit equity (net balance in coin and USD)
+      const rawObj: any = b.raw || {};
+      const rawEquity = rawObj.equity !== undefined && rawObj.equity !== null && rawObj.equity !== ''
+        ? parseFloat(String(rawObj.equity))
+        : NaN;
+      const rawUsdValue = rawObj.usdValue !== undefined && rawObj.usdValue !== null && rawObj.usdValue !== ''
+        ? parseFloat(String(rawObj.usdValue))
+        : NaN;
+
+      const coinPrice = (b.amount > 0 && (b.usdValue || 0) > 0)
+        ? (b.usdValue / b.amount)
+        : 0;
+
+      if (!isNaN(rawEquity) && rawEquity >= 0) {
+        const netAmount = rawEquity;
+        const netUsdValue = (!isNaN(rawUsdValue) && rawUsdValue > 0)
+          ? rawUsdValue
+          : (coinPrice > 0 ? netAmount * coinPrice : (b.usdValue || 0));
+
+        return {
+          ...b,
+          amount: netAmount,
+          usdValue: netUsdValue,
+        };
+      }
+
+      if (rawObj.unrealisedPnl !== undefined && rawObj.unrealisedPnl !== null && rawObj.unrealisedPnl !== '') {
+        const uPnl = parseFloat(String(rawObj.unrealisedPnl));
+        if (!isNaN(uPnl)) {
+          const netAmount = Math.max(0, (b.amount || 0) + uPnl);
+          const netUsdValue = coinPrice > 0 ? netAmount * coinPrice : (b.usdValue || 0);
+          return {
+            ...b,
+            amount: netAmount,
+            usdValue: netUsdValue,
+          };
+        }
+      }
+
+      // Fallback: derive Net Balance from active positions unrealized PnL if available
+      const matchingPositions = activePositions.filter(p =>
+        p.connectionId === b.connectionId &&
+        (p.ccy?.toUpperCase() === b.ccy.toUpperCase() || p.baseCoin?.toUpperCase() === b.ccy.toUpperCase())
+      );
+
+      if (matchingPositions.length > 0) {
+        const sumUnrealizedCoin = matchingPositions.reduce((acc, p) => acc + (p.unrealizedPnl || 0), 0);
+        const netAmount = Math.max(0, (b.amount || 0) + sumUnrealizedCoin);
+        const netUsdValue = coinPrice > 0
+          ? netAmount * coinPrice
+          : (b.usdValue || 0);
+
+        return {
+          ...b,
+          amount: netAmount,
+          usdValue: netUsdValue,
+        };
+      }
+
+      return b;
+    });
+  }, [balancesList, useMockData, activeKeyIds, activePositions]);
 
   const totalEquity = useMemo(() => {
     return Number(activeBalances.reduce((acc, curr) => acc.plus(curr.usdValue || 0), new Big(0)));

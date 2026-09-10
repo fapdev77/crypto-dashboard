@@ -238,9 +238,9 @@ describe('getHedgePositionLevels — short inverse', () => {
 
     const bybitLvlNet = getHedgePositionLevels(bybitPosWithPnl, [BTC_BALANCE], 'net');
     expect(bybitLvlNet.mode).toBe('net');
-    expect(bybitLvlNet.balanceAmount).toBeCloseTo(5.0, 10);
+    expect(bybitLvlNet.balanceAmount).toBeCloseTo(5.5, 10);
     expect(bybitLvlNet.grossBalanceAmount).toBeCloseTo(5.0, 10);
-    expect(bybitLvlNet.netBalanceAmount).toBeCloseTo(5.0, 10);
+    expect(bybitLvlNet.netBalanceAmount).toBeCloseTo(5.5, 10);
   });
 });
 
@@ -483,13 +483,10 @@ describe('getHedgeCoinSummaries', () => {
     expect(coin.walletBalance).toBe(0.65);
     expect(coin.walletBalanceUsd).toBe(44492.5);
 
-    // Initial size in coin = 33332 / 65000 = 0.5128 BTC
-    // Exposed size = 0.65 - 0.5128 = 0.1372 BTC
-    // Exposed USD = 0.1372 * 68450 = 9391.34 USD
-    // Net Balance in USD = 33332 + 9391.34 = 42723.34 USD
-    // Net Balance in BTC = 42723.34 / 68450 = 0.624154 BTC
-    expect(coin.netBalance).toBeCloseTo(0.624154, 4);
-    expect(coin.netBalanceUsd).toBeCloseTo(42723.34, 1);
+    // Net Balance is specific coin equity: Wallet (0.65) + Unrealized PnL (-0.02) = 0.63 BTC
+    // Net Balance in USD = 0.63 * 68450 = 43123.50 USD
+    expect(coin.netBalance).toBeCloseTo(0.63, 4);
+    expect(coin.netBalanceUsd).toBeCloseTo(43123.5, 1);
   });
 
   it('should adjust balanceUsd and exposure according to gross and net modes', () => {
@@ -522,13 +519,13 @@ describe('getHedgeCoinSummaries', () => {
     expect(grossCoin.exposedBaseUsd).toBeCloseTo(30000, 2);
     expect(grossCoin.positions[0].exposedBaseUsd).toBeCloseTo(30000, 2);
 
-    // Net mode: uses net balance / liquid equity ($60,000 for inverse short)
+    // Net mode: uses net balance / liquid equity ($66,000 with +0.1 BTC unrealized PnL)
     const netSummaries = getHedgeCoinSummaries([bybitPos], [bybitBal], 'net');
     const netCoin = netSummaries[0];
-    expect(netCoin.balanceUsd).toBe(60000);
+    expect(netCoin.balanceUsd).toBe(66000);
     expect(netCoin.protectedUsd).toBe(30000);
-    expect(netCoin.exposedBaseUsd).toBeCloseTo(30000, 2);
-    expect(netCoin.positions[0].exposedBaseUsd).toBeCloseTo(30000, 2);
+    expect(netCoin.exposedBaseUsd).toBeCloseTo(36000, 2);
+    expect(netCoin.positions[0].exposedBaseUsd).toBeCloseTo(36000, 2);
   });
 
   it('should separate the same baseCoin across different connections', () => {
@@ -769,7 +766,7 @@ describe('getHedgeTotals', () => {
     const coinNet = netSummaries[0];
     expect(coinNet.protectedUsd).toBe(484);
     expect(coinNet.protectedSize).toBeCloseTo(expectedInitialSize, 6);
-    expect(coinNet.exposedSize).toBeCloseTo(expectedExposedSize, 6);
+    expect(coinNet.exposedSize).toBeCloseTo((241.2993628 - 20.75554424) - expectedInitialSize, 6);
   });
 
   it('should correctly calculate Bybit Inverse Short with USD contracts and initial size valuation', () => {

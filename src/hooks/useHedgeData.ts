@@ -51,15 +51,6 @@ export function useHedgeData(): UseHedgeDataReturn {
     [keys],
   );
 
-  const activeBalances = useMemo(() => {
-    if (!useMockData && activeKeyIds.size === 0) return [];
-    return useMockData
-      ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
-      : balancesList.filter(
-          b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId),
-        );
-  }, [balancesList, useMockData, activeKeyIds]);
-
   const activePositions = useMemo(() => {
     if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
@@ -69,16 +60,98 @@ export function useHedgeData(): UseHedgeDataReturn {
         );
   }, [positionsList, useMockData, activeKeyIds]);
 
-  // Same totalEquity source as the main dashboard (Σ balance usdValue).
+  const rawActiveBalances = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
+    return useMockData
+      ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
+      : balancesList.filter(
+          b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId),
+        );
+  }, [balancesList, useMockData, activeKeyIds]);
+
+  const netActiveBalances = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
+
+    // Exclusively for Bybit in Hedge Pro Aggregated Totals: use Net Balance (Equity)
+    return rawActiveBalances.map(b => {
+      if (b.exchange?.toLowerCase() !== 'bybit') {
+        return b;
+      }
+
+      // Check if raw data has official Bybit equity (net balance in coin and USD)
+      const rawObj: any = b.raw || {};
+      const rawEquity = rawObj.equity !== undefined && rawObj.equity !== null && rawObj.equity !== ''
+        ? parseFloat(String(rawObj.equity))
+        : NaN;
+      const rawUsdValue = rawObj.usdValue !== undefined && rawObj.usdValue !== null && rawObj.usdValue !== ''
+        ? parseFloat(String(rawObj.usdValue))
+        : NaN;
+
+      const coinPrice = (b.amount > 0 && (b.usdValue || 0) > 0)
+        ? (b.usdValue / b.amount)
+        : 0;
+
+      if (!isNaN(rawEquity) && rawEquity >= 0) {
+        const netAmount = rawEquity;
+        const netUsdValue = (!isNaN(rawUsdValue) && rawUsdValue > 0)
+          ? rawUsdValue
+          : (coinPrice > 0 ? netAmount * coinPrice : (b.usdValue || 0));
+
+        return {
+          ...b,
+          amount: netAmount,
+          usdValue: netUsdValue,
+        };
+      }
+
+      if (rawObj.unrealisedPnl !== undefined && rawObj.unrealisedPnl !== null && rawObj.unrealisedPnl !== '') {
+        const uPnl = parseFloat(String(rawObj.unrealisedPnl));
+        if (!isNaN(uPnl)) {
+          const netAmount = Math.max(0, (b.amount || 0) + uPnl);
+          const netUsdValue = coinPrice > 0 ? netAmount * coinPrice : (b.usdValue || 0);
+          return {
+            ...b,
+            amount: netAmount,
+            usdValue: netUsdValue,
+          };
+        }
+      }
+
+      // Fallback: derive Net Balance from active positions unrealized PnL if available
+      const matchingPositions = activePositions.filter(p =>
+        p.connectionId === b.connectionId &&
+        (p.ccy?.toUpperCase() === b.ccy.toUpperCase() || p.baseCoin?.toUpperCase() === b.ccy.toUpperCase())
+      );
+
+      if (matchingPositions.length > 0) {
+        const sumUnrealizedCoin = matchingPositions.reduce((acc, p) => acc + (p.unrealizedPnl || 0), 0);
+        const netAmount = Math.max(0, (b.amount || 0) + sumUnrealizedCoin);
+        const netUsdValue = coinPrice > 0
+          ? netAmount * coinPrice
+          : (b.usdValue || 0);
+
+        return {
+          ...b,
+          amount: netAmount,
+          usdValue: netUsdValue,
+        };
+      }
+
+      return b;
+    });
+  }, [rawActiveBalances, useMockData, activeKeyIds, activePositions]);
+
+  // Aggregated totalEquity for hedge totals and exposure bar
   const totalEquity = useMemo(() => {
     return Number(
-      activeBalances.reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
+      netActiveBalances.reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
     );
-  }, [activeBalances]);
+  }, [netActiveBalances]);
 
+  // Individual coin summaries use raw gross balances to preserve gross wallet balance & coin-specific net equity
   const coinSummaries = useMemo(
-    () => getHedgeCoinSummaries(activePositions, activeBalances, 'gross'),
-    [activePositions, activeBalances],
+    () => getHedgeCoinSummaries(activePositions, rawActiveBalances, 'gross'),
+    [activePositions, rawActiveBalances],
   );
 
   const totals = useMemo(
@@ -112,9 +185,19 @@ export function useHedgeData(): UseHedgeDataReturn {
     });
   }, [coinSummaries, exchange, side, search]);
 
+  const filteredTotalEquity = useMemo(() => {
+    if (exchange === 'All') return totalEquity;
+    const exBalances = netActiveBalances.filter(
+      b => (b.exchange || '').toLowerCase() === exchange.toLowerCase(),
+    );
+    return Number(
+      exBalances.reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
+    );
+  }, [netActiveBalances, exchange, totalEquity]);
+
   const filteredTotals = useMemo(
-    () => getHedgeTotals(filteredSummaries, totalEquity),
-    [filteredSummaries, totalEquity],
+    () => getHedgeTotals(filteredSummaries, filteredTotalEquity),
+    [filteredSummaries, filteredTotalEquity],
   );
 
   const sideOptions = useMemo(
