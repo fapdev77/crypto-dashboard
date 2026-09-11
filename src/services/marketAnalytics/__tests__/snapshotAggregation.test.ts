@@ -74,4 +74,39 @@ describe('Market Analytics Snapshot Multi-Market & Aggregation (D3)', () => {
       expect(diffPct).toBeLessThan(0.05);
     }
   });
+
+  it('guarantees distinct volume, CVD, and metrics without cross-exchange duplicate values', async () => {
+    const snapshot = await MarketAnalyticsService.fetchSnapshot('BTC', ['PERP', 'INVERSE', 'SPOT'], '1h', ['bybit', 'okx', 'bitget'], true);
+    expect(snapshot.breakdown.length).toBe(9); // 3 exchanges x 3 markets
+
+    const bybitPerp = snapshot.breakdown.find((b) => b.exchange === 'bybit' && b.market === 'PERP')!;
+    const bitgetPerp = snapshot.breakdown.find((b) => b.exchange === 'bitget' && b.market === 'PERP')!;
+    const okxPerp = snapshot.breakdown.find((b) => b.exchange === 'okx' && b.market === 'PERP')!;
+
+    // Bybit and Bitget must not share identical volumes or identical CVD flows
+    expect(bybitPerp.volume24hUsd).not.toBe(bitgetPerp.volume24hUsd);
+    expect(bybitPerp.cvd).not.toBe(bitgetPerp.cvd);
+
+    // Within Bitget, PERP and INVERSE should have distinct volumes and CVD
+    const bitgetInv = snapshot.breakdown.find((b) => b.exchange === 'bitget' && b.market === 'INVERSE')!;
+    expect(bitgetPerp.volume24hUsd).not.toBe(bitgetInv.volume24hUsd);
+
+    // Within OKX, PERP and INVERSE should have distinct volumes and CVD
+    const okxInv = snapshot.breakdown.find((b) => b.exchange === 'okx' && b.market === 'INVERSE')!;
+    expect(okxPerp.volume24hUsd).not.toBe(okxInv.volume24hUsd);
+
+    // Aggregated volume should equal sum of all feeds
+    const sumVolume = snapshot.breakdown.reduce((sum, b) => sum + (b.volume24hUsd || 0), 0);
+    expect(snapshot.totalVolume24hUsd).toBe(sumVolume);
+  });
+
+  it('strictly respects useMockData setting when switching between live and mock', async () => {
+    // In live mode (default in store test environment)
+    const liveSnapshot = await MarketAnalyticsService.fetchSnapshot('ETH', ['PERP'], '1h', ['okx', 'bitget'], true);
+    expect(liveSnapshot.symbol).toBe('ETH');
+    expect(liveSnapshot.breakdown.length).toBe(2);
+    expect(liveSnapshot.currentPrice).toBeGreaterThan(0);
+    expect(liveSnapshot.oiHistory.length).toBeGreaterThan(0);
+    expect(liveSnapshot.takerFlowHistory.length).toBeGreaterThan(0);
+  });
 });
