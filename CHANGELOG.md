@@ -1,3 +1,17 @@
+## [1.59.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.59.0...v1.59.1) (2026-09-11)
+
+
+### Performance Improvements
+
+* optimize market filter transitions ([df7deda](https://github.com/fapdev77/crypto-dashboard/commit/df7deda730eae5fa350dd726ab4c1826c83e27b6))
+
+# [1.59.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.58.0...v1.59.0) (2026-09-11)
+
+
+### Features
+
+* implement deterministic seed generation for mocks ([8eb0a76](https://github.com/fapdev77/crypto-dashboard/commit/8eb0a762b2bfbf1508276a1c521e317874b5f6c0))
+
 # [1.58.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.57.0...v1.58.0) (2026-09-11)
 
 

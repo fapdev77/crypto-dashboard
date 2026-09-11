@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useTransition } from 'react';
 import {
   Search,
   X,
@@ -9,6 +9,7 @@ import {
   Sparkles,
   AlertTriangle,
   SlidersHorizontal,
+  Loader2,
 } from 'lucide-react';
 import { useMarketAnalyticsStore, ALL_SPECIFIC_MARKETS, ALL_EXCHANGES } from '../../../store/marketAnalyticsStore';
 import {
@@ -86,8 +87,29 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
   // Search and tabs state
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeChip, setActiveChip] = useState<FilterChipId>('ALL');
+  const [isPendingFilter, startFilterTransition] = useTransition();
+  const [isFiltering, setIsFiltering] = useState<boolean>(false);
+  const [visibleCount, setVisibleCount] = useState<number>(60);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Switch category chip with immediate responsive feedback
+  const handleChipChange = (chipId: FilterChipId) => {
+    if (chipId === activeChip) return;
+    setIsFiltering(true);
+    startFilterTransition(() => {
+      setActiveChip(chipId);
+      setVisibleCount(60);
+    });
+  };
+
+  // Turn off isFiltering once state settles
+  useEffect(() => {
+    if (!isPendingFilter && isFiltering) {
+      const timer = setTimeout(() => setIsFiltering(false), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isPendingFilter, isFiltering]);
 
   // Sync state when modal opens
   useEffect(() => {
@@ -97,6 +119,8 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
       setPendingExchanges(selectedExchanges);
       setSearchQuery('');
       setActiveChip('ALL');
+      setVisibleCount(60);
+      setIsFiltering(false);
       setTimeout(() => searchInputRef.current?.focus(), 80);
     }
   }, [isOpen, selectedSymbol, selectedMarkets, selectedExchanges]);
@@ -271,25 +295,39 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
             <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-none">
               {FILTER_CHIPS.map((chip) => {
                 const isActive = activeChip === chip.id;
+                const isChipLoading = isActive && (isFiltering || isPendingFilter);
                 return (
                   <button
                     key={chip.id}
                     type="button"
-                    onClick={() => setActiveChip(chip.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap transition-all ${
+                    onClick={() => handleChipChange(chip.id)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap transition-all ${
                       isActive
                         ? 'bg-[#2F6BFF] text-white shadow-sm'
                         : 'bg-[#1a1b22] text-[#8E9299] hover:text-white hover:bg-[#22242e] border border-[#2a2b30]/60'
                     }`}
                   >
-                    {chip.label}
+                    {isChipLoading && (
+                      <Loader2 className="w-3 h-3 animate-spin text-white/90" />
+                    )}
+                    <span>{chip.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Coin List */}
-            <div className="flex-1 min-h-[160px] max-h-[260px] lg:max-h-none overflow-y-auto pr-1 space-y-1 divide-y divide-[#1e2027]/60">
+            {/* Coin List with loading feedback */}
+            <div className="relative flex-1 min-h-[160px] max-h-[260px] lg:max-h-none overflow-y-auto pr-1 space-y-1 divide-y divide-[#1e2027]/60">
+              {/* Spinning loading overlay during transition */}
+              {(isFiltering || isPendingFilter) && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#131418]/70 backdrop-blur-[1.5px] rounded-xl animate-in fade-in duration-100">
+                  <div className="flex items-center gap-2.5 px-3 py-2 bg-[#1a1b22] border border-[#2a2b30] rounded-xl shadow-xl">
+                    <Loader2 className="w-4 h-4 text-[#2F6BFF] animate-spin" />
+                    <span className="text-xs font-medium text-[#C5C8D0]">Filtrando ativos...</span>
+                  </div>
+                </div>
+              )}
+
               {/* Custom Ticker Option if not found */}
               {customOption && (
                 <div
@@ -316,7 +354,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                 </div>
               )}
 
-              {coinResults.map((coin) => {
+              {coinResults.slice(0, visibleCount).map((coin) => {
                 const isSelected = pendingSymbol === coin.symbol;
                 const isFav = favorites.includes(coin.symbol);
                 const isBtc = coin.symbol === 'BTC';
@@ -387,7 +425,20 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                 );
               })}
 
-              {coinResults.length === 0 && !customOption && (
+              {/* Show more button if coin results exceed visible batch */}
+              {coinResults.length > visibleCount && (
+                <div className="pt-2 pb-1 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((prev) => prev + 60)}
+                    className="px-3 py-1.5 rounded-lg bg-[#1a1b22] hover:bg-[#20222b] text-[#8E9299] hover:text-white border border-[#2a2b30] text-[11px] font-medium transition-colors"
+                  >
+                    Mostrar mais ({coinResults.length - visibleCount} restantes)
+                  </button>
+                </div>
+              )}
+
+              {coinResults.length === 0 && !customOption && !isFiltering && !isPendingFilter && (
                 <div className="p-8 text-center text-[#8E9299] text-xs">
                   No assets found matching <strong className="text-white font-mono">"{searchQuery}"</strong>.
                 </div>

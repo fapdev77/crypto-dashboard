@@ -60,7 +60,7 @@ const SYMBOL_BASE_META: Record<string, SymbolMeta> = {
   ENA: { basePrice: 0.32, baseOiUsd: 105_000_000, volatility: 0.052, avgVolume24h: 155_000_000 },
 };
 
-function getTimeframeStepMs(tf: MarketTimeframe): number {
+export function getTimeframeStepMs(tf: MarketTimeframe): number {
   switch (tf) {
     case '5m':
       return 5 * 60 * 1000;
@@ -79,7 +79,7 @@ function getTimeframeStepMs(tf: MarketTimeframe): number {
   }
 }
 
-function formatPointTime(ts: number, tf: MarketTimeframe): string {
+export function formatPointTime(ts: number, tf: MarketTimeframe): string {
   const d = new Date(ts);
   if (tf === '1d') {
     return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
@@ -87,6 +87,17 @@ function formatPointTime(ts: number, tf: MarketTimeframe): string {
   const hours = d.getUTCHours().toString().padStart(2, '0');
   const minutes = d.getUTCMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
+}
+
+/** Deterministic feed hash for distinct seed generation across exchanges and markets */
+export function getFeedSeed(ex: string, m: string): number {
+  const str = `${ex}_${m}`;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
 }
 
 export function generateMockSnapshot(
@@ -336,7 +347,7 @@ export function generateMockSnapshot(
   for (const ex of safeExchanges) {
     for (const m of normalizedMarkets) {
       const isDeriv = m !== 'SPOT';
-      const exSeed = ex.charCodeAt(0) * 3 + m.charCodeAt(0) * 7;
+      const exSeed = getFeedSeed(ex, m);
       const priceJitter = m === 'PERP' ? 0.0002 : (m === 'SPOT' ? 0.0006 : -0.0004);
       const mPrice = Number((latestOi.price * (1 + priceJitter * Math.sin(seed + exSeed))).toFixed(latestOi.price < 1 ? 4 : 2));
       const mVol = Number((meta.avgVolume24h / (safeExchanges.length * normalizedMarkets.length) * (0.85 + 0.3 * Math.cos(seed + exSeed))).toFixed(0));
@@ -345,7 +356,7 @@ export function generateMockSnapshot(
         : null;
       const rate8h = isDeriv ? Number((0.0001 + 0.00004 * Math.cos(seed + exSeed)).toFixed(6)) : null;
       const rateApr = rate8h !== null ? Number((rate8h * 3 * 365 * 100).toFixed(2)) : null;
-      const mCvd = Number(((latestTaker.cvd / (safeExchanges.length * normalizedMarkets.length)) * (0.9 + 0.2 * Math.sin(exSeed))).toFixed(0));
+      const mCvd = Number(((latestTaker.cvd / (safeExchanges.length * normalizedMarkets.length)) * (0.9 + 0.2 * Math.sin(seed + exSeed))).toFixed(0));
 
       breakdown.push({
         exchange: ex,
