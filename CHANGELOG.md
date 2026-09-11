@@ -1,3 +1,10 @@
+## [1.59.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.59.0...v1.59.1) (2026-09-11)
+
+
+### Performance Improvements
+
+* optimize market filter transitions ([df7deda](https://github.com/fapdev77/crypto-dashboard/commit/df7deda730eae5fa350dd726ab4c1826c83e27b6))
+
 # [1.59.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.58.0...v1.59.0) (2026-09-11)
 
 
