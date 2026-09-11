@@ -1,3 +1,10 @@
+# [1.60.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.59.1...v1.60.0) (2026-09-11)
+
+
+### Features
+
+* **ui:** add navigation to catalog settings in filter modal ([820f5d9](https://github.com/fapdev77/crypto-dashboard/commit/820f5d9ab4d13616f096dc12c7e137bb3ea1c0bc))
+
 ## [1.59.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.59.0...v1.59.1) (2026-09-11)
 
 
