@@ -10,6 +10,7 @@ import {
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { AppTooltip } from '../../ui/Tooltip';
+import { MaxFundingSpreadTooltip } from './MarketAnalyticsTooltips';
 
 export const FundingArbitrageWidget: React.FC = () => {
   const { snapshot, selectedMarket, setSelectedMarket, setSelectedSymbol } = useMarketAnalyticsStore();
@@ -82,9 +83,11 @@ export const FundingArbitrageWidget: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-white tracking-tight">
-                Cross-Exchange Funding Arbitrage
-              </h3>
+              <MaxFundingSpreadTooltip>
+                <h3 className="text-base font-bold text-white tracking-tight cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-amber-400 transition-colors">
+                  Cross-Exchange Funding Arbitrage
+                </h3>
+              </MaxFundingSpreadTooltip>
               <span className="px-2 py-0.5 text-[10px] font-bold bg-[#2F6BFF]/15 text-[#2F6BFF] border border-[#2F6BFF]/30 rounded">
                 {snapshot.symbol}
               </span>

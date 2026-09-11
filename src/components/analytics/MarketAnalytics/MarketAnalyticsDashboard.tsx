@@ -17,6 +17,15 @@ import { OpenInterestWidget } from './OpenInterestWidget';
 import { TakerFlowCvdWidget } from './TakerFlowCvdWidget';
 import { SmartMoneySentimentWidget } from './SmartMoneySentimentWidget';
 import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
+import {
+  PriceMetricTooltip,
+  Volume24hTooltip,
+  OpenInterestMetricTooltip,
+  FundingRateMetricTooltip,
+  MaxFundingSpreadTooltip,
+  TakerFlowMetricTooltip,
+  FearAndGreedTooltip,
+} from './MarketAnalyticsTooltips';
 
 export const MarketAnalyticsDashboard: React.FC = () => {
   const {
@@ -91,9 +100,11 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {/* Price */}
             <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
-              <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
-                Index Price ({snapshot.symbol})
-              </span>
+              <PriceMetricTooltip>
+                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                  Index Price ({snapshot.symbol})
+                </span>
+              </PriceMetricTooltip>
               <div className="text-lg font-bold font-mono text-white">
                 ${snapshot.currentPrice}
               </div>
@@ -114,9 +125,11 @@ export const MarketAnalyticsDashboard: React.FC = () => {
 
             {/* 24h Volume */}
             <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
-              <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
-                24h Notional Volume
-              </span>
+              <Volume24hTooltip>
+                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                  24h Notional Volume
+                </span>
+              </Volume24hTooltip>
               <div className="text-lg font-bold font-mono text-white">
                 {formatCurrency(snapshot.totalVolume24hUsd)}
               </div>
@@ -125,9 +138,11 @@ export const MarketAnalyticsDashboard: React.FC = () => {
 
             {/* Total Open Interest */}
             <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
-              <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
-                Total Open Interest
-              </span>
+              <OpenInterestMetricTooltip>
+                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                  Total Open Interest
+                </span>
+              </OpenInterestMetricTooltip>
               <div className="text-lg font-bold font-mono text-amber-400">
                 {snapshot.marketType === 'SPOT' ? 'N/A (Spot)' : formatCurrency(snapshot.totalOiUsd)}
               </div>
@@ -143,9 +158,11 @@ export const MarketAnalyticsDashboard: React.FC = () => {
 
             {/* Funding Spread */}
             <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
-              <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
-                Max Funding Spread
-              </span>
+              <MaxFundingSpreadTooltip>
+                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                  Max Funding Spread
+                </span>
+              </MaxFundingSpreadTooltip>
               <div className="text-lg font-bold font-mono text-emerald-400">
                 {snapshot.marketType === 'SPOT' || !snapshot.currentFunding
                   ? 'N/A'
@@ -156,9 +173,11 @@ export const MarketAnalyticsDashboard: React.FC = () => {
 
             {/* CVD Momentum */}
             <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
-              <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
-                Taker Flow (CVD)
-              </span>
+              <TakerFlowMetricTooltip>
+                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                  Taker Flow (CVD)
+                </span>
+              </TakerFlowMetricTooltip>
               <div
                 className={`text-lg font-bold font-mono ${
                   snapshot.takerFlowHistory[snapshot.takerFlowHistory.length - 1]?.cvd >= 0
@@ -175,9 +194,11 @@ export const MarketAnalyticsDashboard: React.FC = () => {
 
             {/* Fear & Greed */}
             <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
-              <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
-                Sentiment Index
-              </span>
+              <FearAndGreedTooltip>
+                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                  Sentiment Index
+                </span>
+              </FearAndGreedTooltip>
               <div className="text-lg font-bold font-mono text-purple-400">
                 {snapshot.sentiment.greedFearScore}
                 <span className="text-xs font-normal text-[#8E9299]">/100</span>

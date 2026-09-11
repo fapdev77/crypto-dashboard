@@ -10,6 +10,13 @@ import {
   Info,
 } from 'lucide-react';
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
+import {
+  SentimentTitleTooltip,
+  FearAndGreedTooltip,
+  SentimentDivergenceTooltip,
+  RetailRatioTooltip,
+  TopTraderRatioTooltip
+} from './MarketAnalyticsTooltips';
 
 export const SmartMoneySentimentWidget: React.FC = () => {
   const { snapshot } = useMarketAnalyticsStore();
@@ -81,9 +88,11 @@ export const SmartMoneySentimentWidget: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-white tracking-tight">
-                Smart Money vs. Retail Sentiment
-              </h3>
+              <SentimentTitleTooltip>
+                <h3 className="text-base font-bold text-white tracking-tight cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-purple-400 transition-colors">
+                  Smart Money vs. Retail Sentiment
+                </h3>
+              </SentimentTitleTooltip>
               <span className="px-2 py-0.5 text-[10px] font-bold bg-[#1a1b22] text-[#d1d5db] border border-[#2a2b30] rounded">
                 Positioning Divergence
               </span>
@@ -95,35 +104,39 @@ export const SmartMoneySentimentWidget: React.FC = () => {
         </div>
 
         {/* Fear & Greed Score Badge */}
-        <div className={`flex items-center gap-3 px-3.5 py-1.5 rounded-xl border ${theme.bg} ${theme.border}`}>
-          <div className="text-right">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-[#8E9299] block">
-              Market Emotion
-            </span>
-            <span className={`text-sm font-bold ${theme.color}`}>{greedFearLabel}</span>
+        <FearAndGreedTooltip>
+          <div className={`flex items-center gap-3 px-3.5 py-1.5 rounded-xl border ${theme.bg} ${theme.border} transition-opacity hover:opacity-90`}>
+            <div className="text-right">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-[#8E9299] block">
+                Market Emotion
+              </span>
+              <span className={`text-sm font-bold ${theme.color}`}>{greedFearLabel}</span>
+            </div>
+            <div className={`text-2xl font-black font-mono ${theme.color}`}>
+              {greedFearScore}
+              <span className="text-xs font-normal text-[#8E9299]">/100</span>
+            </div>
           </div>
-          <div className={`text-2xl font-black font-mono ${theme.color}`}>
-            {greedFearScore}
-            <span className="text-xs font-normal text-[#8E9299]">/100</span>
-          </div>
-        </div>
+        </FearAndGreedTooltip>
       </div>
 
       {/* Divergence Alert Banner */}
       {divergenceDetected && (
-        <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-3.5 flex items-start gap-3">
-          <div className="p-1.5 bg-purple-500/20 rounded-lg text-purple-400 shrink-0 mt-0.5">
-            <Zap className="w-4 h-4" />
+        <SentimentDivergenceTooltip>
+          <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-3.5 flex items-start gap-3">
+            <div className="p-1.5 bg-purple-500/20 rounded-lg text-purple-400 shrink-0 mt-0.5">
+              <Zap className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="text-xs font-bold text-purple-300">
+                Institutional Positioning Divergence Detected:
+              </span>
+              <p className="text-xs text-[#d1d5db] mt-0.5 leading-relaxed">
+                {divergenceMessage}
+              </p>
+            </div>
           </div>
-          <div>
-            <span className="text-xs font-bold text-purple-300">
-              Institutional Positioning Divergence Detected:
-            </span>
-            <p className="text-xs text-[#d1d5db] mt-0.5 leading-relaxed">
-              {divergenceMessage}
-            </p>
-          </div>
-        </div>
+        </SentimentDivergenceTooltip>
       )}
 
       {/* Retail vs Smart Money Comparative Bars */}
@@ -133,9 +146,11 @@ export const SmartMoneySentimentWidget: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-blue-400" />
-              <span className="text-xs font-bold text-white uppercase tracking-wide">
-                Retail Accounts Ratio
-              </span>
+              <RetailRatioTooltip>
+                <span className="text-xs font-bold text-white uppercase tracking-wide cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-blue-400 transition-colors">
+                  Retail Accounts Ratio
+                </span>
+              </RetailRatioTooltip>
             </div>
             <span className="text-[10px] text-[#8E9299]">Bybit & OKX Accounts</span>
           </div>
@@ -167,9 +182,11 @@ export const SmartMoneySentimentWidget: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-bold text-white uppercase tracking-wide">
-                Top Traders (Smart Money)
-              </span>
+              <TopTraderRatioTooltip>
+                <span className="text-xs font-bold text-white uppercase tracking-wide cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-amber-400 transition-colors">
+                  Top Traders (Smart Money)
+                </span>
+              </TopTraderRatioTooltip>
             </div>
             <span className="text-[10px] text-[#8E9299]">Volume-Weighted Elite</span>
           </div>

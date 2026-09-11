@@ -19,6 +19,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
+import { TakerFlowMetricTooltip, CvdDivergenceTooltip } from './MarketAnalyticsTooltips';
 
 export const TakerFlowCvdWidget: React.FC = () => {
   const { snapshot } = useMarketAnalyticsStore();
@@ -73,9 +74,11 @@ export const TakerFlowCvdWidget: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-white tracking-tight">
-                Order Flow & Cumulative Volume Delta (CVD)
-              </h3>
+              <TakerFlowMetricTooltip>
+                <h3 className="text-base font-bold text-white tracking-tight cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-emerald-400 transition-colors">
+                  Order Flow & Cumulative Volume Delta (CVD)
+                </h3>
+              </TakerFlowMetricTooltip>
               <span className="px-2 py-0.5 text-[10px] font-bold bg-[#1a1b22] text-[#d1d5db] border border-[#2a2b30] rounded">
                 Taker Buy vs. Sell
               </span>
@@ -113,19 +116,21 @@ export const TakerFlowCvdWidget: React.FC = () => {
 
       {/* Divergence Notification if present */}
       {divergenceAlert && (
-        <div
-          className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs ${
-            divergenceAlert.type === 'warning'
-              ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-              : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300'
-          }`}
-        >
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          <div>
-            <strong className="font-bold">{divergenceAlert.title}: </strong>
-            <span className="text-[#d1d5db]">{divergenceAlert.desc}</span>
+        <CvdDivergenceTooltip type={divergenceAlert.title} desc={divergenceAlert.desc}>
+          <div
+            className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs cursor-help transition-opacity hover:opacity-90 ${
+              divergenceAlert.type === 'warning'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300'
+            }`}
+          >
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div>
+              <strong className="font-bold">{divergenceAlert.title}: </strong>
+              <span className="text-[#d1d5db]">{divergenceAlert.desc}</span>
+            </div>
           </div>
-        </div>
+        </CvdDivergenceTooltip>
       )}
 
       {/* Volume Ratio Bar */}

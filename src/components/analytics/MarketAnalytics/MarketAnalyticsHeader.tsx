@@ -4,6 +4,13 @@ import { MarketSelectDropdown } from './MarketSelectDropdown';
 import { ExchangeSelectDropdown } from './ExchangeSelectDropdown';
 import { TimeframeSelectDropdown } from './TimeframeSelectDropdown';
 import { CircularCountdownRefresh } from './CircularCountdownRefresh';
+import {
+  AssetSelectorTooltip,
+  MarketTypeSelectorTooltip,
+  ExchangeSelectorTooltip,
+  TimeframeSelectorTooltip,
+  AutoRefreshTooltip,
+} from './MarketAnalyticsTooltips';
 
 export const MarketAnalyticsHeader: React.FC = () => {
   return (
@@ -12,21 +19,31 @@ export const MarketAnalyticsHeader: React.FC = () => {
         {/* Left / Center Controls: Asset Search, Market Type, Exchanges, Timeframe */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Asset Search & Favorites Dropdown */}
-          <CoinSearchDropdown />
+          <AssetSelectorTooltip>
+            <CoinSearchDropdown />
+          </AssetSelectorTooltip>
 
           {/* Market Type Dropdown (All, Perp, Inverse, Spot) */}
-          <MarketSelectDropdown />
+          <MarketTypeSelectorTooltip>
+            <MarketSelectDropdown />
+          </MarketTypeSelectorTooltip>
 
           {/* Exchanges Dropdown (All, Bybit, OKX, Bitget) */}
-          <ExchangeSelectDropdown />
+          <ExchangeSelectorTooltip>
+            <ExchangeSelectDropdown />
+          </ExchangeSelectorTooltip>
 
           {/* Timeframe Dropdown (5m, 15m, 30m, 1h, 4h, 1d) */}
-          <TimeframeSelectDropdown />
+          <TimeframeSelectorTooltip>
+            <TimeframeSelectDropdown />
+          </TimeframeSelectorTooltip>
         </div>
 
         {/* Right Controls: Unified Circular Countdown & Refresh */}
         <div className="flex items-center gap-2 ml-auto">
-          <CircularCountdownRefresh />
+          <AutoRefreshTooltip>
+            <CircularCountdownRefresh />
+          </AutoRefreshTooltip>
         </div>
       </div>
     </div>

@@ -21,6 +21,7 @@ import {
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
 import { MarketRegime } from '../../../types/marketAnalytics';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
+import { OpenInterestMetricTooltip, MarketRegimeTooltip } from './MarketAnalyticsTooltips';
 
 export const OpenInterestWidget: React.FC = () => {
   const { snapshot, selectedMarket, setSelectedMarket } = useMarketAnalyticsStore();
@@ -121,9 +122,11 @@ export const OpenInterestWidget: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-white tracking-tight">
-                Open Interest & Leverage Monitor
-              </h3>
+              <OpenInterestMetricTooltip>
+                <h3 className="text-base font-bold text-white tracking-tight cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-amber-400 transition-colors">
+                  Open Interest & Leverage Monitor
+                </h3>
+              </OpenInterestMetricTooltip>
               <span className="px-2 py-0.5 text-[10px] font-bold bg-[#1a1b22] text-[#d1d5db] border border-[#2a2b30] rounded">
                 Price vs. Open Interest
               </span>
@@ -161,22 +164,23 @@ export const OpenInterestWidget: React.FC = () => {
       </div>
 
       {/* Market Regime Classifier Banner */}
-      <div className={`p-3.5 rounded-xl border ${regimeStyle.bg} ${regimeStyle.border} flex flex-wrap items-center justify-between gap-3`}>
-        <div className="flex items-start gap-2.5 max-w-xl">
-          <div className="mt-0.5 shrink-0">
-            <span className={`inline-block w-2.5 h-2.5 rounded-full ${regimeStyle.dot} animate-pulse`} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`text-xs font-bold uppercase tracking-wide ${regimeStyle.text}`}>
-                Current Regime: {regime.title}
-              </span>
+      <MarketRegimeTooltip regime={regime.title} sentiment={regime.sentiment} description={regime.description}>
+        <div className={`p-3.5 rounded-xl border ${regimeStyle.bg} ${regimeStyle.border} flex flex-wrap items-center justify-between gap-3 cursor-help transition-opacity hover:opacity-90`}>
+          <div className="flex items-start gap-2.5 max-w-xl">
+            <div className="mt-0.5 shrink-0">
+              <span className={`inline-block w-2.5 h-2.5 rounded-full ${regimeStyle.dot} animate-pulse`} />
             </div>
-            <p className="text-xs text-[#d1d5db] mt-0.5 leading-relaxed">
-              {regime.description}
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-bold uppercase tracking-wide ${regimeStyle.text}`}>
+                  Current Regime: {regime.title}
+                </span>
+              </div>
+              <p className="text-xs text-[#d1d5db] mt-0.5 leading-relaxed">
+                {regime.description}
+              </p>
+            </div>
           </div>
-        </div>
         <div className="flex items-center gap-3 text-xs ml-auto">
           <div className="bg-[#1a1b22]/70 px-2.5 py-1 rounded-lg border border-[#2a2b30]">
             <span className="text-[#8E9299]">24h Price: </span>
@@ -192,6 +196,7 @@ export const OpenInterestWidget: React.FC = () => {
           </div>
         </div>
       </div>
+      </MarketRegimeTooltip>
 
       {/* Exchange OI Market Share Bar */}
       <div className="space-y-1.5">
