@@ -293,6 +293,7 @@ A aplicação estrutura seus módulos funcionais através da `Sidebar` responsiv
    - **Bitget Transactions (`BitgetTransactions.tsx`):** Auditoria profunda do extrato transacional da Bitget (Classic e UTA) com categorização, taxas e PnL por símbolo.
    - **OKX Transactions (`OkxTransactions.tsx`):** Auditoria profunda do extrato financeiro da OKX (`bills` e `bills-archive`) com normalização de tipos/subtipos e balanço patrimonial.
    - **Funding Fees (`FundingDashboard.tsx`):** Monitoramento em tempo real e agregação histórica multissímbolo de taxas de financiamento.
+   - **Market Analytics (`MarketAnalyticsDashboard.tsx`):** Terminal quantitativo cross-exchange com monitoramento de Open Interest e regimes de mercado, arbitragem de funding delta-neutra, fluxo de ordens (Cumulative Volume Delta - CVD) e sentimento Smart Money vs. Retail.
    - **Hedge Pro (`HedgeProDashboard.tsx`):** Painel de gestão de risco e monitoramento de exposição protegida, exposta e alavancada para estratégias Delta Neutral em contratos inversos (COIN-M).
 4. **Reports & Orders (`ReportsDashboard.tsx`, `OpenOrders.tsx`, `OrderHistory.tsx`, `TradeHistory.tsx`):** Relatórios de execução de ordens ativas, histórico de trades e extratos de fluxo de caixa (depósitos e saques).
 5. **System & Diagnostic (`ApiKeys.tsx`, `ConnectionLogTerminal.tsx`, `Settings.tsx`, `ApiTester.tsx`):** Gerenciamento de chaves, auditoria de conexões WebSocket isoladas, configurações de rede/cache e terminal de logs.
