@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   SlidersHorizontal,
   Loader2,
+  HelpCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { useMarketAnalyticsStore, ALL_SPECIFIC_MARKETS, ALL_EXCHANGES } from '../../../store/marketAnalyticsStore';
 import {
@@ -18,6 +20,7 @@ import {
 } from '../../../services/marketAnalytics/exchangeCoinCatalog';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
+import { AppTooltip } from '../../ui/Tooltip';
 import {
   ExchangeId,
   SpecificMarketType,
@@ -246,6 +249,35 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
             <div>
               <h2 className="text-sm font-semibold text-white tracking-wide">Market & Asset Filters</h2>
               <p className="text-[11px] text-[#8E9299]">Configure active instrument, markets and exchange data feeds</p>
+              <div className="mt-1">
+                <AppTooltip
+                  description="If you notice data inconsistencies or outdated pairs, open the cache and polling settings to force a refresh or adjust the symbol catalog cache expiration time."
+                  side="bottom"
+                  align="start"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      window.dispatchEvent(
+                        new CustomEvent('navigate-to-tab', {
+                          detail: {
+                            tab: 'settings',
+                            targetId: 'symbol-catalog-settings-card',
+                          },
+                        })
+                      );
+                    }}
+                    className="group inline-flex items-center gap-1.5 text-[11px] text-cyan-400 hover:text-cyan-300 transition-colors font-medium cursor-pointer"
+                  >
+                    <HelpCircle className="w-3.5 h-3.5 text-cyan-400/90 group-hover:text-cyan-300 shrink-0" />
+                    <span className="underline underline-offset-2 decoration-cyan-400/40 group-hover:decoration-cyan-300">
+                      Cache and polling settings
+                    </span>
+                    <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
+                  </button>
+                </AppTooltip>
+              </div>
             </div>
           </div>
           <button
@@ -323,7 +355,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#131418]/70 backdrop-blur-[1.5px] rounded-xl animate-in fade-in duration-100">
                   <div className="flex items-center gap-2.5 px-3 py-2 bg-[#1a1b22] border border-[#2a2b30] rounded-xl shadow-xl">
                     <Loader2 className="w-4 h-4 text-[#2F6BFF] animate-spin" />
-                    <span className="text-xs font-medium text-[#C5C8D0]">Filtrando ativos...</span>
+                    <span className="text-xs font-medium text-[#C5C8D0]">Filtering assets...</span>
                   </div>
                 </div>
               )}
@@ -433,7 +465,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                     onClick={() => setVisibleCount((prev) => prev + 60)}
                     className="px-3 py-1.5 rounded-lg bg-[#1a1b22] hover:bg-[#20222b] text-[#8E9299] hover:text-white border border-[#2a2b30] text-[11px] font-medium transition-colors"
                   >
-                    Mostrar mais ({coinResults.length - visibleCount} restantes)
+                    Show more ({coinResults.length - visibleCount} remaining)
                   </button>
                 </div>
               )}
