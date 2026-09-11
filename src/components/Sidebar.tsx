@@ -99,6 +99,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     },
     {
       id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
+        { id: 'analytics-market-advanced', label: 'Advanced Market Analytics' },
         { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
         { id: 'analytics-bybit-tx', label: 'Bybit Transactions' },
         { id: 'analytics-bitget-tx', label: 'Bitget Transactions' },
