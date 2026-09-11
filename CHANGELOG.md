@@ -1,3 +1,10 @@
+# [1.57.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.56.0...v1.57.0) (2026-09-11)
+
+
+### Features
+
+* add Market Analytics dashboard ([1bac4ee](https://github.com/fapdev77/crypto-dashboard/commit/1bac4eee812fbd11a142d818a238184079bea967))
+
 # [1.56.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.55.0...v1.56.0) (2026-09-11)
 
 
