@@ -1,3 +1,10 @@
+# [1.58.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.57.0...v1.58.0) (2026-09-11)
+
+
+### Features
+
+* **analytics:** add symbol catalog auto-refresh ([7c3b3f6](https://github.com/fapdev77/crypto-dashboard/commit/7c3b3f6c3e9036ad120e9381aa6bae69f07ed1de))
+
 # [1.57.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.56.0...v1.57.0) (2026-09-11)
 
 
