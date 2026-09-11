@@ -24,13 +24,13 @@ import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { OpenInterestMetricTooltip, MarketRegimeTooltip } from './MarketAnalyticsTooltips';
 
 export const OpenInterestWidget: React.FC = () => {
-  const { snapshot, selectedMarket, setSelectedMarket } = useMarketAnalyticsStore();
+  const { snapshot, selectedMarkets, selectAllMarkets } = useMarketAnalyticsStore();
 
   if (!snapshot) return null;
 
-  const isSpot = selectedMarket === 'SPOT';
+  const hasDerivatives = selectedMarkets.some((m) => m !== 'SPOT');
 
-  if (isSpot) {
+  if (!hasDerivatives) {
     return (
       <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-5 shadow-lg flex flex-col items-center justify-center text-center space-y-3 min-h-[220px]">
         <div className="p-3 bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 rounded-full text-[#2F6BFF]">
@@ -43,7 +43,7 @@ export const OpenInterestWidget: React.FC = () => {
           </p>
         </div>
         <button
-          onClick={() => setSelectedMarket('ALL')}
+          onClick={selectAllMarkets}
           className="px-4 py-2 bg-[#2F6BFF] hover:bg-[#2558d4] text-white text-xs font-semibold rounded-lg transition-colors shadow"
         >
           View Consolidated Derivatives OI

@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useMarketAnalyticsStore } from '../marketAnalyticsStore';
 import { useSettingsStore } from '../settingsStore';
+import { exchangeCoinCatalog } from '../../services/marketAnalytics/exchangeCoinCatalog';
 
 describe('useMarketAnalyticsStore', () => {
   beforeEach(() => {
@@ -112,5 +113,65 @@ describe('useMarketAnalyticsStore', () => {
     expect(snapshot?.symbol).toBe('PEPE');
     expect(snapshot?.currentFunding?.symbol).toBe('PEPE');
     expect(snapshot?.currentPrice).toBeGreaterThan(0);
+  });
+
+  it('should reconcile availability when selecting an asset with restricted markets or exchanges', () => {
+    const store = useMarketAnalyticsStore.getState();
+    // Start with all markets and exchanges
+    store.selectAllMarkets();
+    store.selectAllExchanges();
+    expect(useMarketAnalyticsStore.getState().selectedMarkets).toEqual(['PERP', 'INVERSE', 'SPOT']);
+    expect(useMarketAnalyticsStore.getState().selectedExchanges).toEqual(['bybit', 'okx', 'bitget']);
+
+    // Mock availability for a hypothetical stock asset AAPL (only SPOT on bybit)
+    const spy = vi.spyOn(exchangeCoinCatalog, 'getAvailability').mockImplementation((sym: string) => {
+      if (sym === 'AAPL') {
+        return {
+          symbol: 'AAPL',
+          name: 'Apple',
+          kind: 'STOCK',
+          exchanges: ['bybit'],
+          markets: ['SPOT'],
+        };
+      }
+      return null;
+    });
+
+    try {
+      store.setSelectedSymbol('AAPL');
+      const state = useMarketAnalyticsStore.getState();
+      expect(state.selectedSymbol).toBe('AAPL');
+      expect(state.selectedMarkets).toEqual(['SPOT']);
+      expect(state.selectedExchanges).toEqual(['bybit']);
+      expect(state.selectedMarket).toBe('SPOT');
+
+      // Toggling an unavailable market should do nothing
+      store.toggleMarket('PERP');
+      expect(useMarketAnalyticsStore.getState().selectedMarkets).toEqual(['SPOT']);
+
+      // Toggling an unavailable exchange should do nothing
+      store.toggleExchange('okx');
+      expect(useMarketAnalyticsStore.getState().selectedExchanges).toEqual(['bybit']);
+
+      // Cannot deselect the only available market/exchange (never 0)
+      store.toggleMarket('SPOT');
+      expect(useMarketAnalyticsStore.getState().selectedMarkets).toEqual(['SPOT']);
+
+      store.toggleExchange('bybit');
+      expect(useMarketAnalyticsStore.getState().selectedExchanges).toEqual(['bybit']);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('should batch apply filters via applyFilters without losing valid selections', () => {
+    const store = useMarketAnalyticsStore.getState();
+    store.applyFilters('ETH', ['SPOT', 'PERP'], ['bybit', 'okx']);
+
+    const state = useMarketAnalyticsStore.getState();
+    expect(state.selectedSymbol).toBe('ETH');
+    expect(state.selectedMarkets).toEqual(['SPOT', 'PERP']);
+    expect(state.selectedExchanges).toEqual(['bybit', 'okx']);
+    expect(state.selectedMarket).toBe('ALL');
   });
 });
