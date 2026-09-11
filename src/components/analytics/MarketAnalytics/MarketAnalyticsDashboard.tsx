@@ -17,6 +17,8 @@ import { OpenInterestWidget } from './OpenInterestWidget';
 import { TakerFlowCvdWidget } from './TakerFlowCvdWidget';
 import { SmartMoneySentimentWidget } from './SmartMoneySentimentWidget';
 import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
+import { useSymbolCatalogRefresh } from './useSymbolCatalogRefresh';
+import { MarketBreakdownStrip } from './MarketBreakdownStrip';
 import {
   PriceMetricTooltip,
   Volume24hTooltip,
@@ -35,6 +37,9 @@ export const MarketAnalyticsDashboard: React.FC = () => {
     pollingIntervalSeconds,
     refreshData,
   } = useMarketAnalyticsStore();
+
+  // Keeps the exchange symbol registry fresh per the Settings interval
+  useSymbolCatalogRefresh();
 
   // Initial load: BTC is always the default asset when entering Market Analytics
   useEffect(() => {
@@ -144,7 +149,9 @@ export const MarketAnalyticsDashboard: React.FC = () => {
                 </span>
               </OpenInterestMetricTooltip>
               <div className="text-lg font-bold font-mono text-amber-400">
-                {snapshot.marketType === 'SPOT' ? 'N/A (Spot)' : formatCurrency(snapshot.totalOiUsd)}
+                {snapshot.marketTypes?.some((m) => m !== 'SPOT') === false
+                  ? 'N/A (Spot)'
+                  : formatCurrency(snapshot.totalOiUsd)}
               </div>
               <span
                 className={`text-[11px] font-semibold ${
@@ -164,7 +171,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
                 </span>
               </MaxFundingSpreadTooltip>
               <div className="text-lg font-bold font-mono text-emerald-400">
-                {snapshot.marketType === 'SPOT' || !snapshot.currentFunding
+                {snapshot.marketTypes?.some((m) => m !== 'SPOT') === false || !snapshot.currentFunding
                   ? 'N/A'
                   : `+${snapshot.currentFunding.spreadApr}%`}
               </div>
@@ -208,6 +215,9 @@ export const MarketAnalyticsDashboard: React.FC = () => {
               </span>
             </div>
           </div>
+
+          {/* Cross-Market Segregated Breakdown Strip */}
+          <MarketBreakdownStrip />
 
           {/* 4 Core Quantitative Panels */}
           <div className="space-y-6">

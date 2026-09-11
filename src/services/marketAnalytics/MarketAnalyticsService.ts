@@ -1,5 +1,6 @@
 import {
   MarketType,
+  SpecificMarketType,
   MarketTimeframe,
   MarketAnalyticsSnapshot,
   ExchangeId,
@@ -18,8 +19,9 @@ export class MarketAnalyticsService {
   private static cache: Map<string, CacheEntry> = new Map();
   private static CACHE_TTL_MS = 10_000; // 10 seconds
 
-  private static getCacheKey(symbol: string, market: MarketType, tf: MarketTimeframe): string {
-    return `${symbol}_${market}_${tf}`;
+  private static getCacheKey(symbol: string, market: MarketType | SpecificMarketType[], tf: MarketTimeframe): string {
+    const marketKey = Array.isArray(market) ? [...market].sort().join('+') : market;
+    return `${symbol}_${marketKey}_${tf}`;
   }
 
   /**
@@ -27,12 +29,15 @@ export class MarketAnalyticsService {
    */
   static async fetchSnapshot(
     symbol: string,
-    marketType: MarketType = 'ALL',
+    marketType: MarketType | SpecificMarketType[] = 'ALL',
     timeframe: MarketTimeframe = '1h',
     activeExchanges: ExchangeId[] = ['bybit', 'okx', 'bitget'],
     forceRefresh: boolean = false
   ): Promise<MarketAnalyticsSnapshot> {
     const cleanSymbol = symbol.toUpperCase().replace(/USDT$|USD$|-SWAP$/, '');
+    const primaryMarket: MarketType = Array.isArray(marketType)
+      ? (marketType.length === 1 ? marketType[0] : 'ALL')
+      : marketType;
     const cacheKey = this.getCacheKey(cleanSymbol, marketType, timeframe);
 
     if (!forceRefresh) {
@@ -52,51 +57,136 @@ export class MarketAnalyticsService {
     }
 
     try {
-      // Base mock structure to provide deep time-series history
+      // Base mock structure to provide deep time-series history and breakdown matrix
       const baseSnapshot = generateMockSnapshot(cleanSymbol, marketType, timeframe, activeExchanges);
 
       // Attempt parallel fetch of live metrics
       const [bybitData, okxData, bitgetData] = await Promise.allSettled([
-        this.fetchBybitMetrics(cleanSymbol, marketType),
-        this.fetchOkxMetrics(cleanSymbol, marketType),
-        this.fetchBitgetMetrics(cleanSymbol, marketType),
+        this.fetchBybitMetrics(cleanSymbol, primaryMarket),
+        this.fetchOkxMetrics(cleanSymbol, primaryMarket),
+        this.fetchBitgetMetrics(cleanSymbol, primaryMarket),
       ]);
+
+      const bybitVal = bybitData.status === 'fulfilled' ? bybitData.value : null;
+      const okxVal = okxData.status === 'fulfilled' ? okxData.value : null;
+      const bitgetVal = bitgetData.status === 'fulfilled' ? bitgetData.value : null;
 
       let livePrice = baseSnapshot.currentPrice;
       let livePriceChange = baseSnapshot.priceChange24h;
 
       // Extract Bybit live data if successful
-      if (bybitData.status === 'fulfilled' && bybitData.value) {
-        if (bybitData.value.lastPrice) livePrice = bybitData.value.lastPrice;
-        if (bybitData.value.price24hPcnt !== undefined) livePriceChange = bybitData.value.price24hPcnt * 100;
+      if (bybitVal) {
+        if (bybitVal.lastPrice) {
+          livePrice = bybitVal.lastPrice;
+          baseSnapshot.breakdown.forEach((b) => {
+            if (b.exchange === 'bybit') b.price = bybitVal.lastPrice!;
+          });
+        }
+        if (bybitVal.price24hPcnt !== undefined) livePriceChange = bybitVal.price24hPcnt * 100;
         
         // Update Bybit funding rate
-        if (bybitData.value.fundingRate !== undefined && baseSnapshot.currentFunding) {
-          baseSnapshot.currentFunding.bybitRate = bybitData.value.fundingRate;
+        const bbFunding = bybitVal.fundingRate;
+        if (bbFunding !== undefined) {
+          if (baseSnapshot.currentFunding) {
+            baseSnapshot.currentFunding.bybitRate = bbFunding;
+          }
+          const bbApr = Number((bbFunding * 3 * 365 * 100).toFixed(2));
+          baseSnapshot.breakdown.forEach((b) => {
+            if (b.exchange === 'bybit' && b.market !== 'SPOT') {
+              b.fundingRate = bbFunding;
+              b.fundingApr = bbApr;
+            }
+          });
         }
       }
 
       // Extract OKX live data if successful
-      if (okxData.status === 'fulfilled' && okxData.value) {
-        if (okxData.value.fundingRate !== undefined && baseSnapshot.currentFunding) {
-          baseSnapshot.currentFunding.okxRate = okxData.value.fundingRate;
+      if (okxVal) {
+        // Update OKX price in breakdown
+        if (okxVal.lastPrice !== undefined) {
+          const okxPrice = okxVal.lastPrice;
+          if (!bybitVal?.lastPrice) livePrice = okxPrice;
+          baseSnapshot.breakdown.forEach((b) => {
+            if (b.exchange === 'okx') b.price = okxPrice;
+          });
         }
-        if (okxData.value.nextFundingRate !== undefined && baseSnapshot.currentFunding) {
-          baseSnapshot.currentFunding.predictedOkxRate = okxData.value.nextFundingRate;
+
+        const okxFunding = okxVal.fundingRate;
+        if (okxFunding !== undefined) {
+          if (baseSnapshot.currentFunding) {
+            baseSnapshot.currentFunding.okxRate = okxFunding;
+          }
+          const okxApr = Number((okxFunding * 3 * 365 * 100).toFixed(2));
+          baseSnapshot.breakdown.forEach((b) => {
+            if (b.exchange === 'okx' && b.market !== 'SPOT') {
+              b.fundingRate = okxFunding;
+              b.fundingApr = okxApr;
+            }
+          });
         }
-        if (okxData.value.openInterestUsd !== undefined) {
-          baseSnapshot.oiBreakdown.okx = Math.round(okxData.value.openInterestUsd);
+        if (okxVal.nextFundingRate !== undefined && baseSnapshot.currentFunding) {
+          baseSnapshot.currentFunding.predictedOkxRate = okxVal.nextFundingRate;
+        }
+        if (okxVal.openInterestUsd !== undefined) {
+          const roundedOi = Math.round(okxVal.openInterestUsd);
+          baseSnapshot.oiBreakdown.okx = roundedOi;
+          baseSnapshot.breakdown.forEach((b) => {
+            if (b.exchange === 'okx' && b.market !== 'SPOT') {
+              b.oiUsd = roundedOi;
+            }
+          });
         }
       }
 
-      // Extract Bitget live data if successful
-      if (bitgetData.status === 'fulfilled' && bitgetData.value) {
-        if (bitgetData.value.fundingRate !== undefined && baseSnapshot.currentFunding) {
-          baseSnapshot.currentFunding.bitgetRate = bitgetData.value.fundingRate;
+      // Extract Bitget live data if successful (Bitget UTA v3 API per specs/bitget_uta_api_doc.md)
+      if (bitgetVal) {
+        // Update Bitget price in breakdown
+        if (bitgetVal.lastPrice !== undefined) {
+          const bgPrice = bitgetVal.lastPrice;
+          if (!bybitVal?.lastPrice && !okxVal?.lastPrice) livePrice = bgPrice;
+          baseSnapshot.breakdown.forEach((b) => {
+            if (b.exchange === 'bitget') b.price = bgPrice;
+          });
         }
-        if (bitgetData.value.openInterestUsd !== undefined) {
-          baseSnapshot.oiBreakdown.bitget = Math.round(bitgetData.value.openInterestUsd);
+
+        const bgFunding = bitgetVal.fundingRate;
+        if (bgFunding !== undefined) {
+          if (baseSnapshot.currentFunding) {
+            baseSnapshot.currentFunding.bitgetRate = bgFunding;
+          }
+          const bgApr = Number((bgFunding * 3 * 365 * 100).toFixed(2));
+          baseSnapshot.breakdown.forEach((b) => {
+            if (b.exchange === 'bitget' && b.market !== 'SPOT') {
+              b.fundingRate = bgFunding;
+              b.fundingApr = bgApr;
+            }
+          });
         }
+        if (bitgetVal.openInterestUsd !== undefined) {
+          const roundedOi = Math.round(bitgetVal.openInterestUsd);
+          baseSnapshot.oiBreakdown.bitget = roundedOi;
+          baseSnapshot.breakdown.forEach((b) => {
+            if (b.exchange === 'bitget' && b.market !== 'SPOT') {
+              b.oiUsd = roundedOi;
+            }
+          });
+        }
+      }
+
+      // Consistency safeguard: If live price was resolved from any active exchange,
+      // prevent any exchange in breakdown from remaining stuck at outdated mock basePrice ($65k)
+      const hasLivePrice = !!(bybitVal?.lastPrice || okxVal?.lastPrice || bitgetVal?.lastPrice);
+
+      if (hasLivePrice) {
+        const bybitHasPrice = !!bybitVal?.lastPrice;
+        const okxHasPrice = !!okxVal?.lastPrice;
+        const bitgetHasPrice = !!bitgetVal?.lastPrice;
+
+        baseSnapshot.breakdown.forEach((b) => {
+          if (b.exchange === 'bybit' && !bybitHasPrice) b.price = livePrice;
+          if (b.exchange === 'okx' && !okxHasPrice) b.price = livePrice;
+          if (b.exchange === 'bitget' && !bitgetHasPrice) b.price = livePrice;
+        });
       }
 
       // Recalculate funding spread if rates were fetched
@@ -114,8 +204,19 @@ export class MarketAnalyticsService {
           cf.spread = Number((maxRate.r - minRate.r).toFixed(6));
           cf.spreadApr = Number((cf.spread * 3 * 365 * 100).toFixed(2));
           cf.bestLongExchange = minRate.ex;
-          cf.bestShortExchange = maxExLongShort(minRate.ex, maxRate.ex);
+          cf.bestShortExchange = maxRate.ex;
         }
+      }
+
+      // Recalculate aggregated total OI from derivative exchanges
+      const hasDerivatives = baseSnapshot.marketTypes.some((m) => m !== 'SPOT');
+      if (hasDerivatives) {
+        baseSnapshot.totalOiUsd = baseSnapshot.oiBreakdown.bybit + baseSnapshot.oiBreakdown.okx + baseSnapshot.oiBreakdown.bitget;
+      } else {
+        baseSnapshot.totalOiUsd = 0;
+        baseSnapshot.oiBreakdown = { bybit: 0, okx: 0, bitget: 0 };
+        baseSnapshot.currentFunding = null;
+        baseSnapshot.fundingArbitrage = [];
       }
 
       baseSnapshot.currentPrice = Number(livePrice.toFixed(livePrice < 1 ? 4 : 2));
@@ -168,7 +269,7 @@ export class MarketAnalyticsService {
   // ── OKX Fetcher ────────────────────────────────────────────────────
   private static async fetchOkxMetrics(symbol: string, marketType: MarketType) {
     if (marketType === 'SPOT') {
-      const url = `https://api.okx.com/api/v5/market/ticker?instId=${symbol}-USDT`;
+      const url = `https://www.okx.com/api/v5/market/ticker?instId=${symbol}-USDT`;
       const res = await hybridFetch(url, 'GET', {});
       if (res?.code === '0' && res.data?.[0]) {
         return {
@@ -179,14 +280,21 @@ export class MarketAnalyticsService {
     }
 
     const instId = marketType === 'INVERSE' ? `${symbol}-USD-SWAP` : `${symbol}-USDT-SWAP`;
-    const [fundingRes, oiRes] = await Promise.allSettled([
-      hybridFetch(`https://api.okx.com/api/v5/public/funding-rate?instId=${instId}`, 'GET', {}),
-      hybridFetch(`https://api.okx.com/api/v5/public/open-interest?instType=SWAP&instId=${instId}`, 'GET', {}),
+    const [tickerRes, fundingRes, oiRes] = await Promise.allSettled([
+      hybridFetch(`https://www.okx.com/api/v5/market/ticker?instId=${instId}`, 'GET', {}),
+      hybridFetch(`https://www.okx.com/api/v5/public/funding-rate?instId=${instId}`, 'GET', {}),
+      hybridFetch(`https://www.okx.com/api/v5/public/open-interest?instType=SWAP&instId=${instId}`, 'GET', {}),
     ]);
 
+    let lastPrice: number | undefined;
     let fundingRate: number | undefined;
     let nextFundingRate: number | undefined;
     let openInterestUsd: number | undefined;
+
+    if (tickerRes.status === 'fulfilled' && tickerRes.value?.code === '0' && tickerRes.value.data?.[0]) {
+      const t = tickerRes.value.data[0];
+      if (t.last) lastPrice = parseFloat(t.last);
+    }
 
     if (fundingRes.status === 'fulfilled' && fundingRes.value?.code === '0' && fundingRes.value.data?.[0]) {
       const d = fundingRes.value.data[0];
@@ -200,53 +308,51 @@ export class MarketAnalyticsService {
     }
 
     return {
+      lastPrice,
       fundingRate,
       nextFundingRate,
       openInterestUsd,
     };
   }
 
-  // ── Bitget Fetcher ─────────────────────────────────────────────────
+  // ── Bitget Fetcher (UTA API v3 per specs/bitget_uta_api_doc.md) ──────
   private static async fetchBitgetMetrics(symbol: string, marketType: MarketType) {
     if (marketType === 'SPOT') {
-      const url = `https://api.bitget.com/api/v2/spot/market/tickers?symbol=${symbol}USDT`;
+      const url = `https://api.bitget.com/api/v3/market/tickers?category=SPOT&symbol=${symbol}USDT`;
       const res = await hybridFetch(url, 'GET', {});
       if (res?.code === '00000' && res.data?.[0]) {
+        const t = res.data[0];
         return {
-          lastPrice: parseFloat(res.data[0].lastPr),
+          lastPrice: t.lastPrice ? parseFloat(t.lastPrice) : undefined,
+          price24hPcnt: t.price24hPcnt ? parseFloat(t.price24hPcnt) : undefined,
+          volume24h: t.turnover24h ? parseFloat(t.turnover24h) : undefined,
         };
       }
       return null;
     }
 
-    const productType = marketType === 'INVERSE' ? 'coin-futures' : 'usdt-futures';
-    const pairSymbol = marketType === 'INVERSE' ? `${symbol}USD` : `${symbol}USDT`;
+    const category = marketType === 'INVERSE' ? 'COIN-FUTURES' : 'USDT-FUTURES';
+    const pairSymbol = marketType === 'INVERSE' ? `${symbol}USD_CM` : `${symbol}USDT`;
+    const url = `https://api.bitget.com/api/v3/market/tickers?category=${category}&symbol=${pairSymbol}`;
+    const res = await hybridFetch(url, 'GET', {});
 
-    const [fundingRes, oiRes] = await Promise.allSettled([
-      hybridFetch(`https://api.bitget.com/api/v2/mix/market/current-fund-rate?symbol=${pairSymbol}&productType=${productType}`, 'GET', {}),
-      hybridFetch(`https://api.bitget.com/api/v2/mix/market/open-interest?symbol=${pairSymbol}&productType=${productType}`, 'GET', {}),
-    ]);
-
-    let fundingRate: number | undefined;
-    let openInterestUsd: number | undefined;
-
-    if (fundingRes.status === 'fulfilled' && fundingRes.value?.code === '00000' && fundingRes.value.data?.[0]) {
-      const d = fundingRes.value.data[0];
-      if (d.fundingRate) fundingRate = parseFloat(d.fundingRate);
+    if (res?.code === '00000' && res.data?.[0]) {
+      const t = res.data[0];
+      const lastPrice = t.lastPrice ? parseFloat(t.lastPrice) : undefined;
+      const fundingRate = t.fundingRate ? parseFloat(t.fundingRate) : undefined;
+      let openInterestUsd: number | undefined;
+      if (t.openInterest && lastPrice) {
+        openInterestUsd = parseFloat(t.openInterest) * lastPrice;
+      }
+      return {
+        lastPrice,
+        fundingRate,
+        openInterestUsd,
+        price24hPcnt: t.price24hPcnt ? parseFloat(t.price24hPcnt) : undefined,
+        volume24h: t.turnover24h ? parseFloat(t.turnover24h) : undefined,
+      };
     }
-
-    if (oiRes.status === 'fulfilled' && oiRes.value?.code === '00000' && oiRes.value.data?.[0]) {
-      const d = oiRes.value.data[0];
-      if (d.size) openInterestUsd = parseFloat(d.size);
-    }
-
-    return {
-      fundingRate,
-      openInterestUsd,
-    };
+    return null;
   }
 }
 
-function maxExLongShort(minEx: ExchangeId, maxEx: ExchangeId): ExchangeId {
-  return maxEx;
-}

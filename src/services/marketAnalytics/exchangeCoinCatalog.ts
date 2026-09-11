@@ -1,4 +1,4 @@
-import { ExchangeId, MarketType } from '../../types/marketAnalytics';
+import { AssetKind, ExchangeId, MarketType, SpecificMarketType, SymbolEntry } from '../../types/marketAnalytics';
 import { hybridFetch } from '../../utils/proxyFetch';
 import { LogManager } from '../logger';
 
@@ -19,10 +19,187 @@ export interface CoinCatalogItem {
   exchanges: ExchangeId[];
   markets: MarketType[];
   isPopular?: boolean;
+  kind?: AssetKind;
+}
+
+/**
+ * Full symbol catalog keyed by exchange and market type.
+ * Populated from exchange instrument listings (Spot / USDT Perp / Inverse).
+ */
+export type SymbolRegistry = Record<ExchangeId, Record<SpecificMarketType, SymbolEntry[]>>;
+
+/** Reverse index for a single base asset: where it trades and in which markets. */
+export interface SymbolAvailability {
+  symbol: string;
+  name: string;
+  kind: AssetKind;
+  exchanges: ExchangeId[];
+  markets: SpecificMarketType[];
 }
 
 const STORAGE_CATALOG_KEY = 'cpm_market_analytics_coin_catalog_v1';
+const STORAGE_REGISTRY_KEY = 'cpm_market_analytics_symbol_registry_v1';
 const CACHE_TTL_MS = 1000 * 60 * 60 * 4; // 4 hours
+
+const EXCHANGES: ExchangeId[] = ['bybit', 'okx', 'bitget'];
+const MARKET_TYPES: SpecificMarketType[] = ['SPOT', 'PERP', 'INVERSE'];
+
+/** Public instrument-listing endpoints per exchange and market type. */
+const INSTRUMENT_ENDPOINTS: Record<ExchangeId, Record<SpecificMarketType, string>> = {
+  bybit: {
+    SPOT: 'https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000',
+    PERP: 'https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000',
+    INVERSE: 'https://api.bybit.com/v5/market/instruments-info?category=inverse&limit=1000',
+  },
+  okx: {
+    SPOT: 'https://www.okx.com/api/v5/public/instruments?instType=SPOT',
+    PERP: 'https://www.okx.com/api/v5/public/instruments?instType=SWAP',
+    INVERSE: 'https://www.okx.com/api/v5/public/instruments?instType=SWAP',
+  },
+  bitget: {
+    SPOT: 'https://api.bitget.com/api/v2/spot/public/symbols',
+    PERP: 'https://api.bitget.com/api/v2/mix/market/contracts?productType=USDT-FUTURES',
+    INVERSE: 'https://api.bitget.com/api/v2/mix/market/contracts?productType=COIN-FUTURES',
+  },
+};
+
+/** Creates an empty registry with every exchange/market bucket present. */
+export function createEmptyRegistry(): SymbolRegistry {
+  const buckets = (): Record<SpecificMarketType, SymbolEntry[]> => ({ SPOT: [], PERP: [], INVERSE: [] });
+  return { bybit: buckets(), okx: buckets(), bitget: buckets() };
+}
+
+function normalizeBase(raw: string): string {
+  return (raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+const QUOTE_SUFFIXES = ['USDT', 'USDC', 'USD', 'BTC', 'ETH', 'EUR', 'BRL', 'TRY'];
+
+/** Derives the base asset, preferring the API `baseCoin` and falling back to stripping the quote suffix. */
+function deriveBase(symbol: string, baseCoin?: string): string {
+  if (baseCoin) {
+    const fromApi = normalizeBase(baseCoin);
+    if (fromApi) return fromApi;
+  }
+  const s = normalizeBase(symbol);
+  for (const q of QUOTE_SUFFIXES) {
+    if (s.length > q.length && s.endsWith(q)) return s.slice(0, -q.length);
+  }
+  return s;
+}
+
+/** Bybit symbolType enum: stock/xstocks → STOCK, commodity → COMMODITY. */
+function bybitKind(symbolType?: string): AssetKind {
+  const t = (symbolType || '').toLowerCase();
+  if (t === 'stock' || t === 'xstocks') return 'STOCK';
+  if (t === 'commodity') return 'COMMODITY';
+  return 'CRYPTO';
+}
+
+/** OKX instCategory: 1 Crypto, 3 Stocks, 4 Commodities, 5 Forex, 6 Bonds. */
+function okxKind(instCategory?: string): AssetKind {
+  if (instCategory === '3') return 'STOCK';
+  if (instCategory === '4') return 'COMMODITY';
+  if (instCategory === '5' || instCategory === '6') return 'OTHER';
+  return 'CRYPTO';
+}
+
+/** Bitget UTA symbolType: crypto/metal/stock/commodity (classic mix reports perpetual/delivery). */
+function bitgetKind(symbolType?: string): AssetKind {
+  switch ((symbolType || '').toLowerCase()) {
+    case 'stock': return 'STOCK';
+    case 'commodity': return 'COMMODITY';
+    case 'metal': return 'METAL';
+    default: return 'CRYPTO';
+  }
+}
+
+/** Keeps one entry per base asset, preferring a specific kind over the CRYPTO default. */
+function dedupeEntries(entries: Array<SymbolEntry | null>): SymbolEntry[] {
+  const map = new Map<string, SymbolEntry>();
+  for (const entry of entries) {
+    if (!entry || !entry.symbol) continue;
+    const current = map.get(entry.symbol);
+    if (!current || (current.kind === 'CRYPTO' && entry.kind !== 'CRYPTO')) {
+      map.set(entry.symbol, entry);
+    }
+  }
+  return Array.from(map.values());
+}
+
+/** Pure parser for an instrument-listing payload (exported for unit tests). */
+export function parseExchangeInstruments(
+  exchange: ExchangeId,
+  market: SpecificMarketType,
+  payload: any
+): SymbolEntry[] {
+  if (!payload) return [];
+
+  if (exchange === 'bybit') {
+    const list = payload?.result?.list;
+    if (!Array.isArray(list)) return [];
+    return dedupeEntries(
+      list.map((it: any) => {
+        const symbol = normalizeBase(it?.baseCoin || '');
+        return symbol ? { symbol, name: symbol, kind: bybitKind(it?.symbolType) } : null;
+      })
+    );
+  }
+
+  if (exchange === 'okx') {
+    const data = payload?.data;
+    if (!Array.isArray(data)) return [];
+    return dedupeEntries(
+      data.map((it: any) => {
+        const instId = String(it?.instId || '');
+        if (market === 'SPOT') {
+          const symbol = normalizeBase(it?.baseCcy || '');
+          return symbol ? { symbol, name: symbol, kind: okxKind(it?.instCategory) } : null;
+        }
+        if (market === 'PERP' && !instId.endsWith('-USDT-SWAP')) return null;
+        if (market === 'INVERSE' && !instId.endsWith('-USD-SWAP')) return null;
+        const symbol = normalizeBase(instId.split('-')[0] || '');
+        return symbol ? { symbol, name: symbol, kind: okxKind(it?.instCategory) } : null;
+      })
+    );
+  }
+
+  // bitget
+  const data = payload?.data;
+  if (!Array.isArray(data)) return [];
+  return dedupeEntries(
+    data.map((it: any) => {
+      const symbol = deriveBase(String(it?.symbol || ''), it?.baseCoin);
+      return symbol ? { symbol, name: symbol, kind: bitgetKind(it?.symbolType) } : null;
+    })
+  );
+}
+
+/** Builds the reverse `symbol → availability` index from a registry (exported for unit tests). */
+export function buildAvailabilityIndex(byExchange: SymbolRegistry): Map<string, SymbolAvailability> {
+  const index = new Map<string, SymbolAvailability>();
+  for (const ex of EXCHANGES) {
+    for (const market of MARKET_TYPES) {
+      for (const entry of byExchange?.[ex]?.[market] || []) {
+        const current = index.get(entry.symbol);
+        if (current) {
+          if (!current.exchanges.includes(ex)) current.exchanges.push(ex);
+          if (!current.markets.includes(market)) current.markets.push(market);
+          if (current.kind === 'CRYPTO' && entry.kind !== 'CRYPTO') current.kind = entry.kind;
+        } else {
+          index.set(entry.symbol, {
+            symbol: entry.symbol,
+            name: entry.name || entry.symbol,
+            kind: entry.kind,
+            exchanges: [ex],
+            markets: [market],
+          });
+        }
+      }
+    }
+  }
+  return index;
+}
 
 // Top coins catalog covering 120+ assets with verified availability across Bybit, OKX and Bitget
 const SEED_CATALOG: CoinCatalogItem[] = [
@@ -148,8 +325,18 @@ class ExchangeCoinCatalogService {
   private isDynamicFetchDone = false;
   private isFetching = false;
 
+  /** Symbol registry keyed by exchange → market → base assets. */
+  private registry: SymbolRegistry = createEmptyRegistry();
+  /** Reverse index `symbol → availability` derived from the registry. */
+  private availabilityIndex: Map<string, SymbolAvailability> = new Map();
+  private registryUpdatedAt: number | null = null;
+  private staleExchanges: ExchangeId[] = [];
+  private isRefreshing = false;
+
   constructor() {
     this.initCatalog();
+    this.loadRegistry();
+    this.rebuildIndex();
   }
 
   private initCatalog() {
@@ -186,6 +373,169 @@ class ExchangeCoinCatalogService {
     return Array.from(this.catalog.values());
   }
 
+  // ── Symbol registry (exchange × market) ────────────────────────────────
+
+  /**
+   * Fetches all instrument listings (3 exchanges × Spot/Perp/Inverse), merges them into the
+   * registry and persists the result. On partial failure, the previous list of the affected
+   * exchange is preserved and the exchange is flagged as stale.
+   */
+  public async refresh(): Promise<void> {
+    if (this.isRefreshing) return;
+    this.isRefreshing = true;
+
+    try {
+      // De-duplicate identical URLs within a cycle (OKX Spot/Perp/Inverse share one listing URL).
+      const rawRequests = new Map<string, Promise<any>>();
+      const fetchOnce = (url: string): Promise<any> => {
+        if (!rawRequests.has(url)) {
+          rawRequests.set(
+            url,
+            hybridFetch(url, 'GET', {}).catch((err) => {
+              LogManager.warn('ExchangeCoinCatalog', `Instrument listing failed: ${url}`, err);
+              return null;
+            })
+          );
+        }
+        return rawRequests.get(url)!;
+      };
+
+      const previous = this.registry;
+      const next = createEmptyRegistry();
+      const staleExchanges: ExchangeId[] = [];
+
+      for (const exchange of EXCHANGES) {
+        const results = await Promise.all(
+          MARKET_TYPES.map(async (market) => {
+            const payload = await fetchOnce(INSTRUMENT_ENDPOINTS[exchange][market]);
+            return { market, entries: payload ? parseExchangeInstruments(exchange, market, payload) : null };
+          })
+        );
+
+        let stale = false;
+        for (const { market, entries } of results) {
+          if (entries === null) {
+            next[exchange][market] = previous[exchange][market];
+            stale = true;
+          } else {
+            next[exchange][market] = entries;
+          }
+        }
+        if (stale) staleExchanges.push(exchange);
+      }
+
+      this.registry = next;
+      this.registryUpdatedAt = Date.now();
+      this.staleExchanges = staleExchanges;
+      this.rebuildIndex();
+      this.persistRegistry();
+    } catch (err) {
+      LogManager.warn('ExchangeCoinCatalog', 'Symbol registry refresh failed', err);
+    } finally {
+      this.isRefreshing = false;
+    }
+  }
+
+  /** Reverse index lookup for a base asset; `null` when the symbol was not discovered. */
+  public getAvailability(symbol: string): SymbolAvailability | null {
+    return this.availabilityIndex.get(normalizeBase(symbol)) || null;
+  }
+
+  /** All discovered symbols with their exchange/market availability. */
+  public getAllAvailability(): SymbolAvailability[] {
+    return Array.from(this.availabilityIndex.values());
+  }
+
+  /** Symbols listed by a given exchange for a given market type. */
+  public getSymbolsFor(exchange: ExchangeId, market: SpecificMarketType): SymbolEntry[] {
+    return this.registry[exchange]?.[market] || [];
+  }
+
+  /** Timestamp of the last successful registry refresh, or `null` if never fetched. */
+  public getRegistryUpdatedAt(): number | null {
+    return this.registryUpdatedAt;
+  }
+
+  /** Exchanges whose latest refresh partially failed (their previous lists were kept). */
+  public getStaleExchanges(): ExchangeId[] {
+    return [...this.staleExchanges];
+  }
+
+  /** True when the registry has never been fetched or is older than `hours`. */
+  public isStale(hours: number): boolean {
+    if (!this.registryUpdatedAt) return true;
+    return Date.now() - this.registryUpdatedAt > hours * 60 * 60 * 1000;
+  }
+
+  /** True when at least one symbol has been indexed. */
+  public hasRegistry(): boolean {
+    return this.availabilityIndex.size > 0;
+  }
+
+  /** Wipes the persisted registry and re-fetches everything from the exchanges. */
+  public async clearAndSync(): Promise<void> {
+    this.registry = createEmptyRegistry();
+    this.availabilityIndex = new Map();
+    this.registryUpdatedAt = null;
+    this.staleExchanges = [];
+    try {
+      localStorage.removeItem(STORAGE_REGISTRY_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+    await this.refresh();
+  }
+
+  private loadRegistry(): void {
+    try {
+      const saved = localStorage.getItem(STORAGE_REGISTRY_KEY);
+      if (!saved) return;
+      const parsed = JSON.parse(saved);
+      const byExchange = parsed?.byExchange;
+      if (!byExchange) return;
+
+      const next = createEmptyRegistry();
+      let hasAny = false;
+      for (const exchange of EXCHANGES) {
+        for (const market of MARKET_TYPES) {
+          const list = byExchange?.[exchange]?.[market];
+          if (Array.isArray(list)) {
+            next[exchange][market] = list.filter(
+              (entry: any) => entry && typeof entry.symbol === 'string'
+            );
+            if (next[exchange][market].length) hasAny = true;
+          }
+        }
+      }
+      if (!hasAny) return;
+
+      this.registry = next;
+      this.registryUpdatedAt = typeof parsed?.updatedAt === 'number' ? parsed.updatedAt : null;
+      this.staleExchanges = Array.isArray(parsed?.staleExchanges) ? parsed.staleExchanges : [];
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  private persistRegistry(): void {
+    try {
+      localStorage.setItem(
+        STORAGE_REGISTRY_KEY,
+        JSON.stringify({
+          updatedAt: this.registryUpdatedAt,
+          staleExchanges: this.staleExchanges,
+          byExchange: this.registry,
+        })
+      );
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  private rebuildIndex(): void {
+    this.availabilityIndex = buildAvailabilityIndex(this.registry);
+  }
+
   /**
    * Search coins matching query, category and exchange filters
    */
@@ -201,20 +551,47 @@ class ExchangeCoinCatalogService {
     const { query = '', category = 'ALL', exchange = 'ALL', favorites = [] } = options;
     const cleanQuery = query.trim().toUpperCase().replace(/USDT$|USD$|-SWAP$/, '');
 
-    let list = Array.from(this.catalog.values());
+    // Merge static catalog items with any symbols discovered in the live registry
+    const registeredExtra: CoinCatalogItem[] = [];
+    for (const [sym, av] of this.availabilityIndex.entries()) {
+      if (!this.catalog.has(sym)) {
+        registeredExtra.push({
+          symbol: av.symbol,
+          name: av.name || av.symbol,
+          category: (av.kind === 'CRYPTO' ? 'Others' : av.kind) as CoinCategory,
+          exchanges: av.exchanges,
+          markets: av.markets,
+          kind: av.kind,
+        });
+      }
+    }
+    let list: CoinCatalogItem[] = [...Array.from(this.catalog.values()), ...registeredExtra];
 
-    // Category filter
+    // Category / Kind filter
     if (category === 'FAVORITES') {
       list = list.filter((item) => favorites.includes(item.symbol));
     } else if (category === 'POPULAR') {
       list = list.filter((item) => item.isPopular);
+    } else if (category === 'CRYPTO') {
+      list = list.filter((item) => (this.availabilityIndex.get(item.symbol)?.kind || item.kind || 'CRYPTO') === 'CRYPTO');
+    } else if (category === 'STOCK') {
+      list = list.filter((item) => (this.availabilityIndex.get(item.symbol)?.kind || item.kind) === 'STOCK');
+    } else if (category === 'COMMODITY') {
+      list = list.filter((item) => (this.availabilityIndex.get(item.symbol)?.kind || item.kind) === 'COMMODITY');
+    } else if (category === 'METAL') {
+      list = list.filter((item) => (this.availabilityIndex.get(item.symbol)?.kind || item.kind) === 'METAL');
+    } else if (category === 'TRADFI') {
+      list = list.filter((item) => {
+        const k = this.availabilityIndex.get(item.symbol)?.kind || item.kind;
+        return k === 'STOCK' || k === 'COMMODITY' || k === 'METAL';
+      });
     } else if (category !== 'ALL') {
       list = list.filter((item) => item.category === category);
     }
 
-    // Exchange filter
+    // Exchange filter — prefers live registry availability over the static seed
     if (exchange !== 'ALL') {
-      list = list.filter((item) => item.exchanges.includes(exchange));
+      list = list.filter((item) => this.effectiveAvailability(item).exchanges.includes(exchange));
     }
 
     // Text search query
@@ -239,7 +616,7 @@ class ExchangeCoinCatalogService {
 
     // If user searched for something not in current results, provide a custom ticker option
     let customOption: CoinCatalogItem | null = null;
-    const exactExists = this.catalog.has(cleanQuery);
+    const exactExists = this.catalog.has(cleanQuery) || this.availabilityIndex.has(cleanQuery);
     if (cleanQuery && !exactExists && cleanQuery.length >= 2 && cleanQuery.length <= 12) {
       customOption = {
         symbol: cleanQuery,
@@ -247,10 +624,27 @@ class ExchangeCoinCatalogService {
         category: 'Others',
         exchanges: ['bybit', 'okx', 'bitget'],
         markets: ['PERP', 'SPOT'],
+        kind: 'OTHER',
       };
     }
 
-    return { results: list, customOption };
+    return {
+      results: list.map((item) => {
+        const av = this.availabilityIndex.get(item.symbol);
+        return av
+          ? { ...item, exchanges: av.exchanges, markets: av.markets, kind: av.kind }
+          : { ...item, kind: item.kind || 'CRYPTO' };
+      }),
+      customOption,
+    };
+  }
+
+  /**
+   * Effective availability: live registry when the symbol was discovered, otherwise the static seed.
+   */
+  private effectiveAvailability(item: CoinCatalogItem): { exchanges: ExchangeId[]; markets: MarketType[] } {
+    const av = this.availabilityIndex.get(item.symbol);
+    return av ? { exchanges: av.exchanges, markets: av.markets } : { exchanges: item.exchanges, markets: item.markets };
   }
 
   /**
@@ -264,8 +658,8 @@ class ExchangeCoinCatalogService {
       // Parallel fetch tickers to discover all live pairs without locking UI
       const [bybitRes, okxRes, bitgetRes] = await Promise.allSettled([
         hybridFetch('https://api.bybit.com/v5/market/tickers?category=linear', 'GET', {}),
-        hybridFetch('https://api.okx.com/api/v5/market/tickers?instType=SWAP', 'GET', {}),
-        hybridFetch('https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES', 'GET', {}),
+        hybridFetch('https://www.okx.com/api/v5/market/tickers?instType=SWAP', 'GET', {}),
+        hybridFetch('https://api.bitget.com/api/v3/market/tickers?category=USDT-FUTURES', 'GET', {}),
       ]);
 
       // Process Bybit

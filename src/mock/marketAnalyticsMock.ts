@@ -1,5 +1,8 @@
 import {
   MarketType,
+  SpecificMarketType,
+  ExchangeId,
+  MarketBreakdownEntry,
   MarketTimeframe,
   MarketAnalyticsSnapshot,
   OpenInterestDataPoint,
@@ -88,7 +91,7 @@ function formatPointTime(ts: number, tf: MarketTimeframe): string {
 
 export function generateMockSnapshot(
   symbol: string,
-  marketType: MarketType = 'ALL',
+  markets: MarketType | SpecificMarketType[] = 'ALL',
   timeframe: MarketTimeframe = '1h',
   activeExchanges: string[] = ['bybit', 'okx', 'bitget']
 ): MarketAnalyticsSnapshot {
@@ -100,11 +103,25 @@ export function generateMockSnapshot(
     avgVolume24h: 750_000_000,
   };
 
-  // Adjust for market type
-  let marketOiMultiplier = 1.0;
-  if (marketType === 'PERP') marketOiMultiplier = 0.75;
-  if (marketType === 'INVERSE') marketOiMultiplier = 0.25;
-  if (marketType === 'SPOT') marketOiMultiplier = 0; // Spot has 0 OI
+  const normalizedMarkets: SpecificMarketType[] = Array.isArray(markets)
+    ? (markets.length > 0 ? markets : ['PERP', 'INVERSE', 'SPOT'])
+    : (markets === 'ALL' ? ['PERP', 'INVERSE', 'SPOT'] : [markets]);
+
+  const derivedMarketType: MarketType = normalizedMarkets.length === 1 ? normalizedMarkets[0] : 'ALL';
+
+  const validExchanges: ExchangeId[] = (activeExchanges.length > 0 ? activeExchanges : ['bybit', 'okx', 'bitget'])
+    .filter((e): e is ExchangeId => e === 'bybit' || e === 'okx' || e === 'bitget');
+  const safeExchanges: ExchangeId[] = validExchanges.length > 0 ? validExchanges : ['bybit', 'okx', 'bitget'];
+
+  const hasPerp = normalizedMarkets.includes('PERP');
+  const hasInverse = normalizedMarkets.includes('INVERSE');
+  const hasDerivatives = hasPerp || hasInverse;
+
+  // Adjust for market type (OI only sums derivatives)
+  let marketOiMultiplier = 0;
+  if (hasPerp && hasInverse) marketOiMultiplier = 1.0;
+  else if (hasPerp) marketOiMultiplier = 0.75;
+  else if (hasInverse) marketOiMultiplier = 0.25;
 
   const stepMs = getTimeframeStepMs(timeframe);
   const pointCount = 30; // 30 candles/intervals
@@ -174,6 +191,7 @@ export function generateMockSnapshot(
   }
 
   const latestOi = oiHistory[oiHistory.length - 1];
+  const latestTaker = takerFlowHistory[takerFlowHistory.length - 1] || { cvd: 0 };
   const initialOi = oiHistory[0];
   const oiChange24h = ((latestOi.totalOiUsd - initialOi.totalOiUsd) / (initialOi.totalOiUsd || 1)) * 100;
   const priceChange24h = ((latestOi.price - initialOi.price) / (initialOi.price || 1)) * 100;
@@ -264,7 +282,7 @@ export function generateMockSnapshot(
       bestLongExchange: minEx.ex, // Pay least (or receive most if negative)
       bestShortExchange: maxEx.ex, // Receive highest rate
       nextFundingCountdown: countdown,
-      marketType: marketType === 'INVERSE' ? ('INVERSE' as const) : ('PERP' as const),
+      marketType: hasInverse && !hasPerp ? ('INVERSE' as const) : ('PERP' as const),
     };
   };
 
@@ -312,24 +330,65 @@ export function generateMockSnapshot(
     greedFearLabel,
   };
 
+  const derivMarketsCount = (hasPerp ? 1 : 0) + (hasInverse ? 1 : 0);
+  const breakdown: MarketBreakdownEntry[] = [];
+
+  for (const ex of safeExchanges) {
+    for (const m of normalizedMarkets) {
+      const isDeriv = m !== 'SPOT';
+      const exSeed = ex.charCodeAt(0) * 3 + m.charCodeAt(0) * 7;
+      const priceJitter = m === 'PERP' ? 0.0002 : (m === 'SPOT' ? 0.0006 : -0.0004);
+      const mPrice = Number((latestOi.price * (1 + priceJitter * Math.sin(seed + exSeed))).toFixed(latestOi.price < 1 ? 4 : 2));
+      const mVol = Number((meta.avgVolume24h / (safeExchanges.length * normalizedMarkets.length) * (0.85 + 0.3 * Math.cos(seed + exSeed))).toFixed(0));
+      const mOi = isDeriv
+        ? Math.round((latestOi.totalOiUsd / (safeExchanges.length * (derivMarketsCount || 1))) * (0.9 + 0.2 * Math.sin(seed + exSeed)))
+        : null;
+      const rate8h = isDeriv ? Number((0.0001 + 0.00004 * Math.cos(seed + exSeed)).toFixed(6)) : null;
+      const rateApr = rate8h !== null ? Number((rate8h * 3 * 365 * 100).toFixed(2)) : null;
+      const mCvd = Number(((latestTaker.cvd / (safeExchanges.length * normalizedMarkets.length)) * (0.9 + 0.2 * Math.sin(exSeed))).toFixed(0));
+
+      breakdown.push({
+        exchange: ex,
+        market: m,
+        price: mPrice,
+        volume24hUsd: mVol,
+        oiUsd: mOi,
+        fundingRate: rate8h,
+        fundingApr: rateApr,
+        cvd: mCvd,
+      });
+    }
+  }
+
+  // Price aggregation priority: PERP -> SPOT -> INVERSE
+  let aggregatedPrice = latestOi.price;
+  const perpEntry = breakdown.find((b) => b.market === 'PERP');
+  const spotEntry = breakdown.find((b) => b.market === 'SPOT');
+  const inverseEntry = breakdown.find((b) => b.market === 'INVERSE');
+  if (perpEntry) aggregatedPrice = perpEntry.price;
+  else if (spotEntry) aggregatedPrice = spotEntry.price;
+  else if (inverseEntry) aggregatedPrice = inverseEntry.price;
+
   return {
     symbol: coin,
-    marketType,
-    currentPrice: latestOi.price,
+    marketType: derivedMarketType,
+    marketTypes: normalizedMarkets,
+    currentPrice: aggregatedPrice,
     priceChange24h: Number(priceChange24h.toFixed(2)),
     totalVolume24hUsd: meta.avgVolume24h,
-    totalOiUsd: latestOi.totalOiUsd,
-    oiChange1hPercent: Number(((latestOi.totalOiUsd - oiHistory[Math.max(0, oiHistory.length - 2)].totalOiUsd) / (oiHistory[Math.max(0, oiHistory.length - 2)].totalOiUsd || 1) * 100).toFixed(2)),
-    oiChange24hPercent: Number(oiChange24h.toFixed(2)),
+    totalOiUsd: hasDerivatives ? latestOi.totalOiUsd : 0,
+    oiChange1hPercent: hasDerivatives ? Number(((latestOi.totalOiUsd - oiHistory[Math.max(0, oiHistory.length - 2)].totalOiUsd) / (oiHistory[Math.max(0, oiHistory.length - 2)].totalOiUsd || 1) * 100).toFixed(2)) : 0,
+    oiChange24hPercent: hasDerivatives ? Number(oiChange24h.toFixed(2)) : 0,
     oiBreakdown: {
-      bybit: latestOi.bybitOiUsd,
-      okx: latestOi.okxOiUsd,
-      bitget: latestOi.bitgetOiUsd,
+      bybit: hasDerivatives ? latestOi.bybitOiUsd : 0,
+      okx: hasDerivatives ? latestOi.okxOiUsd : 0,
+      bitget: hasDerivatives ? latestOi.bitgetOiUsd : 0,
     },
+    breakdown,
     oiHistory,
     takerFlowHistory,
-    fundingArbitrage,
-    currentFunding,
+    fundingArbitrage: hasDerivatives ? fundingArbitrage : [],
+    currentFunding: hasDerivatives ? currentFunding : null,
     regime,
     sentiment,
     lastUpdated: now,
