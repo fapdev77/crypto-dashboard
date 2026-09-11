@@ -125,7 +125,7 @@ export default function App() {
   if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
   if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
   if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
-  if (activeTab === 'analytics-market-advanced') activeTabName = 'Advanced Market Analytics';
+  if (activeTab === 'analytics-market-advanced') activeTabName = 'Market Analytics';
   else if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
   if (activeTab === 'reports') activeTabName = 'Reports';
 

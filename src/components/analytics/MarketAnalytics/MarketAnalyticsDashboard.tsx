@@ -59,7 +59,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-[#2F6BFF]" />
-              Advanced Market Analytics
+              Market Analytics
             </h1>
             <SimulationModeBadge />
           </div>
