@@ -4,6 +4,19 @@ export type MarketType = 'ALL' | SpecificMarketType;
 
 export type ExchangeId = 'bybit' | 'okx' | 'bitget';
 
+/**
+ * Underlying asset class derived from exchange instrument metadata.
+ * `STOCK` includes xStocks/TradFi equities, `COMMODITY`/`METAL` cover Bybit & Bitget TradFi listings.
+ */
+export type AssetKind = 'CRYPTO' | 'STOCK' | 'COMMODITY' | 'METAL' | 'OTHER';
+
+/** A single tradable base asset as listed by an exchange for a given market type. */
+export interface SymbolEntry {
+  symbol: string; // base asset, e.g. 'BTC'
+  name: string;   // display name, e.g. 'Bitcoin'
+  kind: AssetKind;
+}
+
 export type MarketTimeframe = '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
 
 export type PollingIntervalSeconds = 5 | 10 | 15 | 30 | 60 | 0;
@@ -78,9 +91,21 @@ export interface SmartMoneySentiment {
   greedFearLabel: 'Extreme Fear' | 'Fear' | 'Neutral' | 'Greed' | 'Extreme Greed';
 }
 
+export interface MarketBreakdownEntry {
+  exchange: ExchangeId;
+  market: SpecificMarketType;
+  price: number;
+  volume24hUsd: number;
+  oiUsd: number | null; // null for SPOT
+  fundingRate: number | null; // null for SPOT
+  fundingApr: number | null; // null for SPOT
+  cvd: number;
+}
+
 export interface MarketAnalyticsSnapshot {
   symbol: string;
   marketType: MarketType;
+  marketTypes: SpecificMarketType[];
   currentPrice: number;
   priceChange24h: number;
   totalVolume24hUsd: number;
@@ -92,6 +117,7 @@ export interface MarketAnalyticsSnapshot {
     okx: number;
     bitget: number;
   };
+  breakdown: MarketBreakdownEntry[];
   oiHistory: OpenInterestDataPoint[];
   takerFlowHistory: TakerFlowDataPoint[];
   fundingArbitrage: FundingArbitrageItem[];

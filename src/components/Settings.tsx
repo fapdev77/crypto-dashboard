@@ -24,6 +24,7 @@ import { FundingSyncTimingPanel } from './sync/FundingSyncTimingPanel';
 import { SecurityBackupCard } from './SecurityBackupCard';
 import { VersionInfoCard } from './VersionInfoCard';
 import { TransactionLogsCacheCard } from './sync/TransactionLogsCacheCard';
+import { exchangeCoinCatalog } from '../services/marketAnalytics/exchangeCoinCatalog';
 
 export function Settings() {
   const {
@@ -33,7 +34,8 @@ export function Settings() {
     metadataCacheTtlHours, setMetadataCacheTtlHours,
     showWelcomeOnStartup, setShowWelcomeOnStartup,
     fundingPollingInterval, setFundingPollingInterval,
-    fundingHistoryInterval, setFundingHistoryInterval
+    fundingHistoryInterval, setFundingHistoryInterval,
+    symbolCatalogRefreshHours, setSymbolCatalogRefreshHours
   } = useSettingsStore();
 
   const keys = useApiKeysStore(state => state.keys);
@@ -48,6 +50,43 @@ export function Settings() {
   const [isClearingMeta, setIsClearingMeta] = useState(false);
   const [isClearingFunding, setIsClearingFunding] = useState(false);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
+  const [isRefreshingCatalog, setIsRefreshingCatalog] = useState(false);
+  const [isClearingCatalog, setIsClearingCatalog] = useState(false);
+  const [lastCatalogFetch, setLastCatalogFetch] = useState<number | null>(null);
+  const [staleExchanges, setStaleExchanges] = useState<string[]>([]);
+
+  const syncCatalogInfo = () => {
+    setLastCatalogFetch(exchangeCoinCatalog.getRegistryUpdatedAt());
+    setStaleExchanges(exchangeCoinCatalog.getStaleExchanges());
+  };
+
+  const handleRefreshCatalog = async () => {
+    setIsRefreshingCatalog(true);
+    try {
+      await exchangeCoinCatalog.refresh();
+      syncCatalogInfo();
+      toast.success('Symbol catalog refreshed', { id: 'symbol-catalog-refresh' });
+    } catch (e: any) {
+      LogManager.error('Settings', 'Failed to refresh symbol catalog:', e);
+      toast.error(`Failed to refresh symbol catalog: ${e.message || 'Unknown error'}`, { id: 'err-symbol-catalog-refresh' });
+    } finally {
+      setIsRefreshingCatalog(false);
+    }
+  };
+
+  const handleClearCatalog = async () => {
+    setIsClearingCatalog(true);
+    try {
+      await exchangeCoinCatalog.clearAndSync();
+      syncCatalogInfo();
+      toast.success('Symbol catalog cleared and re-synced', { id: 'symbol-catalog-clear' });
+    } catch (e: any) {
+      LogManager.error('Settings', 'Failed to clear symbol catalog:', e);
+      toast.error(`Failed to clear symbol catalog: ${e.message || 'Unknown error'}`, { id: 'err-symbol-catalog-clear' });
+    } finally {
+      setIsClearingCatalog(false);
+    }
+  };
 
   const refreshStats = async () => {
     try {
@@ -62,6 +101,7 @@ export function Settings() {
 
   useEffect(() => {
     refreshStats();
+    syncCatalogInfo();
   }, []);
 
   const handleForceSync = async () => {
@@ -496,6 +536,89 @@ export function Settings() {
                 }
                 {isClearingMeta ? 'Clearing...' : 'Clear Metadata Cache'}
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4.2: Market Analytics Symbol Catalog */}
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
+          <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-cyan-400" />
+            Symbol Catalog Cache
+          </h3>
+          <p className="text-[#8E9299] text-xs mb-5">Market Analytics instrument lists (Spot / Perp / Inverse)</p>
+
+          <div className="flex flex-col gap-5 flex-1">
+            {/* Refresh Interval */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <AppTooltip description="How often the app re-downloads the full instrument listing (Spot, USDT Perp and Coin-M Inverse) from Bybit, OKX and Bitget. These lists rarely change, so a longer interval saves network and API calls.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Refresh Interval</h4>
+                </AppTooltip>
+                <span className="text-cyan-400 font-mono text-xs bg-cyan-400/10 px-2 py-0.5 rounded-md">{symbolCatalogRefreshHours}h</span>
+              </div>
+              <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
+                Controls the Market Analytics symbol catalog refresh cadence (1 to 24 hours).
+              </p>
+              <input
+                type="range"
+                min="1"
+                max="24"
+                step="1"
+                value={symbolCatalogRefreshHours}
+                onChange={(e) => setSymbolCatalogRefreshHours(Number(e.target.value))}
+                onPointerUp={() => toast.success(`Symbol catalog refresh set to ${symbolCatalogRefreshHours}h`, { id: 'symbol-catalog-interval' })}
+                className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-cyan-400"
+              />
+              <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
+                <span>1h</span>
+                <span>24h</span>
+              </div>
+            </div>
+
+            <div className="border-t border-[#2a2b30]" />
+
+            {/* Last fetch, stale warning and actions */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <AppTooltip description="Timestamp of the last successful catalog download across the three exchanges.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Last Fetch</h4>
+                </AppTooltip>
+                <span className="text-cyan-400 font-mono text-xs">
+                  {lastCatalogFetch ? new Date(lastCatalogFetch).toLocaleString() : 'Never'}
+                </span>
+              </div>
+              {staleExchanges.length > 0 && (
+                <p className="text-[11px] text-amber-400 leading-relaxed">
+                  Partial data — kept the previous lists for: {staleExchanges.join(', ')}
+                </p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                <button
+                  onClick={handleRefreshCatalog}
+                  disabled={isRefreshingCatalog || isClearingCatalog}
+                  className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {isRefreshingCatalog
+                    ? <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                    : <RefreshCw className="w-4 h-4 text-cyan-400" />
+                  }
+                  {isRefreshingCatalog ? 'Refreshing...' : 'Refresh Now'}
+                </button>
+
+                <button
+                  onClick={handleClearCatalog}
+                  disabled={isRefreshingCatalog || isClearingCatalog}
+                  className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {isClearingCatalog
+                    ? <Loader2 className="w-4 h-4 text-red-400 animate-spin" />
+                    : <Trash2 className="w-4 h-4 text-red-400" />
+                  }
+                  {isClearingCatalog ? 'Clearing & Syncing...' : 'Clear Cache & Sync'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
