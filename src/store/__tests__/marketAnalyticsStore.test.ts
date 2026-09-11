@@ -15,7 +15,7 @@ describe('useMarketAnalyticsStore', () => {
     expect(state.selectedMarket).toBe('ALL');
     expect(state.selectedTimeframe).toBe('1h');
     expect(state.favorites).toContain('BTC');
-    expect(state.pollingIntervalSeconds).toBe(15);
+    expect(state.pollingIntervalSeconds).toBe(60);
   });
 
   it('should toggle favorites correctly and persist to localStorage', () => {

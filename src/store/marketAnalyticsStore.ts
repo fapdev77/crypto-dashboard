@@ -75,7 +75,7 @@ export const useMarketAnalyticsStore = create<MarketAnalyticsStoreState>((set, g
   selectedMarkets: ['PERP', 'INVERSE', 'SPOT'],
   selectedExchanges: ['bybit', 'okx', 'bitget'],
   selectedTimeframe: '1h',
-  pollingIntervalSeconds: 15,
+  pollingIntervalSeconds: 60,
   snapshot: null,
   isLoading: false,
   error: null,

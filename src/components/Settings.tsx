@@ -541,7 +541,7 @@ export function Settings() {
         </div>
 
         {/* Card 4.2: Market Analytics Symbol Catalog */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
+        <div id="symbol-catalog-settings-card" className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyan-400" />
             Symbol Catalog Cache
