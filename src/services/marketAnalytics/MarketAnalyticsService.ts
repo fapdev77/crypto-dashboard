@@ -667,13 +667,56 @@ export class MarketAnalyticsService {
     const res = await hybridFetch(url, 'GET', {});
     if (res?.retCode === 0 && res.result?.list?.[0]) {
       const t = res.result.list[0];
+      const px = parseFloat(t.lastPrice || '0');
+      const turnover = parseFloat(t.turnover24h || '0');
+      const baseVol = parseFloat(t.volume24h || '0');
+      
+      let volume24hUsd: number;
+      let openInterestUsd: number | undefined;
+
+      if (market === 'INVERSE') {
+        // Bybit V5 Inverse contracts:
+        // - volume24h is the trading volume in USD contracts (1 contract = 1 USD for BTC/ETH inverse).
+        // - turnover24h is in coin units (e.g. BTC/ETH).
+        // - openInterest is in USD contracts.
+        // - openInterestValue is in coin units (e.g. BTC/ETH).
+        // Therefore, for USD notional representation:
+        // USD Volume = volume24h (or turnover24h * px as fallback).
+        // USD Open Interest = openInterest (or openInterestValue * px as fallback).
+        if (baseVol > 0) {
+          volume24hUsd = baseVol;
+        } else if (turnover > 0 && px > 0) {
+          volume24hUsd = turnover * px;
+        } else {
+          volume24hUsd = 0;
+        }
+
+        if (t.openInterest) {
+          openInterestUsd = parseFloat(t.openInterest);
+        } else if (t.openInterestValue && px > 0) {
+          openInterestUsd = parseFloat(t.openInterestValue) * px;
+        }
+      } else {
+        // Linear / USDT Perp contracts:
+        // - turnover24h is in USDT/USD.
+        // - volume24h is in coin units (e.g. BTC).
+        // - openInterest is in coin units.
+        // - openInterestValue is in USDT/USD.
+        volume24hUsd = turnover > 0 ? turnover : (baseVol > 0 && px > 0 ? baseVol * px : 0);
+        if (t.openInterestValue) {
+          openInterestUsd = parseFloat(t.openInterestValue);
+        } else if (t.openInterest && px > 0) {
+          openInterestUsd = parseFloat(t.openInterest) * px;
+        }
+      }
+
       return {
-        lastPrice: parseFloat(t.lastPrice),
-        price24hPcnt: parseFloat(t.price24hPcnt || '0'),
-        volume24hUsd: parseFloat(t.turnover24h || '0'),
+        lastPrice: px,
+        price24hPcnt: parseFloat(t.price24hPcnt || '0') * 100,
+        volume24hUsd,
         fundingRate: t.fundingRate ? parseFloat(t.fundingRate) : undefined,
         nextFundingTime: t.nextFundingTime ? parseInt(t.nextFundingTime) : undefined,
-        openInterestUsd: t.openInterestValue ? parseFloat(t.openInterestValue) : undefined,
+        openInterestUsd,
       };
     }
     return null;
@@ -686,9 +729,14 @@ export class MarketAnalyticsService {
       const res = await hybridFetch(url, 'GET', {});
       if (res?.code === '0' && res.data?.[0]) {
         const t = res.data[0];
+        const px = t.last ? parseFloat(t.last) : undefined;
+        let volume24hUsd = t.volCcy24h ? parseFloat(t.volCcy24h) : undefined;
+        if (!volume24hUsd && t.vol24h && px) {
+          volume24hUsd = parseFloat(t.vol24h) * px;
+        }
         return {
-          lastPrice: t.last ? parseFloat(t.last) : undefined,
-          volume24hUsd: t.volCcy24h ? parseFloat(t.volCcy24h) : undefined,
+          lastPrice: px,
+          volume24hUsd,
         };
       }
       return null;
@@ -710,7 +758,14 @@ export class MarketAnalyticsService {
     if (tickerRes.status === 'fulfilled' && tickerRes.value?.code === '0' && tickerRes.value.data?.[0]) {
       const t = tickerRes.value.data[0];
       if (t.last) lastPrice = parseFloat(t.last);
-      if (t.volCcy24h) volume24hUsd = parseFloat(t.volCcy24h);
+      // OKX Derivatives (SWAP/FUTURES - Linear & Inverse):
+      // volCcy24h is in base coin units (e.g. BTC), vol24h is contract count.
+      // We must multiply base coin volume (volCcy24h) by lastPrice to obtain accurate USD Notional volume.
+      if (t.volCcy24h && lastPrice) {
+        volume24hUsd = parseFloat(t.volCcy24h) * lastPrice;
+      } else if (t.vol24h && lastPrice) {
+        volume24hUsd = parseFloat(t.vol24h) * lastPrice;
+      }
     }
 
     if (fundingRes.status === 'fulfilled' && fundingRes.value?.code === '0' && fundingRes.value.data?.[0]) {
@@ -721,7 +776,13 @@ export class MarketAnalyticsService {
 
     if (oiRes.status === 'fulfilled' && oiRes.value?.code === '0' && oiRes.value.data?.[0]) {
       const d = oiRes.value.data[0];
-      if (d.oiUsd) openInterestUsd = parseFloat(d.oiUsd);
+      if (d.oiUsd) {
+        openInterestUsd = parseFloat(d.oiUsd);
+      } else if (d.oiCcy && lastPrice) {
+        openInterestUsd = parseFloat(d.oiCcy) * lastPrice;
+      } else if (d.oi && lastPrice) {
+        openInterestUsd = parseFloat(d.oi) * lastPrice;
+      }
     }
 
     return {
@@ -740,10 +801,14 @@ export class MarketAnalyticsService {
       const res = await hybridFetch(url, 'GET', {});
       if (res?.code === '00000' && res.data?.[0]) {
         const t = res.data[0];
+        const lastPrice = t.lastPrice ? parseFloat(t.lastPrice) : undefined;
+        const turnover = t.turnover24h ? parseFloat(t.turnover24h) : 0;
+        const baseVol = t.volume24h ? parseFloat(t.volume24h) : 0;
+        const volume24hUsd = turnover > 0 ? turnover : (baseVol > 0 && lastPrice ? baseVol * lastPrice : undefined);
         return {
-          lastPrice: t.lastPrice ? parseFloat(t.lastPrice) : undefined,
+          lastPrice,
           price24hPcnt: t.price24hPcnt ? parseFloat(t.price24hPcnt) : undefined,
-          volume24hUsd: t.turnover24h ? parseFloat(t.turnover24h) : undefined,
+          volume24hUsd,
         };
       }
       return null;
@@ -760,13 +825,18 @@ export class MarketAnalyticsService {
         let openInterestUsd: number | undefined;
         if (t.openInterest && lastPrice) {
           openInterestUsd = parseFloat(t.openInterest) * lastPrice;
+        } else if (t.openInterestValue) {
+          openInterestUsd = parseFloat(t.openInterestValue);
         }
+        const turnover = t.turnover24h ? parseFloat(t.turnover24h) : 0;
+        const baseVol = t.volume24h ? parseFloat(t.volume24h) : 0;
+        const volume24hUsd = turnover > 0 ? turnover : (baseVol > 0 && lastPrice ? baseVol * lastPrice : undefined);
         return {
           lastPrice,
           fundingRate,
           openInterestUsd,
           price24hPcnt: t.price24hPcnt ? parseFloat(t.price24hPcnt) : undefined,
-          volume24hUsd: t.turnover24h ? parseFloat(t.turnover24h) : undefined,
+          volume24hUsd,
         };
       }
       return null;
@@ -787,13 +857,18 @@ export class MarketAnalyticsService {
       let openInterestUsd: number | undefined;
       if (t.openInterest && lastPrice) {
         openInterestUsd = parseFloat(t.openInterest) * lastPrice;
+      } else if (t.openInterestValue) {
+        openInterestUsd = parseFloat(t.openInterestValue);
       }
+      const turnover = t.turnover24h ? parseFloat(t.turnover24h) : 0;
+      const baseVol = t.volume24h ? parseFloat(t.volume24h) : 0;
+      const volume24hUsd = turnover > 0 ? turnover : (baseVol > 0 && lastPrice ? baseVol * lastPrice : undefined);
       return {
         lastPrice,
         fundingRate,
         openInterestUsd,
         price24hPcnt: t.price24hPcnt ? parseFloat(t.price24hPcnt) : undefined,
-        volume24hUsd: t.turnover24h ? parseFloat(t.turnover24h) : undefined,
+        volume24hUsd,
       };
     }
     return null;
