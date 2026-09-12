@@ -361,7 +361,7 @@ export function FilterBar({
           >
             <span className="truncate max-w-[120px]">
               {(() => {
-                if (!type.value || type.value === 'All') return type.labelAll || 'All Types';
+                if (!type.value || type.value.toUpperCase() === 'ALL') return type.labelAll || 'All Types';
                 const opt = type.options.find(o => typeof o === 'object' ? o.value === type.value : o === type.value);
                 return typeof opt === 'object' ? opt.label : opt;
               })()}
@@ -383,11 +383,11 @@ export function FilterBar({
                 <button
                   type="button"
                   onClick={() => {
-                    type.onChange('All');
+                    type.onChange('ALL');
                     setIsTypeDropdownOpen(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
-                    type.value === 'All' || !type.value
+                    !type.value || type.value.toUpperCase() === 'ALL'
                       ? 'bg-[#2F6BFF] text-white'
                       : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
                   }`}
@@ -396,7 +396,7 @@ export function FilterBar({
                 </button>
                 {type.options.map((opt, i) => {
                   const val = typeof opt === 'object' ? opt.value : (opt as string);
-                  if (val === 'All') return null; // handled above
+                  if (val.toUpperCase() === 'ALL') return null; // handled by top All Types button
                   const label = typeof opt === 'object' ? opt.label : (opt as string);
                   const tooltip = typeof opt === 'object' ? opt.tooltip : undefined;
                   

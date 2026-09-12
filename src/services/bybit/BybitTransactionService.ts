@@ -4,6 +4,7 @@ import { BybitTransactionLogEntry } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { BybitAdapter } from '../adapters/BybitAdapter';
+import { matchUniversalTxType, getBybitUniversalType } from '../../utils/transactionTypeMapper';
 import {
   getBybitTxLogCache,
   saveBybitTxLogCache,
@@ -254,8 +255,8 @@ export class BybitTransactionService {
       filtered = filtered.filter(e => e.category.toLowerCase() === filters.category!.toLowerCase());
     }
 
-    if (filters.type && filters.type !== 'All') {
-      filtered = filtered.filter(e => e.type === filters.type);
+    if (filters.type && filters.type !== 'All' && filters.type !== 'ALL') {
+      filtered = filtered.filter(e => matchUniversalTxType('bybit', e, filters.type!));
     }
 
     if (filters.currency && filters.currency !== 'All') {
@@ -304,7 +305,8 @@ export class BybitTransactionService {
     const EXCHANGE_TYPES = ['SPOT', 'CONVERT', 'CURRENCY_BUY', 'CURRENCY_SELL'];
 
     for (const e of entries) {
-      typeBreakdown[e.type] = (typeBreakdown[e.type] || 0) + 1;
+      const uType = getBybitUniversalType(e.type, e.funding);
+      typeBreakdown[uType] = (typeBreakdown[uType] || 0) + 1;
 
       const stableMatch = isStable(e.currency);
       const bucket = stableMatch ? stable : (perCurrency[e.currency] || (perCurrency[e.currency] = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) }));
