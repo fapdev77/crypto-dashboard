@@ -4,10 +4,10 @@ import { AppTooltip } from '../../ui/Tooltip';
 export interface KpiMetricCardProps {
   icon: React.ReactNode;
   label: string;
-  value: string | number;
+  value: React.ReactNode;
   trend?: 'up' | 'down' | 'neutral';
-  tooltip?: string;
-  color?: 'green' | 'red' | 'white';
+  tooltip?: React.ReactNode;
+  color?: 'green' | 'red' | 'white' | 'amber';
   className?: string;
 }
 
@@ -15,11 +15,12 @@ const colorClasses: Record<string, string> = {
   green: 'text-green-400',
   red: 'text-red-400',
   white: 'text-white',
+  amber: 'text-amber-400',
 };
 
 const trendIcons: Record<string, { icon: string; cls: string }> = {
-  up:    { icon: '↑', cls: 'text-green-400' },
-  down:  { icon: '↓', cls: 'text-red-400' },
+  up: { icon: '↑', cls: 'text-green-400' },
+  down: { icon: '↓', cls: 'text-red-400' },
   neutral: { icon: '→', cls: 'text-[#8E9299]' },
 };
 

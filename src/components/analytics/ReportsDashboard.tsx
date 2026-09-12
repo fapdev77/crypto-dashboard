@@ -7,6 +7,7 @@ import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { getHistoryInverseUsdValues } from '../../utils/inverseUtils';
 import { FilterBar } from '../ui/FilterBar';
+import { SimulationModeBadge } from '../ui/SimulationModeBadge';
 
 export function ReportsDashboard() {
   const [period, setPeriod] = useState<PositionHistoryPeriod>('7d');
@@ -52,10 +53,13 @@ export function ReportsDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start justify-between gap-4 py-2">
         <div className="flex flex-col space-y-1">
-          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-            <FileText className="w-5 h-5 text-[#2F6BFF]" />
-            Reports & Exports
-          </h2>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+              <FileText className="w-5 h-5 text-[#2F6BFF]" />
+              Reports & Exports
+            </h2>
+            <SimulationModeBadge />
+          </div>
           <span className="text-xs text-[#8E9299]">
             USD values are calculated based on positions close price.
           </span>

@@ -3,6 +3,7 @@ import { Upload, Download, AlertTriangle, Shield, Check, FileDown, FileUp, Lock,
 import { useApiKeysStore, ApiCredentials, Exchange } from '../store/apiKeysStore';
 import { encryptData, decryptData } from '../utils/cryptoLib';
 import { ExchangeIcon } from './ui/ExchangeIcon';
+import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import toast from 'react-hot-toast';
 
 type Tab = 'local_security' | 'export' | 'import';
@@ -141,7 +142,11 @@ export function SecurityBackupCard() {
       if (!selectedForImport.has(ik.id)) return;
       
       const res = conflictResolutions[ik.id];
-      const newKey = { ...ik, id: crypto.randomUUID() }; // Always generate new local ID to avoid collision
+      const newKey: ApiCredentials = {
+        ...ik,
+        id: crypto.randomUUID(),
+        accountType: ik.exchange === 'bitget' ? (ik.accountType || 'classic') : undefined,
+      }; // Always generate new local ID to avoid collision
       
       if (res === 'rename') {
         newKey.label = customNames[ik.id] || `${newKey.label} (Imported)`;
@@ -327,7 +332,13 @@ export function SecurityBackupCard() {
                             onChange={() => handleToggleExport(k.id)}
                             className="w-3.5 h-3.5 rounded border-[#2a2b30] bg-[#111216] text-[#2F6BFF] focus:ring-[#2F6BFF] focus:ring-offset-0"
                           />
-                          <span className="text-white text-xs truncate">{k.label}</span>
+                          <span className="text-white text-xs truncate flex-1">{k.label}</span>
+                          <AccountTypeBadge
+                            exchange={k.exchange}
+                            accountType={k.accountType}
+                            environment={k.environment}
+                            bybitRegion={k.bybitRegion}
+                          />
                         </label>
                       ))}
                     </div>
@@ -447,7 +458,13 @@ export function SecurityBackupCard() {
                             className="w-3.5 h-3.5 rounded border-[#2a2b30] bg-[#111216] text-[#2F6BFF] focus:ring-[#2F6BFF] focus:ring-offset-0"
                           />
                           <ExchangeIcon exchange={ik.exchange} className="w-4 h-4 shrink-0" />
-                          <span className="text-white font-medium truncate">{ik.label}</span>
+                          <span className="text-white font-medium truncate flex-1">{ik.label}</span>
+                          <AccountTypeBadge
+                            exchange={ik.exchange}
+                            accountType={ik.accountType}
+                            environment={ik.environment}
+                            bybitRegion={ik.bybitRegion}
+                          />
                         </label>
                         
                         {resolution && (

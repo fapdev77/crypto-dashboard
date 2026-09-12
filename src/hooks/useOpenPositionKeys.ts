@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { usePositionsStore } from '../store/positionsStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { useApiKeysStore } from '../store/apiKeysStore';
 import type { UnifiedPosition } from '../types';
 
 /**
@@ -32,12 +34,24 @@ export const guessInstrumentType = (p: UnifiedPosition): string => {
  */
 export function useOpenPositionKeys(): Set<string> {
   const positions = usePositionsStore(state => state.positions);
+  const useMockData = useSettingsStore(state => state.useMockData);
+  const keys = useApiKeysStore(state => state.keys);
+
+  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
   return useMemo(() => {
-    const keys = new Set<string>();
+    const keySet = new Set<string>();
+    if (!useMockData && activeKeyIds.size === 0) return keySet;
+
     Object.values(positions).forEach(p => {
-      keys.add(`${p.exchange}|${getBaseCoin(p.symbol)}|${guessInstrumentType(p)}`);
+      const isMatch = useMockData
+        ? p.connectionId.startsWith('mocked-data')
+        : !p.connectionId.startsWith('mocked-data') && activeKeyIds.has(p.connectionId);
+
+      if (isMatch && Math.abs(p.size) > 0) {
+        keySet.add(`${p.exchange}|${getBaseCoin(p.symbol)}|${guessInstrumentType(p)}`);
+      }
     });
-    return keys;
-  }, [positions]);
+    return keySet;
+  }, [positions, useMockData, activeKeyIds]);
 }

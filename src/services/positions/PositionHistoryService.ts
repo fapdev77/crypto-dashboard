@@ -16,7 +16,7 @@ export class PositionHistoryService {
   public async fetchExchangeHistory(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     try {
       LogManager.info('PositionHistoryService', `Fetching history for ${key.exchange} (${key.label})`);
-      const adapter = ExchangeAggregator.getAdapter(key.exchange);
+      const adapter = ExchangeAggregator.getAdapter(key);
       return await adapter.fetchAndNormalize(key, start, end);
     } catch (error) {
       LogManager.error('PositionHistoryService', `Fetching history for ${key.exchange} (${key.label}):`, error);

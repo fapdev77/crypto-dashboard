@@ -262,7 +262,7 @@ describe('BybitTransactionService', () => {
       const stats = BybitTransactionService.computeStats(entries);
 
       expect(stats.totalCount).toBe(3);
-      expect(stats.typeBreakdown).toEqual({ TRADE: 2, SETTLEMENT: 1 });
+      expect(stats.typeBreakdown).toEqual({ TRADE: 2, FUNDING_FEE: 1 });
       // funding: -2.5 + 1.25 + (-0.85) = -2.1
       expect(stats.stable.totalFunding).toBe('-2.1');
       // fees: -15.5 + (-6.12) + 0 = -21.62

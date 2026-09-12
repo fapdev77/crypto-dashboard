@@ -87,13 +87,27 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 4. **Controles manuais:** Settings permitem purgar o cache (Clear Local Cache) e re-sincronizar (Force Sync), com feedback via Toast UI.
 5. **Bills (depósitos/saques):** altamente mutáveis → ignoram o IndexedDB e são buscados direto nas APIs para garantir precisão transacional.
 
-### 6.4. Módulo de Transações Bybit (Auditoria Contábil)
+### 6.4. Módulos de Transações / Transaction Logs (Auditoria Contábil)
 
-1. **Deep Sync Progressivo:** na inicialização, `useBybitTransactionSync` faz backfill do `/v5/account/transaction-log` em chunks de 7 dias (categorias linear, inverse e spot), com checkpoints no IndexedDB.
-2. **Sync Incremental:** após o deep sync, busca apenas registros com `transactionTime > latestTransactionTime + 1`.
-3. **PnL Realizado:** calculado pelo fluxo de caixa — `change = cashFlow + funding − fee` — excluindo transfers dos totais de cash flow.
-4. **Cache:** stores `bybit-transaction-log` (indexada por connectionId, transactionTime, symbol, type, currency, category) e `bybit-transaction-meta`.
-5. **UI SWR:** filtros aplicados em memória (sem latência de rede) e badges de progresso durante o sync.
+1. **Bybit Transactions:**
+   - **Deep Sync Progressivo:** na inicialização, `useBybitTransactionSync` faz backfill do `/v5/account/transaction-log` em chunks de 7 dias (categorias linear, inverse e spot), com checkpoints no IndexedDB.
+   - **Sync Incremental:** após o deep sync, busca apenas registros com `transactionTime > latestTransactionTime + 1`.
+   - **PnL Realizado:** calculado pelo fluxo de caixa — `change = cashFlow + funding − fee` — excluindo transfers dos totais de cash flow.
+   - **Cache:** stores `bybit-transaction-log` (indexada por connectionId, transactionTime, symbol, type, currency, category) e `bybit-transaction-meta`.
+
+2. **Bitget Transactions:**
+   - **Deep Sync Progressivo:** `useBitgetTransactionSync` suporta contas Classic (`/mix/account/bill`, `/spot/account/bills`) e UTA (`/user/bills-record`), com paginação temporal e por cursors `lastEndId`.
+   - **Sync Incremental:** busca incremental após o maior timestamp cacheado.
+   - **Métricas:** Cash Flow, Fees, Net Change, PnL por símbolo e histórico com agrupamento de Stablecoins vs Moedas Nativas.
+   - **Cache:** stores `bitget-transaction-log` e `bitget-transaction-meta`.
+
+3. **OKX Transactions:**
+   - **Deep Sync Progressivo:** `useOkxTransactionSync` varre endpoints `/api/v5/account/bills` (recente) e `/api/v5/account/bills-archive` (histórico até 3 meses) em janelas de 7 dias com cursors `after` (`billId`).
+   - **Sync Incremental:** atualizações frequentes via `/bills` recente.
+   - **Métricas:** Normalização dos dezenas de tipos/subtipos operacionais da OKX, balanço patrimonial após transação (`bal`) e variação de saldo (`balChg`).
+   - **Cache:** stores `okx-transaction-log` e `okx-transaction-meta`.
+
+4. **UI SWR Comum:** Todas as 3 abas de transações carregam dados instantaneamente do IndexedDB, executam filtros em memória sem latência de rede, mostram badges de progresso de sync, relatórios de Net Change / ROI e suporte a exportação em CSV, Excel e PDF.
 
 ### 6.5. Funding Fees Dashboard
 
@@ -122,6 +136,15 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 2. Quando ativo: badge pulsante "Simulation Mode" no StatusBar e botão "Sync Now" desabilitado com tooltip explicativo.
 3. Desativar restaura o Real-Time instantaneamente.
 
+### 6.8. Market Analytics
+
+1. **Agregação Quantitativa Cross-Exchange:** consolidação em tempo real de liquidez, derivativos e order flow entre Bybit, OKX e Bitget com suporte a múltiplos tipos de mercado (Linear PERP, Inverse COIN-M, Spot e ALL).
+2. **Open Interest & Regime Detector:** correlação gráfica entre preço e Open Interest (USD) por exchange, diagnosticando automaticamente 5 regimes estruturais: `LONG_ACCUMULATION`, `SHORT_SQUEEZE`, `AGGRESSIVE_SHORTING`, `LONG_LIQUIDATION` e `NEUTRAL_CONSOLIDATION`.
+3. **Cross-Exchange Funding Arbitrage:** scanner de oportunidades de arbitragem delta-neutra entre corretoras, calculando spread 8h e APR anualizado (`Spread APR = Spread * 3 * 365`), indicando exchange ideal para Long e Short e contagem regressiva para liquidação.
+4. **Order Flow & Cumulative Volume Delta (CVD):** mensuração de agressões de mercado (`Net Delta = Taker Buy - Taker Sell`) e curva de volume acumulado (CVD) com detecção algorítmica de divergências altistas (Bullish) e baixistas (Bearish).
+5. **Sentimento Smart Money vs. Retail:** comparação do sentimento do varejo (ponderado por contas) contra o Smart Money (ponderado por volume nocional do top 20% de traders) com índice Fear & Greed e alertas de divergência institucional.
+6. **Tooltips e Controles Padronizados:** tooltips matemáticos detalhados ancorados no Radix UI, seleção com favoritos, seletor de timeframes e atualização automática configurável com contador circular.
+
 ## 7. Requisitos Funcionais (Resumo)
 
 | ID | Requisito | Módulo |
@@ -139,6 +162,11 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 | FR-11 | Exibir telemetria e latência das conexões | Connection Logs |
 | FR-12 | Ticker de mercado em tempo real (marquee) das posições abertas | Positions Ticker |
 | FR-13 | PWA: instalação, cache offline e notificação de atualização | PWA |
+| FR-14 | Auditar extrato transacional e bills da Bitget (Classic e UTA) | Bitget Transactions |
+| FR-15 | Auditar extrato e bills archive da OKX com reconciliação contábil | OKX Transactions |
+| FR-16 | Mapeamento universal de transações (10 categorias universais e badges padronizados) | Universal Tx Mapper |
+| FR-17 | Modo Hedge Pro com monitoramento de delta, ratio de hedge e alertas de risco | Hedge Monitoring |
+| FR-18 | Inteligência de mercado multi-exchange com Open Interest, regimes de mercado, Funding Arbitrage, fluxo de ordens (CVD) e sentimento Smart Money | Market Analytics |
 
 ## 8. Requisitos Não-Funcionais
 

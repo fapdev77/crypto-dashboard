@@ -4,15 +4,22 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Activity } from 'lucide-react';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useApiKeysStore } from '../store/apiKeysStore';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 import { PositionCard } from './PositionCard';
+import { usePagination } from '../hooks/usePagination';
+import { Pagination } from './ui/Pagination';
+import { SimulationModeBadge } from './ui/SimulationModeBadge';
 
 export function OpenPositions() {
   const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
+  const setHedgeExposedMode = useSettingsStore(state => state.setHedgeExposedMode);
+  const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
 
@@ -25,12 +32,17 @@ export function OpenPositions() {
   };
 
   const positionsList = Object.values(positions);
+  const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
   const activePositions = useMemo(() => {
-    // First, filter by mock connection rule
+    if (!useMockData && activeKeyIds.size === 0) {
+      return [];
+    }
+
+    // First, filter by mock or active API connection
     let filtered = useMockData
       ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
-      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data'));
+      : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data') && activeKeyIds.has(pos.connectionId));
 
     // Then, apply size filter
     filtered = filtered.filter(pos => Math.abs(pos.size) > 0);
@@ -49,7 +61,7 @@ export function OpenPositions() {
     }
 
     return filtered.sort((a, b) => a.id.localeCompare(b.id));
-  }, [positionsList, filterText, exchangeFilter, useMockData]);
+  }, [positionsList, filterText, exchangeFilter, useMockData, activeKeyIds]);
 
   const { longs, shorts } = useMemo(() => {
     let longsCount = 0;
@@ -82,17 +94,59 @@ export function OpenPositions() {
     return { totalUnrealizedPnl: Number(uPnl), totalRealizedPnl: Number(rPnl) };
   }, [activePositions]);
 
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedPositions, totalItems } = usePagination(
+    activePositions,
+    50,
+    [filterText, exchangeFilter, useMockData, keys]
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-          <Activity className="w-5 h-5 text-[#2F6BFF]" />
-          Open Positions
-        </h2>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+              <Activity className="w-5 h-5 text-[#2F6BFF]" />
+              Open Positions
+            </h2>
+            <SimulationModeBadge />
+          </div>
+        </div>
       </div>
 
       {/* Header Controls */}
       <FilterBar
+        prepend={
+          <div className="flex items-center gap-2 mr-auto sm:mr-0">
+            <span className="text-xs text-[#8E9299] whitespace-nowrap">For Hedge Pro positions, show exposed balance by:</span>
+            <div className="flex bg-[#0e0f11] p-1 rounded-lg border border-[#2a2b30] w-max">
+              <button
+                type="button"
+                onClick={() => setHedgeExposedMode('gross')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                  hedgeExposedMode === 'gross'
+                    ? 'bg-[#2a2b30] text-white shadow-sm font-semibold'
+                    : 'text-[#8E9299] hover:text-white'
+                }`}
+                title="Gross: Uses fixed Wallet Balance (without unrealized PnL)"
+              >
+                Gross
+              </button>
+              <button
+                type="button"
+                onClick={() => setHedgeExposedMode('net')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                  hedgeExposedMode === 'net'
+                    ? 'bg-[#2a2b30] text-white shadow-sm font-semibold'
+                    : 'text-[#8E9299] hover:text-white'
+                }`}
+                title="Net: Uses Net Balance / Account Equity (including unrealized PnL)"
+              >
+                Net
+              </button>
+            </div>
+          </div>
+        }
         exchange={{
           value: exchangeFilter,
           onChange: setExchangeFilter,
@@ -167,8 +221,19 @@ export function OpenPositions() {
             );
           })()}
 
-          <div className="flex flex-col gap-3">
-            {activePositions.map((pos) => (
+          {totalItems > 5 && (
+            <div className="mb-2 mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                itemsPerPage={50}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3 mt-4">
+            {paginatedPositions.map((pos) => (
               <PositionCard
                 key={pos.id}
                 pos={pos}
@@ -177,6 +242,17 @@ export function OpenPositions() {
               />
             ))}
           </div>
+
+          {totalItems > 0 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                itemsPerPage={50}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

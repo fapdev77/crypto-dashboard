@@ -1,20 +1,5 @@
 [
   {
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1"
-  },
-  {
-    "connectionId": "mocked-data-bitget-2",
-    "exchange": "bitget",
-    "label": "Mock BITGET 2"
-  },
-  {
-    "connectionId": "mocked-data-bitget-3",
-    "exchange": "bitget",
-    "label": "Mock BITGET 3"
-  },
-  {
     "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
     "label": "Mock BYBIT 1"
@@ -28,6 +13,21 @@
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3"
+  },
+  {
+    "connectionId": "mocked-data-bitget-1",
+    "exchange": "bitget",
+    "label": "Mock BITGET 1"
+  },
+  {
+    "connectionId": "mocked-data-bitget-2",
+    "exchange": "bitget",
+    "label": "Mock BITGET 2"
+  },
+  {
+    "connectionId": "mocked-data-bitget-3",
+    "exchange": "bitget",
+    "label": "Mock BITGET 3"
   },
   {
     "connectionId": "mocked-data-okx-1",

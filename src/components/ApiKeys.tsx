@@ -5,6 +5,7 @@ import { useConnectionStore } from '../store/connectionStore';
 import { clearConnectionData } from '../store/crossStoreCleanup';
 import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
+import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import { ApiKeyModal } from './ApiKeyModal';
 import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
@@ -145,6 +146,12 @@ export function ApiKeys() {
                                 <span className="text-sm font-medium text-white truncate" title={apiKey.label}>
                                   {apiKey.label}
                                 </span>
+                                <AccountTypeBadge
+                                  exchange={apiKey.exchange}
+                                  accountType={apiKey.accountType}
+                                  environment={apiKey.environment}
+                                  bybitRegion={apiKey.bybitRegion}
+                                />
                               </div>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono leading-none border uppercase tracking-wider shrink-0 ${!apiKey.isActive ? 'bg-[#8E9299]/10 text-[#8E9299] border-[#8E9299]/20' :
                                 status === 'connected' ? 'bg-[#00C853]/10 text-[#00C853] border-[#00C853]/30' :
@@ -160,23 +167,22 @@ export function ApiKeys() {
                             <div className="flex items-center justify-end gap-2.5 pt-1">
                               {keyToDelete === apiKey.id ? (
                                 <div className="flex items-center gap-1 bg-[#FF4444]/10 border border-[#FF4444]/20 p-0.5 rounded">
-                                  <span className="text-[15px] font-medium text-[#FF4444] px-15">Deletar a chave?</span>
+                                  <span className="text-[13px] font-medium text-[#FF4444] px-2">Delete key?</span>
                                   <button
                                     onClick={() => {
                                       clearConnectionData(apiKey.id);
                                       removeKey(apiKey.id);
                                       setKeyToDelete(null);
                                     }}
-                                    className="text-[15px] px-4 py-0.5 bg-[#FF4444] hover:bg-[#CC0000] text-white rounded transition-colors"
+                                    className="text-[12px] px-2.5 py-0.5 bg-[#FF4444] hover:bg-[#CC0000] text-white rounded transition-colors"
                                   >
-                                    Sim
+                                    Yes
                                   </button>
-                                  |
                                   <button
                                     onClick={() => setKeyToDelete(null)}
-                                    className="text-[15px] px-4 py-0.5 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded transition-colors"
+                                    className="text-[12px] px-2.5 py-0.5 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded transition-colors"
                                   >
-                                    Não
+                                    No
                                   </button>
                                 </div>
                               ) : (

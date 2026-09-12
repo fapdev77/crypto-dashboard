@@ -14,6 +14,9 @@ interface SettingsState {
   /** TTL for cached asset metadata in hours (default 24). */
   metadataCacheTtlHours: number;
   setMetadataCacheTtlHours: (hours: number) => void;
+  /** Refresh interval for the Market Analytics symbol catalog in hours (default 1, min 1, max 24). */
+  symbolCatalogRefreshHours: number;
+  setSymbolCatalogRefreshHours: (hours: number) => void;
   /** Whether to show the welcome/help modal on startup. */
   showWelcomeOnStartup: boolean;
   setShowWelcomeOnStartup: (show: boolean) => void;
@@ -36,6 +39,9 @@ interface SettingsState {
   /** Funding history fetch interval in hours (default 4). */
   fundingHistoryInterval: number;
   setFundingHistoryInterval: (interval: number) => void;
+  /** Exposed balance calculation mode for hedge positions ('gross' or 'net'). */
+  hedgeExposedMode: 'gross' | 'net';
+  setHedgeExposedMode: (mode: 'gross' | 'net') => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -49,6 +55,8 @@ export const useSettingsStore = create<SettingsState>()(
       setHistoryCacheInterval: (val: number) => set({ historyCacheInterval: Math.max(1, Math.min(60, val)) }),
       metadataCacheTtlHours: 24,
       setMetadataCacheTtlHours: (val: number) => set({ metadataCacheTtlHours: Math.max(1, Math.min(24, val)) }),
+      symbolCatalogRefreshHours: 1,
+      setSymbolCatalogRefreshHours: (val: number) => set({ symbolCatalogRefreshHours: Math.max(1, Math.min(24, val)) }),
       showWelcomeOnStartup: true,
       setShowWelcomeOnStartup: (showWelcomeOnStartup: boolean) => set({ showWelcomeOnStartup }),
       historyCacheVersion: 0,
@@ -61,6 +69,8 @@ export const useSettingsStore = create<SettingsState>()(
       setFundingPollingInterval: (val: number) => set({ fundingPollingInterval: Math.max(1, Math.min(60, val)) }),
       fundingHistoryInterval: 4,
       setFundingHistoryInterval: (val: number) => set({ fundingHistoryInterval: Math.max(4, Math.min(8, val)) }),
+      hedgeExposedMode: 'gross',
+      setHedgeExposedMode: (hedgeExposedMode: 'gross' | 'net') => set({ hedgeExposedMode }),
     }),
     {
       name: 'terminal-settings',

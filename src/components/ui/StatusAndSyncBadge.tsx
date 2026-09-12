@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { RefreshCw, CheckCircle2, Clock, Play } from 'lucide-react';
+import { RefreshCw, CheckCircle2, Clock } from 'lucide-react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { AppTooltip } from './Tooltip';
+import { SimulationModeBadge } from './SimulationModeBadge';
 import { formatTimeOnly } from '../../utils/dateTimeHelper';
 
 interface StatusAndSyncBadgeProps {
@@ -145,20 +146,7 @@ export function StatusAndSyncBadge({
       </AppTooltip>
 
       {/* 2b. Simulation Mode Badge */}
-      {useMockData && (
-        <AppTooltip
-          description="The application is currently running in Simulation Mode using offline mock data. Real-time API calls are offline."
-          rows={[
-            { label: 'Mode', value: 'Simulation' },
-            { label: 'Engine', value: 'Mock Data' }
-          ]}
-        >
-          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-500 font-medium select-none animate-pulse">
-            <Play className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-            <span>Simulation Mode</span>
-          </div>
-        </AppTooltip>
-      )}
+      <SimulationModeBadge />
 
       {/* 3. Manual Sync Trigger Button with 1-min Cooldown */}
       <AppTooltip
