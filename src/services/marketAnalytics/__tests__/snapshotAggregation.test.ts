@@ -109,4 +109,35 @@ describe('Market Analytics Snapshot Multi-Market & Aggregation (D3)', () => {
     expect(liveSnapshot.oiHistory.length).toBeGreaterThan(0);
     expect(liveSnapshot.takerFlowHistory.length).toBeGreaterThan(0);
   });
+
+  it('guarantees USD notional volume and OI consistency for INVERSE (Coin-M) and derivative markets', () => {
+    const snapshot = generateMockSnapshot('BTC', ['PERP', 'SPOT', 'INVERSE'], '1h', ['bybit', 'okx', 'bitget']);
+    const inverseEntries = snapshot.breakdown.filter((b) => b.market === 'INVERSE');
+    expect(inverseEntries.length).toBe(3);
+
+    for (const inv of inverseEntries) {
+      // USD volume must be in USD notional range (millions), not small single-digit coin count
+      expect(inv.volume24hUsd).toBeGreaterThan(1_000_000);
+      // OI in USD must be in USD notional range (millions)
+      expect(inv.oiUsd).not.toBeNull();
+      expect(inv.oiUsd!).toBeGreaterThan(1_000_000);
+      // Price must be realistic
+      expect(inv.price).toBeGreaterThan(1000);
+    }
+
+    // Aggregated metrics must reflect the sum of all markets including INVERSE in USD
+    expect(snapshot.totalVolume24hUsd).toBeGreaterThan(10_000_000);
+  });
+
+  it('correctly calculates Bybit Inverse volume and OI in USD notional in snapshot breakdown', () => {
+    const snapshot = generateMockSnapshot('BTC', ['INVERSE'], '1h', ['bybit']);
+    expect(snapshot.breakdown.length).toBe(1);
+    const bybitInverse = snapshot.breakdown[0];
+    expect(bybitInverse.exchange).toBe('bybit');
+    expect(bybitInverse.market).toBe('INVERSE');
+    expect(bybitInverse.price).toBeGreaterThan(1000);
+    expect(bybitInverse.volume24hUsd).toBeGreaterThan(1_000_000);
+    expect(bybitInverse.oiUsd).not.toBeNull();
+    expect(bybitInverse.oiUsd!).toBeGreaterThan(1_000_000);
+  });
 });
