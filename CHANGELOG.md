@@ -1,3 +1,10 @@
+# [1.61.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.60.0...v1.61.0) (2026-09-12)
+
+
+### Features
+
+* **market:** calculate USD notional for inverse contracts ([ba0ecc5](https://github.com/fapdev77/crypto-dashboard/commit/ba0ecc553cc2bd50a881d5f9af7e24a680ba2caa))
+
 # [1.60.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.59.1...v1.60.0) (2026-09-11)
 
 
