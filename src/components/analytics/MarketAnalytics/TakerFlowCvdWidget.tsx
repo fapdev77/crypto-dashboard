@@ -100,25 +100,25 @@ export const TakerFlowCvdWidget: React.FC = () => {
             <PeriodTakerDeltaTooltip>
               <span className="text-[11px] text-[#8E9299] block font-sans">Period Taker Delta</span>
             </PeriodTakerDeltaTooltip>
-            <span
-              className={`text-base font-bold ${
+            <div
+              className={`text-base font-bold mt-0.5 ${
                 netDeltaTotal >= 0 ? 'text-emerald-400' : 'text-rose-400'
               }`}
             >
               {netDeltaTotal >= 0 ? '+' : ''}{formatUsd(netDeltaTotal)}
-            </span>
+            </div>
           </div>
           <div className="text-right">
             <CvdNetBalanceTooltip>
               <span className="text-[11px] text-[#8E9299] block font-sans">CVD Net Balance</span>
             </CvdNetBalanceTooltip>
-            <span
-              className={`text-base font-bold ${
+            <div
+              className={`text-base font-bold mt-0.5 ${
                 latestCvd >= 0 ? 'text-cyan-400' : 'text-amber-400'
               }`}
             >
               {latestCvd >= 0 ? '+' : ''}{formatUsd(latestCvd)}
-            </span>
+            </div>
           </div>
         </div>
       </div>
