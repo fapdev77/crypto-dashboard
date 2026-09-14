@@ -140,4 +140,13 @@ describe('Market Analytics Snapshot Multi-Market & Aggregation (D3)', () => {
     expect(bybitInverse.oiUsd).not.toBeNull();
     expect(bybitInverse.oiUsd!).toBeGreaterThan(1_000_000);
   });
+
+  it('calculates realistic 24h price change percentage without 100x inflation', async () => {
+    const snapshot = await MarketAnalyticsService.fetchSnapshot('BTC', ['PERP', 'SPOT'], '1h', ['bybit', 'okx', 'bitget'], true);
+    // BTC 24h price change in normal market conditions is within [-30%, +30%]
+    // The previous bug caused a -0.57% drop to be calculated as -56.7% due to double * 100
+    expect(Math.abs(snapshot.priceChange24h)).toBeLessThan(30);
+    expect(typeof snapshot.priceChange24h).toBe('number');
+    expect(isNaN(snapshot.priceChange24h)).toBe(false);
+  });
 });

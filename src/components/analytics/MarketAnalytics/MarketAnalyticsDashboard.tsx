@@ -111,7 +111,9 @@ export const MarketAnalyticsDashboard: React.FC = () => {
                 </span>
               </PriceMetricTooltip>
               <div className="text-lg font-bold font-mono text-white">
-                ${snapshot.currentPrice}
+                {snapshot.currentPrice < 1
+                  ? `$${snapshot.currentPrice.toFixed(4)}`
+                  : `$${snapshot.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               </div>
               <div
                 className={`text-xs font-semibold flex items-center gap-0.5 ${
@@ -124,7 +126,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
                   <TrendingDown className="w-3 h-3" />
                 )}
                 {snapshot.priceChange24h >= 0 ? '+' : ''}
-                {snapshot.priceChange24h}%
+                {snapshot.priceChange24h.toFixed(2)}%
               </div>
             </div>
 
