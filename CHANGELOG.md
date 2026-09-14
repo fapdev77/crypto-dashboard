@@ -1,3 +1,17 @@
+# [1.62.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.61.1...v1.62.0) (2026-09-14)
+
+
+### Features
+
+* add tooltips to Taker Flow and CVD metrics ([7002831](https://github.com/fapdev77/crypto-dashboard/commit/70028312fb1f7be1ffba43cd865b983f4fbdaa2e))
+
+## [1.61.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.61.0...v1.61.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* standardize number formatting and fix price calculation ([6b6ebfd](https://github.com/fapdev77/crypto-dashboard/commit/6b6ebfd5216e24f68e506000037d9dc7e197d83f))
+
 # [1.61.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.60.0...v1.61.0) (2026-09-12)
 
 

@@ -83,6 +83,30 @@ export const TakerFlowMetricTooltip: React.FC<{ children: React.ReactNode }> = (
   </TooltipWrapper>
 );
 
+export const PeriodTakerDeltaTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <TooltipWrapper
+    description="Total net delta of aggressive market orders (Taker Buy - Taker Sell) accumulated across all candles in the active chart period."
+    rows={[
+      { label: "Formula", value: "Σ (Taker Buy - Taker Sell)", valueClassName: "font-mono text-[10px] text-gray-400" },
+      { label: "Interpretation", value: "Sum of taker aggression across the selected window" }
+    ]}
+  >
+    {children}
+  </TooltipWrapper>
+);
+
+export const CvdNetBalanceTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <TooltipWrapper
+    description="Current Cumulative Volume Delta (CVD) value at the most recent candle, tracking cumulative aggressive order balance starting from the beginning of the period."
+    rows={[
+      { label: "Formula", value: "Running sum of candle deltas at t(latest)", valueClassName: "font-mono text-[10px] text-gray-400" },
+      { label: "Alignment", value: "Matches the final data point of the blue CVD line on the chart" }
+    ]}
+  >
+    {children}
+  </TooltipWrapper>
+);
+
 export const AssetSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <AppTooltip 
     description="Search and select the cryptocurrency to analyze across the market."

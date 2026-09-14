@@ -146,7 +146,7 @@ export class MarketAnalyticsService {
 
     // 4. Resolve Primary Live Price from fulfilled feeds (PERP -> SPOT -> INVERSE)
     let primaryLivePrice = 0;
-    let liveChange24hPct = 0;
+    let liveChange24hPct: number | null = null;
 
     // Find first valid price
     for (const prefMarket of ['PERP', 'SPOT', 'INVERSE'] as SpecificMarketType[]) {
@@ -155,7 +155,7 @@ export class MarketAnalyticsService {
           const res = feedResults[i];
           if (res.status === 'fulfilled' && res.value?.lastPrice && res.value.lastPrice > 0) {
             primaryLivePrice = res.value.lastPrice;
-            if (res.value.price24hPcnt !== undefined) {
+            if (res.value.price24hPcnt !== undefined && !isNaN(res.value.price24hPcnt)) {
               liveChange24hPct = res.value.price24hPcnt * 100;
             }
             break;
@@ -171,7 +171,7 @@ export class MarketAnalyticsService {
         const res = feedResults[i];
         if (res.status === 'fulfilled' && res.value?.lastPrice && res.value.lastPrice > 0) {
           primaryLivePrice = res.value.lastPrice;
-          if (res.value.price24hPcnt !== undefined) {
+          if (res.value.price24hPcnt !== undefined && !isNaN(res.value.price24hPcnt)) {
             liveChange24hPct = res.value.price24hPcnt * 100;
           }
           break;
@@ -301,7 +301,7 @@ export class MarketAnalyticsService {
     const oiChange24h = initialOiPoint.totalOiUsd > 0
       ? ((latestOiPoint.totalOiUsd - initialOiPoint.totalOiUsd) / initialOiPoint.totalOiUsd) * 100
       : 0;
-    const priceChange24h = liveChange24hPct !== 0
+    const priceChange24h = liveChange24hPct !== null
       ? liveChange24hPct
       : (initialOiPoint.price > 0 ? ((latestOiPoint.price - initialOiPoint.price) / initialOiPoint.price) * 100 : 0);
 
@@ -712,7 +712,7 @@ export class MarketAnalyticsService {
 
       return {
         lastPrice: px,
-        price24hPcnt: parseFloat(t.price24hPcnt || '0') * 100,
+        price24hPcnt: parseFloat(t.price24hPcnt || '0'),
         volume24hUsd,
         fundingRate: t.fundingRate ? parseFloat(t.fundingRate) : undefined,
         nextFundingTime: t.nextFundingTime ? parseInt(t.nextFundingTime) : undefined,
@@ -734,8 +734,16 @@ export class MarketAnalyticsService {
         if (!volume24hUsd && t.vol24h && px) {
           volume24hUsd = parseFloat(t.vol24h) * px;
         }
+        let price24hPcnt: number | undefined;
+        if (px && t.open24h) {
+          const open24h = parseFloat(t.open24h);
+          if (open24h > 0) {
+            price24hPcnt = (px - open24h) / open24h;
+          }
+        }
         return {
           lastPrice: px,
+          price24hPcnt,
           volume24hUsd,
         };
       }
@@ -750,6 +758,7 @@ export class MarketAnalyticsService {
     ]);
 
     let lastPrice: number | undefined;
+    let price24hPcnt: number | undefined;
     let volume24hUsd: number | undefined;
     let fundingRate: number | undefined;
     let nextFundingRate: number | undefined;
@@ -758,6 +767,12 @@ export class MarketAnalyticsService {
     if (tickerRes.status === 'fulfilled' && tickerRes.value?.code === '0' && tickerRes.value.data?.[0]) {
       const t = tickerRes.value.data[0];
       if (t.last) lastPrice = parseFloat(t.last);
+      if (lastPrice && t.open24h) {
+        const open24h = parseFloat(t.open24h);
+        if (open24h > 0) {
+          price24hPcnt = (lastPrice - open24h) / open24h;
+        }
+      }
       // OKX Derivatives (SWAP/FUTURES - Linear & Inverse):
       // volCcy24h is in base coin units (e.g. BTC), vol24h is contract count.
       // We must multiply base coin volume (volCcy24h) by lastPrice to obtain accurate USD Notional volume.
@@ -787,6 +802,7 @@ export class MarketAnalyticsService {
 
     return {
       lastPrice,
+      price24hPcnt,
       volume24hUsd,
       fundingRate,
       nextFundingRate,
