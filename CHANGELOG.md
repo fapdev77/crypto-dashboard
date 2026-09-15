@@ -1,3 +1,10 @@
+# [1.63.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.62.0...v1.63.0) (2026-09-15)
+
+
+### Features
+
+* New inverse market dashboard ([12d33c1](https://github.com/fapdev77/crypto-dashboard/commit/12d33c16a1a415f3665bce2006ae6c0fc71f0f56))
+
 # [1.62.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.61.1...v1.62.0) (2026-09-14)
 
 
