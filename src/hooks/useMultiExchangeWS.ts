@@ -35,14 +35,29 @@ async function syncRestData(config: ApiCredentials): Promise<void> {
     const balancePromise = adapter.getBalance ? adapter.getBalance(config) : Promise.resolve([]);
     const positionsPromise = adapter.getOpenPositions ? adapter.getOpenPositions(config) : Promise.resolve([]);
     const openOrdersPromise = adapter.getOpenOrders ? adapter.getOpenOrders(config) : Promise.resolve([]);
-    const [balances, positions, openOrders] = await Promise.all([
+    const [balanceResult, positionsResult, ordersResult] = await Promise.allSettled([
       balancePromise,
       positionsPromise,
       openOrdersPromise,
     ]);
-    useBalancesStore.getState().updateBalances(config.id, balances as any);
-    usePositionsStore.getState().updatePositions(config.id, positions);
-    useOrdersStore.getState().updateOpenOrders(config.id, openOrders);
+
+    if (balanceResult.status === 'fulfilled') {
+      useBalancesStore.getState().updateBalances(config.id, balanceResult.value as any);
+    } else {
+      LogManager.warn(`REST-${config.id}`, `Failed to fetch balances for ${config.exchange}:`, balanceResult.reason);
+    }
+
+    if (positionsResult.status === 'fulfilled') {
+      usePositionsStore.getState().updatePositions(config.id, positionsResult.value);
+    } else {
+      LogManager.warn(`REST-${config.id}`, `Failed to fetch open positions for ${config.exchange}:`, positionsResult.reason);
+    }
+
+    if (ordersResult.status === 'fulfilled') {
+      useOrdersStore.getState().updateOpenOrders(config.id, ordersResult.value);
+    } else {
+      LogManager.warn(`REST-${config.id}`, `Failed to fetch open orders for ${config.exchange}:`, ordersResult.reason);
+    }
   } catch (err) {
     LogManager.error(`REST-${config.id}`, `${config.exchange} REST polling failed:`, err);
   }

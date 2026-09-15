@@ -66,7 +66,7 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
         label="Real Hedge Coverage"
         value={
           <span className={totals.coveragePct < 0 ? 'text-[#FF4444]' : undefined}>
-            {totals.coveragePct.toFixed(1)}%
+            {totals.coveragePct.toFixed(2)}%
           </span>
         }
         tooltip={
@@ -93,7 +93,7 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
       <KpiMetricCard
         icon={<Wallet className="w-4 h-4 text-white" />}
         label="Protected of Equity"
-        value={`${totals.protectedOfEquityPct.toFixed(1)}%`}
+        value={`${totals.protectedOfEquityPct.toFixed(2)}%`}
         tooltip={
           <div className="flex flex-col gap-2">
             <p>

@@ -24,7 +24,8 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
    - [Trade History (Histórico de Execuções)](#-trade-history-histórico-de-execuções)
    - [PnL by Symbol (Lucros e Perdas por Símbolo)](#-pnl-by-symbol-lucros-e-perdas-por-símbolo)
    - [Dashboard de Taxas de Financiamento (Funding Fees)](#-dashboard-de-taxas-de-financiamento-funding-fees)
-   - [Histórico de Transações Bybit (Transaction Log)](#-histórico-de-transações-bybit-transaction-log)
+   - [Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)](#-histórico-de-transações-multi-corretora-bybit-bitget-e-okx-transactions)
+   - [Market Analytics (Inteligência Quantitativa e Derivativos)](#-market-analytics-inteligência-quantitativa-e-derivativos)
    - [API Tester (Testador de Conexões e Endpoints)](#-api-tester-testador-de-conexões-e-endpoints)
    - [Modo Privacidade (Privacy Mode)](#-modo-privacidade-privacy-mode)
 8. [Padronização de Contratos Inversos e Paginação](#8-padronização-de-contratos-inversos-e-paginação)
@@ -174,11 +175,67 @@ Um painel abrangente que consolida dados de taxas de financiamento (funding rate
 - **Indicadores Visuais**: Animações de atualização (flash) em tempo real e tooltips explicativos da direção do pagamento (Longs pagando Shorts ou vice-versa).
 - *Nota sobre a OKX*: A API da OKX limita o histórico a ~3 meses, sendo automaticamente omitida das médias de 6M e 1Y para manter a integridade dos dados.
 
-### 📜 Histórico de Transações Bybit (Transaction Log)
-Uma ferramenta especializada para usuários da Bybit, desenvolvida para baixar, armazenar e analisar o histórico completo de transações brutas diretamente da corretora:
-- **Sincronização Profunda**: Baixa histórico de liquidações, taxas de funding e taxas de trade, salvando tudo no IndexedDB local.
-- **Cálculo de PnL Realizado**: Calcula ganhos e perdas reais com base na fórmula `cashFlow + funding - fee`.
-- **Atualizações Incrementais**: Sincroniza apenas novos registros após o download inicial.
+### 📜 Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)
+Módulos especializados de auditoria contábil e histórico completo de transações brutas diretamente das corretoras (Bybit, Bitget e OKX):
+- **Sincronização Profunda & Incremental**: Baixa histórico completo de trades, taxas de funding, liquidações, transferências, depósitos, saques e juros, salvando com persistência no IndexedDB local com sincronizações incrementais ultrarrápidas.
+- **Filtros Unificados (Universal Transaction Mapper)**: Sistema de filtragem e badges padronizados em 10 categorias universais comuns às 3 corretoras:
+  1. *Trade & Orders* (Trades, ordens spot/futuros e PnL de fechamento)
+  2. *Funding Fee* (Taxas e proventos periódicos de financiamento)
+  3. *Transfer In / Deposit* (Depósitos e transferências recebidas)
+  4. *Transfer Out / Withdraw* (Saques e transferências enviadas)
+  5. *Liquidation & ADL* (Liquidações forçadas e desalavancagem automática)
+  6. *Interest & Loans* (Juros de margem, empréstimos e amortizações)
+  7. *Rewards & Bonus* (Fundos de teste, cupons, bônus e airdrops)
+  8. *Delivery & Settle* (Entregas de contratos a termo e exercícios de opções)
+  9. *Others* (Conversões de moeda, auto-deduções e ajustes)
+  10. *All Types* (Visualização integral sem filtro de tipo)
+- **Filtros Adicionais**: Categoria de instrumento (Spot, Linear, Inverse, Option, Margin), Moeda/Ativo, Conta/Subconta, Período e Busca por Símbolo.
+- **Cálculo de Fluxo de Caixa e PnL Realizado**: Calcula variações patrimoniais reais com base nas fórmulas contábeis de fluxo de caixa (`cashFlow + funding - fee`) e reconciliação com saldos de carteira (`walletBalance`).
+- **Cards de Métricas e Gráficos de Distribuição**: Total de transações, funding acumulado em USD, taxas de corretagem líquidas em USD e variação líquida do período.
+
+### 📈 Market Analytics (Inteligência Quantitativa e Derivativos)
+Um terminal integrado de inteligência quantitativa de derivativos que consolida e correlaciona dados de mercado em tempo real entre **Bybit**, **OKX** e **Bitget**:
+- **Barra de Filtros e Seletores Globais**:
+  - *Seletor de Ativos (Asset Selector)*: Busca rápida com suporte a favoritos (estrelas) para alternar entre pares de alta liquidez (ex: BTC, ETH, SOL).
+  - *Tipos de Mercado (Market Type)*: Filtro multi-seleção entre contratos Perpétuos/Lineares (PERP), Contratos Inversos (INVERSE), Mercado à Vista (SPOT) ou Todos (ALL).
+  - *Filtro de Corretoras (Exchanges)*: Multi-seleção para isolar ou agregar métricas de Bybit, OKX e Bitget simultaneamente.
+  - *Timeframes*: Intervalos operacionais selecionáveis de 5m, 15m, 30m, 1h, 4h e 1d.
+  - *Atualização Automática (Circular Countdown Refresh)*: Intervalos de polling ajustáveis (5s, 10s, 15s, 30s, 60s ou Pausado) com indicador visual circular de progresso e botão de recarregamento manual imediato.
+- **Painel de Métricas e KPIs (com Tooltips e Fórmulas Detalhadas)**:
+  - *Current Price & 24h Change*: Preço atual de mercado em USD e variação percentual nas últimas 24 horas.
+  - *24h Aggregated Volume*: Volume total nocional negociado agregado entre as corretoras selecionadas.
+  - *Total Open Interest (OI)*: Volume total de contratos em aberto em USD e taxa de variação percentual em 24h.
+  - *Benchmark Funding Rate & APR*: Taxa de financiamento atual para a janela de 8 horas e taxa anualizada correspondente: `APR = Taxa 8h * 3 * 365`.
+  - *Net CVD (Cumulative Volume Delta)*: Diferencial acumulado de agressões entre ordens a mercado de compra e venda (`Taker Buy Vol - Taker Sell Vol`).
+  - *Sentiment Index (Fear & Greed)*: Índice sintético de sentimento (0 a 100), calibrado em 5 zonas: *Extreme Fear (0-24)*, *Fear (25-44)*, *Neutral (45-55)*, *Greed (56-74)* e *Extreme Greed (75-100)*.
+- **Módulos Analíticos Especializados**:
+  1. **Open Interest & Leverage Monitor**:
+     - Gráfico Recharts de eixo duplo correlacionando o preço do ativo com a evolução do Open Interest (OI) em USD no timeframe selecionado.
+     - *Detector Automatizado de Regime de Mercado*:
+       - `Long Accumulation`: Preço ↑ e OI ↑ (Tendência de alta sustentada por injeção de novas posições compradas).
+       - `Short Squeeze`: Preço ↑ e OI ↓ (Movimento de alta acentuado por liquidações e fechamento forçado de posições vendidas).
+       - `Aggressive Shorting`: Preço ↓ e OI ↑ (Tendência de baixa com forte entrada e acúmulo de novas posições vendidas).
+       - `Long Liquidation`: Preço ↓ e OI ↓ (Desova em cascata de posições compradas e encerramento de margem).
+       - `Neutral Consolidation`: Preço e OI lateralizados sem dominância direcional clara.
+     - *Market Share de OI por Corretora*: Distribuição percentual e em dólares entre Bybit, OKX e Bitget.
+  2. **Cross-Exchange Funding Arbitrage (Arbitragem de Funding)**:
+     - Monitoramento em tempo real do spread de taxas de financiamento entre Bybit, OKX e Bitget (taxa de 8h e APR anualizado).
+     - *Fórmulas de Arbitragem*:
+       - `Spread 8h = Taxa Máxima - Taxa Mínima`
+       - `Spread APR = Spread 8h * 3 * 365`
+     - *Recomendação Delta-Neutra*: Identifica dinamicamente a melhor exchange para Long (menor taxa/taxa negativa) e para Short (maior taxa/taxa positiva).
+     - Tabela de oportunidades rápidas em múltiplos pares com contagem regressiva para o próximo acerto de funding.
+  3. **Order Flow & Cumulative Volume Delta (CVD)**:
+     - Rastreamento em tempo real da agressão de mercado: Taker Buy Volume vs. Taker Sell Volume.
+     - *Fórmula*: `Net Taker Delta = Compras a Mercado (Taker Buy) - Vendas a Mercado (Taker Sell)`.
+     - *CVD*: Soma acumulativa contínua do Delta no período (`CVD_t = CVD_(t-1) + Net Delta_t`).
+     - *Detector de Divergências (CVD Divergence Alerts)*:
+       - *Bullish Divergence*: Preço caindo ou lateral enquanto o CVD sobe (indica absorção passiva no livro limit por compradores).
+       - *Bearish Divergence*: Preço subindo ou lateral enquanto o CVD cai (indica absorção passiva no livro limit por vendedores).
+  4. **Smart Money vs. Retail Sentiment**:
+     - *Retail Ratio (Varejo)*: Proporção Long/Short baseada na contagem absoluta de contas de traders de varejo (indicador frequentemente contracíclico).
+     - *Top Trader Ratio (Smart Money)*: Proporção Long/Short ponderada pelo volume nocional em USD das contas do top 20% de operadores de alta rentabilidade.
+     - *Alerta de Divergência de Sentimento*: Sinaliza divergências expressivas entre o posicionamento do varejo e dos grandes operadores institucionais.
 
 ### ⚡ API Tester (Testador de Conexões e Endpoints)
 Ferramenta para diagnóstico técnico e validação de conectividade com as corretoras:

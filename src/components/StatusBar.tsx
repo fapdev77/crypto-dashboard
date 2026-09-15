@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useConnectionStore } from '../store/connectionStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { Activity, Lock, Unlock, KeyRound } from 'lucide-react';
+import { usePwaUpdateStore } from '../store/pwaUpdateStore';
+import { Activity, Lock, Unlock, KeyRound, Sparkles, RefreshCw } from 'lucide-react';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AppTooltip } from './ui/Tooltip';
 
@@ -10,6 +11,7 @@ export function StatusBar() {
   const { keys, isEncrypted } = useApiKeysStore();
   const { statuses, errors } = useConnectionStore();
   const useMockData = useSettingsStore(state => state.useMockData);
+  const { needRefresh, isUpdating, triggerUpdate } = usePwaUpdateStore();
 
   const activeKeys = keys.filter(apiKey => apiKey.isActive);
   const activeCount = activeKeys.length;
@@ -66,14 +68,31 @@ export function StatusBar() {
               </button>
             </AppTooltip>
           </div>
-          <AppTooltip description="View Version & Release Notes">
-            <button
-              onClick={handleVersionClick}
-              className="text-[10px] font-mono text-gray-400 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-gray-700"
-            >
-              v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}
-            </button>
-          </AppTooltip>
+          {needRefresh ? (
+            <AppTooltip description="New version available! Click to update application now">
+              <button
+                onClick={() => triggerUpdate()}
+                disabled={isUpdating}
+                className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-blue-500/40 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 hover:border-blue-400 text-[10px] font-medium font-mono cursor-pointer transition-all animate-pulse shrink-0 shadow-sm shadow-blue-500/20"
+              >
+                {isUpdating ? (
+                  <RefreshCw className="w-3 h-3 text-blue-400 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3 h-3 text-blue-400" />
+                )}
+                <span>{isUpdating ? 'UPDATING...' : 'UPDATE READY'}</span>
+              </button>
+            </AppTooltip>
+          ) : (
+            <AppTooltip description="View Version & Release Notes">
+              <button
+                onClick={handleVersionClick}
+                className="text-[10px] font-mono text-gray-400 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+              >
+                v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}
+              </button>
+            </AppTooltip>
+          )}
         </div>
       </div>
     );
@@ -178,14 +197,31 @@ export function StatusBar() {
           </div>
         </div>
 
-        <AppTooltip description="View Version & Release Notes">
-          <button
-            onClick={handleVersionClick}
-            className="text-[10px] font-mono text-gray-400 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-gray-700 ml-4 shrink-0"
-          >
-            v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}
-          </button>
-        </AppTooltip>
+        {needRefresh ? (
+          <AppTooltip description="New version available! Click to update application now">
+            <button
+              onClick={() => triggerUpdate()}
+              disabled={isUpdating}
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-blue-500/40 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 hover:border-blue-400 text-[10px] font-medium font-mono cursor-pointer transition-all animate-pulse ml-4 shrink-0 shadow-sm shadow-blue-500/20"
+            >
+              {isUpdating ? (
+                <RefreshCw className="w-3 h-3 text-blue-400 animate-spin" />
+              ) : (
+                <Sparkles className="w-3 h-3 text-blue-400" />
+              )}
+              <span>{isUpdating ? 'UPDATING...' : 'UPDATE READY'}</span>
+            </button>
+          </AppTooltip>
+        ) : (
+          <AppTooltip description="View Version & Release Notes">
+            <button
+              onClick={handleVersionClick}
+              className="text-[10px] font-mono text-gray-400 hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-gray-700 ml-4 shrink-0"
+            >
+              v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}
+            </button>
+          </AppTooltip>
+        )}
       </div>
     </div>
   );

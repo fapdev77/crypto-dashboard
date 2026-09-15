@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useApiKeysStore, Exchange } from '../store/apiKeysStore';
+import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
 import { OkxAdapter } from '../services/adapters/OkxAdapter';
 import { BitgetAdapter } from '../services/adapters/BitgetAdapter';
 import { BybitAdapter } from '../services/adapters/BybitAdapter';
+import { getBybitBaseUrl } from '../utils/bybitEndpoints';
 import { proxyFetch } from '../utils/proxyFetch';
 import { LogManager } from '../services/LogManager';
 import { Send, Play, Square, Wifi, WifiOff, Terminal, ListCollapse } from 'lucide-react';
@@ -56,10 +57,10 @@ export function ApiTester() {
     return '';
   };
 
-  const getRestBaseUrl = (exchange: Exchange) => {
-    if (exchange === 'bitget') return 'https://api.bitget.com';
-    if (exchange === 'okx') return 'https://www.okx.com';
-    if (exchange === 'bybit') return 'https://api.bybit.com';
+  const getRestBaseUrl = (key: ApiCredentials) => {
+    if (key.exchange === 'bitget') return 'https://api.bitget.com';
+    if (key.exchange === 'okx') return 'https://www.okx.com';
+    if (key.exchange === 'bybit') return getBybitBaseUrl(key.environment, key.bybitRegion);
     return '';
   }
 
@@ -68,7 +69,7 @@ export function ApiTester() {
     
     setRestResponse('Loading...');
     try {
-      const baseUrl = getRestBaseUrl(activeKey.exchange);
+      const baseUrl = getRestBaseUrl(activeKey);
       const targetUrl = `${baseUrl}${restPath.startsWith('/') ? '' : '/'}${restPath}`;
       
       let headers: Record<string, string> = {};
@@ -81,7 +82,7 @@ export function ApiTester() {
          // Bybit auth usually takes the payload string or query string.
          // If GET, query is everything after `?`.
          const queryStr = restPath.includes('?') ? restPath.split('?')[1] : '';
-         headers = await BybitAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, queryStr) as Record<string, string>;
+         headers = await BybitAdapter.getHeaders(activeKey, queryStr) as Record<string, string>;
       }
       
       const proxyResponse = await proxyFetch({ targetUrl, method: 'GET', headers });

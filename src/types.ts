@@ -219,6 +219,93 @@ export interface BybitTransactionLogEntry {
   raw: Record<string, unknown>;
 }
 
+export interface BitgetTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'bitget';
+  accountType?: 'classic' | 'uta';
+  label: string; // ApiKey Label 
+
+  rawId: string;
+  symbol: string;
+  category: string;        // SPOT, MARGIN, USDT-FUTURES, COIN-FUTURES, USDC-FUTURES, OTHER
+  side: 'Buy' | 'Sell' | 'None' | string;
+  transactionTime: number; // ms timestamp
+  type: string;            // TRANSFER_IN, ORDER_DEALT_IN, ORDER_DEALT_OUT, FUNDING_FEE_IN, etc.
+  transSubType?: string;
+  groupType?: string;
+  positionType?: string;
+  qty?: string;
+  size?: string;
+  amount?: string;
+  currency: string;
+  tradePrice?: string;
+  funding?: string;
+  fee: string;
+  feeCurrency?: string;
+  cashFlow: string;
+  change: string;          // net change
+  cashBalance: string;
+  balance?: string;
+  positionAmount?: string;
+  positionBalance?: string;
+  feeRate?: string;
+  bonusChange?: string;
+  tradeId?: string;
+  orderId?: string;
+  orderLinkId?: string;
+  extra?: string;
+
+  raw: Record<string, unknown>;
+}
+
+export interface OkxTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'okx';
+  label: string; // ApiKey Label 
+
+  rawId: string;
+  billId?: string;
+  symbol: string;
+  category: string;        // SPOT, MARGIN, SWAP, FUTURES, OPTION
+  side: 'Buy' | 'Sell' | 'None' | string;
+  transactionTime: number; // ms timestamp
+  type: string;            // Type display (Trade, Funding fee, Transfer, etc.)
+  transSubType?: string;   // SubType display (Buy, Sell, Funding expense, etc.)
+  subType?: string;
+  typeCode?: string;
+  subTypeCode?: string;
+  qty?: string;
+  size?: string;
+  contracts?: string;
+  contractVal?: string;
+  cryptoQty?: string;
+  totalValueUsd?: string;
+  amount?: string;
+  currency: string;
+  tradePrice?: string;
+  funding?: string;
+  fee: string;
+  feeCurrency?: string;
+  cashFlow: string;
+  change: string;          // balChg
+  cashBalance: string;     // bal
+  balance?: string;
+  positionBalance?: string;
+  feeRate?: string;
+  bonusChange?: string;
+  tradeId?: string;
+  orderId?: string;
+  orderLinkId?: string;
+  pnl?: string;
+  extra?: string;
+
+  raw: Record<string, unknown>;
+}
+
 export interface FundingMeta {
   id: string; // 'exchange-symbol'
   exchange: ExchangeName;
