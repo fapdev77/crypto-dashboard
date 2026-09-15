@@ -13,6 +13,7 @@ import { AppTooltip } from '../ui/Tooltip';
 import { detectQtyIsCoin } from '../../utils/inverseUtils';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
+import { AccountTypeBadge } from '../ui/AccountTypeBadge';
 import { AssetClassifierAggregator } from '../../services/AssetClassifierAggregator';
 import { extractBaseCoin } from '../../utils/unifiers';
 import { formatIsoDateTime, formatDateTime } from '../../utils/formatters';
@@ -431,12 +432,20 @@ export function TradeHistory() {
                       <div className="flex items-center gap-1">
                         <span className="font-bold text-white text-sm">{trade.symbol}</span>
                       </div>
-                      <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
-                        {trade.exchange}
-                      </span>
-                      <span className="w-max text-[10px] font-medium text-[#c0c5cc] bg-[#1a1c20] border border-[#2d3036] mt-1 py-0.5 px-1.5 rounded-[4px] truncate max-w-[130px]">
-                        {connectionLabel}
-                      </span>
+                      <div className="flex items-center gap-1 mt-2 flex-wrap">
+                        <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] capitalize">
+                          {trade.exchange}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
+                        <span className="w-max text-[10px] font-medium text-[#c0c5cc] bg-[#1a1c20] border border-[#2d3036] py-0.5 px-1.5 rounded-[4px] truncate max-w-[130px]" title={connectionLabel}>
+                          {connectionLabel}
+                        </span>
+                        <AccountTypeBadge
+                          exchange={trade.exchange}
+                          accountType={trade.accountType || keys.find(k => k.id === trade.connectionId)?.accountType}
+                        />
+                      </div>
                     </div>
                   </div>
 

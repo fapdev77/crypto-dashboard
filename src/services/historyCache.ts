@@ -1,9 +1,19 @@
 import { openDB, deleteDB, DBSchema, IDBPDatabase } from 'idb';
-import { UnifiedHistoryPosition, UnifiedAssetCategory, UnifiedOrder, BybitTransactionLogEntry, FundingRateSummary, ExchangeName, FundingMeta } from '../types';
+import {
+  UnifiedHistoryPosition,
+  UnifiedAssetCategory,
+  UnifiedOrder,
+  BybitTransactionLogEntry,
+  BitgetTransactionLogEntry,
+  OkxTransactionLogEntry,
+  FundingRateSummary,
+  ExchangeName,
+  FundingMeta
+} from '../types';
 import { LogManager } from './LogManager';
 
 const DB_NAME = 'crypto-dashboard-cache';
-const DB_VERSION = 10;
+const DB_VERSION = 11;
 const HISTORY_STORE = 'positionHistory';
 const META_STORE = 'cacheMeta';
 const ASSET_META_STORE = 'assetMetadata';
@@ -12,6 +22,10 @@ const ORDER_META_STORE = 'orderCacheMeta';
 const BYBIT_REAL_PNL_STORE = 'bybitRealPnL';
 const BYBIT_TX_LOG_STORE = 'bybit-transaction-log';
 const BYBIT_TX_META_STORE = 'bybit-transaction-meta';
+const BITGET_TX_LOG_STORE = 'bitget-transaction-log';
+const BITGET_TX_META_STORE = 'bitget-transaction-meta';
+const OKX_TX_LOG_STORE = 'okx-transaction-log';
+const OKX_TX_META_STORE = 'okx-transaction-meta';
 const FUNDING_SUMMARIES_STORE = 'funding-summaries';
 const FUNDING_META_STORE = 'funding-meta';
 
@@ -80,6 +94,50 @@ interface CacheDB extends DBSchema {
     };
   };
   'bybit-transaction-meta': {
+    key: string;       // connectionId
+    value: {
+      connectionId: string;
+      oldestTransactionTime: number;
+      latestTransactionTime: number;
+      totalRecords: number;
+      updatedAt: number;
+    };
+  };
+  'bitget-transaction-log': {
+    key: string;
+    value: BitgetTransactionLogEntry;
+    indexes: {
+      'by-connectionId': string;
+      'by-transactionTime': number;
+      'by-symbol': string;
+      'by-type': string;
+      'by-currency': string;
+      'by-category': string;
+    };
+  };
+  'bitget-transaction-meta': {
+    key: string;       // connectionId
+    value: {
+      connectionId: string;
+      oldestTransactionTime: number;
+      latestTransactionTime: number;
+      totalRecords: number;
+      updatedAt: number;
+    };
+  };
+  'okx-transaction-log': {
+    key: string;
+    value: OkxTransactionLogEntry;
+    indexes: {
+      'by-connectionId': string;
+      'by-transactionTime': number;
+      'by-symbol': string;
+      'by-type': string;
+      'by-currency': string;
+      'by-category': string;
+    };
+  };
+  'okx-transaction-meta': {
     key: string;       // connectionId
     value: {
       connectionId: string;
@@ -199,6 +257,33 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
         summaryStore.createIndex('by-exchange', 'exchange');
         summaryStore.createIndex('by-symbol', 'symbol');
       }
+
+      if (oldVersion < 11) {
+        if (!db.objectStoreNames.contains(BITGET_TX_LOG_STORE)) {
+          const bitgetTxStore = db.createObjectStore(BITGET_TX_LOG_STORE, { keyPath: 'id' });
+          bitgetTxStore.createIndex('by-connectionId', 'connectionId');
+          bitgetTxStore.createIndex('by-transactionTime', 'transactionTime');
+          bitgetTxStore.createIndex('by-symbol', 'symbol');
+          bitgetTxStore.createIndex('by-type', 'type');
+          bitgetTxStore.createIndex('by-currency', 'currency');
+          bitgetTxStore.createIndex('by-category', 'category');
+        }
+        if (!db.objectStoreNames.contains(BITGET_TX_META_STORE)) {
+          db.createObjectStore(BITGET_TX_META_STORE, { keyPath: 'connectionId' });
+        }
+        if (!db.objectStoreNames.contains(OKX_TX_LOG_STORE)) {
+          const okxTxStore = db.createObjectStore(OKX_TX_LOG_STORE, { keyPath: 'id' });
+          okxTxStore.createIndex('by-connectionId', 'connectionId');
+          okxTxStore.createIndex('by-transactionTime', 'transactionTime');
+          okxTxStore.createIndex('by-symbol', 'symbol');
+          okxTxStore.createIndex('by-type', 'type');
+          okxTxStore.createIndex('by-currency', 'currency');
+          okxTxStore.createIndex('by-category', 'category');
+        }
+        if (!db.objectStoreNames.contains(OKX_TX_META_STORE)) {
+          db.createObjectStore(OKX_TX_META_STORE, { keyPath: 'connectionId' });
+        }
+      }
     },
   });
 
@@ -300,15 +385,182 @@ export async function updateCacheMeta(connectionId: string, latestCloseTime: num
   });
 }
 
-/**
- * Clear all cached data (useful for debugging or user-triggered resets).
- */
 export async function clearAllCache(): Promise<void> {
   if (dbInstance) {
     dbInstance.close();
     dbInstance = null;
   }
   await deleteDB(DB_NAME);
+}
+
+/**
+ * Clear position history cache only
+ */
+export async function clearPositionHistoryCache(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([HISTORY_STORE, META_STORE], 'readwrite');
+  await tx.objectStore(HISTORY_STORE).clear();
+  await tx.objectStore(META_STORE).clear();
+  await tx.done;
+}
+
+/**
+ * Clear order history cache only
+ */
+export async function clearOrderHistoryCache(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([ORDER_HISTORY_STORE, ORDER_META_STORE], 'readwrite');
+  await tx.objectStore(ORDER_HISTORY_STORE).clear();
+  await tx.objectStore(ORDER_META_STORE).clear();
+  await tx.done;
+}
+
+/**
+ * Clear Bybit transaction log cache only
+ */
+export async function clearBybitTxLogCache(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([BYBIT_TX_LOG_STORE, BYBIT_TX_META_STORE], 'readwrite');
+  await tx.objectStore(BYBIT_TX_LOG_STORE).clear();
+  await tx.objectStore(BYBIT_TX_META_STORE).clear();
+  await tx.done;
+}
+
+/**
+ * Clear Bitget transaction log cache only
+ */
+export async function clearBitgetTxLogCache(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([BITGET_TX_LOG_STORE, BITGET_TX_META_STORE], 'readwrite');
+  await tx.objectStore(BITGET_TX_LOG_STORE).clear();
+  await tx.objectStore(BITGET_TX_META_STORE).clear();
+  await tx.done;
+}
+
+/**
+ * Clear OKX transaction log cache only
+ */
+export async function clearOkxTxLogCache(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([OKX_TX_LOG_STORE, OKX_TX_META_STORE], 'readwrite');
+  await tx.objectStore(OKX_TX_LOG_STORE).clear();
+  await tx.objectStore(OKX_TX_META_STORE).clear();
+  await tx.done;
+}
+
+/**
+ * Clear all transaction logs across Bybit, Bitget, and OKX
+ */
+export async function clearAllTransactionLogsCache(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([
+    BYBIT_TX_LOG_STORE, BYBIT_TX_META_STORE,
+    BITGET_TX_LOG_STORE, BITGET_TX_META_STORE,
+    OKX_TX_LOG_STORE, OKX_TX_META_STORE
+  ], 'readwrite');
+  await tx.objectStore(BYBIT_TX_LOG_STORE).clear();
+  await tx.objectStore(BYBIT_TX_META_STORE).clear();
+  await tx.objectStore(BITGET_TX_LOG_STORE).clear();
+  await tx.objectStore(BITGET_TX_META_STORE).clear();
+  await tx.objectStore(OKX_TX_LOG_STORE).clear();
+  await tx.objectStore(OKX_TX_META_STORE).clear();
+  await tx.done;
+}
+
+/**
+ * Get total counts across individual stores
+ */
+export async function getOrderCacheSize(): Promise<number> {
+  const db = await getDB();
+  return db.count(ORDER_HISTORY_STORE);
+}
+
+export async function getBybitTxLogTotalCount(): Promise<number> {
+  const db = await getDB();
+  return db.count(BYBIT_TX_LOG_STORE);
+}
+
+export async function getBitgetTxLogTotalCount(): Promise<number> {
+  const db = await getDB();
+  return db.count(BITGET_TX_LOG_STORE);
+}
+
+export async function getOkxTxLogTotalCount(): Promise<number> {
+  const db = await getDB();
+  return db.count(OKX_TX_LOG_STORE);
+}
+
+export async function getFundingSummariesCount(): Promise<number> {
+  const db = await getDB();
+  return db.count('funding-summaries');
+}
+
+export interface ComprehensiveCacheStats {
+  positionHistoryCount: number;
+  orderHistoryCount: number;
+  bybitTxCount: number;
+  bitgetTxCount: number;
+  okxTxCount: number;
+  totalTxCount: number;
+  fundingCount: number;
+  assetMetaCount: number;
+  totalRecords: number;
+}
+
+export async function getComprehensiveCacheStats(): Promise<ComprehensiveCacheStats> {
+  try {
+    const db = await getDB();
+    const [
+      positionHistoryCount,
+      orderHistoryCount,
+      bybitTxCount,
+      bitgetTxCount,
+      okxTxCount,
+      fundingCount,
+      assetMetaCount,
+    ] = await Promise.all([
+      db.count(HISTORY_STORE).catch(() => 0),
+      db.count(ORDER_HISTORY_STORE).catch(() => 0),
+      db.count(BYBIT_TX_LOG_STORE).catch(() => 0),
+      db.count(BITGET_TX_LOG_STORE).catch(() => 0),
+      db.count(OKX_TX_LOG_STORE).catch(() => 0),
+      db.count('funding-summaries').catch(() => 0),
+      db.count(ASSET_META_STORE).catch(() => 0),
+    ]);
+
+    const totalTxCount = bybitTxCount + bitgetTxCount + okxTxCount;
+    const totalRecords =
+      positionHistoryCount +
+      orderHistoryCount +
+      totalTxCount +
+      fundingCount +
+      assetMetaCount;
+
+    return {
+      positionHistoryCount,
+      orderHistoryCount,
+      bybitTxCount,
+      bitgetTxCount,
+      okxTxCount,
+      totalTxCount,
+      fundingCount,
+      assetMetaCount,
+      totalRecords,
+    };
+  } catch (err) {
+    LogManager.error('HistoryCache', 'Error calculating comprehensive stats:', err);
+    return {
+      positionHistoryCount: 0,
+      orderHistoryCount: 0,
+      bybitTxCount: 0,
+      bitgetTxCount: 0,
+      okxTxCount: 0,
+      totalTxCount: 0,
+      fundingCount: 0,
+      assetMetaCount: 0,
+      totalRecords: 0,
+    };
+  }
 }
 
 /**
@@ -452,6 +704,124 @@ export async function updateBybitTxLogMeta(
 export async function getBybitTxLogCount(connectionId: string): Promise<number> {
   const db = await getDB();
   return db.countFromIndex(BYBIT_TX_LOG_STORE, 'by-connectionId', connectionId);
+}
+
+// ------------------------------------------------------------------
+// BITGET TRANSACTION LOG CACHE
+// ------------------------------------------------------------------
+
+export async function getBitgetTxLogCache(connectionId: string): Promise<BitgetTransactionLogEntry[]> {
+  const db = await getDB();
+  const all = await db.getAllFromIndex(BITGET_TX_LOG_STORE, 'by-connectionId', connectionId);
+  return all.sort((a, b) => b.transactionTime - a.transactionTime);
+}
+
+export async function getAllBitgetTxLogCache(): Promise<BitgetTransactionLogEntry[]> {
+  const db = await getDB();
+  const all = await db.getAll(BITGET_TX_LOG_STORE);
+  return all.sort((a, b) => b.transactionTime - a.transactionTime);
+}
+
+export async function saveBitgetTxLogCache(entries: BitgetTransactionLogEntry[]): Promise<void> {
+  if (entries.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction(BITGET_TX_LOG_STORE, 'readwrite');
+  const store = tx.objectStore(BITGET_TX_LOG_STORE);
+  for (const entry of entries) {
+    await store.put(entry);
+  }
+  await tx.done;
+}
+
+export async function getBitgetTxLogMeta(connectionId: string): Promise<{
+  connectionId: string;
+  oldestTransactionTime: number;
+  latestTransactionTime: number;
+  totalRecords: number;
+  updatedAt: number;
+} | undefined> {
+  const db = await getDB();
+  return db.get(BITGET_TX_META_STORE, connectionId);
+}
+
+export async function updateBitgetTxLogMeta(
+  connectionId: string,
+  oldestTransactionTime: number,
+  latestTransactionTime: number,
+  totalRecords: number
+): Promise<void> {
+  const db = await getDB();
+  await db.put(BITGET_TX_META_STORE, {
+    connectionId,
+    oldestTransactionTime,
+    latestTransactionTime,
+    totalRecords,
+    updatedAt: Date.now(),
+  });
+}
+
+export async function getBitgetTxLogCount(connectionId: string): Promise<number> {
+  const db = await getDB();
+  return db.countFromIndex(BITGET_TX_LOG_STORE, 'by-connectionId', connectionId);
+}
+
+// ------------------------------------------------------------------
+// OKX TRANSACTION LOG CACHE
+// ------------------------------------------------------------------
+
+export async function getOkxTxLogCache(connectionId: string): Promise<OkxTransactionLogEntry[]> {
+  const db = await getDB();
+  const all = await db.getAllFromIndex(OKX_TX_LOG_STORE, 'by-connectionId', connectionId);
+  return all.sort((a, b) => b.transactionTime - a.transactionTime);
+}
+
+export async function getAllOkxTxLogCache(): Promise<OkxTransactionLogEntry[]> {
+  const db = await getDB();
+  const all = await db.getAll(OKX_TX_LOG_STORE);
+  return all.sort((a, b) => b.transactionTime - a.transactionTime);
+}
+
+export async function saveOkxTxLogCache(entries: OkxTransactionLogEntry[]): Promise<void> {
+  if (entries.length === 0) return;
+  const db = await getDB();
+  const tx = db.transaction(OKX_TX_LOG_STORE, 'readwrite');
+  const store = tx.objectStore(OKX_TX_LOG_STORE);
+  for (const entry of entries) {
+    await store.put(entry);
+  }
+  await tx.done;
+}
+
+export async function getOkxTxLogMeta(connectionId: string): Promise<{
+  connectionId: string;
+  oldestTransactionTime: number;
+  latestTransactionTime: number;
+  totalRecords: number;
+  updatedAt: number;
+} | undefined> {
+  const db = await getDB();
+  return db.get(OKX_TX_META_STORE, connectionId);
+}
+
+export async function updateOkxTxLogMeta(
+  connectionId: string,
+  oldestTransactionTime: number,
+  latestTransactionTime: number,
+  totalRecords: number
+): Promise<void> {
+  const db = await getDB();
+  await db.put(OKX_TX_META_STORE, {
+    connectionId,
+    oldestTransactionTime,
+    latestTransactionTime,
+    totalRecords,
+    updatedAt: Date.now(),
+  });
+}
+
+export async function getOkxTxLogCount(connectionId: string): Promise<number> {
+  const db = await getDB();
+  return db.countFromIndex(OKX_TX_LOG_STORE, 'by-connectionId', connectionId);
 }
 
 // ------------------------------------------------------------------

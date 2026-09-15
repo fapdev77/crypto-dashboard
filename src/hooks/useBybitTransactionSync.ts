@@ -113,6 +113,12 @@ export function useBybitTransactionSync() {
     // On mount: smart sync — incremental if cache exists, deep sync if not
     initialSync();
 
+    const handleClearEvent = () => {
+      initialSync();
+    };
+    window.addEventListener('transactions-cache-cleared', handleClearEvent);
+    window.addEventListener('history-cache-cleared', handleClearEvent);
+
     // Periodic incremental sync
     const intervalMs = (historyCacheInterval || 5) * 60 * 1000;
     const intervalId = setInterval(async () => {
@@ -168,6 +174,8 @@ export function useBybitTransactionSync() {
 
     return () => {
       clearInterval(intervalId);
+      window.removeEventListener('transactions-cache-cleared', handleClearEvent);
+      window.removeEventListener('history-cache-cleared', handleClearEvent);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keys, useMockData, historyCacheInterval]);

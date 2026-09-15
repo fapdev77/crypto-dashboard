@@ -10,7 +10,7 @@ export class BillsHistoryService {
    */
   public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
     try {
-      const adapter = ExchangeAggregator.getAdapter(key.exchange);
+      const adapter = ExchangeAggregator.getAdapter(key);
       if (!adapter.fetchBills) {
         LogManager.warn('BillsHistoryService', `Adapter for ${key.exchange} does not implement fetchBills.`);
         return [];

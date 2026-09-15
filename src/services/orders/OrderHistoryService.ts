@@ -19,7 +19,7 @@ export class OrderHistoryService {
    */
   public async fetchWithCache(key: ApiCredentials): Promise<UnifiedOrder[]> {
     const connectionId = key.id;
-    const adapter = ExchangeAggregator.getAdapter(key.exchange);
+    const adapter = ExchangeAggregator.getAdapter(key);
     if (!adapter.getHistoryOrders) {
       return [];
     }
