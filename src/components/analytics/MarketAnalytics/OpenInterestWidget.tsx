@@ -185,13 +185,13 @@ export const OpenInterestWidget: React.FC = () => {
           <div className="bg-[#1a1b22]/70 px-2.5 py-1 rounded-lg border border-[#2a2b30]">
             <span className="text-[#8E9299]">24h Price: </span>
             <strong className={regime.priceChange24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-              {regime.priceChange24h >= 0 ? '+' : ''}{regime.priceChange24h}%
+              {regime.priceChange24h >= 0 ? '+' : ''}{regime.priceChange24h.toFixed(2)}%
             </strong>
           </div>
           <div className="bg-[#1a1b22]/70 px-2.5 py-1 rounded-lg border border-[#2a2b30]">
             <span className="text-[#8E9299]">24h OI: </span>
             <strong className={regime.oiChange24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-              {regime.oiChange24h >= 0 ? '+' : ''}{regime.oiChange24h}%
+              {regime.oiChange24h >= 0 ? '+' : ''}{regime.oiChange24h.toFixed(2)}%
             </strong>
           </div>
         </div>

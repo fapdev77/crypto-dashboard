@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -9,6 +9,7 @@ import {
   Compass,
   AlertCircle,
   Loader2,
+  Coins,
 } from 'lucide-react';
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
 import { MarketAnalyticsHeader } from './MarketAnalyticsHeader';
@@ -19,6 +20,7 @@ import { SmartMoneySentimentWidget } from './SmartMoneySentimentWidget';
 import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
 import { useSymbolCatalogRefresh } from './useSymbolCatalogRefresh';
 import { MarketBreakdownStrip } from './MarketBreakdownStrip';
+import { InverseMarketDashboard } from './InverseMarket/InverseMarketDashboard';
 import {
   PriceMetricTooltip,
   Volume24hTooltip,
@@ -30,6 +32,7 @@ import {
 } from './MarketAnalyticsTooltips';
 
 export const MarketAnalyticsDashboard: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'multi-market' | 'inverse-coinm'>('multi-market');
   const {
     snapshot,
     isLoading,
@@ -74,8 +77,43 @@ export const MarketAnalyticsDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Global Filter Bar: Favorites, Markets, Exchanges, Timeframes */}
-      <MarketAnalyticsHeader />
+      {/* Primary Tab Navigation */}
+      <div className="flex items-center gap-2 border-b border-[#202228] pb-1">
+        <button
+          onClick={() => setActiveTab('multi-market')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === 'multi-market'
+              ? 'bg-[#1c1f28] text-white border border-[#2d3240] shadow-sm'
+              : 'text-[#8E9299] hover:text-white hover:bg-[#161820]'
+          }`}
+        >
+          <BarChart3 className={`w-4 h-4 ${activeTab === 'multi-market' ? 'text-[#2F6BFF]' : ''}`} />
+          <span>Multi-Market Intelligence</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('inverse-coinm')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === 'inverse-coinm'
+              ? 'bg-[#1c1f28] text-white border border-[#2d3240] shadow-sm'
+              : 'text-[#8E9299] hover:text-white hover:bg-[#161820]'
+          }`}
+        >
+          <Coins className={`w-4 h-4 ${activeTab === 'inverse-coinm' ? 'text-cyan-400' : ''}`} />
+          <span>Inverse / Coin-M Market</span>
+          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
+            Coin-M
+          </span>
+        </button>
+      </div>
+
+      {/* Render Inverse/Coin-M View or Multi-Market View */}
+      {activeTab === 'inverse-coinm' ? (
+        <InverseMarketDashboard />
+      ) : (
+        <>
+          {/* Global Filter Bar: Favorites, Markets, Exchanges, Timeframes */}
+          <MarketAnalyticsHeader />
 
       {/* Error display if any */}
       {error && (
@@ -111,7 +149,9 @@ export const MarketAnalyticsDashboard: React.FC = () => {
                 </span>
               </PriceMetricTooltip>
               <div className="text-lg font-bold font-mono text-white">
-                ${snapshot.currentPrice}
+                {snapshot.currentPrice < 1
+                  ? `$${snapshot.currentPrice.toFixed(4)}`
+                  : `$${snapshot.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               </div>
               <div
                 className={`text-xs font-semibold flex items-center gap-0.5 ${
@@ -124,7 +164,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
                   <TrendingDown className="w-3 h-3" />
                 )}
                 {snapshot.priceChange24h >= 0 ? '+' : ''}
-                {snapshot.priceChange24h}%
+                {snapshot.priceChange24h.toFixed(2)}%
               </div>
             </div>
 
@@ -235,8 +275,11 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           </div>
         </>
       )}
+        </>
+      )}
     </div>
   );
 };
 
 export default MarketAnalyticsDashboard;
+

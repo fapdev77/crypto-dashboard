@@ -126,3 +126,48 @@ export interface MarketAnalyticsSnapshot {
   sentiment: SmartMoneySentiment;
   lastUpdated: number;
 }
+
+// ── Inverse / Coin-M Market Dashboard Interfaces ──────────────────
+export interface InverseAssetExchangeMetric {
+  exchange: ExchangeId;              // 'bybit' | 'okx' | 'bitget'
+  pairSymbol: string;                // 'BTCUSD', 'BTC-USD-SWAP', 'BTCUSD_CM'
+  price: number;
+  price24hPcnt: number;              // 24h percentage change (e.g. 2.45)
+  high24h: number;                   // 24h high price
+  low24h: number;                    // 24h low price
+  volume24hCoin: number;             // 24h volume in base coin (e.g. BTC)
+  volume24hUsd: number;              // 24h volume in USD notional
+  openInterestUsd: number | null;    // OI in USD
+  openInterestCoin: number | null;   // OI in base coin
+  nextFundingRate: number | null;    // Next funding rate (decimal e.g. 0.0001)
+  nextFundingTime: number | null;    // Next settlement timestamp ms
+  fundingApr: number | null;         // Annualized funding APR (e.g. 10.95%)
+  todaySum: number | null;           // Cumulative rate paid today UTC civil day
+  currentMonthSum: number | null;    // Cumulative rate current calendar month
+  last3MonthsSum: number | null;     // Cumulative rate past 3 completed months
+}
+
+export interface InverseAssetAggregated {
+  symbol: string;                    // Base asset 'BTC', 'ETH', 'SOL', etc.
+  name: string;                      // Display name 'Bitcoin', 'Ethereum', etc.
+  activeExchanges: ExchangeId[];     // Exchanges where Coin-M contract exists
+  price: number;                     // Average/primary benchmark price
+  price24hPcnt: number;              // Average 24h percent change
+  high24h: number;                   // Aggregated 24h high
+  low24h: number;                    // Aggregated 24h low
+  totalVolumeCoin: number;           // Total 24h volume in base coin
+  totalVolumeUsd: number;            // Total 24h volume in USD
+  totalOiUsd: number;                // Total Open Interest in USD
+  estimatedCvdUsd: number;           // Estimated CVD (Buyer Volume - Seller Volume)
+  estimatedBuyerRatio: number;       // Estimated buyer volume ratio (0 to 100)
+  nextFundingRate: number | null;    // Aggregated next funding rate
+  nextFundingCountdown: number;      // Seconds until next funding settlement
+  todaySum: number | null;           // Aggregated rate today UTC
+  currentMonthSum: number | null;    // Aggregated current month
+  last3MonthsSum: number | null;     // Aggregated last 3 months
+  maxFundingSpreadApr: number | null;// Max spread between highest and lowest exchange APR
+  bestLongExchange: ExchangeId | null;
+  bestShortExchange: ExchangeId | null;
+  exchanges: Record<ExchangeId, InverseAssetExchangeMetric | null>;
+}
+

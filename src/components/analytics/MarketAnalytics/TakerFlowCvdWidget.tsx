@@ -19,7 +19,12 @@ import {
   Eye,
 } from 'lucide-react';
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
-import { TakerFlowMetricTooltip, CvdDivergenceTooltip } from './MarketAnalyticsTooltips';
+import {
+  TakerFlowMetricTooltip,
+  CvdDivergenceTooltip,
+  PeriodTakerDeltaTooltip,
+  CvdNetBalanceTooltip,
+} from './MarketAnalyticsTooltips';
 
 export const TakerFlowCvdWidget: React.FC = () => {
   const { snapshot } = useMarketAnalyticsStore();
@@ -92,24 +97,28 @@ export const TakerFlowCvdWidget: React.FC = () => {
         {/* Aggregated Net Flow */}
         <div className="flex items-center gap-4 text-xs font-mono">
           <div className="text-right">
-            <span className="text-[11px] text-[#8E9299] block font-sans">Period Taker Delta</span>
-            <span
-              className={`text-base font-bold ${
+            <PeriodTakerDeltaTooltip>
+              <span className="text-[11px] text-[#8E9299] block font-sans">Period Taker Delta</span>
+            </PeriodTakerDeltaTooltip>
+            <div
+              className={`text-base font-bold mt-0.5 ${
                 netDeltaTotal >= 0 ? 'text-emerald-400' : 'text-rose-400'
               }`}
             >
               {netDeltaTotal >= 0 ? '+' : ''}{formatUsd(netDeltaTotal)}
-            </span>
+            </div>
           </div>
           <div className="text-right">
-            <span className="text-[11px] text-[#8E9299] block font-sans">CVD Net Balance</span>
-            <span
-              className={`text-base font-bold ${
+            <CvdNetBalanceTooltip>
+              <span className="text-[11px] text-[#8E9299] block font-sans">CVD Net Balance</span>
+            </CvdNetBalanceTooltip>
+            <div
+              className={`text-base font-bold mt-0.5 ${
                 latestCvd >= 0 ? 'text-cyan-400' : 'text-amber-400'
               }`}
             >
               {latestCvd >= 0 ? '+' : ''}{formatUsd(latestCvd)}
-            </span>
+            </div>
           </div>
         </div>
       </div>
@@ -225,8 +234,20 @@ export const TakerFlowCvdWidget: React.FC = () => {
             <Legend
               verticalAlign="top"
               align="right"
-              iconType="circle"
               wrapperStyle={{ paddingBottom: '10px', fontSize: '11px' }}
+              content={() => (
+                <div className="flex items-center justify-end gap-5 pb-2.5 text-[11px] font-sans">
+                  <div className="flex items-center gap-1.5 text-[#d1d5db]">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block -ml-2" />
+                    <span>Net Delta per Candle (Buy / Sell)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[#d1d5db]">
+                    <span className="w-4 h-0.5 bg-[#38bdf8] inline-block rounded-full" />
+                    <span>Cumulative Volume Delta (CVD)</span>
+                  </div>
+                </div>
+              )}
             />
             <Bar yAxisId="delta" dataKey="netDelta" name="Net Delta per Candle" barSize={8}>
               {takerFlowHistory.map((entry, index) => (
