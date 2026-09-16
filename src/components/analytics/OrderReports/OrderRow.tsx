@@ -5,6 +5,7 @@ import Big from 'big.js';
 import { AppTooltip } from '../../ui/Tooltip';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { CoinIcon } from '../../ui/CoinIcon';
+import { AccountTypeBadge } from '../../ui/AccountTypeBadge';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { AssetClassifierAggregator } from '../../../services/AssetClassifierAggregator';
 import { extractBaseCoin } from '../../../utils/unifiers';
@@ -124,12 +125,20 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
             <div className="flex items-center gap-1">
               <span className="font-bold text-white text-sm">{order.symbol}</span>
             </div>
-            <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] mt-2 py-0.5 px-1.5 rounded-[4px] capitalize">
-              {order.exchange}
-            </span>
-            <span className="w-max text-[10px] font-semibold text-[#a0a5ad] bg-[#202226] border border-[#34373c] mt-1 py-0.5 px-1.5 rounded-[4px] truncate max-w-[120px]" title={connectionLabel}>
-              {connectionLabel}
-            </span>
+            <div className="flex items-center gap-1 mt-2 flex-wrap">
+              <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] capitalize">
+                {order.exchange}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              <span className="w-max text-[10px] font-semibold text-[#a0a5ad] bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] truncate max-w-[120px]" title={connectionLabel}>
+                {connectionLabel}
+              </span>
+              <AccountTypeBadge
+                exchange={order.exchange}
+                accountType={order.accountType || keys.find(k => k.id === order.connectionId)?.accountType}
+              />
+            </div>
           </div>
         </div>
 

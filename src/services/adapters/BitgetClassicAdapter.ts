@@ -1,0 +1,844 @@
+import Big from 'big.js';
+import { UnifiedPosition, UnifiedHistoryPosition, UnifiedBillRecord, UnifiedBalance } from '../../types';
+import { IExchangeAdapter } from './IExchangeAdapter';
+import { BaseExchangeAdapter } from './BaseExchangeAdapter';
+import { ApiCredentials } from '../../store/apiKeysStore';
+import { proxyFetch } from '../../utils/proxyFetch';
+import { hmacSha256 } from '../../utils/cryptoLib';
+import { LogManager } from '../LogManager';
+import { calculateRoe } from '../../utils/math-crypto';
+import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
+import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
+
+const MAX_DEEP_PAGES = 30;
+
+export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchangeAdapter {
+  static _timeSyncUrl = 'https://api.bitget.com/api/v2/public/time';
+  static _parseTimeResponse(data: any): number | null {
+    if (data?.code === '00000' && data.data?.serverTime) {
+      return parseInt(data.data.serverTime, 10);
+    }
+    return null;
+  }
+
+  public static async getHeaders(
+    apiKey: string,
+    apiSecret: string,
+    passphrase: string,
+    method: string,
+    requestPath: string,
+    body: string = ''
+  ): Promise<Record<string, string>> {
+    await this.syncTime();
+    const timestamp = (Date.now() + this.timeOffset).toString();
+    const prehash = timestamp + method.toUpperCase() + requestPath + body;
+    const signature = await hmacSha256(prehash, apiSecret, 'base64');
+
+    return {
+      'ACCESS-KEY': apiKey,
+      'ACCESS-SIGN': signature,
+      'ACCESS-TIMESTAMP': timestamp,
+      'ACCESS-PASSPHRASE': passphrase,
+    };
+  }
+
+  // REST Balances
+  public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
+    const endpoints = [
+      { path: '/api/v2/spot/account/assets?assetType=hold_only', type: 'SPOT' },
+      { path: '/api/v2/mix/account/accounts?productType=USDT-FUTURES', type: 'USDT-FUTURES' },
+      { path: '/api/v2/mix/account/accounts?productType=COIN-FUTURES', type: 'COIN-FUTURES' },
+      { path: '/api/v2/mix/account/accounts?productType=USDC-FUTURES', type: 'USDC-FUTURES' },
+      { path: '/api/v2/margin/crossed/account/assets', type: 'MARGIN_CROSS' },
+      { path: '/api/v2/margin/isolated/account/assets', type: 'MARGIN_ISOLATED' },
+      { path: '/api/v2/earn/account/assets', type: 'EARN' }
+    ];
+
+    const requests = endpoints.map(async (ep) => {
+      try {
+        const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', ep.path);
+        const res = await proxyFetch({ targetUrl: `https://api.bitget.com${ep.path}`, method: 'GET', headers });
+        return { res, type: ep.type };
+      } catch (err) {
+        LogManager.warn('BitgetClassicAdapter', `Fetch failed for ${ep.path}`, err);
+        return { res: { code: 'error' }, type: ep.type };
+      }
+    });
+
+    const results = await Promise.all(requests);
+    const balances: UnifiedBalance[] = [];
+
+    results.forEach(({ res, type }) => {
+      if (res.code === '00000' && Array.isArray(res.data)) {
+        if (type === 'SPOT' || type === 'MARGIN_CROSS' || type === 'MARGIN_ISOLATED') {
+          res.data.forEach((item: any) => {
+            const available = parseFloat(item.available || '0');
+            const frozen = parseFloat(item.frozen || '0');
+            const amount = available + frozen;
+            if (amount > 0) {
+              balances.push({
+                id: `${key.id}-${type}-${item.coin || item.symbol}`,
+                connectionId: key.id,
+                exchange: 'bitget',
+                label: `${key.label} (${type.replace('_', ' ')})`,
+                ccy: (item.coin || item.symbol || '').toUpperCase(),
+                amount,
+                usdValue: amount,
+                walletBalance: amount,
+                availableMargin: available,
+                raw: item
+              });
+            }
+          });
+        } else if (type === 'EARN') {
+          res.data.forEach((item: any) => {
+            const amount = parseFloat(item.amount || '0');
+            if (amount > 0) {
+              balances.push({
+                id: `${key.id}-${type}-${item.coin}`,
+                connectionId: key.id,
+                exchange: 'bitget',
+                label: `${key.label} (${type})`,
+                ccy: (item.coin || '').toUpperCase(),
+                amount,
+                usdValue: amount,
+                walletBalance: amount,
+                availableMargin: amount,
+                raw: item
+              });
+            }
+          });
+        } else {
+          // Futures
+          res.data.forEach((item: any) => {
+            const totalEquity = parseFloat(item.usdtEquity || item.accountEquity || '0');
+            const walletBalance = parseFloat(item.crossedMaxAvailable || item.available || '0');
+            balances.push({
+              id: `${key.id}-${type}-${item.marginCoin}`,
+              connectionId: key.id,
+              exchange: 'bitget',
+              label: `${key.label} (${type})`,
+              ccy: item.marginCoin.toUpperCase(),
+              amount: parseFloat(item.accountEquity || item.available || '0'),
+              usdValue: totalEquity,
+              totalEquity,
+              walletBalance,
+              availableMargin: parseFloat(item.crossedMaxAvailable || '0'),
+              unrealizedPnl: parseFloat(item.unrealizedPL || '0'),
+              raw: item
+            });
+          });
+        }
+      }
+    });
+
+    return balances;
+  }
+
+  // REST Positions
+  public async getOpenPositions(key: ApiCredentials): Promise<UnifiedPosition[]> {
+    const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+    const requests = productTypes.map(async (pType) => {
+      const path = `/api/v2/mix/position/all-position?productType=${pType}`;
+      const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      const res = await proxyFetch({
+        targetUrl: `https://api.bitget.com${path}`,
+        method: 'GET',
+        headers
+      });
+      if (res.code !== '00000') throw new Error(res.msg);
+      return (res.data || []).map((item: any) => ({ ...item, productType: pType }));
+    });
+
+    const results = await Promise.all(requests);
+    const rawList = results.flat();
+
+    return rawList
+      .filter(pos => parseFloat(pos.total || '0') > 0)
+      .map(pos => {
+        const margin = parseFloat(pos.marginSize || '0');
+        const markPrice = parseFloat(pos.markPrice || '0');
+        let unrealizedPnl = parseFloat(pos.unrealizedPL || '0');
+        
+        const instrumentType = mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES');
+        const isInverse = instrumentType === 'INVERSE';
+
+        if (isInverse && markPrice > 0) {
+          unrealizedPnl = unrealizedPnl / markPrice;
+        }
+        
+        let size = parseFloat(pos.total || '0');
+        let notionalUsd = size * markPrice;
+
+        const side = mapPositionSide('bitget', pos.holdSide);
+
+        const accumulatedFunding = pos.totalFee ? new Big(pos.totalFee || 0).toString() : "0";
+        const accumulatedTradingFee = pos.deductedFee ? new Big(pos.deductedFee || 0).times(-1).toString() : "0";
+        const closedPnl = parseFloat(pos.achievedProfits || '0');
+        const realizedPnl = closedPnl + parseFloat(accumulatedFunding) + parseFloat(accumulatedTradingFee);
+
+        return {
+          id: `${key.id}-bitget-${pos.symbol || pos.instId}-${side}`,
+          connectionId: key.id,
+          exchange: 'bitget',
+          label: key.label,
+          symbol: pos.symbol,
+          baseCoin: extractBaseCoin('bitget', pos.symbol),
+          quoteCoin: extractQuoteCoin('bitget', pos.symbol),
+          ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.symbol),
+          side,
+          size,
+          entryPrice: parseFloat(pos.openPriceAvg || pos.avgPx || '0'),
+          markPrice: parseFloat(pos.markPrice || '0'),
+          unrealizedPnl,
+          realizedPnl,
+          closedPnl,
+          accumulatedFunding,
+          accumulatedTradingFee,
+          leverage: parseFloat(pos.leverage || '0'),
+          marginMode: mapMarginMode('bitget', pos.marginMode),
+          margin,
+          maintenanceMargin: margin * parseFloat(pos.leverage || '1') * parseFloat(pos.keepMarginRate || '0'),
+          marginRatio: pos.keepMarginRate ? parseFloat(pos.keepMarginRate) * 100 : undefined,
+          notionalUsd,
+          liquidationPrice: parseFloat(pos.liquidationPrice || '0'),
+          breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
+          tp: parseFloat(pos.takeProfit || '0'),
+          sl: parseFloat(pos.stopLoss || '0'),
+          roe: margin > 0 ? (unrealizedPnl / margin) * 100 : undefined,
+          instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
+          raw: pos
+        };
+      });
+  }
+
+  // REST Closed PnL History
+  public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
+    const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+    const fetchType = async (pType: string) => {
+      let list: any[] = [];
+      let lastId = '';
+      let pages = 0;
+      try {
+        do {
+          let query = `productType=${pType}&limit=100`;
+          if (start) query += `&startTime=${start}`;
+          if (end) query += `&endTime=${end}`;
+          if (lastId) query += `&idLessThan=${lastId}`;
+
+          const path = `/api/v2/mix/position/history-position?${query}`;
+          const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+          const res = await proxyFetch({
+            targetUrl: `https://api.bitget.com${path}`,
+            method: 'GET',
+            headers
+          });
+
+          if (res.code !== '00000') throw new Error(res.msg);
+          const rows = res.data?.entList || res.data?.list || [];
+          list = [...list, ...rows.map((r: any) => ({ ...r, productType: pType }))];
+          lastId = res.data?.endId || '';
+          pages++;
+        } while (lastId && pages < MAX_DEEP_PAGES);
+      } catch (err) {
+        LogManager.warn('BitgetClassicAdapter.History', `Error for ${pType}:`, err);
+      }
+      return list;
+    };
+
+    const results = await Promise.all(productTypes.map(pType => fetchType(pType)));
+
+    return results.flat().map((pos: any) => {
+      const closeUpdateTime = parseInt(pos.utime || pos.uTime || pos.ctime || pos.cTime || '0', 10);
+      const createdTime = parseInt(pos.ctime || pos.cTime || pos.utime || pos.uTime || '0', 10);
+      let totalFee = 0;
+      if (pos.openFee) totalFee += parseFloat(pos.openFee);
+      if (pos.closeFee) totalFee += parseFloat(pos.closeFee);
+      if (pos.fee) totalFee += parseFloat(pos.fee);
+
+      return {
+        id: `${key.id}-${pos.posId || pos.positionId}-${closeUpdateTime}`,
+        connectionId: key.id,
+        label: key.label,
+        exchange: 'bitget',
+        symbol: pos.instId || pos.symbol,
+        baseCoin: extractBaseCoin('bitget', pos.instId || pos.symbol),
+        quoteCoin: extractQuoteCoin('bitget', pos.instId || pos.symbol),
+        ccy: extractCcy('bitget', pos.marginCoin, undefined, undefined, pos.instId || pos.symbol),
+        side: mapPositionSide('bitget', pos.holdSide, pos.side),
+        realizedPnl: parseFloat(pos.netProfit ?? pos.pnl ?? pos.achievedProfits ?? '0'),
+        closedPnl: parseFloat(pos.netProfit ?? pos.pnl ?? pos.achievedProfits ?? '0') - (pos.totalFunding ? parseFloat(pos.totalFunding) : 0) - (totalFee || 0),
+        closeUpdateTime: closeUpdateTime,
+        createdTime: createdTime,
+        entryPrice: parseFloat(pos.openAvgPrice || pos.openPriceAvg || '0'),
+        closePrice: parseFloat(pos.closeAvgPrice || pos.closePriceAvg || '0'),
+        size: parseFloat(pos.closeTotalPos || pos.openTotalPos || '0'),
+        fundingFee: pos.totalFunding ? parseFloat(pos.totalFunding) : undefined,
+        tradingFee: totalFee || 0,
+        instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
+        raw: pos,
+      };
+    });
+  }
+
+  // REST Deposits / Withdrawals (Bills)
+  public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+    const fetchRecords = async (type: 'deposit' | 'withdrawal') => {
+      const endpoint = type === 'deposit' ? '/api/v2/spot/wallet/deposit-records' : '/api/v2/spot/wallet/withdrawal-records';
+      let list: any[] = [];
+      let lastId = '';
+      let pages = 0;
+
+      try {
+        do {
+          let query = `limit=100`;
+          if (start) query += `&startTime=${start}`;
+          if (end) query += `&endTime=${end}`;
+          if (lastId) query += `&idLessThan=${lastId}`;
+
+          const path = `${endpoint}?${query}`;
+          const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+          const response = await proxyFetch({
+            targetUrl: `https://api.bitget.com${path}`,
+            method: 'GET',
+            headers
+          });
+
+          if (response.code !== '00000') throw new Error(response.msg);
+          const rows = response.data?.entList || response.data?.list || response.data || [];
+          list = [...list, ...rows];
+          lastId = response.data?.endId || '';
+          pages++;
+        } while (lastId && pages < MAX_DEEP_PAGES);
+      } catch (err) {
+        LogManager.warn('BitgetClassicAdapter.Bills', `Error for ${type}:`, err);
+      }
+      return list.map(item => ({ ...item, _type: type }));
+    };
+
+    const [deposits, withdrawals] = await Promise.all([
+      fetchRecords('deposit'),
+      fetchRecords('withdrawal')
+    ]);
+
+    return [...deposits, ...withdrawals].map((b: any) => {
+      const cTime = parseInt(b.cTime || b.uTime || Date.now().toString(), 10);
+      return {
+        id: `${key.id}-${b.orderId || b.id || Math.random().toString(36)}-${cTime}`,
+        connectionId: key.id,
+        exchange: 'bitget',
+        label: key.label,
+        type: b._type === 'deposit' ? 'deposit' : 'withdrawal',
+        amount: parseFloat(b.size || b.amount || '0'),
+        ccy: b.coin,
+        timestamp: cTime,
+        raw: b
+      };
+    });
+  }
+
+  // Orders
+  public async getOpenOrders(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]> {
+    const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+    let allOrders: any[] = [];
+    
+    // Futures
+    for (const pType of productTypes) {
+      const query = `productType=${pType}`;
+      const path = `/api/v2/mix/order/orders-pending?${query}`;
+      const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      
+      try {
+        const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+        if (res.code === '00000' && res.data?.entrustedList) {
+          allOrders = allOrders.concat(res.data.entrustedList.map((o: any) => ({ ...o, productType: pType })));
+        }
+      } catch (err) {
+        LogManager.warn('BitgetClassicAdapter.OpenOrders', `Error fetching ${pType}:`, err);
+      }
+    }
+
+    // Spot
+    try {
+      const path = `/api/v2/spot/trade/unfilled-orders`;
+      const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+      if (res.code === '00000' && Array.isArray(res.data)) {
+        allOrders = allOrders.concat(res.data.map((o: any) => ({ ...o, productType: 'spot' })));
+      } else if (res.code === '00000' && res.data?.entList) {
+        allOrders = allOrders.concat(res.data.entList.map((o: any) => ({ ...o, productType: 'spot' })));
+      }
+    } catch (err) {
+      LogManager.warn('BitgetClassicAdapter.OpenOrders', 'Error fetching spot:', err);
+    }
+
+    return this.normalizeOrders(allOrders, key);
+  }
+
+  public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
+    const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+    let allOrders: any[] = [];
+
+    // Futures History
+    for (const pType of productTypes) {
+      let list: any[] = [];
+      let lastId = '';
+      let pages = 0;
+      
+      try {
+        do {
+          let queryUrl = `productType=${pType}&limit=100`;
+          if (start) queryUrl += `&startTime=${start}`;
+          if (end) queryUrl += `&endTime=${end}`;
+          if (lastId) queryUrl += `&idLessThan=${lastId}`;
+          
+          const path = `/api/v2/mix/order/orders-history?${queryUrl}`;
+          const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+          
+          const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+          if (res.code === '00000') {
+             const rows = Array.isArray(res.data) ? res.data : (res.data?.entrustedList || res.data?.entList || res.data?.list || []);
+             list = [...list, ...rows.map((o: any) => ({ ...o, productType: pType }))];
+             lastId = res.data?.endId || '';
+          } else {
+             break;
+          }
+          pages++;
+        } while (lastId && pages < MAX_DEEP_PAGES);
+        allOrders = allOrders.concat(list);
+      } catch (err) {
+        LogManager.warn('BitgetClassicAdapter.HistoryOrders', `Error fetching ${pType}:`, err);
+      }
+    }
+
+    // Spot History
+    try {
+      let list: any[] = [];
+      let lastId = '';
+      let pages = 0;
+
+      do {
+        let spotQuery = `limit=100`;
+        if (start) spotQuery += `&startTime=${start}`;
+        if (end) spotQuery += `&endTime=${end}`;
+        if (lastId) spotQuery += `&idLessThan=${lastId}`;
+
+        const path = `/api/v2/spot/trade/history-orders?${spotQuery}`;
+        const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+        const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+        
+        if (res.code === '00000') {
+           const rows = Array.isArray(res.data) ? res.data : (res.data?.entrustedList || res.data?.entList || res.data?.list || []);
+           list = [...list, ...rows.map((o: any) => ({ ...o, productType: 'spot' }))];
+           lastId = res.data?.endId || '';
+        } else {
+           break;
+        }
+        pages++;
+      } while (lastId && pages < MAX_DEEP_PAGES);
+      allOrders = allOrders.concat(list);
+    } catch (err) {
+      LogManager.warn('BitgetClassicAdapter.HistoryOrders', 'Error fetching spot:', err);
+    }
+
+    return this.normalizeOrders(allOrders, key);
+  }
+
+  private normalizeOrders(rawOrders: any[], key: ApiCredentials): import('../../types').UnifiedOrder[] {
+    return rawOrders.map(o => {
+      let status: import('../../types').UnifiedOrderStatus = 'NEW';
+      const state = o.state?.toLowerCase() || o.status?.toLowerCase() || '';
+      if (state === 'filled') status = 'FILLED';
+      else if (state === 'canceled' || state === 'cancelled') status = 'CANCELLED';
+      else if (state === 'partially_filled') status = 'PARTIALLY_FILLED';
+      else if (state === 'new' || state === 'init' || state === 'live') status = 'NEW';
+
+      let type: import('../../types').UnifiedOrderType = 'LIMIT';
+      const ot = o.orderType?.toLowerCase() || o.planType?.toLowerCase() || '';
+      if (ot === 'market') type = 'MARKET';
+      else if (ot.includes('stop') || ot.includes('loss')) type = 'SL';
+      else if (ot.includes('take') || ot.includes('profit')) type = 'TP';
+      else if (ot.includes('plan') || ot.includes('conditional')) type = 'CONDITIONAL';
+
+      const category = mapInstrumentType('bitget', o.productType || 'UNKNOWN');
+      const qty = parseFloat(o.size || '0');
+      const filledQty = parseFloat(o.filledQty || o.baseVolume || '0');
+      const price = parseFloat(o.price || o.priceAvg || o.avgPrice || '0');
+      const value = parseFloat(o.quoteVolume || '0') || (qty * price);
+      
+      return {
+        id: `${key.id}-${o.orderId}`,
+        exchangeOrderId: o.orderId,
+        connectionId: key.id,
+        exchange: 'bitget',
+        label: key.label,
+        symbol: o.symbol || o.instId,
+        category,
+        side: o.side?.toLowerCase().includes('buy') ? 'buy' : 'sell',
+        positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
+        type,
+        status,
+        price: parseFloat(o.price || '0'),
+        avgPrice: parseFloat(o.priceAvg || o.avgPrice || '0'),
+        qty,
+        filledQty,
+        value,
+        triggerPrice: o.triggerPrice ? parseFloat(o.triggerPrice) : undefined,
+        reduceOnly:
+          o.reduceOnly === 'YES' ||
+          o.reduceOnly === 'yes' ||
+          o.reduceOnly === 'true' ||
+          o.reduceOnly === true ||
+          o.tradeSide?.toLowerCase() === 'close',
+        timeInForce: o.timeInForce || o.force,
+        createdTime: parseInt(o.cTime || '0', 10),
+        updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
+        fees: (() => {
+          if (o.deductedFee) {
+            return parseFloat(o.deductedFee) * -1;
+          }
+          const rawFee = parseFloat(o.fee || '0');
+          return rawFee > 0 ? -rawFee : rawFee;
+        })(),
+        leverage: o.leverage ? parseFloat(o.leverage) : undefined,
+        marginMode: o.marginMode ? mapMarginMode('bitget', o.marginMode) : undefined,
+        raw: o
+      };
+    });
+  }
+
+  // Instrument Metadata (Public)
+  public async fetchInstrumentMetadata(symbol: string): Promise<import('../../types').UnifiedAssetCategory | 'NOT_FOUND'> {
+    try {
+      const spotRes = await proxyFetch({
+        targetUrl: `https://api.bitget.com/api/v2/spot/public/symbols?symbol=${symbol}`,
+        method: 'GET',
+        headers: {}
+      });
+      if (spotRes.code === '00000' && spotRes.data && spotRes.data.length > 0) {
+        const info = spotRes.data.find((s: any) => s.symbol === symbol);
+        if (info) {
+          if (info.isRwa === 'YES') return 'STOCK';
+          return 'CRYPTO';
+        }
+      }
+    } catch (err) {
+      LogManager.warn('BitgetClassicAdapter.Metadata', 'Fetch error', err);
+    }
+    return 'NOT_FOUND';
+  }
+
+  // ── Transaction Log (Classic Bills / Financial Records) ──
+  public async getTransactionLog(
+    key: ApiCredentials,
+    startTime: number,
+    endTime: number,
+    category: string = 'USDT-FUTURES',
+    cursor?: string
+  ): Promise<{ list: any[]; nextPageCursor: string }> {
+    const effectiveCategory = category ? category.toUpperCase() : 'USDT-FUTURES';
+
+    // Try V3 financial-records first
+    try {
+      const query = new URLSearchParams();
+      query.append('category', effectiveCategory);
+      query.append('startTime', startTime.toString());
+      query.append('endTime', endTime.toString());
+      query.append('limit', '100');
+      if (cursor) query.append('cursor', cursor);
+
+      const endpoint = `/api/v3/account/financial-records?${query.toString()}`;
+      const url = `https://api.bitget.com${endpoint}`;
+
+      const headers = await BitgetClassicAdapter.getHeaders(
+        key.apiKey,
+        key.apiSecret,
+        key.passphrase || '',
+        'GET',
+        endpoint
+      );
+
+      const res = await proxyFetch({ targetUrl: url, method: 'GET', headers });
+      if (res.code === '00000' && res.data) {
+        return {
+          list: (res.data.list || []).map((item: any) => ({ ...item, category: item.category || effectiveCategory })),
+          nextPageCursor: res.data.cursor || '',
+        };
+      }
+    } catch {
+      // Fallback to V2 endpoints based on category
+    }
+
+    // Fallback: V2 Spot Bills
+    if (effectiveCategory === 'SPOT') {
+      try {
+        const spotQuery = new URLSearchParams();
+        spotQuery.append('startTime', startTime.toString());
+        spotQuery.append('endTime', endTime.toString());
+        spotQuery.append('limit', '100');
+        if (cursor) spotQuery.append('idLessThan', cursor);
+
+        const spotEndpoint = `/api/v2/spot/account/bills?${spotQuery.toString()}`;
+        const spotUrl = `https://api.bitget.com${spotEndpoint}`;
+        const spotHeaders = await BitgetClassicAdapter.getHeaders(
+          key.apiKey,
+          key.apiSecret,
+          key.passphrase || '',
+          'GET',
+          spotEndpoint
+        );
+
+        const spotRes = await proxyFetch({ targetUrl: spotUrl, method: 'GET', headers: spotHeaders });
+        if (spotRes.code === '00000' && Array.isArray(spotRes.data)) {
+          const list = spotRes.data.map((item: any) => ({ ...item, category: 'spot' }));
+          const nextCursor = list.length === 100 ? (list[list.length - 1].id || list[list.length - 1].billId || '') : '';
+          return { list, nextPageCursor: nextCursor };
+        }
+      } catch {
+        return { list: [], nextPageCursor: '' };
+      }
+    }
+
+    // Fallback: V2 Margin Records
+    if (effectiveCategory === 'MARGIN') {
+      try {
+        const marginQuery = new URLSearchParams();
+        marginQuery.append('startTime', startTime.toString());
+        marginQuery.append('endTime', endTime.toString());
+        marginQuery.append('limit', '100');
+        if (cursor) marginQuery.append('idLessThan', cursor);
+
+        const marginEndpoint = `/api/v2/margin/isolated/financial-records?${marginQuery.toString()}`;
+        const marginUrl = `https://api.bitget.com${marginEndpoint}`;
+        const marginHeaders = await BitgetClassicAdapter.getHeaders(
+          key.apiKey,
+          key.apiSecret,
+          key.passphrase || '',
+          'GET',
+          marginEndpoint
+        );
+
+        const marginRes = await proxyFetch({ targetUrl: marginUrl, method: 'GET', headers: marginHeaders });
+        if (marginRes.code === '00000') {
+          const list = (marginRes.data?.list || marginRes.data || []).map((item: any) => ({ ...item, category: 'margin' }));
+          const nextCursor = list.length === 100 ? (list[list.length - 1].id || '') : '';
+          return { list, nextPageCursor: nextCursor };
+        }
+      } catch {
+        return { list: [], nextPageCursor: '' };
+      }
+    }
+
+    // Fallback: V2 Mix (Futures) Bills
+    try {
+      const productType = effectiveCategory.includes('COIN')
+        ? 'COIN-FUTURES'
+        : effectiveCategory.includes('USDC')
+        ? 'USDC-FUTURES'
+        : 'USDT-FUTURES';
+
+      const mixQuery = new URLSearchParams();
+      mixQuery.append('productType', productType);
+      mixQuery.append('startTime', startTime.toString());
+      mixQuery.append('endTime', endTime.toString());
+      mixQuery.append('pageSize', '100');
+      if (cursor) mixQuery.append('lastEndId', cursor);
+
+      const mixEndpoint = `/api/v2/mix/account/bill?${mixQuery.toString()}`;
+      const mixUrl = `https://api.bitget.com${mixEndpoint}`;
+      const mixHeaders = await BitgetClassicAdapter.getHeaders(
+        key.apiKey,
+        key.apiSecret,
+        key.passphrase || '',
+        'GET',
+        mixEndpoint
+      );
+
+      const mixRes = await proxyFetch({ targetUrl: mixUrl, method: 'GET', headers: mixHeaders });
+      if (mixRes.code === '00000') {
+        const rawList = mixRes.data?.bills || mixRes.data || [];
+        const list = Array.isArray(rawList)
+          ? rawList.map((item: any) => ({ ...item, category: effectiveCategory.toLowerCase() }))
+          : [];
+        return {
+          list,
+          nextPageCursor: mixRes.data?.nextFlag ? (mixRes.data?.lastEndId || '') : '',
+        };
+      }
+    } catch {
+      // Return empty if mix bills query failed
+    }
+
+    return { list: [], nextPageCursor: '' };
+  }
+
+  public static normalizeTxLogEntry(raw: any, key: ApiCredentials): import('../../types').BitgetTransactionLogEntry {
+    const transactionTime = parseInt(String(raw.cTime || raw.ts || raw.uTime || '0'), 10);
+    const amount = raw.amount || raw.size || '0';
+    const fee = raw.fee || raw.fees || '0';
+    const balance = raw.balance || raw.accountBalance || '0';
+    const positionAmount = raw.positionAmount || raw.posAmount || '0';
+    const positionBalance = raw.positionBalance || raw.posBalance || '0';
+
+    const cleanSymbol = (raw.symbol || '').replace(/_(UMCBL|DMCBL|CMCBL)$/, '');
+    
+    // Normalize raw type string
+    let rawType = String(raw.type || raw.businessType || raw.business || raw.billType || '').toUpperCase();
+    if (rawType === 'TRANS_FROM_EXCHANGE') rawType = 'TRANSFER_IN';
+    if (rawType === 'TRANS_TO_EXCHANGE') rawType = 'TRANSFER_OUT';
+    if (rawType === 'CONTRACT_EXCHANGE') rawType = 'TRANSFER';
+    if (rawType === 'TRIAL_FUND') rawType = 'BONUS';
+    if (rawType === 'TRIAL_FUND_RECYCLE') rawType = 'BONUS_RECOLLECT';
+    if (rawType === 'DELIVERY_SETTLE') rawType = 'DELIVERY';
+
+    let category = 'other';
+    if (raw.category) {
+      category = String(raw.category).toLowerCase();
+    } else if (raw.symbol?.includes('_DMCBL')) {
+      category = 'coin-futures';
+    } else if (raw.symbol?.includes('_CMCBL')) {
+      category = 'usdc-futures';
+    } else if (raw.businessType || raw.symbol?.includes('_UMCBL')) {
+      category = 'usdt-futures';
+    }
+
+    // Smart Side & Position action normalization
+    const rawSide = String(raw.side || '').toLowerCase().trim();
+    const rawTradeSide = String(raw.tradeSide || '').toLowerCase().trim();
+    const rawPosSide = String(raw.posSide || raw.holdSide || raw.positionType || raw.posMode || '').toLowerCase().trim();
+    const typeUpper = rawType.toUpperCase();
+
+    let normalizedSide = 'None';
+    let normalizedPositionType = String(raw.positionType || raw.posSide || raw.holdSide || '').trim();
+
+    // 1. Check explicit type keywords
+    if (
+      typeUpper.includes('OPEN_LONG') || 
+      typeUpper.includes('OPEN-LONG') || 
+      rawSide === 'open_long' || 
+      rawSide === 'buy_open' || 
+      rawSide === 'open_buy' ||
+      (rawTradeSide === 'open' && rawPosSide.includes('long'))
+    ) {
+      normalizedSide = 'Open Long';
+      normalizedPositionType = 'Long (Open)';
+    } else if (
+      typeUpper.includes('CLOSE_LONG') || 
+      typeUpper.includes('CLOSE-LONG') || 
+      typeUpper.includes('REDUCE_LONG') || 
+      rawSide === 'close_long' || 
+      rawSide === 'sell_close' || 
+      rawSide === 'close_sell' ||
+      (rawTradeSide === 'close' && rawPosSide.includes('long'))
+    ) {
+      normalizedSide = 'Close Long';
+      normalizedPositionType = 'Long (Close/Reduce)';
+    } else if (
+      typeUpper.includes('OPEN_SHORT') || 
+      typeUpper.includes('OPEN-SHORT') || 
+      rawSide === 'open_short' || 
+      rawSide === 'sell_open' || 
+      rawSide === 'open_sell' ||
+      (rawTradeSide === 'open' && rawPosSide.includes('short'))
+    ) {
+      normalizedSide = 'Open Short';
+      normalizedPositionType = 'Short (Open)';
+    } else if (
+      typeUpper.includes('CLOSE_SHORT') || 
+      typeUpper.includes('CLOSE-SHORT') || 
+      typeUpper.includes('REDUCE_SHORT') || 
+      rawSide === 'close_short' || 
+      rawSide === 'buy_close' || 
+      rawSide === 'close_buy' ||
+      (rawTradeSide === 'close' && rawPosSide.includes('short'))
+    ) {
+      normalizedSide = 'Close Short';
+      normalizedPositionType = 'Short (Close/Reduce)';
+    }
+    // 2. Check position side combined with trade execution direction
+    else if (rawPosSide.includes('long')) {
+      if (rawSide.includes('sell') || rawSide.includes('out') || typeUpper === 'ORDER_DEALT_OUT' || typeUpper.includes('CLOSE')) {
+        normalizedSide = 'Close Long';
+        normalizedPositionType = 'Long (Close/Reduce)';
+      } else if (rawSide.includes('buy') || rawSide.includes('in') || typeUpper === 'ORDER_DEALT_IN' || typeUpper.includes('OPEN')) {
+        normalizedSide = 'Open Long';
+        normalizedPositionType = 'Long (Open)';
+      } else {
+        normalizedSide = 'Buy';
+        normalizedPositionType = 'Long';
+      }
+    } else if (rawPosSide.includes('short')) {
+      if (rawSide.includes('buy') || rawSide.includes('in') || typeUpper === 'ORDER_DEALT_IN' || typeUpper.includes('CLOSE')) {
+        normalizedSide = 'Close Short';
+        normalizedPositionType = 'Short (Close/Reduce)';
+      } else if (rawSide.includes('sell') || rawSide.includes('out') || typeUpper === 'ORDER_DEALT_OUT' || typeUpper.includes('OPEN')) {
+        normalizedSide = 'Open Short';
+        normalizedPositionType = 'Short (Open)';
+      } else {
+        normalizedSide = 'Sell';
+        normalizedPositionType = 'Short';
+      }
+    }
+    // 3. Fallback to tradeSide open/close
+    else if (rawTradeSide === 'open') {
+      normalizedSide = rawSide.includes('sell') ? 'Open Short' : 'Open Long';
+    } else if (rawTradeSide === 'close') {
+      normalizedSide = rawSide.includes('buy') ? 'Close Short' : 'Close Long';
+    }
+    // 4. Standard spot Buy / Sell or fallback
+    else if (rawSide.includes('buy') || rawSide.includes('in') || typeUpper === 'ORDER_DEALT_IN' || typeUpper === 'BUY') {
+      normalizedSide = 'Buy';
+    } else if (rawSide.includes('sell') || rawSide.includes('out') || typeUpper === 'ORDER_DEALT_OUT' || typeUpper === 'SELL') {
+      normalizedSide = 'Sell';
+    } else if (rawSide) {
+      normalizedSide = raw.side;
+    }
+
+    // Trade ID and Order ID mapping
+    const tradeId = raw.tradeId || raw.trade_id || raw.fillId || raw.fill_id || '';
+    const orderId = raw.orderId || raw.order_id || raw.ordId || raw.ord_id || '';
+    const orderLinkId = raw.orderLinkId || raw.order_link_id || raw.clientOid || raw.client_oid || raw.clOrdId || '';
+
+    // Qty, Size, tradePrice, funding
+    const qty = String(raw.qty || raw.size || raw.amount || amount || '0');
+    const size = String(raw.size || raw.qty || raw.amount || amount || '0');
+    const tradePrice = String(raw.tradePrice || raw.price || raw.avgPrice || raw.fillPrice || '0');
+
+    const isFunding = rawType.includes('FUNDING') || rawType.includes('SETTLE_FEE') || rawType.includes('SETTLEMENT');
+    const funding = isFunding ? String(raw.change || amount) : '0';
+
+    return {
+      id: `${key.id}-${raw.id || raw.billId || transactionTime}-${transactionTime}`,
+      connectionId: key.id,
+      exchange: 'bitget',
+      label: key.label,
+      rawId: String(raw.id || raw.billId || ''),
+      symbol: cleanSymbol,
+      category,
+      side: normalizedSide,
+      type: rawType,
+      groupType: raw.groupType || '',
+      positionType: normalizedPositionType,
+      qty,
+      size,
+      currency: raw.coin || raw.currency || raw.ccy || raw.coinName || '',
+      tradePrice,
+      funding,
+      amount: String(amount),
+      change: String(raw.change || amount),
+      cashFlow: String(raw.cashFlow || amount),
+      cashBalance: String(balance),
+      balance: String(balance),
+      fee: String(fee),
+      feeCurrency: raw.feeCoin || raw.feeCurrency || raw.coin || raw.coinName || '',
+      positionAmount: String(positionAmount),
+      positionBalance: String(positionBalance),
+      transactionTime,
+      tradeId,
+      orderId,
+      orderLinkId,
+      extra: raw.extra || (raw.memo ? raw.memo : undefined),
+      raw,
+    };
+  }
+}

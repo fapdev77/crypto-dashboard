@@ -8,6 +8,9 @@ import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 import Big from 'big.js';
 import { AppTooltip } from '../../ui/Tooltip';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
+import { usePagination } from '../../../hooks/usePagination';
+import { Pagination } from '../../ui/Pagination';
+import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
 
 export function OpenOrders() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -24,6 +27,12 @@ export function OpenOrders() {
   // Orders come directly from the global background polling cache — no fetch required on mount.
   const { orders, loading, error } = useOrderReports(filters);
   const formatCurrency = useFormatCurrency();
+
+  const { page: currentPage, setPage: setCurrentPage, paginated: paginatedOrders, totalItems } = usePagination(
+    orders,
+    50,
+    [filters]
+  );
 
   const stats = useMemo(() => {
     let buyCount = 0;
@@ -73,10 +82,15 @@ export function OpenOrders() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
-         <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-           <ArrowLeftRight className="w-5 h-5 text-[#2F6BFF]" />
-           Open Orders
-         </h2>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
+              <ArrowLeftRight className="w-5 h-5 text-[#2F6BFF]" />
+              Open Orders
+            </h2>
+            <SimulationModeBadge />
+          </div>
+        </div>
       </div>
 
       <div className="px-0">
@@ -161,9 +175,31 @@ export function OpenOrders() {
         </div>
       )}
 
+      {totalItems > 5 && (
+        <div className="mb-2">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={50}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
+
       <div className="flex-1 overflow-auto hide-scrollbar">
-        <OrdersTable orders={orders} loading={loading} />
+        <OrdersTable orders={paginatedOrders} loading={loading} />
       </div>
+
+      {totalItems > 0 && (
+        <div className="mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={50}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
     </div>
   );
 }

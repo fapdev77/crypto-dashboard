@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Search, X, Eye, EyeOff, ChevronDown, ChevronRight, Wallet } from 'lucide-react';
 import { BalanceItem } from '../store/balancesStore';
+import { useApiKeysStore } from '../store/apiKeysStore';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { Sparkline } from './ui/Sparkline';
+import { AccountTypeBadge } from './ui/AccountTypeBadge';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -14,13 +16,6 @@ const cleanAccountLabel = (label: string) => {
 };
 
 const getAssetOrigin = (b: BalanceItem) => {
-  const ex = b.exchange.toLowerCase();
-
-  if (ex === 'bybit') {
-    return 'UNIFIED';
-  }
-
-  // Bitget and OKX logic
   const connId = b.connectionId;
   const prefix = connId + '-';
   if (b.id.startsWith(prefix)) {
@@ -40,6 +35,8 @@ const getAssetOrigin = (b: BalanceItem) => {
 
 const formatOriginLabel = (origin: string) => {
   switch (origin.toUpperCase()) {
+    case 'UTA':
+      return 'Unified UTA';
     case 'SPOT':
       return 'Spot';
     case 'EARN':
@@ -76,6 +73,7 @@ const getOriginBadgeStyle = (origin: string) => {
       return 'bg-[#03aac7]/10 text-[#03aac7] border border-[#03aac7]/20';
     case 'USDC-FUTURES':
       return 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+    case 'UTA':
     case 'MARGIN_CROSS':
     case 'UNIFIED':
       return 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
@@ -118,6 +116,7 @@ export function ExchangeHierarchyTable({
   hideSmallBalances,
   setHideSmallBalances,
 }: ExchangeHierarchyTableProps) {
+  const { keys } = useApiKeysStore();
   const [expandedExchanges, setExpandedExchanges] = useState<Record<string, boolean>>({});
   const [expandedAccounts, setExpandedAccounts] = useState<Record<string, boolean>>({});
 
@@ -212,7 +211,20 @@ export function ExchangeHierarchyTable({
                       <div className="hidden sm:block ml-4 pl-4 border-l border-[#2a2b30] opacity-70 group-hover:opacity-100 transition-opacity">
                         <Sparkline data={sparkData} color={isPositive ? 'emerald' : 'red'} width={60} height={20} />
                       </div>
-                      <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{cleanAccountLabel(accData.label)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{cleanAccountLabel(accData.label)}</span>
+                        {(() => {
+                          const matchedKey = keys.find(k => k.id === connId);
+                          return (
+                            <AccountTypeBadge
+                              exchange={exchange}
+                              accountType={matchedKey?.accountType}
+                              environment={matchedKey?.environment}
+                              bybitRegion={matchedKey?.bybitRegion}
+                            />
+                          );
+                        })()}
+                      </div>
                     </div>
                     <span className="text-sm font-bold text-white font-mono">{formatCurrency(accData.total, 'usd')}</span>
                   </button>

@@ -1,596 +1,974 @@
 [
   {
-    "id": "bal-1",
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1",
-    "ccy": "USDT",
-    "amount": 46185.57823117429,
-    "usdValue": 46185.57823117429
-  },
-  {
-    "id": "bal-2",
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1",
-    "ccy": "USDC",
-    "amount": 32606.539358985425,
-    "usdValue": 32606.539358985425
-  },
-  {
-    "id": "bal-3",
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1",
-    "ccy": "BTC",
-    "amount": 12.401175623295408,
-    "usdValue": 180.29365395164757
-  },
-  {
-    "id": "bal-4",
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1",
-    "ccy": "ETH",
-    "amount": 6.799176409790361,
-    "usdValue": 339.68062209930923
-  },
-  {
-    "id": "bal-5",
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1",
-    "ccy": "SOL",
-    "amount": 7.128869110071887,
-    "usdValue": 203.2051844605928
-  },
-  {
-    "id": "bal-6",
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1",
-    "ccy": "LINK",
-    "amount": 72.22515563979226,
-    "usdValue": 4397.275930302909
-  },
-  {
-    "id": "bal-7",
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1",
-    "ccy": "USDT",
-    "amount": 44853.17009699337,
-    "usdValue": 44853.17009699337
-  },
-  {
-    "id": "bal-8",
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1",
-    "ccy": "USDC",
-    "amount": 39876.90362373614,
-    "usdValue": 39876.90362373614
-  },
-  {
-    "id": "bal-9",
-    "connectionId": "mocked-data-bitget-1",
-    "exchange": "bitget",
-    "label": "Mock BITGET 1",
-    "ccy": "BTC",
-    "amount": 16.135872333410706,
-    "usdValue": 1100.3318305449238
-  },
-  {
-    "id": "bal-10",
-    "connectionId": "mocked-data-bitget-2",
-    "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "ccy": "USDT",
-    "amount": 43245.19377612908,
-    "usdValue": 43245.19377612908
-  },
-  {
-    "id": "bal-11",
-    "connectionId": "mocked-data-bitget-2",
-    "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "ccy": "USDC",
-    "amount": 21623.056571078065,
-    "usdValue": 21623.056571078065
-  },
-  {
-    "id": "bal-12",
-    "connectionId": "mocked-data-bitget-2",
-    "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "ccy": "BTC",
-    "amount": 69.46697081918528,
-    "usdValue": 1612.0871769954585
-  },
-  {
-    "id": "bal-13",
-    "connectionId": "mocked-data-bitget-2",
-    "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "ccy": "ETH",
-    "amount": 63.015946331651186,
-    "usdValue": 5142.238136919263
-  },
-  {
-    "id": "bal-14",
-    "connectionId": "mocked-data-bitget-2",
-    "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "ccy": "SOL",
-    "amount": 71.53881385003984,
-    "usdValue": 4997.494632675005
-  },
-  {
-    "id": "bal-15",
-    "connectionId": "mocked-data-bitget-2",
-    "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "ccy": "LINK",
-    "amount": 66.71760571586654,
-    "usdValue": 1402.7585663634181
-  },
-  {
-    "id": "bal-16",
-    "connectionId": "mocked-data-bitget-2",
-    "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "ccy": "USDT",
-    "amount": 8841.460348103037,
-    "usdValue": 8841.460348103037
-  },
-  {
-    "id": "bal-17",
-    "connectionId": "mocked-data-bitget-2",
-    "exchange": "bitget",
-    "label": "Mock BITGET 2",
-    "ccy": "USDC",
-    "amount": 27314.572341116756,
-    "usdValue": 27314.572341116756
-  },
-  {
-    "id": "bal-18",
-    "connectionId": "mocked-data-bitget-3",
-    "exchange": "bitget",
-    "label": "Mock BITGET 3",
-    "ccy": "USDT",
-    "amount": 34659.98199864047,
-    "usdValue": 34659.98199864047
-  },
-  {
-    "id": "bal-19",
-    "connectionId": "mocked-data-bitget-3",
-    "exchange": "bitget",
-    "label": "Mock BITGET 3",
-    "ccy": "USDC",
-    "amount": 2746.2065472899594,
-    "usdValue": 2746.2065472899594
-  },
-  {
-    "id": "bal-20",
-    "connectionId": "mocked-data-bitget-3",
-    "exchange": "bitget",
-    "label": "Mock BITGET 3",
-    "ccy": "BTC",
-    "amount": 95.68976417321379,
-    "usdValue": 1034.3691776106498
-  },
-  {
-    "id": "bal-21",
-    "connectionId": "mocked-data-bitget-3",
-    "exchange": "bitget",
-    "label": "Mock BITGET 3",
-    "ccy": "ETH",
-    "amount": 67.21361099980047,
-    "usdValue": 4692.204224568711
-  },
-  {
-    "id": "bal-22",
-    "connectionId": "mocked-data-bitget-3",
-    "exchange": "bitget",
-    "label": "Mock BITGET 3",
-    "ccy": "SOL",
-    "amount": 7.388456225996699,
-    "usdValue": 341.91105849162966
-  },
-  {
-    "id": "bal-23",
-    "connectionId": "mocked-data-bitget-3",
-    "exchange": "bitget",
-    "label": "Mock BITGET 3",
-    "ccy": "LINK",
-    "amount": 84.23468473330715,
-    "usdValue": 1833.2289819211483
-  },
-  {
-    "id": "bal-24",
-    "connectionId": "mocked-data-bitget-3",
-    "exchange": "bitget",
-    "label": "Mock BITGET 3",
-    "ccy": "USDT",
-    "amount": 38644.61199250121,
-    "usdValue": 38644.61199250121
-  },
-  {
-    "id": "bal-25",
-    "connectionId": "mocked-data-bitget-3",
-    "exchange": "bitget",
-    "label": "Mock BITGET 3",
-    "ccy": "USDC",
-    "amount": 22465.1110263737,
-    "usdValue": 22465.1110263737
-  },
-  {
-    "id": "bal-26",
+    "id": "mocked-data-bybit-1-USDT",
     "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "USDT",
-    "amount": 18328.451402459392,
-    "usdValue": 18328.451402459392
+    "amount": 25000,
+    "usdValue": 25000,
+    "walletBalance": 25000,
+    "totalEquity": 25000,
+    "availableMargin": 21250,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDT",
+      "equity": 25000
+    }
   },
   {
-    "id": "bal-27",
+    "id": "mocked-data-bybit-1-USDC",
     "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "USDC",
-    "amount": 48375.43549534623,
-    "usdValue": 48375.43549534623
+    "amount": 5000,
+    "usdValue": 5000,
+    "walletBalance": 5000,
+    "totalEquity": 5000,
+    "availableMargin": 4250,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDC",
+      "equity": 5000
+    }
   },
   {
-    "id": "bal-28",
+    "id": "mocked-data-bybit-1-BTC",
     "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "BTC",
-    "amount": 57.6179986306875,
-    "usdValue": 1640.2159553806412
+    "amount": 1,
+    "usdValue": 68450,
+    "walletBalance": 1,
+    "totalEquity": 68450,
+    "availableMargin": 58182.5,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "BTC",
+      "equity": 68450
+    }
   },
   {
-    "id": "bal-29",
+    "id": "mocked-data-bybit-1-ETH",
     "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "ETH",
-    "amount": 94.59636084253796,
-    "usdValue": 211.10128161834126
+    "amount": 3.5,
+    "usdValue": 11970,
+    "walletBalance": 3.5,
+    "totalEquity": 11970,
+    "availableMargin": 10174.5,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "ETH",
+      "equity": 11970
+    }
   },
   {
-    "id": "bal-30",
+    "id": "mocked-data-bybit-1-SOL",
     "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "SOL",
-    "amount": 83.74669485609374,
-    "usdValue": 6086.966059493226
+    "amount": 25,
+    "usdValue": 4562.5,
+    "walletBalance": 25,
+    "totalEquity": 4562.5,
+    "availableMargin": 3878.13,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "SOL",
+      "equity": 4562.5
+    }
   },
   {
-    "id": "bal-31",
+    "id": "mocked-data-bybit-1-LINK",
     "connectionId": "mocked-data-bybit-1",
     "exchange": "bybit",
     "label": "Mock BYBIT 1",
     "ccy": "LINK",
-    "amount": 20.94447195420482,
-    "usdValue": 977.4110141860731
+    "amount": 200,
+    "usdValue": 3680,
+    "walletBalance": 200,
+    "totalEquity": 3680,
+    "availableMargin": 3128,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "LINK",
+      "equity": 3680
+    }
   },
   {
-    "id": "bal-32",
-    "connectionId": "mocked-data-bybit-1",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 1",
-    "ccy": "USDT",
-    "amount": 46826.03368538162,
-    "usdValue": 46826.03368538162
-  },
-  {
-    "id": "bal-33",
-    "connectionId": "mocked-data-bybit-1",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 1",
-    "ccy": "USDC",
-    "amount": 38846.10830492077,
-    "usdValue": 38846.10830492077
-  },
-  {
-    "id": "bal-34",
+    "id": "mocked-data-bybit-2-USDT",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
     "ccy": "USDT",
-    "amount": 23787.754720761273,
-    "usdValue": 23787.754720761273
+    "amount": 42000,
+    "usdValue": 42000,
+    "walletBalance": 42000,
+    "totalEquity": 42000,
+    "availableMargin": 35700,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDT",
+      "equity": 42000
+    }
   },
   {
-    "id": "bal-35",
+    "id": "mocked-data-bybit-2-USDC",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
     "ccy": "USDC",
-    "amount": 40304.76102106494,
-    "usdValue": 40304.76102106494
+    "amount": 12000,
+    "usdValue": 12000,
+    "walletBalance": 12000,
+    "totalEquity": 12000,
+    "availableMargin": 10200,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDC",
+      "equity": 12000
+    }
   },
   {
-    "id": "bal-36",
+    "id": "mocked-data-bybit-2-BTC",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
     "ccy": "BTC",
-    "amount": 35.979589459476834,
-    "usdValue": 679.5915819469359
+    "amount": 0.65,
+    "usdValue": 44492.5,
+    "walletBalance": 0.65,
+    "totalEquity": 44492.5,
+    "availableMargin": 37818.63,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "BTC",
+      "equity": 44492.5
+    }
   },
   {
-    "id": "bal-37",
+    "id": "mocked-data-bybit-2-ETH",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
     "ccy": "ETH",
-    "amount": 58.382398017578964,
-    "usdValue": 5374.0590558373
+    "amount": 6,
+    "usdValue": 20520,
+    "walletBalance": 6,
+    "totalEquity": 20520,
+    "availableMargin": 17442,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "ETH",
+      "equity": 20520
+    }
   },
   {
-    "id": "bal-38",
+    "id": "mocked-data-bybit-2-SOL",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
     "ccy": "SOL",
-    "amount": 26.91742153845326,
-    "usdValue": 1054.326298116638
+    "amount": 60,
+    "usdValue": 10950,
+    "walletBalance": 60,
+    "totalEquity": 10950,
+    "availableMargin": 9307.5,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "SOL",
+      "equity": 10950
+    }
   },
   {
-    "id": "bal-39",
+    "id": "mocked-data-bybit-2-LINK",
     "connectionId": "mocked-data-bybit-2",
     "exchange": "bybit",
     "label": "Mock BYBIT 2",
     "ccy": "LINK",
-    "amount": 57.26991596881823,
-    "usdValue": 4496.668180347119
+    "amount": 450,
+    "usdValue": 8280,
+    "walletBalance": 450,
+    "totalEquity": 8280,
+    "availableMargin": 7038,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "LINK",
+      "equity": 8280
+    }
   },
   {
-    "id": "bal-40",
-    "connectionId": "mocked-data-bybit-2",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 2",
-    "ccy": "USDT",
-    "amount": 31204.70680881485,
-    "usdValue": 31204.70680881485
-  },
-  {
-    "id": "bal-41",
-    "connectionId": "mocked-data-bybit-2",
-    "exchange": "bybit",
-    "label": "Mock BYBIT 2",
-    "ccy": "USDC",
-    "amount": 19769.841938954043,
-    "usdValue": 19769.841938954043
-  },
-  {
-    "id": "bal-42",
+    "id": "mocked-data-bybit-3-USDT",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
     "ccy": "USDT",
-    "amount": 3176.1233926970544,
-    "usdValue": 3176.1233926970544
+    "amount": 15000,
+    "usdValue": 15000,
+    "walletBalance": 15000,
+    "totalEquity": 15000,
+    "availableMargin": 12750,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDT",
+      "equity": 15000
+    }
   },
   {
-    "id": "bal-43",
+    "id": "mocked-data-bybit-3-USDC",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
     "ccy": "USDC",
-    "amount": 16023.76394606064,
-    "usdValue": 16023.76394606064
+    "amount": 2000,
+    "usdValue": 2000,
+    "walletBalance": 2000,
+    "totalEquity": 2000,
+    "availableMargin": 1700,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDC",
+      "equity": 2000
+    }
   },
   {
-    "id": "bal-44",
+    "id": "mocked-data-bybit-3-BTC",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
     "ccy": "BTC",
-    "amount": 78.20734402893196,
-    "usdValue": 6670.278319693711
+    "amount": 0.35,
+    "usdValue": 23957.5,
+    "walletBalance": 0.35,
+    "totalEquity": 23957.5,
+    "availableMargin": 20363.88,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "BTC",
+      "equity": 23957.5
+    }
   },
   {
-    "id": "bal-45",
+    "id": "mocked-data-bybit-3-ETH",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
     "ccy": "ETH",
-    "amount": 68.32180935617072,
-    "usdValue": 3893.0794072890644
+    "amount": 2,
+    "usdValue": 6840,
+    "walletBalance": 2,
+    "totalEquity": 6840,
+    "availableMargin": 5814,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "ETH",
+      "equity": 6840
+    }
   },
   {
-    "id": "bal-46",
+    "id": "mocked-data-bybit-3-SOL",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
     "ccy": "SOL",
-    "amount": 44.10985000924121,
-    "usdValue": 1100.8430010323968
+    "amount": 30,
+    "usdValue": 5475,
+    "walletBalance": 30,
+    "totalEquity": 5475,
+    "availableMargin": 4653.75,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "SOL",
+      "equity": 5475
+    }
   },
   {
-    "id": "bal-47",
+    "id": "mocked-data-bybit-3-LINK",
     "connectionId": "mocked-data-bybit-3",
     "exchange": "bybit",
     "label": "Mock BYBIT 3",
     "ccy": "LINK",
-    "amount": 17.47272254501283,
-    "usdValue": 1183.0563258963493
+    "amount": 150,
+    "usdValue": 2760,
+    "walletBalance": 150,
+    "totalEquity": 2760,
+    "availableMargin": 2346,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "LINK",
+      "equity": 2760
+    }
   },
   {
-    "id": "bal-48",
+    "id": "mocked-data-bitget-1-USDT",
+    "connectionId": "mocked-data-bitget-1",
+    "exchange": "bitget",
+    "label": "Mock BITGET 1",
+    "ccy": "USDT",
+    "amount": 18000,
+    "usdValue": 18000,
+    "walletBalance": 18000,
+    "totalEquity": 18000,
+    "availableMargin": 15300,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDT",
+      "equity": 18000
+    }
+  },
+  {
+    "id": "mocked-data-bitget-1-USDC",
+    "connectionId": "mocked-data-bitget-1",
+    "exchange": "bitget",
+    "label": "Mock BITGET 1",
+    "ccy": "USDC",
+    "amount": 4000,
+    "usdValue": 4000,
+    "walletBalance": 4000,
+    "totalEquity": 4000,
+    "availableMargin": 3400,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDC",
+      "equity": 4000
+    }
+  },
+  {
+    "id": "mocked-data-bitget-1-BTC",
+    "connectionId": "mocked-data-bitget-1",
+    "exchange": "bitget",
+    "label": "Mock BITGET 1",
+    "ccy": "BTC",
+    "amount": 0.5,
+    "usdValue": 34225,
+    "walletBalance": 0.5,
+    "totalEquity": 34225,
+    "availableMargin": 29091.25,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "BTC",
+      "equity": 34225
+    }
+  },
+  {
+    "id": "mocked-data-bitget-1-ETH",
+    "connectionId": "mocked-data-bitget-1",
+    "exchange": "bitget",
+    "label": "Mock BITGET 1",
+    "ccy": "ETH",
+    "amount": 4,
+    "usdValue": 13680,
+    "walletBalance": 4,
+    "totalEquity": 13680,
+    "availableMargin": 11628,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "ETH",
+      "equity": 13680
+    }
+  },
+  {
+    "id": "mocked-data-bitget-1-SOL",
+    "connectionId": "mocked-data-bitget-1",
+    "exchange": "bitget",
+    "label": "Mock BITGET 1",
+    "ccy": "SOL",
+    "amount": 45,
+    "usdValue": 8212.5,
+    "walletBalance": 45,
+    "totalEquity": 8212.5,
+    "availableMargin": 6980.63,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "SOL",
+      "equity": 8212.5
+    }
+  },
+  {
+    "id": "mocked-data-bitget-1-LINK",
+    "connectionId": "mocked-data-bitget-1",
+    "exchange": "bitget",
+    "label": "Mock BITGET 1",
+    "ccy": "LINK",
+    "amount": 300,
+    "usdValue": 5520,
+    "walletBalance": 300,
+    "totalEquity": 5520,
+    "availableMargin": 4692,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "LINK",
+      "equity": 5520
+    }
+  },
+  {
+    "id": "mocked-data-bitget-2-USDT",
+    "connectionId": "mocked-data-bitget-2",
+    "exchange": "bitget",
+    "label": "Mock BITGET 2",
+    "ccy": "USDT",
+    "amount": 32000,
+    "usdValue": 32000,
+    "walletBalance": 32000,
+    "totalEquity": 32000,
+    "availableMargin": 27200,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDT",
+      "equity": 32000
+    }
+  },
+  {
+    "id": "mocked-data-bitget-2-USDC",
+    "connectionId": "mocked-data-bitget-2",
+    "exchange": "bitget",
+    "label": "Mock BITGET 2",
+    "ccy": "USDC",
+    "amount": 8000,
+    "usdValue": 8000,
+    "walletBalance": 8000,
+    "totalEquity": 8000,
+    "availableMargin": 6800,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDC",
+      "equity": 8000
+    }
+  },
+  {
+    "id": "mocked-data-bitget-2-BTC",
+    "connectionId": "mocked-data-bitget-2",
+    "exchange": "bitget",
+    "label": "Mock BITGET 2",
+    "ccy": "BTC",
+    "amount": 0.8,
+    "usdValue": 54760,
+    "walletBalance": 0.8,
+    "totalEquity": 54760,
+    "availableMargin": 46546,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "BTC",
+      "equity": 54760
+    }
+  },
+  {
+    "id": "mocked-data-bitget-2-ETH",
+    "connectionId": "mocked-data-bitget-2",
+    "exchange": "bitget",
+    "label": "Mock BITGET 2",
+    "ccy": "ETH",
+    "amount": 5.5,
+    "usdValue": 18810,
+    "walletBalance": 5.5,
+    "totalEquity": 18810,
+    "availableMargin": 15988.5,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "ETH",
+      "equity": 18810
+    }
+  },
+  {
+    "id": "mocked-data-bitget-2-SOL",
+    "connectionId": "mocked-data-bitget-2",
+    "exchange": "bitget",
+    "label": "Mock BITGET 2",
+    "ccy": "SOL",
+    "amount": 70,
+    "usdValue": 12775,
+    "walletBalance": 70,
+    "totalEquity": 12775,
+    "availableMargin": 10858.75,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "SOL",
+      "equity": 12775
+    }
+  },
+  {
+    "id": "mocked-data-bitget-2-LINK",
+    "connectionId": "mocked-data-bitget-2",
+    "exchange": "bitget",
+    "label": "Mock BITGET 2",
+    "ccy": "LINK",
+    "amount": 500,
+    "usdValue": 9200,
+    "walletBalance": 500,
+    "totalEquity": 9200,
+    "availableMargin": 7820,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "LINK",
+      "equity": 9200
+    }
+  },
+  {
+    "id": "mocked-data-bitget-3-USDT",
+    "connectionId": "mocked-data-bitget-3",
+    "exchange": "bitget",
+    "label": "Mock BITGET 3",
+    "ccy": "USDT",
+    "amount": 12000,
+    "usdValue": 12000,
+    "walletBalance": 12000,
+    "totalEquity": 12000,
+    "availableMargin": 10200,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDT",
+      "equity": 12000
+    }
+  },
+  {
+    "id": "mocked-data-bitget-3-USDC",
+    "connectionId": "mocked-data-bitget-3",
+    "exchange": "bitget",
+    "label": "Mock BITGET 3",
+    "ccy": "USDC",
+    "amount": 3000,
+    "usdValue": 3000,
+    "walletBalance": 3000,
+    "totalEquity": 3000,
+    "availableMargin": 2550,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDC",
+      "equity": 3000
+    }
+  },
+  {
+    "id": "mocked-data-bitget-3-BTC",
+    "connectionId": "mocked-data-bitget-3",
+    "exchange": "bitget",
+    "label": "Mock BITGET 3",
+    "ccy": "BTC",
+    "amount": 0.25,
+    "usdValue": 17112.5,
+    "walletBalance": 0.25,
+    "totalEquity": 17112.5,
+    "availableMargin": 14545.63,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "BTC",
+      "equity": 17112.5
+    }
+  },
+  {
+    "id": "mocked-data-bitget-3-ETH",
+    "connectionId": "mocked-data-bitget-3",
+    "exchange": "bitget",
+    "label": "Mock BITGET 3",
+    "ccy": "ETH",
+    "amount": 1.5,
+    "usdValue": 5130,
+    "walletBalance": 1.5,
+    "totalEquity": 5130,
+    "availableMargin": 4360.5,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "ETH",
+      "equity": 5130
+    }
+  },
+  {
+    "id": "mocked-data-bitget-3-SOL",
+    "connectionId": "mocked-data-bitget-3",
+    "exchange": "bitget",
+    "label": "Mock BITGET 3",
+    "ccy": "SOL",
+    "amount": 20,
+    "usdValue": 3650,
+    "walletBalance": 20,
+    "totalEquity": 3650,
+    "availableMargin": 3102.5,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "SOL",
+      "equity": 3650
+    }
+  },
+  {
+    "id": "mocked-data-bitget-3-LINK",
+    "connectionId": "mocked-data-bitget-3",
+    "exchange": "bitget",
+    "label": "Mock BITGET 3",
+    "ccy": "LINK",
+    "amount": 100,
+    "usdValue": 1840,
+    "walletBalance": 100,
+    "totalEquity": 1840,
+    "availableMargin": 1564,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "LINK",
+      "equity": 1840
+    }
+  },
+  {
+    "id": "mocked-data-okx-1-USDT",
     "connectionId": "mocked-data-okx-1",
     "exchange": "okx",
     "label": "Mock OKX 1",
     "ccy": "USDT",
-    "amount": 26412.415608661715,
-    "usdValue": 26412.415608661715
+    "amount": 28000,
+    "usdValue": 28000,
+    "walletBalance": 28000,
+    "totalEquity": 28000,
+    "availableMargin": 23800,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDT",
+      "equity": 28000
+    }
   },
   {
-    "id": "bal-49",
+    "id": "mocked-data-okx-1-USDC",
     "connectionId": "mocked-data-okx-1",
     "exchange": "okx",
     "label": "Mock OKX 1",
     "ccy": "USDC",
-    "amount": 41453.960484504554,
-    "usdValue": 41453.960484504554
+    "amount": 6000,
+    "usdValue": 6000,
+    "walletBalance": 6000,
+    "totalEquity": 6000,
+    "availableMargin": 5100,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDC",
+      "equity": 6000
+    }
   },
   {
-    "id": "bal-50",
+    "id": "mocked-data-okx-1-BTC",
     "connectionId": "mocked-data-okx-1",
     "exchange": "okx",
     "label": "Mock OKX 1",
     "ccy": "BTC",
-    "amount": 51.4695992277992,
-    "usdValue": 4664.678710159515
+    "amount": 0.5,
+    "usdValue": 34225,
+    "walletBalance": 0.5,
+    "totalEquity": 34225,
+    "availableMargin": 29091.25,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "BTC",
+      "equity": 34225
+    }
   },
   {
-    "id": "bal-51",
+    "id": "mocked-data-okx-1-ETH",
     "connectionId": "mocked-data-okx-1",
     "exchange": "okx",
     "label": "Mock OKX 1",
     "ccy": "ETH",
-    "amount": 20.464145461388362,
-    "usdValue": 131.01362422481176
+    "amount": 3,
+    "usdValue": 10260,
+    "walletBalance": 3,
+    "totalEquity": 10260,
+    "availableMargin": 8721,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "ETH",
+      "equity": 10260
+    }
   },
   {
-    "id": "bal-52",
+    "id": "mocked-data-okx-1-SOL",
     "connectionId": "mocked-data-okx-1",
     "exchange": "okx",
     "label": "Mock OKX 1",
     "ccy": "SOL",
-    "amount": 89.44011423615599,
-    "usdValue": 5014.767120674098
+    "amount": 40,
+    "usdValue": 7300,
+    "walletBalance": 40,
+    "totalEquity": 7300,
+    "availableMargin": 6205,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "SOL",
+      "equity": 7300
+    }
   },
   {
-    "id": "bal-53",
+    "id": "mocked-data-okx-1-LINK",
     "connectionId": "mocked-data-okx-1",
     "exchange": "okx",
     "label": "Mock OKX 1",
     "ccy": "LINK",
-    "amount": 97.78963511748337,
-    "usdValue": 7919.415447742487
+    "amount": 250,
+    "usdValue": 4600,
+    "walletBalance": 250,
+    "totalEquity": 4600,
+    "availableMargin": 3910,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "LINK",
+      "equity": 4600
+    }
   },
   {
-    "id": "bal-54",
-    "connectionId": "mocked-data-okx-1",
-    "exchange": "okx",
-    "label": "Mock OKX 1",
-    "ccy": "USDT",
-    "amount": 34441.89080693957,
-    "usdValue": 34441.89080693957
-  },
-  {
-    "id": "bal-55",
+    "id": "mocked-data-okx-2-USDT",
     "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
     "label": "Mock OKX 2",
     "ccy": "USDT",
-    "amount": 45501.9345374808,
-    "usdValue": 45501.9345374808
+    "amount": 50000,
+    "usdValue": 50000,
+    "walletBalance": 50000,
+    "totalEquity": 50000,
+    "availableMargin": 42500,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDT",
+      "equity": 50000
+    }
   },
   {
-    "id": "bal-56",
+    "id": "mocked-data-okx-2-USDC",
     "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
     "label": "Mock OKX 2",
     "ccy": "USDC",
-    "amount": 43907.9505043974,
-    "usdValue": 43907.9505043974
+    "amount": 15000,
+    "usdValue": 15000,
+    "walletBalance": 15000,
+    "totalEquity": 15000,
+    "availableMargin": 12750,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDC",
+      "equity": 15000
+    }
   },
   {
-    "id": "bal-57",
+    "id": "mocked-data-okx-2-BTC",
     "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
     "label": "Mock OKX 2",
     "ccy": "BTC",
-    "amount": 73.44543325865084,
-    "usdValue": 6102.486216424742
+    "amount": 1.2,
+    "usdValue": 82140,
+    "walletBalance": 1.2,
+    "totalEquity": 82140,
+    "availableMargin": 69819,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "BTC",
+      "equity": 82140
+    }
   },
   {
-    "id": "bal-58",
+    "id": "mocked-data-okx-2-ETH",
     "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
     "label": "Mock OKX 2",
     "ccy": "ETH",
-    "amount": 57.89111695221365,
-    "usdValue": 2568.003046327804
+    "amount": 8,
+    "usdValue": 27360,
+    "walletBalance": 8,
+    "totalEquity": 27360,
+    "availableMargin": 23256,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "ETH",
+      "equity": 27360
+    }
   },
   {
-    "id": "bal-59",
+    "id": "mocked-data-okx-2-SOL",
     "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
     "label": "Mock OKX 2",
     "ccy": "SOL",
-    "amount": 23.16647275096214,
-    "usdValue": 2315.086330148314
+    "amount": 85,
+    "usdValue": 15512.5,
+    "walletBalance": 85,
+    "totalEquity": 15512.5,
+    "availableMargin": 13185.63,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "SOL",
+      "equity": 15512.5
+    }
   },
   {
-    "id": "bal-60",
+    "id": "mocked-data-okx-2-LINK",
     "connectionId": "mocked-data-okx-2",
     "exchange": "okx",
     "label": "Mock OKX 2",
     "ccy": "LINK",
-    "amount": 81.68360131090546,
-    "usdValue": 3860.0494646018255
+    "amount": 600,
+    "usdValue": 11040,
+    "walletBalance": 600,
+    "totalEquity": 11040,
+    "availableMargin": 9384,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "LINK",
+      "equity": 11040
+    }
   },
   {
-    "id": "bal-61",
-    "connectionId": "mocked-data-okx-2",
-    "exchange": "okx",
-    "label": "Mock OKX 2",
-    "ccy": "USDT",
-    "amount": 43405.096461458474,
-    "usdValue": 43405.096461458474
-  },
-  {
-    "id": "bal-62",
+    "id": "mocked-data-okx-3-USDT",
     "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
     "label": "Mock OKX 3",
     "ccy": "USDT",
-    "amount": 30995.96041201057,
-    "usdValue": 30995.96041201057
+    "amount": 16000,
+    "usdValue": 16000,
+    "walletBalance": 16000,
+    "totalEquity": 16000,
+    "availableMargin": 13600,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDT",
+      "equity": 16000
+    }
   },
   {
-    "id": "bal-63",
+    "id": "mocked-data-okx-3-USDC",
     "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
     "label": "Mock OKX 3",
     "ccy": "USDC",
-    "amount": 15070.306772621292,
-    "usdValue": 15070.306772621292
+    "amount": 3500,
+    "usdValue": 3500,
+    "walletBalance": 3500,
+    "totalEquity": 3500,
+    "availableMargin": 2975,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "USDC",
+      "equity": 3500
+    }
   },
   {
-    "id": "bal-64",
+    "id": "mocked-data-okx-3-BTC",
     "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
     "label": "Mock OKX 3",
     "ccy": "BTC",
-    "amount": 82.29596153047322,
-    "usdValue": 1009.2983944467385
+    "amount": 0.3,
+    "usdValue": 20535,
+    "walletBalance": 0.3,
+    "totalEquity": 20535,
+    "availableMargin": 17454.75,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "BTC",
+      "equity": 20535
+    }
   },
   {
-    "id": "bal-65",
+    "id": "mocked-data-okx-3-ETH",
     "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
     "label": "Mock OKX 3",
     "ccy": "ETH",
-    "amount": 71.30502456359713,
-    "usdValue": 1588.2068474140085
+    "amount": 2.5,
+    "usdValue": 8550,
+    "walletBalance": 2.5,
+    "totalEquity": 8550,
+    "availableMargin": 7267.5,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "ETH",
+      "equity": 8550
+    }
   },
   {
-    "id": "bal-66",
+    "id": "mocked-data-okx-3-SOL",
     "connectionId": "mocked-data-okx-3",
     "exchange": "okx",
     "label": "Mock OKX 3",
     "ccy": "SOL",
-    "amount": 21.753455130521093,
-    "usdValue": 1077.7826112725888
+    "amount": 35,
+    "usdValue": 6387.5,
+    "walletBalance": 35,
+    "totalEquity": 6387.5,
+    "availableMargin": 5429.38,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "SOL",
+      "equity": 6387.5
+    }
+  },
+  {
+    "id": "mocked-data-okx-3-LINK",
+    "connectionId": "mocked-data-okx-3",
+    "exchange": "okx",
+    "label": "Mock OKX 3",
+    "ccy": "LINK",
+    "amount": 180,
+    "usdValue": 3312,
+    "walletBalance": 180,
+    "totalEquity": 3312,
+    "availableMargin": 2815.2,
+    "unrealizedPnl": 0,
+    "raw": {
+      "mockData": true,
+      "ccy": "LINK",
+      "equity": 3312
+    }
   }
 ]
