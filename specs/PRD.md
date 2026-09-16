@@ -136,6 +136,15 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 2. Quando ativo: badge pulsante "Simulation Mode" no StatusBar e botão "Sync Now" desabilitado com tooltip explicativo.
 3. Desativar restaura o Real-Time instantaneamente.
 
+### 6.8. Market Analytics
+
+1. **Agregação Quantitativa Cross-Exchange:** consolidação em tempo real de liquidez, derivativos e order flow entre Bybit, OKX e Bitget com suporte a múltiplos tipos de mercado (Linear PERP, Inverse COIN-M, Spot e ALL).
+2. **Open Interest & Regime Detector:** correlação gráfica entre preço e Open Interest (USD) por exchange, diagnosticando automaticamente 5 regimes estruturais: `LONG_ACCUMULATION`, `SHORT_SQUEEZE`, `AGGRESSIVE_SHORTING`, `LONG_LIQUIDATION` e `NEUTRAL_CONSOLIDATION`.
+3. **Cross-Exchange Funding Arbitrage:** scanner de oportunidades de arbitragem delta-neutra entre corretoras, calculando spread 8h e APR anualizado (`Spread APR = Spread * 3 * 365`), indicando exchange ideal para Long e Short e contagem regressiva para liquidação.
+4. **Order Flow & Cumulative Volume Delta (CVD):** mensuração de agressões de mercado (`Net Delta = Taker Buy - Taker Sell`) e curva de volume acumulado (CVD) com detecção algorítmica de divergências altistas (Bullish) e baixistas (Bearish).
+5. **Sentimento Smart Money vs. Retail:** comparação do sentimento do varejo (ponderado por contas) contra o Smart Money (ponderado por volume nocional do top 20% de traders) com índice Fear & Greed e alertas de divergência institucional.
+6. **Tooltips e Controles Padronizados:** tooltips matemáticos detalhados ancorados no Radix UI, seleção com favoritos, seletor de timeframes e atualização automática configurável com contador circular.
+
 ## 7. Requisitos Funcionais (Resumo)
 
 | ID | Requisito | Módulo |
@@ -157,6 +166,7 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 | FR-15 | Auditar extrato e bills archive da OKX com reconciliação contábil | OKX Transactions |
 | FR-16 | Mapeamento universal de transações (10 categorias universais e badges padronizados) | Universal Tx Mapper |
 | FR-17 | Modo Hedge Pro com monitoramento de delta, ratio de hedge e alertas de risco | Hedge Monitoring |
+| FR-18 | Inteligência de mercado multi-exchange com Open Interest, regimes de mercado, Funding Arbitrage, fluxo de ordens (CVD) e sentimento Smart Money | Market Analytics |
 
 ## 8. Requisitos Não-Funcionais
 

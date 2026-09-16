@@ -25,6 +25,7 @@ Our absolute highest priority is **zero-trust client security** and **strict pri
    - [PnL by Symbol](#-pnl-by-symbol)
    - [Funding Fees Dashboard](#-funding-fees-dashboard)
    - [Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)](#-multi-exchange-transactions-log-bybit-bitget--okx-transactions)
+   - [Market Analytics (Quantitative Intelligence & Order Flow)](#-market-analytics-quantitative-intelligence--order-flow)
    - [API Tester (REST & WebSocket Diagnostics)](#-api-tester-rest--websocket-diagnostics)
    - [Privacy Mode](#-privacy-mode)
 8. [Inverse Contract Normalization & Smart Pagination](#8-inverse-contract-normalization--smart-pagination)
@@ -191,6 +192,49 @@ Specialized financial audit modules providing full access to raw transaction log
 - **Additional Multi-Criteria Filters**: Filter by instrument category (Spot, Linear, Inverse, Option, Margin), Currency/Coin, Account/Subaccount, Timeframe, and Symbol search.
 - **Cash Flow & Realized PnL Calculation**: Computes exact realized net changes based on standard cash flow accounting (`cashFlow + funding - fee`) and reconciles with wallet balance (`walletBalance`).
 - **Interactive KPI Cards & Distribution Visuals**: Track total transactions, aggregated USD funding fees, net trading fees paid/rebated, and net period portfolio changes.
+
+### 📈 Market Analytics (Quantitative Intelligence & Order Flow)
+A quantitative derivatives intelligence terminal consolidating and correlating real-time order flow and market metrics across **Bybit**, **OKX**, and **Bitget**:
+- **Global Filter Bar & Controls**:
+  - *Asset Selector*: Searchable ticker dropdown with star favorites to instantly toggle between major assets (e.g., BTC, ETH, SOL).
+  - *Market Type Filter*: Multi-select between Linear Perpetual contracts (PERP), Inverse contracts (INVERSE), Spot market (SPOT), or All combined (ALL).
+  - *Exchanges Multi-Select*: Toggle Bybit, OKX, and Bitget individually or aggregate all three to examine cross-exchange liquidity.
+  - *Timeframe Selector*: Granular operational intervals (5m, 15m, 30m, 1h, 4h, 1d).
+  - *Circular Countdown Auto-Refresh*: Configurable polling timer (5s, 10s, 15s, 30s, 60s, or Paused) featuring a circular SVG progress ring and instant click-to-refresh button.
+- **Top Metric Cards (Equipped with Detailed Tooltips & Formulas)**:
+  - *Current Price & 24h Change*: Real-time aggregated USD mark price and 24h percentage return.
+  - *24h Aggregated Volume*: Total 24h notional trading volume across selected exchanges.
+  - *Total Open Interest (OI)*: Total active contract exposure in USD with 24h percentage change.
+  - *Benchmark Funding Rate & APR*: Next 8h funding rate and annualized APR equivalent: `APR = 8h Rate * 3 * 365`.
+  - *Net CVD (Cumulative Volume Delta)*: Running net delta between aggressive market buy orders and aggressive market sell orders (`Taker Buy Vol - Taker Sell Vol`).
+  - *Sentiment Index (Fear & Greed)*: Real-time 0-100 market sentiment gauge categorized into: *Extreme Fear (0-24)*, *Fear (25-44)*, *Neutral (45-55)*, *Greed (56-74)*, and *Extreme Greed (75-100)*.
+- **Dedicated Analytical Widgets**:
+  1. **Open Interest & Leverage Monitor**:
+     - Dual-axis Recharts visualization mapping price trajectory alongside aggregated Open Interest in USD.
+     - *Automated Market Regime Classifier*:
+       - `Long Accumulation`: Price ↑ & OI ↑ (Bullish trend confirmed by aggressive new long positioning).
+       - `Short Squeeze`: Price ↑ & OI ↓ (Rally driven by forced short covering and stop-outs).
+       - `Aggressive Shorting`: Price ↓ & OI ↑ (Bearish trend confirmed by aggressive new short accumulation).
+       - `Long Liquidation`: Price ↓ & OI ↓ (Cascading sell-off driven by long liquidations and margin unwinding).
+       - `Neutral Consolidation`: Sideways price and OI action with no dominant institutional flow.
+     - *Exchange OI Breakdown*: Dollar value and percentage market share divided across Bybit, OKX, and Bitget.
+  2. **Cross-Exchange Funding Arbitrage**:
+     - Real-time comparison of 8h and APR funding rates across Bybit, OKX, and Bitget.
+     - *Arbitrage Spread Formulas*:
+       - `Spread 8h = Max Rate - Min Rate`
+       - `Spread APR = Spread 8h * 3 * 365`
+     - *Delta-Neutral Arbitrage Suggestion*: Automatically recommends the optimal Long exchange (lowest/negative rate) and Short exchange (highest/positive rate) to harvest basis yield without directional exposure.
+     - Multi-asset opportunity scanner with real-time countdown to next funding settlement.
+  3. **Order Flow & Cumulative Volume Delta (CVD)**:
+     - Real-time tracking of aggressive market orders (Taker Buy vs. Taker Sell Volume).
+     - *Formulas*: `Net Taker Delta = Taker Buy Volume - Taker Sell Volume`, `CVD_t = CVD_(t-1) + Net Delta_t`.
+     - *CVD Divergence Detection*:
+       - *Bullish Divergence*: Price declining or flat while CVD is rising (signals aggressive sell absorption by passive limit buyers).
+       - *Bearish Divergence*: Price climbing or flat while CVD is dropping (signals aggressive buy absorption by passive limit sellers).
+  4. **Smart Money vs. Retail Sentiment**:
+     - *Retail Ratio*: Long/Short positioning ratio based on absolute number of retail trader accounts.
+     - *Top Trader Ratio (Smart Money)*: Long/Short positioning ratio weighted by notional USD position size of the top 20% profitable traders.
+     - *Sentiment Divergence Alert*: Triggers high-probability contrarian signals when Retail positioning sharply diverges from Top Trader positioning.
 
 ### ⚡ API Tester (REST & WebSocket Diagnostics)
 Developer and diagnostic utility for testing direct connectivity with exchanges:

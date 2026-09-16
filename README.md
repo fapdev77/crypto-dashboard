@@ -62,6 +62,13 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 5. Volte para a rota principal "Dashboard", agora deverá ver seus saldos totais atualizando globalmente.
 
 ## 🛠 Features e UI/UX Recentes
+- ✅ **Market Analytics (Inteligência Quantitativa e Fluxo de Derivativos Multi-Exchange):**
+  - **Consolidação Cross-Exchange em Tempo Real:** Agrega dados de derivativos e fluxo de ordens de Bybit, OKX e Bitget em contratos Perpétuos (Linear), Inversos (Coin-M) e Spot.
+  - **Open Interest & Regime Detector:** Visualização gráfica de evolução de Open Interest (OI) com detector automático de regimes de mercado (`Long Accumulation`, `Short Squeeze`, `Aggressive Shorting`, `Long Liquidation` e `Neutral Consolidation`) e divisão de market share por corretora.
+  - **Arbitragem de Funding Cross-Exchange:** Scanner de discrepâncias de taxas de financiamento com cálculo de spread 8h e APR anualizado delta-neutro (`Spread APR = Spread * 3 * 365`), recomendando automaticamente a melhor exchange para Long e Short.
+  - **Order Flow & Cumulative Volume Delta (CVD):** Gráfico interativo de Net Taker Delta (`Taker Buy - Taker Sell`) e curva de CVD com alertas automáticos de divergência altista (Bullish) e baixista (Bearish).
+  - **Sentimento Smart Money vs. Retail:** Proporção Long/Short do varejo comparada ao posicionamento de topo (Smart Money, top 20% em rentabilidade/volume) com alerta de divergência contrária e medidor Fear & Greed.
+  - **Filtros Globais, Tooltips Padronizados e Countdown Refresh:** Seletores de ativos com favoritos, tipos de mercado, exchanges e timeframes (5m a 1d), além de tooltips matemáticos detalhados em todos os componentes e botão de auto-refresh com indicador circular.
 - ✅ **Auditoria Contábil Completa (Bybit, Bitget e OKX Transactions):** Módulos completos que isolam o histórico contínuo das 3 corretoras para auditoria profunda de Taxas (Trading Fees), Funding, Liquidações e Realized PnL baseados integralmente em fluxo de caixa (Cashflow).
 - ✅ **Filtros Unificados de Transações (Universal Transaction Mapper):** Padronização em 10 tipos universais (*Trade & Orders*, *Funding Fee*, *Transfer In*, *Transfer Out*, *Liquidation*, *Interest*, *Rewards*, *Delivery*, *Others*, *All Types*) com badges estilizados e suporte simultâneo a filtros de categoria, moeda, conta e período.
 - ✅ **Relatórios Consolidados de Ordens (Order Reports):** Rastreio avançado separando ordens abertas de ordens finalizadas (History), equipadas com filtragem multicritério e extrações analíticas.

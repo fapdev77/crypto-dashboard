@@ -1,3 +1,87 @@
+# [1.63.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.62.0...v1.63.0) (2026-09-15)
+
+
+### Features
+
+* New inverse market dashboard ([12d33c1](https://github.com/fapdev77/crypto-dashboard/commit/12d33c16a1a415f3665bce2006ae6c0fc71f0f56))
+
+# [1.62.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.61.1...v1.62.0) (2026-09-14)
+
+
+### Features
+
+* add tooltips to Taker Flow and CVD metrics ([7002831](https://github.com/fapdev77/crypto-dashboard/commit/70028312fb1f7be1ffba43cd865b983f4fbdaa2e))
+
+## [1.61.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.61.0...v1.61.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* standardize number formatting and fix price calculation ([6b6ebfd](https://github.com/fapdev77/crypto-dashboard/commit/6b6ebfd5216e24f68e506000037d9dc7e197d83f))
+
+# [1.61.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.60.0...v1.61.0) (2026-09-12)
+
+
+### Features
+
+* **market:** calculate USD notional for inverse contracts ([ba0ecc5](https://github.com/fapdev77/crypto-dashboard/commit/ba0ecc553cc2bd50a881d5f9af7e24a680ba2caa))
+
+# [1.60.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.59.1...v1.60.0) (2026-09-11)
+
+
+### Features
+
+* **ui:** add navigation to catalog settings in filter modal ([820f5d9](https://github.com/fapdev77/crypto-dashboard/commit/820f5d9ab4d13616f096dc12c7e137bb3ea1c0bc))
+
+## [1.59.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.59.0...v1.59.1) (2026-09-11)
+
+
+### Performance Improvements
+
+* optimize market filter transitions ([df7deda](https://github.com/fapdev77/crypto-dashboard/commit/df7deda730eae5fa350dd726ab4c1826c83e27b6))
+
+# [1.59.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.58.0...v1.59.0) (2026-09-11)
+
+
+### Features
+
+* implement deterministic seed generation for mocks ([8eb0a76](https://github.com/fapdev77/crypto-dashboard/commit/8eb0a762b2bfbf1508276a1c521e317874b5f6c0))
+
+# [1.58.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.57.0...v1.58.0) (2026-09-11)
+
+
+### Features
+
+* **analytics:** add symbol catalog auto-refresh ([7c3b3f6](https://github.com/fapdev77/crypto-dashboard/commit/7c3b3f6c3e9036ad120e9381aa6bae69f07ed1de))
+
+# [1.57.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.56.0...v1.57.0) (2026-09-11)
+
+
+### Features
+
+* add Market Analytics dashboard ([1bac4ee](https://github.com/fapdev77/crypto-dashboard/commit/1bac4eee812fbd11a142d818a238184079bea967))
+
+# [1.56.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.55.0...v1.56.0) (2026-09-11)
+
+
+### Features
+
+* **analytics:** add tooltips to market dashboard ([3deacfc](https://github.com/fapdev77/crypto-dashboard/commit/3deacfc24e8cc1ed5f26052de34a483dbe08daea))
+
+# [1.55.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.54.1...v1.55.0) (2026-09-11)
+
+
+### Features
+
+* add Advanced Market Analytics dashboard ([10044e0](https://github.com/fapdev77/crypto-dashboard/commit/10044e067eb6194c2b977493880c8d62cd0b9824))
+
+## [1.54.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.54.0...v1.54.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **bitget:** update UTA adapter for v3 API compatibility ([9c42a52](https://github.com/fapdev77/crypto-dashboard/commit/9c42a52b6d4848ceeb4dbc80e0255260d642b720))
+
 # [1.54.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.53.0...v1.54.0) (2026-09-09)
 
 

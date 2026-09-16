@@ -52,15 +52,26 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
       const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
 
       if (res.code === '00000' && res.data) {
-        const list = Array.isArray(res.data) ? res.data : (res.data.list || []);
+        // In Bitget UTA v3, coin assets reside under res.data.assets
+        const list = Array.isArray(res.data.assets)
+          ? res.data.assets
+          : (Array.isArray(res.data) ? res.data : (res.data.list || []));
+        const accountEquity = parseFloat(res.data.accountEquity || '0');
+        const accountUsdtEquity = parseFloat(res.data.usdtEquity || '0');
+        const accountUnrealizedPnl = parseFloat(res.data.unrealisedPnl || '0');
+        const mmr = parseFloat(res.data.mmr || '0');
+        const mgnRatio = parseFloat(res.data.mgnRatio || '0');
+
         list.forEach((item: any) => {
           const balance = parseFloat(item.balance || '0');
           const available = parseFloat(item.available || '0');
+          const equity = parseFloat(item.equity || '0');
           const crossedEquity = parseFloat(item.crossedEquity || '0');
           const isolatedEquity = parseFloat(item.isolatedEquity || '0');
-          const totalEquity = crossedEquity + isolatedEquity > 0 ? (crossedEquity + isolatedEquity) : balance;
+          const subTotalEquity = crossedEquity + isolatedEquity > 0 ? (crossedEquity + isolatedEquity) : 0;
+          const totalEquity = equity > 0 ? equity : (subTotalEquity > 0 ? subTotalEquity : balance);
           const usdVal = parseFloat(item.usdValue || '0');
-          const unrealizedPnl = parseFloat(item.unrealisedPnl || '0');
+          const unrealizedPnl = parseFloat(item.unrealisedPnl || '0') || (item.coin?.toUpperCase() === 'USDT' ? accountUnrealizedPnl : 0);
 
           if (totalEquity > 0 || balance > 0 || available > 0 || usdVal > 0) {
             balances.push({
@@ -71,11 +82,11 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
               ccy: (item.coin || '').toUpperCase(),
               amount: balance > 0 ? balance : totalEquity,
               usdValue: usdVal > 0 ? usdVal : (totalEquity > 0 ? totalEquity : balance),
-              totalEquity,
+              totalEquity: totalEquity > 0 ? totalEquity : (item.coin?.toUpperCase() === 'USDT' && accountEquity > 0 ? accountEquity : balance),
               walletBalance: balance,
               availableMargin: available,
               unrealizedPnl,
-              raw: item
+              raw: { ...item, accountMetrics: { accountEquity, accountUsdtEquity, accountUnrealizedPnl, mmr, mgnRatio } }
             });
           }
         });
@@ -201,15 +212,31 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
   // REST Closed PnL History (UTA v3)
   public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
-    const fetchCategory = async (cat: string) => {
+    const THIRTY_DAYS_MS = 29 * 24 * 60 * 60 * 1000; // 29-day safe window (Bitget UTA max 30 days)
+    const now = Date.now();
+    const effectiveEnd = end ? Math.min(end, now) : now;
+    const minAllowed = now - (90 * 24 * 60 * 60 * 1000); // 90 days access window
+    const effectiveStart = start ? Math.max(start, minAllowed) : Math.max(minAllowed, effectiveEnd - THIRTY_DAYS_MS);
+
+    // Segment into <= 29 day intervals as required by Bitget UTA v3
+    const windows: { start: number; end: number }[] = [];
+    let cur = effectiveStart;
+    while (cur < effectiveEnd) {
+      const next = Math.min(cur + THIRTY_DAYS_MS, effectiveEnd);
+      windows.push({ start: cur, end: next });
+      cur = next;
+    }
+    if (windows.length === 0) {
+      windows.push({ start: effectiveStart, end: effectiveEnd });
+    }
+
+    const fetchCategoryWindow = async (cat: string, winStart: number, winEnd: number) => {
       let list: any[] = [];
       let cursor = '';
       let pages = 0;
       try {
         do {
-          let query = `category=${cat}&limit=100`;
-          if (start) query += `&startTime=${start}`;
-          if (end) query += `&endTime=${end}`;
+          let query = `category=${cat}&limit=100&startTime=${winStart}&endTime=${winEnd}`;
           if (cursor) query += `&cursor=${cursor}`;
 
           const path = `/api/v3/position/history-position?${query}`;
@@ -227,14 +254,31 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
           pages++;
         } while (cursor && pages < MAX_DEEP_PAGES);
       } catch (err) {
-        LogManager.warn('BitgetUTAAdapter.History', `Error for ${cat}:`, err);
+        LogManager.warn('BitgetUTAAdapter.History', `Error for ${cat} [${winStart}-${winEnd}]:`, err);
       }
       return list;
     };
 
-    const results = await Promise.all(categories.map(cat => fetchCategory(cat)));
+    const tasks: Promise<any[]>[] = [];
+    for (const cat of categories) {
+      for (const win of windows) {
+        tasks.push(fetchCategoryWindow(cat, win.start, win.end));
+      }
+    }
 
-    return results.flat().map((pos: any) => {
+    const results = await Promise.all(tasks);
+    const rawPositions = results.flat();
+
+    // Deduplicate by positionId
+    const seenIds = new Set<string>();
+    const uniquePositions = rawPositions.filter((pos: any) => {
+      const pId = pos.positionId || `${pos.symbol}-${pos.posSide}-${pos.createdTime}`;
+      if (seenIds.has(pId)) return false;
+      seenIds.add(pId);
+      return true;
+    });
+
+    return uniquePositions.map((pos: any) => {
       const closeUpdateTime = parseInt(pos.updatedTime || pos.createdTime || '0', 10);
       const createdTime = parseInt(pos.createdTime || pos.updatedTime || '0', 10);
       let totalFee = 0;
@@ -242,7 +286,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
       if (pos.closeFeeTotal) totalFee += parseFloat(pos.closeFeeTotal);
 
       return {
-        id: `${key.id}-${pos.positionId}-${closeUpdateTime}`,
+        id: `${key.id}-${pos.positionId || (pos.symbol + '-' + closeUpdateTime)}`,
         connectionId: key.id,
         label: key.label,
         exchange: 'bitget',
@@ -268,6 +312,11 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
 
   // REST Deposits / Withdrawals (UTA v3)
   public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+    const THIRTY_DAYS_MS = 29 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const effectiveEnd = end ? Math.min(end, now) : now;
+    const effectiveStart = start ? Math.max(start, now - (90 * 24 * 60 * 60 * 1000)) : effectiveEnd - THIRTY_DAYS_MS;
+
     const fetchRecords = async (type: 'deposit' | 'withdrawal') => {
       const endpoint = type === 'deposit' ? '/api/v3/account/deposit-records' : '/api/v3/account/withdrawal-records';
       let list: any[] = [];
@@ -276,9 +325,8 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
 
       try {
         do {
-          let query = `limit=100`;
-          if (start) query += `&startTime=${start}`;
-          if (end) query += `&endTime=${end}`;
+          // In Bitget UTA v3, startTime and endTime are REQUIRED
+          let query = `limit=100&startTime=${effectiveStart}&endTime=${effectiveEnd}`;
           if (cursor) query += `&cursor=${cursor}`;
 
           const path = `${endpoint}?${query}`;
@@ -327,6 +375,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'SPOT', 'MARGIN'];
     let allOrders: any[] = [];
 
+    // 1. Regular Unfilled Orders (/api/v3/trade/unfilled-orders)
     for (const category of categories) {
       const path = `/api/v3/trade/unfilled-orders?category=${category}&limit=100`;
       const headers = await BitgetUTAAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
@@ -342,45 +391,89 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
       }
     }
 
+    // 2. Strategy / Trigger / TP-SL Unfilled Orders (/api/v3/trade/unfilled-strategy-orders)
+    for (const category of ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'SPOT']) {
+      for (const stratType of ['tpsl', 'trigger']) {
+        const path = `/api/v3/trade/unfilled-strategy-orders?category=${category}&type=${stratType}`;
+        const headers = await BitgetUTAAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+
+        try {
+          const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+          if (res.code === '00000') {
+            const list = Array.isArray(res.data) ? res.data : (res.data?.list || []);
+            allOrders = allOrders.concat(list.map((o: any) => ({ ...o, category, delegateType: stratType })));
+          }
+        } catch (err) {
+          LogManager.warn('BitgetUTAAdapter.StrategyOrders', `Error fetching ${category} (${stratType}):`, err);
+        }
+      }
+    }
+
     return this.normalizeOrders(allOrders, key);
   }
 
   public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedOrder[]> {
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'SPOT', 'MARGIN'];
+    const THIRTY_DAYS_MS = 29 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const effectiveEnd = end ? Math.min(end, now) : now;
+    const minAllowed = now - (90 * 24 * 60 * 60 * 1000);
+    const effectiveStart = start ? Math.max(start, minAllowed) : Math.max(minAllowed, effectiveEnd - THIRTY_DAYS_MS);
+
+    const windows: { start: number; end: number }[] = [];
+    let cur = effectiveStart;
+    while (cur < effectiveEnd) {
+      const next = Math.min(cur + THIRTY_DAYS_MS, effectiveEnd);
+      windows.push({ start: cur, end: next });
+      cur = next;
+    }
+    if (windows.length === 0) {
+      windows.push({ start: effectiveStart, end: effectiveEnd });
+    }
+
     let allOrders: any[] = [];
 
     for (const category of categories) {
-      let list: any[] = [];
-      let cursor = '';
-      let pages = 0;
+      for (const win of windows) {
+        let list: any[] = [];
+        let cursor = '';
+        let pages = 0;
 
-      try {
-        do {
-          let queryUrl = `category=${category}&limit=100`;
-          if (start) queryUrl += `&startTime=${start}`;
-          if (end) queryUrl += `&endTime=${end}`;
-          if (cursor) queryUrl += `&cursor=${cursor}`;
+        try {
+          do {
+            let queryUrl = `category=${category}&limit=100&startTime=${win.start}&endTime=${win.end}`;
+            if (cursor) queryUrl += `&cursor=${cursor}`;
 
-          const path = `/api/v3/trade/history-orders?${queryUrl}`;
-          const headers = await BitgetUTAAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+            const path = `/api/v3/trade/history-orders?${queryUrl}`;
+            const headers = await BitgetUTAAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
 
-          const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
-          if (res.code === '00000') {
-            const rows = Array.isArray(res.data) ? res.data : (res.data?.list || []);
-            list = [...list, ...rows.map((o: any) => ({ ...o, category }))];
-            cursor = res.data?.cursor || '';
-          } else {
-            break;
-          }
-          pages++;
-        } while (cursor && pages < MAX_DEEP_PAGES);
-        allOrders = allOrders.concat(list);
-      } catch (err) {
-        LogManager.warn('BitgetUTAAdapter.HistoryOrders', `Error fetching ${category}:`, err);
+            const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+            if (res.code === '00000') {
+              const rows = Array.isArray(res.data) ? res.data : (res.data?.list || []);
+              list = [...list, ...rows.map((o: any) => ({ ...o, category }))];
+              cursor = res.data?.cursor || '';
+            } else {
+              break;
+            }
+            pages++;
+          } while (cursor && pages < MAX_DEEP_PAGES);
+          allOrders = allOrders.concat(list);
+        } catch (err) {
+          LogManager.warn('BitgetUTAAdapter.HistoryOrders', `Error fetching ${category} [${win.start}-${win.end}]:`, err);
+        }
       }
     }
 
-    return this.normalizeOrders(allOrders, key);
+    // Deduplicate by orderId
+    const seenOrderIds = new Set<string>();
+    const uniqueOrders = allOrders.filter((o: any) => {
+      const id = o.orderId || o.clientOid;
+      if (!id || seenOrderIds.has(id)) return false;
+      seenOrderIds.add(id);
+      return true;
+    });
+
+    return this.normalizeOrders(uniqueOrders, key);
   }
 
   private normalizeOrders(rawOrders: any[], key: ApiCredentials): UnifiedOrder[] {

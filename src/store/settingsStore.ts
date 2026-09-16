@@ -14,6 +14,9 @@ interface SettingsState {
   /** TTL for cached asset metadata in hours (default 24). */
   metadataCacheTtlHours: number;
   setMetadataCacheTtlHours: (hours: number) => void;
+  /** Refresh interval for the Market Analytics symbol catalog in hours (default 1, min 1, max 24). */
+  symbolCatalogRefreshHours: number;
+  setSymbolCatalogRefreshHours: (hours: number) => void;
   /** Whether to show the welcome/help modal on startup. */
   showWelcomeOnStartup: boolean;
   setShowWelcomeOnStartup: (show: boolean) => void;
@@ -52,6 +55,8 @@ export const useSettingsStore = create<SettingsState>()(
       setHistoryCacheInterval: (val: number) => set({ historyCacheInterval: Math.max(1, Math.min(60, val)) }),
       metadataCacheTtlHours: 24,
       setMetadataCacheTtlHours: (val: number) => set({ metadataCacheTtlHours: Math.max(1, Math.min(24, val)) }),
+      symbolCatalogRefreshHours: 1,
+      setSymbolCatalogRefreshHours: (val: number) => set({ symbolCatalogRefreshHours: Math.max(1, Math.min(24, val)) }),
       showWelcomeOnStartup: true,
       setShowWelcomeOnStartup: (showWelcomeOnStartup: boolean) => set({ showWelcomeOnStartup }),
       historyCacheVersion: 0,

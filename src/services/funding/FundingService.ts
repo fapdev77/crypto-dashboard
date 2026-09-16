@@ -368,7 +368,7 @@ export class FundingService {
   }
 
   // ═════════════════════════════════════════════════════════════════
-  //  BITGET
+  //  BITGET (UTA v3 with v2 Fallback)
   // ═════════════════════════════════════════════════════════════════
 
   private static async fetchBitgetRecordsForAggregation(
@@ -384,28 +384,51 @@ export class FundingService {
     let pageNo = 1;
 
     do {
-      const url = `https://api.bitget.com/api/v2/mix/market/history-fund-rate?symbol=${symbol}&productType=${productType}&pageSize=${pageSize}&pageNo=${pageNo}`;
-      const data = await this.fetchWithRetry(url);
+      // 1. Try UTA v3 endpoint first: /api/v3/market/history-fund-rate
+      const v3Url = `https://api.bitget.com/api/v3/market/history-fund-rate?category=${productType}&symbol=${symbol}&limit=${pageSize}&cursor=${pageNo}`;
+      let data = await this.fetchWithRetry(v3Url);
 
-      if (!data || data.code !== '00000' || !data.data || data.data.length === 0) {
+      let rawList: any[] = [];
+      if (data && data.code === '00000' && data.data) {
+        if (Array.isArray(data.data.resultList)) {
+          rawList = data.data.resultList.map((item: any) => ({
+            fundingTime: String(item.fundingRateTimestamp || item.fundingTime || item.settleTime),
+            fundingRate: String(item.fundingRate),
+          }));
+        } else if (Array.isArray(data.data)) {
+          rawList = data.data.map((item: any) => ({
+            fundingTime: String(item.fundingTime || item.settleTime || item.fundingRateTimestamp),
+            fundingRate: String(item.fundingRate),
+          }));
+        }
+      }
+
+      // 2. Fallback to v2 endpoint if v3 returned no records: /api/v2/mix/market/history-fund-rate
+      if (rawList.length === 0) {
+        const v2Url = `https://api.bitget.com/api/v2/mix/market/history-fund-rate?symbol=${symbol}&productType=${productType}&pageSize=${pageSize}&pageNo=${pageNo}`;
+        const v2Data = await this.fetchWithRetry(v2Url);
+        if (v2Data && v2Data.code === '00000' && Array.isArray(v2Data.data) && v2Data.data.length > 0) {
+          rawList = v2Data.data.map((item: any) => ({
+            fundingTime: String(item.fundingTime || item.settleTime),
+            fundingRate: String(item.fundingRate),
+          }));
+        }
+      }
+
+      if (rawList.length === 0) {
         break;
       }
 
-      const pageRecords: RawRecord[] = data.data.map((item: any) => ({
-        fundingTime: String(item.fundingTime || item.settleTime),
-        fundingRate: String(item.fundingRate),
-      }));
-
-      records.push(...pageRecords);
+      records.push(...rawList);
 
       // Check oldest record against boundary
-      const oldest = pageRecords[pageRecords.length - 1];
+      const oldest = rawList[rawList.length - 1];
       if (Number(oldest.fundingTime) <= boundaries.last3MStart) {
         break;
       }
 
       // Partial page means no more data
-      if (pageRecords.length < pageSize) {
+      if (rawList.length < pageSize) {
         break;
       }
 
@@ -502,11 +525,12 @@ export class FundingService {
     const results: CurrentFundingRate[] = [];
     for (const productType of ['USDT-FUTURES', 'COIN-FUTURES']) {
       try {
-        const url = `https://api.bitget.com/api/v2/mix/market/current-fund-rate?productType=${productType}`;
-        const data = await hybridFetch(url, 'GET', {});
+        const instType = productType === 'USDT-FUTURES' ? 'USDT-M' : 'COIN-M';
+        // 1. Try UTA v3 current funding rate: /api/v3/market/current-fund-rate
+        const v3Url = `https://api.bitget.com/api/v3/market/current-fund-rate?category=${productType}`;
+        let data = await hybridFetch(v3Url, 'GET', {});
 
-        if (data && data.code === '00000' && data.data) {
-          const instType = productType === 'USDT-FUTURES' ? 'USDT-M' : 'COIN-M';
+        if (data && data.code === '00000' && Array.isArray(data.data) && data.data.length > 0) {
           for (const item of data.data) {
             const fundingRate = FundingService.parseFundingRate(item.fundingRate);
             const nextTime = FundingService.parseIntOrNull(item.nextUpdate || item.nextFundingTime);
@@ -518,6 +542,26 @@ export class FundingService {
                 fundingRate,
                 nextFundingTime: nextTime,
               });
+            }
+          }
+        } else {
+          // 2. Fallback to v2 current funding rate: /api/v2/mix/market/current-fund-rate
+          const v2Url = `https://api.bitget.com/api/v2/mix/market/current-fund-rate?productType=${productType}`;
+          const v2Data = await hybridFetch(v2Url, 'GET', {});
+
+          if (v2Data && v2Data.code === '00000' && Array.isArray(v2Data.data)) {
+            for (const item of v2Data.data) {
+              const fundingRate = FundingService.parseFundingRate(item.fundingRate);
+              const nextTime = FundingService.parseIntOrNull(item.nextUpdate || item.nextFundingTime);
+              if (fundingRate !== null && nextTime !== null && nextTime > 0) {
+                results.push({
+                  exchange: 'bitget',
+                  symbol: item.symbol,
+                  instrumentType: instType,
+                  fundingRate,
+                  nextFundingTime: nextTime,
+                });
+              }
             }
           }
         }
