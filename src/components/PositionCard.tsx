@@ -227,7 +227,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
           <div className="flex flex-col items-center gap-1.5 shrink-0">
             <div className="flex items-center relative">
-              <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" category={category} />
+              <CoinIcon symbol={pos.baseCoin || pos.symbol} size={28} className="w-7 h-7" category={category} />
               <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
                 <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
               </div>
