@@ -468,6 +468,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
       tp: parseFloat(pos.takeProfit || '0'),
       sl: parseFloat(pos.stopLoss || '0'),
+      tpMode: (pos.tpslMode?.toLowerCase() === 'partial' ? 'partial' : (parseFloat(pos.takeProfit || '0') > 0 ? 'full' : undefined)),
+      slMode: (pos.tpslMode?.toLowerCase() === 'partial' ? 'partial' : (parseFloat(pos.stopLoss || '0') > 0 ? 'full' : undefined)),
       roe,
       instrumentType: mapInstrumentType('bybit', pos.category || 'linear'),
       raw: pos
@@ -713,12 +715,58 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       let type: import('../../types').UnifiedOrderType = 'LIMIT';
       const ot = o.orderType?.toUpperCase() || '';
       if (ot === 'MARKET') type = 'MARKET';
-      // simple handling for TP/SL if needed based on trigger parameters, Bybit usually has stopOrderType
-      if (o.stopOrderType) {
-        if (o.stopOrderType.toUpperCase() === 'TAKEPROFIT') type = 'TP';
-        else if (o.stopOrderType.toUpperCase() === 'STOPLOSS') type = 'SL';
-        else type = 'CONDITIONAL';
+
+      let executionScope: import('../../types').OrderExecutionScope | undefined = undefined;
+      let closeFraction: number | undefined = undefined;
+      let tpTriggerPrice: number | undefined = undefined;
+      let slTriggerPrice: number | undefined = undefined;
+      let isPositionTpsl: boolean | undefined = undefined;
+
+      const sot = (o.stopOrderType || '').trim();
+      const sotUpper = sot.toUpperCase();
+
+      if (sotUpper === 'TAKEPROFIT') {
+        type = 'TP';
+        executionScope = 'FULL_POSITION';
+        closeFraction = 1;
+        isPositionTpsl = true;
+      } else if (sotUpper === 'PARTIALTAKEPROFIT') {
+        type = 'TP';
+        executionScope = 'PARTIAL';
+      } else if (sotUpper === 'STOPLOSS') {
+        type = 'SL';
+        executionScope = 'FULL_POSITION';
+        closeFraction = 1;
+        isPositionTpsl = true;
+      } else if (sotUpper === 'PARTIALSTOPLOSS') {
+        type = 'SL';
+        executionScope = 'PARTIAL';
+      } else if (sotUpper === 'TRAILINGSTOP') {
+        type = 'TRAILING_STOP';
+      } else if (['TPSLORDER', 'OCOORDER', 'BIDIRECTIONALTPSLORDER'].includes(sotUpper)) {
+        type = 'OCO';
+        isPositionTpsl = true;
+      } else if (sotUpper === 'STOP') {
+        type = 'CONDITIONAL';
       }
+
+      if (o.takeProfit && parseFloat(o.takeProfit) > 0) {
+        tpTriggerPrice = parseFloat(o.takeProfit);
+      }
+      if (o.stopLoss && parseFloat(o.stopLoss) > 0) {
+        slTriggerPrice = parseFloat(o.stopLoss);
+      }
+
+      if (type === 'TP' && !tpTriggerPrice && o.triggerPrice) {
+        tpTriggerPrice = parseFloat(o.triggerPrice);
+      }
+      if (type === 'SL' && !slTriggerPrice && o.triggerPrice) {
+        slTriggerPrice = parseFloat(o.triggerPrice);
+      }
+
+      const generalTrigger = o.triggerPrice
+        ? parseFloat(o.triggerPrice)
+        : (type === 'TP' ? tpTriggerPrice : type === 'SL' ? slTriggerPrice : undefined);
 
       const pSize = parseFloat(o.qty || '0');
       const pFil = parseFloat(o.cumExecQty || '0');
@@ -740,7 +788,12 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         qty: pSize,
         filledQty: pFil,
         value: parseFloat(o.cumExecValue || '0'),
-        triggerPrice: o.triggerPrice ? parseFloat(o.triggerPrice) : undefined,
+        triggerPrice: generalTrigger,
+        executionScope,
+        closeFraction,
+        tpTriggerPrice,
+        slTriggerPrice,
+        isPositionTpsl,
         reduceOnly: o.reduceOnly === true || o.reduceOnly === 'true',
         timeInForce: o.timeInForce,
         createdTime: parseInt(o.createdTime, 10),

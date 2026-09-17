@@ -1,3 +1,17 @@
+## [1.64.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.64.0...v1.64.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* improve coin icon symbol normalization ([237974e](https://github.com/fapdev77/crypto-dashboard/commit/237974ec6845f366598098120c3b8297532098dd))
+
+# [1.64.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.63.0...v1.64.0) (2026-09-17)
+
+
+### Features
+
+* improve TP/SL visualization and filtering ([cfa0b40](https://github.com/fapdev77/crypto-dashboard/commit/cfa0b40268276fe69e2f3c9f2553f007e2e045a2))
+
 # [1.63.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.62.0...v1.63.0) (2026-09-15)
 
 

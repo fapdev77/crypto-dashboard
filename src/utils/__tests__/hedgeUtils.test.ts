@@ -862,4 +862,53 @@ describe('getHedgeTotals', () => {
     expect(coin.barMetrics.protectedPct + coin.barMetrics.exposedPct).toBeCloseTo(100, 1);
     expect(coin.barMetrics.protectedPct).toBeCloseTo((9574.1178 / 10835.39) * 100, 1); // ~88.4%
   });
+
+  it('should accurately calculate protection and exposure for Bitget Coin-M ETHUSD with contract notional in USD', () => {
+    // Exact user scenario:
+    // Entry: 2444.99, Mark: 2474.08
+    // Contracts in USD: 2445 (notionalUsd: 2445)
+    // Size in ETH: 2445 / 2474.08 = 0.98824 ETH
+    // Wallet / Net Balance: 4.4608 ETH ($11,007.57)
+    // Unrealized PnL: -0.01214517 ETH
+    const markPrice = 2474.08;
+    const notionalUsd = 2445;
+    const sizeInEth = notionalUsd / markPrice; // ~0.98824 ETH
+
+    const bitgetPos = makePos({
+      id: 'bitget-eth-user',
+      connectionId: 'bitget-uta-conn',
+      exchange: 'bitget',
+      symbol: 'ETHUSD_CM',
+      baseCoin: 'ETH',
+      ccy: 'ETH',
+      side: 'short',
+      size: sizeInEth,
+      notionalUsd: 2445,
+      entryPrice: 2444.99,
+      markPrice,
+      unrealizedPnl: -0.01214517,
+      margin: 0.4939,
+      leverage: 2,
+    });
+
+    const bitgetBal = makeBal({
+      id: 'bitget-uta-bal',
+      connectionId: 'bitget-uta-conn',
+      exchange: 'bitget',
+      ccy: 'ETH',
+      amount: 4.4608,
+      walletBalance: 4.4729,
+      usdValue: 11007.57,
+    });
+
+    const lvl = getHedgePositionLevels(bitgetPos, [bitgetBal]);
+    // Initial value USD locked at entry is 2445 USD
+    expect(lvl.protectedUsd).toBe(2445);
+    // Protected amount in ETH at mark price (~0.9882 ETH)
+    expect(lvl.protectedAmount).toBeCloseTo(0.9882, 3);
+    // Protected percentage: 2445 / 11007.57 ≈ 22.2%
+    expect(lvl.barMetrics.protectedPct).toBeCloseTo(22.2, 1);
+    // Exposed percentage: ~78.3%
+    expect(lvl.barMetrics.exposedPct).toBeCloseTo(78.3, 1);
+  });
 });
