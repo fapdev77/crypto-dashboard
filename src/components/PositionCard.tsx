@@ -68,6 +68,15 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const posTitle = `${pos.symbol} ${posTypeStr}`;
   const baseCoinClean = pos.baseCoin || pos.symbol.replace(/USDT|USDC|USD|EUR|BUSD|BTC$/i, '');
 
+  const isTpPartial = pos.tpMode === 'partial';
+  const isSlPartial = pos.slMode === 'partial';
+  const entireTp = (pos.tp && !isTpPartial) ? pos.tp : undefined;
+  const entireSl = (pos.sl && !isSlPartial) ? pos.sl : undefined;
+  const partialTp = (pos.tp && isTpPartial) ? pos.tp : undefined;
+  const partialSl = (pos.sl && isSlPartial) ? pos.sl : undefined;
+  const hasEntireTpsl = !!(entireTp || entireSl);
+  const hasPartialTpsl = !!(partialTp || partialSl);
+
   const handleNavigateToHedgePro = (e: React.MouseEvent) => {
     e.stopPropagation();
     const targetCoin = (pos.baseCoin || baseCoinClean).toUpperCase();
@@ -186,7 +195,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
       },
       {
         label: 'Number of contracts',
-        value: `${formatCurrency(Math.abs(pos.size), 'crypto')} contracts`,
+        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(pos.notionalUsd || Math.abs(pos.size), 'crypto', 0) : formatCurrency(Math.abs(pos.size), 'crypto')} contracts`,
         labelClassName: 'text-[12px] text-[#8E9299]',
         valueClassName: 'text-[12px] font-mono text-white'
       },
@@ -254,6 +263,26 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                   />
                 );
               })()}
+              {pos.tp !== undefined && pos.tp > 0 && (
+                <span
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[#00C853] flex items-center gap-1"
+                  title={`Take Profit: ${formatPrice(pos.tp, isFiatPair)} (${pos.tpMode === 'partial' ? 'Partial' : 'Full'})`}
+                >
+                  <span className="font-semibold">TP</span>
+                  <span>{formatPrice(pos.tp, isFiatPair)}</span>
+                  {isTpPartial && <span className="text-[9px] text-blue-400 font-sans font-normal">(P)</span>}
+                </span>
+              )}
+              {pos.sl !== undefined && pos.sl > 0 && (
+                <span
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-[#FF4444] flex items-center gap-1"
+                  title={`Stop Loss: ${formatPrice(pos.sl, isFiatPair)} (${pos.slMode === 'partial' ? 'Partial' : 'Full'})`}
+                >
+                  <span className="font-semibold">SL</span>
+                  <span>{formatPrice(pos.sl, isFiatPair)}</span>
+                  {isSlPartial && <span className="text-[9px] text-blue-400 font-sans font-normal">(P)</span>}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -582,10 +611,23 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               </div>
             ) : (
               <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
-                <span className="font-mono text-white">
-                  {pos.tp ? formatPrice(pos.tp, isFiatPair) : '--'} / {pos.sl ? formatPrice(pos.sl, isFiatPair) : '--'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
+                  {hasEntireTpsl && (
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/20">
+                      Full
+                    </span>
+                  )}
+                </div>
+                <div className="font-mono text-xs flex items-center gap-1">
+                  <span className={entireTp ? 'text-[#00C853] font-semibold' : 'text-white'}>
+                    {entireTp ? formatPrice(entireTp, isFiatPair) : '--'}
+                  </span>
+                  <span className="text-[#8E9299]">/</span>
+                  <span className={entireSl ? 'text-[#FF4444] font-semibold' : 'text-white'}>
+                    {entireSl ? formatPrice(entireSl, isFiatPair) : '--'}
+                  </span>
+                </div>
               </div>
             )}
 
@@ -670,8 +712,23 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             </AppTooltip>
             {pos.instrumentType !== 'INVERSE' && (
               <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
-                <span className="font-mono text-[#8E9299]">--</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
+                  {hasPartialTpsl && (
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-blue-400 font-mono border border-blue-500/20">
+                      Partial
+                    </span>
+                  )}
+                </div>
+                <div className="font-mono text-xs flex items-center gap-1">
+                  <span className={partialTp ? 'text-[#00C853] font-semibold' : 'text-[#8E9299]'}>
+                    {partialTp ? formatPrice(partialTp, isFiatPair) : '--'}
+                  </span>
+                  <span className="text-[#8E9299]">/</span>
+                  <span className={partialSl ? 'text-[#FF4444] font-semibold' : 'text-[#8E9299]'}>
+                    {partialSl ? formatPrice(partialSl, isFiatPair) : '--'}
+                  </span>
+                </div>
               </div>
             )}
 

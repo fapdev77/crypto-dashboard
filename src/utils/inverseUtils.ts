@@ -97,31 +97,20 @@ export function getOpenPositionSizeAndValue(pos: UnifiedPosition) {
 export function getInverseShortUsdEntryValue(pos: UnifiedPosition): number {
   if (pos.side !== 'short' || pos.instrumentType !== 'INVERSE') return 0;
 
-  const ex = (pos.exchange || '').toLowerCase();
   const entryPrice = pos.entryPrice || pos.markPrice || 0;
 
-  // Para Bybit e OKX: notionalUsd representa o valor fixo em contratos USD (ex: $10.000 USD).
+  // Para Bybit, OKX e Bitget: notionalUsd representa o valor fixo em contratos USD (ex: $2.445 USD ou $10.000 USD).
   // Não flutua com a variação do preço de mercado.
-  if ((ex === 'bybit' || ex === 'okx') && pos.notionalUsd && pos.notionalUsd > 0) {
-    return pos.notionalUsd;
-  }
-
-  // Para Bitget: pos.size é a quantidade fixa na moeda (ex: BTC), então o valor em USD no entryPrice
-  // é calculado multiplicando pos.size * entryPrice.
-  if (ex === 'bitget' && entryPrice > 0 && pos.size && pos.size > 0) {
-    return pos.size * entryPrice;
-  }
-
-  // Fallback genérico para outras exchanges / mock data:
   if (pos.notionalUsd && pos.notionalUsd > 0) {
     return pos.notionalUsd;
   }
 
+  // Fallback se notionalUsd não estiver preenchido, mas size e entryPrice estiverem disponíveis:
   if (entryPrice > 0 && pos.size && pos.size > 0) {
     return pos.size * entryPrice;
   }
 
-  return pos.notionalUsd || 0;
+  return 0;
 }
 
 export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {

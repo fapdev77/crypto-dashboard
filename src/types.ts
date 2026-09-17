@@ -15,7 +15,8 @@ export type UnifiedPositionMode = 'hedge' | 'one_way' | 'unknown';
 export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
 export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
 export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
-export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL' | 'TRAILING_STOP' | 'OCO';
+export type OrderExecutionScope = 'FULL_POSITION' | 'PARTIAL';
 export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
 
 // Interfaces
@@ -54,6 +55,14 @@ export interface UnifiedOrder {
   filledQty: number;
   value?: number;
   triggerPrice?: number;
+  executionScope?: OrderExecutionScope;
+  closeFraction?: number;
+  tpTriggerPrice?: number;
+  slTriggerPrice?: number;
+  tpOrderPrice?: number;
+  slOrderPrice?: number;
+  isPositionTpsl?: boolean;
+  parentOrderId?: string;
   reduceOnly?: boolean;
   timeInForce?: string;
   createdTime: number;
@@ -93,6 +102,8 @@ export interface UnifiedPosition {
   roe?: number; // Return on Equity (%)
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
+  tpMode?: 'full' | 'partial';
+  slMode?: 'full' | 'partial';
   instrumentType?: UnifiedInstrumentType;
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
