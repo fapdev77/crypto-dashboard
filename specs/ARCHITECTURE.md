@@ -267,6 +267,10 @@ O CPM adota uma arquitetura de micro-stores modularizadas com Zustand 5.0 para g
   - Coordenador de sincronização em memória que compartilha snapshots de cache e timestamps de sincronização entre as visões de Histórico de Posições, PnL por Símbolo, Relatórios de Ordens e Bybit Transactions, evitando múltiplos fetches concorrentes durante a navegação entre abas.
 - **`useLogStore`:**
   - Terminal de logs do sistema em tempo real com severidades (`INFO`, `WARN`, `ERROR`, `DATA`, `SYSTEM`) e retenção de até 10.000 entradas em memória.
+- **`useMarketAnalyticsStore`:**
+  - Gerencia o estado analítico quantitativo cross-exchange: símbolos favoritados (`favorites` com persistência no `localStorage`), símbolo selecionado (`selectedSymbol`, default `'BTC'`), tipo de mercado global (`selectedMarket`: `'ALL' | 'PERP' | 'INVERSE' | 'SPOT'`), mercados específicos selecionados (`selectedMarkets`), exchanges selecionadas (`selectedExchanges`), timeframe (`selectedTimeframe`: `'5m' | '15m' | '1h' | '4h' | '1d'`), intervalo de auto-refresh (`pollingIntervalSeconds`: 0, 10, 30, 60), snapshot de dados consolidado (`MarketAnalyticsSnapshot`), e estados de carregamento/erro.
+- **`usePwaUpdateStore`:**
+  - Controla o ciclo de vida do Service Worker do PWA: detecção de atualizações (`needRefresh`), status offline (`offlineReady`) e registro do callback de atualização manual.
 - **`useFundingStore`:**
   - Gerencia o estado do módulo de Funding Rates: `currentRates` (taxas ao vivo), `isSyncing`/`syncProgress`/`syncMessage` (status de sincronização), `favorites` (moedas favoritadas), `lastHistoryFetch` (timestamp do último sync), `lastSyncPerformance` (métricas de performance do último sync), `lastExchangeTimings` (timing por exchange), `nextFundingTime` (próximo pagamento de funding), `nextScheduledSyncTime` (próximo auto-sync agendado).
   - `favorites`, `lastHistoryFetch`, `lastSyncPerformance`, `lastExchangeTimings`, `nextFundingTime`, e `nextScheduledSyncTime` são persistidos no `localStorage` via middleware `persist`.
@@ -285,16 +289,18 @@ O CPM adota uma arquitetura de micro-stores modularizadas com Zustand 5.0 para g
 
 A aplicação estrutura seus módulos funcionais através da `Sidebar` responsiva:
 
-1. **Dashboard (`Dashboard.tsx`):** Visão executiva consolidada com métricas de patrimônio total (Equity), margens utilizadas, PnL flutuante diário, distribuição por exchange e tabela hierárquica de contas/moedas.
-2. **Positions (`OpenPositions.tsx` & `ClosedPositions.tsx`):** Posições em aberto com cálculo de ROE, alavancagem, preço de liquidação, margem e histórico contábil de posições fechadas.
+1. **Dashboard (`Dashboard.tsx`):** Visão executiva consolidada com métricas de patrimônio total (Equity), margens utilizadas, PnL flutuante diário, distribuição por exchange e tabela hierárquica de contas/moedas. Inclui o **Positions Ticker** (`PositionsTicker.tsx`) no topo do workspace para monitoramento contínuo das posições ativas com cotação e PnL flutuante em marquee horizontal.
+2. **Positions (`OpenPositions.tsx` & `ClosedPositions.tsx`):** Posições em aberto com cálculo de ROE, alavancagem, preço de liquidação, margem, modos Detailed e Lite, e histórico contábil de posições fechadas com filtros temporais e exportações multiformato.
 3. **Analytics:**
-   - **PnL by Symbol (`PnLBySymbol.tsx`):** Lucro e prejuízo consolidado por ativo negociado (Long vs Short).
-   - **Bybit Transactions (`BybitTransactions.tsx`):** Auditoria profunda do transaction log da Bybit com cálculo de PnL real (`cashFlow + funding - fee`).
+   - **PnL by Symbol (`PnLBySymbol.tsx`):** Lucro e prejuízo consolidado por ativo negociado (Long vs Short) com barras de intensidade visual e filtros por tipo de instrumento.
+   - **Bybit Transactions (`BybitTransactions.tsx`):** Auditoria profunda do transaction log da Bybit com cálculo de PnL real (`cashFlow + funding - fee`) e reconciliação contábil.
    - **Bitget Transactions (`BitgetTransactions.tsx`):** Auditoria profunda do extrato transacional da Bitget (Classic e UTA) com categorização, taxas e PnL por símbolo.
    - **OKX Transactions (`OkxTransactions.tsx`):** Auditoria profunda do extrato financeiro da OKX (`bills` e `bills-archive`) com normalização de tipos/subtipos e balanço patrimonial.
-   - **Funding Fees (`FundingDashboard.tsx`):** Monitoramento em tempo real e agregação histórica multissímbolo de taxas de financiamento.
-   - **Market Analytics (`MarketAnalyticsDashboard.tsx`):** Terminal quantitativo cross-exchange com monitoramento de Open Interest e regimes de mercado, arbitragem de funding delta-neutra, fluxo de ordens (Cumulative Volume Delta - CVD) e sentimento Smart Money vs. Retail.
-   - **Hedge Pro (`HedgeProDashboard.tsx`):** Painel de gestão de risco e monitoramento de exposição protegida, exposta e alavancada para estratégias Delta Neutral em contratos inversos (COIN-M).
+   - **Funding Fees (`FundingDashboard.tsx`):** Monitoramento em tempo real e agregação histórica multissímbolo de taxas de financiamento com auto-sync inteligente, KPI cards e ranking Top Payers.
+   - **Market Analytics (`MarketAnalyticsDashboard.tsx`):** Terminal quantitativo cross-exchange operando em dois modos selecionáveis via abas superiores:
+     - *Multi-Market Overview:* Gráficos consolidados de Open Interest e Preço com Regime Detector algorítmico, Scanner de Arbitragem de Funding delta-neutra, Fluxo de Ordens (Cumulative Volume Delta - CVD com detecção de divergências) e Sentimento Institucional (Smart Money vs. Retail).
+     - *Inverse Coin-M Dashboard (`InverseMarketDashboard.tsx`):* Terminal dedicado a contratos inversos com tabela de moedas favoritas, métricas agregadas por moeda, desdobramento expansível por corretora (taxas, volume 24h, OI e spread) e ações de expansão em lote.
+   - **Hedge Pro (`HedgeProDashboard.tsx`):** Painel de gestão de risco e monitoramento de exposição protegida, exposta e alavancada para estratégias Delta Neutral em contratos inversos (COIN-M) com gauges de cobertura patrimonial e alertas.
 4. **Reports & Orders (`ReportsDashboard.tsx`, `OpenOrders.tsx`, `OrderHistory.tsx`, `TradeHistory.tsx`):** Relatórios de execução de ordens ativas, histórico de trades e extratos de fluxo de caixa (depósitos e saques).
 5. **System & Diagnostic (`ApiKeys.tsx`, `ConnectionLogTerminal.tsx`, `Settings.tsx`, `ApiTester.tsx`):** Gerenciamento de chaves, auditoria de conexões WebSocket isoladas, configurações de rede/cache e terminal de logs.
 
