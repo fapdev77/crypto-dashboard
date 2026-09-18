@@ -62,8 +62,15 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 5. Volte para a rota principal "Dashboard", agora deverá ver seus saldos totais atualizando globalmente.
 
 ## 🛠 Features e UI/UX Recentes
-- ✅ **Dashboard Multi-Período de Funding Fees (Taxas de Financiamento):** Consolidação profunda do histórico (via IndexedDB) de cobranças/recebimentos de Funding em contratos perpétuos e inversos, categorizados temporalmente e apoiados por cartões de métricas (Market Overview).
-- ✅ **Auditoria Contábil Pessoal (Bybit Transactions & PnL by Symbol):** Uma central unificada que isola o histórico contínuo da corretora para gerar extrações rigorosas de Taxas (Trading Fees), Realized PnL (Lucros Realizados Isolados) baseados integralmente em fluxo de caixa (Cashflow).
+- ✅ **Market Analytics (Inteligência Quantitativa e Fluxo de Derivativos Multi-Exchange):**
+  - **Consolidação Cross-Exchange em Tempo Real:** Agrega dados de derivativos e fluxo de ordens de Bybit, OKX e Bitget em contratos Perpétuos (Linear), Inversos (Coin-M) e Spot.
+  - **Open Interest & Regime Detector:** Visualização gráfica de evolução de Open Interest (OI) com detector automático de regimes de mercado (`Long Accumulation`, `Short Squeeze`, `Aggressive Shorting`, `Long Liquidation` e `Neutral Consolidation`) e divisão de market share por corretora.
+  - **Arbitragem de Funding Cross-Exchange:** Scanner de discrepâncias de taxas de financiamento com cálculo de spread 8h e APR anualizado delta-neutro (`Spread APR = Spread * 3 * 365`), recomendando automaticamente a melhor exchange para Long e Short.
+  - **Order Flow & Cumulative Volume Delta (CVD):** Gráfico interativo de Net Taker Delta (`Taker Buy - Taker Sell`) e curva de CVD com alertas automáticos de divergência altista (Bullish) e baixista (Bearish).
+  - **Sentimento Smart Money vs. Retail:** Proporção Long/Short do varejo comparada ao posicionamento de topo (Smart Money, top 20% em rentabilidade/volume) com alerta de divergência contrária e medidor Fear & Greed.
+  - **Filtros Globais, Tooltips Padronizados e Countdown Refresh:** Seletores de ativos com favoritos, tipos de mercado, exchanges e timeframes (5m a 1d), além de tooltips matemáticos detalhados em todos os componentes e botão de auto-refresh com indicador circular.
+- ✅ **Auditoria Contábil Completa (Bybit, Bitget e OKX Transactions):** Módulos completos que isolam o histórico contínuo das 3 corretoras para auditoria profunda de Taxas (Trading Fees), Funding, Liquidações e Realized PnL baseados integralmente em fluxo de caixa (Cashflow).
+- ✅ **Filtros Unificados de Transações (Universal Transaction Mapper):** Padronização em 10 tipos universais (*Trade & Orders*, *Funding Fee*, *Transfer In*, *Transfer Out*, *Liquidation*, *Interest*, *Rewards*, *Delivery*, *Others*, *All Types*) com badges estilizados e suporte simultâneo a filtros de categoria, moeda, conta e período.
 - ✅ **Relatórios Consolidados de Ordens (Order Reports):** Rastreio avançado separando ordens abertas de ordens finalizadas (History), equipadas com filtragem multicritério e extrações analíticas.
 - ✅ **Integração OKX Dual-Wallet (Trading + Funding Account):**
   - **Saldos Unificados e de Financiamento:** O `OkxAdapter` foi expandido para ler de forma concorrente tanto a conta unificada de trading (`/api/v5/account/balance`) quanto a conta de financiamento/funding (`/api/v5/asset/balances`).
@@ -112,15 +119,13 @@ Caso deseja escalonar o dashboard:
 2. Inclua o nome referenciado no Union type `ExchangeName` do tipo de configurações (em `types.ts` ou `store/apiKeysStore.ts`) e propague sua tipagem via React Forms no modal de Configurações `components/ApiConfigModal.tsx`.
 3. Direcione a inicialização na classe `ExchangeAggregator.ts` e instancie-a nas fábricas de histórico REST.
 
-## 📚 Documentação para Desenvolvedores e Engenharia de IA
+## 📚 Documentação para Desenvolvedores, Engenharia de IA e Usuários
 Este projeto adota o modelo **Spec-Driven Development (SDD)** e está preparado para recriação ou refatoração por IAs Generativas (ex: Antigravity, Claude, ChatGPT). 
 
-Todos os documentos e diagramas arquiteturais estão disponíveis no diretório `/specs`:
-- [PRD (Regras de Negócio)](./specs/PRD.md): Product Requirements Document com o escopo, regras de negócio e requisitos do produto.
-- [Arquitetura e Fluxo de Dados](./specs/ARCHITECTURE.md): Diagrama estático e funcionamento híbrido Proxy-Frontend.
-- [Evolução e Refatorações](./specs/EVOLUTION_TASKS.md): Histórico de refatorações estruturais, melhorias de qualidade e segurança (auditoria técnica).
-- [Interfaces Unificadas](./specs/unified-interfaces.md): Especificação dos tipos e interfaces normalizadas (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, etc.) — fonte única de verdade para a UI.
-- [Funding Fees Dashboard](./specs/FUNDING_FEES_DASHBOARD.md): Especificação de design do dashboard de taxas de financiamento (v3.0).
-- [Transações Bybit](./specs/bybit-transactions-spec.md): Especificação técnica do módulo de auditoria de transações da Bybit (`/v5/account/transaction-log`).
-- [KPI Funding Cards](./specs/kpi-funding-cards.md): Especificação dos cards de KPI de mercado do Funding Dashboard.
-- [Documentação das APIs](./specs/bybit_v5_api_doc.md): Referências técnicas oficiais das corretoras integradas (Bybit V5, [OKX V5](./specs/okx_v5_api_doc.md) e [Bitget Classic](./specs/bitget_classic_api_doc.md)).
+Todos os documentos e diagramas arquiteturais estão disponíveis no diretório `/specs` e `/user_manual`:
+- [PRD (Regras de Negócio)](./specs/PRD.md): Product Requirements Document completo com o escopo consolidado, regras de negócio e requisitos funcionais.
+- [Arquitetura e Fluxo de Dados](./specs/ARCHITECTURE.md): Especificação técnica aprofundada, diagramas de fluxo híbrido Proxy-Frontend, engines de sincronização, IndexedDB e Zustand micro-stores.
+- [Interfaces Unificadas](./specs/unified-interfaces.md): Especificação dos tipos e interfaces normalizadas (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, `UnifiedOrder`, etc.) — fonte única de verdade para a UI.
+- [Manual do Usuário (Português)](./user_manual/cpm_user_manual_pt-br.md): Guia operacional completo com passo a passo de configuração, segurança Zero-Trust, uso de todas as telas e solução de problemas.
+- [User Manual (English)](./user_manual/cpm_user_manual_en-us.md): Comprehensive user guide in English covering all modules, security practices, and daily operations.
+- [Documentação das APIs das Exchanges](./specs/bybit_v5_api_doc.md): Referências técnicas oficiais das corretoras integradas (Bybit V5, [OKX V5](./specs/okx_v5_api_doc.md), [Bitget Classic](./specs/bitget_classic_api_doc.md) e [Bitget UTA](./specs/bitget_uta_api_doc.md)).

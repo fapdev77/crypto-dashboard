@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppTooltip } from '../../ui/Tooltip';
 
 interface HedgeExposureBarProps {
   /** Protected segment as % of the capital reference (emerald). */
@@ -9,6 +10,8 @@ interface HedgeExposureBarProps {
   balanceWidthPct: number;
   /** Width of the leveraged extension as % of the bar (drawn beyond the balance track). */
   leveragedWidthPct: number;
+  /** Optional tooltip content detailing components of exposure. */
+  tooltip?: React.ReactNode;
 }
 
 /**
@@ -20,9 +23,15 @@ interface HedgeExposureBarProps {
  * `leveragedWidthPct` so the whole bar (balance + leveraged) fills the available
  * width without overflowing.
  */
-export function HedgeExposureBar({ protectedPct, exposedPct, balanceWidthPct, leveragedWidthPct }: HedgeExposureBarProps) {
-  return (
-    <div className="relative h-1.5 rounded-full w-full bg-[#2a2b30]">
+export function HedgeExposureBar({
+  protectedPct,
+  exposedPct,
+  balanceWidthPct,
+  leveragedWidthPct,
+  tooltip,
+}: HedgeExposureBarProps) {
+  const bar = (
+    <div className={`relative h-2 rounded-full w-full bg-[#2a2b30] ${tooltip ? 'cursor-help' : ''}`}>
       {/* Balance track — exactly 100% of the capital */}
       <div
         className="absolute inset-y-0 left-0 flex overflow-hidden rounded-full transition-all duration-300"
@@ -42,6 +51,16 @@ export function HedgeExposureBar({ protectedPct, exposedPct, balanceWidthPct, le
       <div className="absolute inset-y-0 w-px bg-[#8E9299]/80" style={{ left: `${balanceWidthPct}%` }} />
     </div>
   );
+
+  if (tooltip) {
+    return (
+      <AppTooltip description={tooltip} side="top" align="center">
+        <div className="w-full">{bar}</div>
+      </AppTooltip>
+    );
+  }
+
+  return bar;
 }
 
 export default HedgeExposureBar;
