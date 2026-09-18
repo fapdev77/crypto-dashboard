@@ -10,6 +10,7 @@ import {
   HedgeCoinSummary,
   HedgeTotals,
 } from '../utils/hedgeUtils';
+import { isStablecoin } from '../utils/formatters';
 
 export interface UseHedgeDataReturn {
   search: string;
@@ -148,6 +149,15 @@ export function useHedgeData(): UseHedgeDataReturn {
     );
   }, [netActiveBalances]);
 
+  // Aggregated stablecoins USD balance (liquid assets pegged to USD, inherently protected)
+  const stablecoinsEquityUsd = useMemo(() => {
+    return Number(
+      netActiveBalances
+        .filter(b => isStablecoin(b.ccy))
+        .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
+    );
+  }, [netActiveBalances]);
+
   // Individual coin summaries use raw gross balances to preserve gross wallet balance & coin-specific net equity
   const coinSummaries = useMemo(
     () => getHedgeCoinSummaries(activePositions, rawActiveBalances, 'gross'),
@@ -155,8 +165,8 @@ export function useHedgeData(): UseHedgeDataReturn {
   );
 
   const totals = useMemo(
-    () => getHedgeTotals(coinSummaries, totalEquity),
-    [coinSummaries, totalEquity],
+    () => getHedgeTotals(coinSummaries, totalEquity, stablecoinsEquityUsd),
+    [coinSummaries, totalEquity, stablecoinsEquityUsd],
   );
 
   // Available unique exchanges for filter dropdown
@@ -195,9 +205,20 @@ export function useHedgeData(): UseHedgeDataReturn {
     );
   }, [netActiveBalances, exchange, totalEquity]);
 
+  const filteredStablecoinsEquityUsd = useMemo(() => {
+    const list = exchange === 'All'
+      ? netActiveBalances
+      : netActiveBalances.filter(b => (b.exchange || '').toLowerCase() === exchange.toLowerCase());
+    return Number(
+      list
+        .filter(b => isStablecoin(b.ccy))
+        .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
+    );
+  }, [netActiveBalances, exchange]);
+
   const filteredTotals = useMemo(
-    () => getHedgeTotals(filteredSummaries, filteredTotalEquity),
-    [filteredSummaries, filteredTotalEquity],
+    () => getHedgeTotals(filteredSummaries, filteredTotalEquity, filteredStablecoinsEquityUsd),
+    [filteredSummaries, filteredTotalEquity, filteredStablecoinsEquityUsd],
   );
 
   const sideOptions = useMemo(

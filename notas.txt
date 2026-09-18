@@ -1,2 +1,2 @@
 Anotações para futuras implementações de Ideias e melhorias
--TP/SL Improvements
+-Hedge improvements

@@ -134,6 +134,49 @@ export function HedgeProDashboard() {
           exposedPct={totals.exposedPct}
           balanceWidthPct={totals.balanceWidthPct}
           leveragedWidthPct={totals.leveragedWidthPct}
+          tooltip={
+            <div className="text-xs space-y-1.5 p-1 min-w-[230px]">
+              <div className="font-semibold text-white border-b border-[#2a2b30] pb-1">
+                Capital Exposure Breakdown
+              </div>
+              <div className="space-y-1 font-mono text-[11px]">
+                <div className="flex justify-between items-center gap-4 text-emerald-400">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                    Hedge (Shorts):
+                  </span>
+                  <span>{formatCurrency(totals.syntheticHedgeUsd, 'usd', 2)} ({totals.hedgeOfEquityPct.toFixed(2)}%)</span>
+                </div>
+                <div className="flex justify-between items-center gap-4 text-blue-400">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+                    Stablecoins:
+                  </span>
+                  <span>{formatCurrency(totals.stablecoinsProtectedUsd, 'usd', 2)} ({totals.stablesOfEquityPct.toFixed(2)}%)</span>
+                </div>
+                <div className="flex justify-between items-center gap-4 text-emerald-300 font-semibold border-t border-[#2a2b30]/60 pt-0.5">
+                  <span>Total Protected:</span>
+                  <span>{formatCurrency(totals.totalProtected, 'usd', 2)} ({totals.protectedPct.toFixed(2)}%)</span>
+                </div>
+                <div className="flex justify-between items-center gap-4 text-white border-t border-[#2a2b30]/60 pt-0.5">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-white inline-block" />
+                    Exposed:
+                  </span>
+                  <span>{formatCurrency(totals.summaryExposed, 'usd', 2)} ({totals.exposedPct.toFixed(2)}%)</span>
+                </div>
+                {totals.totalLeveraged > 0 && (
+                  <div className="flex justify-between items-center gap-4 text-amber-400 border-t border-[#2a2b30]/60 pt-0.5">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                      Leveraged (Longs):
+                    </span>
+                    <span>{formatCurrency(totals.totalLeveraged, 'usd', 2)} (+{totals.leveragedPct.toFixed(2)}%)</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          }
         />
         <div className="flex justify-between text-[15px] font-semibold font-mono">
           <span className="text-emerald-500/90">P {totals.protectedPct.toFixed(2)}%</span>

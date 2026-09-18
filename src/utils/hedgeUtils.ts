@@ -212,6 +212,18 @@ export interface HedgeCoinSummary {
 /** Portfolio-level totals. */
 export interface HedgeTotals {
   totalProtected: number;
+  /** USD locked at entry price by inverse short positions (synthetic hedge). */
+  syntheticHedgeUsd: number;
+  /** Net balance held in stablecoins (natively protected in USD). */
+  stablecoinsProtectedUsd: number;
+  /** Share of total protected represented by synthetic inverse short hedge (0..100). */
+  hedgeOfProtectedPct: number;
+  /** Share of total protected represented by native stablecoins (0..100). */
+  stablesOfProtectedPct: number;
+  /** Synthetic hedge as % of total equity (0..100). */
+  hedgeOfEquityPct: number;
+  /** Stablecoins as % of total equity (0..100). */
+  stablesOfEquityPct: number;
   totalExposed: number;
   totalLeveraged: number;
   totalBalance: number;
@@ -860,14 +872,22 @@ export function getHedgeCoinChartRows(summaries: HedgeCoinSummary[]): HedgeCoinC
 export function getHedgeTotals(
   coinSummaries: HedgeCoinSummary[],
   totalEquity: number,
+  stablecoinsUsd: number = 0,
 ): HedgeTotals {
   const sum = (selector: (c: HedgeCoinSummary) => number): number =>
     coinSummaries.reduce((acc, c) => acc.plus(selector(c) || 0), new Big(0)).toNumber();
 
-  const totalProtected = sum(c => c.protectedUsd);
-  const totalExposed = sum(c => c.exposedBaseUsd);
+  const syntheticHedgeUsd = sum(c => c.protectedUsd);
+  const stablecoinsProtectedUsd = Math.max(0, stablecoinsUsd);
+  const totalProtected = new Big(syntheticHedgeUsd).plus(stablecoinsProtectedUsd).toNumber();
   const totalLeveraged = sum(c => c.leveragedUsd);
   const totalBalance = sum(c => c.balanceUsd);
+
+  // Capital and exposed calculations:
+  // The hedge protects the whole portfolio capital, so the 100% reference is Total Equity.
+  const summaryCapital = totalEquity > 0 ? totalEquity : totalProtected;
+  const summaryExposed = Math.max(0, summaryCapital - totalProtected);
+  const totalExposed = sum(c => c.exposedBaseUsd);
 
   // Hedge Coverage (net protection): only the protected leg counts — the leveraged leg is
   // NOT protected (it only adds risk), so it subtracts from the protected side, measured
@@ -877,16 +897,20 @@ export function getHedgeTotals(
   const protectedOfEquityPct = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
   const exposedOfEquityPct = totalEquity > 0 ? (totalExposed / totalEquity) * 100 : 0;
 
+  const hedgeOfProtectedPct = totalProtected > 0 ? (syntheticHedgeUsd / totalProtected) * 100 : 0;
+  const stablesOfProtectedPct = totalProtected > 0 ? (stablecoinsProtectedUsd / totalProtected) * 100 : 0;
+
+  const hedgeOfEquityPct = summaryCapital > 0 ? (syntheticHedgeUsd / summaryCapital) * 100 : 0;
+  const stablesOfEquityPct = summaryCapital > 0 ? (stablecoinsProtectedUsd / summaryCapital) * 100 : 0;
+
   const inversePositionCount = coinSummaries.reduce((acc, c) => acc + c.positionCount, 0);
   const inverseLongCount = coinSummaries.reduce((acc, c) => acc + c.longCount, 0);
   const inverseShortCount = coinSummaries.reduce((acc, c) => acc + c.shortCount, 0);
 
   // Portfolio summary bar (beyond-100% model): the hedge protects the WHOLE capital,
   // so the 100% reference is Total Equity (Σ balance usdValue) — not just the hedged
-  // coin balances. Protected + Exposed = 100% of equity; Leveraged (longs) extends
-  // beyond. Percentages are of the equity reference.
-  const summaryCapital = totalEquity > 0 ? totalEquity : totalProtected;
-  const summaryExposed = Math.max(0, summaryCapital - totalProtected);
+  // coin balances. Protected (synthetic + stables) + Exposed = 100% of equity;
+  // Leveraged (longs) extends beyond. Percentages are of the equity reference.
   const summaryBarTotal = summaryCapital + totalLeveraged;
   const balanceWidthPct = summaryBarTotal > 0 ? (summaryCapital / summaryBarTotal) * 100 : 0;
   const leveragedWidthPct = summaryBarTotal > 0 ? (totalLeveraged / summaryBarTotal) * 100 : 0;
@@ -897,6 +921,12 @@ export function getHedgeTotals(
 
   return {
     totalProtected,
+    syntheticHedgeUsd,
+    stablecoinsProtectedUsd,
+    hedgeOfProtectedPct,
+    stablesOfProtectedPct,
+    hedgeOfEquityPct,
+    stablesOfEquityPct,
     totalExposed,
     totalLeveraged,
     totalBalance,
