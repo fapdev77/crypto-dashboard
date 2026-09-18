@@ -9,6 +9,7 @@ import {
   Cell,
 } from 'recharts';
 import { ShieldCheck, Activity, DollarSign, TrendingUp, Shield } from 'lucide-react';
+import { AppTooltip } from '../../ui/Tooltip';
 import { HedgeTotals } from '../../../utils/hedgeUtils';
 
 interface HedgeProCapitalExposureChartProps {
@@ -251,49 +252,81 @@ export function HedgeProCapitalExposureChart({
           </span>
         </div>
 
-        {/* Stacked Recharts Visual Bar */}
-        <div className="w-full h-5 relative rounded-md overflow-hidden bg-[#1a1b1e] border border-[#2a2b30]/80">
-          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-            <BarChart
-              layout="vertical"
-              data={stackData}
-              margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-            >
-              <XAxis type="number" domain={[0, totalBase + (totals.totalLeveraged || 0)]} hide />
-              <YAxis type="category" dataKey="name" hide />
-              <RechartsTooltip
-                cursor={{ fill: 'transparent' }}
-                content={
-                  <div className="bg-[#151619] border border-[#2a2b30] rounded-lg p-2 text-xs font-mono shadow-xl space-y-1">
-                    <div className="text-white font-semibold text-[11px] border-b border-[#2a2b30] pb-1">
-                      Capital Allocation
-                    </div>
-                    <div className="text-emerald-400 text-[10px]">
-                      Hedge (Shorts): {formatCurrency(totals.syntheticHedgeUsd, 'usd', 2)} ({totals.hedgeOfEquityPct.toFixed(2)}%)
-                    </div>
-                    <div className="text-blue-400 text-[10px]">
-                      Stablecoins: {formatCurrency(totals.stablecoinsProtectedUsd, 'usd', 2)} ({totals.stablesOfEquityPct.toFixed(2)}%)
-                    </div>
-                    <div className="text-white text-[10px]">
-                      Exposed: {formatCurrency(totals.summaryExposed, 'usd', 2)} ({totals.exposedPct.toFixed(2)}%)
-                    </div>
-                    {hasLeveraged && (
-                      <div className="text-amber-400 text-[10px]">
-                        Leveraged: {formatCurrency(totals.totalLeveraged, 'usd', 2)} (+{totals.leveragedPct.toFixed(2)}%)
-                      </div>
-                    )}
+        {/* Stacked Recharts Visual Bar with Portal-based AppTooltip */}
+        <AppTooltip
+          side="top"
+          align="center"
+          description={
+            <div className="text-xs space-y-1.5 p-1 min-w-[240px]">
+              <div className="font-semibold text-white border-b border-[#2a2b30] pb-1">
+                Capital Allocation Breakdown
+              </div>
+              <div className="space-y-1.5 font-mono text-[11px]">
+                <div className="flex justify-between items-center text-emerald-400">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                    Hedge (Shorts):
+                  </span>
+                  <span className="font-semibold">
+                    {formatCurrency(totals.syntheticHedgeUsd, 'usd', 2)} ({totals.hedgeOfEquityPct.toFixed(2)}%)
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-blue-400">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+                    Stablecoins:
+                  </span>
+                  <span className="font-semibold">
+                    {formatCurrency(totals.stablecoinsProtectedUsd, 'usd', 2)} ({totals.stablesOfEquityPct.toFixed(2)}%)
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-white">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-white inline-block" />
+                    Exposed:
+                  </span>
+                  <span className="font-semibold">
+                    {formatCurrency(totals.summaryExposed, 'usd', 2)} ({totals.exposedPct.toFixed(2)}%)
+                  </span>
+                </div>
+                {hasLeveraged && (
+                  <div className="flex justify-between items-center text-amber-400 border-t border-[#2a2b30]/60 pt-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                      Leveraged (Longs):
+                    </span>
+                    <span className="font-semibold">
+                      +{formatCurrency(totals.totalLeveraged, 'usd', 2)} (+{totals.leveragedPct.toFixed(2)}%)
+                    </span>
                   </div>
-                }
-              />
-              <Bar dataKey="hedge" stackId="alloc" fill="#10b981" isAnimationActive={false} />
-              <Bar dataKey="stablecoins" stackId="alloc" fill="#3b82f6" isAnimationActive={false} />
-              <Bar dataKey="exposed" stackId="alloc" fill="#ffffff" isAnimationActive={false} />
-              {hasLeveraged && (
-                <Bar dataKey="leveraged" stackId="alloc" fill="#f59e0b" isAnimationActive={false} />
-              )}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+                )}
+                <div className="flex justify-between items-center text-white border-t border-[#2a2b30] pt-1 font-semibold">
+                  <span className="text-[#8E9299]">Total Equity:</span>
+                  <span>{formatCurrency(totals.totalEquity, 'usd', 2)}</span>
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <div className="w-full h-5 relative rounded-md overflow-hidden bg-[#1a1b1e] border border-[#2a2b30]/80 cursor-help hover:border-[#3a3b42] transition-colors">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+              <BarChart
+                layout="vertical"
+                data={stackData}
+                margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+              >
+                <XAxis type="number" domain={[0, totalBase + (totals.totalLeveraged || 0)]} hide />
+                <YAxis type="category" dataKey="name" hide />
+                <Bar dataKey="hedge" stackId="alloc" fill="#10b981" isAnimationActive={false} />
+                <Bar dataKey="stablecoins" stackId="alloc" fill="#3b82f6" isAnimationActive={false} />
+                <Bar dataKey="exposed" stackId="alloc" fill="#ffffff" isAnimationActive={false} />
+                {hasLeveraged && (
+                  <Bar dataKey="leveraged" stackId="alloc" fill="#f59e0b" isAnimationActive={false} />
+                )}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </AppTooltip>
       </div>
 
       {/* Granular Categories Comparison Chart (Recharts) */}
@@ -323,6 +356,7 @@ export function HedgeProCapitalExposureChart({
               cursor={{ fill: 'rgba(255,255,255,0.03)' }}
               content={<CustomTooltip formatCurrency={formatCurrency} totals={totals} />}
               isAnimationActive={false}
+              wrapperStyle={{ zIndex: 50 }}
             />
             <Bar dataKey="usd" radius={[0, 4, 4, 0]} isAnimationActive={false}>
               {chartData.map((entry, index) => (
