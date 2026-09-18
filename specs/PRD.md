@@ -143,7 +143,8 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 3. **Cross-Exchange Funding Arbitrage:** scanner de oportunidades de arbitragem delta-neutra entre corretoras, calculando spread 8h e APR anualizado (`Spread APR = Spread * 3 * 365`), indicando exchange ideal para Long e Short e contagem regressiva para liquidação.
 4. **Order Flow & Cumulative Volume Delta (CVD):** mensuração de agressões de mercado (`Net Delta = Taker Buy - Taker Sell`) e curva de volume acumulado (CVD) com detecção algorítmica de divergências altistas (Bullish) e baixistas (Bearish).
 5. **Sentimento Smart Money vs. Retail:** comparação do sentimento do varejo (ponderado por contas) contra o Smart Money (ponderado por volume nocional do top 20% de traders) com índice Fear & Greed e alertas de divergência institucional.
-6. **Tooltips e Controles Padronizados:** tooltips matemáticos detalhados ancorados no Radix UI, seleção com favoritos, seletor de timeframes e atualização automática configurável com contador circular.
+6. **Sub-View Especializada — Inverse Coin-M Dashboard:** painel analítico comutável dedicado a contratos inversos (COIN-M) consolidando métricas cross-exchange, favoritos com persistência local, desdobramento expansível por corretora (taxa de funding, volume 24h, OI e spread arbitrage) e controles de Expand/Collapse All.
+7. **Tooltips e Controles Padronizados:** tooltips matemáticos detalhados ancorados no Radix UI, seleção com favoritos, seletor de timeframes e atualização automática configurável com contador circular.
 
 ## 7. Requisitos Funcionais (Resumo)
 
@@ -166,7 +167,7 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 | FR-15 | Auditar extrato e bills archive da OKX com reconciliação contábil | OKX Transactions |
 | FR-16 | Mapeamento universal de transações (10 categorias universais e badges padronizados) | Universal Tx Mapper |
 | FR-17 | Modo Hedge Pro com monitoramento de delta, ratio de hedge e alertas de risco | Hedge Monitoring |
-| FR-18 | Inteligência de mercado multi-exchange com Open Interest, regimes de mercado, Funding Arbitrage, fluxo de ordens (CVD) e sentimento Smart Money | Market Analytics |
+| FR-18 | Inteligência de mercado multi-exchange com Open Interest, regimes de mercado, Funding Arbitrage, fluxo de ordens (CVD), sentimento Smart Money e Inverse Coin-M Dashboard | Market Analytics |
 
 ## 8. Requisitos Não-Funcionais
 
@@ -206,16 +207,21 @@ Ver `specs/ARCHITECTURE.md` para o diagrama completo. Visão de alto nível:
 - **Precisão contábil:** PnL Realizado do Bybit Transactions reconcilia com o fluxo de caixa (`change = cashFlow + funding − fee`).
 - **Cobertura de testes:** ≥ 235 testes unitários passando; typecheck (`tsc --noEmit`) sem erros.
 
-## 11. Roadmap / Backlog
+## 11. Histórico de Evolução e Entregas
 
-Registrado em `specs/EVOLUTION_TASKS.md` (histórico de refatorações e sprints). Sprints concluídos incluem: resolução de débitos críticos (SSRF/DoS, backoff, Web Crypto), arquitetura de adapters (SRP/Strategy), relatórios de performance, funding fees dashboard, auditoria Bybit, classificação de ativos e refinamentos de UI/UX.
+Sprints concluídos e consolidados no projeto incluem:
+- Resolução de débitos críticos de segurança (SSRF/DoS, backoff exponencial, migração para Web Crypto nativa PBKDF2/AES-GCM).
+- Arquitetura de adapters e micro-stores Zustand (SRP e Strategy Pattern).
+- Relatórios de performance, PnL by Symbol e auditoria unificada de transações (Bybit, Bitget e OKX Transactions).
+- Funding Fees Dashboard com agregação analítica no serviço e cache IndexedDB.
+- Hedge Pro Dashboard para monitoramento Delta-Neutral em contratos inversos COIN-M.
+- Market Analytics completo com Open Interest, regimes de mercado, funding arbitrage, CVD e Inverse Coin-M Dashboard.
+- Progressive Web App (PWA), Privacy Mode e Ticker de mercado em tempo real.
 
 ## 12. Documentação Relacionada
 
-- [Arquitetura e Fluxo de Dados](./ARCHITECTURE.md)
-- [Evolução e Refatorações](./EVOLUTION_TASKS.md)
-- [Interfaces Unificadas](./unified-interfaces.md)
-- [Funding Fees Dashboard](./FUNDING_FEES_DASHBOARD.md)
-- [Transações Bybit](./bybit-transactions-spec.md)
-- [KPI Funding Cards](./kpi-funding-cards.md)
-- [Referências das APIs](./bybit_v5_api_doc.md), [OKX V5](./okx_v5_api_doc.md), [Bitget Classic](./bitget_classic_api_doc.md)
+- [Arquitetura Técnica e Fluxo de Dados](./ARCHITECTURE.md): Detalhamento do Hybrid-Proxy, micro-stores, caching IndexedDB e engines de sincronização.
+- [Interfaces Unificadas](./unified-interfaces.md): Especificação dos tipos normalizados e raw responses de Bybit, Bitget e OKX.
+- [Manual do Usuário (Português)](../user_manual/cpm_user_manual_pt-br.md): Guia operacional completo com fluxo de telas, segurança e troubleshooting.
+- [User Manual (English)](../user_manual/cpm_user_manual_en-us.md): Complete English user manual.
+- [Referências das APIs](./bybit_v5_api_doc.md), [OKX V5](./okx_v5_api_doc.md), [Bitget Classic](./bitget_classic_api_doc.md) e [Bitget UTA](./bitget_uta_api_doc.md).
