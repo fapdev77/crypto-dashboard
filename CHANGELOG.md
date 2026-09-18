@@ -1,3 +1,10 @@
+# [1.67.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.66.0...v1.67.0) (2026-09-18)
+
+
+### Features
+
+* **analytics:** replace native tooltip with AppTooltip ([1414141](https://github.com/fapdev77/crypto-dashboard/commit/14141418f8dcbc8d0c16206ba38ffe5d1af9ea9d))
+
 # [1.66.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.65.0...v1.66.0) (2026-09-18)
 
 
