@@ -3,8 +3,13 @@ import { UnifiedAssetCategory } from '../types';
 
 export function isStablecoin(ccy: string | undefined | null): boolean {
   if (!ccy) return false;
-  const normalized = ccy.toUpperCase();
-  return ['USDT', 'USDC', 'USDG', 'USD', 'BRL'].some(stable => normalized.includes(stable));
+  const normalized = ccy.toUpperCase().trim();
+  const knownStables = new Set([
+    'USDT', 'USDC', 'USD', 'DAI', 'FDUSD', 'USDE', 'USDD',
+    'BUSD', 'PYUSD', 'TUSD', 'USDP', 'EURT', 'GUSD', 'BRL', 'USDG'
+  ]);
+  if (knownStables.has(normalized)) return true;
+  return ['USDT', 'USDC', 'USDG', 'USD', 'BRL', 'EURT'].some(stable => normalized.includes(stable));
 }
 
 export function formatValue(val: number | undefined | null, decimalsOrSymbol: number | string = 2): string {

@@ -1,3 +1,10 @@
+# [1.65.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.64.1...v1.65.0) (2026-09-18)
+
+
+### Features
+
+* **analytics:** enhance hedge exposure reporting ([ec11c97](https://github.com/fapdev77/crypto-dashboard/commit/ec11c971dbf4613a1fd82dcb09136efe6e9e9529))
+
 ## [1.64.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.64.0...v1.64.1) (2026-09-17)
 
 

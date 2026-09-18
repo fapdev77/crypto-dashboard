@@ -14,6 +14,8 @@ import { ExchangeHierarchyTable } from './ExchangeHierarchyTable';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
+import { isStablecoin } from '../utils/formatters';
+import { AppTooltip } from './ui/Tooltip';
 
 export function Dashboard() {
   const balances = useBalancesStore(state => state.balances);
@@ -149,20 +151,41 @@ export function Dashboard() {
   const inverseLongCount = inversePositions.filter(pos => pos.side === 'long').length;
   const inverseShortCount = inversePositions.filter(pos => pos.side === 'short').length;
 
-  const totalProtected = Number(inversePositions.reduce((acc, pos) => {
-    if (pos.side === 'short') {
-      return acc.plus(getInverseShortUsdEntryValue(pos));
-    }
-    return acc;
-  }, new Big(0)));
-  const totalExposed = totalEquity - totalProtected;
+  const syntheticHedgeUsd = useMemo(() => {
+    return Number(inversePositions.reduce((acc, pos) => {
+      if (pos.side === 'short') {
+        return acc.plus(getInverseShortUsdEntryValue(pos));
+      }
+      return acc;
+    }, new Big(0)));
+  }, [inversePositions]);
+
+  const stablecoinsProtectedUsd = useMemo(() => {
+    return Number(
+      activeBalances
+        .filter(b => isStablecoin(b.ccy))
+        .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
+    );
+  }, [activeBalances]);
+
+  const totalProtected = new Big(syntheticHedgeUsd).plus(stablecoinsProtectedUsd).toNumber();
+  const totalExposed = Math.max(0, totalEquity - totalProtected);
 
   const protectedPercent = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
   const exposedPercent = totalEquity > 0 ? (totalExposed / totalEquity) * 100 : 0;
 
+  const hedgeOfProtectedPct = totalProtected > 0 ? (syntheticHedgeUsd / totalProtected) * 100 : 0;
+  const stablesOfProtectedPct = totalProtected > 0 ? (stablecoinsProtectedUsd / totalProtected) * 100 : 0;
+
   const handleHedgeProClick = () => {
     window.dispatchEvent(new CustomEvent('navigate-to-tab', {
       detail: 'analytics-hedge-pro'
+    }));
+  };
+
+  const handleOpenPositionsClick = () => {
+    window.dispatchEvent(new CustomEvent('navigate-to-tab', {
+      detail: 'positions-open'
     }));
   };
 
@@ -308,59 +331,69 @@ export function Dashboard() {
           <span className="text-yellow-500 text-sm font-medium tracking-wide uppercase">Simulation Mode Active - Displaying Mock Data</span>
         </div>
       )}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Card 1: Patrimonio e P&L */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-6 md:divide-x divide-[#2a2b30]">
-          {/* Lado Esquerdo: Patrimonio */}
-          <div className="flex-1 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        {/* Card 1: Total Equity */}
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
                 <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Total Equity (USD)</span>
                 <span className={`inline-block w-2 h-2 rounded-full ${openPositionsTotalPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
               </div>
-              <div className="flex items-baseline gap-2 mt-1">
-                <p className="text-3xl font-bold text-white font-mono tracking-tight">
-                  {formatCurrency(totalEquity, 'usd')}
-                </p>
-                {openPositionsTotalPnL >= 0 ? (
-                  <TrendingUp className="w-4 h-4 text-emerald-500/70" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 text-red-500/70" />
-                )}
-              </div>
+              <DollarSign className="w-4 h-4 text-[#8E9299]/60" />
             </div>
-            <div className="mt-4 text-xs text-[#8E9299] font-medium">
-              Net balance across all connected exchanges
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-2xl lg:text-3xl font-bold text-white font-mono tracking-tight">
+                {formatCurrency(totalEquity, 'usd')}
+              </p>
+              {openPositionsTotalPnL >= 0 ? (
+                <TrendingUp className="w-4 h-4 text-emerald-500/70 shrink-0" />
+              ) : (
+                <TrendingDown className="w-4 h-4 text-red-500/70 shrink-0" />
+              )}
             </div>
           </div>
+          <div className="mt-4 text-xs text-[#8E9299] font-medium">
+            Net balance across all connected exchanges
+          </div>
+        </div>
 
-          {/* Lado Direito: Open Positions P&L */}
-          <div className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Open Positions P&L</span>
-              <Activity className="w-5 h-5 text-[#8E9299]/70" />
+        {/* Card 2: Open Positions P&L */}
+        <button
+          type="button"
+          onClick={handleOpenPositionsClick}
+          title="Click to view Open Positions"
+          className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-[#3a3b40] transition-colors"
+        >
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
+                Open Positions P&L
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+              </span>
+              <Activity className="w-4 h-4 text-[#8E9299]/70" />
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Unrealized */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-1">Unrealized P&L</div>
-                  <div className="flex items-baseline gap-2">
-                    <p className={`text-xl font-bold font-mono tracking-tight ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-0.5">Unrealized P&L</div>
+                  <div className="flex items-baseline gap-1.5">
+                    <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '$••••' : `${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsUnrealizedPnL, 'usd')}`}
                     </p>
-                    <span className={`text-xs font-semibold font-mono ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <span className={`text-[11px] font-semibold font-mono ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '(••••%)' : `(${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${unrealizedPnLPercent.toFixed(2)}%)`}
                     </span>
                   </div>
                 </div>
-                <div className="w-[60px] h-[24px] opacity-90 hidden sm:block">
+                <div className="w-[50px] h-[20px] opacity-90 hidden sm:block">
                   <Sparkline
                     data={[10, 20, 15, 30, 25, 40, 35, 50, openPositionsUnrealizedPnL >= 0 ? 70 : 20]}
                     color={openPositionsUnrealizedPnL >= 0 ? 'emerald' : 'red'}
-                    width={60}
-                    height={24}
+                    width={50}
+                    height={20}
                   />
                 </div>
               </div>
@@ -368,49 +401,54 @@ export function Dashboard() {
               {/* Realized */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-1">Realized P&L</div>
-                  <div className="flex items-baseline gap-2">
-                    <p className={`text-xl font-bold font-mono tracking-tight ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-0.5">Realized P&L</div>
+                  <div className="flex items-baseline gap-1.5">
+                    <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '$••••' : `${openPositionsRealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsRealizedPnL, 'usd')}`}
                     </p>
-                    <span className={`text-xs font-semibold font-mono ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <span className={`text-[11px] font-semibold font-mono ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '(••••%)' : `(${openPositionsRealizedPnL >= 0 ? '+' : ''}${realizedPnLPercent.toFixed(2)}%)`}
                     </span>
                   </div>
                 </div>
-                <div className="w-[60px] h-[24px] opacity-90 hidden sm:block">
+                <div className="w-[50px] h-[20px] opacity-90 hidden sm:block">
                   <Sparkline
                     data={[15, 10, 25, 20, 35, 30, 45, 40, openPositionsRealizedPnL >= 0 ? 60 : 30]}
                     color={openPositionsRealizedPnL >= 0 ? 'emerald' : 'red'}
-                    width={60}
-                    height={24}
+                    width={50}
+                    height={20}
                   />
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </button>
 
-        {/* Card 2: Posições e Hedge Mode */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-1 md:divide-x divide-[#2a2b30]">
-          {/* Lado Esquerdo: Posições Ativas */}
-          <div className="flex-1 flex flex-col justify-between pr-5">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Active Positions</span>
-                <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
-              </div>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <p className="text-3xl font-bold text-white font-mono">
-                  {openPositionsCount}
-                </p>
-                <span className="text-xs text-[#8E9299] font-semibold">Active</span>
-              </div>
+        {/* Card 3: Active Positions */}
+        <button
+          type="button"
+          onClick={handleOpenPositionsClick}
+          title="Click to view Open Positions"
+          className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-[#3a3b40] transition-colors"
+        >
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
+                Active Positions
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+              </span>
+              <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
+            </div>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <p className="text-3xl font-bold text-white font-mono">
+                {openPositionsCount}
+              </p>
+              <span className="text-xs text-[#8E9299] font-semibold">Active</span>
             </div>
 
             {/* Long vs Short Bar */}
             <div className="space-y-2 mt-4">
-              <div className="flex justify-between text-[15px] font-semibold">
+              <div className="flex justify-between text-xs font-semibold">
                 <span className="text-emerald-500 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" /> Longs: {longPositions}
                 </span>
@@ -428,7 +466,7 @@ export function Dashboard() {
                   <div className="h-full w-full bg-[#2a2b30]" />
                 )}
               </div>
-              <div className="flex justify-between text-[15px] font-semibold">
+              <div className="flex justify-between text-xs font-semibold">
                 <span className="text-emerald-500 flex items-center gap-1">
                   {longPercent.toFixed(0)}%
                 </span>
@@ -438,39 +476,67 @@ export function Dashboard() {
               </div>
             </div>
           </div>
+        </button>
 
-          {/* Lado Direito: Hedge Mode (Inverse) — clique leva ao Hedge Pro */}
-          <button
-            type="button"
-            onClick={handleHedgeProClick}
-            title="Click to open Hedge Pro dashboard for detailed information about hedge"
-            className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6 text-left cursor-pointer group rounded-lg transition-colors"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
-                  Hedge Mode (Inverse)
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-emerald-500">Hedged: {inverseShortCount}</span>
-                  <span className="text-xs font-bold ">|</span>
-                  <span className="text-xs font-semibold text-amber-400">Leveraged: {inverseLongCount}</span>
-                </div>
+        {/* Card 4: Hedge Mode (Inverse) */}
+        <button
+          type="button"
+          onClick={handleHedgeProClick}
+          title="Click to open Hedge Pro dashboard for detailed information about hedge"
+          className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-[#3a3b40] transition-colors"
+        >
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
+                Hedge Mode (Inverse)
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-emerald-500">Hedged: {inverseShortCount}</span>
+                <span className="text-xs font-bold text-[#8E9299]">|</span>
+                <span className="text-xs font-semibold text-amber-400">Leveraged: {inverseLongCount}</span>
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <p className="text-xl font-bold text-white font-mono">
-                  {inverseOpenCount}
-                </p>
-                <span className="text-xs text-[#8E9299] font-medium">Active Positions</span>
-              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <p className="text-xl font-bold text-white font-mono">
+                {inverseOpenCount}
+              </p>
+              <span className="text-xs text-[#8E9299] font-medium">Active Positions</span>
             </div>
 
             {/* Protected vs Exposed Bar */}
             <div className="space-y-2 mt-4">
-              <div className="flex justify-between text-[15px] font-semibold font-mono">
-                <span className="text-emerald-500/90">Prot: {formatCurrency(totalProtected, 'usd', 2)} </span>
-                <span className="text-white font-semibold">Exp: {formatCurrency(totalExposed, 'usd', 2)} </span>
+              <div className="flex justify-between text-xs font-semibold font-mono">
+                <AppTooltip
+                  description={
+                    <div className="text-xs space-y-1.5 p-1 min-w-[230px]">
+                      <div className="font-semibold text-white border-b border-[#2a2b30] pb-1">
+                        Protected Capital Breakdown
+                      </div>
+                      <div className="space-y-1 font-mono text-[11px]">
+                        <div className="flex justify-between items-center text-emerald-400">
+                          <span>Hedge (Shorts):</span>
+                          <span>{formatCurrency(syntheticHedgeUsd, 'usd', 2)} ({hedgeOfProtectedPct.toFixed(2)}%)</span>
+                        </div>
+                        <div className="flex justify-between items-center text-blue-400">
+                          <span>Stablecoins:</span>
+                          <span>{formatCurrency(stablecoinsProtectedUsd, 'usd', 2)} ({stablesOfProtectedPct.toFixed(2)}%)</span>
+                        </div>
+                        <div className="flex justify-between items-center text-white border-t border-[#2a2b30] pt-1 font-semibold">
+                          <span>Total Protected:</span>
+                          <span>{formatCurrency(totalProtected, 'usd', 2)} ({protectedPercent.toFixed(2)}% equity)</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  side="top"
+                  align="start"
+                >
+                  <span className="text-emerald-500/90 underline decoration-dotted decoration-emerald-500/50 cursor-help">
+                    Prot: {formatCurrency(totalProtected, 'usd', 2)}
+                  </span>
+                </AppTooltip>
+                <span className="text-white font-semibold">Exp: {formatCurrency(totalExposed, 'usd', 2)}</span>
               </div>
               <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
                 {totalEquity > 0 ? (
@@ -482,14 +548,13 @@ export function Dashboard() {
                   <div className="h-full w-full bg-[#2a2b30]" />
                 )}
               </div>
-              <div className="flex justify-between text-[15px] font-semibold font-mono">
-                <span className="text-emerald-500/90"> {protectedPercent.toFixed(2)}%</span>
-                <span className="text-white font-semibold"> {exposedPercent.toFixed(2)}%</span>
+              <div className="flex justify-between text-xs font-semibold font-mono">
+                <span className="text-emerald-500/90">{protectedPercent.toFixed(2)}%</span>
+                <span className="text-white font-semibold">{exposedPercent.toFixed(2)}%</span>
               </div>
-
             </div>
-          </button>
-        </div>
+          </div>
+        </button>
       </div>
 
 
