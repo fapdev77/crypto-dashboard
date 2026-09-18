@@ -1,3 +1,10 @@
+# [1.66.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.65.0...v1.66.0) (2026-09-18)
+
+
+### Features
+
+* **analytics:** add HedgePro capital exposure chart ([39081e8](https://github.com/fapdev77/crypto-dashboard/commit/39081e843a9521282cfc70cc69bdc778d5b5cf1a))
+
 # [1.65.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.64.1...v1.65.0) (2026-09-18)
 
 
