@@ -9,6 +9,7 @@ import { HedgeProKpis } from './HedgeProKpis';
 import { HedgeProCoinRows } from './HedgeProCoinRows';
 import { HedgeProBreakdownChart } from './HedgeProBreakdownChart';
 import { HedgeExposureBar } from './HedgeExposureBar';
+import { HedgeProCapitalExposureChart } from './HedgeProCapitalExposureChart';
 
 export type HedgePnlConceptMode = 'standard' | 'hedge';
 
@@ -186,6 +187,9 @@ export function HedgeProDashboard() {
           )}
         </div>
       </div>
+
+      {/* Capital Exposure Breakdown Card (Recharts) */}
+      <HedgeProCapitalExposureChart totals={totals} formatCurrency={formatCurrency} />
 
       {/* Filters with Exchange Selection */}
       <FilterBar
