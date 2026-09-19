@@ -1,3 +1,10 @@
+# [1.68.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.67.0...v1.68.0) (2026-09-19)
+
+
+### Features
+
+* **analytics:** add COIN-M filter to funding rate comparison ([e695a1e](https://github.com/fapdev77/crypto-dashboard/commit/e695a1e97213cf38f747d01921c37aefe7fe0002))
+
 # [1.67.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.66.0...v1.67.0) (2026-09-18)
 
 
