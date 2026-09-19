@@ -1,2 +1,2 @@
 Anotações para futuras implementações de Ideias e melhorias
-- [CONCLUÍDO] inverse coin-m comparison: filtro rápido e isolado de instrumentos COIN-M / Inverse adicionado ao componente Funding Rate Comparison.
+- 
