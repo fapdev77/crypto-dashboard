@@ -1,3 +1,10 @@
+# [1.69.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.68.0...v1.69.0) (2026-09-19)
+
+
+### Features
+
+* **ui:** add tooltip support to FilterBar components ([3297aeb](https://github.com/fapdev77/crypto-dashboard/commit/3297aeba96ee5a79b12db761da09f37649b5ecaf))
+
 # [1.68.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.67.0...v1.68.0) (2026-09-19)
 
 
