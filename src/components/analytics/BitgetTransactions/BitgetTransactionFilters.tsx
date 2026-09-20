@@ -148,7 +148,7 @@ export function BitgetTransactionFilters({ filters, setFilters, availableCurrenc
       account={{
         value: filters.accountId,
         onChange: (v) => setFilters(prev => ({ ...prev, accountId: v })),
-        options: bitgetKeys.map(k => ({ id: k.id, label: k.label || k.exchange, exchange: 'bitget' })),
+        options: bitgetKeys.map(k => ({ id: k.id, label: k.label || k.exchange, exchange: 'bitget', accountType: k.accountType })),
         labelAll: 'All Bitget Accounts',
       }}
       period={{
