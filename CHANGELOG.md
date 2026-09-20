@@ -1,3 +1,24 @@
+# [1.70.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.69.0...v1.70.0) (2026-09-20)
+
+
+### Features
+
+* improve Bitget exchange value calculations ([1b667da](https://github.com/fapdev77/crypto-dashboard/commit/1b667da97ee129b6b68a7bf0ddd2dd4de05e4897))
+
+# [1.69.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.68.0...v1.69.0) (2026-09-19)
+
+
+### Features
+
+* **ui:** add tooltip support to FilterBar components ([3297aeb](https://github.com/fapdev77/crypto-dashboard/commit/3297aeba96ee5a79b12db761da09f37649b5ecaf))
+
+# [1.68.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.67.0...v1.68.0) (2026-09-19)
+
+
+### Features
+
+* **analytics:** add COIN-M filter to funding rate comparison ([e695a1e](https://github.com/fapdev77/crypto-dashboard/commit/e695a1e97213cf38f747d01921c37aefe7fe0002))
+
 # [1.67.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.66.0...v1.67.0) (2026-09-18)
 
 

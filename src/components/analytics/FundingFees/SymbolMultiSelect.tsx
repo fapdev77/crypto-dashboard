@@ -82,7 +82,12 @@ export const SymbolMultiSelect: React.FC<Props> = ({
               <CoinIcon symbol={sym.coin} className="w-3.5 h-3.5 shrink-0" />
               <ExchangeIcon exchange={sym.exchange as ExchangeName} className="w-3 h-3 shrink-0" />
               <span className="truncate">{sym.symbol}</span>
-              <span className="text-[10px] text-[#8E9299]">{sym.type === 'USDT-M' ? 'U' : 'C'}</span>
+              <span className={clsx(
+                "text-[10px] px-1 py-0.2 rounded font-mono shrink-0", 
+                sym.type === 'COIN-M' ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" : "text-[#8E9299]"
+              )}>
+                {sym.type === 'USDT-M' ? 'U' : 'C'}
+              </span>
               <button 
                 onClick={(e) => removeSymbol(id, e)}
                 className="text-[#8E9299] hover:text-white ml-1 focus:outline-none shrink-0"
@@ -158,7 +163,14 @@ export const SymbolMultiSelect: React.FC<Props> = ({
                       <CoinIcon symbol={sym.coin} className="w-4 h-4 shrink-0" />
                       <ExchangeIcon exchange={sym.exchange as ExchangeName} className="w-4 h-4 shrink-0" />
                       <span className="font-medium truncate">{sym.symbol}</span>
-                      <span className="text-xs text-[#8E9299] shrink-0">({sym.type})</span>
+                      <span className={clsx(
+                        "text-[10px] px-1.5 py-0.5 rounded border shrink-0 font-medium",
+                        sym.type === 'COIN-M'
+                          ? "bg-purple-500/15 text-purple-300 border-purple-500/30"
+                          : "bg-[#2a2b30]/50 text-[#8E9299] border-[#2a2b30]"
+                      )}>
+                        {sym.type}
+                      </span>
                     </div>
                     {isSelected && <Check className="w-4 h-4 text-[#2F6BFF] shrink-0 ml-2" />}
                   </button>

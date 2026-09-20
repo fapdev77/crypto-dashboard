@@ -172,9 +172,17 @@ Um relatório gerencial para analisar a performance individual de cada ativo ope
 ### 💸 Dashboard de Taxas de Financiamento (Funding Fees)
 Um painel abrangente que consolida dados de taxas de financiamento (funding rates) em tempo real e históricos da Bybit, Bitget e OKX (contratos perpétuos USDT-M e COIN-M):
 - **Análise Multi-Período**: Analise taxas em múltiplos intervalos: Próxima Taxa, Última Taxa, Hoje, Mês Atual, Mês Passado, 3 Meses, 6 Meses e 1 Ano.
+- **Comparativo de Taxas (Funding Rate Comparison)**:
+  - Gráfico comparativo horizontal ordenado por taxa de financiamento em múltiplos períodos (*Last Funding Rate*, *Today Cumulative*, *Current Month*, *Last Month*, *Last 3 Months*).
+  - *Filtros Rápidos de Comparação*:
+    - **Favorites**: Exibe rapidamente os pares favoritados pelo usuário.
+    - **Open Positions**: Isola os ativos nos quais o usuário possui posições atualmente abertas.
+    - **COIN-M / Inverse**: Filtro específico que isola e compara somente os ativos e contratos de instrumentos inversos (COIN-M) das corretoras.
+  - *Seletor de Símbolos Multi-Select*: Permite selecionar manualmente até 25 ativos com identificadores e badges visuais destacados para instrumentos lineares (USDT-M) e inversos (COIN-M).
 - **Pipeline de Agregação e Cache v10**: Utiliza o IndexedDB para armazenar sumários pré-calculados por mês calendário. Realiza sincronizações incrementais ultrarrápidas, com cobertura de até 400 dias (Bybit).
 - **Indicadores Visuais**: Animações de atualização (flash) em tempo real e tooltips explicativos da direção do pagamento (Longs pagando Shorts ou vice-versa).
 - *Nota sobre a OKX*: A API da OKX limita o histórico a ~3 meses, sendo automaticamente omitida das médias de 6M e 1Y para manter a integridade dos dados.
+
 
 ### 📜 Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)
 Módulos especializados de auditoria contábil e histórico completo de transações brutas diretamente das corretoras (Bybit, Bitget e OKX):

@@ -172,9 +172,17 @@ A managerial reporting tool to analyze the individual performance of every trade
 ### 💸 Funding Fees Dashboard
 A comprehensive dashboard providing a unified view of real-time and historical funding rates across Bybit, Bitget, and OKX (USDT-M and COIN-M perpetual swaps):
 - **Multi-Period Analysis**: Analyze funding rates across multiple timeframes: Next Funding, Last Settlement, Today, Current Month, Last Month, 3 Months, 6 Months, and 1 Year.
+- **Funding Rate Comparison**:
+  - Interactive horizontal comparison chart ranked by funding rate across multiple timeframes (*Last Funding Rate*, *Today Cumulative*, *Current Month*, *Last Month*, *Last 3 Months*).
+  - *Quick Comparison Filters*:
+    - **Favorites**: Quickly view funding rates for user-starred pairs.
+    - **Open Positions**: Isolates pairs where open positions are currently held.
+    - **COIN-M / Inverse**: Dedicated filter to isolate and compare only COIN-M / inverse contract instruments across supported exchanges.
+  - *Multi-Select Symbol Dropdown*: Manually pick up to 25 assets simultaneously with clear visual badges distinguishing linear (USDT-M) from inverse (COIN-M) instruments.
 - **Smart Aggregation Pipeline & Cache v10**: Uses IndexedDB to store pre-calculated calendar month summaries. Features ultra-fast incremental updates and up to 400 days of historical depth.
 - **Visual Indicators**: Flashing animations for rate updates and tooltips explaining funding direction (Longs paying Shorts vs Shorts paying Longs).
 - *Note on OKX*: OKX API restricts historical data to ~3 months, and is automatically excluded from 6M and 1Y averages to preserve market accuracy.
+
 
 ### 📜 Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)
 Specialized financial audit modules providing full access to raw transaction logs directly from Bybit, Bitget, and OKX:

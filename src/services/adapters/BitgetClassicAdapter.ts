@@ -568,7 +568,7 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       const qty = parseFloat(o.size || o.totalSize || o.actualSize || '0');
       const filledQty = parseFloat(o.filledQty || o.baseVolume || '0');
       const price = parseFloat(o.price || o.priceAvg || o.avgPrice || o.executePrice || '0');
-      const value = parseFloat(o.quoteVolume || '0') || (qty * price);
+      const value = parseFloat(o.quoteVolume || '0') || (category === 'INVERSE' ? qty : (qty * price));
       const orderId = String(o.orderId || o.planOrderId || o.order_id || o.clientOid || '');
       
       return {

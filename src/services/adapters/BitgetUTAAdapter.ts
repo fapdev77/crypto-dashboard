@@ -583,7 +583,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
       const filledQty = parseFloat(o.cumExecQty || o.filledQty || '0');
       const price = parseFloat(o.price || o.executePrice || '0');
       const avgPrice = parseFloat(o.avgPrice || o.priceAvg || '0');
-      const value = parseFloat(o.cumExecValue || o.amount || '0') || (qty * (avgPrice || price));
+      const value = parseFloat(o.cumExecValue || o.amount || '0') || (category === 'INVERSE' ? qty : (qty * (avgPrice || price)));
       const orderId = String(o.orderId || o.strategyId || o.clientOid || '');
 
       let fee = 0;
