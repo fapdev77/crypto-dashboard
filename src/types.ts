@@ -25,6 +25,8 @@ export interface UnifiedBalance {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   ccy: string;
   amount: number;
@@ -42,6 +44,8 @@ export interface UnifiedOrder {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
@@ -78,6 +82,8 @@ export interface UnifiedPosition {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string; // Account label/name
   symbol: string;
   baseCoin: string; // E.g., 'BTC'
@@ -115,6 +121,8 @@ export interface UnifiedHistoryPosition {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   symbol: string;
   baseCoin: string;
@@ -144,6 +152,8 @@ export interface UnifiedBillRecord {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   type: BillType;
   amount: number;

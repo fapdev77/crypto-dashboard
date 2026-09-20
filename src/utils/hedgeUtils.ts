@@ -38,7 +38,9 @@ export interface HedgeBalanceInput {
 export interface HedgePositionLevels {
   positionId: string;
   connectionId?: string;
-  accountType?: 'classic' | 'uta';
+  accountType?: 'classic' | 'uta' | string;
+  environment?: string;
+  bybitRegion?: string;
   symbol: string;
   baseCoin?: string;
   exchange: ExchangeName;
@@ -128,7 +130,9 @@ export interface HedgeBarMetrics {
 export interface HedgeCoinSummary {
   key: string;
   connectionId: string;
-  accountType?: 'classic' | 'uta';
+  accountType?: 'classic' | 'uta' | string;
+  environment?: string;
+  bybitRegion?: string;
   baseCoin: string;
   exchange: ExchangeName;
   /** Human-readable account label for this connection (e.g. 'Mock BITGET 1'). */
@@ -425,6 +429,8 @@ export function getHedgePositionLevels(
     positionId: pos.id,
     connectionId: pos.connectionId,
     accountType: pos.accountType,
+    environment: pos.environment,
+    bybitRegion: pos.bybitRegion,
     symbol: pos.symbol,
     baseCoin: pos.baseCoin,
     exchange: pos.exchange,
@@ -696,6 +702,8 @@ export function getHedgeCoinSummaries(
       key,
       connectionId: group.connectionId,
       accountType: group.levels[0]?.accountType,
+      environment: group.levels[0]?.environment,
+      bybitRegion: group.levels[0]?.bybitRegion,
       baseCoin: group.baseCoin,
       exchange: group.exchange,
       accountLabel: group.levels[0]?.label || '',
