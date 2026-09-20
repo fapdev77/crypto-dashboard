@@ -90,7 +90,14 @@ export function TradeHistory() {
           // Bybit linear: t.value is already in USD
           valUsd = t.value && t.value > 0 ? t.value : (p > 0 ? Number(new Big(t.filledQty).times(p)) : 0);
         }
-      } else if (t.value && t.value > 0 && t.exchange !== 'bitget') {
+      } else if (t.exchange === 'bitget') {
+        if (isInverse) {
+          const rawQuoteVol = t.raw?.quoteVolume ? parseFloat(t.raw.quoteVolume) : 0;
+          valUsd = rawQuoteVol > 0 ? rawQuoteVol : (t.value && t.value > 0 && t.value !== t.filledQty * p ? t.value : t.filledQty);
+        } else {
+          valUsd = t.value && t.value > 0 ? t.value : (p > 0 ? Number(new Big(t.filledQty).times(p)) : 0);
+        }
+      } else if (t.value && t.value > 0) {
         // Prefer exact value if available, except for bitget where it might be inaccurate for partial fills
         valUsd = t.filledQty > 0 && t.filledQty !== t.qty ? (p > 0 ? Number(new Big(t.filledQty).times(p)) : 0) : t.value;
       } else if (isInverse && !qtyIsCoin) {
@@ -173,6 +180,15 @@ export function TradeHistory() {
         if (isInverse) {
           filledValUsd = t.value && t.value > 0 && filledPrice > 0 ? t.value * filledPrice : t.filledQty;
           actualFilledCoinSize = t.value && t.value > 0 ? t.value : (filledPrice > 0 ? t.filledQty / filledPrice : 0);
+        } else {
+          filledValUsd = t.value && t.value > 0 ? t.value : (filledPrice > 0 ? t.filledQty * filledPrice : 0);
+          actualFilledCoinSize = t.filledQty;
+        }
+      } else if (t.exchange === 'bitget') {
+        if (isInverse) {
+          const rawQuoteVol = t.raw?.quoteVolume ? parseFloat(t.raw.quoteVolume) : 0;
+          filledValUsd = rawQuoteVol > 0 ? rawQuoteVol : (t.value && t.value > 0 && t.value !== t.filledQty * filledPrice ? t.value : t.filledQty);
+          actualFilledCoinSize = filledPrice > 0 ? filledValUsd / filledPrice : 0;
         } else {
           filledValUsd = t.value && t.value > 0 ? t.value : (filledPrice > 0 ? t.filledQty * filledPrice : 0);
           actualFilledCoinSize = t.filledQty;
@@ -387,6 +403,15 @@ export function TradeHistory() {
               if (isInverse) {
                 filledValUsd = trade.value && trade.value > 0 && filledPrice > 0 ? Number(new Big(trade.value).times(filledPrice)) : trade.filledQty;
                 actualFilledCoinSize = trade.value && trade.value > 0 ? trade.value : (filledPrice > 0 ? trade.filledQty / filledPrice : 0);
+              } else {
+                filledValUsd = trade.value && trade.value > 0 ? trade.value : (filledPrice > 0 ? Number(new Big(trade.filledQty).times(filledPrice)) : 0);
+                actualFilledCoinSize = trade.filledQty;
+              }
+            } else if (trade.exchange === 'bitget') {
+              if (isInverse) {
+                const rawQuoteVol = trade.raw?.quoteVolume ? parseFloat(trade.raw.quoteVolume) : 0;
+                filledValUsd = rawQuoteVol > 0 ? rawQuoteVol : (trade.value && trade.value > 0 && trade.value !== trade.filledQty * filledPrice ? trade.value : trade.filledQty);
+                actualFilledCoinSize = filledPrice > 0 ? filledValUsd / filledPrice : 0;
               } else {
                 filledValUsd = trade.value && trade.value > 0 ? trade.value : (filledPrice > 0 ? Number(new Big(trade.filledQty).times(filledPrice)) : 0);
                 actualFilledCoinSize = trade.filledQty;

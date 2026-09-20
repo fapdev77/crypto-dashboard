@@ -21,10 +21,10 @@ export function detectQtyIsCoin(params: {
 
   const ex = (exchange || '').toLowerCase();
 
-  if (ex === 'bitget') {
-    return true;
-  }
-  if (ex === 'okx' || ex === 'bybit') {
+  // Em contratos Inverse/Coin-M:
+  // Bitget, OKX e Bybit utilizam contratos cotados em USD (USD contracts).
+  // A quantidade (qty) representa o número de contratos / valor nocional em USD, NÃO a quantidade em moedas.
+  if (ex === 'bitget' || ex === 'okx' || ex === 'bybit') {
     return false;
   }
 

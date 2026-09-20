@@ -87,7 +87,22 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
       filledValUsd = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.filledQty * effPrice : 0);
       actualFilledCoinSize = order.filledQty;
     }
-  } else if (order.value && order.value > 0 && order.exchange !== 'bitget') {
+  } else if (order.exchange === 'bitget') {
+    if (isInverse) {
+      const rawQuoteVol = order.raw?.quoteVolume ? parseFloat(order.raw.quoteVolume) : 0;
+      valUsd = rawQuoteVol > 0 ? rawQuoteVol : (order.value && order.value > 0 && order.value !== order.qty * effPrice ? order.value : order.qty);
+      actualCoinSize = effPrice > 0 ? valUsd / effPrice : 0;
+      filledValUsd = rawQuoteVol > 0 ? rawQuoteVol : (order.filledQty > 0 ? order.filledQty : 0);
+      actualFilledCoinSize = effPrice > 0 ? filledValUsd / effPrice : 0;
+    } else {
+      valUsd = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.qty * effPrice : 0);
+      actualCoinSize = order.qty;
+      filledValUsd = order.value && order.value > 0 && order.filledQty === order.qty
+        ? order.value
+        : (effPrice > 0 ? order.filledQty * effPrice : 0);
+      actualFilledCoinSize = order.filledQty;
+    }
+  } else if (order.value && order.value > 0) {
     valUsd = order.value;
     actualCoinSize = isInverse ? (effPrice > 0 ? order.value / effPrice : order.qty) : order.qty;
     filledValUsd = order.filledQty > 0 && order.filledQty !== order.qty ? (effPrice > 0 ? order.filledQty * effPrice : 0) : order.value;
