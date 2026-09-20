@@ -5,6 +5,7 @@ import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { AccountTypeBadge } from '../../ui/AccountTypeBadge';
 import { AppTooltip } from '../../ui/Tooltip';
+import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { HedgeExposureBar } from './HedgeExposureBar';
 import { HedgePositionLevelRow } from './HedgePositionLevelRow';
 import { HedgeProCoinDrawerMetrics } from './HedgeProCoinDrawerMetrics';
@@ -36,6 +37,11 @@ export function HedgeProCoinRow({
   pnlConceptMode = 'hedge',
 }: HedgeProCoinRowProps) {
   const { barMetrics } = coin;
+  const keys = useApiKeysStore(state => state.keys);
+  const matchedKey = keys.find(k => k.id === coin.connectionId);
+  const accountType = coin.accountType || matchedKey?.accountType;
+  const environment = coin.environment || matchedKey?.environment;
+  const bybitRegion = coin.bybitRegion || matchedKey?.bybitRegion;
 
   return (
     <div
@@ -70,7 +76,12 @@ export function HedgeProCoinRow({
               >
                 {coin.accountLabel}
               </span>
-              <AccountTypeBadge exchange={coin.exchange} accountType={coin.accountType} />
+              <AccountTypeBadge
+                exchange={coin.exchange}
+                accountType={accountType}
+                environment={environment}
+                bybitRegion={bybitRegion}
+              />
 
               {/* Position counter & Risk Alert Icon (integrated together without text) */}
               <div className="flex items-center gap-1.5 ml-1">
