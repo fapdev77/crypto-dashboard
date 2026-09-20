@@ -1,3 +1,10 @@
+# [1.71.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.70.0...v1.71.0) (2026-09-20)
+
+
+### Features
+
+* include account type in filter options ([6e61b27](https://github.com/fapdev77/crypto-dashboard/commit/6e61b270c341976958fe8815f50088682edc8cf0))
+
 # [1.70.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.69.0...v1.70.0) (2026-09-20)
 
 
