@@ -1,3 +1,10 @@
+# [1.73.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.72.0...v1.73.0) (2026-09-20)
+
+
+### Features
+
+* enhance account metadata propagation ([6395f28](https://github.com/fapdev77/crypto-dashboard/commit/6395f28ccb368833bec884c0695c471c2434fbf9))
+
 # [1.72.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.71.0...v1.72.0) (2026-09-20)
 
 
