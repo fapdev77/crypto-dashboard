@@ -1,3 +1,10 @@
+# [1.72.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.71.0...v1.72.0) (2026-09-20)
+
+
+### Features
+
+* support net balance equity for Bitget and OKX ([25f22bd](https://github.com/fapdev77/crypto-dashboard/commit/25f22bdac5c5e4356124fd422459d07033212884))
+
 # [1.71.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.70.0...v1.71.0) (2026-09-20)
 
 
