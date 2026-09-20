@@ -73,20 +73,38 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
           const usdVal = parseFloat(item.usdValue || '0');
           const unrealizedPnl = parseFloat(item.unrealisedPnl || '0') || (item.coin?.toUpperCase() === 'USDT' ? accountUnrealizedPnl : 0);
 
+          // In Bitget UTA, item.usdValue represents the USD valuation of item.equity (net balance / equity).
+          // Derive the coin price in USD to correctly compute the gross wallet balance in USD (amount * coinPrice):
+          let coinPrice = 0;
+          if (totalEquity > 0 && usdVal > 0) {
+            coinPrice = usdVal / totalEquity;
+          } else if (balance > 0 && usdVal > 0) {
+            coinPrice = usdVal / balance;
+          }
+
+          const walletBalance = balance > 0 ? balance : totalEquity;
+          const walletUsdValue = coinPrice > 0 ? walletBalance * coinPrice : (usdVal > 0 ? usdVal : walletBalance);
+
           if (totalEquity > 0 || balance > 0 || available > 0 || usdVal > 0) {
             balances.push({
               id: `${key.id}-uta-${item.coin}`,
               connectionId: key.id,
               exchange: 'bitget',
+              accountType: 'uta',
               label: `${key.label} (UTA)`,
               ccy: (item.coin || '').toUpperCase(),
-              amount: balance > 0 ? balance : totalEquity,
-              usdValue: usdVal > 0 ? usdVal : (totalEquity > 0 ? totalEquity : balance),
+              amount: walletBalance,
+              usdValue: walletUsdValue,
               totalEquity: totalEquity > 0 ? totalEquity : (item.coin?.toUpperCase() === 'USDT' && accountEquity > 0 ? accountEquity : balance),
               walletBalance: balance,
               availableMargin: available,
               unrealizedPnl,
-              raw: { ...item, accountMetrics: { accountEquity, accountUsdtEquity, accountUnrealizedPnl, mmr, mgnRatio } }
+              raw: {
+                ...item,
+                equity: totalEquity,
+                usdValue: usdVal,
+                accountMetrics: { accountEquity, accountUsdtEquity, accountUnrealizedPnl, mmr, mgnRatio }
+              }
             });
           }
         });
@@ -112,6 +130,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
               id: `${key.id}-uta-funding-${item.coin}`,
               connectionId: key.id,
               exchange: 'bitget',
+              accountType: 'uta',
               label: `${key.label} (Funding)`,
               ccy: (item.coin || '').toUpperCase(),
               amount: balance,
@@ -154,17 +173,35 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
       .map(pos => {
         const margin = parseFloat(pos.positionBalance || '0');
         const markPrice = parseFloat(pos.markPrice || '0');
-        let unrealizedPnl = parseFloat(pos.unrealisedPnl || '0');
+        const entryPrice = parseFloat(pos.avgPrice || '0');
+        // A API Bitget para COIN-FUTURES já retorna unrealisedPnl diretamente na moeda da margem (ex: ETH).
+        // Não deve ser dividido por markPrice.
+        const unrealizedPnl = parseFloat(pos.unrealisedPnl || '0');
 
         const instrumentType = mapInstrumentType('bitget', pos.category || 'USDT-FUTURES');
         const isInverse = instrumentType === 'INVERSE';
 
-        if (isInverse && markPrice > 0) {
-          unrealizedPnl = unrealizedPnl / markPrice;
+        let size: number;
+        let notionalUsd: number;
+
+        if (isInverse) {
+          // Em contratos COIN-FUTURES da Bitget (ex: ETHUSD_CM), pos.total representa a quantidade de contratos em USD
+          // (ex: 2445 contratos = $2,445.00 USD).
+          // O tamanho na moeda base (ex: ETH) é o valor nocional dividido pelo preço de mercado.
+          const rawContracts = parseFloat(pos.total || '0');
+          notionalUsd = rawContracts;
+          if (markPrice > 0) {
+            size = notionalUsd / markPrice;
+          } else if (entryPrice > 0) {
+            size = notionalUsd / entryPrice;
+          } else {
+            size = notionalUsd;
+          }
+        } else {
+          size = parseFloat(pos.total || '0');
+          notionalUsd = size * markPrice;
         }
 
-        const size = parseFloat(pos.total || '0');
-        const notionalUsd = size * markPrice;
         const side = mapPositionSide('bitget', pos.posSide);
 
         const accumulatedFunding = pos.totalFunding ? new Big(pos.totalFunding || 0).toString() : "0";
@@ -178,6 +215,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
           id: `${key.id}-bitget-uta-${pos.symbol}-${side}`,
           connectionId: key.id,
           exchange: 'bitget',
+          accountType: 'uta',
           label: key.label,
           symbol: pos.symbol,
           baseCoin: extractBaseCoin('bitget', pos.symbol),
@@ -202,6 +240,8 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
           breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
           tp: parseFloat(pos.takeProfit || '0'),
           sl: parseFloat(pos.stopLoss || '0'),
+          tpMode: (parseFloat(pos.takeProfit || '0') > 0 ? (pos.tpMode === 'partial' ? 'partial' : 'full') : undefined),
+          slMode: (parseFloat(pos.stopLoss || '0') > 0 ? (pos.slMode === 'partial' ? 'partial' : 'full') : undefined),
           roe: pos.profitRate ? parseFloat(pos.profitRate) * 100 : (margin > 0 ? (unrealizedPnl / margin) * 100 : undefined),
           instrumentType,
           raw: pos
@@ -290,6 +330,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
         connectionId: key.id,
         label: key.label,
         exchange: 'bitget',
+        accountType: 'uta',
         symbol: pos.symbol,
         baseCoin: extractBaseCoin('bitget', pos.symbol),
         quoteCoin: extractQuoteCoin('bitget', pos.symbol),
@@ -479,25 +520,92 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
   private normalizeOrders(rawOrders: any[], key: ApiCredentials): UnifiedOrder[] {
     return rawOrders.map(o => {
       let status: UnifiedOrderStatus = 'NEW';
-      const state = o.orderStatus?.toLowerCase() || o.status?.toLowerCase() || o.state?.toLowerCase() || '';
-      if (state === 'filled') status = 'FILLED';
+      const state = (o.orderStatus || o.status || o.state || o.planStatus || '').toLowerCase();
+      if (state === 'filled' || state === 'executed') status = 'FILLED';
       else if (state === 'cancelled' || state === 'canceled') status = 'CANCELLED';
       else if (state === 'partially_filled') status = 'PARTIALLY_FILLED';
-      else if (state === 'live' || state === 'new' || state === 'init') status = 'NEW';
+      else if (state === 'live' || state === 'new' || state === 'init' || state === 'not_trigger') status = 'NEW';
+      else if (state === 'triggered') status = 'TRIGGERED';
+      else if (state === 'fail_trigger' || state === 'rejected') status = 'REJECTED';
 
       let type: UnifiedOrderType = 'LIMIT';
-      const ot = o.orderType?.toLowerCase() || o.delegateType?.toLowerCase() || '';
-      if (ot === 'market') type = 'MARKET';
-      else if (ot.includes('stop_loss') || ot.includes('sl')) type = 'SL';
-      else if (ot.includes('stop_profit') || ot.includes('tp')) type = 'TP';
-      else if (ot.includes('plan') || ot.includes('conditional')) type = 'CONDITIONAL';
+      let executionScope: import('../../types').OrderExecutionScope | undefined = undefined;
+      let closeFraction: number | undefined = undefined;
+      let tpTriggerPrice: number | undefined = undefined;
+      let slTriggerPrice: number | undefined = undefined;
+      let isPositionTpsl: boolean | undefined = undefined;
+
+      const planType = (o.planType || '').toLowerCase();
+      const delegateType = (o.delegateType || '').toLowerCase();
+      const ot = (o.orderType || '').toLowerCase();
+
+      const hasTp = !!(o.takeProfit && parseFloat(o.takeProfit) > 0);
+      const hasSl = !!(o.stopLoss && parseFloat(o.stopLoss) > 0);
+
+      if (hasTp) tpTriggerPrice = parseFloat(o.takeProfit);
+      if (hasSl) slTriggerPrice = parseFloat(o.stopLoss);
+
+      if (planType === 'pos_profit') {
+        type = 'TP';
+        executionScope = 'FULL_POSITION';
+        closeFraction = 1;
+        isPositionTpsl = true;
+      } else if (planType === 'pos_loss') {
+        type = 'SL';
+        executionScope = 'FULL_POSITION';
+        closeFraction = 1;
+        isPositionTpsl = true;
+      } else if (planType === 'profit_plan') {
+        type = 'TP';
+        executionScope = 'PARTIAL';
+      } else if (planType === 'loss_plan') {
+        type = 'SL';
+        executionScope = 'PARTIAL';
+      } else if (planType === 'track_plan') {
+        type = 'TRAILING_STOP';
+      } else if (planType === 'normal_plan' || delegateType === 'trigger') {
+        type = 'CONDITIONAL';
+      } else if (delegateType === 'tpsl') {
+        if (hasTp && hasSl) {
+          type = 'OCO';
+        } else if (hasTp) {
+          type = 'TP';
+        } else if (hasSl) {
+          type = 'SL';
+        } else {
+          type = 'TP';
+        }
+      } else if (ot === 'market') {
+        type = 'MARKET';
+      } else if (ot.includes('stop_profit') || ot === 'tp') {
+        type = 'TP';
+      } else if (ot.includes('stop_loss') || ot === 'sl') {
+        type = 'SL';
+      } else if (ot.includes('plan') || ot.includes('conditional')) {
+        type = 'CONDITIONAL';
+      }
+
+      if (delegateType === 'tpsl' || planType.includes('pos_')) {
+        isPositionTpsl = true;
+        if (!executionScope) {
+          executionScope = (o.actualSize && parseFloat(o.actualSize) > 0) ? 'PARTIAL' : 'FULL_POSITION';
+          if (executionScope === 'FULL_POSITION') closeFraction = 1;
+        }
+      }
+
+      const trigPx = o.triggerPrice
+        ? parseFloat(o.triggerPrice)
+        : (o.executePrice
+          ? parseFloat(o.executePrice)
+          : (type === 'TP' ? tpTriggerPrice : type === 'SL' ? slTriggerPrice : (tpTriggerPrice || slTriggerPrice)));
 
       const category = mapInstrumentType('bitget', o.category || 'UNKNOWN');
-      const qty = parseFloat(o.qty || o.size || '0');
+      const qty = parseFloat(o.qty || o.size || o.actualSize || o.totalSize || '0');
       const filledQty = parseFloat(o.cumExecQty || o.filledQty || '0');
-      const price = parseFloat(o.price || '0');
+      const price = parseFloat(o.price || o.executePrice || '0');
       const avgPrice = parseFloat(o.avgPrice || o.priceAvg || '0');
-      const value = parseFloat(o.cumExecValue || o.amount || '0') || (qty * (avgPrice || price));
+      const value = parseFloat(o.cumExecValue || o.amount || '0') || (category === 'INVERSE' ? qty : (qty * (avgPrice || price)));
+      const orderId = String(o.orderId || o.strategyId || o.clientOid || '');
 
       let fee = 0;
       if (Array.isArray(o.feeDetail) && o.feeDetail.length > 0) {
@@ -505,14 +613,15 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
       }
 
       return {
-        id: `${key.id}-${o.orderId}`,
-        exchangeOrderId: o.orderId,
+        id: `${key.id}-${orderId}`,
+        exchangeOrderId: orderId,
         connectionId: key.id,
         exchange: 'bitget',
+        accountType: 'uta',
         label: key.label,
         symbol: o.symbol,
         category,
-        side: o.side?.toLowerCase().includes('buy') ? 'buy' : 'sell',
+        side: (o.side || '').toLowerCase().includes('buy') ? 'buy' : 'sell',
         positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
         type,
         status,
@@ -521,12 +630,18 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
         qty,
         filledQty,
         value,
-        triggerPrice: o.takeProfit || o.stopLoss ? parseFloat(o.takeProfit || o.stopLoss) : undefined,
+        triggerPrice: trigPx,
+        executionScope,
+        closeFraction,
+        tpTriggerPrice,
+        slTriggerPrice,
+        isPositionTpsl,
         reduceOnly:
           o.reduceOnly === 'YES' ||
           o.reduceOnly === 'yes' ||
           o.reduceOnly === 'true' ||
-          o.reduceOnly === true,
+          o.reduceOnly === true ||
+          isPositionTpsl === true,
         timeInForce: o.timeInForce,
         createdTime: parseInt(o.createdTime || o.cTime || '0', 10),
         updatedTime: parseInt(o.updatedTime || o.uTime || o.createdTime || '0', 10),

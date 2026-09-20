@@ -1,3 +1,80 @@
+# [1.73.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.72.0...v1.73.0) (2026-09-20)
+
+
+### Features
+
+* enhance account metadata propagation ([6395f28](https://github.com/fapdev77/crypto-dashboard/commit/6395f28ccb368833bec884c0695c471c2434fbf9))
+
+# [1.72.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.71.0...v1.72.0) (2026-09-20)
+
+
+### Features
+
+* support net balance equity for Bitget and OKX ([25f22bd](https://github.com/fapdev77/crypto-dashboard/commit/25f22bdac5c5e4356124fd422459d07033212884))
+
+# [1.71.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.70.0...v1.71.0) (2026-09-20)
+
+
+### Features
+
+* include account type in filter options ([6e61b27](https://github.com/fapdev77/crypto-dashboard/commit/6e61b270c341976958fe8815f50088682edc8cf0))
+
+# [1.70.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.69.0...v1.70.0) (2026-09-20)
+
+
+### Features
+
+* improve Bitget exchange value calculations ([1b667da](https://github.com/fapdev77/crypto-dashboard/commit/1b667da97ee129b6b68a7bf0ddd2dd4de05e4897))
+
+# [1.69.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.68.0...v1.69.0) (2026-09-19)
+
+
+### Features
+
+* **ui:** add tooltip support to FilterBar components ([3297aeb](https://github.com/fapdev77/crypto-dashboard/commit/3297aeba96ee5a79b12db761da09f37649b5ecaf))
+
+# [1.68.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.67.0...v1.68.0) (2026-09-19)
+
+
+### Features
+
+* **analytics:** add COIN-M filter to funding rate comparison ([e695a1e](https://github.com/fapdev77/crypto-dashboard/commit/e695a1e97213cf38f747d01921c37aefe7fe0002))
+
+# [1.67.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.66.0...v1.67.0) (2026-09-18)
+
+
+### Features
+
+* **analytics:** replace native tooltip with AppTooltip ([1414141](https://github.com/fapdev77/crypto-dashboard/commit/14141418f8dcbc8d0c16206ba38ffe5d1af9ea9d))
+
+# [1.66.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.65.0...v1.66.0) (2026-09-18)
+
+
+### Features
+
+* **analytics:** add HedgePro capital exposure chart ([39081e8](https://github.com/fapdev77/crypto-dashboard/commit/39081e843a9521282cfc70cc69bdc778d5b5cf1a))
+
+# [1.65.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.64.1...v1.65.0) (2026-09-18)
+
+
+### Features
+
+* **analytics:** enhance hedge exposure reporting ([ec11c97](https://github.com/fapdev77/crypto-dashboard/commit/ec11c971dbf4613a1fd82dcb09136efe6e9e9529))
+
+## [1.64.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.64.0...v1.64.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* improve coin icon symbol normalization ([237974e](https://github.com/fapdev77/crypto-dashboard/commit/237974ec6845f366598098120c3b8297532098dd))
+
+# [1.64.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.63.0...v1.64.0) (2026-09-17)
+
+
+### Features
+
+* improve TP/SL visualization and filtering ([cfa0b40](https://github.com/fapdev77/crypto-dashboard/commit/cfa0b40268276fe69e2f3c9f2553f007e2e045a2))
+
 # [1.63.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.62.0...v1.63.0) (2026-09-15)
 
 

@@ -80,6 +80,7 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
                 id: `${key.id}-${type}-${item.coin || item.symbol}`,
                 connectionId: key.id,
                 exchange: 'bitget',
+                accountType: 'classic',
                 label: `${key.label} (${type.replace('_', ' ')})`,
                 ccy: (item.coin || item.symbol || '').toUpperCase(),
                 amount,
@@ -98,6 +99,7 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
                 id: `${key.id}-${type}-${item.coin}`,
                 connectionId: key.id,
                 exchange: 'bitget',
+                accountType: 'classic',
                 label: `${key.label} (${type})`,
                 ccy: (item.coin || '').toUpperCase(),
                 amount,
@@ -117,6 +119,7 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
               id: `${key.id}-${type}-${item.marginCoin}`,
               connectionId: key.id,
               exchange: 'bitget',
+              accountType: 'classic',
               label: `${key.label} (${type})`,
               ccy: item.marginCoin.toUpperCase(),
               amount: parseFloat(item.accountEquity || item.available || '0'),
@@ -158,17 +161,32 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       .map(pos => {
         const margin = parseFloat(pos.marginSize || '0');
         const markPrice = parseFloat(pos.markPrice || '0');
-        let unrealizedPnl = parseFloat(pos.unrealizedPL || '0');
+        const entryPrice = parseFloat(pos.openPriceAvg || pos.avgPx || '0');
+        // A API Bitget para COIN-FUTURES já retorna unrealizedPL diretamente na moeda da margem (ex: ETH/BTC).
+        // Não deve ser dividido por markPrice.
+        const unrealizedPnl = parseFloat(pos.unrealizedPL || '0');
         
         const instrumentType = mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES');
         const isInverse = instrumentType === 'INVERSE';
 
-        if (isInverse && markPrice > 0) {
-          unrealizedPnl = unrealizedPnl / markPrice;
+        let size: number;
+        let notionalUsd: number;
+
+        if (isInverse) {
+          // Em contratos COIN-FUTURES da Bitget, pos.total representa a quantidade de contratos em USD
+          const rawContracts = parseFloat(pos.total || '0');
+          notionalUsd = rawContracts;
+          if (markPrice > 0) {
+            size = notionalUsd / markPrice;
+          } else if (entryPrice > 0) {
+            size = notionalUsd / entryPrice;
+          } else {
+            size = notionalUsd;
+          }
+        } else {
+          size = parseFloat(pos.total || '0');
+          notionalUsd = size * markPrice;
         }
-        
-        let size = parseFloat(pos.total || '0');
-        let notionalUsd = size * markPrice;
 
         const side = mapPositionSide('bitget', pos.holdSide);
 
@@ -181,6 +199,7 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
           id: `${key.id}-bitget-${pos.symbol || pos.instId}-${side}`,
           connectionId: key.id,
           exchange: 'bitget',
+          accountType: 'classic',
           label: key.label,
           symbol: pos.symbol,
           baseCoin: extractBaseCoin('bitget', pos.symbol),
@@ -205,6 +224,8 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
           breakEvenPrice: parseFloat(pos.breakEvenPrice || '0'),
           tp: parseFloat(pos.takeProfit || '0'),
           sl: parseFloat(pos.stopLoss || '0'),
+          tpMode: (parseFloat(pos.takeProfit || '0') > 0 ? (pos.tpMode === 'partial' ? 'partial' : 'full') : undefined),
+          slMode: (parseFloat(pos.stopLoss || '0') > 0 ? (pos.slMode === 'partial' ? 'partial' : 'full') : undefined),
           roe: margin > 0 ? (unrealizedPnl / margin) * 100 : undefined,
           instrumentType: mapInstrumentType('bitget', pos.productType || 'USDT-FUTURES'),
           raw: pos
@@ -261,6 +282,7 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
         connectionId: key.id,
         label: key.label,
         exchange: 'bitget',
+        accountType: 'classic',
         symbol: pos.instId || pos.symbol,
         baseCoin: extractBaseCoin('bitget', pos.instId || pos.symbol),
         quoteCoin: extractQuoteCoin('bitget', pos.instId || pos.symbol),
@@ -342,23 +364,40 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     let allOrders: any[] = [];
     
-    // Futures
+    // Futures Standard & Plan Orders
     for (const pType of productTypes) {
-      const query = `productType=${pType}`;
-      const path = `/api/v2/mix/order/orders-pending?${query}`;
-      const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
-      
+      // 1. Regular pending orders
       try {
+        const query = `productType=${pType}`;
+        const path = `/api/v2/mix/order/orders-pending?${query}`;
+        const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
         const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
         if (res.code === '00000' && res.data?.entrustedList) {
           allOrders = allOrders.concat(res.data.entrustedList.map((o: any) => ({ ...o, productType: pType })));
         }
       } catch (err) {
-        LogManager.warn('BitgetClassicAdapter.OpenOrders', `Error fetching ${pType}:`, err);
+        LogManager.warn('BitgetClassicAdapter.OpenOrders', `Error fetching regular ${pType}:`, err);
+      }
+
+      // 2. Plan (TP/SL & Conditional) pending orders
+      const planTypes = ['profit_loss', 'normal_plan'];
+      for (const planType of planTypes) {
+        try {
+          const planQuery = `productType=${pType}&planType=${planType}`;
+          const planPath = `/api/v2/mix/order/orders-plan-pending?${planQuery}`;
+          const planHeaders = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', planPath);
+          const planRes = await proxyFetch({ targetUrl: `https://api.bitget.com${planPath}`, method: 'GET', headers: planHeaders });
+          if (planRes.code === '00000') {
+            const list = Array.isArray(planRes.data) ? planRes.data : (planRes.data?.entrustedList || planRes.data?.list || []);
+            allOrders = allOrders.concat(list.map((o: any) => ({ ...o, productType: pType, isPlanOrder: true })));
+          }
+        } catch (err) {
+          LogManager.warn('BitgetClassicAdapter.OpenOrders', `Error fetching plan ${planType} for ${pType}:`, err);
+        }
       }
     }
 
-    // Spot
+    // Spot Regular & Plan
     try {
       const path = `/api/v2/spot/trade/unfilled-orders`;
       const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
@@ -370,6 +409,18 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       }
     } catch (err) {
       LogManager.warn('BitgetClassicAdapter.OpenOrders', 'Error fetching spot:', err);
+    }
+
+    try {
+      const spotPlanPath = `/api/v2/spot/trade/unfilled-plan-orders`;
+      const spotPlanHeaders = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', spotPlanPath);
+      const spotPlanRes = await proxyFetch({ targetUrl: `https://api.bitget.com${spotPlanPath}`, method: 'GET', headers: spotPlanHeaders });
+      if (spotPlanRes.code === '00000') {
+        const spotPlanList = Array.isArray(spotPlanRes.data) ? spotPlanRes.data : (spotPlanRes.data?.entrustedList || []);
+        allOrders = allOrders.concat(spotPlanList.map((o: any) => ({ ...o, productType: 'spot', isPlanOrder: true })));
+      }
+    } catch (err) {
+      LogManager.warn('BitgetClassicAdapter.OpenOrders', 'Error fetching spot plan orders:', err);
     }
 
     return this.normalizeOrders(allOrders, key);
@@ -409,6 +460,22 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       } catch (err) {
         LogManager.warn('BitgetClassicAdapter.HistoryOrders', `Error fetching ${pType}:`, err);
       }
+
+      // Mix Plan History
+      try {
+        let planQueryUrl = `productType=${pType}&limit=100`;
+        if (start) planQueryUrl += `&startTime=${start}`;
+        if (end) planQueryUrl += `&endTime=${end}`;
+        const planHistPath = `/api/v2/mix/order/orders-plan-history?${planQueryUrl}`;
+        const planHistHeaders = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', planHistPath);
+        const planHistRes = await proxyFetch({ targetUrl: `https://api.bitget.com${planHistPath}`, method: 'GET', headers: planHistHeaders });
+        if (planHistRes.code === '00000') {
+          const planRows = Array.isArray(planHistRes.data) ? planHistRes.data : (planHistRes.data?.entrustedList || planHistRes.data?.list || []);
+          allOrders = allOrders.concat(planRows.map((o: any) => ({ ...o, productType: pType, isPlanOrder: true })));
+        }
+      } catch (err) {
+        LogManager.warn('BitgetClassicAdapter.HistoryOrders', `Error fetching plan history for ${pType}:`, err);
+      }
     }
 
     // Spot History
@@ -447,52 +514,102 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
   private normalizeOrders(rawOrders: any[], key: ApiCredentials): import('../../types').UnifiedOrder[] {
     return rawOrders.map(o => {
       let status: import('../../types').UnifiedOrderStatus = 'NEW';
-      const state = o.state?.toLowerCase() || o.status?.toLowerCase() || '';
-      if (state === 'filled') status = 'FILLED';
+      const state = (o.state || o.status || o.planStatus || '').toLowerCase();
+      if (state === 'filled' || state === 'executed') status = 'FILLED';
       else if (state === 'canceled' || state === 'cancelled') status = 'CANCELLED';
       else if (state === 'partially_filled') status = 'PARTIALLY_FILLED';
-      else if (state === 'new' || state === 'init' || state === 'live') status = 'NEW';
+      else if (state === 'new' || state === 'init' || state === 'live' || state === 'not_trigger') status = 'NEW';
+      else if (state === 'triggered') status = 'TRIGGERED';
+      else if (state === 'fail_trigger' || state === 'rejected') status = 'REJECTED';
 
       let type: import('../../types').UnifiedOrderType = 'LIMIT';
-      const ot = o.orderType?.toLowerCase() || o.planType?.toLowerCase() || '';
-      if (ot === 'market') type = 'MARKET';
-      else if (ot.includes('stop') || ot.includes('loss')) type = 'SL';
-      else if (ot.includes('take') || ot.includes('profit')) type = 'TP';
-      else if (ot.includes('plan') || ot.includes('conditional')) type = 'CONDITIONAL';
+      let executionScope: import('../../types').OrderExecutionScope | undefined = undefined;
+      let closeFraction: number | undefined = undefined;
+      let tpTriggerPrice: number | undefined = undefined;
+      let slTriggerPrice: number | undefined = undefined;
+      let isPositionTpsl: boolean | undefined = undefined;
+
+      const planType = (o.planType || '').toLowerCase();
+      const ot = (o.orderType || '').toLowerCase();
+
+      if (planType === 'pos_profit') {
+        type = 'TP';
+        executionScope = 'FULL_POSITION';
+        closeFraction = 1;
+        isPositionTpsl = true;
+      } else if (planType === 'pos_loss') {
+        type = 'SL';
+        executionScope = 'FULL_POSITION';
+        closeFraction = 1;
+        isPositionTpsl = true;
+      } else if (planType === 'profit_plan') {
+        type = 'TP';
+        executionScope = 'PARTIAL';
+      } else if (planType === 'loss_plan') {
+        type = 'SL';
+        executionScope = 'PARTIAL';
+      } else if (planType === 'track_plan') {
+        type = 'TRAILING_STOP';
+      } else if (planType === 'normal_plan') {
+        type = 'CONDITIONAL';
+      } else if (ot === 'market') {
+        type = 'MARKET';
+      } else if (ot.includes('stop') || ot.includes('loss')) {
+        type = 'SL';
+      } else if (ot.includes('take') || ot.includes('profit')) {
+        type = 'TP';
+      } else if (ot.includes('plan') || ot.includes('conditional')) {
+        type = 'CONDITIONAL';
+      }
+
+      const trigPx = o.triggerPrice ? parseFloat(o.triggerPrice) : (o.executePrice ? parseFloat(o.executePrice) : undefined);
+      if (type === 'TP' && trigPx) {
+        tpTriggerPrice = trigPx;
+      } else if (type === 'SL' && trigPx) {
+        slTriggerPrice = trigPx;
+      }
 
       const category = mapInstrumentType('bitget', o.productType || 'UNKNOWN');
-      const qty = parseFloat(o.size || '0');
+      const qty = parseFloat(o.size || o.totalSize || o.actualSize || '0');
       const filledQty = parseFloat(o.filledQty || o.baseVolume || '0');
-      const price = parseFloat(o.price || o.priceAvg || o.avgPrice || '0');
-      const value = parseFloat(o.quoteVolume || '0') || (qty * price);
+      const price = parseFloat(o.price || o.priceAvg || o.avgPrice || o.executePrice || '0');
+      const value = parseFloat(o.quoteVolume || '0') || (category === 'INVERSE' ? qty : (qty * price));
+      const orderId = String(o.orderId || o.planOrderId || o.order_id || o.clientOid || '');
       
       return {
-        id: `${key.id}-${o.orderId}`,
-        exchangeOrderId: o.orderId,
+        id: `${key.id}-${orderId}`,
+        exchangeOrderId: orderId,
         connectionId: key.id,
         exchange: 'bitget',
+        accountType: 'classic',
         label: key.label,
         symbol: o.symbol || o.instId,
         category,
-        side: o.side?.toLowerCase().includes('buy') ? 'buy' : 'sell',
+        side: (o.side || '').toLowerCase().includes('buy') ? 'buy' : 'sell',
         positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
         type,
         status,
-        price: parseFloat(o.price || '0'),
+        price,
         avgPrice: parseFloat(o.priceAvg || o.avgPrice || '0'),
         qty,
         filledQty,
         value,
-        triggerPrice: o.triggerPrice ? parseFloat(o.triggerPrice) : undefined,
+        triggerPrice: trigPx,
+        executionScope,
+        closeFraction,
+        tpTriggerPrice,
+        slTriggerPrice,
+        isPositionTpsl,
         reduceOnly:
           o.reduceOnly === 'YES' ||
           o.reduceOnly === 'yes' ||
           o.reduceOnly === 'true' ||
           o.reduceOnly === true ||
-          o.tradeSide?.toLowerCase() === 'close',
+          o.tradeSide?.toLowerCase() === 'close' ||
+          isPositionTpsl === true,
         timeInForce: o.timeInForce || o.force,
-        createdTime: parseInt(o.cTime || '0', 10),
-        updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
+        createdTime: parseInt(o.cTime || o.createTime || '0', 10),
+        updatedTime: parseInt(o.uTime || o.cTime || o.createTime || '0', 10),
         fees: (() => {
           if (o.deductedFee) {
             return parseFloat(o.deductedFee) * -1;

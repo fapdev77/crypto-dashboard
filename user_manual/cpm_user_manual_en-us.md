@@ -122,6 +122,7 @@ Through the **Settings** screen in the sidebar, you can easily control how the a
 
 ### 🏠 Dashboard Home
 Your central intelligence center structured in a responsive masonry grid:
+- **Positions Ticker**: Real-time streaming marquee header at the top of the workspace showing live prices, unrealized PnL, and directional markers for all active positions across exchanges.
 - **Unified Net Capital**: Live aggregate of Spot and Futures balances across all exchanges.
 - **Custody Allocation**: A sleek donut chart indicating risk allocation per exchange.
 - **Asset Treemap**: A visual block matrix sorting your cross-exchange assets by USD size.
@@ -171,9 +172,17 @@ A managerial reporting tool to analyze the individual performance of every trade
 ### 💸 Funding Fees Dashboard
 A comprehensive dashboard providing a unified view of real-time and historical funding rates across Bybit, Bitget, and OKX (USDT-M and COIN-M perpetual swaps):
 - **Multi-Period Analysis**: Analyze funding rates across multiple timeframes: Next Funding, Last Settlement, Today, Current Month, Last Month, 3 Months, 6 Months, and 1 Year.
+- **Funding Rate Comparison**:
+  - Interactive horizontal comparison chart ranked by funding rate across multiple timeframes (*Last Funding Rate*, *Today Cumulative*, *Current Month*, *Last Month*, *Last 3 Months*).
+  - *Quick Comparison Filters*:
+    - **Favorites**: Quickly view funding rates for user-starred pairs.
+    - **Open Positions**: Isolates pairs where open positions are currently held.
+    - **COIN-M / Inverse**: Dedicated filter to isolate and compare only COIN-M / inverse contract instruments across supported exchanges.
+  - *Multi-Select Symbol Dropdown*: Manually pick up to 25 assets simultaneously with clear visual badges distinguishing linear (USDT-M) from inverse (COIN-M) instruments.
 - **Smart Aggregation Pipeline & Cache v10**: Uses IndexedDB to store pre-calculated calendar month summaries. Features ultra-fast incremental updates and up to 400 days of historical depth.
 - **Visual Indicators**: Flashing animations for rate updates and tooltips explaining funding direction (Longs paying Shorts vs Shorts paying Longs).
 - *Note on OKX*: OKX API restricts historical data to ~3 months, and is automatically excluded from 6M and 1Y averages to preserve market accuracy.
+
 
 ### 📜 Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)
 Specialized financial audit modules providing full access to raw transaction logs directly from Bybit, Bitget, and OKX:
@@ -235,6 +244,12 @@ A quantitative derivatives intelligence terminal consolidating and correlating r
      - *Retail Ratio*: Long/Short positioning ratio based on absolute number of retail trader accounts.
      - *Top Trader Ratio (Smart Money)*: Long/Short positioning ratio weighted by notional USD position size of the top 20% profitable traders.
      - *Sentiment Divergence Alert*: Triggers high-probability contrarian signals when Retail positioning sharply diverges from Top Trader positioning.
+- **Dedicated Sub-View — Inverse Coin-M Dashboard**:
+  - Switch to the **Inverse Coin-M** tab at the top of the view to access an analytical dashboard 100% focused on contracts settled in the underlying cryptocurrency (COIN-M).
+  - *Consolidated Coin Table*: Displays inverse pairs with star favorites, mark prices, 24h changes, aggregated volumes, funding rates, and arbitrage spreads.
+  - *Expandable Exchange Breakdown*: Click any asset row (e.g., BTC, ETH, SOL) to instantly expand and contrast exchange-specific metrics across Bybit, OKX, and Bitget: 8h Funding Rate, 24h USD Volume, Open Interest, and Arbitrage Spread.
+  - *Expand All / Collapse All Controls*: Bulk toggle all coin accordions with a single click.
+  - *Direct Integration with Hedge Pro*: Supplies real-time funding yield and spread intelligence required to calibrate delta-neutral and capital protection positions monitored in the Hedge Pro Dashboard.
 
 ### ⚡ API Tester (REST & WebSocket Diagnostics)
 Developer and diagnostic utility for testing direct connectivity with exchanges:

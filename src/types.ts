@@ -15,7 +15,8 @@ export type UnifiedPositionMode = 'hedge' | 'one_way' | 'unknown';
 export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
 export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
 export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
-export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL' | 'TRAILING_STOP' | 'OCO';
+export type OrderExecutionScope = 'FULL_POSITION' | 'PARTIAL';
 export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
 
 // Interfaces
@@ -24,6 +25,8 @@ export interface UnifiedBalance {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   ccy: string;
   amount: number;
@@ -41,6 +44,8 @@ export interface UnifiedOrder {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
@@ -54,6 +59,14 @@ export interface UnifiedOrder {
   filledQty: number;
   value?: number;
   triggerPrice?: number;
+  executionScope?: OrderExecutionScope;
+  closeFraction?: number;
+  tpTriggerPrice?: number;
+  slTriggerPrice?: number;
+  tpOrderPrice?: number;
+  slOrderPrice?: number;
+  isPositionTpsl?: boolean;
+  parentOrderId?: string;
   reduceOnly?: boolean;
   timeInForce?: string;
   createdTime: number;
@@ -69,6 +82,8 @@ export interface UnifiedPosition {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string; // Account label/name
   symbol: string;
   baseCoin: string; // E.g., 'BTC'
@@ -93,6 +108,8 @@ export interface UnifiedPosition {
   roe?: number; // Return on Equity (%)
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
+  tpMode?: 'full' | 'partial';
+  slMode?: 'full' | 'partial';
   instrumentType?: UnifiedInstrumentType;
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
@@ -104,6 +121,8 @@ export interface UnifiedHistoryPosition {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   symbol: string;
   baseCoin: string;
@@ -133,6 +152,8 @@ export interface UnifiedBillRecord {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   type: BillType;
   amount: number;

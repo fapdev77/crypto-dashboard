@@ -10,6 +10,7 @@ import {
   HedgeCoinSummary,
   HedgeTotals,
 } from '../utils/hedgeUtils';
+import { isStablecoin } from '../utils/formatters';
 
 export interface UseHedgeDataReturn {
   search: string;
@@ -72,20 +73,25 @@ export function useHedgeData(): UseHedgeDataReturn {
   const netActiveBalances = useMemo(() => {
     if (!useMockData && activeKeyIds.size === 0) return [];
 
-    // Exclusively for Bybit in Hedge Pro Aggregated Totals: use Net Balance (Equity)
+    // For Bybit, Bitget, and OKX in Hedge Pro Aggregated Totals: use Net Balance (Equity)
     return rawActiveBalances.map(b => {
-      if (b.exchange?.toLowerCase() !== 'bybit') {
+      const ex = b.exchange?.toLowerCase();
+      if (ex !== 'bybit' && ex !== 'bitget' && ex !== 'okx') {
         return b;
       }
 
-      // Check if raw data has official Bybit equity (net balance in coin and USD)
+      // Check if raw data has official exchange equity (net balance in coin and USD)
       const rawObj: any = b.raw || {};
       const rawEquity = rawObj.equity !== undefined && rawObj.equity !== null && rawObj.equity !== ''
         ? parseFloat(String(rawObj.equity))
-        : NaN;
+        : (rawObj.eq !== undefined && rawObj.eq !== null && rawObj.eq !== ''
+            ? parseFloat(String(rawObj.eq))
+            : (b.totalEquity !== undefined && b.totalEquity !== null && b.totalEquity > 0 ? b.totalEquity : NaN));
       const rawUsdValue = rawObj.usdValue !== undefined && rawObj.usdValue !== null && rawObj.usdValue !== ''
         ? parseFloat(String(rawObj.usdValue))
-        : NaN;
+        : (rawObj.eqUsd !== undefined && rawObj.eqUsd !== null && rawObj.eqUsd !== ''
+            ? parseFloat(String(rawObj.eqUsd))
+            : NaN);
 
       const coinPrice = (b.amount > 0 && (b.usdValue || 0) > 0)
         ? (b.usdValue / b.amount)
@@ -148,6 +154,15 @@ export function useHedgeData(): UseHedgeDataReturn {
     );
   }, [netActiveBalances]);
 
+  // Aggregated stablecoins USD balance (liquid assets pegged to USD, inherently protected)
+  const stablecoinsEquityUsd = useMemo(() => {
+    return Number(
+      netActiveBalances
+        .filter(b => isStablecoin(b.ccy))
+        .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
+    );
+  }, [netActiveBalances]);
+
   // Individual coin summaries use raw gross balances to preserve gross wallet balance & coin-specific net equity
   const coinSummaries = useMemo(
     () => getHedgeCoinSummaries(activePositions, rawActiveBalances, 'gross'),
@@ -155,8 +170,8 @@ export function useHedgeData(): UseHedgeDataReturn {
   );
 
   const totals = useMemo(
-    () => getHedgeTotals(coinSummaries, totalEquity),
-    [coinSummaries, totalEquity],
+    () => getHedgeTotals(coinSummaries, totalEquity, stablecoinsEquityUsd),
+    [coinSummaries, totalEquity, stablecoinsEquityUsd],
   );
 
   // Available unique exchanges for filter dropdown
@@ -195,9 +210,20 @@ export function useHedgeData(): UseHedgeDataReturn {
     );
   }, [netActiveBalances, exchange, totalEquity]);
 
+  const filteredStablecoinsEquityUsd = useMemo(() => {
+    const list = exchange === 'All'
+      ? netActiveBalances
+      : netActiveBalances.filter(b => (b.exchange || '').toLowerCase() === exchange.toLowerCase());
+    return Number(
+      list
+        .filter(b => isStablecoin(b.ccy))
+        .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
+    );
+  }, [netActiveBalances, exchange]);
+
   const filteredTotals = useMemo(
-    () => getHedgeTotals(filteredSummaries, filteredTotalEquity),
-    [filteredSummaries, filteredTotalEquity],
+    () => getHedgeTotals(filteredSummaries, filteredTotalEquity, filteredStablecoinsEquityUsd),
+    [filteredSummaries, filteredTotalEquity, filteredStablecoinsEquityUsd],
   );
 
   const sideOptions = useMemo(

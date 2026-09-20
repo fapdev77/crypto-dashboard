@@ -122,6 +122,7 @@ Através da tela **Settings** no menu lateral, você pode controlar o funcioname
 
 ### 🏠 Dashboard Principal
 Seu painel analítico central, composto por uma estrutura elegante de cartões:
+- **Positions Ticker**: Marquee contínuo no topo do workspace que exibe cotações, PnL flutuante e direção de todas as suas posições ativas em tempo real com atualização contínua.
 - **Balanço Consolidado**: Soma dos saldos de todas as carteiras e subcontas conectadas.
 - **Alocação por Corretora**: Gráfico Donut mapeando sua distribuição de capital e risco de custódia.
 - **Treemap de Ativos**: Distribuição visual dos seus criptoativos cross-exchange por tamanho de capital.
@@ -171,9 +172,17 @@ Um relatório gerencial para analisar a performance individual de cada ativo ope
 ### 💸 Dashboard de Taxas de Financiamento (Funding Fees)
 Um painel abrangente que consolida dados de taxas de financiamento (funding rates) em tempo real e históricos da Bybit, Bitget e OKX (contratos perpétuos USDT-M e COIN-M):
 - **Análise Multi-Período**: Analise taxas em múltiplos intervalos: Próxima Taxa, Última Taxa, Hoje, Mês Atual, Mês Passado, 3 Meses, 6 Meses e 1 Ano.
+- **Comparativo de Taxas (Funding Rate Comparison)**:
+  - Gráfico comparativo horizontal ordenado por taxa de financiamento em múltiplos períodos (*Last Funding Rate*, *Today Cumulative*, *Current Month*, *Last Month*, *Last 3 Months*).
+  - *Filtros Rápidos de Comparação*:
+    - **Favorites**: Exibe rapidamente os pares favoritados pelo usuário.
+    - **Open Positions**: Isola os ativos nos quais o usuário possui posições atualmente abertas.
+    - **COIN-M / Inverse**: Filtro específico que isola e compara somente os ativos e contratos de instrumentos inversos (COIN-M) das corretoras.
+  - *Seletor de Símbolos Multi-Select*: Permite selecionar manualmente até 25 ativos com identificadores e badges visuais destacados para instrumentos lineares (USDT-M) e inversos (COIN-M).
 - **Pipeline de Agregação e Cache v10**: Utiliza o IndexedDB para armazenar sumários pré-calculados por mês calendário. Realiza sincronizações incrementais ultrarrápidas, com cobertura de até 400 dias (Bybit).
 - **Indicadores Visuais**: Animações de atualização (flash) em tempo real e tooltips explicativos da direção do pagamento (Longs pagando Shorts ou vice-versa).
 - *Nota sobre a OKX*: A API da OKX limita o histórico a ~3 meses, sendo automaticamente omitida das médias de 6M e 1Y para manter a integridade dos dados.
+
 
 ### 📜 Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)
 Módulos especializados de auditoria contábil e histórico completo de transações brutas diretamente das corretoras (Bybit, Bitget e OKX):
@@ -236,6 +245,12 @@ Um terminal integrado de inteligência quantitativa de derivativos que consolida
      - *Retail Ratio (Varejo)*: Proporção Long/Short baseada na contagem absoluta de contas de traders de varejo (indicador frequentemente contracíclico).
      - *Top Trader Ratio (Smart Money)*: Proporção Long/Short ponderada pelo volume nocional em USD das contas do top 20% de operadores de alta rentabilidade.
      - *Alerta de Divergência de Sentimento*: Sinaliza divergências expressivas entre o posicionamento do varejo e dos grandes operadores institucionais.
+- **Sub-View Especializada — Inverse Coin-M Dashboard**:
+  - Alterne para a aba **Inverse Coin-M** no topo da tela para acessar uma visão analítica 100% voltada para contratos liquidados na própria criptomoeda base (COIN-M).
+  - *Tabela Consolidada de Moedas*: Lista pares inversos com suporte a favoritos (estrelas), preço atual, variação 24h, volume total, taxas de funding e oportunidades de arbitragem.
+  - *Desdobramento Expansível por Corretora*: Clique na linha de qualquer ativo (ex: BTC, ETH, SOL) para expandir e comparar instantaneamente os valores específicos em cada exchange (Bybit, OKX e Bitget): Taxa de Funding 8h, Volume 24h em USD, Open Interest e Spread de Arbitragem.
+  - *Controles Expand All / Collapse All*: Permite expandir ou recolher todos os pares simultaneamente com um único clique.
+  - *Sincronização com o Modo Hedge Pro*: Fornece a inteligência de taxas e spreads necessária para alimentar operações de delta-neutral e proteção de capital monitoradas no Hedge Pro Dashboard.
 
 ### ⚡ API Tester (Testador de Conexões e Endpoints)
 Ferramenta para diagnóstico técnico e validação de conectividade com as corretoras:

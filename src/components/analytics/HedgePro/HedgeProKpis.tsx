@@ -28,7 +28,27 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
         icon={<ShieldCheck className="w-4 h-4 text-emerald-400" />}
         label="Total Protected"
         value={formatCurrency(totals.totalProtected, 'usd', 2)}
-        tooltip="USD locked at the entry price by inverse shorts (Coin-M). This value does NOT float with the asset — it is the capital protection leg."
+        tooltip={
+          <div className="flex flex-col gap-2">
+            <p>
+              <span className="text-white font-semibold">Total Protected Capital</span> — capital protected against cryptocurrency market volatility.
+            </p>
+            <div className="text-xs space-y-1 py-1.5 px-2.5 bg-[#1a1b1e] rounded border border-[#2a2b30] font-mono">
+              <div className="text-emerald-400">
+                Hedge: {formatCurrency(totals.syntheticHedgeUsd, 'usd', 2)} ({totals.hedgeOfProtectedPct.toFixed(2)}%)
+              </div>
+              <div className="text-blue-400">
+                Stablecoins: {formatCurrency(totals.stablecoinsProtectedUsd, 'usd', 2)} ({totals.stablesOfProtectedPct.toFixed(2)}%)
+              </div>
+            </div>
+            <p className="text-[11px] text-[#8E9299]">
+              • <strong className="text-emerald-400">Hedge:</strong> USD value locked at entry price by inverse shorts (Coin-M). Does not float with the asset price.
+            </p>
+            <p className="text-[11px] text-[#8E9299]">
+              • <strong className="text-blue-400">Stablecoins:</strong> Liquid balance held in USD-pegged tokens (USDT, USDC, etc.) protecting dollar purchasing power.
+            </p>
+          </div>
+        }
         color="green"
       />
       <KpiMetricCard
