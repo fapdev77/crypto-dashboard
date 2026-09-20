@@ -44,20 +44,25 @@ export function Dashboard() {
       ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
       : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
 
-    // Exclusively for Bybit in Dashboard: use Net Balance (Equity) instead of Gross Wallet Balance
+    // For Bybit, Bitget, and OKX in Dashboard: use Net Balance (Equity) instead of Gross Wallet Balance
     return rawList.map(b => {
-      if (b.exchange?.toLowerCase() !== 'bybit') {
+      const ex = b.exchange?.toLowerCase();
+      if (ex !== 'bybit' && ex !== 'bitget' && ex !== 'okx') {
         return b;
       }
 
-      // Check if raw data has official Bybit equity (net balance in coin and USD)
+      // Check if raw data has official exchange equity (net balance in coin and USD)
       const rawObj: any = b.raw || {};
       const rawEquity = rawObj.equity !== undefined && rawObj.equity !== null && rawObj.equity !== ''
         ? parseFloat(String(rawObj.equity))
-        : NaN;
+        : (rawObj.eq !== undefined && rawObj.eq !== null && rawObj.eq !== ''
+            ? parseFloat(String(rawObj.eq))
+            : (b.totalEquity !== undefined && b.totalEquity !== null && b.totalEquity > 0 ? b.totalEquity : NaN));
       const rawUsdValue = rawObj.usdValue !== undefined && rawObj.usdValue !== null && rawObj.usdValue !== ''
         ? parseFloat(String(rawObj.usdValue))
-        : NaN;
+        : (rawObj.eqUsd !== undefined && rawObj.eqUsd !== null && rawObj.eqUsd !== ''
+            ? parseFloat(String(rawObj.eqUsd))
+            : NaN);
 
       const coinPrice = (b.amount > 0 && (b.usdValue || 0) > 0)
         ? (b.usdValue / b.amount)
@@ -169,7 +174,7 @@ export function Dashboard() {
   }, [activeBalances]);
 
   const totalProtected = new Big(syntheticHedgeUsd).plus(stablecoinsProtectedUsd).toNumber();
-  const totalExposed = Math.max(0, totalEquity - totalProtected);
+  const totalExposed = new Big(totalEquity).minus(totalProtected).toNumber();
 
   const protectedPercent = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
   const exposedPercent = totalEquity > 0 ? (totalExposed / totalEquity) * 100 : 0;
@@ -541,8 +546,8 @@ export function Dashboard() {
               <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
                 {totalEquity > 0 ? (
                   <>
-                    <div className="h-full bg-emerald-500/80 transition-all duration-300" style={{ width: `${protectedPercent}%` }} />
-                    <div className="h-full bg-white transition-all duration-300" style={{ width: `${exposedPercent}%` }} />
+                    <div className="h-full bg-emerald-500/80 transition-all duration-300" style={{ width: `${Math.max(0, protectedPercent)}%` }} />
+                    <div className="h-full bg-white transition-all duration-300" style={{ width: `${Math.max(0, exposedPercent)}%` }} />
                   </>
                 ) : (
                   <div className="h-full w-full bg-[#2a2b30]" />

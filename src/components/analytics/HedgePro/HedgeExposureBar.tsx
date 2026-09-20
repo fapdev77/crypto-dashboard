@@ -37,8 +37,8 @@ export function HedgeExposureBar({
         className="absolute inset-y-0 left-0 flex overflow-hidden rounded-full transition-all duration-300"
         style={{ width: `${balanceWidthPct}%` }}
       >
-        <div className="bg-emerald-500/80 h-full transition-all duration-300" style={{ width: `${protectedPct}%` }} />
-        <div className="bg-white h-full transition-all duration-300" style={{ width: `${exposedPct}%` }} />
+        <div className="bg-emerald-500/80 h-full transition-all duration-300" style={{ width: `${Math.max(0, protectedPct)}%` }} />
+        <div className="bg-white h-full transition-all duration-300" style={{ width: `${Math.max(0, exposedPct)}%` }} />
       </div>
       {/* Leveraged — beyond 100% of the capital */}
       {leveragedWidthPct > 0 && (

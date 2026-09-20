@@ -73,20 +73,25 @@ export function useHedgeData(): UseHedgeDataReturn {
   const netActiveBalances = useMemo(() => {
     if (!useMockData && activeKeyIds.size === 0) return [];
 
-    // Exclusively for Bybit in Hedge Pro Aggregated Totals: use Net Balance (Equity)
+    // For Bybit, Bitget, and OKX in Hedge Pro Aggregated Totals: use Net Balance (Equity)
     return rawActiveBalances.map(b => {
-      if (b.exchange?.toLowerCase() !== 'bybit') {
+      const ex = b.exchange?.toLowerCase();
+      if (ex !== 'bybit' && ex !== 'bitget' && ex !== 'okx') {
         return b;
       }
 
-      // Check if raw data has official Bybit equity (net balance in coin and USD)
+      // Check if raw data has official exchange equity (net balance in coin and USD)
       const rawObj: any = b.raw || {};
       const rawEquity = rawObj.equity !== undefined && rawObj.equity !== null && rawObj.equity !== ''
         ? parseFloat(String(rawObj.equity))
-        : NaN;
+        : (rawObj.eq !== undefined && rawObj.eq !== null && rawObj.eq !== ''
+            ? parseFloat(String(rawObj.eq))
+            : (b.totalEquity !== undefined && b.totalEquity !== null && b.totalEquity > 0 ? b.totalEquity : NaN));
       const rawUsdValue = rawObj.usdValue !== undefined && rawObj.usdValue !== null && rawObj.usdValue !== ''
         ? parseFloat(String(rawObj.usdValue))
-        : NaN;
+        : (rawObj.eqUsd !== undefined && rawObj.eqUsd !== null && rawObj.eqUsd !== ''
+            ? parseFloat(String(rawObj.eqUsd))
+            : NaN);
 
       const coinPrice = (b.amount > 0 && (b.usdValue || 0) > 0)
         ? (b.usdValue / b.amount)

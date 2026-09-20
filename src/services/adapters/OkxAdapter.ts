@@ -142,19 +142,39 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     // Map trading balances with updated totalEquity and walletBalance
     const tradingBalances = data.details.map((item: any) => {
       const ccy = item.ccy.toUpperCase();
+      const rawCashBal = parseFloat(item.cashBal || '0');
+      const rawEq = parseFloat(item.eq || '0');
+      const rawEqUsd = parseFloat(item.eqUsd || '0');
+      const coinUsdPrice = parseFloat(item.coinUsdPrice || '0');
+
+      let coinPrice = coinUsdPrice > 0 ? coinUsdPrice : (prices[ccy] || 0);
+      if (coinPrice <= 0 && rawEq > 0 && rawEqUsd > 0) {
+        coinPrice = rawEqUsd / rawEq;
+      } else if (coinPrice <= 0 && rawCashBal > 0 && rawEqUsd > 0) {
+        coinPrice = rawEqUsd / rawCashBal;
+      }
+
+      const walletBalCoin = rawCashBal;
+      const walletBalUsd = coinPrice > 0 ? walletBalCoin * coinPrice : (rawEqUsd > 0 ? rawEqUsd : walletBalCoin);
+
       return {
         id: `${key.id}-UNIFIED-${ccy}`,
         connectionId: key.id,
         exchange: 'okx' as const,
         label: key.label,
         ccy,
-        amount: parseFloat(item.cashBal || '0'),
-        usdValue: parseFloat(item.eqUsd || '0'),
-        totalEquity,
-        walletBalance,
+        amount: walletBalCoin,
+        usdValue: walletBalUsd,
+        totalEquity: rawEq > 0 ? rawEq : (ccy === 'USDT' && totalEquity > 0 ? totalEquity : walletBalCoin),
+        walletBalance: walletBalCoin,
         availableMargin,
         unrealizedPnl,
-        raw: item
+        raw: {
+          ...item,
+          equity: rawEq > 0 ? rawEq : walletBalCoin,
+          usdValue: rawEqUsd > 0 ? rawEqUsd : walletBalUsd,
+          accountMetrics: { totalEquity, walletBalance, availableMargin, unrealizedPnl }
+        }
       };
     });
 
