@@ -1,3 +1,10 @@
+# [1.70.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.69.0...v1.70.0) (2026-09-20)
+
+
+### Features
+
+* improve Bitget exchange value calculations ([1b667da](https://github.com/fapdev77/crypto-dashboard/commit/1b667da97ee129b6b68a7bf0ddd2dd4de05e4897))
+
 # [1.69.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.68.0...v1.69.0) (2026-09-19)
 
 
