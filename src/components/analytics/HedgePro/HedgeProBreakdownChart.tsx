@@ -113,8 +113,8 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
                     className="absolute inset-y-0 left-0 flex overflow-hidden rounded"
                     style={{ width: `${balancePct}%` }}
                   >
-                    <div className="bg-emerald-500/80 h-full" style={{ width: `${protectedPct}%` }} />
-                    <div className="bg-white h-full" style={{ width: `${exposedPct}%` }} />
+                    <div className="bg-emerald-500/80 h-full" style={{ width: `${Math.max(0, protectedPct)}%` }} />
+                    <div className="bg-white h-full" style={{ width: `${Math.max(0, exposedPct)}%` }} />
                   </div>
                   {/* Leveraged — beyond 100% of the coin's balance */}
                   {leveragedPct > 0 && (

@@ -269,7 +269,8 @@ export function FilterBar({
                   {(() => {
                     const selected = account.options.find(k => k.id === account.value);
                     if (selected) {
-                      const extra = selected.exchange === 'bitget' ? (selected.accountType === 'uta' ? ' (UTA)' : ' (CLS)') : '';
+                      const accType = selected.accountType || keys.find(item => item.id === selected.id)?.accountType;
+                      const extra = selected.exchange === 'bitget' ? (accType === 'uta' ? ' (UTA)' : ' (CLS)') : '';
                       return (
                         <>
                           <ExchangeIcon exchange={selected.exchange} className="w-4 h-4 shrink-0" />
@@ -317,7 +318,8 @@ export function FilterBar({
               </AppTooltip>
 
               {account.options.map(k => {
-                const extra = k.exchange === 'bitget' ? (k.accountType === 'uta' ? ' (UTA)' : ' (CLS)') : '';
+                const accType = k.accountType || keys.find(item => item.id === k.id)?.accountType;
+                const extra = k.exchange === 'bitget' ? (accType === 'uta' ? ' (UTA)' : ' (CLS)') : '';
                 const label = `${k.label || k.exchange}${extra}`;
                 const tooltipDesc = k.tooltip || `${label} (${k.exchange.toUpperCase()})`;
                 return (

@@ -73,6 +73,18 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
           const usdVal = parseFloat(item.usdValue || '0');
           const unrealizedPnl = parseFloat(item.unrealisedPnl || '0') || (item.coin?.toUpperCase() === 'USDT' ? accountUnrealizedPnl : 0);
 
+          // In Bitget UTA, item.usdValue represents the USD valuation of item.equity (net balance / equity).
+          // Derive the coin price in USD to correctly compute the gross wallet balance in USD (amount * coinPrice):
+          let coinPrice = 0;
+          if (totalEquity > 0 && usdVal > 0) {
+            coinPrice = usdVal / totalEquity;
+          } else if (balance > 0 && usdVal > 0) {
+            coinPrice = usdVal / balance;
+          }
+
+          const walletBalance = balance > 0 ? balance : totalEquity;
+          const walletUsdValue = coinPrice > 0 ? walletBalance * coinPrice : (usdVal > 0 ? usdVal : walletBalance);
+
           if (totalEquity > 0 || balance > 0 || available > 0 || usdVal > 0) {
             balances.push({
               id: `${key.id}-uta-${item.coin}`,
@@ -80,13 +92,18 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
               exchange: 'bitget',
               label: `${key.label} (UTA)`,
               ccy: (item.coin || '').toUpperCase(),
-              amount: balance > 0 ? balance : totalEquity,
-              usdValue: usdVal > 0 ? usdVal : (totalEquity > 0 ? totalEquity : balance),
+              amount: walletBalance,
+              usdValue: walletUsdValue,
               totalEquity: totalEquity > 0 ? totalEquity : (item.coin?.toUpperCase() === 'USDT' && accountEquity > 0 ? accountEquity : balance),
               walletBalance: balance,
               availableMargin: available,
               unrealizedPnl,
-              raw: { ...item, accountMetrics: { accountEquity, accountUsdtEquity, accountUnrealizedPnl, mmr, mgnRatio } }
+              raw: {
+                ...item,
+                equity: totalEquity,
+                usdValue: usdVal,
+                accountMetrics: { accountEquity, accountUsdtEquity, accountUnrealizedPnl, mmr, mgnRatio }
+              }
             });
           }
         });
