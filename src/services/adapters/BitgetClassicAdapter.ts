@@ -653,14 +653,32 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
     category: string = 'USDT-FUTURES',
     cursor?: string
   ): Promise<{ list: any[]; nextPageCursor: string }> {
+    const now = Date.now();
+    const minAllowed = now - (89 * 24 * 60 * 60 * 1000); // 89 days access window (safe 90-day window)
+
+    // If requested range is entirely beyond Bitget's 90-day limit, return empty to prevent error 25200
+    if (endTime < minAllowed) {
+      return { list: [], nextPageCursor: '' };
+    }
+
+    const effectiveEnd = Math.min(endTime, now);
+    let effectiveStart = Math.max(startTime, minAllowed);
+    if (effectiveStart > effectiveEnd) {
+      effectiveStart = Math.max(minAllowed, effectiveEnd - 1000);
+    }
+    const MAX_INTERVAL_MS = 29 * 24 * 60 * 60 * 1000;
+    if (effectiveEnd - effectiveStart > MAX_INTERVAL_MS) {
+      effectiveStart = effectiveEnd - MAX_INTERVAL_MS;
+    }
+
     const effectiveCategory = category ? category.toUpperCase() : 'USDT-FUTURES';
 
     // Try V3 financial-records first
     try {
       const query = new URLSearchParams();
       query.append('category', effectiveCategory);
-      query.append('startTime', startTime.toString());
-      query.append('endTime', endTime.toString());
+      query.append('startTime', effectiveStart.toString());
+      query.append('endTime', effectiveEnd.toString());
       query.append('limit', '100');
       if (cursor) query.append('cursor', cursor);
 
@@ -690,8 +708,8 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
     if (effectiveCategory === 'SPOT') {
       try {
         const spotQuery = new URLSearchParams();
-        spotQuery.append('startTime', startTime.toString());
-        spotQuery.append('endTime', endTime.toString());
+        spotQuery.append('startTime', effectiveStart.toString());
+        spotQuery.append('endTime', effectiveEnd.toString());
         spotQuery.append('limit', '100');
         if (cursor) spotQuery.append('idLessThan', cursor);
 
@@ -720,8 +738,8 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
     if (effectiveCategory === 'MARGIN') {
       try {
         const marginQuery = new URLSearchParams();
-        marginQuery.append('startTime', startTime.toString());
-        marginQuery.append('endTime', endTime.toString());
+        marginQuery.append('startTime', effectiveStart.toString());
+        marginQuery.append('endTime', effectiveEnd.toString());
         marginQuery.append('limit', '100');
         if (cursor) marginQuery.append('idLessThan', cursor);
 
@@ -756,8 +774,8 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
 
       const mixQuery = new URLSearchParams();
       mixQuery.append('productType', productType);
-      mixQuery.append('startTime', startTime.toString());
-      mixQuery.append('endTime', endTime.toString());
+      mixQuery.append('startTime', effectiveStart.toString());
+      mixQuery.append('endTime', effectiveEnd.toString());
       mixQuery.append('pageSize', '100');
       if (cursor) mixQuery.append('lastEndId', cursor);
 

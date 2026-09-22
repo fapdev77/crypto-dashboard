@@ -682,11 +682,30 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
     category: string = 'USDT-FUTURES',
     cursor?: string
   ): Promise<{ list: any[]; nextPageCursor: string }> {
+    const now = Date.now();
+    const minAllowed = now - (89 * 24 * 60 * 60 * 1000); // 89 days access window (safe 90-day window)
+
+    // If requested range is entirely beyond Bitget's 90-day limit, return empty to prevent error 25200
+    if (endTime < minAllowed) {
+      return { list: [], nextPageCursor: '' };
+    }
+
+    const effectiveEnd = Math.min(endTime, now);
+    let effectiveStart = Math.max(startTime, minAllowed);
+    if (effectiveStart > effectiveEnd) {
+      effectiveStart = Math.max(minAllowed, effectiveEnd - 1000);
+    }
+    // Bitget requires interval <= 30 days
+    const MAX_INTERVAL_MS = 29 * 24 * 60 * 60 * 1000;
+    if (effectiveEnd - effectiveStart > MAX_INTERVAL_MS) {
+      effectiveStart = effectiveEnd - MAX_INTERVAL_MS;
+    }
+
     const query = new URLSearchParams();
     const effectiveCategory = category ? category.toUpperCase() : 'USDT-FUTURES';
     query.append('category', effectiveCategory);
-    query.append('startTime', startTime.toString());
-    query.append('endTime', endTime.toString());
+    query.append('startTime', effectiveStart.toString());
+    query.append('endTime', effectiveEnd.toString());
     query.append('limit', '100');
     if (cursor) query.append('cursor', cursor);
 

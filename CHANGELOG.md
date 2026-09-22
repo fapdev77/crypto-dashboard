@@ -1,3 +1,10 @@
+## [1.73.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.73.0...v1.73.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **bitget:** enforce 90-day historical data limit ([b7c587e](https://github.com/fapdev77/crypto-dashboard/commit/b7c587e1e5516dbd3ae1dba0d42a67ad2fb14492))
+
 # [1.73.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.72.0...v1.73.0) (2026-09-20)
 
 
