@@ -161,7 +161,11 @@ export function OrderHistory() {
           if (o.exchange === 'bybit') {
             // Bybit inverse: o.value is in COIN. Multiply by price to get USD value
             valUsd = o.value && o.value > 0 && p > 0 ? Number(new Big(o.value).times(p)) : o.filledQty;
-          } else if (o.value && o.value > 0 && o.exchange !== 'bitget') {
+          } else if (o.exchange === 'bitget') {
+            // Bitget inverse: filledQty is contracts in USD. raw quoteVolume is USD volume if available
+            const rawQuoteVol = o.raw?.quoteVolume ? parseFloat(o.raw.quoteVolume) : 0;
+            valUsd = rawQuoteVol > 0 ? rawQuoteVol : (o.value && o.value > 0 && o.value !== o.filledQty * p ? o.value : o.filledQty);
+          } else if (o.value && o.value > 0) {
             valUsd = o.filledQty > 0 && o.filledQty !== o.qty ? (p > 0 ? Number(new Big(o.filledQty).times(p)) : 0) : o.value;
           } else if (!qtyIsCoin) {
             valUsd = o.filledQty; // Qty is mostly in USD already

@@ -17,6 +17,8 @@ import { SimulationModeBadge } from './ui/SimulationModeBadge';
 export function OpenPositions() {
   const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
+  const setHedgeExposedMode = useSettingsStore(state => state.setHedgeExposedMode);
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
@@ -114,6 +116,37 @@ export function OpenPositions() {
 
       {/* Header Controls */}
       <FilterBar
+        prepend={
+          <div className="flex items-center gap-2 mr-auto sm:mr-0">
+            <span className="text-xs text-[#8E9299] whitespace-nowrap">For Hedge Pro positions, show exposed balance by:</span>
+            <div className="flex bg-[#0e0f11] p-1 rounded-lg border border-[#2a2b30] w-max">
+              <button
+                type="button"
+                onClick={() => setHedgeExposedMode('gross')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                  hedgeExposedMode === 'gross'
+                    ? 'bg-[#2a2b30] text-white shadow-sm font-semibold'
+                    : 'text-[#8E9299] hover:text-white'
+                }`}
+                title="Gross: Uses fixed Wallet Balance (without unrealized PnL)"
+              >
+                Gross
+              </button>
+              <button
+                type="button"
+                onClick={() => setHedgeExposedMode('net')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                  hedgeExposedMode === 'net'
+                    ? 'bg-[#2a2b30] text-white shadow-sm font-semibold'
+                    : 'text-[#8E9299] hover:text-white'
+                }`}
+                title="Net: Uses Net Balance / Account Equity (including unrealized PnL)"
+              >
+                Net
+              </button>
+            </div>
+          </div>
+        }
         exchange={{
           value: exchangeFilter,
           onChange: setExchangeFilter,

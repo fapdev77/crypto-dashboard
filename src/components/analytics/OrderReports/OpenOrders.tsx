@@ -52,12 +52,17 @@ export function OpenOrders() {
 
       let valUsd = 0;
       if (o.category === 'INVERSE') {
-        const qtyIsCoin = detectQtyIsCoin({ exchange: o.exchange, qty: o.qty, price: o.price, value: o.value });
-
-        if (qtyIsCoin) {
-          valUsd = o.value || (o.price > 0 ? Number(new Big(o.qty).times(o.price)) : 0);
+        if (o.exchange === 'bitget') {
+          const rawQuoteVol = o.raw?.quoteVolume ? parseFloat(o.raw.quoteVolume) : 0;
+          valUsd = rawQuoteVol > 0 ? rawQuoteVol : (o.value && o.value > 0 && o.value !== o.qty * o.price ? o.value : o.qty);
         } else {
-          valUsd = o.qty;
+          const qtyIsCoin = detectQtyIsCoin({ exchange: o.exchange, qty: o.qty, price: o.price, value: o.value });
+
+          if (qtyIsCoin) {
+            valUsd = o.value || (o.price > 0 ? Number(new Big(o.qty).times(o.price)) : 0);
+          } else {
+            valUsd = o.qty;
+          }
         }
       } else {
         valUsd = o.value || (o.price > 0 ? Number(new Big(o.qty).times(o.price)) : 0);

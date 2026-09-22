@@ -54,16 +54,19 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
 
       <div className="flex flex-col gap-2.5">
         {rows.map(row => {
-          const balancePct = pctOfBalance(row.balanceUsd, maxStack);
-          const leveragedPct = pctOfBalance(row.leveragedUsd, maxStack);
-          const protectedPct = pctOfBalance(row.protectedUsd, row.balanceUsd);
-          const exposedPct = pctOfBalance(row.exposedBaseUsd, row.balanceUsd);
-          const leveragedOfBalancePct =
-            row.balanceUsd > 0
-              ? pctOfBalance(row.leveragedUsd, row.balanceUsd)
-              : row.leveragedUsd > 0
-                ? 100
-                : 0;
+        const baseRef = (row.protectedUsd + row.exposedBaseUsd > 0)
+          ? (row.protectedUsd + row.exposedBaseUsd)
+          : row.balanceUsd;
+        const balancePct = pctOfBalance(baseRef, maxStack);
+        const leveragedPct = pctOfBalance(row.leveragedUsd, maxStack);
+        const protectedPct = pctOfBalance(row.protectedUsd, baseRef);
+        const exposedPct = pctOfBalance(row.exposedBaseUsd, baseRef);
+        const leveragedOfBalancePct =
+          baseRef > 0
+            ? pctOfBalance(row.leveragedUsd, baseRef)
+            : row.leveragedUsd > 0
+              ? 100
+              : 0;
 
           const tooltipRows = [
             {
@@ -110,8 +113,8 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
                     className="absolute inset-y-0 left-0 flex overflow-hidden rounded"
                     style={{ width: `${balancePct}%` }}
                   >
-                    <div className="bg-emerald-500/80 h-full" style={{ width: `${protectedPct}%` }} />
-                    <div className="bg-white h-full" style={{ width: `${exposedPct}%` }} />
+                    <div className="bg-emerald-500/80 h-full" style={{ width: `${Math.max(0, protectedPct)}%` }} />
+                    <div className="bg-white h-full" style={{ width: `${Math.max(0, exposedPct)}%` }} />
                   </div>
                   {/* Leveraged — beyond 100% of the coin's balance */}
                   {leveragedPct > 0 && (

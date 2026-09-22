@@ -441,7 +441,7 @@ export function ClosedPositions() {
                   <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
                     <div className="flex flex-col items-center gap-1.5 shrink-0">
                       <div className="flex items-center relative pr-1">
-                        <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" category={category} />
+                        <CoinIcon symbol={pos.baseCoin || pos.symbol} size={28} className="w-7 h-7" category={category} />
                         <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
                           <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
                         </div>
@@ -466,10 +466,17 @@ export function ClosedPositions() {
                         <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] capitalize">
                           {pos.label}
                         </span>
-                        <AccountTypeBadge
-                          exchange={pos.exchange}
-                          accountType={pos.accountType || keys.find(k => k.id === pos.connectionId)?.accountType}
-                        />
+                        {(() => {
+                          const matchedKey = keys.find(k => k.id === pos.connectionId);
+                          return (
+                            <AccountTypeBadge
+                              exchange={pos.exchange}
+                              accountType={pos.accountType || matchedKey?.accountType}
+                              environment={matchedKey?.environment}
+                              bybitRegion={matchedKey?.bybitRegion}
+                            />
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>

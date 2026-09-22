@@ -7,11 +7,15 @@ import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
-import { getInverseUsdValues, getOpenPositionSizeAndValue, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
+import { getInverseUsdValues, getOpenPositionSizeAndValue } from '../utils/inverseUtils';
+import { getHedgePositionLevels } from '../utils/hedgeUtils';
+import { HedgeExposureBar } from './analytics/HedgePro/HedgeExposureBar';
+import { usePositionsStore } from '../store/positionsStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { useBalancesStore } from '../store/balancesStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ExternalLink } from 'lucide-react';
 
 interface PositionCardProps {
   pos: UnifiedPosition;
@@ -21,6 +25,8 @@ interface PositionCardProps {
 
 export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const balances = useBalancesStore(state => state.balances);
+  const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
+  const setHedgeExposedMode = useSettingsStore(state => state.setHedgeExposedMode);
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
@@ -52,46 +58,8 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
   const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
-  // Inverse Protection / Exposure logic
-  const matchingBalance = Object.values(balances).find(
-    b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy.toUpperCase()
-  );
-  const totalAssetBal = matchingBalance ? matchingBalance.amount : 0;
-  const markPrice = pos.markPrice || 0;
-  const assetBalUsd = totalAssetBal * markPrice;
-  const openPosSize = markPrice > 0 ? (sizeValUsd / markPrice) : Math.abs(pos.size);
-
-  let protectedPct = 0;
-  let exposedPct = 100;
-  let protectedAmount = 0;
-  let exposedAmount = totalAssetBal;
-  let protectedUsd = 0;
-  let exposedUsd = assetBalUsd;
-
-  if (pos.instrumentType === 'INVERSE' && totalAssetBal > 0) {
-    if (isShort) {
-      const usdValAtEntry = getInverseShortUsdEntryValue(pos);
-      protectedUsd = Math.min(usdValAtEntry, assetBalUsd > 0 ? assetBalUsd : usdValAtEntry);
-      exposedUsd = Math.max(0, assetBalUsd - usdValAtEntry);
-
-      protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 0;
-      exposedPct = assetBalUsd > 0 ? (exposedUsd / assetBalUsd) * 100 : 0;
-
-      protectedAmount = markPrice > 0 ? protectedUsd / markPrice : 0;
-      exposedAmount = markPrice > 0 ? exposedUsd / markPrice : Math.max(0, totalAssetBal - protectedAmount);
-    } else {
-      // Long Inverse position
-      const longSizeUsd = openPosSize * markPrice;
-      exposedUsd = assetBalUsd + longSizeUsd;
-      protectedUsd = 0;
-
-      protectedPct = 0;
-      exposedPct = assetBalUsd > 0 ? (exposedUsd / assetBalUsd) * 100 : 100;
-
-      protectedAmount = 0;
-      exposedAmount = markPrice > 0 ? exposedUsd / markPrice : (totalAssetBal + openPosSize);
-    }
-  }
+  // Inverse Protection / Exposure logic via centralized hedgeUtils with active mode
+  const hedgeLevels = getHedgePositionLevels(pos, Object.values(balances), hedgeExposedMode);
 
   const posTypeStr = pos.instrumentType === 'INVERSE' ? 'CM Perpetual Inverse' :
     (pos.instrumentType && pos.instrumentType !== 'PERP') ?
@@ -99,6 +67,29 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
       'Perpetual';
   const posTitle = `${pos.symbol} ${posTypeStr}`;
   const baseCoinClean = pos.baseCoin || pos.symbol.replace(/USDT|USDC|USD|EUR|BUSD|BTC$/i, '');
+
+  const isTpPartial = pos.tpMode === 'partial';
+  const isSlPartial = pos.slMode === 'partial';
+  const entireTp = (pos.tp && !isTpPartial) ? pos.tp : undefined;
+  const entireSl = (pos.sl && !isSlPartial) ? pos.sl : undefined;
+  const partialTp = (pos.tp && isTpPartial) ? pos.tp : undefined;
+  const partialSl = (pos.sl && isSlPartial) ? pos.sl : undefined;
+  const hasEntireTpsl = !!(entireTp || entireSl);
+  const hasPartialTpsl = !!(partialTp || partialSl);
+
+  const handleNavigateToHedgePro = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const targetCoin = (pos.baseCoin || baseCoinClean).toUpperCase();
+    const targetId = `hedge-row-${pos.connectionId}:${targetCoin}`;
+    window.dispatchEvent(
+      new CustomEvent('navigate-to-tab', {
+        detail: {
+          tab: 'analytics-hedge-pro',
+          targetId: targetId,
+        },
+      })
+    );
+  };
 
   const entryPriceTooltipProps = {
     side: "top" as const,
@@ -204,13 +195,13 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
       },
       {
         label: 'Number of contracts',
-        value: `${formatCurrency(Math.abs(pos.size), 'crypto')} contracts`,
+        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(pos.notionalUsd || Math.abs(pos.size), 'crypto', 0) : formatCurrency(Math.abs(pos.size), 'crypto')} contracts`,
         labelClassName: 'text-[12px] text-[#8E9299]',
         valueClassName: 'text-[12px] font-mono text-white'
       },
       {
         label: 'Total crypto',
-        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(openPosSize, 'crypto', 8) : formatCurrency(Math.abs(pos.size), 'crypto')} ${baseCoinClean}`,
+        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(hedgeLevels.openPosSize, 'crypto', 8) : formatCurrency(Math.abs(pos.size), 'crypto')} ${baseCoinClean}`,
         labelClassName: 'text-[12px] text-[#8E9299]',
         valueClassName: 'text-[12px] font-mono text-white'
       },
@@ -225,6 +216,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
   return (
     <div
+      id={`pos-card-${pos.id}`}
       className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]"
       onClick={onToggle}
     >
@@ -235,7 +227,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
           <div className="flex flex-col items-center gap-1.5 shrink-0">
             <div className="flex items-center relative">
-              <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" category={category} />
+              <CoinIcon symbol={pos.baseCoin || pos.symbol} size={28} className="w-7 h-7" category={category} />
               <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
                 <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
               </div>
@@ -260,10 +252,37 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] capitalize">
                 {pos.label}
               </span>
-              <AccountTypeBadge
-                exchange={pos.exchange}
-                accountType={pos.accountType || keys.find(k => k.id === pos.connectionId)?.accountType}
-              />
+              {(() => {
+                const matchedKey = keys.find(k => k.id === pos.connectionId);
+                return (
+                  <AccountTypeBadge
+                    exchange={pos.exchange}
+                    accountType={pos.accountType || matchedKey?.accountType}
+                    environment={matchedKey?.environment}
+                    bybitRegion={matchedKey?.bybitRegion}
+                  />
+                );
+              })()}
+              {pos.tp !== undefined && pos.tp > 0 && (
+                <span
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[#00C853] flex items-center gap-1"
+                  title={`Take Profit: ${formatPrice(pos.tp, isFiatPair)} (${pos.tpMode === 'partial' ? 'Partial' : 'Full'})`}
+                >
+                  <span className="font-semibold">TP</span>
+                  <span>{formatPrice(pos.tp, isFiatPair)}</span>
+                  {isTpPartial && <span className="text-[9px] text-blue-400 font-sans font-normal">(P)</span>}
+                </span>
+              )}
+              {pos.sl !== undefined && pos.sl > 0 && (
+                <span
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-[#FF4444] flex items-center gap-1"
+                  title={`Stop Loss: ${formatPrice(pos.sl, isFiatPair)} (${pos.slMode === 'partial' ? 'Partial' : 'Full'})`}
+                >
+                  <span className="font-semibold">SL</span>
+                  <span>{formatPrice(pos.sl, isFiatPair)}</span>
+                  {isSlPartial && <span className="text-[9px] text-blue-400 font-sans font-normal">(P)</span>}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -376,24 +395,73 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
         {/* Inverse - Protected / Exposed */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <AppTooltip description="Position hedge/exposure level">
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Hedge / Exposure</span>
-          </AppTooltip>
           {pos.instrumentType === 'INVERSE' ? (
-            <>
+            <div className="flex items-center gap-1">
+              <AppTooltip
+                description={
+                  hedgeExposedMode === 'net'
+                    ? "Indicates the Hedge protection based on Net Equity (Net Balance [Wallet + PnL] - Position = Net Exposed Balance), considering the position's unrealized PnL. Click to view more details in Hedge Pro Dashboard."
+                    : "Indicates the Hedge protection based on Total Gross Assets (Wallet Balance - Position = Gross Exposed Balance), not considering the position's PnL. Click to view more details in Hedge Pro Dashboard."
+                }
+              >
+                <button
+                  type="button"
+                  onClick={handleNavigateToHedgePro}
+                  className="text-[10px] text-[#8E9299] hover:text-emerald-400 uppercase w-fit cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:border-emerald-400 transition-colors flex items-center gap-1 group text-left"
+                >
+                  <span>Hedge / Exposure</span>
+                  <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-400" />
+                </button>
+              </AppTooltip>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHedgeExposedMode(hedgeExposedMode === 'gross' ? 'net' : 'gross');
+                }}
+                className="text-[9px] px-1 py-0.2 rounded bg-[#2a2b30] hover:bg-[#3a3b40] text-[#8E9299] hover:text-white font-mono lowercase border border-transparent hover:border-[#4a4b50] transition-colors cursor-pointer"
+                title={`Current mode: ${hedgeExposedMode}. Click to switch to ${hedgeExposedMode === 'gross' ? 'net' : 'gross'}.`}
+              >
+                {hedgeExposedMode}
+              </button>
+            </div>
+          ) : (
+            <AppTooltip description="Position hedge/exposure level">
+              <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">
+                Hedge / Exposure
+              </span>
+            </AppTooltip>
+          )}
+          {pos.instrumentType === 'INVERSE' ? (
+            <div
+              onClick={handleNavigateToHedgePro}
+              className="cursor-pointer group/hedge hover:opacity-90 transition-opacity"
+              title="Click to view in Hedge Pro"
+            >
               <div className="flex items-center justify-between text-[10px] font-mono leading-none">
-                <span className="text-[#00C853]">{protectedPct.toFixed(1)}%</span>
-                <span className={exposedPct > 0 && exposedPct <= 100 ? "text-[#8E9299]" : "text-[#FF4444]"}>{exposedPct.toFixed(1)}%</span>
+                <span className="text-[#00C853]">{hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-white">{hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
+                  {hedgeLevels.barMetrics.leveragedWidthPct > 0 && (
+                    <span className="text-amber-400 font-semibold" title="Leveraged long exposure">
+                      +{((hedgeLevels.barMetrics.leveragedOfBalancePct || 0)).toFixed(0)}%
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex h-1.5 rounded-full overflow-hidden w-full bg-[#2a2b30] mt-0.5 mb-0.5">
-                <div className="bg-[#00C853] h-full transition-all duration-300" style={{ width: `${Math.min(100, protectedPct)}%` }} />
-                <div className={`${exposedPct > 0 && exposedPct <= 100 ? "bg-[#8E9299]" : "bg-[#FF4444]"} h-full transition-all duration-300`} style={{ width: `${Math.min(100, Math.max(0, exposedPct))}%` }} />
+              <div className="mt-1 mb-1 group-hover/hedge:ring-1 group-hover/hedge:ring-emerald-400/40 rounded-full transition-all">
+                <HedgeExposureBar
+                  protectedPct={hedgeLevels.barMetrics.protectedPct}
+                  exposedPct={hedgeLevels.barMetrics.exposedPct}
+                  balanceWidthPct={hedgeLevels.barMetrics.balanceWidthPct}
+                  leveragedWidthPct={hedgeLevels.barMetrics.leveragedWidthPct}
+                />
               </div>
               <div className="flex justify-between text-[9px] font-mono text-[#8E9299] leading-none text-opacity-80">
-                <span>Bal: {formatCcy(totalAssetBal)}</span>
-                <span>Pos: {formatCcy(openPosSize)}</span>
+                <span>{hedgeExposedMode === 'net' ? 'Net:' : 'Bal:'} {formatCcy(hedgeLevels.balanceAmount)}</span>
+                <span>Pos: {formatCcy(hedgeLevels.openPosSize)}</span>
               </div>
-            </>
+            </div>
           ) : (
             <div className="flex flex-1 items-center h-full">
               <span className="text-[#8E9299] font-mono">—</span>
@@ -480,49 +548,86 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             </AppTooltip>
 
             {pos.instrumentType === 'INVERSE' ? (
-              <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-4">
+              <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
-                  <AppTooltip description="Hedge position details">
-                    <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help">Hedge Pro Details</span>
+                  <AppTooltip description="Click to view details in Hedge Pro Dashboard">
+                    <button
+                      type="button"
+                      onClick={handleNavigateToHedgePro}
+                      className="text-[#8E9299] hover:text-emerald-400 text-xs w-max border-b border-dashed border-[#8E9299]/50 hover:border-emerald-400 cursor-pointer flex items-center gap-1.5 transition-colors group"
+                    >
+                      <span>Hedge Pro Details ({hedgeExposedMode.toUpperCase()})</span>
+                      <ExternalLink className="w-3 h-3 text-emerald-400 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    </button>
                   </AppTooltip>
 
-                  <div className="flex flex-col gap-3 mt-1">
+                  <div className="flex flex-col gap-2.5 mt-1.5">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#8E9299]">Balance:</span>
+                      <span className="text-[10px] text-[#8E9299]">
+                        {hedgeExposedMode === 'net' ? 'Net Balance (Equity):' : 'Wallet Balance (Gross):'}
+                      </span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(assetBalUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.balanceAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.balanceUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#00C853]">Protected: {protectedPct.toFixed(2)}%</span>
+                      <span className="text-[10px] text-emerald-400 font-medium">Protected: {hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(protectedUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.protectedUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#FF4444]">Exposed: {exposedPct.toFixed(2)}%</span>
+                      <span className="text-[10px] text-white font-medium">Exposed (Base): {hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
                       <span className="font-mono text-white text-[13px]">
-                        {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(exposedUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.markPrice > 0 ? hedgeLevels.exposedBaseUsd / hedgeLevels.markPrice : 0)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.exposedBaseUsd, 'usd', 2)} USD</span>
                       </span>
                     </div>
+
+                    {!isShort && hedgeLevels.leveragedUsd > 0 && (
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-amber-400 font-medium">
+                          Leveraged (Long): +{(hedgeLevels.barMetrics.leveragedOfBalancePct || 0).toFixed(1)}%
+                        </span>
+                        <span className="font-mono text-white text-[13px]">
+                          {formatCcy(hedgeLevels.openPosSize)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(hedgeLevels.leveragedUsd, 'usd', 2)} USD</span>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {!isShort && (
-                  <div className="flex items-start gap-1 py-1.5 px-2 bg-orange-500/10 border border-orange-500/20 rounded">
-                    <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
-                    <span className="text-[9.5px] text-orange-300 font-medium leading-tight">Overexposed! Focus on risk management! Always have a stop in place!</span>
+                {hedgeLevels.overexposed && (
+                  <div className="flex items-start gap-1 py-1.5 px-2 bg-amber-500/10 border border-amber-500/20 rounded">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                    <span className="text-[9.5px] text-amber-300 font-medium leading-tight">
+                      {isShort
+                        ? 'No matching coin balance found — this position has no identified coverage.'
+                        : 'Leveraged! Focus on risk management! Always have a stop in place!'}
+                    </span>
                   </div>
                 )}
               </div>
             ) : (
               <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
-                <span className="font-mono text-white">
-                  {pos.tp ? formatPrice(pos.tp, isFiatPair) : '--'} / {pos.sl ? formatPrice(pos.sl, isFiatPair) : '--'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
+                  {hasEntireTpsl && (
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/20">
+                      Full
+                    </span>
+                  )}
+                </div>
+                <div className="font-mono text-xs flex items-center gap-1">
+                  <span className={entireTp ? 'text-[#00C853] font-semibold' : 'text-white'}>
+                    {entireTp ? formatPrice(entireTp, isFiatPair) : '--'}
+                  </span>
+                  <span className="text-[#8E9299]">/</span>
+                  <span className={entireSl ? 'text-[#FF4444] font-semibold' : 'text-white'}>
+                    {entireSl ? formatPrice(entireSl, isFiatPair) : '--'}
+                  </span>
+                </div>
               </div>
             )}
 
@@ -607,8 +712,23 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             </AppTooltip>
             {pos.instrumentType !== 'INVERSE' && (
               <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
-                <span className="font-mono text-[#8E9299]">--</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
+                  {hasPartialTpsl && (
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-blue-400 font-mono border border-blue-500/20">
+                      Partial
+                    </span>
+                  )}
+                </div>
+                <div className="font-mono text-xs flex items-center gap-1">
+                  <span className={partialTp ? 'text-[#00C853] font-semibold' : 'text-[#8E9299]'}>
+                    {partialTp ? formatPrice(partialTp, isFiatPair) : '--'}
+                  </span>
+                  <span className="text-[#8E9299]">/</span>
+                  <span className={partialSl ? 'text-[#FF4444] font-semibold' : 'text-[#8E9299]'}>
+                    {partialSl ? formatPrice(partialSl, isFiatPair) : '--'}
+                  </span>
+                </div>
               </div>
             )}
 

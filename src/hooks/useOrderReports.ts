@@ -43,6 +43,23 @@ export interface OrderFilters {
  * @param filters Current filter configuration.
  * @returns Object with fetchOrders callback, filtered orders array, loading/syncing/error states.
  */
+function matchesOrderType(filterType: string, orderType: string): boolean {
+  if (filterType.toLowerCase() === 'all') return true;
+  const f = filterType.toUpperCase();
+  const o = (orderType || '').toUpperCase();
+  if (f === o) return true;
+  if (f === 'TP') {
+    return o.includes('TAKE_PROFIT') || o === 'TP';
+  }
+  if (f === 'SL') {
+    return o.includes('STOP_LOSS') || o === 'SL';
+  }
+  if (f === 'CONDITIONAL') {
+    return o === 'CONDITIONAL' || o.includes('STOP') || o.includes('PROFIT') || o === 'TRIGGER' || o === 'OCO' || o.includes('TRAILING');
+  }
+  return f === o;
+}
+
 export function useOrderReports(filters: OrderFilters) {
   const { keys } = useApiKeysStore();
   const cachedOpenOrders = useOrdersStore(state => state.openOrders);
@@ -187,7 +204,7 @@ export function useOrderReports(filters: OrderFilters) {
         if (filters.exchange.toLowerCase() !== 'all' && order.exchange.toLowerCase() !== filters.exchange.toLowerCase()) return false;
         if (filters.status === 'CLOSED' && order.createdTime < cutoffTime) return false;
         if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
-        if (filters.type.toLowerCase() !== 'all' && filters.type.toLowerCase() !== order.type.toLowerCase()) return false;
+        if (!matchesOrderType(filters.type, order.type)) return false;
         if (filters.side.toLowerCase() !== 'all' && order.side.toLowerCase() !== filters.side.toLowerCase()) return false;
         if (filters.instrument.toLowerCase() !== 'all' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
         if (filters.accountId.toLowerCase() !== 'all' && order.connectionId !== filters.accountId) return false;
@@ -220,7 +237,7 @@ export function useOrderReports(filters: OrderFilters) {
       if (filters.exchange.toLowerCase() !== 'all' && order.exchange.toLowerCase() !== filters.exchange.toLowerCase()) return false;
       if (filters.status === 'CLOSED' && order.createdTime < cutoffTime) return false;
       if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
-      if (filters.type.toLowerCase() !== 'all' && filters.type.toLowerCase() !== order.type.toLowerCase()) return false;
+      if (!matchesOrderType(filters.type, order.type)) return false;
       if (filters.side.toLowerCase() !== 'all' && order.side.toLowerCase() !== filters.side.toLowerCase()) return false;
       if (filters.instrument.toLowerCase() !== 'all' && (order.category || '').toUpperCase() !== filters.instrument.toUpperCase()) return false;
       if (filters.accountId.toLowerCase() !== 'all' && order.connectionId !== filters.accountId) return false;

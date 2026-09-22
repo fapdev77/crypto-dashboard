@@ -9,6 +9,7 @@ import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
+import { calculateOkxTradeDetails } from '../../utils/okxUtils';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -141,19 +142,39 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     // Map trading balances with updated totalEquity and walletBalance
     const tradingBalances = data.details.map((item: any) => {
       const ccy = item.ccy.toUpperCase();
+      const rawCashBal = parseFloat(item.cashBal || '0');
+      const rawEq = parseFloat(item.eq || '0');
+      const rawEqUsd = parseFloat(item.eqUsd || '0');
+      const coinUsdPrice = parseFloat(item.coinUsdPrice || '0');
+
+      let coinPrice = coinUsdPrice > 0 ? coinUsdPrice : (prices[ccy] || 0);
+      if (coinPrice <= 0 && rawEq > 0 && rawEqUsd > 0) {
+        coinPrice = rawEqUsd / rawEq;
+      } else if (coinPrice <= 0 && rawCashBal > 0 && rawEqUsd > 0) {
+        coinPrice = rawEqUsd / rawCashBal;
+      }
+
+      const walletBalCoin = rawCashBal;
+      const walletBalUsd = coinPrice > 0 ? walletBalCoin * coinPrice : (rawEqUsd > 0 ? rawEqUsd : walletBalCoin);
+
       return {
         id: `${key.id}-UNIFIED-${ccy}`,
         connectionId: key.id,
         exchange: 'okx' as const,
         label: key.label,
         ccy,
-        amount: parseFloat(item.cashBal || '0'),
-        usdValue: parseFloat(item.eqUsd || '0'),
-        totalEquity,
-        walletBalance,
+        amount: walletBalCoin,
+        usdValue: walletBalUsd,
+        totalEquity: rawEq > 0 ? rawEq : (ccy === 'USDT' && totalEquity > 0 ? totalEquity : walletBalCoin),
+        walletBalance: walletBalCoin,
         availableMargin,
         unrealizedPnl,
-        raw: item
+        raw: {
+          ...item,
+          equity: rawEq > 0 ? rawEq : walletBalCoin,
+          usdValue: rawEqUsd > 0 ? rawEqUsd : walletBalUsd,
+          accountMetrics: { totalEquity, walletBalance, availableMargin, unrealizedPnl }
+        }
       };
     });
 
@@ -201,6 +222,26 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       const accumulatedTradingFee = pos.fee ? new Big(pos.fee || 0).toString() : "0";
       const closedPnl = parseFloat(pos.pnl || '0');
 
+      let tp: number | undefined = pos.tpTriggerPx && parseFloat(pos.tpTriggerPx) > 0 ? parseFloat(pos.tpTriggerPx) : undefined;
+      let sl: number | undefined = pos.slTriggerPx && parseFloat(pos.slTriggerPx) > 0 ? parseFloat(pos.slTriggerPx) : undefined;
+      let tpMode: 'full' | 'partial' | undefined = undefined;
+      let slMode: 'full' | 'partial' | undefined = undefined;
+
+      if (Array.isArray(pos.closeOrderAlgo) && pos.closeOrderAlgo.length > 0) {
+        for (const algo of pos.closeOrderAlgo) {
+          if (algo.tpTriggerPx && parseFloat(algo.tpTriggerPx) > 0) {
+            tp = parseFloat(algo.tpTriggerPx);
+            tpMode = (algo.closeFraction === '1' || algo.closeFraction === '1.0' || !algo.closeFraction) ? 'full' : 'partial';
+          }
+          if (algo.slTriggerPx && parseFloat(algo.slTriggerPx) > 0) {
+            sl = parseFloat(algo.slTriggerPx);
+            slMode = (algo.closeFraction === '1' || algo.closeFraction === '1.0' || !algo.closeFraction) ? 'full' : 'partial';
+          }
+        }
+      }
+      if (tp && !tpMode) tpMode = 'full';
+      if (sl && !slMode) slMode = 'full';
+
       return {
         id: `${key.id}-okx-${pos.instId}-${side}`,
         connectionId: key.id,
@@ -227,6 +268,10 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
         notionalUsd,
         liquidationPrice: parseFloat(pos.liqPx || '0'),
         breakEvenPrice: parseFloat(pos.bePx || '0'),
+        tp,
+        sl,
+        tpMode,
+        slMode,
         roe: pos.uplRatio ? parseFloat(pos.uplRatio) * 100 : (margin > 0 ? (unrealizedPnl / margin) * 100 : undefined),
         instrumentType: mapInstrumentType('okx', pos.instType || 'SWAP', pos.ccy || pos.marginCoin || 'USDT'),
         raw: pos
@@ -383,8 +428,9 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
     let allOrders: any[] = [];
 
+    // 1. Regular Pending Orders
     for (const instType of instTypes) {
-      const query = `instType=${instType}`;
+      const query = `instType=${instType}&limit=100`;
       const path = `/api/v5/trade/orders-pending?${query}`;
       const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
 
@@ -397,6 +443,24 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
         LogManager.warn('OKXAdapter.OpenOrders', `Error fetching ${instType}:`, err);
       }
     }
+
+    // 2. Algo Pending Orders (TP/SL, OCO, Trigger, Trailing)
+    for (const instType of instTypes) {
+      for (const ordType of ['conditional,oco', 'trigger', 'move_order_stop']) {
+        const path = `/api/v5/trade/orders-algo-pending?instType=${instType}&ordType=${ordType}&limit=100`;
+        const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+
+        try {
+          const res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+          if (res.code === '0' && res.data) {
+            allOrders = allOrders.concat(res.data.map((o: any) => ({ ...o, isAlgo: true })));
+          }
+        } catch (err) {
+          LogManager.warn('OKXAdapter.AlgoOrders', `Error fetching ${instType} algo (${ordType}):`, err);
+        }
+      }
+    }
+
     await OkxAdapter.ensureInstrumentsLoaded();
     return this.normalizeOrders(allOrders, key);
   }
@@ -437,14 +501,29 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
           LogManager.warn('OKXAdapter.HistoryOrders', `Error fetching ${instType} from ${endpoint}:`, err);
         }
       }
+
+      // Also query historical algo orders (TP/SL, trigger, OCO)
+      for (const state of ['effective', 'canceled']) {
+        const path = `/api/v5/trade/orders-algo-history?instType=${instType}&ordType=conditional,oco&state=${state}&limit=100`;
+        try {
+          const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+          const res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+          if (res.code === '0' && res.data) {
+            allOrders = allOrders.concat(res.data.map((o: any) => ({ ...o, isAlgo: true })));
+          }
+        } catch (err) {
+          LogManager.warn('OKXAdapter.AlgoHistory', `Error fetching ${instType} algo history (${state}):`, err);
+        }
+      }
     }
 
-    // De-duplicate orders by unique OKX order ID (ordId)
+    // De-duplicate orders by unique OKX order ID (ordId or algoId)
     const seenOrdIds = new Set<string>();
     const uniqueOrders: any[] = [];
     for (const o of allOrders) {
-      if (!seenOrdIds.has(o.ordId)) {
-        seenOrdIds.add(o.ordId);
+      const id = o.ordId || o.algoId || o.clOrdId;
+      if (id && !seenOrdIds.has(id)) {
+        seenOrdIds.add(id);
         uniqueOrders.push(o);
       }
     }
@@ -456,23 +535,65 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
   private normalizeOrders(rawOrders: any[], key: ApiCredentials): import('../../types').UnifiedOrder[] {
     return rawOrders.map(o => {
       let status: import('../../types').UnifiedOrderStatus = 'NEW';
-      const state = o.state?.toLowerCase() || '';
-      if (state === 'filled') status = 'FILLED';
+      const state = (o.state || '').toLowerCase();
+      if (state === 'filled' || state === 'effective') status = 'FILLED';
       else if (state === 'canceled' || state === 'cancelled') status = 'CANCELLED';
-      else if (state === 'partially_filled') status = 'PARTIALLY_FILLED';
-      else if (state === 'live') status = 'NEW';
-
+      else if (state === 'partially_filled' || state === 'partially_effective') status = 'PARTIALLY_FILLED';
+      else if (state === 'live' || state === 'pause') status = 'NEW';
+      else if (state === 'order_failed') status = 'REJECTED';
 
       let type: import('../../types').UnifiedOrderType = 'LIMIT';
-      const ot = o.ordType?.toLowerCase() || '';
-      if (ot === 'market') type = 'MARKET';
-      else if (ot.includes('stop') || ot.includes('loss')) type = 'SL';
-      else if (ot.includes('take') || ot.includes('profit')) type = 'TP';
-      else if (ot.includes('conditional')) type = 'CONDITIONAL';
+      let executionScope: import('../../types').OrderExecutionScope | undefined = undefined;
+      let closeFraction: number | undefined = undefined;
+      let tpTriggerPrice: number | undefined = undefined;
+      let slTriggerPrice: number | undefined = undefined;
+      let isPositionTpsl: boolean | undefined = undefined;
 
-      const sz = parseFloat(o.sz || '0');
+      const ot = (o.ordType || '').toLowerCase();
+      const hasTp = !!(o.tpTriggerPx && parseFloat(o.tpTriggerPx) > 0);
+      const hasSl = !!(o.slTriggerPx && parseFloat(o.slTriggerPx) > 0);
+
+      if (hasTp) tpTriggerPrice = parseFloat(o.tpTriggerPx);
+      if (hasSl) slTriggerPrice = parseFloat(o.slTriggerPx);
+
+      if (ot === 'oco' || (hasTp && hasSl)) {
+        type = 'OCO';
+      } else if (hasTp || ot.includes('take') || ot.includes('profit')) {
+        type = 'TP';
+      } else if (hasSl || ot.includes('stop') || ot.includes('loss')) {
+        type = 'SL';
+      } else if (ot === 'move_order_stop') {
+        type = 'TRAILING_STOP';
+      } else if (ot === 'market') {
+        type = 'MARKET';
+      } else if (ot.includes('conditional') || ot === 'trigger') {
+        type = 'CONDITIONAL';
+      }
+
+      if (o.closeFraction) {
+        isPositionTpsl = true;
+        const frac = parseFloat(o.closeFraction);
+        if (frac >= 1 || o.closeFraction === '1') {
+          executionScope = 'FULL_POSITION';
+          closeFraction = 1;
+        } else {
+          executionScope = 'PARTIAL';
+          closeFraction = frac;
+        }
+      } else if (type === 'TP' || type === 'SL' || type === 'OCO') {
+        if (o.reduceOnly === 'true' || o.reduceOnly === true) {
+          isPositionTpsl = true;
+          executionScope = 'PARTIAL';
+        }
+      }
+
+      const trigPx = o.triggerPx
+        ? parseFloat(o.triggerPx)
+        : (type === 'TP' ? tpTriggerPrice : type === 'SL' ? slTriggerPrice : (tpTriggerPrice || slTriggerPrice));
+
+      const sz = parseFloat(o.sz || o.actualSz || '0');
       const accFillSz = parseFloat(o.accFillSz || '0');
-      const px = parseFloat(o.px || o.avgPx || '0');
+      const px = parseFloat(o.px || o.ordPx || o.tpOrdPx || o.slOrdPx || o.avgPx || '0');
 
       let qty = sz;
       let filledQty = accFillSz;
@@ -496,25 +617,37 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
         }
       }
 
+      const orderId = String(o.ordId || o.algoId || o.clOrdId || '');
+
       return {
-        id: `${key.id}-${o.ordId}`,
-        exchangeOrderId: o.ordId,
+        id: `${key.id}-${orderId}`,
+        exchangeOrderId: orderId,
         connectionId: key.id,
         exchange: 'okx',
         label: key.label,
         symbol: o.instId,
         category: mapInstrumentType('okx', o.instType || 'SWAP', o.ccy || 'USDT'),
-        side: o.side?.toLowerCase() === 'sell' ? 'sell' : 'buy',
+        side: (o.side || '').toLowerCase() === 'sell' ? 'sell' : 'buy',
         positionSide: o.posSide?.toLowerCase() === 'long' ? 'long' : o.posSide?.toLowerCase() === 'short' ? 'short' : 'net',
         type,
         status,
-        price: parseFloat(o.px || '0'),
+        price: px,
         avgPrice: parseFloat(o.avgPx || '0'),
         qty,
         filledQty,
         value,
-        triggerPrice: o.tpTriggerPx ? parseFloat(o.tpTriggerPx) : o.slTriggerPx ? parseFloat(o.slTriggerPx) : undefined,
-        timeInForce: o.notionalUsd || undefined, // OKX specific fallback, they don't always expose timeInForce directly here 
+        triggerPrice: trigPx,
+        executionScope,
+        closeFraction,
+        tpTriggerPrice,
+        slTriggerPrice,
+        isPositionTpsl,
+        reduceOnly:
+          o.reduceOnly === 'true' ||
+          o.reduceOnly === true ||
+          !!o.closeFraction ||
+          isPositionTpsl === true,
+        timeInForce: o.notionalUsd || undefined,
         createdTime: parseInt(o.cTime || '0', 10),
         updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
         fees: parseFloat(o.fee || '0'),
@@ -600,4 +733,140 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     return 'NOT_FOUND';
   }
 
+  // ── Transaction Log (OKX Account Bills) ──
+  public async getTransactionLog(
+    key: ApiCredentials,
+    startTime: number,
+    endTime: number,
+    category: string = '',
+    cursor?: string
+  ): Promise<{ list: any[]; nextPageCursor: string }> {
+    await OkxAdapter.ensureInstrumentsLoaded().catch(() => {});
+
+    const query = new URLSearchParams();
+    if (category) query.append('instType', category);
+    if (startTime) query.append('begin', startTime.toString());
+    if (endTime) query.append('end', endTime.toString());
+    query.append('limit', '100');
+    if (cursor) query.append('after', cursor);
+
+    // Try recent bills first
+    let path = `/api/v5/account/bills?${query.toString()}`;
+    let headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+    let res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+
+    // If recent bills is empty and startTime is more than 7 days ago, try bills-archive
+    const isOlderThan7Days = Date.now() - startTime > 7 * 24 * 60 * 60 * 1000;
+    if ((!res.data || res.data.length === 0) && isOlderThan7Days) {
+      path = `/api/v5/account/bills-archive?${query.toString()}`;
+      headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+      res = await proxyFetch({ targetUrl: `https://www.okx.com${path}`, method: 'GET', headers });
+    }
+
+    if (res.code && res.code !== '0') {
+      throw new Error(`OKX bills API error (${res.code}): ${res.msg}`);
+    }
+
+    const list = res.data || [];
+    // In OKX, 'after' cursor is the billId of the last record when pagination has more
+    const nextPageCursor = list.length >= 100 ? (list[list.length - 1]?.billId || '') : '';
+
+    return {
+      list,
+      nextPageCursor,
+    };
+  }
+
+  public static normalizeTxLogEntry(raw: any, key: ApiCredentials): import('../../types').OkxTransactionLogEntry {
+    const transactionTime = parseInt(raw.ts || '0', 10);
+    const amount = raw.sz || raw.balChg || '0';
+    const fee = raw.fee || '0';
+    const balance = raw.bal || '0';
+    const positionBalance = raw.posBal || '0';
+
+    // Side normalization
+    let normalizedSide = 'None';
+    const subTypeCode = String(raw.subType || '').trim();
+    if (subTypeCode === '1') normalizedSide = 'Buy';
+    else if (subTypeCode === '2') normalizedSide = 'Sell';
+    else if (subTypeCode === '3') normalizedSide = 'Open Long';
+    else if (subTypeCode === '4') normalizedSide = 'Open Short';
+    else if (subTypeCode === '5') normalizedSide = 'Close Long';
+    else if (subTypeCode === '6') normalizedSide = 'Close Short';
+    else if (raw.side) {
+      const rs = String(raw.side).toLowerCase();
+      if (rs.includes('buy') || rs.includes('long') || rs.includes('in')) normalizedSide = 'Buy';
+      else if (rs.includes('sell') || rs.includes('short') || rs.includes('out')) normalizedSide = 'Sell';
+    }
+
+    // Trade price, contracts, qty, size normalization
+    const tradePrice = String(raw.px || raw.price || raw.avgPrice || raw.fillPx || raw.fillPrice || '0');
+    
+    // Calculate accurate contract & crypto values
+    const tradeDetails = calculateOkxTradeDetails({
+      symbol: raw.instId,
+      category: raw.instType,
+      sz: raw.sz,
+      tradePrice,
+      currency: raw.ccy,
+      raw,
+      cachedInsts: OkxAdapter.cachedInstruments
+    });
+
+    const qty = tradeDetails.isDerivative
+      ? String(tradeDetails.cryptoQty)
+      : String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
+    const size = tradeDetails.isDerivative
+      ? String(tradeDetails.cryptoQty)
+      : String(raw.sz || raw.amount || raw.qty || raw.fillSz || raw.fillSize || '0');
+    const contracts = tradeDetails.isDerivative ? String(tradeDetails.contracts) : undefined;
+    const contractVal = tradeDetails.isDerivative ? String(tradeDetails.ctVal) : undefined;
+    const cryptoQty = String(tradeDetails.cryptoQty);
+    const totalValueUsd = tradeDetails.totalValueUsd > 0 ? String(tradeDetails.totalValueUsd) : undefined;
+
+    // Funding mapping (type 8 is funding fee)
+    const isFunding = String(raw.type || '') === '8';
+    const funding = isFunding ? String(raw.balChg || '0') : '0';
+
+    return {
+      id: `${key.id}-${raw.billId || transactionTime}-${transactionTime}`,
+      connectionId: key.id,
+      exchange: 'okx',
+      label: key.label,
+      rawId: String(raw.billId || ''),
+      billId: String(raw.billId || ''),
+      symbol: raw.instId || '',
+      category: raw.instType || 'OTHER',
+      side: normalizedSide,
+      type: raw.type ? String(raw.type) : '',
+      transSubType: raw.subType ? String(raw.subType) : '',
+      subType: raw.subType ? String(raw.subType) : '',
+      typeCode: raw.type ? String(raw.type) : '',
+      subTypeCode: raw.subType ? String(raw.subType) : '',
+      qty,
+      size,
+      contracts,
+      contractVal,
+      cryptoQty,
+      totalValueUsd,
+      currency: raw.ccy || '',
+      tradePrice,
+      funding,
+      amount: String(amount),
+      change: String(raw.balChg || amount),
+      cashFlow: String(raw.balChg || amount),
+      cashBalance: String(balance),
+      balance: String(balance),
+      fee: String(fee),
+      feeCurrency: raw.ccy || '',
+      positionBalance: String(positionBalance),
+      transactionTime,
+      tradeId: raw.tradeId || '',
+      orderId: raw.ordId || '',
+      orderLinkId: raw.clOrdId || '',
+      pnl: String(raw.pnl || '0'),
+      extra: raw.notes || raw.execType || undefined,
+      raw,
+    };
+  }
 }
