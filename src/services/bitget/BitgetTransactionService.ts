@@ -13,7 +13,7 @@ import {
 } from '../historyCache';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-const TWO_YEARS_MS = 2 * 365 * 24 * 60 * 60 * 1000;
+const NINETY_DAYS_MS = 89 * 24 * 60 * 60 * 1000; // Bitget API supports max 90 days access window (89d used for clock drift safety)
 const MAX_PAGES_PER_CHUNK = 20;
 
 /** Service for syncing and caching Bitget transaction logs with progressive deep-sync. */
@@ -58,13 +58,14 @@ export class BitgetTransactionService {
    */
   async syncIncremental(key: ApiCredentials, latestTime: number): Promise<BitgetTransactionLogEntry[]> {
     const now = Date.now();
+    const minAllowedTime = now - NINETY_DAYS_MS;
     let allNew: BitgetTransactionLogEntry[] = [];
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'SPOT', 'MARGIN', 'OTHER'];
     let hasError = false;
     const adapter = this.getAdapter(key);
 
     for (const category of categories) {
-      let chunkStart = latestTime + 1;
+      let chunkStart = Math.max(latestTime + 1, minAllowedTime);
       while (chunkStart < now) {
         const chunkEnd = Math.min(chunkStart + SEVEN_DAYS_MS, now);
         let cursor = '';
@@ -125,7 +126,7 @@ export class BitgetTransactionService {
   }
 
   /**
-   * Deep sync: progressively backfill up to 2 years starting from most recent.
+   * Deep sync: progressively backfill up to 90 days (Bitget API access limit) starting from most recent.
    * Runs in 7-day chunks from now backwards.
    */
   async syncAll(
@@ -133,18 +134,18 @@ export class BitgetTransactionService {
     onProgress?: (pct: number, records: number) => void
   ): Promise<void> {
     const now = Date.now();
-    let twoYearsAgo = now - TWO_YEARS_MS;
+    const maxLookback = now - NINETY_DAYS_MS;
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'SPOT', 'MARGIN', 'OTHER'];
     let totalNew = 0;
-    const targetStart = twoYearsAgo;
+    const targetStart = maxLookback;
     const adapter = this.getAdapter(key);
 
     // Process chunks from most recent to oldest
     let chunkEnd = now;
     let allEntries: BitgetTransactionLogEntry[] = [];
 
-    while (chunkEnd > twoYearsAgo) {
-      const chunkStart = Math.max(twoYearsAgo, chunkEnd - SEVEN_DAYS_MS);
+    while (chunkEnd > maxLookback) {
+      const chunkStart = Math.max(maxLookback, chunkEnd - SEVEN_DAYS_MS);
 
       for (const category of categories) {
         let cursor = '';

@@ -182,5 +182,21 @@ describe('BitgetTransactionService', () => {
       const entryOpenShort = BitgetClassicAdapter.normalizeTxLogEntry(rawOpenShort, { ...mockKey, accountType: 'classic' });
       expect(entryOpenShort.side).toBe('Open Short');
     });
+
+    it('UTA adapter getTransactionLog returns empty without error when range is older than 90 days', async () => {
+      const { BitgetUTAAdapter } = await import('../../adapters/BitgetUTAAdapter');
+      const adapter = new BitgetUTAAdapter();
+      const oldTime = Date.now() - (120 * 24 * 60 * 60 * 1000); // 120 days ago
+      const result = await adapter.getTransactionLog(mockKey, oldTime - 86400000, oldTime, 'USDT-FUTURES');
+      expect(result).toEqual({ list: [], nextPageCursor: '' });
+    });
+
+    it('Classic adapter getTransactionLog returns empty without error when range is older than 90 days', async () => {
+      const { BitgetClassicAdapter } = await import('../../adapters/BitgetClassicAdapter');
+      const adapter = new BitgetClassicAdapter();
+      const oldTime = Date.now() - (120 * 24 * 60 * 60 * 1000); // 120 days ago
+      const result = await adapter.getTransactionLog(mockKey, oldTime - 86400000, oldTime, 'USDT-FUTURES');
+      expect(result).toEqual({ list: [], nextPageCursor: '' });
+    });
   });
 });
