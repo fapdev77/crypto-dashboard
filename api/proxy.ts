@@ -68,9 +68,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     delete cleanHeaders.origin;
     delete cleanHeaders.referer;
 
+    const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+      ? AbortSignal.timeout(20000)
+      : undefined;
+
     const fetchOptions: RequestInit = {
       method,
       headers: cleanHeaders,
+      signal: timeoutSignal,
     };
 
     if (method !== "GET" && method !== "HEAD" && body) {
@@ -95,6 +100,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error: any) {
     ServerLogger.error('Vercel-Proxy', 'Proxy error:', error);
-    res.status(500).json({ error: error.message || "Internal Server Error" });
+    const isTimeout = error.name === 'TimeoutError' || error.name === 'AbortError' || error.message?.includes('timeout') || error.message?.includes('aborted');
+    const statusCode = isTimeout ? 504 : 500;
+    res.status(statusCode).json({
+      error: isTimeout
+        ? 'Gateway Timeout: upstream exchange did not respond within 20s'
+        : (error.message || "Internal Server Error")
+    });
   }
 }

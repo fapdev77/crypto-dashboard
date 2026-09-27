@@ -5,6 +5,7 @@ import { LogManager } from '../LogManager';
 import { BitgetUTAAdapter } from '../adapters/BitgetUTAAdapter';
 import { BitgetClassicAdapter } from '../adapters/BitgetClassicAdapter';
 import { matchUniversalTxType, getBitgetUniversalType } from '../../utils/transactionTypeMapper';
+import { executeWithRetry } from '../../utils/retryHelper';
 import {
   getBitgetTxLogCache,
   saveBitgetTxLogCache,
@@ -15,6 +16,7 @@ import {
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const NINETY_DAYS_MS = 89 * 24 * 60 * 60 * 1000; // Bitget API supports max 90 days access window (89d used for clock drift safety)
 const MAX_PAGES_PER_CHUNK = 20;
+const MAX_RETRIES = 3;
 
 /** Service for syncing and caching Bitget transaction logs with progressive deep-sync. */
 export class BitgetTransactionService {
@@ -72,7 +74,13 @@ export class BitgetTransactionService {
         let pages = 0;
         try {
           do {
-            const { list, nextPageCursor } = await adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined);
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `BitgetTransactionService.${key.label}`,
+              }
+            );
             for (const raw of list) {
               allNew.push(
                 key.accountType === 'uta'
@@ -82,15 +90,20 @@ export class BitgetTransactionService {
             }
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BitgetTransactionService', `Incremental chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('BitgetTransactionService', `Incremental chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
           hasError = true;
+          break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
         }
         chunkStart = chunkEnd + 1;
         // Throttle to avoid rate-limiting
         await new Promise(resolve => setTimeout(resolve, 100));
       }
+      if (hasError) break;
     }
 
     // Deduplicate
@@ -143,6 +156,7 @@ export class BitgetTransactionService {
     // Process chunks from most recent to oldest
     let chunkEnd = now;
     let allEntries: BitgetTransactionLogEntry[] = [];
+    let hasError = false;
 
     while (chunkEnd > maxLookback) {
       const chunkStart = Math.max(maxLookback, chunkEnd - SEVEN_DAYS_MS);
@@ -153,8 +167,14 @@ export class BitgetTransactionService {
 
         try {
           do {
-            const { list, nextPageCursor } = await adapter.getTransactionLog(
-              key, chunkStart, chunkEnd, category, cursor || undefined
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => adapter.getTransactionLog(
+                key, chunkStart, chunkEnd, category, cursor || undefined
+              ),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `BitgetTransactionService.${key.label}`,
+              }
             );
 
             for (const raw of list) {
@@ -167,10 +187,20 @@ export class BitgetTransactionService {
 
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BitgetTransactionService', `Chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('BitgetTransactionService', `Deep sync chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
+          hasError = true;
+          break; // Stop deep sync regress to preserve continuous historical cache without gaps
         }
+      }
+
+      if (hasError) {
+        LogManager.warn('BitgetTransactionService', `Halting deep sync for ${key.label} at ${new Date(chunkStart).toISOString()} due to chunk error.`);
+        break;
       }
 
       // Save batch and report progress

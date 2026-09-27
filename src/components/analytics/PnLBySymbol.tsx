@@ -29,7 +29,7 @@ export function PnLBySymbol() {
   const [sortField, setSortField] = useState<SortField>('totalPnL');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const { pnlData, isLoading, isSyncing, syncMessage, isRealPnLSyncing } = usePnLBySymbol(period, exchange, instrument);
+  const { pnlData, isLoading, isSyncing, syncMessage, syncError, isRealPnLSyncing } = usePnLBySymbol(period, exchange, instrument);
 
   const instrumentsAvailable = useMemo(() => {
     if (exchange === 'bitget') return ['All', 'USDT-M', 'Coin-M', 'USDC-M'];
@@ -174,7 +174,7 @@ export function PnLBySymbol() {
             <BarChart2 className="w-5 h-5 text-[#2F6BFF]" />
             PnL by Symbol
           </h2>
-          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} syncError={syncError} />
           <span className="text-xs text-[#8E9299] mt-1">To represent the actual PnL, it is calculated based on the real time USD value of the trades, not on the positions value. <br/>
           For Bybit, PnL is derived from the transaction-log cache (up to 2 years). PnL for other exchanges is computed from closed positions.</span>
           {isRealPnLSyncing && exchange === 'bybit' && (

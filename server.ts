@@ -63,9 +63,14 @@ async function startServer() {
       delete cleanHeaders.origin;
       delete cleanHeaders.referer;
 
+      const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+        ? AbortSignal.timeout(20000)
+        : undefined;
+
       const fetchOptions: any = {
         method,
         headers: cleanHeaders,
+        signal: timeoutSignal,
       };
 
       if (method !== "GET" && method !== "HEAD" && body) {
@@ -89,7 +94,13 @@ async function startServer() {
 
     } catch (error: any) {
       ServerLogger.error('Proxy', 'Proxy error:', error);
-      res.status(500).json({ error: error.message });
+      const isTimeout = error.name === 'TimeoutError' || error.name === 'AbortError' || error.message?.includes('timeout') || error.message?.includes('aborted');
+      const statusCode = isTimeout ? 504 : 500;
+      res.status(statusCode).json({
+        error: isTimeout
+          ? 'Gateway Timeout: upstream exchange did not respond within 20s'
+          : (error.message || 'Internal Server Error')
+      });
     }
   });
 

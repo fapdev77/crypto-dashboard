@@ -238,7 +238,7 @@ export function OrderHistory() {
             <History className="w-5 h-5 text-[#2F6BFF]" />
             Orders History
           </h2>
-          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} />
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} syncError={error} />
         </div>
         <div className="relative">
           <button

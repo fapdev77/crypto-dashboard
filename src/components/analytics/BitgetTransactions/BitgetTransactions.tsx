@@ -104,7 +104,7 @@ export function BitgetTransactions() {
             Bitget Transactions
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing Bitget transactions...' : null} />
+            <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing Bitget transactions...' : null} syncError={error} />
             <BitgetTransactionProgress isSyncing={isSyncing} progress={progress} />
           </div>
         </div>

@@ -247,7 +247,7 @@ export function TradeHistory() {
             <ArrowLeftRight className="w-5 h-5 text-[#2F6BFF]" />
             Trade History
           </h2>
-          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing trade history...' : null} />
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing trade history...' : null} syncError={error} />
         </div>
         <div className="relative">
           <button

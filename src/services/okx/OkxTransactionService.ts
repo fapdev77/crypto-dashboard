@@ -4,6 +4,7 @@ import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { OkxAdapter } from '../adapters/OkxAdapter';
 import { matchUniversalTxType, getOkxUniversalType } from '../../utils/transactionTypeMapper';
+import { executeWithRetry } from '../../utils/retryHelper';
 import {
   getOkxTxLogCache,
   saveOkxTxLogCache,
@@ -14,6 +15,7 @@ import {
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000; // OKX archive supports up to 3 months
 const MAX_PAGES_PER_CHUNK = 20;
+const MAX_RETRIES = 3;
 
 /** Service for syncing and caching OKX transaction logs with progressive deep-sync. */
 export class OkxTransactionService {
@@ -63,21 +65,32 @@ export class OkxTransactionService {
         let pages = 0;
         try {
           do {
-            const { list, nextPageCursor } = await this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined);
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `OkxTransactionService.${key.label}`,
+              }
+            );
             for (const raw of list) {
               allNew.push(OkxAdapter.normalizeTxLogEntry(raw, key));
             }
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('OkxTransactionService', `Incremental chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('OkxTransactionService', `Incremental chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
           hasError = true;
+          break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
         }
         chunkStart = chunkEnd + 1;
         // Throttle to avoid rate-limiting
         await new Promise(resolve => setTimeout(resolve, 100));
       }
+      if (hasError) break;
     }
 
     // Deduplicate
@@ -129,6 +142,7 @@ export class OkxTransactionService {
     // Process chunks from most recent to oldest
     let chunkEnd = now;
     let allEntries: OkxTransactionLogEntry[] = [];
+    let hasError = false;
 
     while (chunkEnd > threeMonthsAgo) {
       const chunkStart = Math.max(threeMonthsAgo, chunkEnd - SEVEN_DAYS_MS);
@@ -139,8 +153,14 @@ export class OkxTransactionService {
 
         try {
           do {
-            const { list, nextPageCursor } = await this.adapter.getTransactionLog(
-              key, chunkStart, chunkEnd, category, cursor || undefined
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => this.adapter.getTransactionLog(
+                key, chunkStart, chunkEnd, category, cursor || undefined
+              ),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `OkxTransactionService.${key.label}`,
+              }
             );
 
             for (const raw of list) {
@@ -149,10 +169,20 @@ export class OkxTransactionService {
 
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('OkxTransactionService', `Chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('OkxTransactionService', `Deep sync chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
+          hasError = true;
+          break; // Stop deep sync regress to preserve continuous historical cache without gaps
         }
+      }
+
+      if (hasError) {
+        LogManager.warn('OkxTransactionService', `Halting deep sync for ${key.label} at ${new Date(chunkStart).toISOString()} due to chunk error.`);
+        break;
       }
 
       // Save batch and report progress

@@ -8,6 +8,7 @@ import {
   getBybitTxLogTotalCount,
   getBitgetTxLogTotalCount,
   getOkxTxLogTotalCount,
+  DB_VERSION,
 } from '../../services/historyCache';
 import { AppTooltip } from '../ui/Tooltip';
 import { LogManager } from '../../services/LogManager';
@@ -136,11 +137,19 @@ export function TransactionLogsCacheCard() {
           <ArrowLeftRight className="w-4 h-4 text-emerald-400" />
           Transaction Logs Cache
         </h3>
-        <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
-          <span className="text-[#8E9299] text-[10px]">Total Tx:</span>
-          <span className="text-emerald-400 font-mono text-xs font-medium">
-            {dbCounts.total.toLocaleString()}
+        <div className="flex items-center gap-2">
+          <span 
+            className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            title={`IndexedDB schema v${DB_VERSION}`}
+          >
+            DB v{DB_VERSION}
           </span>
+          <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
+            <span className="text-[#8E9299] text-[10px]">Total Tx:</span>
+            <span className="text-emerald-400 font-mono text-xs font-medium">
+              {dbCounts.total.toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
       <p className="text-[#8E9299] text-xs mb-4">

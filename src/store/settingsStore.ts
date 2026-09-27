@@ -42,6 +42,12 @@ interface SettingsState {
   /** Exposed balance calculation mode for hedge positions ('gross' or 'net'). */
   hedgeExposedMode: 'gross' | 'net';
   setHedgeExposedMode: (mode: 'gross' | 'net') => void;
+  /** IndexedDB health and schema status */
+  indexedDBStatus: 'healthy' | 'error' | 'recovering';
+  indexedDBError: string | null;
+  indexedDBVersion: number;
+  setIndexedDBStatus: (status: 'healthy' | 'error' | 'recovering', error?: string | null) => void;
+  clearIndexedDBError: () => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -71,6 +77,11 @@ export const useSettingsStore = create<SettingsState>()(
       setFundingHistoryInterval: (val: number) => set({ fundingHistoryInterval: Math.max(4, Math.min(8, val)) }),
       hedgeExposedMode: 'gross',
       setHedgeExposedMode: (hedgeExposedMode: 'gross' | 'net') => set({ hedgeExposedMode }),
+      indexedDBStatus: 'healthy',
+      indexedDBError: null,
+      indexedDBVersion: 12,
+      setIndexedDBStatus: (indexedDBStatus, error = null) => set({ indexedDBStatus, indexedDBError: error }),
+      clearIndexedDBError: () => set({ indexedDBStatus: 'healthy', indexedDBError: null }),
     }),
     {
       name: 'terminal-settings',

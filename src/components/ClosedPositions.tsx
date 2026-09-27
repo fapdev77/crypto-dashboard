@@ -30,7 +30,7 @@ export function ClosedPositions() {
 
   const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
 
-  const { positions: closedPositions, isLoading, isSyncing, syncMessage } = usePositionHistory(period);
+  const { positions: closedPositions, isLoading, isSyncing, syncMessage, syncError } = usePositionHistory(period);
   const [error, setError] = useState<string | null>(null);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
@@ -206,7 +206,7 @@ export function ClosedPositions() {
             <History className="w-5 h-5 text-[#2F6BFF]" />
             Positions History
           </h2>
-          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} />
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} syncError={syncError} />
         </div>
         <div className="relative">
           <button

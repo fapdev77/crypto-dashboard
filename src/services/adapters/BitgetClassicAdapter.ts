@@ -9,6 +9,7 @@ import { LogManager } from '../LogManager';
 import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
+import { ApiRateLimitError } from '../../utils/retryHelper';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -694,13 +695,17 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       );
 
       const res = await proxyFetch({ targetUrl: url, method: 'GET', headers });
+      if (res.code === '30006' || res._httpStatus === 429) {
+        throw new ApiRateLimitError(`Bitget classic financial-records rate limit exceeded (30006): ${res.msg}`, '30006', 'bitget');
+      }
       if (res.code === '00000' && res.data) {
         return {
           list: (res.data.list || []).map((item: any) => ({ ...item, category: item.category || effectiveCategory })),
           nextPageCursor: res.data.cursor || '',
         };
       }
-    } catch {
+    } catch (e) {
+      if (e instanceof ApiRateLimitError) throw e;
       // Fallback to V2 endpoints based on category
     }
 
@@ -724,12 +729,16 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
         );
 
         const spotRes = await proxyFetch({ targetUrl: spotUrl, method: 'GET', headers: spotHeaders });
+        if (spotRes.code === '30006' || spotRes._httpStatus === 429) {
+          throw new ApiRateLimitError(`Bitget classic spot bills rate limit exceeded (30006): ${spotRes.msg}`, '30006', 'bitget');
+        }
         if (spotRes.code === '00000' && Array.isArray(spotRes.data)) {
           const list = spotRes.data.map((item: any) => ({ ...item, category: 'spot' }));
           const nextCursor = list.length === 100 ? (list[list.length - 1].id || list[list.length - 1].billId || '') : '';
           return { list, nextPageCursor: nextCursor };
         }
-      } catch {
+      } catch (e) {
+        if (e instanceof ApiRateLimitError) throw e;
         return { list: [], nextPageCursor: '' };
       }
     }
@@ -754,12 +763,16 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
         );
 
         const marginRes = await proxyFetch({ targetUrl: marginUrl, method: 'GET', headers: marginHeaders });
+        if (marginRes.code === '30006' || marginRes._httpStatus === 429) {
+          throw new ApiRateLimitError(`Bitget classic margin bills rate limit exceeded (30006): ${marginRes.msg}`, '30006', 'bitget');
+        }
         if (marginRes.code === '00000') {
           const list = (marginRes.data?.list || marginRes.data || []).map((item: any) => ({ ...item, category: 'margin' }));
           const nextCursor = list.length === 100 ? (list[list.length - 1].id || '') : '';
           return { list, nextPageCursor: nextCursor };
         }
-      } catch {
+      } catch (e) {
+        if (e instanceof ApiRateLimitError) throw e;
         return { list: [], nextPageCursor: '' };
       }
     }
@@ -790,6 +803,9 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       );
 
       const mixRes = await proxyFetch({ targetUrl: mixUrl, method: 'GET', headers: mixHeaders });
+      if (mixRes.code === '30006' || mixRes._httpStatus === 429) {
+        throw new ApiRateLimitError(`Bitget classic mix bills rate limit exceeded (30006): ${mixRes.msg}`, '30006', 'bitget');
+      }
       if (mixRes.code === '00000') {
         const rawList = mixRes.data?.bills || mixRes.data || [];
         const list = Array.isArray(rawList)
@@ -800,7 +816,8 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
           nextPageCursor: mixRes.data?.nextFlag ? (mixRes.data?.lastEndId || '') : '',
         };
       }
-    } catch {
+    } catch (e) {
+      if (e instanceof ApiRateLimitError) throw e;
       // Return empty if mix bills query failed
     }
 

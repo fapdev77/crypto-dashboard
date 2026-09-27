@@ -105,7 +105,7 @@ export function OkxTransactions() {
             OKX Transactions
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing OKX transactions...' : null} />
+            <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing OKX transactions...' : null} syncError={error} />
             <OkxTransactionProgress isSyncing={isSyncing} progress={progress} />
           </div>
         </div>

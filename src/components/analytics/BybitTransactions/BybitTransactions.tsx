@@ -113,7 +113,7 @@ export function BybitTransactions() {
             Bybit Transactions
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing Bybit transactions...' : null} />
+            <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing Bybit transactions...' : null} syncError={error} />
             <BybitTransactionProgress isSyncing={isSyncing} progress={progress} />
           </div>
         </div>

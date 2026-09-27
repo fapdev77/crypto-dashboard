@@ -21,6 +21,9 @@ interface SyncCoordinatorState {
   /** Timestamp of the last successful positions sync. */
   lastPositionsSyncTimestamp: number;
   setLastPositionsSyncTimestamp: (timestamp: number) => void;
+  /** Error message if the last positions sync failed. */
+  positionsSyncError: string | null;
+  setPositionsSyncError: (error: string | null) => void;
 
   // ── 2. PnL By Symbol (Bybit Real PnL) ──
   /** Bybit transaction-log PnL aggregated by symbol. */
@@ -43,6 +46,9 @@ interface SyncCoordinatorState {
   /** Timestamp of the last successful orders sync. */
   lastOrdersSyncTimestamp: number;
   setLastOrdersSyncTimestamp: (timestamp: number) => void;
+  /** Error message if the last orders sync failed. */
+  ordersSyncError: string | null;
+  setOrdersSyncError: (error: string | null) => void;
 
   // ── 4. Bybit Transactions ──
   /** In-memory cache of transaction log entries across connections. */
@@ -57,6 +63,9 @@ interface SyncCoordinatorState {
   /** Timestamp of the last successful transaction-log sync. */
   bybitTxLastSyncTime: number;
   setBybitTxLastSyncTime: (t: number) => void;
+  /** Error message if the last transaction sync failed. */
+  txSyncError: string | null;
+  setTxSyncError: (error: string | null) => void;
   /** Latest transactionTime cached. */
   bybitTxLatestTransactionTime: number;
   setBybitTxLatestTransactionTime: (t: number) => void;
@@ -108,6 +117,8 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setLastPositionsSyncedVersion: (lastPositionsSyncedVersion) => set({ lastPositionsSyncedVersion }),
   lastPositionsSyncTimestamp: 0,
   setLastPositionsSyncTimestamp: (lastPositionsSyncTimestamp) => set({ lastPositionsSyncTimestamp }),
+  positionsSyncError: null,
+  setPositionsSyncError: (positionsSyncError) => set({ positionsSyncError }),
 
   // 2. PnL By Symbol (Bybit Real PnL)
   cachedPnLRecord: {},
@@ -124,6 +135,8 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setLastOrdersSyncedVersion: (lastOrdersSyncedVersion) => set({ lastOrdersSyncedVersion }),
   lastOrdersSyncTimestamp: 0,
   setLastOrdersSyncTimestamp: (lastOrdersSyncTimestamp) => set({ lastOrdersSyncTimestamp }),
+  ordersSyncError: null,
+  setOrdersSyncError: (ordersSyncError) => set({ ordersSyncError }),
 
   // 4. Bybit Transactions
   cachedTxLog: [],
@@ -134,6 +147,8 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setBybitTxProgress: (bybitTxProgress) => set({ bybitTxProgress }),
   bybitTxLastSyncTime: 0,
   setBybitTxLastSyncTime: (bybitTxLastSyncTime) => set({ bybitTxLastSyncTime }),
+  txSyncError: null,
+  setTxSyncError: (txSyncError) => set({ txSyncError }),
   bybitTxLatestTransactionTime: 0,
   setBybitTxLatestTransactionTime: (bybitTxLatestTransactionTime) => set({ bybitTxLatestTransactionTime }),
   bybitTxOldestTransactionTime: 0,
