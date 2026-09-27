@@ -1,3 +1,10 @@
+# [1.80.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.79.0...v1.80.0) (2026-09-27)
+
+
+### Features
+
+* improve connection resilience and storage management ([5b21dd1](https://github.com/fapdev77/crypto-dashboard/commit/5b21dd13a7fa4dc960f8faee54c9350787fbb3f5))
+
 # [1.79.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.78.0...v1.79.0) (2026-09-27)
 
 
