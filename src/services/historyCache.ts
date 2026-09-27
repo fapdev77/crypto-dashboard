@@ -1317,3 +1317,135 @@ export async function updateFundingMeta(
   );
 }
 
+export interface PruneResult {
+  positionsPruned: number;
+  ordersPruned: number;
+  bybitTxPruned: number;
+  bitgetTxPruned: number;
+  okxTxPruned: number;
+  totalPruned: number;
+  cutoffDate: Date;
+}
+
+/**
+ * Prunes historical records older than `olderThanDays` from IndexedDB stores
+ * (positions, closed orders, Bybit/Bitget/OKX transaction logs).
+ * Uses timestamp indexes to efficiently delete out-of-scope historical items.
+ */
+export async function pruneHistoricalData(olderThanDays: number): Promise<PruneResult> {
+  const cutoffTime = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
+  const cutoffDate = new Date(cutoffTime);
+
+  const res = await executeDBTransaction<PruneResult>(
+    [
+      HISTORY_STORE,
+      ORDER_HISTORY_STORE,
+      BYBIT_TX_LOG_STORE,
+      BITGET_TX_LOG_STORE,
+      OKX_TX_LOG_STORE,
+    ],
+    'readwrite',
+    async (tx) => {
+      let positionsPruned = 0;
+      let ordersPruned = 0;
+      let bybitTxPruned = 0;
+      let bitgetTxPruned = 0;
+      let okxTxPruned = 0;
+
+      // 1. Positions by-closeUpdateTime
+      try {
+        const posIndex = tx.objectStore(HISTORY_STORE).index('by-closeUpdateTime');
+        let posCursor = await posIndex.openCursor(IDBKeyRange.upperBound(cutoffTime));
+        while (posCursor) {
+          await posCursor.delete();
+          positionsPruned++;
+          posCursor = await posCursor.continue();
+        }
+      } catch (e) {
+        LogManager.warn('HistoryCache', 'Error pruning positions:', e);
+      }
+
+      // 2. Orders by-createdTime
+      try {
+        const orderIndex = tx.objectStore(ORDER_HISTORY_STORE).index('by-createdTime');
+        let orderCursor = await orderIndex.openCursor(IDBKeyRange.upperBound(cutoffTime));
+        while (orderCursor) {
+          await orderCursor.delete();
+          ordersPruned++;
+          orderCursor = await orderCursor.continue();
+        }
+      } catch (e) {
+        LogManager.warn('HistoryCache', 'Error pruning orders:', e);
+      }
+
+      // 3. Bybit Tx
+      try {
+        const bybitIndex = tx.objectStore(BYBIT_TX_LOG_STORE).index('by-transactionTime');
+        let bybitCursor = await bybitIndex.openCursor(IDBKeyRange.upperBound(cutoffTime));
+        while (bybitCursor) {
+          await bybitCursor.delete();
+          bybitTxPruned++;
+          bybitCursor = await bybitCursor.continue();
+        }
+      } catch (e) {
+        LogManager.warn('HistoryCache', 'Error pruning Bybit Tx:', e);
+      }
+
+      // 4. Bitget Tx
+      try {
+        const bitgetIndex = tx.objectStore(BITGET_TX_LOG_STORE).index('by-transactionTime');
+        let bitgetCursor = await bitgetIndex.openCursor(IDBKeyRange.upperBound(cutoffTime));
+        while (bitgetCursor) {
+          await bitgetCursor.delete();
+          bitgetTxPruned++;
+          bitgetCursor = await bitgetCursor.continue();
+        }
+      } catch (e) {
+        LogManager.warn('HistoryCache', 'Error pruning Bitget Tx:', e);
+      }
+
+      // 5. OKX Tx
+      try {
+        const okxIndex = tx.objectStore(OKX_TX_LOG_STORE).index('by-transactionTime');
+        let okxCursor = await okxIndex.openCursor(IDBKeyRange.upperBound(cutoffTime));
+        while (okxCursor) {
+          await okxCursor.delete();
+          okxTxPruned++;
+          okxCursor = await okxCursor.continue();
+        }
+      } catch (e) {
+        LogManager.warn('HistoryCache', 'Error pruning OKX Tx:', e);
+      }
+
+      const totalPruned = positionsPruned + ordersPruned + bybitTxPruned + bitgetTxPruned + okxTxPruned;
+      LogManager.info(
+        'HistoryCache',
+        `Pruned ${totalPruned} records older than ${olderThanDays} days (before ${cutoffDate.toISOString()})`
+      );
+
+      return {
+        positionsPruned,
+        ordersPruned,
+        bybitTxPruned,
+        bitgetTxPruned,
+        okxTxPruned,
+        totalPruned,
+        cutoffDate,
+      };
+    },
+    'pruneHistoricalData'
+  );
+
+  return (
+    res || {
+      positionsPruned: 0,
+      ordersPruned: 0,
+      bybitTxPruned: 0,
+      bitgetTxPruned: 0,
+      okxTxPruned: 0,
+      totalPruned: 0,
+      cutoffDate,
+    }
+  );
+}
+

@@ -33,7 +33,9 @@ import {
   getBybitTxLogTotalCount,
   getBitgetTxLogTotalCount,
   getOkxTxLogTotalCount,
+  pruneHistoricalData,
 } from '../services/historyCache';
+import { getStorageQuotaEstimate, StorageEstimateResult } from '../services/storageQuota';
 import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 
@@ -86,6 +88,11 @@ export function IndexedDBCacheCard() {
   // Recovery states
   const [isRecovering, setIsRecovering] = useState(false);
 
+  // Storage Quota & Pruning states
+  const [storageQuota, setStorageQuota] = useState<StorageEstimateResult | null>(null);
+  const [isPruning, setIsPruning] = useState(false);
+  const [pruneDays, setPruneDays] = useState(365);
+
   // Tx counts
   const [txCounts, setTxCounts] = useState({
     bybit: 0,
@@ -96,18 +103,22 @@ export function IndexedDBCacheCard() {
 
   const loadAllStats = useCallback(async () => {
     try {
-      const [cacheStats, metaSize, bybit, bitget, okx] = await Promise.all([
+      const [cacheStats, metaSize, bybit, bitget, okx, quota] = await Promise.all([
         getComprehensiveCacheStats().catch(() => null),
         getAssetMetadataCacheSize().catch(() => 0),
         getBybitTxLogTotalCount().catch(() => 0),
         getBitgetTxLogTotalCount().catch(() => 0),
         getOkxTxLogTotalCount().catch(() => 0),
+        getStorageQuotaEstimate().catch(() => null),
       ]);
 
       if (cacheStats) {
         setStats(cacheStats);
       }
       setMetaCacheSize(metaSize);
+      if (quota) {
+        setStorageQuota(quota);
+      }
       setTxCounts({
         bybit,
         bitget,
@@ -267,6 +278,26 @@ export function IndexedDBCacheCard() {
     }
   };
 
+  const handlePruneData = async () => {
+    if (!window.confirm(`Are you sure you want to prune local cache records older than ${pruneDays} days?`)) {
+      return;
+    }
+    setIsPruning(true);
+    try {
+      const result = await pruneHistoricalData(pruneDays);
+      toast.success(
+        `Pruned ${result.totalPruned.toLocaleString()} records older than ${pruneDays} days`,
+        { id: 'prune-toast' }
+      );
+      await loadAllStats();
+    } catch (err: any) {
+      LogManager.error('IndexedDBCacheCard', 'Failed to prune historical data:', err);
+      toast.error(`Pruning failed: ${err.message || 'Unknown error'}`, { id: 'prune-err' });
+    } finally {
+      setIsPruning(false);
+    }
+  };
+
   const totalRecordsCount = (stats?.totalRecords || 0) + (metaCacheSize || 0);
 
   return (
@@ -298,6 +329,23 @@ export function IndexedDBCacheCard() {
           >
             DB v{indexedDBVersion || DB_VERSION}
           </span>
+
+          {/* Storage Quota badge if supported */}
+          {storageQuota?.isSupported && (
+            <div
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-mono ${
+                storageQuota.isWarning
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                  : 'bg-[#2a2b30]/50 text-gray-300 border-[#2a2b30]'
+              }`}
+              title={`Browser Storage Quota: ${storageQuota.usageMB} MB of ${storageQuota.quotaMB} MB used (${storageQuota.percentageUsed}%)`}
+            >
+              <span className="text-[#8E9299] text-[10px]">Disk:</span>
+              <span className="font-semibold">
+                {storageQuota.usageMB} MB ({storageQuota.percentageUsed}%)
+              </span>
+            </div>
+          )}
 
           {/* Color-coded health indicator */}
           <span
@@ -606,6 +654,50 @@ export function IndexedDBCacheCard() {
           <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
             <span>1h</span>
             <span>24h</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 3.5: IndexedDB Historical Retention & Quota Pruning */}
+      <div className="mt-4 bg-[#0c0d0e] border border-[#2a2b30]/60 p-4 rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-amber-400" />
+              <h4 className="text-white font-medium text-xs">
+                Data Retention & History Pruning
+              </h4>
+              <span className="text-amber-400 font-mono text-xs bg-amber-400/10 px-2 py-0.5 rounded-md font-semibold">
+                {pruneDays}d
+              </span>
+            </div>
+            <p className="text-[#8E9299] text-[11px] leading-relaxed">
+              Purge historical records (closed positions, orders, and transaction ledgers) older than the selected threshold to free IndexedDB browser storage.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <select
+              value={pruneDays}
+              onChange={(e) => setPruneDays(Number(e.target.value))}
+              className="bg-[#1a1b1e] border border-[#2a2b30] text-xs text-white rounded-md px-2.5 py-1.5 focus:outline-none focus:border-amber-400 cursor-pointer"
+            >
+              <option value={30}>Older than 30 days (1 mo)</option>
+              <option value={60}>Older than 60 days (2 mo)</option>
+              <option value={90}>Older than 90 days (3 mo)</option>
+              <option value={180}>Older than 180 days (6 mo)</option>
+              <option value={365}>Older than 1 year (Default)</option>
+              <option value={730}>Older than 2 years</option>
+            </select>
+            <button
+              onClick={handlePruneData}
+              disabled={isPruning}
+              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Prune out-of-scope historical records from IndexedDB"
+            >
+              {isPruning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              <span>{isPruning ? 'Pruning...' : 'Prune History'}</span>
+            </button>
           </div>
         </div>
       </div>

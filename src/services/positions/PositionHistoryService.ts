@@ -2,6 +2,7 @@ import { UnifiedHistoryPosition } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { ExchangeAggregator } from '../adapters/ExchangeAggregator';
+import { useSyncCoordinatorStore } from '../../store/syncCoordinatorStore';
 import {
   getCachedHistory,
   saveCachedHistory,
@@ -20,8 +21,8 @@ export class PositionHistoryService {
       return await adapter.fetchAndNormalize(key, start, end);
     } catch (error) {
       LogManager.error('PositionHistoryService', `Fetching history for ${key.exchange} (${key.label}):`, error);
+      throw error;
     }
-    return [];
   }
 
   /**
@@ -48,9 +49,12 @@ export class PositionHistoryService {
     try {
       newPositions = await this.fetchExchangeHistory(key, incrementalStart, now);
       LogManager.info('HistoryCache', `${connectionId}: ${newPositions.length} new records fetched`);
-    } catch (err) {
-      LogManager.warn('HistoryCache', `Incremental fetch failed for ${connectionId}, returning stale cache`, err);
-      return cachedPositions; // Graceful fallback to stale data (AGENTS.md §5)
+      useSyncCoordinatorStore.getState().setPositionsSyncError(null);
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      LogManager.warn('HistoryCache', `Incremental fetch failed for ${connectionId}, returning stale cache: ${errMsg}`);
+      useSyncCoordinatorStore.getState().setPositionsSyncError(errMsg);
+      return cachedPositions; // Graceful fallback to stale data
     }
 
     // Step 4: Persist new records and update metadata

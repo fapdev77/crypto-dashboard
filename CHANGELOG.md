@@ -1,3 +1,17 @@
+# [1.79.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.78.0...v1.79.0) (2026-09-27)
+
+
+### Features
+
+* add storage pruning and global error handling ([4e077c1](https://github.com/fapdev77/crypto-dashboard/commit/4e077c1d3845136834bb2af7deb25d88a9968656))
+
+# [1.78.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.77.0...v1.78.0) (2026-09-27)
+
+
+### Features
+
+* **sync:** implement connection-level lock manager ([f0e8e2e](https://github.com/fapdev77/crypto-dashboard/commit/f0e8e2e6ea70b2e060efe33cbdd1600fa3878db5))
+
 # [1.77.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.76.0...v1.77.0) (2026-09-27)
 
 
