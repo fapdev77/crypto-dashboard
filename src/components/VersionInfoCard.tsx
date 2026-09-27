@@ -1,10 +1,27 @@
-import React, { useState } from 'react';
-import { Tag, Github, ExternalLink, Calendar, GitCommit, Sparkles, FileText, ChevronDown, ChevronUp, CheckCircle2, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Tag, Github, ExternalLink, Calendar, GitCommit, Sparkles, FileText, ChevronDown, ChevronUp, CheckCircle2, RefreshCw, Database, AlertCircle } from 'lucide-react';
 import { usePwaUpdateStore } from '../store/pwaUpdateStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { checkIndexedDBHealth, recoverAndResetIndexedDB, DB_VERSION } from '../services/historyCache';
 
 export function VersionInfoCard() {
   const [showFullChangelog, setShowFullChangelog] = useState(false);
   const { needRefresh, isUpdating, triggerUpdate } = usePwaUpdateStore();
+  const { indexedDBStatus, indexedDBError, indexedDBVersion } = useSettingsStore();
+  const [isRecoveringDb, setIsRecoveringDb] = useState(false);
+
+  useEffect(() => {
+    checkIndexedDBHealth().catch(() => {});
+  }, []);
+
+  const handleClearAndRecover = async () => {
+    setIsRecoveringDb(true);
+    try {
+      await recoverAndResetIndexedDB();
+    } finally {
+      setIsRecoveringDb(false);
+    }
+  };
 
   const releaseInfo = typeof __APP_RELEASE_INFO__ !== 'undefined' ? __APP_RELEASE_INFO__ : null;
 
@@ -111,6 +128,57 @@ export function VersionInfoCard() {
               </a>
             </div>
           </div>
+
+          {/* IndexedDB Cache Database Status Row */}
+          <div className="flex items-center justify-between sm:col-span-2 border-t border-[#2a2b30]/50 pt-2.5 mt-0.5">
+            <div className="flex items-center gap-2.5">
+              <div className={`p-2 rounded-md ${
+                indexedDBStatus === 'healthy' 
+                  ? 'bg-emerald-500/10 text-emerald-400' 
+                  : 'bg-red-500/10 text-red-400 animate-pulse'
+              }`}>
+                <Database className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">
+                  IndexedDB Cache Database
+                </span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs font-mono font-semibold text-white">v{indexedDBVersion || DB_VERSION}</span>
+                  {/* Color-coded indicator: green for healthy, red for error */}
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                    indexedDBStatus === 'healthy'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      indexedDBStatus === 'healthy' ? 'bg-emerald-400' : 'bg-red-500'
+                    }`} />
+                    {indexedDBStatus === 'healthy' ? 'Healthy' : indexedDBStatus === 'recovering' ? 'Recovering...' : 'Error / Conflict'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {indexedDBStatus === 'error' && (
+              <button
+                onClick={handleClearAndRecover}
+                disabled={isRecoveringDb}
+                className="px-2.5 py-1 text-xs bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-50 text-white rounded font-medium transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+                title="Clear Cache & Rebuild Database"
+              >
+                {isRecoveringDb && <RefreshCw className="w-3 h-3 animate-spin" />}
+                Clear Cache
+              </button>
+            )}
+          </div>
+
+          {indexedDBStatus === 'error' && indexedDBError && (
+            <div className="sm:col-span-2 bg-red-500/10 border border-red-500/20 rounded p-2 text-[11px] text-red-300 flex items-start gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+              <span>{indexedDBError}</span>
+            </div>
+          )}
         </div>
 
         {/* Latest Release Summary */}

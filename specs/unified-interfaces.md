@@ -599,7 +599,7 @@ Transient fields (`currentRates`, `isSyncing`, etc.) are NOT persisted to localS
 
 ## 12. Funding Cache Stores (IndexedDB via `historyCache.ts`)
 
-### 12.1 Object Stores (DB_VERSION 10)
+### 12.1 Object Stores (DB_VERSION 12)
 
 | Store Name | Key Path | Indexes | Description |
 |-----------|----------|---------|-------------|
@@ -618,13 +618,14 @@ Transient fields (`currentRates`, `isSyncing`, etc.) are NOT persisted to localS
 | `getFundingMeta(exchange, symbol)` | `funding-meta` | Read coverage metadata |
 | `updateFundingMeta(exchange, symbol, oldest, latest)` | `funding-meta` | Upsert coverage metadata |
 
-### 12.3 Migration (v9 → v10)
+### 12.3 Migration (v9 → v10 → v12)
 
 | Action | Details |
 |--------|---------|
 | Delete `funding-fees` store | Removes all raw individual settlement records |
 | Create `funding-summaries` store | New store with `by-exchange` and `by-symbol` indexes |
 | Preserve `funding-meta` store | Unchanged, all metadata entries retained |
+| Add Bitget & OKX tx logs (v11/v12) | Dedicated stores for transaction logs and metadata |
 
 ### 12.4 Metadata Schema (unchanged)
 
@@ -640,7 +641,7 @@ export interface FundingMeta {
 }
 ```
 
-### 12.5 Global IndexedDB Cache Database Architecture (`crypto-dashboard-cache` - DB_VERSION 10)
+### 12.5 Global IndexedDB Cache Database Architecture (`crypto-dashboard-cache` - DB_VERSION 12)
 
 | Store Name | Key Path | Indexes | Associated Unified Interface |
 |---|---|---|---|
