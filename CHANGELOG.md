@@ -1,3 +1,10 @@
+# [1.74.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.73.1...v1.74.0) (2026-09-27)
+
+
+### Features
+
+* update IndexedDB schema to v12 ([95b381b](https://github.com/fapdev77/crypto-dashboard/commit/95b381bd8e9acddd11aa2129ef93856d0c2f5c06))
+
 ## [1.73.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.73.0...v1.73.1) (2026-09-22)
 
 
