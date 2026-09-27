@@ -1,3 +1,10 @@
+# [1.75.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.74.0...v1.75.0) (2026-09-27)
+
+
+### Features
+
+* improve IndexedDB error handling ([7dcef55](https://github.com/fapdev77/crypto-dashboard/commit/7dcef55810f92f797693015b141cacd04329e020))
+
 # [1.74.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.73.1...v1.74.0) (2026-09-27)
 
 
