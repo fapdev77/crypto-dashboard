@@ -1,3 +1,10 @@
+# [1.81.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.80.0...v1.81.0) (2026-09-27)
+
+
+### Features
+
+* **storage:** monitor browser storage quota ([462b44b](https://github.com/fapdev77/crypto-dashboard/commit/462b44bf6a3fd25cf5b41d9041b86fdb39c9dede))
+
 # [1.80.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.79.0...v1.80.0) (2026-09-27)
 
 
