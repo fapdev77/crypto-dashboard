@@ -1,3 +1,10 @@
+# [1.76.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.75.0...v1.76.0) (2026-09-27)
+
+
+### Features
+
+* **services:** implement rate limit handling for exchanges ([8617fb3](https://github.com/fapdev77/crypto-dashboard/commit/8617fb3687a30ba82a1614b7dafc47266f276a7e))
+
 # [1.75.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.74.0...v1.75.0) (2026-09-27)
 
 
