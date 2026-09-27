@@ -77,6 +77,11 @@ export function isTransientError(error: any): boolean {
     return true;
   }
 
+  const name = (error.name || '').toLowerCase();
+  if (name === 'timeouterror' || name === 'aborterror') {
+    return true;
+  }
+
   const message = (error.message || (typeof error === 'string' ? error : '')).toLowerCase();
   return (
     message.includes('network') ||
@@ -84,6 +89,8 @@ export function isTransientError(error: any): boolean {
     message.includes('failed to fetch') ||
     message.includes('timeout') ||
     message.includes('timed out') ||
+    message.includes('aborted') ||
+    message.includes('gateway timeout') ||
     message.includes('econnreset') ||
     message.includes('etimedout') ||
     message.includes('enotfound') ||

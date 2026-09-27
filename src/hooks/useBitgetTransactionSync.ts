@@ -84,6 +84,7 @@ export function useBitgetTransactionSync() {
         }
         setBitgetTxTotalRecords(allEntries.length);
         setBitgetTxLastSyncTime(now);
+        useSyncCoordinatorStore.getState().setTxSyncError(null);
 
         LogManager.system(
           'BitgetTxSync',
@@ -95,8 +96,9 @@ export function useBitgetTransactionSync() {
           `New: ${totalNewRecords} | ` +
           `Total Cached: ${allEntries.length} records`
         );
-      } catch (err) {
+      } catch (err: any) {
         LogManager.error('BitgetTxSync', 'Background sync failed:', err);
+        useSyncCoordinatorStore.getState().setTxSyncError(err?.message || 'Error syncing Bitget transactions');
       } finally {
         setIsBitgetTxSyncing(false);
       }

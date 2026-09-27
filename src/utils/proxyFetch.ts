@@ -1,17 +1,33 @@
 import { LogManager } from '../services/LogManager';
 
+export const DEFAULT_FETCH_TIMEOUT_MS = 25000; // 25s client-side timeout
+
 export interface ProxyRequest {
   targetUrl: string;
   method: string;
   headers: Record<string, string>;
   body?: any;
+  signal?: AbortSignal;
+  timeoutMs?: number;
 }
 
 export const proxyFetch = async (req: ProxyRequest) => {
+  const timeoutMs = req.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS;
+  const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+    ? AbortSignal.timeout(timeoutMs)
+    : undefined;
+  const signal = req.signal ?? timeoutSignal;
+
   const response = await fetch('/api/proxy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(req),
+    body: JSON.stringify({
+      targetUrl: req.targetUrl,
+      method: req.method,
+      headers: req.headers,
+      body: req.body,
+    }),
+    signal,
   });
 
   const contentType = response.headers.get('content-type');
@@ -48,10 +64,21 @@ export const proxyFetch = async (req: ProxyRequest) => {
  * If it fails (e.g., network error / strict CORS in another environment), it falls back to the conventional cloud proxyFetch.
  * DO NOT REMOVE: Without this fallback, Bybit dashboard rendering will fail on US-hosted environments.
  */
-export const hybridFetch = async (targetUrl: string, method: string, headers: Record<string, string>) => {
+export const hybridFetch = async (
+  targetUrl: string,
+  method: string,
+  headers: Record<string, string>,
+  options?: { timeoutMs?: number; signal?: AbortSignal }
+) => {
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS;
+  const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+    ? AbortSignal.timeout(timeoutMs)
+    : undefined;
+  const signal = options?.signal ?? timeoutSignal;
+
   try {
     // Browser-Direct Attempt (escapes WAF/GeoBlock Bybit on US Cloud Run instances)
-    const res = await fetch(targetUrl, { method, headers });
+    const res = await fetch(targetUrl, { method, headers, signal });
     const contentType = res.headers.get('content-type');
     const isJson = contentType && contentType.includes('application/json');
 
@@ -76,5 +103,5 @@ export const hybridFetch = async (targetUrl: string, method: string, headers: Re
   }
   
   // Proxy Fallback
-  return await proxyFetch({ targetUrl, method, headers });
+  return await proxyFetch({ targetUrl, method, headers, signal, timeoutMs });
 };

@@ -84,6 +84,7 @@ export function useOkxTransactionSync() {
         }
         setOkxTxTotalRecords(allEntries.length);
         setOkxTxLastSyncTime(now);
+        useSyncCoordinatorStore.getState().setTxSyncError(null);
 
         LogManager.system(
           'OkxTxSync',
@@ -95,8 +96,9 @@ export function useOkxTransactionSync() {
           `New: ${totalNewRecords} | ` +
           `Total Cached: ${allEntries.length} records`
         );
-      } catch (err) {
+      } catch (err: any) {
         LogManager.error('OkxTxSync', 'Background sync failed:', err);
+        useSyncCoordinatorStore.getState().setTxSyncError(err?.message || 'Error syncing OKX transactions');
       } finally {
         setIsOkxTxSyncing(false);
       }

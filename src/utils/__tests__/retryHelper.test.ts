@@ -63,6 +63,13 @@ describe('retryHelper', () => {
       expect(isTransientError(new Error('Failed to fetch'))).toBe(true);
       expect(isTransientError(new Error('Network error: ECONNRESET'))).toBe(true);
       expect(isTransientError(new Error('ETIMEDOUT: Connection timed out'))).toBe(true);
+      expect(isTransientError(new Error('Gateway Timeout: upstream exchange did not respond'))).toBe(true);
+      const abortErr = new Error('The operation was aborted');
+      abortErr.name = 'AbortError';
+      expect(isTransientError(abortErr)).toBe(true);
+      const timeoutErr = new Error('The operation timed out');
+      timeoutErr.name = 'TimeoutError';
+      expect(isTransientError(timeoutErr)).toBe(true);
       expect(isTransientError({ status: 502 })).toBe(true);
       expect(isTransientError({ status: 503 })).toBe(true);
       expect(isTransientError({ status: 504 })).toBe(true);

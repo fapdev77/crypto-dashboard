@@ -95,13 +95,15 @@ export class BitgetTransactionService {
             }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BitgetTransactionService', `Incremental chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('BitgetTransactionService', `Incremental chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
           hasError = true;
+          break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
         }
         chunkStart = chunkEnd + 1;
         // Throttle to avoid rate-limiting
         await new Promise(resolve => setTimeout(resolve, 100));
       }
+      if (hasError) break;
     }
 
     // Deduplicate
@@ -154,6 +156,7 @@ export class BitgetTransactionService {
     // Process chunks from most recent to oldest
     let chunkEnd = now;
     let allEntries: BitgetTransactionLogEntry[] = [];
+    let hasError = false;
 
     while (chunkEnd > maxLookback) {
       const chunkStart = Math.max(maxLookback, chunkEnd - SEVEN_DAYS_MS);
@@ -189,8 +192,15 @@ export class BitgetTransactionService {
             }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BitgetTransactionService', `Chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('BitgetTransactionService', `Deep sync chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
+          hasError = true;
+          break; // Stop deep sync regress to preserve continuous historical cache without gaps
         }
+      }
+
+      if (hasError) {
+        LogManager.warn('BitgetTransactionService', `Halting deep sync for ${key.label} at ${new Date(chunkStart).toISOString()} due to chunk error.`);
+        break;
       }
 
       // Save batch and report progress
