@@ -1,3 +1,10 @@
+# [1.77.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.76.0...v1.77.0) (2026-09-27)
+
+
+### Features
+
+* add proxy request timeouts and sync error UI ([5540981](https://github.com/fapdev77/crypto-dashboard/commit/5540981ad73f3b541074886a37357607e838e1c0))
+
 # [1.76.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.75.0...v1.76.0) (2026-09-27)
 
 
