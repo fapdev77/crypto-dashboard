@@ -1,3 +1,10 @@
+# [1.79.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.78.0...v1.79.0) (2026-09-27)
+
+
+### Features
+
+* add storage pruning and global error handling ([4e077c1](https://github.com/fapdev77/crypto-dashboard/commit/4e077c1d3845136834bb2af7deb25d88a9968656))
+
 # [1.78.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.77.0...v1.78.0) (2026-09-27)
 
 
