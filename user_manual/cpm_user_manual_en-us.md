@@ -256,6 +256,26 @@ Developer and diagnostic utility for testing direct connectivity with exchanges:
 - **REST Testing**: Dispatch direct authenticated and public API requests to verify latency, HTTP status, and inspect raw payloads.
 - **WebSocket Inspector**: Monitor live WebSocket handshakes and message streams in real-time.
 
+### 💾 IndexedDB Storage, Quota & History Pruning (v1.79.0)
+Located inside the **IndexedDB Storage & Cache** card (within Settings / Configurações), this control center manages your browser's persistent database:
+- **Browser Storage Quota Telemetry**: Displays real-time disk consumption (used MB vs. total allocated quota MB) via the browser's `StorageManager` API, complete with a color-coded warning bar to prevent storage exhaustion.
+- **Data Retention & History Pruning**:
+  - Configurable historical retention windows: *30 days (1 mo)*, *60 days (2 mo)*, *90 days (3 mo)*, *180 days (6 mo)*, *Older than 1 year (Default)* (365 days), and *Older than 2 years* (730 days).
+  - **"Prune History" Action**: Selectively purges closed positions, filled/canceled orders, and ledger transactions older than the selected retention threshold, reclaiming browser disk space immediately while keeping active datasets and metadata intact.
+- **Maintenance Actions**:
+  - *Force Sync*: Re-synchronizes background deltas across all active exchange keys.
+  - *Clear Cache*: Completely flushes local IndexedDB caches in case of schema transitions.
+
+### 🛡️ Connection Resilience & IP Protection (Fail-Fast Auth)
+Engineered for zero-trust safety and avoiding exchange rate-limit bans:
+- **Fail-Fast Authentication Error Handling**: If an API key has invalid credentials, expired status, wrong signature, or unwhitelisted IP (HTTP 401/403 or exchange auth codes), CPM detects the fatal error and **immediately aborts automatic reconnection loops**. This shields your IP address from Cloudflare/Akamai rate-limit bans caused by repetitive unauthorized requests.
+- **Smart Exponential Backoff for Network Drops**: Transient internet disruptions (timeouts, 502/503/504 errors) trigger intelligent exponential backoff with random jitter (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s cap) with a 5-attempt circuit breaker before pausing.
+
+### 🛡️ Global Error Boundary & Safe Crash Recovery
+Should an unexpected React runtime exception occur, the application will not break into a blank white screen:
+- A dedicated **Safe Recovery** screen isolates the failure and displays actionable diagnostics with an expandable stack trace.
+- Two 1-click recovery actions are available: **Reload Dashboard** (standard clean reload) and **Clear Cache & Reload** (purges local cache to recover from rare data corruption scenarios).
+
 ### 👁 Privacy Mode
 Toggle the **Eye Icon** in the sidebar header to hide all numerical balances, sizes, and PnL metrics behind secure `***` masks. This is designed for safe streaming, sharing, or public presentations.
 

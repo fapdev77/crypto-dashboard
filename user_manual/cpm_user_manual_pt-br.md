@@ -257,6 +257,26 @@ Ferramenta para diagnóstico técnico e validação de conectividade com as corr
 - **Testes REST**: Dispare chamadas diretas autenticadas e públicas para verificar tempos de resposta (latência) e payloads brutos.
 - **Diagnóstico de WebSocket**: Monitore o status do handshake e a recepção de mensagens em tempo real.
 
+### 💾 Armazenamento IndexedDB, Quota e Pruning Histórico (v1.79.0)
+No card **IndexedDB Storage & Cache** (em Configurações / Settings), você conta com uma central avançada para governança dos dados armazenados no navegador:
+- **Telemetria de Quota do Navegador**: Monitora em tempo real a quantidade de megabytes (MB) utilizados pelo CPM e a quota total disponibilizada pelo navegador (`StorageManager`), com barra progressiva colorida para prevenção de disco cheio.
+- **Data Retention & History Pruning**:
+  - Permite escolher a janela de retenção de dados históricos: *30 dias (1 mês)*, *60 dias (2 meses)*, *90 dias (3 meses)*, *180 dias (6 meses)*, *Older than 1 year (Default)* (365 dias) ou *Older than 2 years* (730 dias).
+  - **Ação "Prune History"**: Remove transações contábeis, ordens e posições fechadas anteriores à janela selecionada, liberando espaço no navegador imediatamente sem zerar metadados essenciais ou histórico recente.
+- **Ações de Emergência**:
+  - *Force Sync*: Re-sincroniza deltas de todas as exchanges ativas.
+  - *Clear Cache*: Apaga a base IndexedDB local em caso de inconsistência de schemas.
+
+### 🛡️ Resiliência de Conexão e Proteção de IP (Fail-Fast Auth)
+Para garantir a máxima integridade e evitar penalizações nas corretoras:
+- **Fail-Fast em Falha de Autenticação**: Se uma chave de API for inserida incorretamente (código 401, chave inexistente, assinatura errada, IP não autorizado), o CPM detecta o erro fatal e **aborta imediatamente as tentativas automáticas de reconexão**. Isso previne que o seu endereço IP seja temporariamente ou permanentemente banido pela Cloudflare ou Akamai por envio repetido de credenciais inválidas.
+- **Backoff Exponencial para Quedas de Rede**: Em caso de oscilações normais de internet (timeout, 502 Bad Gateway), o app re-tenta de forma inteligente em intervalos progressivos (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) com limite de 5 tentativas (circuit breaker) antes de repousar.
+
+### 🛡️ Recuperação de Falhas (Global Error Boundary)
+Caso ocorra uma exceção inesperada em tempo de execução no React, a aplicação não fecha abruptamente:
+- Uma tela de **Safe Recovery** é exibida com detalhes do incidente.
+- Dois botões de ação imediata estão disponíveis: **Reload Dashboard** (para reiniciar a interface) e **Clear Cache & Reload** (para purgar o cache do navegador e reabrir de forma limpa caso haja dados corrompidos).
+
 ### 👁 Modo Privacidade (Privacy Mode)
 Clique no **Ícone de Olho** no topo direito do menu lateral para ativar o ocultamento global de valores numéricos. Isso transformará números financeiros em máscaras `***`, permitindo gravações de tela e compartilhamento seguro.
 

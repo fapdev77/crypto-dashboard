@@ -246,6 +246,56 @@ A base local IndexedDB (`crypto-dashboard-cache`) consolida 14 object stores est
 | `funding-summaries` | `id` (`exchange-symbol`) | `by-exchange`, `by-symbol` | Somatórios e agregações pré-calculadas de taxas de financiamento (`FundingRateSummary`) |
 | `funding-meta` | `id` (`exchange-symbol`) | `by-exchange` | Metadados de cobertura e guardião de frescor (8h) para funding rates |
 
+### 5.6. IndexedDB Retention, Quota Management & History Pruning Engine
+
+Para assegurar longevidade e evitar exaustão de armazenamento no cliente (especialmente em navegadores móveis e ambientes com quotas rígidas), o CPM integra uma engine de retenção histórica e pruning no IndexedDB:
+
+1. **Monitoramento Ativo de Quota (`storageQuota.ts`):**
+   - Utiliza a API `navigator.storage.estimate()` para coletar periodicamente o uso atual (`usage` em bytes/MB), a quota total disponível (`quota`) e a taxa percentual de ocupação.
+   - Apresenta feedback visual progressivo com color-coding de alerta no card `IndexedDBCacheCard.tsx`.
+2. **Expurgo Seletivo por Janela Temporal (`pruneHistoryOlderThan`):**
+   - Permite definir janelas de retenção histórica: 30 dias (1 mês), 60 dias (2 meses), 90 dias (3 meses), 180 dias (6 meses), 365 dias (1 ano - Padrão) e 730 dias (2 anos).
+   - Executa varreduras transacionais em lote nas stores `positionHistory`, `orderHistory` e nas tabelas de extrato (`bybit-transaction-log`, `bitget-transaction-log`, `okx-transaction-log`), expurgando registros anteriores ao timestamp de corte (`cutoffTime = Date.now() - days * 86400000`).
+   - Mantém intactas as stores de metadados (`cacheMeta`, `assetMetadata`), preservando a consistência dos índices e a velocidade de leitura para o histórico recente.
+3. **Ações sob Demanda ("Prune History"):**
+   - Ação manual com feedback imediato via toast UI, permitindo ao usuário recuperar espaço em disco sem necessidade de limpar completamente o cache local (Clear Cache).
+
+### 5.7. Connection Lifecycle, Fail-Fast Auth & Resilience Circuit Breaker
+
+O ciclo de vida de inicialização e sincronização contínua das conexões com as exchanges (`useMultiExchangeWS.ts`) é protegido por um circuito de resiliência e fail-fast:
+
+```
+[bootload(config)]
+        │
+        ├─► [Sucesso] ──► setStatus('connected') ──► startRestPolling() ──► Reset retryAttempts
+        │
+        └─► [Falha / Catch]
+                 │
+                 ├── isAuthError(error)?
+                 │        ├─► SIM ──► ABORT RETRIES IMEDIATAMENTE (Fail-Fast)
+                 │        │          setStatus('error', 'Authentication Error...')
+                 │        │          LogManager.error(...) & Toast explicativo
+                 │        │          [Protege o IP contra bans por força bruta / rate limits]
+                 │        │
+                 │        └─► NÃO (Transitório / Rede / 5xx)
+                 │                 │
+                 │                 ├── currentAttempt > BOOTLOAD_MAX_RETRIES (5)?
+                 │                 │        ├─► SIM ──► CIRCUIT BREAKER TRIP (Pausa retries)
+                 │                 │        │          setStatus('error', 'Connection failed after 5 attempts...')
+                 │                 │        │
+                 │                 │        └─► NÃO ──► EXPONENTIAL BACKOFF + JITTER
+                 │                 │                   delay = min(5000 * 2^(attempt-1), 60000) + jitter
+                 │                 │                   setTimeout(bootload, delay)
+```
+
+1. **Discriminação Rigorosa de Erros de Autenticação (`isAuthError`):**
+   - Inspeciona status HTTP (401 Unauthorized, 403 Forbidden), códigos de resposta das exchanges (Bybit `10003`, `10004`, `10005`, `33004`, `10024`; OKX `50100`, `50105`, `50111`, `50113`; Bitget `40001`, `40005`, `40006`, `40014`, `40017`) e padrões de mensagem contendo `api key`, `signature`, `passphrase`, `unauthorized`, `ip not in whitelist`.
+   - **Fail-Fast Incondicional:** Em caso de erro de credencial, o sistema cancela qualquer agendamento automático de nova tentativa, eliminando o risco de sobrecarga ou bloqueio de IP pelas proteções anti-DDoS da Cloudflare/Akamai das exchanges.
+2. **Backoff Exponencial com Jitter para Erros Transitórios:**
+   - Erros de rede (`ETIMEDOUT`, `ECONNRESET`, 502/503/504) ou rate limits (429) utilizam escalonamento exponencial ($5\text{s} \to 10\text{s} \to 20\text{s} \to 40\text{s} \to \text{teto de } 60\text{s}$) adicionado de jitter aleatório (0 a 800ms) para evitar picos de colisão sincronizada.
+3. **Circuit Breaker Automático:**
+   - Capped em 5 tentativas consecutivas (`BOOTLOAD_MAX_RETRIES`). Atingido o limite, as tentativas automáticas cessam e o status avisa que a conexão aguarda ação do usuário ou reedição da chave.
+
 ## 6. State Management & Micro-Stores Architecture
 
 O CPM adota uma arquitetura de micro-stores modularizadas com Zustand 5.0 para garantir isolamento de responsabilidades, alta coesão e evitar renderizações em cascata:
@@ -284,6 +334,8 @@ O CPM adota uma arquitetura de micro-stores modularizadas com Zustand 5.0 para g
   - Hook isolado e especializado (SRP) encarregado de injetar payloads mockados calibrados (`accounts.json`, `balances.json`, `positions.json`, `history.json`, `orders.json`, `funding.json`, `bybit-transactions.json`, `bills.json`) quando o Modo Simulação estiver ativo.
 - **`PrivacyContext`:** 
   - Context API nativo que envelopa a aplicação para controlar a visibilidade (`isPrivateMode`) de valores monetários sensíveis em todas as tabelas e cards, persistindo a escolha no `localStorage`.
+- **`GlobalErrorBoundary`:**
+  - Componente de barreira de erro React que envolve a raiz de renderização da aplicação. Intercepta falhas inesperadas de renderização ou exceções de runtime, exibe uma tela dedicada de falha graciosa com stack trace detalhado e oferece opções de recuperação: "Reload Dashboard" (recarregamento padrão) e "Clear Cache & Reload" (expurgo do cache local corrompido e reload seguro).
 
 ## 7. Application Views & Navigation Modules
 
