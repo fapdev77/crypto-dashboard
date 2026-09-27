@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getStorageQuotaEstimate } from '../storageQuota';
+import toast from 'react-hot-toast';
+import { getStorageQuotaEstimate, checkAndWarnStorageQuota } from '../storageQuota';
+
+vi.mock('react-hot-toast', () => ({
+  default: Object.assign(vi.fn(), {
+    error: vi.fn(),
+    success: vi.fn(),
+  }),
+}));
 
 describe('storageQuota service', () => {
   const originalNavigator = global.navigator;
@@ -64,5 +72,67 @@ describe('storageQuota service', () => {
     const res = await getStorageQuotaEstimate();
     expect(res.isWarning).toBe(true);
     expect(res.isCritical).toBe(false);
+  });
+
+  describe('checkAndWarnStorageQuota', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('triggers warning toast when storage reaches warning threshold (>= 80%)', async () => {
+      const mockEstimate = vi.fn().mockResolvedValue({
+        usage: 850 * 1024 * 1024,
+        quota: 1000 * 1024 * 1024,
+      });
+
+      Object.defineProperty(global, 'navigator', {
+        value: { storage: { estimate: mockEstimate } },
+        writable: true,
+      });
+
+      const res = await checkAndWarnStorageQuota('Test');
+      expect(res.isWarning).toBe(true);
+      expect(toast).toHaveBeenCalledWith(
+        expect.stringContaining('High browser storage usage'),
+        expect.objectContaining({ id: 'storage-quota-warning' })
+      );
+    });
+
+    it('triggers critical error toast when storage reaches critical threshold (>= 95%)', async () => {
+      const mockEstimate = vi.fn().mockResolvedValue({
+        usage: 960 * 1024 * 1024,
+        quota: 1000 * 1024 * 1024,
+      });
+
+      Object.defineProperty(global, 'navigator', {
+        value: { storage: { estimate: mockEstimate } },
+        writable: true,
+      });
+
+      const res = await checkAndWarnStorageQuota('Test');
+      expect(res.isCritical).toBe(true);
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringContaining('Critical browser storage'),
+        expect.objectContaining({ id: 'storage-quota-warning' })
+      );
+    });
+
+    it('does not trigger toast when storage is healthy (< 80%)', async () => {
+      const mockEstimate = vi.fn().mockResolvedValue({
+        usage: 200 * 1024 * 1024,
+        quota: 1000 * 1024 * 1024,
+      });
+
+      Object.defineProperty(global, 'navigator', {
+        value: { storage: { estimate: mockEstimate } },
+        writable: true,
+      });
+
+      const res = await checkAndWarnStorageQuota('Test');
+      expect(res.isWarning).toBe(false);
+      expect(res.isCritical).toBe(false);
+      expect(toast).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalled();
+    });
   });
 });

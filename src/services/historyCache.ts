@@ -492,6 +492,12 @@ async function getDB(): Promise<IDBPDatabase<CacheDB>> {
           },
         });
         useSettingsStore.getState().setIndexedDBStatus('healthy', null);
+        useSettingsStore.getState().bumpHistoryCacheVersion();
+        toast('Cache local reconstruído após uma inconsistência de versão.', {
+          icon: 'ℹ️',
+          id: 'idb-version-recovery-toast',
+          duration: 7000,
+        });
         return dbInstance;
       } catch (recoverErr) {
         handleIndexedDBError(recoverErr, 'VersionRecovery');

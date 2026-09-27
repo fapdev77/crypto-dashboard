@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { LogManager } from './LogManager';
 
 export interface StorageEstimateResult {
@@ -65,4 +66,26 @@ export async function getStorageQuotaEstimate(): Promise<StorageEstimateResult> 
     isCritical: false,
     isSupported: false,
   };
+}
+
+/**
+ * Proactively checks browser storage quota and displays an informative warning toast
+ * if usage crosses the 80% threshold (deduplicated by id to prevent spam).
+ */
+export async function checkAndWarnStorageQuota(context = 'StorageCheck'): Promise<StorageEstimateResult> {
+  const estimate = await getStorageQuotaEstimate();
+  if (estimate.isSupported) {
+    if (estimate.isCritical) {
+      toast.error(
+        `Critical browser storage: ${estimate.usageMB}MB of ${estimate.quotaMB}MB used (${estimate.percentageUsed}%). Writes may fail. Please prune history in Settings.`,
+        { id: 'storage-quota-warning', duration: 10000 }
+      );
+    } else if (estimate.isWarning) {
+      toast(
+        `High browser storage usage: ${estimate.usageMB}MB of ${estimate.quotaMB}MB used (${estimate.percentageUsed}%). Consider pruning historical data in Settings.`,
+        { id: 'storage-quota-warning', duration: 8000, icon: '⚠️' }
+      );
+    }
+  }
+  return estimate;
 }

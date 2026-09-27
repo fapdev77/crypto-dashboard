@@ -4,6 +4,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { OrderHistoryService } from '../services/orders/OrderHistoryService';
 import { LogManager } from '../services/LogManager';
+import { checkAndWarnStorageQuota } from '../services/storageQuota';
 
 /** Module-level guard: shared across all hook instances */
 const syncInProgressRef = { current: false };
@@ -34,6 +35,7 @@ export function useHistoryCachePolling() {
 
       const startMs = performance.now();
       LogManager.info('HistoryCachePolling', 'Executing background update...');
+      await checkAndWarnStorageQuota('BackgroundPolling');
       const positionService = new PositionHistoryService();
       const orderService = new OrderHistoryService();
       try {
