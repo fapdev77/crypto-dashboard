@@ -3,6 +3,7 @@ import { ExchangeName, FundingRateSummary } from '../../types';
 import { hybridFetch } from '../../utils/proxyFetch';
 import { LogManager } from '../logger';
 import { getStartOfTodayInMs } from '../../utils/dateTimeHelper';
+import { executeWithRetry } from '../../utils/retryHelper';
 
 export interface CurrentFundingRate {
   exchange: ExchangeName;
@@ -90,30 +91,27 @@ export class FundingService {
   }
 
   /**
-   * Fetch wrapper with retry logic for rate-limited requests.
-   * Retries up to 3 times with exponential backoff (1s, 2s, 4s)
-   * when the API returns a rate-limit error or null response.
+   * Fetch wrapper with retry logic for rate-limited requests across all exchanges
+   * (Bybit 10006, OKX 50011, Bitget 30006, and HTTP 429).
+   * Retries up to 3 times with exponential backoff and jitter.
    */
   private static async fetchWithRetry(url: string): Promise<any> {
-    const MAX_RETRIES = 3;
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      if (attempt > 0) {
-        const backoffMs = 1000 * Math.pow(2, attempt - 1);
-        await this.sleep(backoffMs);
-      }
-      const data = await hybridFetch(url, 'GET', {});
-      if (!data) {
-        if (attempt < MAX_RETRIES) continue;
-        return null;
-      }
-      // Bybit rate limit (retCode 10006)
-      if (typeof data === 'object' && data.retCode === 10006) {
-        if (attempt < MAX_RETRIES) continue;
-        return data;
-      }
-      return data;
+    try {
+      return await executeWithRetry(
+        async () => {
+          const data = await hybridFetch(url, 'GET', {});
+          if (!data) throw new Error('Empty response from exchange API');
+          return data;
+        },
+        {
+          maxRetries: 3,
+          baseDelayMs: 1000,
+          context: 'FundingService',
+        }
+      );
+    } catch {
+      return null;
     }
-    return null;
   }
 
   // ── Aggregation boundaries ─────────────────────────────────────────

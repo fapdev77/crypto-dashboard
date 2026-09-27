@@ -5,6 +5,7 @@ import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { BybitAdapter } from '../adapters/BybitAdapter';
 import { matchUniversalTxType, getBybitUniversalType } from '../../utils/transactionTypeMapper';
+import { executeWithRetry } from '../../utils/retryHelper';
 import {
   getBybitTxLogCache,
   saveBybitTxLogCache,
@@ -65,12 +66,21 @@ export class BybitTransactionService {
         let pages = 0;
         try {
           do {
-            const { list, nextPageCursor } = await this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined);
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `BybitTransactionService.${key.label}`,
+              }
+            );
             for (const raw of list) {
               allNew.push(BybitAdapter.normalizeTxLogEntry(raw, key));
             }
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
           LogManager.warn('BybitTransactionService', `Incremental chunk error ${key.label}/${category}:`, err);
@@ -141,8 +151,14 @@ export class BybitTransactionService {
 
         try {
           do {
-            const { list, nextPageCursor } = await this.adapter.getTransactionLog(
-              key, chunkStart, chunkEnd, category, cursor || undefined
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => this.adapter.getTransactionLog(
+                key, chunkStart, chunkEnd, category, cursor || undefined
+              ),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `BybitTransactionService.${key.label}`,
+              }
             );
 
             for (const raw of list) {
@@ -151,6 +167,9 @@ export class BybitTransactionService {
 
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
           LogManager.warn('BybitTransactionService', `Chunk error ${key.label}/${category}:`, err);

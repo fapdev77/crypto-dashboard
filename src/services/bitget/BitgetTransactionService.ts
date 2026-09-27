@@ -5,6 +5,7 @@ import { LogManager } from '../LogManager';
 import { BitgetUTAAdapter } from '../adapters/BitgetUTAAdapter';
 import { BitgetClassicAdapter } from '../adapters/BitgetClassicAdapter';
 import { matchUniversalTxType, getBitgetUniversalType } from '../../utils/transactionTypeMapper';
+import { executeWithRetry } from '../../utils/retryHelper';
 import {
   getBitgetTxLogCache,
   saveBitgetTxLogCache,
@@ -15,6 +16,7 @@ import {
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const NINETY_DAYS_MS = 89 * 24 * 60 * 60 * 1000; // Bitget API supports max 90 days access window (89d used for clock drift safety)
 const MAX_PAGES_PER_CHUNK = 20;
+const MAX_RETRIES = 3;
 
 /** Service for syncing and caching Bitget transaction logs with progressive deep-sync. */
 export class BitgetTransactionService {
@@ -72,7 +74,13 @@ export class BitgetTransactionService {
         let pages = 0;
         try {
           do {
-            const { list, nextPageCursor } = await adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined);
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `BitgetTransactionService.${key.label}`,
+              }
+            );
             for (const raw of list) {
               allNew.push(
                 key.accountType === 'uta'
@@ -82,6 +90,9 @@ export class BitgetTransactionService {
             }
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
           LogManager.warn('BitgetTransactionService', `Incremental chunk error ${key.label}/${category}:`, err);
@@ -153,8 +164,14 @@ export class BitgetTransactionService {
 
         try {
           do {
-            const { list, nextPageCursor } = await adapter.getTransactionLog(
-              key, chunkStart, chunkEnd, category, cursor || undefined
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => adapter.getTransactionLog(
+                key, chunkStart, chunkEnd, category, cursor || undefined
+              ),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `BitgetTransactionService.${key.label}`,
+              }
             );
 
             for (const raw of list) {
@@ -167,6 +184,9 @@ export class BitgetTransactionService {
 
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
           LogManager.warn('BitgetTransactionService', `Chunk error ${key.label}/${category}:`, err);

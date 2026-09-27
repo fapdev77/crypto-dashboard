@@ -4,6 +4,7 @@ import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { OkxAdapter } from '../adapters/OkxAdapter';
 import { matchUniversalTxType, getOkxUniversalType } from '../../utils/transactionTypeMapper';
+import { executeWithRetry } from '../../utils/retryHelper';
 import {
   getOkxTxLogCache,
   saveOkxTxLogCache,
@@ -14,6 +15,7 @@ import {
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000; // OKX archive supports up to 3 months
 const MAX_PAGES_PER_CHUNK = 20;
+const MAX_RETRIES = 3;
 
 /** Service for syncing and caching OKX transaction logs with progressive deep-sync. */
 export class OkxTransactionService {
@@ -63,12 +65,21 @@ export class OkxTransactionService {
         let pages = 0;
         try {
           do {
-            const { list, nextPageCursor } = await this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined);
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `OkxTransactionService.${key.label}`,
+              }
+            );
             for (const raw of list) {
               allNew.push(OkxAdapter.normalizeTxLogEntry(raw, key));
             }
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
           LogManager.warn('OkxTransactionService', `Incremental chunk error ${key.label}/${category}:`, err);
@@ -139,8 +150,14 @@ export class OkxTransactionService {
 
         try {
           do {
-            const { list, nextPageCursor } = await this.adapter.getTransactionLog(
-              key, chunkStart, chunkEnd, category, cursor || undefined
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => this.adapter.getTransactionLog(
+                key, chunkStart, chunkEnd, category, cursor || undefined
+              ),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `OkxTransactionService.${key.label}`,
+              }
             );
 
             for (const raw of list) {
@@ -149,6 +166,9 @@ export class OkxTransactionService {
 
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
           LogManager.warn('OkxTransactionService', `Chunk error ${key.label}/${category}:`, err);

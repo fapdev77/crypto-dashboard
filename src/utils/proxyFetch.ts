@@ -24,13 +24,20 @@ export const proxyFetch = async (req: ProxyRequest) => {
       if (data && data.error && Object.keys(data).length === 1) {
         throw new Error(`Proxy Error: ${response.status} - ${data.error}`);
       }
+      if (data && typeof data === 'object') {
+        data._httpStatus = response.status;
+      }
       // Exchange API valid JSON response (business logic error like 400 margin disabled)
       return data;
     }
     throw new Error(`Proxy Error: ${response.status} ${response.statusText}`);
   }
 
-  return isJson ? response.json() : response.text();
+  const result = isJson ? await response.json() : await response.text();
+  if (result && typeof result === 'object') {
+    result._httpStatus = response.status;
+  }
+  return result;
 };
 
 /**
@@ -49,12 +56,20 @@ export const hybridFetch = async (targetUrl: string, method: string, headers: Re
     const isJson = contentType && contentType.includes('application/json');
 
     if (res.ok) {
-      return isJson ? await res.json() : await res.text();
+      const data = isJson ? await res.json() : await res.text();
+      if (data && typeof data === 'object') {
+        data._httpStatus = res.status;
+      }
+      return data;
     }
     
     // If it's a valid JSON response from the exchange (e.g. 400 Bad Request) and not a GeoBlock (403), return it
     if (res.status !== 403 && res.status !== 418 && isJson) {
-      return await res.json();
+      const data = await res.json();
+      if (data && typeof data === 'object') {
+        data._httpStatus = res.status;
+      }
+      return data;
     }
   } catch (err) {
     LogManager.warn('HybridFetch', `Direct fetch failed, falling back to proxy...`, targetUrl);

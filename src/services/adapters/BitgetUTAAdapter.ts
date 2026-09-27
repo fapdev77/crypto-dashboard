@@ -8,6 +8,7 @@ import { hmacSha256 } from '../../utils/cryptoLib';
 import { LogManager } from '../LogManager';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
+import { ApiRateLimitError } from '../../utils/retryHelper';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -722,6 +723,9 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
 
     const res = await proxyFetch({ targetUrl: url, method: 'GET', headers });
     if (res.code !== '00000') {
+      if (res.code === '30006' || res._httpStatus === 429) {
+        throw new ApiRateLimitError(`Bitget financial-records rate limit exceeded (30006): ${res.msg}`, '30006', 'bitget');
+      }
       throw new Error(`Bitget financial-records API error (${res.code}): ${res.msg}`);
     }
 

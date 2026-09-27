@@ -10,6 +10,7 @@ import { calculateRoe } from '../../utils/math-crypto';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { calculateOkxTradeDetails } from '../../utils/okxUtils';
+import { ApiRateLimitError } from '../../utils/retryHelper';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -764,6 +765,9 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     }
 
     if (res.code && res.code !== '0') {
+      if (res.code === '50011' || res._httpStatus === 429) {
+        throw new ApiRateLimitError(`OKX bills rate limit exceeded (50011): ${res.msg}`, '50011', 'okx');
+      }
       throw new Error(`OKX bills API error (${res.code}): ${res.msg}`);
     }
 

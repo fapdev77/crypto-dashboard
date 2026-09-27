@@ -11,6 +11,7 @@ import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { getBybitBaseUrl, getBybitCustomHeaders } from '../../utils/bybitEndpoints';
 import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
+import { ApiRateLimitError } from '../../utils/retryHelper';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -836,6 +837,9 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     const res = await hybridFetch(targetUrl, 'GET', headers);
 
     if (res.retCode !== 0) {
+      if (res.retCode === 10006 || res._httpStatus === 429) {
+        throw new ApiRateLimitError(`Bybit tx-log rate limit exceeded (10006): ${res.retMsg}`, 10006, 'bybit');
+      }
       throw new Error(`Bybit tx-log API Error (${res.retCode}): ${res.retMsg}`);
     }
 
