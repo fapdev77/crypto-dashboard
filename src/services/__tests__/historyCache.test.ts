@@ -21,7 +21,30 @@ describe('historyCache DB_VERSION and configuration', () => {
     handleIndexedDBError(fakeError, 'TestContext');
 
     expect(useSettingsStore.getState().indexedDBStatus).toBe('error');
-    expect(useSettingsStore.getState().indexedDBError).toContain('VersionError');
+    expect(useSettingsStore.getState().indexedDBError).toContain('schema conflict');
+  });
+
+  it('specifically classifies QuotaExceededError in handleIndexedDBError', () => {
+    useSettingsStore.getState().clearIndexedDBError();
+    const quotaErr = new Error('The quota has been exceeded');
+    quotaErr.name = 'QuotaExceededError';
+
+    handleIndexedDBError(quotaErr, 'saveBybitTxLogCache');
+
+    expect(useSettingsStore.getState().indexedDBStatus).toBe('error');
+    expect(useSettingsStore.getState().indexedDBError).toContain('Browser storage quota is full');
+  });
+
+  it('specifically classifies SecurityError (Private Browsing) in handleIndexedDBError', () => {
+    useSettingsStore.getState().clearIndexedDBError();
+    const securityErr = new Error('The operation is insecure or blocked in private window');
+    securityErr.name = 'SecurityError';
+
+    handleIndexedDBError(securityErr, 'saveCachedHistory');
+
+    expect(useSettingsStore.getState().indexedDBStatus).toBe('error');
+    expect(useSettingsStore.getState().indexedDBError).toContain('Private browsing or strict security rules');
   });
 });
+
 
