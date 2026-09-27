@@ -64,11 +64,54 @@ export function isRateLimited(target: any): boolean {
 }
 
 /**
+ * Checks whether an error indicates an unrecoverable authentication, authorization,
+ * or permission failure:
+ * - HTTP 401 (Unauthorized) / HTTP 403 (Forbidden)
+ * - Bybit: 10003 (Invalid API key), 10004 (Sign error), 10005 (Permission denied), 33004 (Key expired), 10024 (Compliance IP violation)
+ * - OKX: 50111 (Invalid API key), 50105 (Access key invalid), 50113 (IP not whitelisted), 50100 (User does not exist)
+ * - Bitget: 40001 (Access key not found), 40005 (Sign failed), 40006 (Invalid IP), 40014 (Key expired), 40017 (Key frozen)
+ */
+export function isAuthError(error: any): boolean {
+  if (!error) return false;
+
+  const status = error._httpStatus || error.status || error.statusCode;
+  if (status === 401 || status === 403) {
+    return true;
+  }
+
+  const code = String(error.retCode || error.code || '');
+  if (['10003', '10004', '10005', '33004', '10024'].includes(code)) return true;
+  if (['50100', '50105', '50111', '50113', '50102'].includes(code)) return true;
+  if (['40001', '40005', '40006', '40014', '40017'].includes(code)) return true;
+
+  const message = (error.message || error.retMsg || error.msg || (typeof error === 'string' ? error : '')).toLowerCase();
+  return (
+    message.includes('api key') ||
+    message.includes('apikey') ||
+    message.includes('accesskey') ||
+    message.includes('invalid sign') ||
+    message.includes('sign failed') ||
+    message.includes('signature') ||
+    message.includes('unauthorized') ||
+    message.includes('forbidden') ||
+    message.includes('permission denied') ||
+    message.includes('not in whitelist') ||
+    message.includes('invalid ip') ||
+    message.includes('key expired') ||
+    message.includes('access key') ||
+    message.includes('secret key') ||
+    message.includes('passphrase')
+  );
+}
+
+/**
  * Checks whether an error is transient (temporary network/server glitch or rate limit)
  * and therefore safe and recommended to retry.
  */
 export function isTransientError(error: any): boolean {
   if (!error) return false;
+  // Auth and credential errors are NEVER transient
+  if (isAuthError(error)) return false;
   if (isRateLimited(error)) return true;
 
   // Check HTTP 5xx transient server codes

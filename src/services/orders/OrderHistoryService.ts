@@ -2,6 +2,7 @@ import { UnifiedOrder } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { ExchangeAggregator } from '../adapters/ExchangeAggregator';
 import { LogManager } from '../LogManager';
+import { useSyncCoordinatorStore } from '../../store/syncCoordinatorStore';
 import {
   getCachedOrders,
   saveCachedOrders,
@@ -47,10 +48,13 @@ export class OrderHistoryService {
         }
       }
       
+      useSyncCoordinatorStore.getState().setOrdersSyncError(null);
       // Return fully merged set from cache
       return await getCachedOrders(connectionId);
-    } catch (err) {
-      LogManager.warn('OrderHistoryCache', `Incremental fetch failed for ${connectionId}, returning cached data`, err);
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      LogManager.warn('OrderHistoryCache', `Incremental fetch failed for ${connectionId}, returning cached data: ${errMsg}`);
+      useSyncCoordinatorStore.getState().setOrdersSyncError(errMsg);
       return cachedOrders;
     }
   }

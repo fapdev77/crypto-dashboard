@@ -3,6 +3,7 @@ import {
   ApiRateLimitError,
   isRateLimited,
   isTransientError,
+  isAuthError,
   executeWithRetry,
 } from '../retryHelper';
 
@@ -79,6 +80,62 @@ describe('retryHelper', () => {
       expect(isTransientError(new Error('API key invalid'))).toBe(false);
       expect(isTransientError(new Error('Parameter error: symbol not found'))).toBe(false);
       expect(isTransientError(null)).toBe(false);
+    });
+
+    it('never treats authentication errors as transient even if they contain network-sounding words', () => {
+      expect(isTransientError({ _httpStatus: 401, message: 'fetch failed: Unauthorized API key' })).toBe(false);
+      expect(isTransientError({ retCode: 10003, message: 'network request aborted: API key is invalid' })).toBe(false);
+    });
+  });
+
+  describe('isAuthError', () => {
+    it('detects HTTP 401 and 403 status codes', () => {
+      expect(isAuthError({ _httpStatus: 401 })).toBe(true);
+      expect(isAuthError({ status: 401 })).toBe(true);
+      expect(isAuthError({ statusCode: 401 })).toBe(true);
+      expect(isAuthError({ _httpStatus: 403 })).toBe(true);
+      expect(isAuthError({ status: 403 })).toBe(true);
+    });
+
+    it('detects Bybit auth error codes', () => {
+      expect(isAuthError({ retCode: 10003, retMsg: 'API key is invalid' })).toBe(true);
+      expect(isAuthError({ retCode: 10004, retMsg: 'Error sign' })).toBe(true);
+      expect(isAuthError({ retCode: 10005, retMsg: 'Permission denied' })).toBe(true);
+      expect(isAuthError({ retCode: 33004, retMsg: 'API key has expired' })).toBe(true);
+      expect(isAuthError({ retCode: 10024, retMsg: 'Compliance IP violation' })).toBe(true);
+    });
+
+    it('detects OKX auth error codes', () => {
+      expect(isAuthError({ code: '50111', msg: 'Invalid API key' })).toBe(true);
+      expect(isAuthError({ code: '50105', msg: 'Access key invalid' })).toBe(true);
+      expect(isAuthError({ code: '50113', msg: 'IP not in whitelist' })).toBe(true);
+      expect(isAuthError({ code: '50100', msg: 'User does not exist' })).toBe(true);
+    });
+
+    it('detects Bitget auth error codes', () => {
+      expect(isAuthError({ code: '40001', msg: 'accesskey does not exist' })).toBe(true);
+      expect(isAuthError({ code: '40005', msg: 'sign failed' })).toBe(true);
+      expect(isAuthError({ code: '40006', msg: 'invalid IP' })).toBe(true);
+      expect(isAuthError({ code: '40014', msg: 'accesskey expired' })).toBe(true);
+      expect(isAuthError({ code: '40017', msg: 'API key frozen' })).toBe(true);
+    });
+
+    it('detects auth keywords in error messages', () => {
+      expect(isAuthError(new Error('Invalid API Key provided'))).toBe(true);
+      expect(isAuthError(new Error('Signature verification failed'))).toBe(true);
+      expect(isAuthError(new Error('User unauthorized: 401'))).toBe(true);
+      expect(isAuthError(new Error('Forbidden: API key lacks positions read permission'))).toBe(true);
+      expect(isAuthError(new Error('IP address not in whitelist'))).toBe(true);
+      expect(isAuthError(new Error('API key has expired, please renew'))).toBe(true);
+    });
+
+    it('returns false for transient network or rate-limit errors', () => {
+      expect(isAuthError(null)).toBe(false);
+      expect(isAuthError(undefined)).toBe(false);
+      expect(isAuthError({ retCode: 10006, retMsg: 'Rate limit' })).toBe(false);
+      expect(isAuthError({ _httpStatus: 429 })).toBe(false);
+      expect(isAuthError(new Error('ECONNRESET'))).toBe(false);
+      expect(isAuthError(new Error('Failed to fetch'))).toBe(false);
     });
   });
 

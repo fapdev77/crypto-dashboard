@@ -223,7 +223,121 @@ export class ConnectionLockManager {
   }
 }
 
+type SupportedTxExchange = 'bybit' | 'bitget' | 'okx';
+
+interface ExchangeTxConfig {
+  exchangeName: string;
+  taskDescription: string;
+  createService: () => {
+    syncIncremental: (key: ApiCredentials, since: number) => Promise<any[]>;
+    syncAll: (key: ApiCredentials) => Promise<any>;
+  };
+  getMeta: (keyId: string) => Promise<{ latestTransactionTime: number; totalRecords: number } | null | undefined>;
+  getCache: (keyId: string) => Promise<any[]>;
+  updateStore: (all: any[], syncTime: number) => void;
+}
+
+const EXCHANGE_TX_CONFIGS: Record<SupportedTxExchange, ExchangeTxConfig> = {
+  bybit: {
+    exchangeName: 'Bybit',
+    taskDescription: 'Bybit Transaction Sync',
+    createService: () => new BybitTransactionService(),
+    getMeta: getBybitTxLogMeta,
+    getCache: getBybitTxLogCache,
+    updateStore: (all, syncTime) => {
+      useSyncCoordinatorStore.getState().setCachedTxLog(all);
+      useSyncCoordinatorStore.getState().setBybitTxTotalRecords(all.length);
+      useSyncCoordinatorStore.getState().setBybitTxLastSyncTime(syncTime);
+    },
+  },
+  bitget: {
+    exchangeName: 'Bitget',
+    taskDescription: 'Bitget Transaction Sync',
+    createService: () => new BitgetTransactionService(),
+    getMeta: getBitgetTxLogMeta,
+    getCache: getBitgetTxLogCache,
+    updateStore: (all, syncTime) => {
+      useSyncCoordinatorStore.getState().setCachedBitgetTxLog(all);
+      useSyncCoordinatorStore.getState().setBitgetTxTotalRecords(all.length);
+      useSyncCoordinatorStore.getState().setBitgetTxLastSyncTime(syncTime);
+    },
+  },
+  okx: {
+    exchangeName: 'OKX',
+    taskDescription: 'OKX Transaction Sync',
+    createService: () => new OkxTransactionService(),
+    getMeta: getOkxTxLogMeta,
+    getCache: getOkxTxLogCache,
+    updateStore: (all, syncTime) => {
+      useSyncCoordinatorStore.getState().setCachedOkxTxLog(all);
+      useSyncCoordinatorStore.getState().setOkxTxTotalRecords(all.length);
+      useSyncCoordinatorStore.getState().setOkxTxLastSyncTime(syncTime);
+    },
+  },
+};
+
 export class UnifiedSyncManager {
+  /**
+   * Synchronizes transaction logs for a single connection key under ConnectionLockManager.
+   */
+  public static async syncKeyTransactions(key: ApiCredentials): Promise<number> {
+    const config = EXCHANGE_TX_CONFIGS[key.exchange as SupportedTxExchange];
+    if (!config) return 0;
+
+    return ConnectionLockManager.runWithLock(
+      key.id,
+      config.taskDescription,
+      async () => {
+        const service = config.createService();
+        const meta = await config.getMeta(key.id);
+        if (meta && meta.latestTransactionTime > 0) {
+          const added = await service.syncIncremental(key, meta.latestTransactionTime);
+          return added.length;
+        } else {
+          await service.syncAll(key);
+          const postMeta = await config.getMeta(key.id);
+          return postMeta?.totalRecords || 0;
+        }
+      },
+      { connectionLabel: key.label }
+    );
+  }
+
+  /**
+   * Synchronizes all connections for a specific exchange and refreshes the coordinator cache.
+   */
+  public static async syncExchangeTransactions(
+    keys: ApiCredentials[],
+    exchange: SupportedTxExchange
+  ): Promise<number> {
+    const config = EXCHANGE_TX_CONFIGS[exchange];
+    if (!config) return 0;
+
+    const exchangeKeys = keys.filter(k => k.isActive && k.exchange === exchange);
+    if (exchangeKeys.length === 0) return 0;
+
+    let addedCount = 0;
+    for (const key of exchangeKeys) {
+      try {
+        const count = await this.syncKeyTransactions(key);
+        addedCount += count;
+      } catch (err: any) {
+        LogManager.warn('UnifiedSyncManager', `${config.exchangeName} Tx sync failed for ${key.label}:`, err?.message || err);
+      }
+    }
+
+    // Reload cache into coordinator store
+    const all: any[] = [];
+    for (const key of exchangeKeys) {
+      const cached = await config.getCache(key.id);
+      all.push(...cached);
+    }
+    all.sort((a, b) => b.transactionTime - a.transactionTime);
+    config.updateStore(all, Date.now());
+
+    return addedCount;
+  }
+
   /**
    * Syncs all modules across the entire application:
    * 1. Closed Position History
@@ -246,18 +360,12 @@ export class UnifiedSyncManager {
       try {
         const startTime = performance.now();
         const activeKeys = keys.filter(k => k.isActive);
-        const bybitKeys = activeKeys.filter(k => k.exchange === 'bybit');
-        const bitgetKeys = activeKeys.filter(k => k.exchange === 'bitget');
-        const okxKeys = activeKeys.filter(k => k.exchange === 'okx');
 
         LogManager.info('UnifiedSyncManager', 'Starting full application synchronization...');
         onProgress?.('Syncing Positions, Orders, Transactions & Funding in parallel...');
 
         const positionService = new PositionHistoryService();
         const orderService = new OrderHistoryService();
-        const bybitTxService = new BybitTransactionService();
-        const bitgetTxService = new BitgetTransactionService();
-        const okxTxService = new OkxTransactionService();
 
         // 1. Sync Positions & Orders
         const positionsPromise = Promise.all(
@@ -288,127 +396,12 @@ export class UnifiedSyncManager {
           )
         );
 
-        // 2. Sync Bybit Transactions
-        const bybitPromise = (async () => {
-          if (bybitKeys.length === 0) return 0;
-          let count = 0;
-          for (const key of bybitKeys) {
-            try {
-              const addedCount = await ConnectionLockManager.runWithLock(
-                key.id,
-                'Bybit Transaction Sync',
-                async () => {
-                  const meta = await getBybitTxLogMeta(key.id);
-                  if (meta && meta.latestTransactionTime > 0) {
-                    const added = await bybitTxService.syncIncremental(key, meta.latestTransactionTime);
-                    return added.length;
-                  } else {
-                    await bybitTxService.syncAll(key);
-                    const postMeta = await getBybitTxLogMeta(key.id);
-                    return postMeta?.totalRecords || 0;
-                  }
-                },
-                { connectionLabel: key.label }
-              );
-              count += addedCount;
-            } catch (err) {
-              LogManager.warn('UnifiedSyncManager', `Bybit Tx sync failed for ${key.label}:`, err);
-            }
-          }
-          // Reload cache into coordinator store
-          const all: any[] = [];
-          for (const key of bybitKeys) {
-            const cached = await getBybitTxLogCache(key.id);
-            all.push(...cached);
-          }
-          all.sort((a, b) => b.transactionTime - a.transactionTime);
-          useSyncCoordinatorStore.getState().setCachedTxLog(all);
-          useSyncCoordinatorStore.getState().setBybitTxTotalRecords(all.length);
-          useSyncCoordinatorStore.getState().setBybitTxLastSyncTime(Date.now());
-          return count;
-        })();
+        // 2. Parallel Sync for all exchanges
+        const bybitPromise = this.syncExchangeTransactions(activeKeys, 'bybit');
+        const bitgetPromise = this.syncExchangeTransactions(activeKeys, 'bitget');
+        const okxPromise = this.syncExchangeTransactions(activeKeys, 'okx');
 
-        // 3. Sync Bitget Transactions
-        const bitgetPromise = (async () => {
-          if (bitgetKeys.length === 0) return 0;
-          let count = 0;
-          for (const key of bitgetKeys) {
-            try {
-              const addedCount = await ConnectionLockManager.runWithLock(
-                key.id,
-                'Bitget Transaction Sync',
-                async () => {
-                  const meta = await getBitgetTxLogMeta(key.id);
-                  if (meta && meta.latestTransactionTime > 0) {
-                    const added = await bitgetTxService.syncIncremental(key, meta.latestTransactionTime);
-                    return added.length;
-                  } else {
-                    await bitgetTxService.syncAll(key);
-                    const postMeta = await getBitgetTxLogMeta(key.id);
-                    return postMeta?.totalRecords || 0;
-                  }
-                },
-                { connectionLabel: key.label }
-              );
-              count += addedCount;
-            } catch (err) {
-              LogManager.warn('UnifiedSyncManager', `Bitget Tx sync failed for ${key.label}:`, err);
-            }
-          }
-          // Reload cache into coordinator store
-          const all: any[] = [];
-          for (const key of bitgetKeys) {
-            const cached = await getBitgetTxLogCache(key.id);
-            all.push(...cached);
-          }
-          all.sort((a, b) => b.transactionTime - a.transactionTime);
-          useSyncCoordinatorStore.getState().setCachedBitgetTxLog(all);
-          useSyncCoordinatorStore.getState().setBitgetTxTotalRecords(all.length);
-          useSyncCoordinatorStore.getState().setBitgetTxLastSyncTime(Date.now());
-          return count;
-        })();
-
-        // 4. Sync OKX Transactions
-        const okxPromise = (async () => {
-          if (okxKeys.length === 0) return 0;
-          let count = 0;
-          for (const key of okxKeys) {
-            try {
-              const addedCount = await ConnectionLockManager.runWithLock(
-                key.id,
-                'OKX Transaction Sync',
-                async () => {
-                  const meta = await getOkxTxLogMeta(key.id);
-                  if (meta && meta.latestTransactionTime > 0) {
-                    const added = await okxTxService.syncIncremental(key, meta.latestTransactionTime);
-                    return added.length;
-                  } else {
-                    await okxTxService.syncAll(key);
-                    const postMeta = await getOkxTxLogMeta(key.id);
-                    return postMeta?.totalRecords || 0;
-                  }
-                },
-                { connectionLabel: key.label }
-              );
-              count += addedCount;
-            } catch (err) {
-              LogManager.warn('UnifiedSyncManager', `OKX Tx sync failed for ${key.label}:`, err);
-            }
-          }
-          // Reload cache into coordinator store
-          const all: any[] = [];
-          for (const key of okxKeys) {
-            const cached = await getOkxTxLogCache(key.id);
-            all.push(...cached);
-          }
-          all.sort((a, b) => b.transactionTime - a.transactionTime);
-          useSyncCoordinatorStore.getState().setCachedOkxTxLog(all);
-          useSyncCoordinatorStore.getState().setOkxTxTotalRecords(all.length);
-          useSyncCoordinatorStore.getState().setOkxTxLastSyncTime(Date.now());
-          return count;
-        })();
-
-        // 5. Trigger funding refresh event
+        // 3. Trigger funding refresh event
         window.dispatchEvent(new CustomEvent('funding-cache-cleared'));
 
         const [posResults, orderResults, bybitCount, bitgetCount, okxCount] = await Promise.all([
@@ -468,133 +461,16 @@ export class UnifiedSyncManager {
       try {
         const startTime = performance.now();
         const activeKeys = keys.filter(k => k.isActive);
-        const bybitKeys = activeKeys.filter(k => k.exchange === 'bybit');
-        const bitgetKeys = activeKeys.filter(k => k.exchange === 'bitget');
-        const okxKeys = activeKeys.filter(k => k.exchange === 'okx');
 
         onProgress?.('Syncing Bybit, Bitget & OKX transaction logs in parallel...');
 
-        const bybitTxService = new BybitTransactionService();
-        const bitgetTxService = new BitgetTransactionService();
-        const okxTxService = new OkxTransactionService();
+        const [bybit, bitget, okx] = await Promise.all([
+          this.syncExchangeTransactions(activeKeys, 'bybit'),
+          this.syncExchangeTransactions(activeKeys, 'bitget'),
+          this.syncExchangeTransactions(activeKeys, 'okx'),
+        ]);
 
-        const bybitPromise = (async () => {
-          if (bybitKeys.length === 0) return 0;
-          let count = 0;
-          for (const key of bybitKeys) {
-            try {
-              const addedCount = await ConnectionLockManager.runWithLock(
-                key.id,
-                'Bybit Transaction Sync',
-                async () => {
-                  const meta = await getBybitTxLogMeta(key.id);
-                  if (meta && meta.latestTransactionTime > 0) {
-                    const added = await bybitTxService.syncIncremental(key, meta.latestTransactionTime);
-                    return added.length;
-                  } else {
-                    await bybitTxService.syncAll(key);
-                    const postMeta = await getBybitTxLogMeta(key.id);
-                    return postMeta?.totalRecords || 0;
-                  }
-                },
-                { connectionLabel: key.label }
-              );
-              count += addedCount;
-            } catch (err) {
-              LogManager.warn('UnifiedSyncManager', `Bybit Tx sync failed:`, err);
-            }
-          }
-          const all: any[] = [];
-          for (const key of bybitKeys) {
-            const cached = await getBybitTxLogCache(key.id);
-            all.push(...cached);
-          }
-          all.sort((a, b) => b.transactionTime - a.transactionTime);
-          useSyncCoordinatorStore.getState().setCachedTxLog(all);
-          useSyncCoordinatorStore.getState().setBybitTxTotalRecords(all.length);
-          useSyncCoordinatorStore.getState().setBybitTxLastSyncTime(Date.now());
-          return count;
-        })();
-
-        const bitgetPromise = (async () => {
-          if (bitgetKeys.length === 0) return 0;
-          let count = 0;
-          for (const key of bitgetKeys) {
-            try {
-              const addedCount = await ConnectionLockManager.runWithLock(
-                key.id,
-                'Bitget Transaction Sync',
-                async () => {
-                  const meta = await getBitgetTxLogMeta(key.id);
-                  if (meta && meta.latestTransactionTime > 0) {
-                    const added = await bitgetTxService.syncIncremental(key, meta.latestTransactionTime);
-                    return added.length;
-                  } else {
-                    await bitgetTxService.syncAll(key);
-                    const postMeta = await getBitgetTxLogMeta(key.id);
-                    return postMeta?.totalRecords || 0;
-                  }
-                },
-                { connectionLabel: key.label }
-              );
-              count += addedCount;
-            } catch (err) {
-              LogManager.warn('UnifiedSyncManager', `Bitget Tx sync failed:`, err);
-            }
-          }
-          const all: any[] = [];
-          for (const key of bitgetKeys) {
-            const cached = await getBitgetTxLogCache(key.id);
-            all.push(...cached);
-          }
-          all.sort((a, b) => b.transactionTime - a.transactionTime);
-          useSyncCoordinatorStore.getState().setCachedBitgetTxLog(all);
-          useSyncCoordinatorStore.getState().setBitgetTxTotalRecords(all.length);
-          useSyncCoordinatorStore.getState().setBitgetTxLastSyncTime(Date.now());
-          return count;
-        })();
-
-        const okxPromise = (async () => {
-          if (okxKeys.length === 0) return 0;
-          let count = 0;
-          for (const key of okxKeys) {
-            try {
-              const addedCount = await ConnectionLockManager.runWithLock(
-                key.id,
-                'OKX Transaction Sync',
-                async () => {
-                  const meta = await getOkxTxLogMeta(key.id);
-                  if (meta && meta.latestTransactionTime > 0) {
-                    const added = await okxTxService.syncIncremental(key, meta.latestTransactionTime);
-                    return added.length;
-                  } else {
-                    await okxTxService.syncAll(key);
-                    const postMeta = await getOkxTxLogMeta(key.id);
-                    return postMeta?.totalRecords || 0;
-                  }
-                },
-                { connectionLabel: key.label }
-              );
-              count += addedCount;
-            } catch (err) {
-              LogManager.warn('UnifiedSyncManager', `OKX Tx sync failed:`, err);
-            }
-          }
-          const all: any[] = [];
-          for (const key of okxKeys) {
-            const cached = await getOkxTxLogCache(key.id);
-            all.push(...cached);
-          }
-          all.sort((a, b) => b.transactionTime - a.transactionTime);
-          useSyncCoordinatorStore.getState().setCachedOkxTxLog(all);
-          useSyncCoordinatorStore.getState().setOkxTxTotalRecords(all.length);
-          useSyncCoordinatorStore.getState().setOkxTxLastSyncTime(Date.now());
-          return count;
-        })();
-
-        const [bybit, bitget, okx] = await Promise.all([bybitPromise, bitgetPromise, okxPromise]);
         const elapsedSeconds = Number(((performance.now() - startTime) / 1000).toFixed(1));
-
         return {
           bybit,
           bitget,
@@ -646,43 +522,12 @@ export class UnifiedSyncManager {
           LogManager.warn('UnifiedSyncManager', `Connection order sync failed for ${key.label}:`, err?.message || err);
         }
 
-        try {
-          if (key.exchange === 'bybit') {
-            const bybitTxService = new BybitTransactionService();
-            const meta = await getBybitTxLogMeta(key.id);
-            if (meta && meta.latestTransactionTime > 0) {
-              const added = await bybitTxService.syncIncremental(key, meta.latestTransactionTime);
-              txCount = added.length;
-            } else {
-              await bybitTxService.syncAll(key);
-              const postMeta = await getBybitTxLogMeta(key.id);
-              txCount = postMeta?.totalRecords || 0;
-            }
-          } else if (key.exchange === 'bitget') {
-            const bitgetTxService = new BitgetTransactionService();
-            const meta = await getBitgetTxLogMeta(key.id);
-            if (meta && meta.latestTransactionTime > 0) {
-              const added = await bitgetTxService.syncIncremental(key, meta.latestTransactionTime);
-              txCount = added.length;
-            } else {
-              await bitgetTxService.syncAll(key);
-              const postMeta = await getBitgetTxLogMeta(key.id);
-              txCount = postMeta?.totalRecords || 0;
-            }
-          } else if (key.exchange === 'okx') {
-            const okxTxService = new OkxTransactionService();
-            const meta = await getOkxTxLogMeta(key.id);
-            if (meta && meta.latestTransactionTime > 0) {
-              const added = await okxTxService.syncIncremental(key, meta.latestTransactionTime);
-              txCount = added.length;
-            } else {
-              await okxTxService.syncAll(key);
-              const postMeta = await getOkxTxLogMeta(key.id);
-              txCount = postMeta?.totalRecords || 0;
-            }
+        if (key.exchange === 'bybit' || key.exchange === 'bitget' || key.exchange === 'okx') {
+          try {
+            txCount = await this.syncKeyTransactions(key);
+          } catch (err: any) {
+            LogManager.warn('UnifiedSyncManager', `Connection transaction sync failed for ${key.label}:`, err?.message || err);
           }
-        } catch (err: any) {
-          LogManager.warn('UnifiedSyncManager', `Connection transaction sync failed for ${key.label}:`, err?.message || err);
         }
 
         const elapsedSeconds = Number(((performance.now() - startTime) / 1000).toFixed(1));
