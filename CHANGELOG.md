@@ -1,3 +1,10 @@
+# [1.82.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.81.0...v1.82.0) (2026-09-28)
+
+
+### Features
+
+* enhance error handling and aggregation across multiple keys in transaction sync services ([1ab1130](https://github.com/fapdev77/crypto-dashboard/commit/1ab1130afd89961ad6ed963d54fb91d38e5b423a))
+
 # [1.81.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.80.0...v1.81.0) (2026-09-27)
 
 
