@@ -166,13 +166,12 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
           } else {
             useSyncCoordinatorStore.getState().setPositionsSyncError(null);
             setSyncError(null);
+            setLastSyncTime(Date.now());
           }
 
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
-          
-          setLastSyncTime(Date.now());
         }
       } catch (err: any) {
         LogManager.error('PositionHistory', 'Error syncing network positions:', err);

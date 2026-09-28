@@ -111,4 +111,64 @@ describe('useOrderReports ordersSyncError integration', () => {
     expect(result.current.ordersSyncError).toContain('Bybit order fetch 429');
     spy.mockRestore();
   });
+
+  it('does not advance lastSyncTime when an order fetch failure occurs', async () => {
+    useSettingsStore.setState({ lastSyncTime: 4000 });
+
+    useApiKeysStore.setState({
+      keys: [
+        {
+          id: 'conn-1',
+          exchange: 'bybit',
+          apiKey: 'key-1',
+          apiSecret: 'sec-1',
+          label: 'Bybit 1',
+          isActive: true,
+        },
+      ],
+    });
+
+    const { OrderHistoryService } = await import('../../services/orders/OrderHistoryService');
+    const spy = vi.spyOn(OrderHistoryService.prototype, 'fetchWithCache').mockRejectedValue(new Error('Rate limit'));
+
+    const { result } = renderHook(() => useOrderReports(defaultFilters));
+
+    await act(async () => {
+      await result.current.fetchOrders(true);
+    });
+
+    expect(result.current.error).toContain('Rate limit');
+    expect(useSettingsStore.getState().lastSyncTime).toBe(4000);
+    spy.mockRestore();
+  });
+
+  it('advances lastSyncTime when all order fetches succeed', async () => {
+    useSettingsStore.setState({ lastSyncTime: 4000 });
+
+    useApiKeysStore.setState({
+      keys: [
+        {
+          id: 'conn-1',
+          exchange: 'bybit',
+          apiKey: 'key-1',
+          apiSecret: 'sec-1',
+          label: 'Bybit 1',
+          isActive: true,
+        },
+      ],
+    });
+
+    const { OrderHistoryService } = await import('../../services/orders/OrderHistoryService');
+    const spy = vi.spyOn(OrderHistoryService.prototype, 'fetchWithCache').mockResolvedValue([]);
+
+    const { result } = renderHook(() => useOrderReports(defaultFilters));
+
+    await act(async () => {
+      await result.current.fetchOrders(true);
+    });
+
+    expect(result.current.error).toBeNull();
+    expect(useSettingsStore.getState().lastSyncTime).toBeGreaterThan(4000);
+    spy.mockRestore();
+  });
 });

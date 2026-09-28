@@ -126,4 +126,76 @@ describe('usePositionHistory multi-key error aggregation', () => {
 
     expect(useSyncCoordinatorStore.getState().positionsSyncError).toBeNull();
   });
+
+  it('does not advance lastSyncTime when a key fails during position sync', async () => {
+    useSettingsStore.setState({ lastSyncTime: 5000 });
+
+    useApiKeysStore.setState({
+      keys: [
+        {
+          id: 'conn-1',
+          exchange: 'bybit',
+          apiKey: 'key-1',
+          apiSecret: 'secret-1',
+          label: 'Bybit Main',
+          isActive: true,
+        },
+      ],
+    });
+
+    vi.mocked(PositionHistoryService).mockImplementation(function(this: any) {
+      return {
+        fetchWithCache: vi.fn().mockRejectedValue(new Error('Bybit 429 Too Many Requests')),
+        fetchExchangeHistory: vi.fn(),
+      } as any;
+    });
+    vi.mocked(historyCache.getCachedHistory).mockResolvedValue([]);
+
+    const { result } = renderHook(() => usePositionHistory('7d'));
+
+    await waitFor(() => {
+      expect(result.current.isSyncing).toBe(false);
+      expect(result.current.syncError).toBeTruthy();
+    });
+
+    // lastSyncTime must NOT have advanced!
+    expect(useSettingsStore.getState().lastSyncTime).toBe(5000);
+  });
+
+  it('advances lastSyncTime when all keys succeed and attempts sync again if previous sync had failed', async () => {
+    useSettingsStore.setState({ lastSyncTime: 5000 });
+
+    useApiKeysStore.setState({
+      keys: [
+        {
+          id: 'conn-1',
+          exchange: 'bybit',
+          apiKey: 'key-1',
+          apiSecret: 'secret-1',
+          label: 'Bybit Main',
+          isActive: true,
+        },
+      ],
+    });
+
+    const mockFetch = vi.fn().mockResolvedValue([]);
+    vi.mocked(PositionHistoryService).mockImplementation(function(this: any) {
+      return {
+        fetchWithCache: mockFetch,
+        fetchExchangeHistory: vi.fn(),
+      } as any;
+    });
+    vi.mocked(historyCache.getCachedHistory).mockResolvedValue([]);
+
+    const { result } = renderHook(() => usePositionHistory('7d'));
+
+    await waitFor(() => {
+      expect(result.current.isSyncing).toBe(false);
+      expect(result.current.syncError).toBeNull();
+    });
+
+    // lastSyncTime must have advanced beyond initial timestamp
+    expect(useSettingsStore.getState().lastSyncTime).toBeGreaterThan(5000);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
 });
