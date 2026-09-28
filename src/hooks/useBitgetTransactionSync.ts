@@ -91,9 +91,9 @@ export function useBitgetTransactionSync() {
         setBitgetTxLastSyncTime(now);
 
         if (syncErrors.length > 0) {
-          useSyncCoordinatorStore.getState().setTxSyncError(syncErrors.join('; '));
+          useSyncCoordinatorStore.getState().setBitgetTxSyncError(syncErrors.join('; '));
         } else {
-          useSyncCoordinatorStore.getState().setTxSyncError(null);
+          useSyncCoordinatorStore.getState().setBitgetTxSyncError(null);
         }
 
         LogManager.system(
@@ -108,7 +108,7 @@ export function useBitgetTransactionSync() {
         );
       } catch (err: any) {
         LogManager.error('BitgetTxSync', 'Background sync failed:', err);
-        useSyncCoordinatorStore.getState().setTxSyncError(err?.message || 'Error syncing Bitget transactions');
+        useSyncCoordinatorStore.getState().setBitgetTxSyncError(err?.message || 'Error syncing Bitget transactions');
       } finally {
         setIsBitgetTxSyncing(false);
       }
@@ -156,12 +156,13 @@ export function useBitgetTransactionSync() {
         setBitgetTxLastSyncTime(Date.now());
 
         if (syncErrors.length > 0) {
-          useSyncCoordinatorStore.getState().setTxSyncError(syncErrors.join('; '));
+          useSyncCoordinatorStore.getState().setBitgetTxSyncError(syncErrors.join('; '));
         } else {
-          useSyncCoordinatorStore.getState().setTxSyncError(null);
+          useSyncCoordinatorStore.getState().setBitgetTxSyncError(null);
         }
-      } catch (err) {
+      } catch (err: any) {
         LogManager.error('BitgetTxSync', 'Periodic sync failed:', err);
+        useSyncCoordinatorStore.getState().setBitgetTxSyncError(err?.message || 'Error syncing Bitget transactions');
       } finally {
         setIsBitgetTxSyncing(false);
       }

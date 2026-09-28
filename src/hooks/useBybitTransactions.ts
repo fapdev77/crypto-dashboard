@@ -259,7 +259,7 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
     isSyncing: syncStore.isBybitTxSyncing,
     isCalculatingUsd,
     progress: syncStore.bybitTxProgress,
-    error,
+    error: error || syncStore.bybitTxSyncError,
     stats,
     tokenRates,
   };

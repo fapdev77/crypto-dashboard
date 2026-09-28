@@ -5,7 +5,7 @@ import { LogManager } from '../LogManager';
 import { BitgetUTAAdapter } from '../adapters/BitgetUTAAdapter';
 import { BitgetClassicAdapter } from '../adapters/BitgetClassicAdapter';
 import { matchUniversalTxType, getBitgetUniversalType } from '../../utils/transactionTypeMapper';
-import { executeWithRetry } from '../../utils/retryHelper';
+import { executeWithRetry, classifyError } from '../../utils/retryHelper';
 import {
   getBitgetTxLogCache,
   saveBitgetTxLogCache,
@@ -64,6 +64,7 @@ export class BitgetTransactionService {
     let allNew: BitgetTransactionLogEntry[] = [];
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'SPOT', 'MARGIN', 'OTHER'];
     let hasError = false;
+    let lastChunkError: any = null;
     const adapter = this.getAdapter(key);
 
     for (const category of categories) {
@@ -97,6 +98,7 @@ export class BitgetTransactionService {
         } catch (err) {
           LogManager.warn('BitgetTransactionService', `Incremental chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
           hasError = true;
+          lastChunkError = err;
           break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
         }
         chunkStart = chunkEnd + 1;
@@ -138,7 +140,8 @@ export class BitgetTransactionService {
 
     // Signal partial failure to the caller after all partial data has been persisted
     if (hasError) {
-      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+      const cause = classifyError(lastChunkError);
+      throw new Error(`Partial sync failure for ${key.label} (${cause})`);
     }
 
     return allNew;
@@ -163,6 +166,7 @@ export class BitgetTransactionService {
     let chunkEnd = now;
     let allEntries: BitgetTransactionLogEntry[] = [];
     let hasError = false;
+    let lastChunkError: any = null;
 
     while (chunkEnd > maxLookback) {
       const chunkStart = Math.max(maxLookback, chunkEnd - SEVEN_DAYS_MS);
@@ -200,6 +204,7 @@ export class BitgetTransactionService {
         } catch (err) {
           LogManager.warn('BitgetTransactionService', `Deep sync chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
           hasError = true;
+          lastChunkError = err;
           break; // Stop deep sync regress to preserve continuous historical cache without gaps
         }
       }
@@ -247,7 +252,8 @@ export class BitgetTransactionService {
 
     // Signal partial failure to the caller after all partial data has been persisted
     if (hasError) {
-      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+      const cause = classifyError(lastChunkError);
+      throw new Error(`Partial sync failure for ${key.label} (${cause})`);
     }
   }
 

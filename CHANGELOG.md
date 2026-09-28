@@ -1,3 +1,10 @@
+## [1.82.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.0...v1.82.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* suppress noise in error logging ([4bfa006](https://github.com/fapdev77/crypto-dashboard/commit/4bfa0062d9917de5b07cae3e90f1ca5056e338ea))
+
 # [1.82.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.81.0...v1.82.0) (2026-09-28)
 
 

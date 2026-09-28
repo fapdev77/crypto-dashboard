@@ -27,7 +27,7 @@ export function useBybitTransactionSync() {
     setBybitTxOldestTransactionTime,
     setBybitTxTotalRecords,
     setCachedTxLog,
-    setTxSyncError,
+    setBybitTxSyncError,
   } = useSyncCoordinatorStore();
 
   useEffect(() => {
@@ -100,9 +100,9 @@ export function useBybitTransactionSync() {
         setBybitTxLastSyncTime(now);
 
         if (syncErrors.length > 0) {
-          setTxSyncError(syncErrors.join('; '));
+          setBybitTxSyncError(syncErrors.join('; '));
         } else {
-          setTxSyncError(null);
+          setBybitTxSyncError(null);
         }
 
         LogManager.system(
@@ -116,7 +116,7 @@ export function useBybitTransactionSync() {
         );
       } catch (err: any) {
         LogManager.error('BybitTransactionSync', 'Deep sync error:', err);
-        setTxSyncError(err?.message || 'Error syncing Bybit transactions');
+        setBybitTxSyncError(err?.message || 'Error syncing Bybit transactions');
       } finally {
         setIsBybitTxSyncing(false);
         setBybitTxProgress(null);
@@ -169,9 +169,9 @@ export function useBybitTransactionSync() {
         setBybitTxLastSyncTime(Date.now());
 
         if (syncErrors.length > 0) {
-          setTxSyncError(syncErrors.join('; '));
+          setBybitTxSyncError(syncErrors.join('; '));
         } else {
-          setTxSyncError(null);
+          setBybitTxSyncError(null);
         }
 
         const writeEndTime = Date.now();
@@ -190,7 +190,7 @@ export function useBybitTransactionSync() {
         );
       } catch (err: any) {
         LogManager.error('BybitTransactionSync', 'Incremental sync error:', err);
-        setTxSyncError(err?.message || 'Error syncing Bybit transactions');
+        setBybitTxSyncError(err?.message || 'Error syncing Bybit transactions');
       } finally {
         setIsBybitTxSyncing(false);
         setBybitTxProgress(null);

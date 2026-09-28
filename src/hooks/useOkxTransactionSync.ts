@@ -91,9 +91,9 @@ export function useOkxTransactionSync() {
         setOkxTxLastSyncTime(now);
 
         if (syncErrors.length > 0) {
-          useSyncCoordinatorStore.getState().setTxSyncError(syncErrors.join('; '));
+          useSyncCoordinatorStore.getState().setOkxTxSyncError(syncErrors.join('; '));
         } else {
-          useSyncCoordinatorStore.getState().setTxSyncError(null);
+          useSyncCoordinatorStore.getState().setOkxTxSyncError(null);
         }
 
         LogManager.system(
@@ -108,7 +108,7 @@ export function useOkxTransactionSync() {
         );
       } catch (err: any) {
         LogManager.error('OkxTxSync', 'Background sync failed:', err);
-        useSyncCoordinatorStore.getState().setTxSyncError(err?.message || 'Error syncing OKX transactions');
+        useSyncCoordinatorStore.getState().setOkxTxSyncError(err?.message || 'Error syncing OKX transactions');
       } finally {
         setIsOkxTxSyncing(false);
       }
@@ -156,12 +156,13 @@ export function useOkxTransactionSync() {
         setOkxTxLastSyncTime(Date.now());
 
         if (syncErrors.length > 0) {
-          useSyncCoordinatorStore.getState().setTxSyncError(syncErrors.join('; '));
+          useSyncCoordinatorStore.getState().setOkxTxSyncError(syncErrors.join('; '));
         } else {
-          useSyncCoordinatorStore.getState().setTxSyncError(null);
+          useSyncCoordinatorStore.getState().setOkxTxSyncError(null);
         }
-      } catch (err) {
+      } catch (err: any) {
         LogManager.error('OkxTxSync', 'Periodic sync failed:', err);
+        useSyncCoordinatorStore.getState().setOkxTxSyncError(err?.message || 'Error syncing OKX transactions');
       } finally {
         setIsOkxTxSyncing(false);
       }
