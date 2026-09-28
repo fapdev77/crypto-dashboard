@@ -1,3 +1,10 @@
+## [1.82.2](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.1...v1.82.2) (2026-09-28)
+
+
+### Bug Fixes
+
+* **sync:** prevent lastSyncTime update on failure ([d72b6b0](https://github.com/fapdev77/crypto-dashboard/commit/d72b6b0529bf7069e4500f238f7e270623c57122))
+
 ## [1.82.1](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.0...v1.82.1) (2026-09-28)
 
 

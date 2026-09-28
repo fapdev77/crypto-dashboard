@@ -195,8 +195,8 @@ export function useOrderReports(filters: OrderFilters) {
       } else {
         useSyncCoordinatorStore.getState().setOrdersSyncError(null);
         setError(null);
+        setLastSyncTime(Date.now());
       }
-      setLastSyncTime(Date.now());
 
     } catch (err: any) {
       const errMsg = err?.message || 'Failed to fetch order history';
