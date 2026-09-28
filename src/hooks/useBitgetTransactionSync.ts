@@ -44,20 +44,25 @@ export function useBitgetTransactionSync() {
         let totalNewRecords = 0;
         let isIncremental = false;
 
+        const syncErrors: string[] = [];
         for (const key of bitgetKeys) {
-          const meta = await getBitgetTxLogMeta(key.id);
-          if (meta && meta.latestTransactionTime > 0) {
-            isIncremental = true;
-            const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
-            totalNewRecords += newRecords.length;
-          } else {
-            const preMeta = await getBitgetTxLogMeta(key.id);
-            const preCount = preMeta?.totalRecords || 0;
-            await service.syncAll(key, (pct, records) => {
-              setBitgetTxProgress({ pct, records });
-            });
-            const postMeta = await getBitgetTxLogMeta(key.id);
-            totalNewRecords += (postMeta?.totalRecords || 0) - preCount;
+          try {
+            const meta = await getBitgetTxLogMeta(key.id);
+            if (meta && meta.latestTransactionTime > 0) {
+              isIncremental = true;
+              const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
+              totalNewRecords += newRecords.length;
+            } else {
+              const preMeta = await getBitgetTxLogMeta(key.id);
+              const preCount = preMeta?.totalRecords || 0;
+              await service.syncAll(key, (pct, records) => {
+                setBitgetTxProgress({ pct, records });
+              });
+              const postMeta = await getBitgetTxLogMeta(key.id);
+              totalNewRecords += (postMeta?.totalRecords || 0) - preCount;
+            }
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
           }
         }
         const fetchEndTime = Date.now();
@@ -84,7 +89,12 @@ export function useBitgetTransactionSync() {
         }
         setBitgetTxTotalRecords(allEntries.length);
         setBitgetTxLastSyncTime(now);
-        useSyncCoordinatorStore.getState().setTxSyncError(null);
+
+        if (syncErrors.length > 0) {
+          useSyncCoordinatorStore.getState().setTxSyncError(syncErrors.join('; '));
+        } else {
+          useSyncCoordinatorStore.getState().setTxSyncError(null);
+        }
 
         LogManager.system(
           'BitgetTxSync',
@@ -120,11 +130,16 @@ export function useBitgetTransactionSync() {
       setIsBitgetTxSyncing(true);
       try {
         let totalNewRecords = 0;
+        const syncErrors: string[] = [];
         for (const key of activeBitgetKeys) {
-          const meta = await getBitgetTxLogMeta(key.id);
-          if (meta && meta.latestTransactionTime > 0) {
-            const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
-            totalNewRecords += newRecords.length;
+          try {
+            const meta = await getBitgetTxLogMeta(key.id);
+            if (meta && meta.latestTransactionTime > 0) {
+              const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
+              totalNewRecords += newRecords.length;
+            }
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
           }
         }
 
@@ -139,6 +154,12 @@ export function useBitgetTransactionSync() {
           setBitgetTxTotalRecords(allEntries.length);
         }
         setBitgetTxLastSyncTime(Date.now());
+
+        if (syncErrors.length > 0) {
+          useSyncCoordinatorStore.getState().setTxSyncError(syncErrors.join('; '));
+        } else {
+          useSyncCoordinatorStore.getState().setTxSyncError(null);
+        }
       } catch (err) {
         LogManager.error('BitgetTxSync', 'Periodic sync failed:', err);
       } finally {

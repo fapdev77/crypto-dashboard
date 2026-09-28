@@ -62,6 +62,15 @@ Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se fo
 5. Volte para a rota principal "Dashboard", agora deverá ver seus saldos totais atualizando globalmente.
 
 ## 🛠 Features e UI/UX Recentes
+- ✅ **Resiliência de Conexão com Fail-Fast de Autenticação e Backoff Exponencial:**
+  - **Fail-Fast em Falhas de Credenciais:** Discriminação algorítmica de erros (`isAuthError`) cobrindo status HTTP 401/403, códigos proprietários das corretoras (Bybit `10003`, `10004`, `10005`, `33004`, `10024`; OKX `50100`, `50105`, `50111`, `50113`; Bitget `40001`, `40005`, `40006`, `40014`, `40017`) e padrões textuais de chaves inválidas/assinatura. Ao detectar falha de autenticação no bootload, os retries automáticos são abortados imediatamente para blindar o IP do usuário contra bloqueios de rate limit e banimentos Cloudflare/Akamai das exchanges.
+  - **Backoff Exponencial com Jitter:** Para falhas transitórias de rede ou respostas 5xx, o sistema aplica backoff progressivo com jitter aleatório (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ teto de 60s) e circuit breaker automático de 5 tentativas consecutivas antes de pausar os disparos.
+- ✅ **Gestão de Quota de Armazenamento e Pruning Histórico no IndexedDB:**
+  - **Monitoramento em Tempo Real de Quota:** Leitura da API `navigator.storage.estimate()` exibindo espaço consumido em MB, quota total alocada pelo navegador e percentual com barra visual progressiva no card de configurações de cache.
+  - **Política de Retenção Flexível e Expurgo sob Demanda:** Seletor configurável de retenção histórica com opções de 30 dias (1 mês), 60 dias (2 meses), 90 dias (3 meses), 180 dias (6 meses), 365 dias (1 ano - Padrão) e 730 dias (2 anos), acompanhado do botão "Prune History" para purgar registros fechados antigos e recuperar espaço em disco sem afetar o histórico ativo.
+- ✅ **Global Error Boundary & Safe Crash Recovery:**
+  - **Captura Global de Exceções de Renderização:** Componente `GlobalErrorBoundary` que envelopa a árvore da aplicação, interceptando erros não tratados de renderização ou estado sem quebrar a tela inteira.
+  - **Tela de Recuperação Graciosa:** Interface com relatório do erro, visualização expansível de stack trace para depuração e ações rápidas com um clique para "Reload Dashboard" ou "Clear Cache & Reload".
 - ✅ **Market Analytics (Inteligência Quantitativa e Fluxo de Derivativos Multi-Exchange):**
   - **Consolidação Cross-Exchange em Tempo Real:** Agrega dados de derivativos e fluxo de ordens de Bybit, OKX e Bitget em contratos Perpétuos (Linear), Inversos (Coin-M) e Spot.
   - **Open Interest & Regime Detector:** Visualização gráfica de evolução de Open Interest (OI) com detector automático de regimes de mercado (`Long Accumulation`, `Short Squeeze`, `Aggressive Shorting`, `Long Liquidation` e `Neutral Consolidation`) e divisão de market share por corretora.

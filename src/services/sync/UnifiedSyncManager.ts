@@ -20,6 +20,7 @@ import {
   ComprehensiveCacheStats,
 } from '../historyCache';
 import { LogManager } from '../LogManager';
+import { checkAndWarnStorageQuota } from '../storageQuota';
 
 export interface FullSyncResult {
   stats: ComprehensiveCacheStats;
@@ -362,6 +363,7 @@ export class UnifiedSyncManager {
         const activeKeys = keys.filter(k => k.isActive);
 
         LogManager.info('UnifiedSyncManager', 'Starting full application synchronization...');
+        await checkAndWarnStorageQuota('FullAppSync');
         onProgress?.('Syncing Positions, Orders, Transactions & Funding in parallel...');
 
         const positionService = new PositionHistoryService();
@@ -463,6 +465,7 @@ export class UnifiedSyncManager {
         const activeKeys = keys.filter(k => k.isActive);
 
         onProgress?.('Syncing Bybit, Bitget & OKX transaction logs in parallel...');
+        await checkAndWarnStorageQuota('TransactionSync');
 
         const [bybit, bitget, okx] = await Promise.all([
           this.syncExchangeTransactions(activeKeys, 'bybit'),

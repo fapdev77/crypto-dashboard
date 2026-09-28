@@ -1,3 +1,24 @@
+# [1.82.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.81.0...v1.82.0) (2026-09-28)
+
+
+### Features
+
+* enhance error handling and aggregation across multiple keys in transaction sync services ([1ab1130](https://github.com/fapdev77/crypto-dashboard/commit/1ab1130afd89961ad6ed963d54fb91d38e5b423a))
+
+# [1.81.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.80.0...v1.81.0) (2026-09-27)
+
+
+### Features
+
+* **storage:** monitor browser storage quota ([462b44b](https://github.com/fapdev77/crypto-dashboard/commit/462b44bf6a3fd25cf5b41d9041b86fdb39c9dede))
+
+# [1.80.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.79.0...v1.80.0) (2026-09-27)
+
+
+### Features
+
+* improve connection resilience and storage management ([5b21dd1](https://github.com/fapdev77/crypto-dashboard/commit/5b21dd13a7fa4dc960f8faee54c9350787fbb3f5))
+
 # [1.79.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.78.0...v1.79.0) (2026-09-27)
 
 

@@ -44,20 +44,25 @@ export function useOkxTransactionSync() {
         let totalNewRecords = 0;
         let isIncremental = false;
 
+        const syncErrors: string[] = [];
         for (const key of okxKeys) {
-          const meta = await getOkxTxLogMeta(key.id);
-          if (meta && meta.latestTransactionTime > 0) {
-            isIncremental = true;
-            const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
-            totalNewRecords += newRecords.length;
-          } else {
-            const preMeta = await getOkxTxLogMeta(key.id);
-            const preCount = preMeta?.totalRecords || 0;
-            await service.syncAll(key, (pct, records) => {
-              setOkxTxProgress({ pct, records });
-            });
-            const postMeta = await getOkxTxLogMeta(key.id);
-            totalNewRecords += (postMeta?.totalRecords || 0) - preCount;
+          try {
+            const meta = await getOkxTxLogMeta(key.id);
+            if (meta && meta.latestTransactionTime > 0) {
+              isIncremental = true;
+              const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
+              totalNewRecords += newRecords.length;
+            } else {
+              const preMeta = await getOkxTxLogMeta(key.id);
+              const preCount = preMeta?.totalRecords || 0;
+              await service.syncAll(key, (pct, records) => {
+                setOkxTxProgress({ pct, records });
+              });
+              const postMeta = await getOkxTxLogMeta(key.id);
+              totalNewRecords += (postMeta?.totalRecords || 0) - preCount;
+            }
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
           }
         }
         const fetchEndTime = Date.now();
@@ -84,7 +89,12 @@ export function useOkxTransactionSync() {
         }
         setOkxTxTotalRecords(allEntries.length);
         setOkxTxLastSyncTime(now);
-        useSyncCoordinatorStore.getState().setTxSyncError(null);
+
+        if (syncErrors.length > 0) {
+          useSyncCoordinatorStore.getState().setTxSyncError(syncErrors.join('; '));
+        } else {
+          useSyncCoordinatorStore.getState().setTxSyncError(null);
+        }
 
         LogManager.system(
           'OkxTxSync',
@@ -120,11 +130,16 @@ export function useOkxTransactionSync() {
       setIsOkxTxSyncing(true);
       try {
         let totalNewRecords = 0;
+        const syncErrors: string[] = [];
         for (const key of activeOkxKeys) {
-          const meta = await getOkxTxLogMeta(key.id);
-          if (meta && meta.latestTransactionTime > 0) {
-            const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
-            totalNewRecords += newRecords.length;
+          try {
+            const meta = await getOkxTxLogMeta(key.id);
+            if (meta && meta.latestTransactionTime > 0) {
+              const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
+              totalNewRecords += newRecords.length;
+            }
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
           }
         }
 
@@ -139,6 +154,12 @@ export function useOkxTransactionSync() {
           setOkxTxTotalRecords(allEntries.length);
         }
         setOkxTxLastSyncTime(Date.now());
+
+        if (syncErrors.length > 0) {
+          useSyncCoordinatorStore.getState().setTxSyncError(syncErrors.join('; '));
+        } else {
+          useSyncCoordinatorStore.getState().setTxSyncError(null);
+        }
       } catch (err) {
         LogManager.error('OkxTxSync', 'Periodic sync failed:', err);
       } finally {

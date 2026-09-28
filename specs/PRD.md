@@ -65,6 +65,7 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 4. **Allowlist anti-SSRF:** o proxy valida domínios oficiais das três exchanges (mitigação de SSRF/DoS).
 5. **Time-Sync Engine:** cada adaptador sincroniza o relógio com o servidor da exchange (offset calculado, throttling de 5 min) para evitar rejeições por timestamp expirado (`recvWindow` < 5000ms na Bybit).
 6. **Privacidade:** o Privacy Mode mascara todos os valores monetários com um clique (`$••••`), persistindo a preferência.
+7. **Fail-Fast de Autenticação e Proteção de IP:** detecção rigorosa de falhas de autenticação (`isAuthError`) cobrindo status HTTP 401/403, códigos proprietários das corretoras (Bybit `10003/10004/10005/33004`, OKX `50100/50105/50111/50113`, Bitget `40001/40005/40006/40014`) e mensagens de assinatura/permissão. Em caso de falha de credenciais, o bootload aborta imediatamente novas tentativas automáticas, protegendo o IP do cliente contra bloqueios por rate limit ou banimentos Cloudflare/Akamai. Falhas transitórias utilizam backoff exponencial com jitter (5s a 60s) e circuit breaker de 5 tentativas.
 
 ### 6.2. Consolidação e Normalização
 
@@ -86,6 +87,7 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 3. **Background Polling:** intervalos configuráveis (5–60 min) mantêm o cache quente.
 4. **Controles manuais:** Settings permitem purgar o cache (Clear Local Cache) e re-sincronizar (Force Sync), com feedback via Toast UI.
 5. **Bills (depósitos/saques):** altamente mutáveis → ignoram o IndexedDB e são buscados direto nas APIs para garantir precisão transacional.
+6. **Política de Retenção e Pruning Histórico:** seletor configurável de retenção histórica (30 dias, 60 dias, 90 dias, 180 dias, 365 dias padrão e 730 dias / 2 anos) acompanhado do botão "Prune History" para expurgo sob demanda de dados encerrados antigos, além de monitoramento visual da quota de disco do navegador via `navigator.storage.estimate()`.
 
 ### 6.4. Módulos de Transações / Transaction Logs (Auditoria Contábil)
 
@@ -145,6 +147,14 @@ Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
 5. **Sentimento Smart Money vs. Retail:** comparação do sentimento do varejo (ponderado por contas) contra o Smart Money (ponderado por volume nocional do top 20% de traders) com índice Fear & Greed e alertas de divergência institucional.
 6. **Sub-View Especializada — Inverse Coin-M Dashboard:** painel analítico comutável dedicado a contratos inversos (COIN-M) consolidando métricas cross-exchange, favoritos com persistência local, desdobramento expansível por corretora (taxa de funding, volume 24h, OI e spread arbitrage) e controles de Expand/Collapse All.
 7. **Tooltips e Controles Padronizados:** tooltips matemáticos detalhados ancorados no Radix UI, seleção com favoritos, seletor de timeframes e atualização automática configurável com contador circular.
+
+### 6.9. Resiliência de Interface (Global Error Boundary & Safe Crash Recovery)
+
+1. **Captura Global de Exceções:** Um componente `GlobalErrorBoundary` envolve a aplicação, capturando falhas não tratadas na árvore do React sem quebrar o documento inteiro.
+2. **Tela de Recuperação Graciosa:** Exibe aviso visual intuitivo com relatório da falha e detalhes técnicos (stack trace) em accordion recolhível para diagnóstico.
+3. **Mecanismos de Recuperação em 1 Clique:**
+   - **Reload Dashboard:** Realiza reinicialização limpa do aplicativo para restabelecer o ciclo de vida dos componentes.
+   - **Clear Cache & Reload:** Pura completamente o banco local IndexedDB e reinicia o aplicativo, permitindo restaurar a estabilidade mesmo em cenários de corrupção ou inconsistência de dados locais.
 
 ## 7. Requisitos Funcionais (Resumo)
 

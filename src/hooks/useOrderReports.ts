@@ -68,6 +68,7 @@ export function useOrderReports(filters: OrderFilters) {
   const activeKeys = useMemo(() => keys.filter(k => k.isActive), [keys]);
 
   const syncStore = useSyncCoordinatorStore();
+  const ordersSyncError = useSyncCoordinatorStore(state => state.ordersSyncError);
 
   // Local state used only for CLOSED (history) orders
   const [closedRawOrders, setClosedRawOrders] = useState<UnifiedOrder[]>(syncStore.cachedClosedOrders);
@@ -76,7 +77,12 @@ export function useOrderReports(filters: OrderFilters) {
     return syncStore.cachedClosedOrders.length === 0;
   });
   const [isSyncing, setIsSyncing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(ordersSyncError);
+
+  // Keep error state synchronized with syncCoordinatorStore
+  useEffect(() => {
+    setError(ordersSyncError);
+  }, [ordersSyncError]);
 
   // Turn off loading if active keys count goes to 0
   useEffect(() => {
@@ -159,6 +165,11 @@ export function useOrderReports(filters: OrderFilters) {
       const fetchPromises = activeKeys.map(apiKey => orderService.fetchWithCache(apiKey));
       const results = await Promise.allSettled(fetchPromises);
 
+      // Collect per-key failures
+      const failures = results
+        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+        .map(r => r.reason?.message || 'Sync failed');
+
       // Reload fully merged set from cache
       let updatedTotal: UnifiedOrder[] = [];
       const newCachePromises = activeKeys.map(apiKey => getCachedOrders(apiKey.id));
@@ -176,12 +187,22 @@ export function useOrderReports(filters: OrderFilters) {
         useSyncCoordinatorStore.getState().setCachedClosedOrders([]);
       }
 
-      // Mark as fully synchronized
+      // Set or clear sync error based on actual results
+      if (failures.length > 0) {
+        const errorMessage = failures.join('; ');
+        useSyncCoordinatorStore.getState().setOrdersSyncError(errorMessage);
+        if (!silent) setError(errorMessage);
+      } else {
+        useSyncCoordinatorStore.getState().setOrdersSyncError(null);
+        setError(null);
+      }
       setLastSyncTime(Date.now());
 
     } catch (err: any) {
+      const errMsg = err?.message || 'Failed to fetch order history';
       LogManager.error('OrderReports', 'Failed to fetch order history:', err);
-      if (!silent) setError(err.message || 'Failed to fetch order history');
+      if (!silent) setError(errMsg);
+      useSyncCoordinatorStore.getState().setOrdersSyncError(errMsg);
     } finally {
       if (!silent) setLoading(false);
       setIsSyncing(false);
@@ -248,5 +269,14 @@ export function useOrderReports(filters: OrderFilters) {
     return [...filtered].sort((a, b) => b.createdTime - a.createdTime);
   }, [cachedOpenOrders, closedRawOrders, filters, keys, useMockData]);
 
-  return { fetchOrders, orders, loading: filters.status === 'OPEN' ? false : loading, isSyncing, error };
+  const effectiveError = ordersSyncError || error;
+
+  return {
+    fetchOrders,
+    orders,
+    loading: filters.status === 'OPEN' ? false : loading,
+    isSyncing,
+    error: effectiveError,
+    ordersSyncError: effectiveError,
+  };
 }

@@ -4,6 +4,8 @@ import { useSettingsStore } from '../store/settingsStore';
 import { PositionHistoryService } from '../services/positions/PositionHistoryService';
 import { OrderHistoryService } from '../services/orders/OrderHistoryService';
 import { LogManager } from '../services/LogManager';
+import { checkAndWarnStorageQuota } from '../services/storageQuota';
+import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 
 /** Module-level guard: shared across all hook instances */
 const syncInProgressRef = { current: false };
@@ -34,13 +36,31 @@ export function useHistoryCachePolling() {
 
       const startMs = performance.now();
       LogManager.info('HistoryCachePolling', 'Executing background update...');
+      await checkAndWarnStorageQuota('BackgroundPolling');
       const positionService = new PositionHistoryService();
       const orderService = new OrderHistoryService();
       try {
-        const positionSyncs = activeKeys.map(apiKey => positionService.fetchWithCache(apiKey));
-        const orderSyncs = activeKeys.map(apiKey => orderService.fetchWithCache(apiKey));
-        
-        await Promise.all([...positionSyncs, ...orderSyncs]);
+        const positionResults = await Promise.allSettled(activeKeys.map(apiKey => positionService.fetchWithCache(apiKey)));
+        const orderResults = await Promise.allSettled(activeKeys.map(apiKey => orderService.fetchWithCache(apiKey)));
+
+        const posErrors = positionResults
+          .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+          .map(r => r.reason?.message || 'Sync failed');
+        const orderErrors = orderResults
+          .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+          .map(r => r.reason?.message || 'Sync failed');
+
+        if (posErrors.length > 0) {
+          useSyncCoordinatorStore.getState().setPositionsSyncError(posErrors.join('; '));
+        } else {
+          useSyncCoordinatorStore.getState().setPositionsSyncError(null);
+        }
+
+        if (orderErrors.length > 0) {
+          useSyncCoordinatorStore.getState().setOrdersSyncError(orderErrors.join('; '));
+        } else {
+          useSyncCoordinatorStore.getState().setOrdersSyncError(null);
+        }
         
         bumpHistoryCacheVersion();
         setLastSyncTime(Date.now());
