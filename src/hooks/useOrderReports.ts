@@ -165,6 +165,11 @@ export function useOrderReports(filters: OrderFilters) {
       const fetchPromises = activeKeys.map(apiKey => orderService.fetchWithCache(apiKey));
       const results = await Promise.allSettled(fetchPromises);
 
+      // Collect per-key failures
+      const failures = results
+        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+        .map(r => r.reason?.message || 'Sync failed');
+
       // Reload fully merged set from cache
       let updatedTotal: UnifiedOrder[] = [];
       const newCachePromises = activeKeys.map(apiKey => getCachedOrders(apiKey.id));
@@ -182,9 +187,15 @@ export function useOrderReports(filters: OrderFilters) {
         useSyncCoordinatorStore.getState().setCachedClosedOrders([]);
       }
 
-      // Mark as fully synchronized
-      useSyncCoordinatorStore.getState().setOrdersSyncError(null);
-      setError(null);
+      // Set or clear sync error based on actual results
+      if (failures.length > 0) {
+        const errorMessage = failures.join('; ');
+        useSyncCoordinatorStore.getState().setOrdersSyncError(errorMessage);
+        if (!silent) setError(errorMessage);
+      } else {
+        useSyncCoordinatorStore.getState().setOrdersSyncError(null);
+        setError(null);
+      }
       setLastSyncTime(Date.now());
 
     } catch (err: any) {

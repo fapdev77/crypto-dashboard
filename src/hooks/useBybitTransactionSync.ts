@@ -50,23 +50,28 @@ export function useBybitTransactionSync() {
         let totalNewRecords = 0;
         let isIncremental = false;
 
+        const syncErrors: string[] = [];
         for (const key of bybitKeys) {
-          // Check if cache already exists in IndexedDB
-          // If yes: incremental sync from latest cached timestamp
-          // If no: full progressive deep sync (backfill up to 2 years)
-          const meta = await getBybitTxLogMeta(key.id);
-          if (meta && meta.latestTransactionTime > 0) {
-            isIncremental = true;
-            const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
-            totalNewRecords += newRecords.length;
-          } else {
-            const preMeta = await getBybitTxLogMeta(key.id);
-            const preCount = preMeta?.totalRecords || 0;
-            await service.syncAll(key, (pct, records) => {
-              setBybitTxProgress({ pct, records });
-            });
-            const postMeta = await getBybitTxLogMeta(key.id);
-            totalNewRecords += (postMeta?.totalRecords || 0) - preCount;
+          try {
+            // Check if cache already exists in IndexedDB
+            // If yes: incremental sync from latest cached timestamp
+            // If no: full progressive deep sync (backfill up to 2 years)
+            const meta = await getBybitTxLogMeta(key.id);
+            if (meta && meta.latestTransactionTime > 0) {
+              isIncremental = true;
+              const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
+              totalNewRecords += newRecords.length;
+            } else {
+              const preMeta = await getBybitTxLogMeta(key.id);
+              const preCount = preMeta?.totalRecords || 0;
+              await service.syncAll(key, (pct, records) => {
+                setBybitTxProgress({ pct, records });
+              });
+              const postMeta = await getBybitTxLogMeta(key.id);
+              totalNewRecords += (postMeta?.totalRecords || 0) - preCount;
+            }
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
           }
         }
         const fetchEndTime = Date.now();
@@ -93,7 +98,12 @@ export function useBybitTransactionSync() {
         }
         setBybitTxTotalRecords(allEntries.length);
         setBybitTxLastSyncTime(now);
-        setTxSyncError(null);
+
+        if (syncErrors.length > 0) {
+          setTxSyncError(syncErrors.join('; '));
+        } else {
+          setTxSyncError(null);
+        }
 
         LogManager.system(
           'BybitTxSync',
@@ -133,11 +143,16 @@ export function useBybitTransactionSync() {
         const startTime = Date.now();
         let totalNewRecords = 0;
 
+        const syncErrors: string[] = [];
         for (const key of bybitKeys) {
-          const meta = await getBybitTxLogMeta(key.id);
-          if (meta && meta.latestTransactionTime > 0) {
-            const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
-            totalNewRecords += newRecords.length;
+          try {
+            const meta = await getBybitTxLogMeta(key.id);
+            if (meta && meta.latestTransactionTime > 0) {
+              const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
+              totalNewRecords += newRecords.length;
+            }
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
           }
         }
         const fetchEndTime = Date.now();
@@ -152,7 +167,12 @@ export function useBybitTransactionSync() {
         setCachedTxLog(allEntries as any);
         setBybitTxTotalRecords(allEntries.length);
         setBybitTxLastSyncTime(Date.now());
-        setTxSyncError(null);
+
+        if (syncErrors.length > 0) {
+          setTxSyncError(syncErrors.join('; '));
+        } else {
+          setTxSyncError(null);
+        }
 
         const writeEndTime = Date.now();
         const fetchElapsed = fetchEndTime - startTime;

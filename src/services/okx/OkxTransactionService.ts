@@ -122,6 +122,12 @@ export class OkxTransactionService {
        await updateOkxTxLogMeta(key.id, oldest, nextLatestTime, totalRecords);
     }
 
+
+    // Signal partial failure to the caller after all partial data has been persisted
+    if (hasError) {
+      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+    }
+
     return allNew;
   }
 
@@ -220,6 +226,11 @@ export class OkxTransactionService {
     }
 
     LogManager.info('OkxTransactionService', `Deep sync complete for ${key.label}: ${totalNew} records`);
+
+    // Signal partial failure to the caller after all partial data has been persisted
+    if (hasError) {
+      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+    }
   }
 
   /**

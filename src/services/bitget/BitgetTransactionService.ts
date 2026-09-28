@@ -135,6 +135,12 @@ export class BitgetTransactionService {
        await updateBitgetTxLogMeta(key.id, oldest, nextLatestTime, totalRecords);
     }
 
+
+    // Signal partial failure to the caller after all partial data has been persisted
+    if (hasError) {
+      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+    }
+
     return allNew;
   }
 
@@ -238,6 +244,11 @@ export class BitgetTransactionService {
     }
 
     LogManager.info('BitgetTransactionService', `Deep sync complete for ${key.label}: ${totalNew} records`);
+
+    // Signal partial failure to the caller after all partial data has been persisted
+    if (hasError) {
+      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+    }
   }
 
   /**

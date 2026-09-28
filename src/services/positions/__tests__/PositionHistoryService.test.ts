@@ -33,7 +33,7 @@ describe('PositionHistoryService error propagation and fallback', () => {
     await expect(service.fetchExchangeHistory(mockKey, 1000, 2000)).rejects.toThrow('API key expired 401');
   });
 
-  it('fetchWithCache catches fetch errors, sets positionsSyncError, and returns stale cache', async () => {
+  it('fetchWithCache re-throws errors from the adapter so callers can aggregate errors', async () => {
     const service = new PositionHistoryService();
     const stalePositions = [
       {
@@ -52,15 +52,14 @@ describe('PositionHistoryService error propagation and fallback', () => {
     };
     vi.mocked(ExchangeAggregator.getAdapter).mockReturnValue(mockAdapter as any);
 
-    const result = await service.fetchWithCache(mockKey);
-
-    expect(result).toEqual(stalePositions);
-    expect(useSyncCoordinatorStore.getState().positionsSyncError).toContain('Rate limit exceeded 429');
+    await expect(service.fetchWithCache(mockKey)).rejects.toThrow('Rate limit exceeded 429');
+    // Service does not directly touch the global error store, preventing multi-key overwriting
+    expect(useSyncCoordinatorStore.getState().positionsSyncError).toBeNull();
   });
 
-  it('fetchWithCache resets positionsSyncError to null on successful fetch', async () => {
+  it('fetchWithCache saves fresh positions on successful fetch without altering existing store error', async () => {
     const service = new PositionHistoryService();
-    useSyncCoordinatorStore.getState().setPositionsSyncError('Previous Error');
+    useSyncCoordinatorStore.getState().setPositionsSyncError('Previous Error from another key');
 
     vi.mocked(historyCache.getCachedHistory).mockResolvedValue([]);
     vi.mocked(historyCache.getLastFetchTimestamp).mockResolvedValue(0);
@@ -84,6 +83,7 @@ describe('PositionHistoryService error propagation and fallback', () => {
     const result = await service.fetchWithCache(mockKey);
 
     expect(result).toEqual(freshPositions);
-    expect(useSyncCoordinatorStore.getState().positionsSyncError).toBeNull();
+    // Service leaves store error intact so calling hook can manage multi-key aggregation
+    expect(useSyncCoordinatorStore.getState().positionsSyncError).toBe('Previous Error from another key');
   });
 });

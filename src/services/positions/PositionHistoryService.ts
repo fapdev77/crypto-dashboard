@@ -2,7 +2,7 @@ import { UnifiedHistoryPosition } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { ExchangeAggregator } from '../adapters/ExchangeAggregator';
-import { useSyncCoordinatorStore } from '../../store/syncCoordinatorStore';
+
 import {
   getCachedHistory,
   saveCachedHistory,
@@ -49,12 +49,11 @@ export class PositionHistoryService {
     try {
       newPositions = await this.fetchExchangeHistory(key, incrementalStart, now);
       LogManager.info('HistoryCache', `${connectionId}: ${newPositions.length} new records fetched`);
-      useSyncCoordinatorStore.getState().setPositionsSyncError(null);
     } catch (err: any) {
       const errMsg = err?.message || String(err);
       LogManager.warn('HistoryCache', `Incremental fetch failed for ${connectionId}, returning stale cache: ${errMsg}`);
-      useSyncCoordinatorStore.getState().setPositionsSyncError(errMsg);
-      return cachedPositions; // Graceful fallback to stale data
+      // Re-throw so the caller can aggregate errors across keys; stale cache remains in IndexedDB
+      throw err;
     }
 
     // Step 4: Persist new records and update metadata

@@ -11,12 +11,29 @@ export interface ProxyRequest {
   timeoutMs?: number;
 }
 
+function combineSignals(signalA?: AbortSignal, signalB?: AbortSignal): AbortSignal | undefined {
+  if (!signalA) return signalB;
+  if (!signalB) return signalA;
+  if (typeof AbortSignal !== 'undefined' && 'any' in AbortSignal && typeof (AbortSignal as any).any === 'function') {
+    return (AbortSignal as any).any([signalA, signalB]);
+  }
+  const controller = new AbortController();
+  const onAbort = () => controller.abort();
+  if (signalA.aborted || signalB.aborted) {
+    controller.abort();
+    return controller.signal;
+  }
+  signalA.addEventListener('abort', onAbort, { once: true });
+  signalB.addEventListener('abort', onAbort, { once: true });
+  return controller.signal;
+}
+
 export const proxyFetch = async (req: ProxyRequest) => {
   const timeoutMs = req.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS;
   const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
     ? AbortSignal.timeout(timeoutMs)
     : undefined;
-  const signal = req.signal ?? timeoutSignal;
+  const signal = combineSignals(req.signal, timeoutSignal);
 
   const response = await fetch('/api/proxy', {
     method: 'POST',
@@ -71,14 +88,14 @@ export const hybridFetch = async (
   options?: { timeoutMs?: number; signal?: AbortSignal }
 ) => {
   const timeoutMs = options?.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS;
-  const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+  const directTimeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
     ? AbortSignal.timeout(timeoutMs)
     : undefined;
-  const signal = options?.signal ?? timeoutSignal;
+  const directSignal = combineSignals(options?.signal, directTimeoutSignal);
 
   try {
     // Browser-Direct Attempt (escapes WAF/GeoBlock Bybit on US Cloud Run instances)
-    const res = await fetch(targetUrl, { method, headers, signal });
+    const res = await fetch(targetUrl, { method, headers, signal: directSignal });
     const contentType = res.headers.get('content-type');
     const isJson = contentType && contentType.includes('application/json');
 
@@ -98,10 +115,14 @@ export const hybridFetch = async (
       }
       return data;
     }
-  } catch (err) {
+  } catch (err: any) {
+    // If caller explicitly aborted via options.signal, do not fall back to proxy
+    if (options?.signal?.aborted) {
+      throw err;
+    }
     LogManager.warn('HybridFetch', `Direct fetch failed, falling back to proxy...`, targetUrl);
   }
   
-  // Proxy Fallback
-  return await proxyFetch({ targetUrl, method, headers, signal, timeoutMs });
+  // Proxy Fallback with fresh timeout and the caller's original signal
+  return await proxyFetch({ targetUrl, method, headers, signal: options?.signal, timeoutMs });
 };

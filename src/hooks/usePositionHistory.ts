@@ -135,13 +135,19 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
       try {
         const service = new PositionHistoryService();
+        const syncErrors: string[] = [];
+
         for (const key of activeKeys) {
           if (!key.isActive) continue;
           if (isMounted) setSyncMessage(`Syncing ${key.exchange} (${key.label})...`);
-          await service.fetchWithCache(key);
+          try {
+            await service.fetchWithCache(key);
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
+          }
         }
 
-        // Fetch complete updated list from cache
+        // Fetch complete updated list from cache (includes stale data for failed keys)
         let cachedTotal: UnifiedHistoryPosition[] = [];
         const cachePromises = activeKeys.map(apiKey => getCachedHistory(apiKey.id));
         const cacheResults = await Promise.all(cachePromises);
@@ -152,8 +158,16 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
         if (isMounted) {
           setRawCachedPositions(cachedTotal);
           useSyncCoordinatorStore.getState().setCachedPositions(cachedTotal);
-          useSyncCoordinatorStore.getState().setPositionsSyncError(null);
-          setSyncError(null);
+
+          if (syncErrors.length > 0) {
+            const errorMessage = syncErrors.join('; ');
+            useSyncCoordinatorStore.getState().setPositionsSyncError(errorMessage);
+            setSyncError(errorMessage);
+          } else {
+            useSyncCoordinatorStore.getState().setPositionsSyncError(null);
+            setSyncError(null);
+          }
+
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);

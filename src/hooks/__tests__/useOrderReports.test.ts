@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useOrderReports, OrderFilters } from '../useOrderReports';
 import { useSyncCoordinatorStore } from '../../store/syncCoordinatorStore';
@@ -69,5 +69,46 @@ describe('useOrderReports ordersSyncError integration', () => {
 
     expect(result.current.ordersSyncError).toBeNull();
     expect(result.current.error).toBeNull();
+  });
+
+  it('aggregates per-key failures when fetchOrders is called', async () => {
+    useApiKeysStore.setState({
+      keys: [
+        {
+          id: 'conn-1',
+          exchange: 'bybit',
+          apiKey: 'key-1',
+          apiSecret: 'sec-1',
+          label: 'Bybit 1',
+          isActive: true,
+        },
+        {
+          id: 'conn-2',
+          exchange: 'bitget',
+          apiKey: 'key-2',
+          apiSecret: 'sec-2',
+          label: 'Bitget 1',
+          isActive: true,
+        },
+      ],
+    });
+
+    const { OrderHistoryService } = await import('../../services/orders/OrderHistoryService');
+    const spy = vi.spyOn(OrderHistoryService.prototype, 'fetchWithCache').mockImplementation(async (key) => {
+      if (key.id === 'conn-1') {
+        throw new Error('Bybit order fetch 429');
+      }
+      return [];
+    });
+
+    const { result } = renderHook(() => useOrderReports(defaultFilters));
+
+    await act(async () => {
+      await result.current.fetchOrders(true);
+    });
+
+    expect(useSyncCoordinatorStore.getState().ordersSyncError).toContain('Bybit order fetch 429');
+    expect(result.current.ordersSyncError).toContain('Bybit order fetch 429');
+    spy.mockRestore();
   });
 });
