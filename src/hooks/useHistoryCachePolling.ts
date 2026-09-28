@@ -63,7 +63,9 @@ export function useHistoryCachePolling() {
         }
         
         bumpHistoryCacheVersion();
-        setLastSyncTime(Date.now());
+        if (posErrors.length === 0 && orderErrors.length === 0) {
+          setLastSyncTime(Date.now());
+        }
         const elapsed = ((performance.now() - startMs) / 1000).toFixed(1);
         LogManager.info('HistoryCachePolling', `Background update complete — ${elapsed}s`);
       } catch (err) {

@@ -257,7 +257,7 @@ export function useOkxTransactions(filters: OkxTxFilters = defaultFilters) {
     isSyncing: syncStore.isOkxTxSyncing,
     isCalculatingUsd,
     progress: syncStore.okxTxProgress,
-    error,
+    error: error || syncStore.okxTxSyncError,
     stats,
     tokenRates,
   };

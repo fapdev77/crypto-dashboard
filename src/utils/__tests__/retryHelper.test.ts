@@ -5,9 +5,27 @@ import {
   isTransientError,
   isAuthError,
   executeWithRetry,
+  classifyError,
 } from '../retryHelper';
 
 describe('retryHelper', () => {
+  describe('classifyError', () => {
+    it('classifies auth errors correctly', () => {
+      expect(classifyError({ status: 401 })).toBe('Invalid credentials or permission denied');
+      expect(classifyError(new Error('Invalid API key provided'))).toBe('Invalid credentials or permission denied');
+    });
+
+    it('classifies rate limit errors correctly', () => {
+      expect(classifyError({ _httpStatus: 429 })).toBe('Rate limit exhausted');
+      expect(classifyError({ retCode: 10006 })).toBe('Rate limit exhausted');
+    });
+
+    it('classifies timeouts and network errors correctly', () => {
+      expect(classifyError(new Error('The request timed out'))).toBe('Request timed out');
+      expect(classifyError(new Error('Failed to fetch network error'))).toBe('Network connection error');
+    });
+  });
+
   describe('isRateLimited', () => {
     it('detects ApiRateLimitError instances', () => {
       const err = new ApiRateLimitError('Rate limited', 10006, 'bybit');

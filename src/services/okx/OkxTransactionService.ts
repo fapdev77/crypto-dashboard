@@ -4,7 +4,7 @@ import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { OkxAdapter } from '../adapters/OkxAdapter';
 import { matchUniversalTxType, getOkxUniversalType } from '../../utils/transactionTypeMapper';
-import { executeWithRetry } from '../../utils/retryHelper';
+import { executeWithRetry, classifyError } from '../../utils/retryHelper';
 import {
   getOkxTxLogCache,
   saveOkxTxLogCache,
@@ -56,6 +56,7 @@ export class OkxTransactionService {
     let allNew: OkxTransactionLogEntry[] = [];
     const categories = [''];
     let hasError = false;
+    let lastChunkError: any = null;
 
     for (const category of categories) {
       let chunkStart = latestTime + 1;
@@ -84,6 +85,7 @@ export class OkxTransactionService {
         } catch (err) {
           LogManager.warn('OkxTransactionService', `Incremental chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
           hasError = true;
+          lastChunkError = err;
           break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
         }
         chunkStart = chunkEnd + 1;
@@ -125,7 +127,8 @@ export class OkxTransactionService {
 
     // Signal partial failure to the caller after all partial data has been persisted
     if (hasError) {
-      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+      const cause = classifyError(lastChunkError);
+      throw new Error(`Partial sync failure for ${key.label} (${cause})`);
     }
 
     return allNew;
@@ -149,6 +152,7 @@ export class OkxTransactionService {
     let chunkEnd = now;
     let allEntries: OkxTransactionLogEntry[] = [];
     let hasError = false;
+    let lastChunkError: any = null;
 
     while (chunkEnd > threeMonthsAgo) {
       const chunkStart = Math.max(threeMonthsAgo, chunkEnd - SEVEN_DAYS_MS);
@@ -182,6 +186,7 @@ export class OkxTransactionService {
         } catch (err) {
           LogManager.warn('OkxTransactionService', `Deep sync chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
           hasError = true;
+          lastChunkError = err;
           break; // Stop deep sync regress to preserve continuous historical cache without gaps
         }
       }
@@ -229,7 +234,8 @@ export class OkxTransactionService {
 
     // Signal partial failure to the caller after all partial data has been persisted
     if (hasError) {
-      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+      const cause = classifyError(lastChunkError);
+      throw new Error(`Partial sync failure for ${key.label} (${cause})`);
     }
   }
 

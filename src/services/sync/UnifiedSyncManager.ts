@@ -31,6 +31,7 @@ export interface FullSyncResult {
   okxTxSynced: number;
   totalTxSynced: number;
   elapsedSeconds: number;
+  errors: string[];
 }
 
 // Module-level concurrency locks & request deduplication promises
@@ -236,6 +237,7 @@ interface ExchangeTxConfig {
   getMeta: (keyId: string) => Promise<{ latestTransactionTime: number; totalRecords: number } | null | undefined>;
   getCache: (keyId: string) => Promise<any[]>;
   updateStore: (all: any[], syncTime: number) => void;
+  setError: (error: string | null) => void;
 }
 
 const EXCHANGE_TX_CONFIGS: Record<SupportedTxExchange, ExchangeTxConfig> = {
@@ -250,6 +252,9 @@ const EXCHANGE_TX_CONFIGS: Record<SupportedTxExchange, ExchangeTxConfig> = {
       useSyncCoordinatorStore.getState().setBybitTxTotalRecords(all.length);
       useSyncCoordinatorStore.getState().setBybitTxLastSyncTime(syncTime);
     },
+    setError: (error) => {
+      useSyncCoordinatorStore.getState().setBybitTxSyncError(error);
+    },
   },
   bitget: {
     exchangeName: 'Bitget',
@@ -262,6 +267,9 @@ const EXCHANGE_TX_CONFIGS: Record<SupportedTxExchange, ExchangeTxConfig> = {
       useSyncCoordinatorStore.getState().setBitgetTxTotalRecords(all.length);
       useSyncCoordinatorStore.getState().setBitgetTxLastSyncTime(syncTime);
     },
+    setError: (error) => {
+      useSyncCoordinatorStore.getState().setBitgetTxSyncError(error);
+    },
   },
   okx: {
     exchangeName: 'OKX',
@@ -273,6 +281,9 @@ const EXCHANGE_TX_CONFIGS: Record<SupportedTxExchange, ExchangeTxConfig> = {
       useSyncCoordinatorStore.getState().setCachedOkxTxLog(all);
       useSyncCoordinatorStore.getState().setOkxTxTotalRecords(all.length);
       useSyncCoordinatorStore.getState().setOkxTxLastSyncTime(syncTime);
+    },
+    setError: (error) => {
+      useSyncCoordinatorStore.getState().setOkxTxSyncError(error);
     },
   },
 };
@@ -309,7 +320,8 @@ export class UnifiedSyncManager {
    */
   public static async syncExchangeTransactions(
     keys: ApiCredentials[],
-    exchange: SupportedTxExchange
+    exchange: SupportedTxExchange,
+    collectedErrors?: string[]
   ): Promise<number> {
     const config = EXCHANGE_TX_CONFIGS[exchange];
     if (!config) return 0;
@@ -318,13 +330,23 @@ export class UnifiedSyncManager {
     if (exchangeKeys.length === 0) return 0;
 
     let addedCount = 0;
+    const errors: string[] = [];
     for (const key of exchangeKeys) {
       try {
         const count = await this.syncKeyTransactions(key);
         addedCount += count;
       } catch (err: any) {
+        const msg = `${config.exchangeName} (${key.label}): ${err?.message || 'Sync failed'}`;
         LogManager.warn('UnifiedSyncManager', `${config.exchangeName} Tx sync failed for ${key.label}:`, err?.message || err);
+        errors.push(msg);
+        collectedErrors?.push(msg);
       }
+    }
+
+    if (errors.length > 0) {
+      config.setError(errors.join('; '));
+    } else {
+      config.setError(null);
     }
 
     // Reload cache into coordinator store
@@ -369,6 +391,10 @@ export class UnifiedSyncManager {
         const positionService = new PositionHistoryService();
         const orderService = new OrderHistoryService();
 
+        const positionErrors: string[] = [];
+        const orderErrors: string[] = [];
+        const txErrors: string[] = [];
+
         // 1. Sync Positions & Orders
         const positionsPromise = Promise.all(
           activeKeys.map(k =>
@@ -378,7 +404,9 @@ export class UnifiedSyncManager {
               () => positionService.fetchWithCache(k),
               { connectionLabel: k.label }
             ).catch(err => {
+              const msg = `${k.exchange} (${k.label}): ${err?.message || 'Sync failed'}`;
               LogManager.warn('UnifiedSyncManager', `Position sync failed for ${k.label}:`, err);
+              positionErrors.push(msg);
               return [];
             })
           )
@@ -392,16 +420,18 @@ export class UnifiedSyncManager {
               () => orderService.fetchWithCache(k),
               { connectionLabel: k.label }
             ).catch(err => {
+              const msg = `${k.exchange} (${k.label}): ${err?.message || 'Sync failed'}`;
               LogManager.warn('UnifiedSyncManager', `Order sync failed for ${k.label}:`, err);
+              orderErrors.push(msg);
               return [];
             })
           )
         );
 
         // 2. Parallel Sync for all exchanges
-        const bybitPromise = this.syncExchangeTransactions(activeKeys, 'bybit');
-        const bitgetPromise = this.syncExchangeTransactions(activeKeys, 'bitget');
-        const okxPromise = this.syncExchangeTransactions(activeKeys, 'okx');
+        const bybitPromise = this.syncExchangeTransactions(activeKeys, 'bybit', txErrors);
+        const bitgetPromise = this.syncExchangeTransactions(activeKeys, 'bitget', txErrors);
+        const okxPromise = this.syncExchangeTransactions(activeKeys, 'okx', txErrors);
 
         // 3. Trigger funding refresh event
         window.dispatchEvent(new CustomEvent('funding-cache-cleared'));
@@ -414,8 +444,27 @@ export class UnifiedSyncManager {
           okxPromise,
         ]);
 
+        const allSyncErrors = [...positionErrors, ...orderErrors, ...txErrors];
+
+        // Update coordinator store error states
+        if (positionErrors.length > 0) {
+          useSyncCoordinatorStore.getState().setPositionsSyncError(positionErrors.join('; '));
+        } else {
+          useSyncCoordinatorStore.getState().setPositionsSyncError(null);
+        }
+
+        if (orderErrors.length > 0) {
+          useSyncCoordinatorStore.getState().setOrdersSyncError(orderErrors.join('; '));
+        } else {
+          useSyncCoordinatorStore.getState().setOrdersSyncError(null);
+        }
+
         useSettingsStore.getState().bumpHistoryCacheVersion();
-        useSettingsStore.getState().setLastSyncTime(Date.now());
+
+        // Scenario B: Only advance last completed sync timestamp when entire synchronization succeeds
+        if (allSyncErrors.length === 0) {
+          useSettingsStore.getState().setLastSyncTime(Date.now());
+        }
 
         const elapsedSeconds = Number(((performance.now() - startTime) / 1000).toFixed(1));
         const stats = await getComprehensiveCacheStats();
@@ -426,7 +475,7 @@ export class UnifiedSyncManager {
 
         LogManager.system(
           'UnifiedSyncManager',
-          `Full application sync completed in ${elapsedSeconds}s | Total DB Records: ${stats.totalRecords}`
+          `Full application sync completed in ${elapsedSeconds}s | Total DB Records: ${stats.totalRecords} | Errors: ${allSyncErrors.length}`
         );
 
         return {
@@ -438,6 +487,7 @@ export class UnifiedSyncManager {
           okxTxSynced: okxCount,
           totalTxSynced,
           elapsedSeconds,
+          errors: allSyncErrors,
         };
       } finally {
         activeFullSyncPromise = null;
@@ -510,31 +560,42 @@ export class UnifiedSyncManager {
         let positionsCount = 0;
         let ordersCount = 0;
         let txCount = 0;
+        const connectionErrors: string[] = [];
 
         try {
           const positions = await positionService.fetchWithCache(key);
           positionsCount = positions.length;
         } catch (err: any) {
+          const msg = `Positions: ${err?.message || 'Sync failed'}`;
           LogManager.warn('UnifiedSyncManager', `Connection position sync failed for ${key.label}:`, err?.message || err);
+          connectionErrors.push(msg);
+          useSyncCoordinatorStore.getState().setPositionsSyncError(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
         }
 
         try {
           const orders = await orderService.fetchWithCache(key);
           ordersCount = orders.length;
         } catch (err: any) {
+          const msg = `Orders: ${err?.message || 'Sync failed'}`;
           LogManager.warn('UnifiedSyncManager', `Connection order sync failed for ${key.label}:`, err?.message || err);
+          connectionErrors.push(msg);
+          useSyncCoordinatorStore.getState().setOrdersSyncError(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
         }
 
         if (key.exchange === 'bybit' || key.exchange === 'bitget' || key.exchange === 'okx') {
           try {
             txCount = await this.syncKeyTransactions(key);
           } catch (err: any) {
+            const msg = `Transactions: ${err?.message || 'Sync failed'}`;
             LogManager.warn('UnifiedSyncManager', `Connection transaction sync failed for ${key.label}:`, err?.message || err);
+            connectionErrors.push(msg);
+            const exchangeTxConfig = EXCHANGE_TX_CONFIGS[key.exchange as SupportedTxExchange];
+            exchangeTxConfig?.setError(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
           }
         }
 
         const elapsedSeconds = Number(((performance.now() - startTime) / 1000).toFixed(1));
-        return { positions: positionsCount, orders: ordersCount, transactions: txCount, elapsedSeconds };
+        return { positions: positionsCount, orders: ordersCount, transactions: txCount, elapsedSeconds, errors: connectionErrors };
       },
       { connectionLabel: key.label }
     );

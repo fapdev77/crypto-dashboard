@@ -144,6 +144,24 @@ export function isTransientError(error: any): boolean {
 }
 
 /**
+ * Classifies an error into a human-readable diagnosis category
+ * for inclusion in user-facing warning messages and logs.
+ */
+export function classifyError(error: any): string {
+  if (!error) return 'Unknown error';
+  if (isAuthError(error)) return 'Invalid credentials or permission denied';
+  if (isRateLimited(error)) return 'Rate limit exhausted';
+  const status = error._httpStatus || error.status || error.statusCode;
+  if (status === 502 || status === 503 || status === 504) return `Server unavailable (HTTP ${status})`;
+  const name = (error.name || '').toLowerCase();
+  const msg = (error.message || '').toLowerCase();
+  if (name.includes('timeout') || msg.includes('timeout') || msg.includes('timed out')) return 'Request timed out';
+  if (name.includes('abort') || msg.includes('abort')) return 'Request aborted';
+  if (msg.includes('network') || msg.includes('fetch failed')) return 'Network connection error';
+  return error.message || String(error);
+}
+
+/**
  * Generic retry executor with exponential backoff and jitter.
  * Automatically identifies rate-limit and transient network errors.
  * Non-transient errors (such as invalid API key, permission denied, bad parameters)

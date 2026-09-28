@@ -258,7 +258,7 @@ export function useBitgetTransactions(filters: BitgetTxFilters = defaultFilters)
     isSyncing: syncStore.isBitgetTxSyncing,
     isCalculatingUsd,
     progress: syncStore.bitgetTxProgress,
-    error,
+    error: error || syncStore.bitgetTxSyncError,
     stats,
     tokenRates,
   };

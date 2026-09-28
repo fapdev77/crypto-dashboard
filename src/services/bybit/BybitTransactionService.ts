@@ -5,7 +5,7 @@ import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { BybitAdapter } from '../adapters/BybitAdapter';
 import { matchUniversalTxType, getBybitUniversalType } from '../../utils/transactionTypeMapper';
-import { executeWithRetry } from '../../utils/retryHelper';
+import { executeWithRetry, classifyError } from '../../utils/retryHelper';
 import {
   getBybitTxLogCache,
   saveBybitTxLogCache,
@@ -57,6 +57,7 @@ export class BybitTransactionService {
     let allNew: BybitTransactionLogEntry[] = [];
     const categories = [''];
     let hasError = false;
+    let lastChunkError: any = null;
 
     for (const category of categories) {
       let chunkStart = latestTime + 1;
@@ -85,6 +86,7 @@ export class BybitTransactionService {
         } catch (err) {
           LogManager.warn('BybitTransactionService', `Incremental chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
           hasError = true;
+          lastChunkError = err;
           break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
         }
         chunkStart = chunkEnd + 1;
@@ -126,7 +128,8 @@ export class BybitTransactionService {
 
     // Signal partial failure to the caller after all partial data has been persisted
     if (hasError) {
-      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+      const cause = classifyError(lastChunkError);
+      throw new Error(`Partial sync failure for ${key.label} (${cause})`);
     }
 
     return allNew;
@@ -150,6 +153,7 @@ export class BybitTransactionService {
     let chunkEnd = now;
     let allEntries: BybitTransactionLogEntry[] = [];
     let hasError = false;
+    let lastChunkError: any = null;
 
     while (chunkEnd > twoYearsAgo) {
       const chunkStart = Math.max(twoYearsAgo, chunkEnd - SEVEN_DAYS_MS);
@@ -183,6 +187,7 @@ export class BybitTransactionService {
         } catch (err) {
           LogManager.warn('BybitTransactionService', `Deep sync chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
           hasError = true;
+          lastChunkError = err;
           break; // Stop deep sync regress to preserve continuous historical cache without gaps
         }
       }
@@ -230,7 +235,8 @@ export class BybitTransactionService {
 
     // Signal partial failure to the caller after all partial data has been persisted
     if (hasError) {
-      throw new Error(`Partial sync failure for ${key.label}: some chunks could not be fetched`);
+      const cause = classifyError(lastChunkError);
+      throw new Error(`Partial sync failure for ${key.label} (${cause})`);
     }
   }
 

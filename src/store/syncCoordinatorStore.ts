@@ -63,7 +63,10 @@ interface SyncCoordinatorState {
   /** Timestamp of the last successful transaction-log sync. */
   bybitTxLastSyncTime: number;
   setBybitTxLastSyncTime: (t: number) => void;
-  /** Error message if the last transaction sync failed. */
+  /** Error message if the last Bybit transaction sync failed. */
+  bybitTxSyncError: string | null;
+  setBybitTxSyncError: (error: string | null) => void;
+  /** Error message if the last transaction sync failed (legacy alias). */
   txSyncError: string | null;
   setTxSyncError: (error: string | null) => void;
   /** Latest transactionTime cached. */
@@ -85,6 +88,8 @@ interface SyncCoordinatorState {
   setBitgetTxProgress: (p: TxSyncProgress | null) => void;
   bitgetTxLastSyncTime: number;
   setBitgetTxLastSyncTime: (t: number) => void;
+  bitgetTxSyncError: string | null;
+  setBitgetTxSyncError: (error: string | null) => void;
   bitgetTxLatestTransactionTime: number;
   setBitgetTxLatestTransactionTime: (t: number) => void;
   bitgetTxOldestTransactionTime: number;
@@ -101,6 +106,8 @@ interface SyncCoordinatorState {
   setOkxTxProgress: (p: TxSyncProgress | null) => void;
   okxTxLastSyncTime: number;
   setOkxTxLastSyncTime: (t: number) => void;
+  okxTxSyncError: string | null;
+  setOkxTxSyncError: (error: string | null) => void;
   okxTxLatestTransactionTime: number;
   setOkxTxLatestTransactionTime: (t: number) => void;
   okxTxOldestTransactionTime: number;
@@ -147,8 +154,10 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setBybitTxProgress: (bybitTxProgress) => set({ bybitTxProgress }),
   bybitTxLastSyncTime: 0,
   setBybitTxLastSyncTime: (bybitTxLastSyncTime) => set({ bybitTxLastSyncTime }),
+  bybitTxSyncError: null,
+  setBybitTxSyncError: (bybitTxSyncError) => set({ bybitTxSyncError, txSyncError: bybitTxSyncError }),
   txSyncError: null,
-  setTxSyncError: (txSyncError) => set({ txSyncError }),
+  setTxSyncError: (txSyncError) => set({ txSyncError, bybitTxSyncError: txSyncError }),
   bybitTxLatestTransactionTime: 0,
   setBybitTxLatestTransactionTime: (bybitTxLatestTransactionTime) => set({ bybitTxLatestTransactionTime }),
   bybitTxOldestTransactionTime: 0,
@@ -165,6 +174,8 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setBitgetTxProgress: (bitgetTxProgress) => set({ bitgetTxProgress }),
   bitgetTxLastSyncTime: 0,
   setBitgetTxLastSyncTime: (bitgetTxLastSyncTime) => set({ bitgetTxLastSyncTime }),
+  bitgetTxSyncError: null,
+  setBitgetTxSyncError: (bitgetTxSyncError) => set({ bitgetTxSyncError }),
   bitgetTxLatestTransactionTime: 0,
   setBitgetTxLatestTransactionTime: (bitgetTxLatestTransactionTime) => set({ bitgetTxLatestTransactionTime }),
   bitgetTxOldestTransactionTime: 0,
@@ -181,6 +192,8 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setOkxTxProgress: (okxTxProgress) => set({ okxTxProgress }),
   okxTxLastSyncTime: 0,
   setOkxTxLastSyncTime: (okxTxLastSyncTime) => set({ okxTxLastSyncTime }),
+  okxTxSyncError: null,
+  setOkxTxSyncError: (okxTxSyncError) => set({ okxTxSyncError }),
   okxTxLatestTransactionTime: 0,
   setOkxTxLatestTransactionTime: (okxTxLatestTransactionTime) => set({ okxTxLatestTransactionTime }),
   okxTxOldestTransactionTime: 0,

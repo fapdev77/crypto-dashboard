@@ -18,6 +18,8 @@ interface StatusAndSyncBadgeProps {
   overrideNextSyncTime?: number;
   /** Override the manual sync click handler */
   onManualSync?: () => void;
+  /** Optional custom handler when clicking the error badge. Defaults to navigating to the 'logs' tab. */
+  onErrorClick?: () => void;
 }
 
 export function StatusAndSyncBadge({ 
@@ -28,7 +30,8 @@ export function StatusAndSyncBadge({
   overrideIntervalMs,
   overrideLastSyncTime,
   overrideNextSyncTime,
-  onManualSync
+  onManualSync,
+  onErrorClick
 }: StatusAndSyncBadgeProps) {
   const {
     historyCacheInterval,
@@ -55,12 +58,12 @@ export function StatusAndSyncBadge({
   // Update last sync time ONLY when isSyncing actually transitions from true to false
   useEffect(() => {
     if (wasSyncingRef.current && !isSyncing) {
-      if (overrideLastSyncTime === undefined) {
+      if (overrideLastSyncTime === undefined && !syncError) {
         setLastSyncTime(Date.now());
       }
     }
     wasSyncingRef.current = isSyncing;
-  }, [isSyncing, setLastSyncTime, overrideLastSyncTime]);
+  }, [isSyncing, setLastSyncTime, overrideLastSyncTime, syncError]);
 
   const now = currentTime;
   
@@ -120,7 +123,7 @@ export function StatusAndSyncBadge({
             ? [
                 { label: 'Status', value: 'Sync Failed / Incomplete' },
                 { label: 'Reason', value: syncError },
-                { label: 'Action', value: 'Auto-retrying on next schedule or click Force Sync' }
+                { label: 'Action', value: 'Click to open Live Connection Logs' }
               ]
             : [
                 { label: 'Status', value: 'SWR Cache Loaded' },
@@ -128,32 +131,33 @@ export function StatusAndSyncBadge({
               ]
         }
       >
-        <div 
-          className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none ${
-            isSyncing 
-              ? 'bg-[#2F6BFF]/10 text-[#2F6BFF] border-[#2F6BFF]/20' 
-              : syncError
-              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-              : 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20'
-          }`}
-        >
-          {isSyncing ? (
-            <>
-              <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
-              <span className="truncate max-w-[200px]">{syncMessage || 'Syncing...'}</span>
-            </>
-          ) : syncError ? (
-            <>
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
-              <span>Sync Warning</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#10B981]" />
-              <span>Up to Date</span>
-            </>
-          )}
-        </div>
+        {isSyncing ? (
+          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none bg-[#2F6BFF]/10 text-[#2F6BFF] border-[#2F6BFF]/20">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
+            <span className="truncate max-w-[200px]">{syncMessage || 'Syncing...'}</span>
+          </div>
+        ) : syncError ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (onErrorClick) {
+                onErrorClick();
+              } else {
+                window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'logs' }));
+              }
+            }}
+            aria-label="View sync error details in connection logs"
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-200 select-none bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 cursor-pointer active:scale-95 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+            <span>Sync Warning</span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#10B981]" />
+            <span>Up to Date</span>
+          </div>
+        )}
       </AppTooltip>
 
       {/* 2. Last Sync & Next Update Countdown Badge */}

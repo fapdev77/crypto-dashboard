@@ -18,7 +18,11 @@ function combineSignals(signalA?: AbortSignal, signalB?: AbortSignal): AbortSign
     return (AbortSignal as any).any([signalA, signalB]);
   }
   const controller = new AbortController();
-  const onAbort = () => controller.abort();
+  const onAbort = () => {
+    signalA.removeEventListener('abort', onAbort);
+    signalB.removeEventListener('abort', onAbort);
+    controller.abort();
+  };
   if (signalA.aborted || signalB.aborted) {
     controller.abort();
     return controller.signal;
