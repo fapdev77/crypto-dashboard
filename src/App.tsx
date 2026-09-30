@@ -18,8 +18,11 @@ import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
 import { PnLBySymbol } from './components/analytics/PnLBySymbol';
 import { BybitTransactions } from './components/analytics/BybitTransactions/BybitTransactions';
+import { BitgetTransactions } from './components/analytics/BitgetTransactions/BitgetTransactions';
+import { OkxTransactions } from './components/analytics/OkxTransactions/OkxTransactions';
 import { FundingDashboard } from './components/analytics/FundingFees/FundingDashboard';
 import { HedgeProDashboard } from './components/analytics/HedgePro/HedgeProDashboard';
+import { MarketAnalyticsDashboard } from './components/analytics/MarketAnalytics/MarketAnalyticsDashboard';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 import { PrivacyProvider } from './context/PrivacyContext';
@@ -34,6 +37,7 @@ import { WelcomeHelpModal } from './components/WelcomeHelpModal';
 import { UpdateNotification } from './components/UpdateNotification';
 import { useApiKeysStore } from './store/apiKeysStore';
 import { GlobalUnlockScreen } from './components/GlobalUnlockScreen';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -122,7 +126,8 @@ export default function App() {
   if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
   if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
   if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
-  if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
+  if (activeTab === 'analytics-market-advanced') activeTabName = 'Market Analytics';
+  else if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
   if (activeTab === 'reports') activeTabName = 'Reports';
 
   return (
@@ -184,21 +189,26 @@ export default function App() {
                 </header>
 
                 <div className="flex-1 overflow-auto hide-scrollbar relative">
-                  {activeTab === 'dashboard' && <Dashboard />}
-                  {activeTab === 'positions-open' && <OpenPositions />}
-                  {activeTab === 'positions-history' && <ClosedPositions />}
-                  {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
-                  {activeTab === 'analytics-bybit-tx' && <BybitTransactions />}
-                  {activeTab === 'analytics-funding' && <FundingDashboard />}
-                  {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
-                  {activeTab === 'reports' && <ReportsDashboard />}
-                  {activeTab === 'orders-open' && <OpenOrders />}
-                  {activeTab === 'orders-history' && <OrderHistory />}
-                  {activeTab === 'trade-history' && <TradeHistory />}
-                  {activeTab === 'api-keys' && <ApiKeys />}
-                  {activeTab === 'logs' && <ConnectionLogTerminal />}
-                  {activeTab === 'settings' && <Settings />}
-                  {activeTab === 'api-tester' && <ApiTester />}
+                  <ErrorBoundary isolateScope={activeTabName} key={activeTab}>
+                    {activeTab === 'dashboard' && <Dashboard />}
+                    {activeTab === 'positions-open' && <OpenPositions />}
+                    {activeTab === 'positions-history' && <ClosedPositions />}
+                    {activeTab === 'analytics-market-advanced' && <MarketAnalyticsDashboard />}
+                    {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
+                    {activeTab === 'analytics-bybit-tx' && <BybitTransactions />}
+                    {activeTab === 'analytics-bitget-tx' && <BitgetTransactions />}
+                    {activeTab === 'analytics-okx-tx' && <OkxTransactions />}
+                    {activeTab === 'analytics-funding' && <FundingDashboard />}
+                    {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
+                    {activeTab === 'reports' && <ReportsDashboard />}
+                    {activeTab === 'orders-open' && <OpenOrders />}
+                    {activeTab === 'orders-history' && <OrderHistory />}
+                    {activeTab === 'trade-history' && <TradeHistory />}
+                    {activeTab === 'api-keys' && <ApiKeys />}
+                    {activeTab === 'logs' && <ConnectionLogTerminal />}
+                    {activeTab === 'settings' && <Settings />}
+                    {activeTab === 'api-tester' && <ApiTester />}
+                  </ErrorBoundary>
                 </div>
               </main>
 

@@ -24,7 +24,8 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
    - [Trade History (Histórico de Execuções)](#-trade-history-histórico-de-execuções)
    - [PnL by Symbol (Lucros e Perdas por Símbolo)](#-pnl-by-symbol-lucros-e-perdas-por-símbolo)
    - [Dashboard de Taxas de Financiamento (Funding Fees)](#-dashboard-de-taxas-de-financiamento-funding-fees)
-   - [Histórico de Transações Bybit (Transaction Log)](#-histórico-de-transações-bybit-transaction-log)
+   - [Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)](#-histórico-de-transações-multi-corretora-bybit-bitget-e-okx-transactions)
+   - [Market Analytics (Inteligência Quantitativa e Derivativos)](#-market-analytics-inteligência-quantitativa-e-derivativos)
    - [API Tester (Testador de Conexões e Endpoints)](#-api-tester-testador-de-conexões-e-endpoints)
    - [Modo Privacidade (Privacy Mode)](#-modo-privacidade-privacy-mode)
 8. [Padronização de Contratos Inversos e Paginação](#8-padronização-de-contratos-inversos-e-paginação)
@@ -121,6 +122,7 @@ Através da tela **Settings** no menu lateral, você pode controlar o funcioname
 
 ### 🏠 Dashboard Principal
 Seu painel analítico central, composto por uma estrutura elegante de cartões:
+- **Positions Ticker**: Marquee contínuo no topo do workspace que exibe cotações, PnL flutuante e direção de todas as suas posições ativas em tempo real com atualização contínua.
 - **Balanço Consolidado**: Soma dos saldos de todas as carteiras e subcontas conectadas.
 - **Alocação por Corretora**: Gráfico Donut mapeando sua distribuição de capital e risco de custódia.
 - **Treemap de Ativos**: Distribuição visual dos seus criptoativos cross-exchange por tamanho de capital.
@@ -170,20 +172,110 @@ Um relatório gerencial para analisar a performance individual de cada ativo ope
 ### 💸 Dashboard de Taxas de Financiamento (Funding Fees)
 Um painel abrangente que consolida dados de taxas de financiamento (funding rates) em tempo real e históricos da Bybit, Bitget e OKX (contratos perpétuos USDT-M e COIN-M):
 - **Análise Multi-Período**: Analise taxas em múltiplos intervalos: Próxima Taxa, Última Taxa, Hoje, Mês Atual, Mês Passado, 3 Meses, 6 Meses e 1 Ano.
+- **Comparativo de Taxas (Funding Rate Comparison)**:
+  - Gráfico comparativo horizontal ordenado por taxa de financiamento em múltiplos períodos (*Last Funding Rate*, *Today Cumulative*, *Current Month*, *Last Month*, *Last 3 Months*).
+  - *Filtros Rápidos de Comparação*:
+    - **Favorites**: Exibe rapidamente os pares favoritados pelo usuário.
+    - **Open Positions**: Isola os ativos nos quais o usuário possui posições atualmente abertas.
+    - **COIN-M / Inverse**: Filtro específico que isola e compara somente os ativos e contratos de instrumentos inversos (COIN-M) das corretoras.
+  - *Seletor de Símbolos Multi-Select*: Permite selecionar manualmente até 25 ativos com identificadores e badges visuais destacados para instrumentos lineares (USDT-M) e inversos (COIN-M).
 - **Pipeline de Agregação e Cache v10**: Utiliza o IndexedDB para armazenar sumários pré-calculados por mês calendário. Realiza sincronizações incrementais ultrarrápidas, com cobertura de até 400 dias (Bybit).
 - **Indicadores Visuais**: Animações de atualização (flash) em tempo real e tooltips explicativos da direção do pagamento (Longs pagando Shorts ou vice-versa).
 - *Nota sobre a OKX*: A API da OKX limita o histórico a ~3 meses, sendo automaticamente omitida das médias de 6M e 1Y para manter a integridade dos dados.
 
-### 📜 Histórico de Transações Bybit (Transaction Log)
-Uma ferramenta especializada para usuários da Bybit, desenvolvida para baixar, armazenar e analisar o histórico completo de transações brutas diretamente da corretora:
-- **Sincronização Profunda**: Baixa histórico de liquidações, taxas de funding e taxas de trade, salvando tudo no IndexedDB local.
-- **Cálculo de PnL Realizado**: Calcula ganhos e perdas reais com base na fórmula `cashFlow + funding - fee`.
-- **Atualizações Incrementais**: Sincroniza apenas novos registros após o download inicial.
+
+### 📜 Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)
+Módulos especializados de auditoria contábil e histórico completo de transações brutas diretamente das corretoras (Bybit, Bitget e OKX):
+- **Sincronização Profunda & Incremental**: Baixa histórico completo de trades, taxas de funding, liquidações, transferências, depósitos, saques e juros, salvando com persistência no IndexedDB local com sincronizações incrementais ultrarrápidas.
+- **Filtros Unificados (Universal Transaction Mapper)**: Sistema de filtragem e badges padronizados em 10 categorias universais comuns às 3 corretoras:
+  1. *Trade & Orders* (Trades, ordens spot/futuros e PnL de fechamento)
+  2. *Funding Fee* (Taxas e proventos periódicos de financiamento)
+  3. *Transfer In / Deposit* (Depósitos e transferências recebidas)
+  4. *Transfer Out / Withdraw* (Saques e transferências enviadas)
+  5. *Liquidation & ADL* (Liquidações forçadas e desalavancagem automática)
+  6. *Interest & Loans* (Juros de margem, empréstimos e amortizações)
+  7. *Rewards & Bonus* (Fundos de teste, cupons, bônus e airdrops)
+  8. *Delivery & Settle* (Entregas de contratos a termo e exercícios de opções)
+  9. *Others* (Conversões de moeda, auto-deduções e ajustes)
+  10. *All Types* (Visualização integral sem filtro de tipo)
+- **Filtros Adicionais**: Categoria de instrumento (Spot, Linear, Inverse, Option, Margin), Moeda/Ativo, Conta/Subconta, Período e Busca por Símbolo.
+- **Cálculo de Fluxo de Caixa e PnL Realizado**: Calcula variações patrimoniais reais com base nas fórmulas contábeis de fluxo de caixa (`cashFlow + funding - fee`) e reconciliação com saldos de carteira (`walletBalance`).
+- **Cards de Métricas e Gráficos de Distribuição**: Total de transações, funding acumulado em USD, taxas de corretagem líquidas em USD e variação líquida do período.
+
+### 📈 Market Analytics (Inteligência Quantitativa e Derivativos)
+Um terminal integrado de inteligência quantitativa de derivativos que consolida e correlaciona dados de mercado em tempo real entre **Bybit**, **OKX** e **Bitget**:
+- **Barra de Filtros e Seletores Globais**:
+  - *Seletor de Ativos (Asset Selector)*: Busca rápida com suporte a favoritos (estrelas) para alternar entre pares de alta liquidez (ex: BTC, ETH, SOL).
+  - *Tipos de Mercado (Market Type)*: Filtro multi-seleção entre contratos Perpétuos/Lineares (PERP), Contratos Inversos (INVERSE), Mercado à Vista (SPOT) ou Todos (ALL).
+  - *Filtro de Corretoras (Exchanges)*: Multi-seleção para isolar ou agregar métricas de Bybit, OKX e Bitget simultaneamente.
+  - *Timeframes*: Intervalos operacionais selecionáveis de 5m, 15m, 30m, 1h, 4h e 1d.
+  - *Atualização Automática (Circular Countdown Refresh)*: Intervalos de polling ajustáveis (5s, 10s, 15s, 30s, 60s ou Pausado) com indicador visual circular de progresso e botão de recarregamento manual imediato.
+- **Painel de Métricas e KPIs (com Tooltips e Fórmulas Detalhadas)**:
+  - *Current Price & 24h Change*: Preço atual de mercado em USD e variação percentual nas últimas 24 horas.
+  - *24h Aggregated Volume*: Volume total nocional negociado agregado entre as corretoras selecionadas.
+  - *Total Open Interest (OI)*: Volume total de contratos em aberto em USD e taxa de variação percentual em 24h.
+  - *Benchmark Funding Rate & APR*: Taxa de financiamento atual para a janela de 8 horas e taxa anualizada correspondente: `APR = Taxa 8h * 3 * 365`.
+  - *Net CVD (Cumulative Volume Delta)*: Diferencial acumulado de agressões entre ordens a mercado de compra e venda (`Taker Buy Vol - Taker Sell Vol`).
+  - *Sentiment Index (Fear & Greed)*: Índice sintético de sentimento (0 a 100), calibrado em 5 zonas: *Extreme Fear (0-24)*, *Fear (25-44)*, *Neutral (45-55)*, *Greed (56-74)* e *Extreme Greed (75-100)*.
+- **Módulos Analíticos Especializados**:
+  1. **Open Interest & Leverage Monitor**:
+     - Gráfico Recharts de eixo duplo correlacionando o preço do ativo com a evolução do Open Interest (OI) em USD no timeframe selecionado.
+     - *Detector Automatizado de Regime de Mercado*:
+       - `Long Accumulation`: Preço ↑ e OI ↑ (Tendência de alta sustentada por injeção de novas posições compradas).
+       - `Short Squeeze`: Preço ↑ e OI ↓ (Movimento de alta acentuado por liquidações e fechamento forçado de posições vendidas).
+       - `Aggressive Shorting`: Preço ↓ e OI ↑ (Tendência de baixa com forte entrada e acúmulo de novas posições vendidas).
+       - `Long Liquidation`: Preço ↓ e OI ↓ (Desova em cascata de posições compradas e encerramento de margem).
+       - `Neutral Consolidation`: Preço e OI lateralizados sem dominância direcional clara.
+     - *Market Share de OI por Corretora*: Distribuição percentual e em dólares entre Bybit, OKX e Bitget.
+  2. **Cross-Exchange Funding Arbitrage (Arbitragem de Funding)**:
+     - Monitoramento em tempo real do spread de taxas de financiamento entre Bybit, OKX e Bitget (taxa de 8h e APR anualizado).
+     - *Fórmulas de Arbitragem*:
+       - `Spread 8h = Taxa Máxima - Taxa Mínima`
+       - `Spread APR = Spread 8h * 3 * 365`
+     - *Recomendação Delta-Neutra*: Identifica dinamicamente a melhor exchange para Long (menor taxa/taxa negativa) e para Short (maior taxa/taxa positiva).
+     - Tabela de oportunidades rápidas em múltiplos pares com contagem regressiva para o próximo acerto de funding.
+  3. **Order Flow & Cumulative Volume Delta (CVD)**:
+     - Rastreamento em tempo real da agressão de mercado: Taker Buy Volume vs. Taker Sell Volume.
+     - *Fórmula*: `Net Taker Delta = Compras a Mercado (Taker Buy) - Vendas a Mercado (Taker Sell)`.
+     - *CVD*: Soma acumulativa contínua do Delta no período (`CVD_t = CVD_(t-1) + Net Delta_t`).
+     - *Detector de Divergências (CVD Divergence Alerts)*:
+       - *Bullish Divergence*: Preço caindo ou lateral enquanto o CVD sobe (indica absorção passiva no livro limit por compradores).
+       - *Bearish Divergence*: Preço subindo ou lateral enquanto o CVD cai (indica absorção passiva no livro limit por vendedores).
+  4. **Smart Money vs. Retail Sentiment**:
+     - *Retail Ratio (Varejo)*: Proporção Long/Short baseada na contagem absoluta de contas de traders de varejo (indicador frequentemente contracíclico).
+     - *Top Trader Ratio (Smart Money)*: Proporção Long/Short ponderada pelo volume nocional em USD das contas do top 20% de operadores de alta rentabilidade.
+     - *Alerta de Divergência de Sentimento*: Sinaliza divergências expressivas entre o posicionamento do varejo e dos grandes operadores institucionais.
+- **Sub-View Especializada — Inverse Coin-M Dashboard**:
+  - Alterne para a aba **Inverse Coin-M** no topo da tela para acessar uma visão analítica 100% voltada para contratos liquidados na própria criptomoeda base (COIN-M).
+  - *Tabela Consolidada de Moedas*: Lista pares inversos com suporte a favoritos (estrelas), preço atual, variação 24h, volume total, taxas de funding e oportunidades de arbitragem.
+  - *Desdobramento Expansível por Corretora*: Clique na linha de qualquer ativo (ex: BTC, ETH, SOL) para expandir e comparar instantaneamente os valores específicos em cada exchange (Bybit, OKX e Bitget): Taxa de Funding 8h, Volume 24h em USD, Open Interest e Spread de Arbitragem.
+  - *Controles Expand All / Collapse All*: Permite expandir ou recolher todos os pares simultaneamente com um único clique.
+  - *Sincronização com o Modo Hedge Pro*: Fornece a inteligência de taxas e spreads necessária para alimentar operações de delta-neutral e proteção de capital monitoradas no Hedge Pro Dashboard.
 
 ### ⚡ API Tester (Testador de Conexões e Endpoints)
 Ferramenta para diagnóstico técnico e validação de conectividade com as corretoras:
 - **Testes REST**: Dispare chamadas diretas autenticadas e públicas para verificar tempos de resposta (latência) e payloads brutos.
 - **Diagnóstico de WebSocket**: Monitore o status do handshake e a recepção de mensagens em tempo real.
+
+### 💾 Armazenamento IndexedDB, Quota e Pruning Histórico (v1.79.0)
+No card **IndexedDB Storage & Cache** (em Configurações / Settings), você conta com uma central avançada para governança dos dados armazenados no navegador:
+- **Telemetria de Quota do Navegador**: Monitora em tempo real a quantidade de megabytes (MB) utilizados pelo CPM e a quota total disponibilizada pelo navegador (`StorageManager`), com barra progressiva colorida para prevenção de disco cheio.
+- **Data Retention & History Pruning**:
+  - Permite escolher a janela de retenção de dados históricos: *30 dias (1 mês)*, *60 dias (2 meses)*, *90 dias (3 meses)*, *180 dias (6 meses)*, *Older than 1 year (Default)* (365 dias) ou *Older than 2 years* (730 dias).
+  - **Ação "Prune History"**: Remove transações contábeis, ordens e posições fechadas anteriores à janela selecionada, liberando espaço no navegador imediatamente sem zerar metadados essenciais ou histórico recente.
+- **Ações de Emergência**:
+  - *Force Sync*: Re-sincroniza deltas de todas as exchanges ativas.
+  - *Clear Cache*: Apaga a base IndexedDB local em caso de inconsistência de schemas.
+
+### 🛡️ Resiliência de Conexão e Proteção de IP (Fail-Fast Auth)
+Para garantir a máxima integridade e evitar penalizações nas corretoras:
+- **Fail-Fast em Falha de Autenticação**: Se uma chave de API for inserida incorretamente (código 401, chave inexistente, assinatura errada, IP não autorizado), o CPM detecta o erro fatal e **aborta imediatamente as tentativas automáticas de reconexão**. Isso previne que o seu endereço IP seja temporariamente ou permanentemente banido pela Cloudflare ou Akamai por envio repetido de credenciais inválidas.
+- **Backoff Exponencial para Quedas de Rede**: Em caso de oscilações normais de internet (timeout, 502 Bad Gateway), o app re-tenta de forma inteligente em intervalos progressivos (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) com limite de 5 tentativas (circuit breaker) antes de repousar.
+
+### 🛡️ Recuperação de Falhas (Global Error Boundary)
+Caso ocorra uma exceção inesperada em tempo de execução no React, a aplicação não fecha abruptamente:
+- Uma tela de **Safe Recovery** é exibida com detalhes do incidente.
+- Dois botões de ação imediata estão disponíveis: **Reload Dashboard** (para reiniciar a interface) e **Clear Cache & Reload** (para purgar o cache do navegador e reabrir de forma limpa caso haja dados corrompidos).
 
 ### 👁 Modo Privacidade (Privacy Mode)
 Clique no **Ícone de Olho** no topo direito do menu lateral para ativar o ocultamento global de valores numéricos. Isso transformará números financeiros em máscaras `***`, permitindo gravações de tela e compartilhamento seguro.

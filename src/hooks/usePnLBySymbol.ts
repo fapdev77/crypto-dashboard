@@ -27,7 +27,7 @@ export function usePnLBySymbol(
   exchangeFilter: string,
   instrumentFilter: string
 ) {
-  const { positions, isLoading, isSyncing, syncMessage: historySyncMessage } = usePositionHistory(period);
+  const { positions, isLoading, isSyncing, syncMessage: historySyncMessage, syncError } = usePositionHistory(period);
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
@@ -224,6 +224,7 @@ export function usePnLBySymbol(
     isLoading: isLoading || isBybitLoading,
     isSyncing: isSyncing || syncStore.isBybitTxSyncing,
     syncMessage: currentSyncMessage,
+    syncError: syncError || syncStore.txSyncError,
     isRealPnLSyncing: syncStore.isBybitTxSyncing,
   };
 }

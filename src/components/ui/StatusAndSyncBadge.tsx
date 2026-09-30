@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { RefreshCw, CheckCircle2, Clock } from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import { useSettingsStore } from '../../store/settingsStore';
 import { AppTooltip } from './Tooltip';
 import { SimulationModeBadge } from './SimulationModeBadge';
@@ -8,6 +8,7 @@ import { formatTimeOnly } from '../../utils/dateTimeHelper';
 interface StatusAndSyncBadgeProps {
   isSyncing: boolean;
   syncMessage?: string | null;
+  syncError?: string | null;
   className?: string;
   /** Override the auto-sync interval in ms. Defaults to historyCacheInterval (minutes) from settingsStore. */
   overrideIntervalMs?: number;
@@ -17,16 +18,20 @@ interface StatusAndSyncBadgeProps {
   overrideNextSyncTime?: number;
   /** Override the manual sync click handler */
   onManualSync?: () => void;
+  /** Optional custom handler when clicking the error badge. Defaults to navigating to the 'logs' tab. */
+  onErrorClick?: () => void;
 }
 
 export function StatusAndSyncBadge({ 
   isSyncing, 
   syncMessage, 
+  syncError,
   className = '', 
   overrideIntervalMs,
   overrideLastSyncTime,
   overrideNextSyncTime,
-  onManualSync
+  onManualSync,
+  onErrorClick
 }: StatusAndSyncBadgeProps) {
   const {
     historyCacheInterval,
@@ -53,12 +58,12 @@ export function StatusAndSyncBadge({
   // Update last sync time ONLY when isSyncing actually transitions from true to false
   useEffect(() => {
     if (wasSyncingRef.current && !isSyncing) {
-      if (overrideLastSyncTime === undefined) {
+      if (overrideLastSyncTime === undefined && !syncError) {
         setLastSyncTime(Date.now());
       }
     }
     wasSyncingRef.current = isSyncing;
-  }, [isSyncing, setLastSyncTime, overrideLastSyncTime]);
+  }, [isSyncing, setLastSyncTime, overrideLastSyncTime, syncError]);
 
   const now = currentTime;
   
@@ -101,31 +106,58 @@ export function StatusAndSyncBadge({
     <div className={`flex flex-wrap items-center gap-2 mt-1 ${className}`}>
       {/* 1. Status Badge (Always Active) */}
       <AppTooltip
-        description="Current synchronization status of the cached historical records with the API endpoints of connected exchanges."
-        rows={[
-          { label: 'Status', value: isSyncing ? 'Synchronizing...' : 'SWR Cache Loaded' },
-          { label: 'Signal', value: isSyncing ? 'Fetching REST' : 'Up to Date' }
-        ]}
+        description={
+          isSyncing
+            ? "Current synchronization status of the cached historical records with the API endpoints of connected exchanges."
+            : syncError
+            ? `The last synchronization attempt encountered an issue: "${syncError}". Displayed data may be incomplete or outdated until the next successful update.`
+            : "Current synchronization status of the cached historical records with the API endpoints of connected exchanges."
+        }
+        rows={
+          isSyncing
+            ? [
+                { label: 'Status', value: 'Synchronizing...' },
+                { label: 'Signal', value: 'Fetching REST' }
+              ]
+            : syncError
+            ? [
+                { label: 'Status', value: 'Sync Failed / Incomplete' },
+                { label: 'Reason', value: syncError },
+                { label: 'Action', value: 'Click to open Live Connection Logs' }
+              ]
+            : [
+                { label: 'Status', value: 'SWR Cache Loaded' },
+                { label: 'Signal', value: 'Up to Date' }
+              ]
+        }
       >
-        <div 
-          className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none ${
-            isSyncing 
-              ? 'bg-[#2F6BFF]/10 text-[#2F6BFF] border-[#2F6BFF]/20' 
-              : 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20'
-          }`}
-        >
-          {isSyncing ? (
-            <>
-              <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
-              <span className="truncate max-w-[200px]">{syncMessage || 'Syncing...'}</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#10B981]" />
-              <span>Up to Date</span>
-            </>
-          )}
-        </div>
+        {isSyncing ? (
+          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none bg-[#2F6BFF]/10 text-[#2F6BFF] border-[#2F6BFF]/20">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
+            <span className="truncate max-w-[200px]">{syncMessage || 'Syncing...'}</span>
+          </div>
+        ) : syncError ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (onErrorClick) {
+                onErrorClick();
+              } else {
+                window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'logs' }));
+              }
+            }}
+            aria-label="View sync error details in connection logs"
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-200 select-none bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 cursor-pointer active:scale-95 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+            <span>Sync Warning</span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#10B981]" />
+            <span>Up to Date</span>
+          </div>
+        )}
       </AppTooltip>
 
       {/* 2. Last Sync & Next Update Countdown Badge */}

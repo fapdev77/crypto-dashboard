@@ -25,9 +25,24 @@ async function startServer() {
       // SSRF prevention: Domain validation (Allowlist)
       const allowedDomains = [
         'api.bybit.com',
+        'api.bytick.com',
+        'api-testnet.bybit.com',
+        'api.bybit.nl',
+        'api.bybit.tr',
+        'api.bybit.kz',
+        'api.bybitgeorgia.ge',
+        'api.bybit.ae',
+        'api.bybit.eu',
+        'api.bybit.id',
+        'api.manepa.jp',
+        'api-testnet.manepa.jp',
+        'api.spark-fintech.com',
+        'api-testnet.spark-fintech.com',
         'api.bitget.com',
         'www.okx.com',
-        'api.okx.com'
+        'api.okx.com',
+        'aws.okx.com',
+        'api.alternative.me',
       ];
 
       try {
@@ -48,9 +63,14 @@ async function startServer() {
       delete cleanHeaders.origin;
       delete cleanHeaders.referer;
 
+      const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+        ? AbortSignal.timeout(20000)
+        : undefined;
+
       const fetchOptions: any = {
         method,
         headers: cleanHeaders,
+        signal: timeoutSignal,
       };
 
       if (method !== "GET" && method !== "HEAD" && body) {
@@ -74,7 +94,13 @@ async function startServer() {
 
     } catch (error: any) {
       ServerLogger.error('Proxy', 'Proxy error:', error);
-      res.status(500).json({ error: error.message });
+      const isTimeout = error.name === 'TimeoutError' || error.name === 'AbortError' || error.message?.includes('timeout') || error.message?.includes('aborted');
+      const statusCode = isTimeout ? 504 : 500;
+      res.status(statusCode).json({
+        error: isTimeout
+          ? 'Gateway Timeout: upstream exchange did not respond within 20s'
+          : (error.message || 'Internal Server Error')
+      });
     }
   });
 
@@ -87,8 +113,15 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('sw.js') || filePath.endsWith('registerSW.js') || filePath.endsWith('manifest.webmanifest') || filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+      }
+    }));
     app.get("*", (req, res) => {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

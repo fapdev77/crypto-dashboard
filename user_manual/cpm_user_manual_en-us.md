@@ -24,7 +24,8 @@ Our absolute highest priority is **zero-trust client security** and **strict pri
    - [Trade History](#-trade-history)
    - [PnL by Symbol](#-pnl-by-symbol)
    - [Funding Fees Dashboard](#-funding-fees-dashboard)
-   - [Bybit Transactions Log](#-bybit-transactions-log)
+   - [Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)](#-multi-exchange-transactions-log-bybit-bitget--okx-transactions)
+   - [Market Analytics (Quantitative Intelligence & Order Flow)](#-market-analytics-quantitative-intelligence--order-flow)
    - [API Tester (REST & WebSocket Diagnostics)](#-api-tester-rest--websocket-diagnostics)
    - [Privacy Mode](#-privacy-mode)
 8. [Inverse Contract Normalization & Smart Pagination](#8-inverse-contract-normalization--smart-pagination)
@@ -121,6 +122,7 @@ Through the **Settings** screen in the sidebar, you can easily control how the a
 
 ### 🏠 Dashboard Home
 Your central intelligence center structured in a responsive masonry grid:
+- **Positions Ticker**: Real-time streaming marquee header at the top of the workspace showing live prices, unrealized PnL, and directional markers for all active positions across exchanges.
 - **Unified Net Capital**: Live aggregate of Spot and Futures balances across all exchanges.
 - **Custody Allocation**: A sleek donut chart indicating risk allocation per exchange.
 - **Asset Treemap**: A visual block matrix sorting your cross-exchange assets by USD size.
@@ -170,20 +172,109 @@ A managerial reporting tool to analyze the individual performance of every trade
 ### 💸 Funding Fees Dashboard
 A comprehensive dashboard providing a unified view of real-time and historical funding rates across Bybit, Bitget, and OKX (USDT-M and COIN-M perpetual swaps):
 - **Multi-Period Analysis**: Analyze funding rates across multiple timeframes: Next Funding, Last Settlement, Today, Current Month, Last Month, 3 Months, 6 Months, and 1 Year.
+- **Funding Rate Comparison**:
+  - Interactive horizontal comparison chart ranked by funding rate across multiple timeframes (*Last Funding Rate*, *Today Cumulative*, *Current Month*, *Last Month*, *Last 3 Months*).
+  - *Quick Comparison Filters*:
+    - **Favorites**: Quickly view funding rates for user-starred pairs.
+    - **Open Positions**: Isolates pairs where open positions are currently held.
+    - **COIN-M / Inverse**: Dedicated filter to isolate and compare only COIN-M / inverse contract instruments across supported exchanges.
+  - *Multi-Select Symbol Dropdown*: Manually pick up to 25 assets simultaneously with clear visual badges distinguishing linear (USDT-M) from inverse (COIN-M) instruments.
 - **Smart Aggregation Pipeline & Cache v10**: Uses IndexedDB to store pre-calculated calendar month summaries. Features ultra-fast incremental updates and up to 400 days of historical depth.
 - **Visual Indicators**: Flashing animations for rate updates and tooltips explaining funding direction (Longs paying Shorts vs Shorts paying Longs).
 - *Note on OKX*: OKX API restricts historical data to ~3 months, and is automatically excluded from 6M and 1Y averages to preserve market accuracy.
 
-### 📜 Bybit Transactions Log
-A specialized tracking tool specifically built for Bybit users to download, store, and analyze the full raw transaction log directly from the exchange:
-- **Deep Syncing**: Downloads your entire history of settlements, funding fees, and trading fees into local IndexedDB cache.
-- **Realized PnL Calculation**: Computes exact realized gains and losses based on cash flow, funding, and fees (`cashFlow + funding - fee`).
-- **Incremental Updates**: Syncs only new records following initial sync.
+
+### 📜 Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)
+Specialized financial audit modules providing full access to raw transaction logs directly from Bybit, Bitget, and OKX:
+- **Deep & Incremental Syncing**: Downloads your entire history of trades, funding fees, settlements, liquidations, transfers, deposits, withdrawals, and margin interest, persistently cached in local IndexedDB.
+- **Unified Transaction Filters (Universal Transaction Mapper)**: Standardized filtering system and badges across 10 universal transaction types:
+  1. *Trade & Orders* (Spot & futures trades, executions, and close PnL)
+  2. *Funding Fee* (Periodic funding fee payments and receipts)
+  3. *Transfer In / Deposit* (Deposits and incoming subaccount/wallet transfers)
+  4. *Transfer Out / Withdraw* (Withdrawals and outgoing subaccount/wallet transfers)
+  5. *Liquidation & ADL* (Forced liquidations and auto-deleveraging events)
+  6. *Interest & Loans* (Margin interest, borrow, and loan repayments)
+  7. *Rewards & Bonus* (Trial funds, coupons, trading bonuses, and airdrops)
+  8. *Delivery & Settle* (Futures delivery settlements and option exercises)
+  9. *Others* (Currency conversions, auto-deductions, and miscellaneous entries)
+  10. *All Types* (Unfiltered complete transaction view)
+- **Additional Multi-Criteria Filters**: Filter by instrument category (Spot, Linear, Inverse, Option, Margin), Currency/Coin, Account/Subaccount, Timeframe, and Symbol search.
+- **Cash Flow & Realized PnL Calculation**: Computes exact realized net changes based on standard cash flow accounting (`cashFlow + funding - fee`) and reconciles with wallet balance (`walletBalance`).
+- **Interactive KPI Cards & Distribution Visuals**: Track total transactions, aggregated USD funding fees, net trading fees paid/rebated, and net period portfolio changes.
+
+### 📈 Market Analytics (Quantitative Intelligence & Order Flow)
+A quantitative derivatives intelligence terminal consolidating and correlating real-time order flow and market metrics across **Bybit**, **OKX**, and **Bitget**:
+- **Global Filter Bar & Controls**:
+  - *Asset Selector*: Searchable ticker dropdown with star favorites to instantly toggle between major assets (e.g., BTC, ETH, SOL).
+  - *Market Type Filter*: Multi-select between Linear Perpetual contracts (PERP), Inverse contracts (INVERSE), Spot market (SPOT), or All combined (ALL).
+  - *Exchanges Multi-Select*: Toggle Bybit, OKX, and Bitget individually or aggregate all three to examine cross-exchange liquidity.
+  - *Timeframe Selector*: Granular operational intervals (5m, 15m, 30m, 1h, 4h, 1d).
+  - *Circular Countdown Auto-Refresh*: Configurable polling timer (5s, 10s, 15s, 30s, 60s, or Paused) featuring a circular SVG progress ring and instant click-to-refresh button.
+- **Top Metric Cards (Equipped with Detailed Tooltips & Formulas)**:
+  - *Current Price & 24h Change*: Real-time aggregated USD mark price and 24h percentage return.
+  - *24h Aggregated Volume*: Total 24h notional trading volume across selected exchanges.
+  - *Total Open Interest (OI)*: Total active contract exposure in USD with 24h percentage change.
+  - *Benchmark Funding Rate & APR*: Next 8h funding rate and annualized APR equivalent: `APR = 8h Rate * 3 * 365`.
+  - *Net CVD (Cumulative Volume Delta)*: Running net delta between aggressive market buy orders and aggressive market sell orders (`Taker Buy Vol - Taker Sell Vol`).
+  - *Sentiment Index (Fear & Greed)*: Real-time 0-100 market sentiment gauge categorized into: *Extreme Fear (0-24)*, *Fear (25-44)*, *Neutral (45-55)*, *Greed (56-74)*, and *Extreme Greed (75-100)*.
+- **Dedicated Analytical Widgets**:
+  1. **Open Interest & Leverage Monitor**:
+     - Dual-axis Recharts visualization mapping price trajectory alongside aggregated Open Interest in USD.
+     - *Automated Market Regime Classifier*:
+       - `Long Accumulation`: Price ↑ & OI ↑ (Bullish trend confirmed by aggressive new long positioning).
+       - `Short Squeeze`: Price ↑ & OI ↓ (Rally driven by forced short covering and stop-outs).
+       - `Aggressive Shorting`: Price ↓ & OI ↑ (Bearish trend confirmed by aggressive new short accumulation).
+       - `Long Liquidation`: Price ↓ & OI ↓ (Cascading sell-off driven by long liquidations and margin unwinding).
+       - `Neutral Consolidation`: Sideways price and OI action with no dominant institutional flow.
+     - *Exchange OI Breakdown*: Dollar value and percentage market share divided across Bybit, OKX, and Bitget.
+  2. **Cross-Exchange Funding Arbitrage**:
+     - Real-time comparison of 8h and APR funding rates across Bybit, OKX, and Bitget.
+     - *Arbitrage Spread Formulas*:
+       - `Spread 8h = Max Rate - Min Rate`
+       - `Spread APR = Spread 8h * 3 * 365`
+     - *Delta-Neutral Arbitrage Suggestion*: Automatically recommends the optimal Long exchange (lowest/negative rate) and Short exchange (highest/positive rate) to harvest basis yield without directional exposure.
+     - Multi-asset opportunity scanner with real-time countdown to next funding settlement.
+  3. **Order Flow & Cumulative Volume Delta (CVD)**:
+     - Real-time tracking of aggressive market orders (Taker Buy vs. Taker Sell Volume).
+     - *Formulas*: `Net Taker Delta = Taker Buy Volume - Taker Sell Volume`, `CVD_t = CVD_(t-1) + Net Delta_t`.
+     - *CVD Divergence Detection*:
+       - *Bullish Divergence*: Price declining or flat while CVD is rising (signals aggressive sell absorption by passive limit buyers).
+       - *Bearish Divergence*: Price climbing or flat while CVD is dropping (signals aggressive buy absorption by passive limit sellers).
+  4. **Smart Money vs. Retail Sentiment**:
+     - *Retail Ratio*: Long/Short positioning ratio based on absolute number of retail trader accounts.
+     - *Top Trader Ratio (Smart Money)*: Long/Short positioning ratio weighted by notional USD position size of the top 20% profitable traders.
+     - *Sentiment Divergence Alert*: Triggers high-probability contrarian signals when Retail positioning sharply diverges from Top Trader positioning.
+- **Dedicated Sub-View — Inverse Coin-M Dashboard**:
+  - Switch to the **Inverse Coin-M** tab at the top of the view to access an analytical dashboard 100% focused on contracts settled in the underlying cryptocurrency (COIN-M).
+  - *Consolidated Coin Table*: Displays inverse pairs with star favorites, mark prices, 24h changes, aggregated volumes, funding rates, and arbitrage spreads.
+  - *Expandable Exchange Breakdown*: Click any asset row (e.g., BTC, ETH, SOL) to instantly expand and contrast exchange-specific metrics across Bybit, OKX, and Bitget: 8h Funding Rate, 24h USD Volume, Open Interest, and Arbitrage Spread.
+  - *Expand All / Collapse All Controls*: Bulk toggle all coin accordions with a single click.
+  - *Direct Integration with Hedge Pro*: Supplies real-time funding yield and spread intelligence required to calibrate delta-neutral and capital protection positions monitored in the Hedge Pro Dashboard.
 
 ### ⚡ API Tester (REST & WebSocket Diagnostics)
 Developer and diagnostic utility for testing direct connectivity with exchanges:
 - **REST Testing**: Dispatch direct authenticated and public API requests to verify latency, HTTP status, and inspect raw payloads.
 - **WebSocket Inspector**: Monitor live WebSocket handshakes and message streams in real-time.
+
+### 💾 IndexedDB Storage, Quota & History Pruning (v1.79.0)
+Located inside the **IndexedDB Storage & Cache** card (within Settings / Configurações), this control center manages your browser's persistent database:
+- **Browser Storage Quota Telemetry**: Displays real-time disk consumption (used MB vs. total allocated quota MB) via the browser's `StorageManager` API, complete with a color-coded warning bar to prevent storage exhaustion.
+- **Data Retention & History Pruning**:
+  - Configurable historical retention windows: *30 days (1 mo)*, *60 days (2 mo)*, *90 days (3 mo)*, *180 days (6 mo)*, *Older than 1 year (Default)* (365 days), and *Older than 2 years* (730 days).
+  - **"Prune History" Action**: Selectively purges closed positions, filled/canceled orders, and ledger transactions older than the selected retention threshold, reclaiming browser disk space immediately while keeping active datasets and metadata intact.
+- **Maintenance Actions**:
+  - *Force Sync*: Re-synchronizes background deltas across all active exchange keys.
+  - *Clear Cache*: Completely flushes local IndexedDB caches in case of schema transitions.
+
+### 🛡️ Connection Resilience & IP Protection (Fail-Fast Auth)
+Engineered for zero-trust safety and avoiding exchange rate-limit bans:
+- **Fail-Fast Authentication Error Handling**: If an API key has invalid credentials, expired status, wrong signature, or unwhitelisted IP (HTTP 401/403 or exchange auth codes), CPM detects the fatal error and **immediately aborts automatic reconnection loops**. This shields your IP address from Cloudflare/Akamai rate-limit bans caused by repetitive unauthorized requests.
+- **Smart Exponential Backoff for Network Drops**: Transient internet disruptions (timeouts, 502/503/504 errors) trigger intelligent exponential backoff with random jitter (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s cap) with a 5-attempt circuit breaker before pausing.
+
+### 🛡️ Global Error Boundary & Safe Crash Recovery
+Should an unexpected React runtime exception occur, the application will not break into a blank white screen:
+- A dedicated **Safe Recovery** screen isolates the failure and displays actionable diagnostics with an expandable stack trace.
+- Two 1-click recovery actions are available: **Reload Dashboard** (standard clean reload) and **Clear Cache & Reload** (purges local cache to recover from rare data corruption scenarios).
 
 ### 👁 Privacy Mode
 Toggle the **Eye Icon** in the sidebar header to hide all numerical balances, sizes, and PnL metrics behind secure `***` masks. This is designed for safe streaming, sharing, or public presentations.

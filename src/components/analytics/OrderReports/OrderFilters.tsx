@@ -58,7 +58,7 @@ export function OrderFilters({ filters, setFilters, showPeriod = false, showStat
   const accountConfig = {
     value: filters.accountId,
     onChange: (val: string) => setFilters(p => ({ ...p, accountId: val })),
-    options: activeKeys.map(k => ({ id: k.id, label: k.label || k.exchange, exchange: k.exchange })),
+    options: activeKeys.map(k => ({ id: k.id, label: k.label || k.exchange, exchange: k.exchange, accountType: k.accountType })),
     disabled: filters.exchange === 'All',
     labelAll: 'All Accounts',
   };
