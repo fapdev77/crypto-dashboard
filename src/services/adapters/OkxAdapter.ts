@@ -128,7 +128,14 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
         ccy,
         amount,
         usdValue,
-        raw: item
+        walletBalance: amount,
+        availableMargin: parseFloat(item.availBal || item.bal || '0'),
+        unrealizedPnl: 0,
+        raw: {
+          ...item,
+          equity: amount,
+          usdValue,
+        }
       });
     });
 
@@ -166,7 +173,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
         ccy,
         amount: walletBalCoin,
         usdValue: walletBalUsd,
-        totalEquity: rawEq > 0 ? rawEq : (ccy === 'USDT' && totalEquity > 0 ? totalEquity : walletBalCoin),
+        totalEquity: rawEq > 0 ? rawEq : walletBalCoin,
         walletBalance: walletBalCoin,
         availableMargin,
         unrealizedPnl,
@@ -179,12 +186,11 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       };
     });
 
-    // Set updated values on funding balances
+    // Set updated account metrics on funding balances without overriding asset equity
     fundingBalances.forEach((fb) => {
-      fb.totalEquity = totalEquity;
-      fb.walletBalance = walletBalance;
-      fb.availableMargin = availableMargin;
-      fb.unrealizedPnl = unrealizedPnl;
+      if (fb.raw) {
+        fb.raw.accountMetrics = { totalEquity, walletBalance, availableMargin, unrealizedPnl };
+      }
     });
 
     return [...tradingBalances, ...fundingBalances];

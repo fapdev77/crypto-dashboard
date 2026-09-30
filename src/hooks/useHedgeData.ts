@@ -86,7 +86,7 @@ export function useHedgeData(): UseHedgeDataReturn {
         ? parseFloat(String(rawObj.equity))
         : (rawObj.eq !== undefined && rawObj.eq !== null && rawObj.eq !== ''
             ? parseFloat(String(rawObj.eq))
-            : (b.totalEquity !== undefined && b.totalEquity !== null && b.totalEquity > 0 ? b.totalEquity : NaN));
+            : NaN);
       const rawUsdValue = rawObj.usdValue !== undefined && rawObj.usdValue !== null && rawObj.usdValue !== ''
         ? parseFloat(String(rawObj.usdValue))
         : (rawObj.eqUsd !== undefined && rawObj.eqUsd !== null && rawObj.eqUsd !== ''
