@@ -1,3 +1,10 @@
+## [1.82.3](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.2...v1.82.3) (2026-09-30)
+
+
+### Bug Fixes
+
+* **okx:** prevent funding balance equity override ([42764dc](https://github.com/fapdev77/crypto-dashboard/commit/42764dca7f793bf2bbc6add1aff90d23be7919d3))
+
 ## [1.82.2](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.1...v1.82.2) (2026-09-28)
 
 
