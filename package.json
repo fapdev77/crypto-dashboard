@@ -1,7 +1,7 @@
 {
   "name": "crypto-portfolio-manager",
   "private": true,
-  "version": "1.82.4",
+  "version": "1.82.5",
   "type": "module",
   "engines": {
     "node": ">=24"

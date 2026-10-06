@@ -1,3 +1,10 @@
+## [1.82.5](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.4...v1.82.5) (2026-10-06)
+
+
+### Bug Fixes
+
+* aggregate multiple balances for Bybit and OKX ([0150a83](https://github.com/fapdev77/crypto-dashboard/commit/0150a83dc4c38fe824b280110c3fd35d78e6e967))
+
 ## [1.82.4](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.3...v1.82.4) (2026-10-06)
 
 
