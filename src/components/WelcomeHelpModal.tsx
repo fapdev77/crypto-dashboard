@@ -13,6 +13,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
   const [lang, setLang] = useState<'en' | 'pt'>('pt');
   const [isManualOpen, setIsManualOpen] = useState(false);
 
+  const releaseInfo = typeof __APP_RELEASE_INFO__ !== 'undefined' ? __APP_RELEASE_INFO__ : null;
+  const version = releaseInfo?.version || (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.36.0');
+
   if (!isOpen) return null;
 
   const texts = {
@@ -131,7 +134,12 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
               <HelpCircle className="w-6 h-6 text-[#2F6BFF]" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">{t.title}</h3>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h3 className="text-lg font-semibold text-white">{t.title}</h3>
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#2F6BFF]/10 text-[#2F6BFF] border border-[#2F6BFF]/20">
+                  v{version}
+                </span>
+              </div>
               <p className="text-xs text-[#8E9299] mt-0.5">{t.subtitle}</p>
             </div>
           </div>

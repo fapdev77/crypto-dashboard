@@ -450,7 +450,7 @@ describe('FundingService', () => {
     });
 
     it('should route Bitget to fetchBitgetCurrentRates (USDT + COIN)', async () => {
-      mockHybridFetch.mockResolvedValue({ code: '00000', data: [] });
+      mockHybridFetch.mockResolvedValue(BITGET_TICKER_RESPONSE);
 
       await FundingService.fetchCurrentFundingRates('bitget');
 

@@ -235,19 +235,24 @@ export interface RawBalanceItem {
   coin?: string;
   symbol?: string;
   ccy?: string;
-  walletBalance?: string;
-  equity?: string;
-  usdValue?: string;
-  available?: string;
-  frozen?: string;
-  amount?: string;
-  usdtEquity?: string;
-  accountEquity?: string;
-  crossedMaxAvailable?: string;
+  walletBalance?: string | number;
+  equity?: string | number;
+  usdValue?: string | number;
+  available?: string | number;
+  frozen?: string | number;
+  amount?: string | number;
+  usdtEquity?: string | number;
+  accountEquity?: string | number;
+  crossedMaxAvailable?: string | number;
   marginCoin?: string;
-  unrealizedPL?: string;
-  cashBal?: string;
-  eqUsd?: string;
+  unrealizedPL?: string | number;
+  cashBal?: string | number;
+  eqUsd?: string | number;
+  eq?: string | number;
+  bal?: string | number;
+  availBal?: string | number;
+  accountMetrics?: any;
+  [key: string]: any;
 }
 
 // ──────────────────────────────────────────────

@@ -261,3 +261,38 @@ describe('persist layer', () => {
       localStorage.removeItem('terminal-settings');
     });
 });
+
+// ───────────────────────────────────────────────
+// Settings Store — IndexedDB Status & Error Management
+// ───────────────────────────────────────────────
+
+describe('settingsStore — IndexedDB status and error management', () => {
+  beforeEach(() => {
+    useSettingsStore.getState().clearIndexedDBError();
+  });
+
+  it('initializes with healthy status and no errors', () => {
+    const state = useSettingsStore.getState();
+    expect(state.indexedDBStatus).toBe('healthy');
+    expect(state.indexedDBError).toBeNull();
+    expect(state.indexedDBVersion).toBe(12);
+  });
+
+  it('updates status and error via setIndexedDBStatus', () => {
+    useSettingsStore.getState().setIndexedDBStatus('error', 'VersionError: requested version 11 is less than 12');
+    const state = useSettingsStore.getState();
+    expect(state.indexedDBStatus).toBe('error');
+    expect(state.indexedDBError).toContain('VersionError');
+  });
+
+  it('clears error and resets to healthy via clearIndexedDBError', () => {
+    useSettingsStore.getState().setIndexedDBStatus('error', 'Permission denied');
+    expect(useSettingsStore.getState().indexedDBStatus).toBe('error');
+
+    useSettingsStore.getState().clearIndexedDBError();
+    const state = useSettingsStore.getState();
+    expect(state.indexedDBStatus).toBe('healthy');
+    expect(state.indexedDBError).toBeNull();
+  });
+});
+

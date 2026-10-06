@@ -3,8 +3,13 @@ import { UnifiedAssetCategory } from '../types';
 
 export function isStablecoin(ccy: string | undefined | null): boolean {
   if (!ccy) return false;
-  const normalized = ccy.toUpperCase();
-  return ['USDT', 'USDC', 'USDG', 'USD', 'BRL'].some(stable => normalized.includes(stable));
+  const normalized = ccy.toUpperCase().trim();
+  const knownStables = new Set([
+    'USDT', 'USDC', 'USD', 'DAI', 'FDUSD', 'USDE', 'USDD',
+    'BUSD', 'PYUSD', 'TUSD', 'USDP', 'EURT', 'GUSD', 'BRL', 'USDG'
+  ]);
+  if (knownStables.has(normalized)) return true;
+  return ['USDT', 'USDC', 'USDG', 'USD', 'BRL', 'EURT'].some(stable => normalized.includes(stable));
 }
 
 export function formatValue(val: number | undefined | null, decimalsOrSymbol: number | string = 2): string {
@@ -62,9 +67,12 @@ export function formatPrice(val: number | undefined | null, isFiatPair: boolean 
 }
 
 export function formatCompactUSD(val: number, decimals = 2): string {
-  if (val >= 1000000) return `$${(val / 1000000).toFixed(decimals)}M`;
-  if (val >= 1000) return `$${(val / 1000).toFixed(decimals)}k`;
-  return `$${val.toFixed(decimals)}`;
+  const absVal = Math.abs(val);
+  const sign = val < 0 ? '-' : '';
+  if (absVal >= 1_000_000_000) return `${sign}$${(absVal / 1_000_000_000).toFixed(decimals)}B`;
+  if (absVal >= 1_000_000) return `${sign}$${(absVal / 1_000_000).toFixed(decimals)}M`;
+  if (absVal >= 1_000) return `${sign}$${(absVal / 1_000).toFixed(decimals)}k`;
+  return `${sign}$${absVal.toFixed(decimals)}`;
 }
 
 /**
