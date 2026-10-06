@@ -301,14 +301,42 @@ export function getHedgePositionLevels(
         : Object.values(balances))
     : [];
 
-  const matchingBalance = balanceList.find(
-    b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy
-  );
-  const rawBalanceAmount = matchingBalance ? (matchingBalance.amount || 0) : 0;
   const markPrice = pos.markPrice || 0;
-  const rawBalanceUsd = (markPrice > 0 && rawBalanceAmount > 0)
-    ? rawBalanceAmount * markPrice
-    : ((matchingBalance?.usdValue && matchingBalance.usdValue > 0) ? matchingBalance.usdValue : 0);
+  const isBitget = (pos.exchange || '').toLowerCase().includes('bitget');
+
+  let rawBalanceAmount = 0;
+  let rawBalanceUsd = 0;
+
+  if (isBitget) {
+    // In Bitget (both UTA and Classic), accounts can have multiple balance rows for the same coin
+    // (e.g. trading/futures account assets vs funding assets, or spot vs mix futures).
+    // Sum all matching balance records for this connection and currency to reflect the real wallet balance.
+    const bitgetMatchingBalances = balanceList.filter(
+      b => b.connectionId === pos.connectionId &&
+        (b.ccy.toUpperCase() === posCcy || (pos.baseCoin && b.ccy.toUpperCase() === pos.baseCoin.toUpperCase()))
+    );
+
+    if (bitgetMatchingBalances.length > 0) {
+      rawBalanceAmount = bitgetMatchingBalances.reduce(
+        (acc, b) => acc.plus(b.amount || 0),
+        new Big(0)
+      ).toNumber();
+      rawBalanceUsd = (markPrice > 0 && rawBalanceAmount > 0)
+        ? rawBalanceAmount * markPrice
+        : bitgetMatchingBalances.reduce(
+            (acc, b) => acc.plus(b.usdValue || 0),
+            new Big(0)
+          ).toNumber();
+    }
+  } else {
+    const matchingBalance = balanceList.find(
+      b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy
+    );
+    rawBalanceAmount = matchingBalance ? (matchingBalance.amount || 0) : 0;
+    rawBalanceUsd = (markPrice > 0 && rawBalanceAmount > 0)
+      ? rawBalanceAmount * markPrice
+      : ((matchingBalance?.usdValue && matchingBalance.usdValue > 0) ? matchingBalance.usdValue : 0);
+  }
 
   const posUnrealizedPnlCoin = pos.unrealizedPnl || 0;
   const posUnrealizedPnlUsd = inverseVals.unrealizedPnl || 0;
@@ -349,7 +377,6 @@ export function getHedgePositionLevels(
     : (isShort && markPrice > 0 ? initialValueUsd / markPrice : openPosSize);
 
   const isBybit = (pos.exchange || '').toLowerCase().includes('bybit');
-  const isBitget = (pos.exchange || '').toLowerCase().includes('bitget');
   const isOkx = (pos.exchange || '').toLowerCase().includes('okx');
   const isInverseHedgeExchange = isBybit || isBitget || isOkx;
 

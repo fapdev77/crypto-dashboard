@@ -1,3 +1,10 @@
+## [1.82.4](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.3...v1.82.4) (2026-10-06)
+
+
+### Bug Fixes
+
+* aggregate Bitget balances for accurate position tracking ([b9e74ad](https://github.com/fapdev77/crypto-dashboard/commit/b9e74ad78bd594013f6e3e91f329409570591ded))
+
 ## [1.82.3](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.2...v1.82.3) (2026-09-30)
 
 
