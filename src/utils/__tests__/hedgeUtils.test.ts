@@ -942,4 +942,74 @@ describe('getHedgeTotals', () => {
     expect(coin.barMetrics.exposedPct).toBeCloseTo(12.66, 1);
     expect(coin.barMetrics.protectedPct + coin.barMetrics.exposedPct).toBeCloseTo(100, 1);
   });
+
+  it('correctly aggregates multiple Bitget balances (e.g. funding dust + UTA trading balance) for position levels', () => {
+    const markPrice = 0.2731;
+    const entryPrice = 0.22256;
+    const notionalUsd = 8987;
+    const tradingWalletAmount = 45159.36390893;
+    const fundingDustAmount = 0.000000002495;
+    const totalExpectedWallet = tradingWalletAmount + fundingDustAmount;
+    const unrealizedPnlCoin = -7472.73534447;
+    const expectedInitialSizeInCoin = notionalUsd / entryPrice; // 40,380.09528589 ADA
+    const expectedExposedCoin = totalExpectedWallet - expectedInitialSizeInCoin; // ~4,779.268623 ADA
+
+    const bitgetAdaPos = makePos({
+      id: 'bitget-ada-user-pos',
+      connectionId: 'bitget-uta-conn',
+      exchange: 'bitget',
+      symbol: 'ADAUSD_CM',
+      baseCoin: 'ADA',
+      quoteCoin: 'USD',
+      ccy: 'ADA',
+      side: 'short',
+      size: notionalUsd,
+      notionalUsd,
+      entryPrice,
+      markPrice,
+      unrealizedPnl: unrealizedPnlCoin,
+      instrumentType: 'INVERSE',
+    });
+
+    // Funding balance appears FIRST in array (e.g. from /api/v3/account/funding-assets)
+    const bitgetFundingBal = makeBal({
+      id: 'bitget-uta-conn-uta-funding-ADA',
+      connectionId: 'bitget-uta-conn',
+      exchange: 'bitget',
+      ccy: 'ADA',
+      amount: fundingDustAmount,
+      walletBalance: fundingDustAmount,
+      usdValue: fundingDustAmount * markPrice,
+    });
+
+    // UTA Trading balance appears SECOND in array (from /api/v3/account/assets)
+    const bitgetUtaTradingBal = makeBal({
+      id: 'bitget-uta-conn-uta-ADA',
+      connectionId: 'bitget-uta-conn',
+      exchange: 'bitget',
+      ccy: 'ADA',
+      amount: tradingWalletAmount,
+      walletBalance: tradingWalletAmount,
+      usdValue: tradingWalletAmount * markPrice,
+    });
+
+    const multipleBalances = [bitgetFundingBal, bitgetUtaTradingBal];
+
+    const lvl = getHedgePositionLevels(bitgetAdaPos, multipleBalances, 'gross');
+
+    // Without Bitget balance aggregation, lvl picks the first item (fundingDust) and fails:
+    // rawBalanceAmount becomes 2.495e-9, exposedAmount becomes negative (-40,380),
+    // exposedBaseUsd becomes -$11,027.80, and protectedPct explodes to 1.6e15%.
+    expect(lvl.grossBalanceAmount).toBeCloseTo(totalExpectedWallet, 6);
+    expect(lvl.protectedUsd).toBe(8987);
+    expect(lvl.protectedAmount).toBeCloseTo(expectedInitialSizeInCoin, 6);
+    expect(lvl.exposedAmount).toBeCloseTo(expectedExposedCoin, 4); // ~4,779.27 ADA (positive!)
+    expect(lvl.exposedAmount).toBeGreaterThan(0);
+    expect(lvl.exposedBaseUsd).toBeCloseTo(expectedExposedCoin * markPrice, 2); // ~$1,305.22 USD (positive!)
+    expect(lvl.exposedBaseUsd).toBeGreaterThan(0);
+    expect(lvl.barMetrics.protectedPct).toBeCloseTo((expectedInitialSizeInCoin / totalExpectedWallet) * 100, 1); // ~89.4%
+    expect(lvl.barMetrics.exposedPct).toBeCloseTo((expectedExposedCoin / totalExpectedWallet) * 100, 1); // ~10.6%
+    expect(lvl.barMetrics.protectedPct).toBeLessThan(100);
+    expect(lvl.barMetrics.exposedPct).toBeGreaterThan(0);
+  });
 });
