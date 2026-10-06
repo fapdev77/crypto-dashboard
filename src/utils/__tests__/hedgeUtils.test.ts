@@ -1012,4 +1012,132 @@ describe('getHedgeTotals', () => {
     expect(lvl.barMetrics.protectedPct).toBeLessThan(100);
     expect(lvl.barMetrics.exposedPct).toBeGreaterThan(0);
   });
+
+  it('correctly aggregates multiple Bybit balances (e.g. funding dust + UNIFIED balance) for position levels', () => {
+    const markPrice = 60000;
+    const entryPrice = 60000;
+    const notionalUsd = 60000;
+    const unifiedWalletAmount = 1.5;
+    const fundingDustAmount = 0.00001;
+    const totalExpectedWallet = unifiedWalletAmount + fundingDustAmount;
+    const expectedInitialSizeInCoin = notionalUsd / entryPrice; // 1 BTC
+    const expectedExposedCoin = totalExpectedWallet - expectedInitialSizeInCoin; // 0.50001 BTC
+
+    const bybitBtcPos = makePos({
+      id: 'bybit-btc-pos',
+      connectionId: 'bybit-conn',
+      exchange: 'bybit',
+      symbol: 'BTCUSD',
+      baseCoin: 'BTC',
+      quoteCoin: 'USD',
+      ccy: 'BTC',
+      side: 'short',
+      size: notionalUsd,
+      notionalUsd,
+      entryPrice,
+      markPrice,
+      unrealizedPnl: 0,
+      instrumentType: 'INVERSE',
+    });
+
+    const bybitFundingBal = makeBal({
+      id: 'bybit-conn-FUNDING-BTC',
+      connectionId: 'bybit-conn',
+      exchange: 'bybit',
+      ccy: 'BTC',
+      amount: fundingDustAmount,
+      walletBalance: fundingDustAmount,
+      usdValue: fundingDustAmount * markPrice,
+    });
+
+    const bybitUnifiedBal = makeBal({
+      id: 'bybit-conn-UNIFIED-BTC',
+      connectionId: 'bybit-conn',
+      exchange: 'bybit',
+      ccy: 'BTC',
+      amount: unifiedWalletAmount,
+      walletBalance: unifiedWalletAmount,
+      usdValue: unifiedWalletAmount * markPrice,
+    });
+
+    const multipleBalances = [bybitFundingBal, bybitUnifiedBal];
+
+    const lvl = getHedgePositionLevels(bybitBtcPos, multipleBalances, 'gross');
+
+    expect(lvl.grossBalanceAmount).toBeCloseTo(totalExpectedWallet, 6);
+    expect(lvl.protectedUsd).toBe(60000);
+    expect(lvl.protectedAmount).toBeCloseTo(expectedInitialSizeInCoin, 6);
+    expect(lvl.exposedAmount).toBeCloseTo(expectedExposedCoin, 5); // 0.50001 BTC (positive)
+    expect(lvl.exposedAmount).toBeGreaterThan(0);
+    expect(lvl.exposedBaseUsd).toBeCloseTo(expectedExposedCoin * markPrice, 2);
+    expect(lvl.exposedBaseUsd).toBeGreaterThan(0);
+    expect(lvl.barMetrics.protectedPct).toBeCloseTo((expectedInitialSizeInCoin / totalExpectedWallet) * 100, 1);
+    expect(lvl.barMetrics.exposedPct).toBeCloseTo((expectedExposedCoin / totalExpectedWallet) * 100, 1);
+    expect(lvl.barMetrics.protectedPct).toBeLessThan(100);
+    expect(lvl.barMetrics.exposedPct).toBeGreaterThan(0);
+  });
+
+  it('correctly aggregates multiple OKX balances (e.g. funding dust + UNIFIED trading balance) for position levels', () => {
+    const markPrice = 50000;
+    const entryPrice = 50000;
+    const notionalUsd = 50000;
+    const tradingWalletAmount = 2.0;
+    const fundingDustAmount = 0.00005;
+    const totalExpectedWallet = tradingWalletAmount + fundingDustAmount;
+    const expectedInitialSizeInCoin = notionalUsd / entryPrice; // 1 BTC
+    const expectedExposedCoin = totalExpectedWallet - expectedInitialSizeInCoin; // 1.00005 BTC
+
+    const okxBtcPos = makePos({
+      id: 'okx-btc-pos',
+      connectionId: 'okx-conn',
+      exchange: 'okx',
+      symbol: 'BTC-USD-SWAP',
+      baseCoin: 'BTC',
+      quoteCoin: 'USD',
+      ccy: 'BTC',
+      side: 'short',
+      size: notionalUsd,
+      notionalUsd,
+      entryPrice,
+      markPrice,
+      unrealizedPnl: 0,
+      instrumentType: 'INVERSE',
+    });
+
+    const okxFundingBal = makeBal({
+      id: 'okx-conn-FUNDING-BTC',
+      connectionId: 'okx-conn',
+      exchange: 'okx',
+      ccy: 'BTC',
+      amount: fundingDustAmount,
+      walletBalance: fundingDustAmount,
+      usdValue: fundingDustAmount * markPrice,
+    });
+
+    const okxTradingBal = makeBal({
+      id: 'okx-conn-UNIFIED-BTC',
+      connectionId: 'okx-conn',
+      exchange: 'okx',
+      ccy: 'BTC',
+      amount: tradingWalletAmount,
+      walletBalance: tradingWalletAmount,
+      usdValue: tradingWalletAmount * markPrice,
+    });
+
+    const multipleBalances = [okxFundingBal, okxTradingBal];
+
+    const lvl = getHedgePositionLevels(okxBtcPos, multipleBalances, 'gross');
+
+    expect(lvl.grossBalanceAmount).toBeCloseTo(totalExpectedWallet, 6);
+    expect(lvl.protectedUsd).toBe(50000);
+    expect(lvl.protectedAmount).toBeCloseTo(expectedInitialSizeInCoin, 6);
+    expect(lvl.exposedAmount).toBeCloseTo(expectedExposedCoin, 5); // 1.00005 BTC (positive)
+    expect(lvl.exposedAmount).toBeGreaterThan(0);
+    expect(lvl.exposedBaseUsd).toBeCloseTo(expectedExposedCoin * markPrice, 2);
+    expect(lvl.exposedBaseUsd).toBeGreaterThan(0);
+    expect(lvl.barMetrics.protectedPct).toBeCloseTo((expectedInitialSizeInCoin / totalExpectedWallet) * 100, 1);
+    expect(lvl.barMetrics.exposedPct).toBeCloseTo((expectedExposedCoin / totalExpectedWallet) * 100, 1);
+    expect(lvl.barMetrics.protectedPct).toBeLessThan(100);
+    expect(lvl.barMetrics.exposedPct).toBeGreaterThan(0);
+  });
 });
