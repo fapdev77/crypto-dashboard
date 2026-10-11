@@ -222,6 +222,22 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                           VERIFIED ({model.lastPingLatencyMs || 0}MS)
                         </span>
                       )}
+
+                      {model.supportsTools === false ||
+                      model.modelId.toLowerCase().includes('deepseek-r1') ||
+                      model.modelId.toLowerCase().includes('coder') ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-300 border border-amber-500/40"
+                          title="Modelos de raciocínio puro ou código não chamam ferramentas no Ollama. Consultas sobre saldos e posições serão bloqueadas pelo PIKA para evitar dados inventados."
+                        >
+                          <AlertCircle className="w-3 h-3 text-amber-400" />
+                          SEM TOOLS (BLOQUEIO ATIVO)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                          TOOLS OK
+                        </span>
+                      )}
                     </div>
 
                     {/* Metadata Specs Row */}

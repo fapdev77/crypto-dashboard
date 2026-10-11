@@ -30,6 +30,9 @@ export interface AiModelConfig {
   lastPingLatencyMs?: number;
   lastPingMessage?: string;
   lastPingAt?: number;
+
+  // Tool / function calling capability flag
+  supportsTools?: boolean;
 }
 
 export interface AiAuditToolInvocation {
@@ -140,6 +143,10 @@ export interface AiChatMessage {
   errorMessage?: string;
   auditLogId?: string;
   rawDebug?: AiRawDebugData;
+  unverifiedData?: boolean;
+  auditWarning?: string;
+  incompatibleToolModel?: boolean;
+  recommendedModelSuggestion?: string;
 }
 
 export interface AiChatSession {

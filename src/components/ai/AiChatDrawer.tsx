@@ -14,6 +14,9 @@ import {
   MoreVertical,
   Trash2,
   AlertCircle,
+  AlertTriangle,
+  ShieldAlert,
+  CheckCircle2,
   Maximize2,
   Minimize2,
   PanelLeft,
@@ -270,6 +273,10 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
         toolsInvoked: response.toolsInvoked,
         auditLogId: response.auditLogId,
         rawDebug: response.rawDebug,
+        unverifiedData: response.unverifiedData,
+        auditWarning: response.auditWarning,
+        incompatibleToolModel: response.incompatibleToolModel,
+        recommendedModelSuggestion: response.recommendedModelSuggestion,
       });
     } catch (err: any) {
       const isCancelled = err?.name === 'AbortError' || err?.isCancelled || abortController.signal.aborted;
@@ -714,6 +721,10 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                           ? 'bg-[#181613] border border-amber-500/30 text-gray-200 rounded-tl-none'
                           : msg.status === 'error'
                           ? 'bg-[#181215] border border-rose-900/40 text-gray-200 rounded-tl-none'
+                          : msg.incompatibleToolModel
+                          ? 'bg-[#1a1215] border border-rose-500/50 text-gray-200 rounded-tl-none'
+                          : msg.unverifiedData
+                          ? 'bg-[#181512] border border-amber-500/40 text-gray-200 rounded-tl-none'
                           : 'bg-[#151619] border border-[#2a2b30] text-gray-200 rounded-tl-none'
                       }`}
                     >
@@ -752,6 +763,48 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                         />
                       ) : (
                         <div className="space-y-2">
+                          {/* Banner de Bloqueio por Modelo Incompatível */}
+                          {msg.incompatibleToolModel && (
+                            <div className="mb-3 p-3.5 rounded-xl bg-rose-950/40 border-l-4 border-l-rose-500 border border-rose-500/30 text-rose-200 space-y-2">
+                              <div className="flex items-center gap-2 text-rose-300 font-semibold text-xs">
+                                <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
+                                <span>Consulta Bloqueada: Ferramentas Não Executadas</span>
+                              </div>
+                              <p className="text-[11px] text-rose-200/90 leading-relaxed">
+                                {msg.auditWarning ||
+                                  'O modelo não executou ferramentas de exchange no Ollama. A resposta com números fictícios foi bloqueada para proteger sua operação.'}
+                              </p>
+                              <div className="pt-1 flex flex-wrap items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    closeDrawer();
+                                    if (onNavigateToSettings) onNavigateToSettings();
+                                    window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'ai-settings' }));
+                                  }}
+                                  className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 border border-rose-500/40 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1.5"
+                                >
+                                  <SettingsIcon className="w-3.5 h-3.5" />
+                                  <span>Trocar para Modelo Compatível (qwen2.5, llama3.1)</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Banner de Alerta em Destaque no Topo da Resposta */}
+                          {msg.unverifiedData && !msg.incompatibleToolModel && (
+                            <div className="mb-3 p-3 rounded-xl bg-amber-950/40 border-l-4 border-l-amber-500 border border-amber-500/30 text-amber-200 space-y-1">
+                              <div className="flex items-center gap-2 text-amber-300 font-semibold text-xs">
+                                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                                <span>⚠️ ATENÇÃO: Resposta Sem Consulta às Ferramentas da Exchange</span>
+                              </div>
+                              <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                                {msg.auditWarning ||
+                                  'Esta resposta foi gerada sem consulta prévia às ferramentas locais de exchange. Números de saldo, posições ou taxas podem ser imprecisos ou alucinados.'}
+                              </p>
+                            </div>
+                          )}
+
                           <AiMarkdownRenderer content={msg.content} />
 
                           {/* Footer with Tool badges and Inspector trigger */}
@@ -765,11 +818,17 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                                   )}
                                 </span>
                               )}
-                              {msg.toolsInvoked && msg.toolsInvoked.length > 0 && (
-                                <span className="px-1.5 py-0.5 rounded bg-[#1e1f24] text-[#A0A4AB] border border-[#2a2b30]">
-                                  {msg.toolsInvoked.length} {msg.toolsInvoked.length === 1 ? 'tool' : 'tools'}
+                              {msg.toolsInvoked && msg.toolsInvoked.length > 0 ? (
+                                <span className="px-1.5 py-0.5 rounded bg-emerald-950/50 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 font-mono">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                  <span>{msg.toolsInvoked.length} {msg.toolsInvoked.length === 1 ? 'tool auditada' : 'tools auditadas'}</span>
                                 </span>
-                              )}
+                              ) : msg.unverifiedData ? (
+                                <span className="px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-500/40 flex items-center gap-1 font-mono">
+                                  <AlertTriangle className="w-3 h-3 text-amber-400" />
+                                  <span>Sem tools</span>
+                                </span>
+                              ) : null}
                             </div>
 
                             <div className="flex items-center gap-3">

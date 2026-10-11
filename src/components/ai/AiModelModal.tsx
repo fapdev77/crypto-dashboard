@@ -235,6 +235,10 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
         lastPingLatencyMs: pingResult?.latencyMs,
         lastPingMessage: pingResult?.details || pingResult?.error,
         lastPingAt: Date.now(),
+        supportsTools:
+          !modelId.toLowerCase().includes('deepseek-r1') &&
+          !modelId.toLowerCase().includes('deepseek_r1') &&
+          !modelId.toLowerCase().includes('coder'),
       },
       modelToEdit?.id
     );
@@ -474,6 +478,67 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                     className="w-full bg-[#151619] border border-[#2a2b30] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#2F6BFF] font-mono"
                     required
                   />
+                )}
+
+                {/* Quick Presets & Tool Compatibility Hints for Ollama */}
+                {provider === 'ollama' && (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                      <span className="text-[#8E9299]">Atalhos com suporte a Tools:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModelId('qwen2.5:7b');
+                          if (!modelToEdit) setName('Qwen 2.5 7B (Instruct)');
+                        }}
+                        className="px-2 py-0.5 rounded bg-[#1e1f24] hover:bg-[#282a33] text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
+                      >
+                        qwen2.5:7b
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModelId('llama3.1:8b');
+                          if (!modelToEdit) setName('Llama 3.1 8B (Instruct)');
+                        }}
+                        className="px-2 py-0.5 rounded bg-[#1e1f24] hover:bg-[#282a33] text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
+                      >
+                        llama3.1:8b
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModelId('mistral-nemo:12b');
+                          if (!modelToEdit) setName('Mistral Nemo 12B');
+                        }}
+                        className="px-2 py-0.5 rounded bg-[#1e1f24] hover:bg-[#282a33] text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
+                      >
+                        mistral-nemo:12b
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModelId('llama3.2:3b');
+                          if (!modelToEdit) setName('Llama 3.2 3B');
+                        }}
+                        className="px-2 py-0.5 rounded bg-[#1e1f24] hover:bg-[#282a33] text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
+                      >
+                        llama3.2:3b
+                      </button>
+                    </div>
+
+                    {(modelId.toLowerCase().includes('deepseek-r1') ||
+                      modelId.toLowerCase().includes('deepseek_r1') ||
+                      modelId.toLowerCase().includes('coder')) && (
+                      <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-200 text-[11px] leading-relaxed flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-semibold text-amber-300">Aviso de Compatibilidade de Ferramentas:</span>{' '}
+                          Modelos como DeepSeek-R1 (raciocínio puro) e modelos Coder não executam Function Calling no Ollama. O PIKA bloqueará consultas sobre saldos e posições para proteger contra alucinações. Para interagir com dados de exchanges, utilize modelos instruct como <span className="font-mono text-white">qwen2.5:7b</span> ou <span className="font-mono text-white">llama3.1:8b</span>.
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}

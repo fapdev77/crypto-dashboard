@@ -30,6 +30,65 @@ export interface SendMessageResult {
   durationMs: number;
   auditLogId: string;
   rawDebug?: AiRawDebugData;
+  unverifiedData?: boolean;
+  auditWarning?: string;
+  incompatibleToolModel?: boolean;
+  recommendedModelSuggestion?: string;
+}
+
+export function isOperationalFinancialQuery(message: string): boolean {
+  const normalized = message.toLowerCase();
+  const patterns = [
+    /\bsaldo\b/,
+    /\bsaldos\b/,
+    /\bbalance\b/,
+    /\bbalances\b/,
+    /\bposiç(?:ão|ões)\b/,
+    /\bposicoes\b/,
+    /\bpositions?\b/,
+    /\bfunding\b/,
+    /\btaxa(?:s)?\s*(?:de)?\s*(?:financiamento|funding)\b/,
+    /\bordens?\b/,
+    /\borders?\b/,
+    /\btrades?\b/,
+    /\boperaç(?:ão|ões)\b/,
+    /\boperacoes\b/,
+    /\bcarteira\b/,
+    /\bportfolio\b/,
+    /\bpatrimônio\b/,
+    /\bpatrimonio\b/,
+    /\bbybit\b/,
+    /\bokx\b/,
+    /\bbitget\b/,
+    /\bbinance\b/,
+    /\bquanto tenho\b/,
+    /\bmeus ativos\b/,
+    /\bminhas contas\b/,
+    /\bminha conta\b/,
+    /\bhedge\b/,
+    /\barbitragem\b/,
+    /\blux\b/,
+    /\bpnl\b/,
+    /\blucro\b/,
+    /\bprejuízo\b/,
+    /\bprejuizo\b/
+  ];
+  return patterns.some((p) => p.test(normalized));
+}
+
+export function isModelKnownIncompatibleWithTools(model: AiModelConfig): boolean {
+  if (model.supportsTools === false) return true;
+  const id = (model.modelId || '').toLowerCase();
+  const name = (model.name || '').toLowerCase();
+  // DeepSeek-R1 (distilled or full) has no function calling template/parser in Ollama
+  if (id.includes('deepseek-r1') || id.includes('deepseek_r1') || name.includes('deepseek-r1') || name.includes('deepseek r1')) {
+    return true;
+  }
+  // Code generation models (qwen2.5-coder, deepseek-coder) lack instruct tool templates in Ollama
+  if (id.includes('coder') || name.includes('coder')) {
+    return true;
+  }
+  return false;
 }
 
 class AiAdapter {
@@ -163,6 +222,10 @@ class AiAdapter {
           durationMs,
           auditLogId: logId,
           rawDebug: result.rawDebug,
+          unverifiedData: result.unverifiedData,
+          auditWarning: result.auditWarning,
+          incompatibleToolModel: result.incompatibleToolModel,
+          recommendedModelSuggestion: result.recommendedModelSuggestion,
         };
       } catch (err: any) {
         lastError = err;
@@ -275,6 +338,10 @@ class AiAdapter {
     promptTokens: number;
     completionTokens: number;
     rawDebug: AiRawDebugData;
+    unverifiedData?: boolean;
+    auditWarning?: string;
+    incompatibleToolModel?: boolean;
+    recommendedModelSuggestion?: string;
   }> {
     const { model, userMessage, conversationHistory, systemPrompt, onToolInvoking, signal } = params;
 
@@ -319,6 +386,10 @@ class AiAdapter {
     promptTokens: number;
     completionTokens: number;
     rawDebug: AiRawDebugData;
+    unverifiedData?: boolean;
+    auditWarning?: string;
+    incompatibleToolModel?: boolean;
+    recommendedModelSuggestion?: string;
   }> {
     const { model, userMessage, conversationHistory, systemPrompt, onToolInvoking, signal } = params;
 
@@ -330,7 +401,15 @@ class AiAdapter {
     const toolsInvoked: AiAuditToolInvocation[] = [];
     const toolsExecutionDebug: AiRawDebugToolExecution[] = [];
 
-    const messages: any[] = [{ role: 'system', content: systemPrompt }];
+    const isFinancialQuery = isOperationalFinancialQuery(userMessage);
+    const isIncompatible = isModelKnownIncompatibleWithTools(model);
+
+    let effectiveSystemPrompt = systemPrompt;
+    if (isFinancialQuery) {
+      effectiveSystemPrompt += `\n\n[STRICT AUDIT MANDATE]: The user is asking about specific exchange portfolio metrics (balances, open positions, funding fees, liquidation risk, or orders). You MUST call the corresponding tools (e.g. get_balances, get_positions, get_funding_fees, get_account_summary) to inspect the actual database and connected exchanges. DO NOT fabricate, hallucinate, extrapolate or invent nominal amounts or positions under any circumstances.`;
+    }
+
+    const messages: any[] = [{ role: 'system', content: effectiveSystemPrompt }];
 
     const maxRounds = useAiSettingsStore.getState().globalSettings?.maxHistoryRounds || 20;
     for (const h of conversationHistory.slice(-maxRounds)) {
@@ -346,7 +425,7 @@ class AiAdapter {
         endpoint,
         modelId: model.modelId,
         provider: model.provider,
-        systemInstruction: systemPrompt,
+        systemInstruction: effectiveSystemPrompt,
         messages: JSON.parse(JSON.stringify(messages)),
         toolsDeclarations: tools,
         parameters: {
@@ -358,6 +437,7 @@ class AiAdapter {
           model: model.modelId,
           messages,
           tools: tools.length > 0 ? tools : undefined,
+          tool_choice: tools.length > 0 ? 'auto' : undefined,
           temperature: model.temperature ?? 0.1,
           top_p: model.topP ?? 0.95,
           max_tokens: model.maxTokens ?? 2048,
@@ -390,14 +470,18 @@ class AiAdapter {
         headers['Authorization'] = `Bearer ${model.apiKey}`;
       }
 
-      const bodyPayload = {
+      const bodyPayload: any = {
         model: model.modelId,
         messages,
-        tools: tools.length > 0 ? tools : undefined,
         temperature: model.temperature ?? 0.1,
         top_p: model.topP ?? 0.95,
         max_tokens: model.maxTokens ?? 2048,
       };
+
+      if (tools.length > 0) {
+        bodyPayload.tools = tools;
+        bodyPayload.tool_choice = 'auto';
+      }
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -499,12 +583,47 @@ class AiAdapter {
           });
         }
       } else {
+        // Model returned text without invoking tools
+        if (isFinancialQuery && isIncompatible) {
+          const blockedAnswer = `### ⚠️ Consulta Bloqueada: Modelo Incompatível com Ferramentas
+
+O modelo **${model.name}** (\`${model.modelId}\`) não possui suporte para executar ferramentas (*Function Calling*) no Ollama.
+
+Modelos da família **DeepSeek-R1** (raciocínio puro com \`<think>\`) e modelos da série **Coder** (focados em código) ignoram a especificação de ferramentas locais e geram números, saldos e posições fictícias.
+
+Para proteger sua integridade operacional e evitar erros com dados alucinados:
+- **A resposta inventada foi bloqueada.**
+- Selecione um modelo recomendado com suporte nativo a ferramentas:
+  - **\`qwen2.5:7b\`** (versão instruct geral)
+  - **\`llama3.1:8b\`** ou **\`llama3.2:3b\`**
+  - **\`mistral-nemo:12b\`**
+  - **\`gemini-3.8-flash\`** (Cloud)`;
+
+          return {
+            answer: blockedAnswer,
+            toolsInvoked: [],
+            promptTokens: promptTokens || Math.round(userMessage.length / 4) + 100,
+            completionTokens: completionTokens || Math.round(blockedAnswer.length / 4),
+            rawDebug,
+            incompatibleToolModel: true,
+            unverifiedData: true,
+            auditWarning: `O modelo ${model.modelId} não executou ferramentas de exchange no Ollama. A resposta com números fictícios foi bloqueada por segurança.`,
+            recommendedModelSuggestion: 'qwen2.5:7b ou llama3.1:8b',
+          };
+        }
+
+        const unverified = isFinancialQuery && toolsInvoked.length === 0;
+
         return {
           answer: message.content || '',
           toolsInvoked,
           promptTokens: promptTokens || Math.round(userMessage.length / 4) + 200,
           completionTokens: completionTokens || Math.round((message.content?.length || 0) / 4),
           rawDebug,
+          unverifiedData: unverified,
+          auditWarning: unverified
+            ? 'Atenção: Esta resposta foi gerada sem consulta às ferramentas de exchange (Function Calling). Números de saldo, posições ou taxas podem ser imprecisos ou alucinados.'
+            : undefined,
         };
       }
     }
@@ -527,6 +646,10 @@ class AiAdapter {
     promptTokens: number;
     completionTokens: number;
     rawDebug: AiRawDebugData;
+    unverifiedData?: boolean;
+    auditWarning?: string;
+    incompatibleToolModel?: boolean;
+    recommendedModelSuggestion?: string;
   }> {
     const { model, userMessage, conversationHistory, systemPrompt, onToolInvoking, signal } = params;
     const tools = aiToolRegistry.getGeminiToolsSchema();
@@ -722,12 +845,19 @@ class AiAdapter {
           parts: responseParts,
         });
       } else {
+        const isFinancialQuery = isOperationalFinancialQuery(userMessage);
+        const unverified = isFinancialQuery && toolsInvoked.length === 0;
+
         return {
           answer: data.text || '',
           toolsInvoked,
           promptTokens: promptTokens || data.usage?.promptTokens || 350,
           completionTokens: completionTokens || data.usage?.completionTokens || 120,
           rawDebug,
+          unverifiedData: unverified,
+          auditWarning: unverified
+            ? 'Atenção: Esta resposta foi gerada sem consulta prévia às ferramentas locais de exchange (Function Calling). Números de saldo e posições não foram auditados.'
+            : undefined,
         };
       }
     }
