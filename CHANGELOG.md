@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.1.0...v2.2.0) (2026-10-11)
+
+
+### Features
+
+* **ai:** implement tool compatibility audit ([7f7457a](https://github.com/fapdev77/crypto-dashboard/commit/7f7457a7fc1927c70ee4a2fe92d8bd4f5de44c04))
+
 # [2.1.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.0.0...v2.1.0) (2026-10-11)
 
 # [1.84.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.83.0...v1.84.0) (2026-10-11)
