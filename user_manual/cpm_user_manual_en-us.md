@@ -309,7 +309,25 @@ CPM is built as a Progressive Web App (PWA). You can install it on your Desktop 
 
 ---
 
-## 11. Frequently Asked Questions (FAQ)
+## 11. PIKA Assistant (AI Portfolio Auditor)
+
+**PIKA (Portfolio Information & Knowledge Assistant)** is an analytical engine designed exclusively to audit and diagnose your crypto portfolio in real time.
+
+### Zero-Trust Security & Read-Only Nature
+- **Strict Read-Only**: PIKA has zero execution privileges. It cannot place orders, cancel trades, or move funds.
+- **Credential Isolation**: Your exchange API keys, passphrases, and withdrawal credentials are never shared with or sent to the AI engine.
+- **Disabled by Default**: For privacy and control, the assistant is disabled by default until explicitly activated in **AI Settings**.
+
+### Local Ollama & Multi-Provider Support
+- **100% Local Privacy with Ollama**: Connect directly to your local Ollama instance (e.g. `llama3.2:latest` at `http://localhost:11434`) without sending data to third-party cloud servers.
+- **Cloud Models & Fallback**: Support for Google Gemini 1.5 Flash, OpenRouter, and OpenAI with automatic contingency fallback if a provider experiences downtime or rate limits.
+
+### Disclaimer Notice
+> **Important**: `( ! ) A IA pode cometer erros. Por isso, cheque as respostas` (AI may make errors. Please verify answers and cross-check vital financial decisions).
+
+---
+
+## 12. Frequently Asked Questions (FAQ)
 
 ### My API Key status is failing. How can I fix it?
 1. Verify that there are no leading or trailing blank spaces in the copied keys.

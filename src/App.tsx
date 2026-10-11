@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Bot, Sparkles } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ApiKeys } from './components/ApiKeys';
 import { WorkSpace } from './components/WorkSpace';
@@ -38,6 +38,12 @@ import { UpdateNotification } from './components/UpdateNotification';
 import { useApiKeysStore } from './store/apiKeysStore';
 import { GlobalUnlockScreen } from './components/GlobalUnlockScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AiSettings } from './components/ai/AiSettings';
+import { AiChatDrawer } from './components/ai/AiChatDrawer';
+import { AiPikaChatButton } from './components/ai/AiPikaChatButton';
+import { useAiSettingsStore } from './store/aiSettingsStore';
+import { useAiChatStore } from './store/aiChatStore';
+import { isAiChatbotFeatureEnabled } from './utils/aiFeatureFlag';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -46,6 +52,15 @@ export default function App() {
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
 
   const { isEncrypted, isUnlocked } = useApiKeysStore();
+  const isAiFeatureEnabled = isAiChatbotFeatureEnabled();
+  const isAiEnabled = useAiSettingsStore((state) => state.globalSettings.isEnabled);
+  const openChatDrawer = useAiChatStore((state) => state.openDrawer);
+
+  useEffect(() => {
+    if (!isAiFeatureEnabled && activeTab === 'ai-settings') {
+      setActiveTab('dashboard');
+    }
+  }, [isAiFeatureEnabled, activeTab]);
 
   // Listen for global tab navigation requests
   useEffect(() => {
@@ -122,6 +137,7 @@ export default function App() {
   if (activeTab === 'api-keys') activeTabName = 'API Keys Manager';
   if (activeTab === 'logs') activeTabName = 'Live Connection Logs';
   if (activeTab === 'settings') activeTabName = 'Settings';
+  if (activeTab === 'ai-settings') activeTabName = 'AI Settings';
   if (activeTab === 'api-tester') activeTabName = 'API Tester';
   if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
   if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
@@ -183,6 +199,7 @@ export default function App() {
                     </h2>
                   </div>
                   <div className="flex items-center gap-2">
+                    {isAiFeatureEnabled && <AiPikaChatButton onClick={openChatDrawer} isEnabled={isAiEnabled} />}
                     <HelpToggleButton isOpen={isWelcomeOpen} onClick={() => setIsWelcomeOpen(!isWelcomeOpen)} />
                     <PrivacyToggleButton />
                   </div>
@@ -206,6 +223,7 @@ export default function App() {
                     {activeTab === 'trade-history' && <TradeHistory />}
                     {activeTab === 'api-keys' && <ApiKeys />}
                     {activeTab === 'logs' && <ConnectionLogTerminal />}
+                    {isAiFeatureEnabled && activeTab === 'ai-settings' && <AiSettings />}
                     {activeTab === 'settings' && <Settings />}
                     {activeTab === 'api-tester' && <ApiTester />}
                   </ErrorBoundary>
@@ -224,6 +242,7 @@ export default function App() {
           </div>
           <WelcomeHelpModal isOpen={isWelcomeOpen} onClose={() => setIsWelcomeOpen(false)} />
           <UpdateNotification />
+          {isAiFeatureEnabled && <AiChatDrawer onNavigateToSettings={() => setActiveTab('ai-settings')} />}
         </WorkSpace>
       </TooltipProvider>
     </PrivacyProvider>

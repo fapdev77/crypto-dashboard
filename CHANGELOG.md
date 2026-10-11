@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.5...v2.0.0) (2026-10-09)
+
+
+### Features
+
+* **pika-ai:** introduce PIKA (Portfolio Information & Knowledge Assistant), a quantitative AI auditor with multi-provider architecture (Ollama Local & Google Gemini Cloud)
+* **audit-telemetry:** implement deep diagnostic modal with complete raw request payload, tool executions history, token usage analytics, and local audit logs
+* **sync-intelligence:** add smart sync-state detection (no data, sync in progress, and consistency warnings) for real-time tool execution
+* **privacy-mode:** add automatic percentage-based balance and nominal value obfuscation in AI tools when Privacy Mode is active
+* **quick-activation:** add 1-click instant activation card inside PIKA drawer for friction-free onboarding
+* **feature-toggle:** add environment variable kill-switch (AI_CHAT_BOT_ENABLED) to completely disable AI chatbot and related settings
+
 ## [1.82.5](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.4...v1.82.5) (2026-10-06)
 
 

@@ -1,9 +1,11 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight, BrainCircuit } from 'lucide-react';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
+import { useAiSettingsStore } from '../store/aiSettingsStore';
+import { isAiChatbotFeatureEnabled } from '../utils/aiFeatureFlag';
 import logo1 from '../assets/CriptoDashboard-logo1.PNG';
 
 interface SubItem {
@@ -311,6 +313,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
           { id: 'api-keys', label: 'API Keys', icon: KeyRound },
           { id: 'logs', label: 'Logs', icon: AlignLeft },
           { id: 'api-tester', label: 'API Tester', icon: Terminal },
+          ...(isAiChatbotFeatureEnabled() ? [{ id: 'ai-settings', label: 'AI Settings', icon: BrainCircuit }] : []),
           { id: 'settings', label: 'Settings', icon: Settings },
         ].map((item) => (
           <button
@@ -318,8 +321,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
             onClick={() => handleTabClick(item.id)}
             title={item.label}
             className={`w-full flex items-center ${
-              collapsed ? 'justify-center py-3.5' : 'gap-3 px-3.5 py-2.5'
-            } text-sm font-medium rounded-lg transition-colors mt-1 ${
+              collapsed ? 'justify-center py-3' : 'gap-3 px-3.5 py-2'
+            } text-sm font-medium rounded-lg transition-colors mt-0.5 relative ${
               activeTab === item.id
                 ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
                 : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
