@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.3.0...v2.4.0) (2026-10-11)
+
+
+### Features
+
+* **ai:** enhance Ollama model metadata and localization ([0bbf7e3](https://github.com/fapdev77/crypto-dashboard/commit/0bbf7e3ec4cae32fd17adf16f20dd7d2cf7e97b8))
+
 # [2.3.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.2.0...v2.3.0) (2026-10-11)
 
 
