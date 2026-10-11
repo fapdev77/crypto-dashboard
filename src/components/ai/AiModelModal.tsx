@@ -51,6 +51,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
   // Online models discovery state
   const [onlineModels, setOnlineModels] = useState<DiscoveredModel[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [filterToolsOnly, setFilterToolsOnly] = useState<boolean>(true);
 
   // Validation layer on save
   const [isValidatingSave, setIsValidatingSave] = useState(false);
@@ -460,20 +461,57 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                 </div>
 
                 {onlineModels.length > 0 ? (
-                  <select
-                    value={modelId}
-                    onChange={(e) => {
-                      setModelId(e.target.value);
-                      if (!modelToEdit) setName(e.target.value);
-                    }}
-                    className="w-full bg-[#151619] border border-[#2a2b30] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#2F6BFF] font-mono"
-                  >
-                    {onlineModels.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-[#8E9299]">
+                        Discovered Models ({onlineModels.filter((m) => !filterToolsOnly || m.supportsTools !== false).length} of {onlineModels.length})
+                      </span>
+                      <label className="flex items-center gap-1.5 text-[11px] text-[#8E9299] hover:text-white cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={filterToolsOnly}
+                          onChange={(e) => setFilterToolsOnly(e.target.checked)}
+                          className="w-3.5 h-3.5 rounded border-[#2a2b30] text-[#2F6BFF] focus:ring-[#2F6BFF]"
+                        />
+                        <span>Filter: Tools only</span>
+                      </label>
+                    </div>
+
+                    <select
+                      value={modelId}
+                      onChange={(e) => {
+                        const selected = e.target.value;
+                        setModelId(selected);
+                        const found = onlineModels.find((m) => m.id === selected);
+                        if (found) {
+                          if (!modelToEdit) setName(found.displayName || found.name);
+                          if (found.supportsTools !== undefined) {
+                            setSupportsTools(found.supportsTools);
+                          }
+                        }
+                      }}
+                      className="w-full bg-[#151619] border border-[#2a2b30] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#2F6BFF] font-mono"
+                    >
+                      <option value="" disabled>Select model from provider...</option>
+                      {onlineModels
+                        .filter((m) => !filterToolsOnly || m.supportsTools !== false)
+                        .map((m) => {
+                          const toolBadge = m.supportsTools ? '⚙️ [TOOLS]' : '[NO TOOLS]';
+                          const paramBadge = m.parameterSize ? ` [${m.parameterSize}]` : '';
+                          return (
+                            <option key={m.id} value={m.id}>
+                              {m.name} {toolBadge}{paramBadge}
+                            </option>
+                          );
+                        })}
+                    </select>
+
+                    {onlineModels.filter((m) => !filterToolsOnly || m.supportsTools !== false).length === 0 && (
+                      <p className="text-[11px] text-amber-300">
+                        No models matching "Tools only" filter. Uncheck the filter to view all models.
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <input
                     type="text"
@@ -489,7 +527,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                 {provider === 'ollama' && (
                   <div className="mt-2 space-y-2">
                     <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                      <span className="text-[#8E9299]">Atalhos com suporte a Tools:</span>
+                      <span className="text-[#8E9299]">Quick presets with Tool Calling support:</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -553,8 +591,8 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                       <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-200 text-[11px] leading-relaxed flex items-start gap-2">
                         <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                         <div>
-                          <span className="font-semibold text-amber-300">Aviso de Compatibilidade de Ferramentas:</span>{' '}
-                          Modelos como DeepSeek-R1 (raciocínio puro) e modelos Coder não executam Function Calling no Ollama. O PIKA bloqueará consultas sobre saldos e posições para proteger contra alucinações. Para interagir com dados de exchanges, utilize modelos instruct como <span className="font-mono text-white">qwen2.5:7b</span> ou <span className="font-mono text-white">llama3.1:8b</span>.
+                          <span className="font-semibold text-amber-300">Tool Calling Compatibility Notice:</span>{' '}
+                          Pure reasoning models (like DeepSeek-R1) and dedicated coder models lack standard function calling templates in Ollama. PIKA will protect trading operations by guarding against unverified portfolio figures. For real-time exchange audits, select an instruct model with tool support like <span className="font-mono text-white">gpt-oss:20b</span>, <span className="font-mono text-white">qwen2.5:7b</span>, or <span className="font-mono text-white">llama3.1:8b</span>.
                         </div>
                       </div>
                     )}
@@ -658,19 +696,19 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
             <div className="p-3.5 bg-[#151619] border border-[#2a2b30] rounded-xl flex items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-white">Suporte a Ferramentas (Function Calling)</span>
+                  <span className="text-xs font-semibold text-white">Tool Calling Support (Function Calling)</span>
                   {supportsTools ? (
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      ATIVO (TOOL CALLING HABILITADO)
+                      ENABLED (TOOL CALLING READY)
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                      DESATIVADO (BLOQUEIO ANTI-ALUCINAÇÃO)
+                      DISABLED (NO TOOLS AUDIT)
                     </span>
                   )}
                 </div>
                 <p className="text-[11px] text-[#8E9299] leading-relaxed">
-                  Permite ao modelo executar ferramentas locais para inspecionar saldos reais, posições e taxas. Se desativado, o PIKA bloqueia respostas operacionais com dados fictícios.
+                  Allows the model to invoke exchange tools to inspect real balances, open positions, funding fees, and order status. When disabled, queries requiring live exchange data are protected against fabricated numbers.
                 </p>
               </div>
 
@@ -681,7 +719,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                   onChange={(e) => setSupportsTools(e.target.checked)}
                   className="w-4 h-4 rounded border-[#2a2b30] text-[#2F6BFF] focus:ring-[#2F6BFF]"
                 />
-                <span className="text-xs font-mono text-gray-300">{supportsTools ? 'Ativo' : 'Inativo'}</span>
+                <span className="text-xs font-mono text-gray-300">{supportsTools ? 'Enabled' : 'Disabled'}</span>
               </label>
             </div>
 

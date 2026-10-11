@@ -627,17 +627,18 @@ class AiAdapter {
       } else {
         // Model returned text without invoking tools
         if (isFinancialQuery && isIncompatible) {
-          const blockedAnswer = `### ⚠️ Consulta Bloqueada: Modelo Incompatível com Ferramentas
+          const blockedAnswer = `### ⚠️ Query Guarded: Model Incompatible with Function Calling
 
-O modelo **${model.name}** (\`${model.modelId}\`) não possui suporte para executar ferramentas (*Function Calling*) no Ollama.
+The model **${model.name}** (\`${model.modelId}\`) does not support tool execution (*Function Calling*) in Ollama.
 
-Modelos da família **DeepSeek-R1** (raciocínio puro com \`<think>\`) e modelos da série **Coder** (focados em código) ignoram a especificação de ferramentas locais e geram números, saldos e posições fictícias.
+Pure reasoning models (such as **DeepSeek-R1** with \`<think>\` blocks) and raw code models ignore tool calling specifications and fabricate financial figures, balances, and positions.
 
-Para proteger sua integridade operacional e evitar erros com dados alucinados:
-- **A resposta inventada foi bloqueada.**
-- Selecione um modelo recomendado com suporte nativo a ferramentas:
-  - **\`qwen2.5:7b\`** (versão instruct geral)
-  - **\`llama3.1:8b\`** ou **\`llama3.2:3b\`**
+To protect your live operations from hallucinated data:
+- **The unverified response was blocked.**
+- Please switch to a recommended model with verified tool support:
+  - **\`gpt-oss:20b\`** (OpenAI Open-Weight in Ollama)
+  - **\`qwen2.5:7b\`** (General Instruct)
+  - **\`llama3.1:8b\`** or **\`llama3.2:3b\`**
   - **\`mistral-nemo:12b\`**
   - **\`gemini-3.8-flash\`** (Cloud)`;
 
@@ -649,8 +650,8 @@ Para proteger sua integridade operacional e evitar erros com dados alucinados:
             rawDebug,
             incompatibleToolModel: true,
             unverifiedData: true,
-            auditWarning: `O modelo ${model.modelId} não executou ferramentas de exchange no Ollama. A resposta com números fictícios foi bloqueada por segurança.`,
-            recommendedModelSuggestion: 'qwen2.5:7b ou llama3.1:8b',
+            auditWarning: `Model ${model.modelId} does not support tool execution. Unverified portfolio metrics were blocked for safety.`,
+            recommendedModelSuggestion: 'gpt-oss:20b, qwen2.5:7b or llama3.1:8b',
           };
         }
 
@@ -664,7 +665,7 @@ Para proteger sua integridade operacional e evitar erros com dados alucinados:
           rawDebug,
           unverifiedData: unverified,
           auditWarning: unverified
-            ? 'Atenção: Esta resposta foi gerada sem consulta às ferramentas de exchange (Function Calling). Números de saldo, posições ou taxas podem ser imprecisos ou alucinados.'
+            ? 'Warning: This response was generated without invoking exchange tools (Function Calling). Balance, positions, or fee metrics may be inaccurate or hallucinated.'
             : undefined,
         };
       }
@@ -925,17 +926,17 @@ Para proteger sua integridade operacional e evitar erros com dados alucinados:
       } else {
         // Model returned text response without invoking tools
         if (isFinancialQuery && isIncompatible) {
-          const blockedAnswer = `### ⚠️ Consulta Bloqueada: Modelo Incompatível com Ferramentas
+          const blockedAnswer = `### ⚠️ Query Guarded: Model Incompatible with Function Calling
 
-O modelo **${model.name}** (\`${model.modelId}\`) não possui suporte para executar ferramentas (*Function Calling*) no Ollama.
+The model **${model.name}** (\`${model.modelId}\`) does not support tool execution (*Function Calling*) in Ollama.
 
-Modelos da família **DeepSeek-R1** (raciocínio puro com \`<think>\`) ignoram a especificação de ferramentas locais e geram números, saldos e posições fictícias.
+Pure reasoning models (such as **DeepSeek-R1** with \`<think>\` blocks) ignore tool calling specifications and fabricate financial figures, balances, and positions.
 
-Para proteger sua integridade operacional e evitar erros com dados alucinados:
-- **A resposta inventada foi bloqueada.**
-- Selecione um modelo recomendado com suporte nativo a ferramentas:
-  - **\`gpt-oss:20b\`** (OpenAI Open-Weight no Ollama)
-  - **\`qwen2.5:7b\`** (versão instruct geral)
+To protect your live operations from hallucinated data:
+- **The unverified response was blocked.**
+- Please switch to a recommended model with verified tool support:
+  - **\`gpt-oss:20b\`** (OpenAI Open-Weight in Ollama)
+  - **\`qwen2.5:7b\`** (General Instruct)
   - **\`llama3.1:8b\`** ou **\`llama3.2:3b\`**
   - **\`mistral-nemo:12b\`**
   - **\`gemini-3.8-flash\`** (Cloud)`;
@@ -948,8 +949,8 @@ Para proteger sua integridade operacional e evitar erros com dados alucinados:
             rawDebug,
             incompatibleToolModel: true,
             unverifiedData: true,
-            auditWarning: `O modelo ${model.modelId} não possui suporte a ferramentas no Ollama. A resposta com números fictícios foi bloqueada por segurança.`,
-            recommendedModelSuggestion: 'gpt-oss:20b, qwen2.5:7b ou llama3.1:8b',
+            auditWarning: `Model ${model.modelId} does not support function calling in Ollama. Unverified portfolio metrics were blocked for safety.`,
+            recommendedModelSuggestion: 'gpt-oss:20b, qwen2.5:7b or llama3.1:8b',
           };
         }
 
@@ -963,7 +964,7 @@ Para proteger sua integridade operacional e evitar erros com dados alucinados:
           rawDebug,
           unverifiedData: unverified,
           auditWarning: unverified
-            ? 'Atenção: Esta resposta foi gerada sem consulta às ferramentas de exchange (Function Calling). Números de saldo, posições ou taxas podem ser imprecisos ou alucinados.'
+            ? 'Warning: This response was generated without invoking exchange tools (Function Calling). Balance, positions, or fee metrics may be inaccurate or hallucinated.'
             : undefined,
         };
       }

@@ -231,10 +231,10 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                          model.modelId.toLowerCase().includes('deepseek-coder'))) ? (
                         <span
                           className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-300 border border-amber-500/40"
-                          title="Modelos sem suporte a ferramentas têm consultas financeiras bloqueadas para prevenir números fictícios."
+                          title="Models without tool support will have live portfolio queries blocked to prevent hallucinations."
                         >
                           <AlertCircle className="w-3 h-3 text-amber-400" />
-                          SEM TOOLS (BLOQUEIO ATIVO)
+                          NO TOOLS (STRICT AUDIT)
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">

@@ -14,6 +14,10 @@ export interface DiscoveredModel {
   displayName?: string;
   description?: string;
   isRecommended?: boolean;
+  capabilities?: string[];
+  supportsTools?: boolean;
+  parameterSize?: string;
+  family?: string;
 }
 
 export const aiConnectionTester = {
@@ -171,6 +175,49 @@ export const aiConnectionTester = {
     apiKey?: string,
     baseUrl?: string
   ): Promise<{ success: boolean; models: DiscoveredModel[]; error?: string }> {
+    // 1. Direct browser fetch for local Ollama instances
+    if (provider === 'ollama') {
+      const cleanUrl = (baseUrl || 'http://localhost:11434').trim().replace(/\/+$/, '');
+      const directEndpoint = cleanUrl.endsWith('/api/tags') ? cleanUrl : `${cleanUrl}/api/tags`;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const directRes = await fetch(directEndpoint, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (directRes.ok) {
+          const data = await directRes.json();
+          const directModels: DiscoveredModel[] = (data.models || []).map((m: any) => {
+            const capabilities: string[] = Array.isArray(m.capabilities) ? m.capabilities : [];
+            const hasTools = capabilities.length > 0 ? capabilities.includes('tools') : undefined;
+            const paramSize = m.details?.parameter_size;
+            const family = m.details?.family || (Array.isArray(m.details?.families) ? m.details.families[0] : undefined);
+            const sizeGb = Math.round((m.size || 0) / (1024 * 1024 * 1024) * 10) / 10;
+            return {
+              id: m.name,
+              name: m.name,
+              displayName: paramSize ? `${m.name} (${paramSize})` : m.name,
+              description: `Size: ${sizeGb} GB${paramSize ? ` • Params: ${paramSize}` : ''}${family ? ` • Family: ${family}` : ''}`,
+              capabilities,
+              supportsTools: hasTools,
+              parameterSize: paramSize,
+              family,
+            };
+          });
+
+          if (directModels.length > 0) {
+            return { success: true, models: directModels };
+          }
+        }
+      } catch {
+        // Direct browser fetch failed (e.g. CORS, Mixed Content or remote container) -> fallback to server proxy below
+      }
+    }
+
+    // 2. Server proxy fallback
     try {
       const res = await fetch('/api/ai/fetch-models', {
         method: 'POST',

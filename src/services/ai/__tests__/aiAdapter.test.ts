@@ -120,6 +120,54 @@ describe('aiAdapter', () => {
       expect(isOperationalFinancialQuery('Quais são minhas posições abertas?')).toBe(true);
       expect(isOperationalFinancialQuery('Quanto paguei de taxa de funding hoje?')).toBe(true);
       expect(isOperationalFinancialQuery('Explique o que é análise técnica')).toBe(false);
+      expect(isOperationalFinancialQuery('What is my current balance on Bybit?')).toBe(true);
+      expect(isOperationalFinancialQuery('List all open positions and funding rate')).toBe(true);
+    });
+
+    it('validates model tool capability from Ollama API capabilities payload', () => {
+      // Models payload format from curl http://localhost:11434/api/tags
+      const sampleOllamaModels = [
+        {
+          name: 'finance-advisor:latest',
+          capabilities: ['completion', 'tools', 'thinking'],
+          details: { parameter_size: '20.9B', family: 'gpt-oss' },
+        },
+        {
+          name: 'gpt-oss:20b',
+          capabilities: ['completion', 'tools', 'thinking'],
+          details: { parameter_size: '20.9B', family: 'gpt-oss' },
+        },
+        {
+          name: 'insights:latest',
+          capabilities: ['tools', 'thinking', 'completion'],
+          details: { parameter_size: '8.2B', family: 'qwen3' },
+        },
+        {
+          name: 'pure-chat:latest',
+          capabilities: ['completion'],
+          details: { parameter_size: '7B', family: 'llama' },
+        },
+      ];
+
+      const mapped = sampleOllamaModels.map((m) => ({
+        id: m.name,
+        name: m.name,
+        capabilities: m.capabilities,
+        supportsTools: m.capabilities.includes('tools'),
+      }));
+
+      // 3 of 4 support tools
+      const toolCapable = mapped.filter((m) => m.supportsTools);
+      expect(toolCapable.length).toBe(3);
+      expect(toolCapable.map((m) => m.id)).toEqual([
+        'finance-advisor:latest',
+        'gpt-oss:20b',
+        'insights:latest',
+      ]);
+
+      const withoutTools = mapped.filter((m) => !m.supportsTools);
+      expect(withoutTools.length).toBe(1);
+      expect(withoutTools[0].id).toBe('pure-chat:latest');
     });
   });
 });

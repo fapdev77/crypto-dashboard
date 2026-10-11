@@ -275,13 +275,23 @@ async function startServer() {
           if (!resp.ok) {
             return res.status(resp.status).json({ error: `Ollama returned HTTP ${resp.status}` });
           }
-          const data = await resp.json();
-          const models = (data.models || []).map((m: any) => ({
-            id: m.name,
-            name: m.name,
-            displayName: m.name,
-            description: `Size: ${Math.round((m.size || 0) / (1024 * 1024 * 1024) * 10) / 10} GB`,
-          }));
+          const models = (data.models || []).map((m: any) => {
+            const capabilities: string[] = Array.isArray(m.capabilities) ? m.capabilities : [];
+            const hasTools = capabilities.length > 0 ? capabilities.includes('tools') : undefined;
+            const paramSize = m.details?.parameter_size;
+            const family = m.details?.family || (Array.isArray(m.details?.families) ? m.details.families[0] : undefined);
+            const sizeGb = Math.round((m.size || 0) / (1024 * 1024 * 1024) * 10) / 10;
+            return {
+              id: m.name,
+              name: m.name,
+              displayName: paramSize ? `${m.name} (${paramSize})` : m.name,
+              description: `Size: ${sizeGb} GB${paramSize ? ` • Params: ${paramSize}` : ''}${family ? ` • Family: ${family}` : ''}`,
+              capabilities,
+              supportsTools: hasTools,
+              parameterSize: paramSize,
+              family,
+            };
+          });
           return res.json({ success: true, provider: 'ollama', count: models.length, models });
         } catch (fetchErr: any) {
           clearTimeout(timeout);

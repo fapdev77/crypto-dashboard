@@ -763,16 +763,16 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                         />
                       ) : (
                         <div className="space-y-2">
-                          {/* Banner de Bloqueio por Modelo Incompatível */}
+                          {/* Block Banner for Incompatible Model */}
                           {msg.incompatibleToolModel && (
                             <div className="mb-3 p-3.5 rounded-xl bg-rose-950/40 border-l-4 border-l-rose-500 border border-rose-500/30 text-rose-200 space-y-2">
                               <div className="flex items-center gap-2 text-rose-300 font-semibold text-xs">
                                 <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
-                                <span>Consulta Bloqueada: Ferramentas Não Executadas</span>
+                                <span>Query Guarded: Tools Not Invoked</span>
                               </div>
                               <p className="text-[11px] text-rose-200/90 leading-relaxed">
                                 {msg.auditWarning ||
-                                  'O modelo não executou ferramentas de exchange no Ollama. A resposta com números fictícios foi bloqueada para proteger sua operação.'}
+                                  'The model did not invoke exchange tools in Ollama. Unverified responses were blocked to protect your operations.'}
                               </p>
                               <div className="pt-1 flex flex-wrap items-center gap-2">
                                 <button
@@ -785,22 +785,22 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                                   className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 border border-rose-500/40 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1.5"
                                 >
                                   <SettingsIcon className="w-3.5 h-3.5" />
-                                  <span>Trocar para Modelo Compatível (qwen2.5, llama3.1)</span>
+                                  <span>Switch to Tool-Compatible Model (gpt-oss, qwen2.5, llama3.1)</span>
                                 </button>
                               </div>
                             </div>
                           )}
 
-                          {/* Banner de Alerta em Destaque no Topo da Resposta */}
+                          {/* Highlight Alert Banner at the Top of Response */}
                           {msg.unverifiedData && !msg.incompatibleToolModel && (
                             <div className="mb-3 p-3 rounded-xl bg-amber-950/40 border-l-4 border-l-amber-500 border border-amber-500/30 text-amber-200 space-y-1">
                               <div className="flex items-center gap-2 text-amber-300 font-semibold text-xs">
                                 <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                                <span>⚠️ ATENÇÃO: Resposta Sem Consulta às Ferramentas da Exchange</span>
+                                <span>⚠️ WARNING: Response Generated Without Exchange Tool Verification</span>
                               </div>
                               <p className="text-[11px] text-amber-200/90 leading-relaxed">
                                 {msg.auditWarning ||
-                                  'Esta resposta foi gerada sem consulta prévia às ferramentas locais de exchange. Números de saldo, posições ou taxas podem ser imprecisos ou alucinados.'}
+                                  'This response was generated without verifying live data through exchange tools. Account balance, positions, or fee metrics may be inaccurate or hallucinated.'}
                               </p>
                             </div>
                           )}
@@ -821,12 +821,12 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                               {msg.toolsInvoked && msg.toolsInvoked.length > 0 ? (
                                 <span className="px-1.5 py-0.5 rounded bg-emerald-950/50 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 font-mono">
                                   <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                  <span>{msg.toolsInvoked.length} {msg.toolsInvoked.length === 1 ? 'tool auditada' : 'tools auditadas'}</span>
+                                  <span>{msg.toolsInvoked.length} {msg.toolsInvoked.length === 1 ? 'tool verified' : 'tools verified'}</span>
                                 </span>
                               ) : msg.unverifiedData ? (
                                 <span className="px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-500/40 flex items-center gap-1 font-mono">
                                   <AlertTriangle className="w-3 h-3 text-amber-400" />
-                                  <span>Sem tools</span>
+                                  <span>No tools</span>
                                 </span>
                               ) : null}
                             </div>
