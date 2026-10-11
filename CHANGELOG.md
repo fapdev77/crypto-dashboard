@@ -1,3 +1,5 @@
+# [1.84.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.83.0...v1.84.0) (2026-10-11)
+
 # [1.83.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.5...v1.83.0) (2026-10-11)
 
 
