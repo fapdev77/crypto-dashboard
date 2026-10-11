@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.2.0...v2.3.0) (2026-10-11)
+
+
+### Features
+
+* **ai:** add Ollama proxy and improve model tool management ([8f97976](https://github.com/fapdev77/crypto-dashboard/commit/8f9797604ea630c5f8a5e3f3b10ed3d7099efc70))
+
 # [2.2.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.1.0...v2.2.0) (2026-10-11)
 
 
