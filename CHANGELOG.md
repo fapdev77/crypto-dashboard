@@ -1,3 +1,10 @@
+# [1.83.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.5...v1.83.0) (2026-10-11)
+
+
+### Features
+
+* release version 2.0.0 with PIKA AI assistant ([e8d8111](https://github.com/fapdev77/crypto-dashboard/commit/e8d811188f6b5569b108fdb68e00d08e17a260f0))
+
 # [2.0.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.5...v2.0.0) (2026-10-09)
 
 
