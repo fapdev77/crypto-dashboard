@@ -224,11 +224,14 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                       )}
 
                       {model.supportsTools === false ||
-                      model.modelId.toLowerCase().includes('deepseek-r1') ||
-                      model.modelId.toLowerCase().includes('coder') ? (
+                      (model.supportsTools === undefined &&
+                        (model.modelId.toLowerCase().includes('deepseek-r1') ||
+                         model.modelId.toLowerCase().includes('deepseek_r1') ||
+                         model.modelId.toLowerCase().includes('qwen2.5-coder') ||
+                         model.modelId.toLowerCase().includes('deepseek-coder'))) ? (
                         <span
                           className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-300 border border-amber-500/40"
-                          title="Modelos de raciocínio puro ou código não chamam ferramentas no Ollama. Consultas sobre saldos e posições serão bloqueadas pelo PIKA para evitar dados inventados."
+                          title="Modelos sem suporte a ferramentas têm consultas financeiras bloqueadas para prevenir números fictícios."
                         >
                           <AlertCircle className="w-3 h-3 text-amber-400" />
                           SEM TOOLS (BLOQUEIO ATIVO)

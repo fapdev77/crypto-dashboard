@@ -76,18 +76,49 @@ export function isOperationalFinancialQuery(message: string): boolean {
   return patterns.some((p) => p.test(normalized));
 }
 
+export function getOllamaChatEndpoint(baseUrl?: string): string {
+  const base = (baseUrl || 'http://localhost:11434').trim().replace(/\/+$/, '');
+  if (base.endsWith('/api/chat')) return base;
+  if (base.endsWith('/api')) return `${base}/chat`;
+  if (base.endsWith('/v1/chat/completions')) return `${base.replace(/\/v1\/chat\/completions$/, '')}/api/chat`;
+  if (base.endsWith('/v1')) return `${base.replace(/\/v1$/, '')}/api/chat`;
+  return `${base}/api/chat`;
+}
+
 export function isModelKnownIncompatibleWithTools(model: AiModelConfig): boolean {
+  // 1. Explicit user configuration in the UI takes absolute precedence
+  if (model.supportsTools === true) return false;
   if (model.supportsTools === false) return true;
+
   const id = (model.modelId || '').toLowerCase();
-  const name = (model.name || '').toLowerCase();
-  // DeepSeek-R1 (distilled or full) has no function calling template/parser in Ollama
-  if (id.includes('deepseek-r1') || id.includes('deepseek_r1') || name.includes('deepseek-r1') || name.includes('deepseek r1')) {
+
+  // 2. Models with verified function calling / tool support
+  if (
+    id.includes('gpt-oss') ||
+    id.includes('gpt_oss') ||
+    id.includes('llama3') ||
+    id.includes('mistral') ||
+    id.includes('gemini') ||
+    (id.includes('qwen2.5') && !id.includes('coder'))
+  ) {
+    return false;
+  }
+
+  // 3. DeepSeek-R1 (reasoning with <think>) does not support Ollama tool calling templates
+  if (id.includes('deepseek-r1') || id.includes('deepseek_r1')) {
     return true;
   }
-  // Code generation models (qwen2.5-coder, deepseek-coder) lack instruct tool templates in Ollama
-  if (id.includes('coder') || name.includes('coder')) {
+
+  // 4. Code-only models that lack standard tool calling templates in Ollama
+  if (
+    id.includes('qwen2.5-coder') ||
+    id.includes('deepseek-coder') ||
+    id.includes('codellama') ||
+    id.includes('starcoder')
+  ) {
     return true;
   }
+
   return false;
 }
 
@@ -363,6 +394,17 @@ class AiAdapter {
       });
     }
 
+    if (model.provider === 'ollama') {
+      return this.executeWithOllamaChat({
+        model,
+        userMessage,
+        conversationHistory,
+        systemPrompt,
+        onToolInvoking,
+        signal,
+      });
+    }
+
     return this.executeWithOpenAiCompatible({
       model,
       userMessage,
@@ -609,6 +651,305 @@ Para proteger sua integridade operacional e evitar erros com dados alucinados:
             unverifiedData: true,
             auditWarning: `O modelo ${model.modelId} não executou ferramentas de exchange no Ollama. A resposta com números fictícios foi bloqueada por segurança.`,
             recommendedModelSuggestion: 'qwen2.5:7b ou llama3.1:8b',
+          };
+        }
+
+        const unverified = isFinancialQuery && toolsInvoked.length === 0;
+
+        return {
+          answer: message.content || '',
+          toolsInvoked,
+          promptTokens: promptTokens || Math.round(userMessage.length / 4) + 200,
+          completionTokens: completionTokens || Math.round((message.content?.length || 0) / 4),
+          rawDebug,
+          unverifiedData: unverified,
+          auditWarning: unverified
+            ? 'Atenção: Esta resposta foi gerada sem consulta às ferramentas de exchange (Function Calling). Números de saldo, posições ou taxas podem ser imprecisos ou alucinados.'
+            : undefined,
+        };
+      }
+    }
+
+    const err = new Error('Tool reasoning iteration limit exceeded.');
+    (err as any).rawDebug = rawDebug;
+    throw err;
+  }
+
+  private async executeWithOllamaChat(params: {
+    model: AiModelConfig;
+    userMessage: string;
+    conversationHistory: AiChatMessage[];
+    systemPrompt: string;
+    onToolInvoking?: (toolName: string) => void;
+    signal?: AbortSignal;
+  }): Promise<{
+    answer: string;
+    toolsInvoked: AiAuditToolInvocation[];
+    promptTokens: number;
+    completionTokens: number;
+    rawDebug: AiRawDebugData;
+    unverifiedData?: boolean;
+    auditWarning?: string;
+    incompatibleToolModel?: boolean;
+    recommendedModelSuggestion?: string;
+  }> {
+    const { model, userMessage, conversationHistory, systemPrompt, onToolInvoking, signal } = params;
+
+    const endpoint = getOllamaChatEndpoint(model.baseUrl);
+    const tools = aiToolRegistry.getOpenAiToolsSchema();
+    const toolsInvoked: AiAuditToolInvocation[] = [];
+    const toolsExecutionDebug: AiRawDebugToolExecution[] = [];
+
+    const isFinancialQuery = isOperationalFinancialQuery(userMessage);
+    const isIncompatible = isModelKnownIncompatibleWithTools(model);
+
+    let effectiveSystemPrompt = systemPrompt;
+    if (isFinancialQuery) {
+      effectiveSystemPrompt += `\n\n[STRICT AUDIT MANDATE]: The user is asking about specific exchange portfolio metrics (balances, open positions, funding fees, liquidation risk, or orders). You MUST invoke the appropriate local tool (get_balances, get_positions, get_funding_fees, get_account_summary) to read real metrics from the active databases and exchanges. DO NOT invent nominal amounts or open positions.`;
+    }
+
+    const messages: any[] = [{ role: 'system', content: effectiveSystemPrompt }];
+
+    const maxRounds = useAiSettingsStore.getState().globalSettings?.maxHistoryRounds || 20;
+    for (const h of conversationHistory.slice(-maxRounds)) {
+      if (h.role === 'user' || h.role === 'assistant') {
+        messages.push({ role: h.role, content: h.content });
+      }
+    }
+
+    messages.push({ role: 'user', content: userMessage });
+
+    const rawDebug: AiRawDebugData = {
+      request: {
+        endpoint,
+        modelId: model.modelId,
+        provider: 'ollama',
+        systemInstruction: effectiveSystemPrompt,
+        messages: JSON.parse(JSON.stringify(messages)),
+        toolsDeclarations: tools,
+        parameters: {
+          temperature: model.temperature ?? 0.1,
+          topP: model.topP ?? 0.95,
+          maxTokens: model.maxTokens ?? 2048,
+        },
+        rawPayload: {
+          model: model.modelId,
+          messages,
+          stream: false,
+          tools: tools.length > 0 && !isIncompatible ? tools : undefined,
+          options: {
+            temperature: model.temperature ?? 0.1,
+            top_p: model.topP ?? 0.95,
+            num_predict: model.maxTokens ?? 2048,
+          },
+        },
+        timestamp: Date.now(),
+      },
+      toolsExecution: toolsExecutionDebug,
+    };
+
+    let promptTokens = 0;
+    let completionTokens = 0;
+    let turns = 0;
+    const maxTurns = 5;
+
+    while (turns < maxTurns) {
+      if (signal?.aborted) {
+        const abortErr = new Error('Análise interrompida pelo usuário.');
+        abortErr.name = 'AbortError';
+        (abortErr as any).isCancelled = true;
+        (abortErr as any).rawDebug = rawDebug;
+        throw abortErr;
+      }
+
+      turns++;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (model.apiKey) {
+        headers['Authorization'] = `Bearer ${model.apiKey}`;
+      }
+
+      const bodyPayload: any = {
+        model: model.modelId,
+        messages,
+        stream: false,
+        options: {
+          temperature: model.temperature ?? 0.1,
+          top_p: model.topP ?? 0.95,
+          num_predict: model.maxTokens ?? 2048,
+        },
+      };
+
+      if (tools.length > 0 && !isIncompatible) {
+        bodyPayload.tools = tools;
+      }
+
+      let res: Response;
+      try {
+        res = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(bodyPayload),
+          signal,
+        });
+      } catch (directErr: any) {
+        // Fallback to server-side Ollama proxy if direct browser fetch fails (CORS / Mixed Content)
+        const isNetworkOrCors = directErr?.name === 'TypeError' || directErr?.message?.includes('fetch');
+        if (isNetworkOrCors && !signal?.aborted) {
+          try {
+            res = await fetch('/api/ai/ollama-chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                endpoint,
+                headers,
+                payload: bodyPayload,
+              }),
+              signal,
+            });
+          } catch (proxyErr: any) {
+            rawDebug.error = {
+              message: `Ollama connection error (direct & proxy failed): ${proxyErr.message}`,
+              rawError: proxyErr.message,
+            };
+            const err = new Error(`Could not reach Ollama at ${endpoint}. Ensure Ollama is running ('ollama serve') and accessible.`);
+            (err as any).rawDebug = rawDebug;
+            throw err;
+          }
+        } else {
+          rawDebug.error = {
+            message: `Ollama network error: ${directErr.message}`,
+            rawError: directErr.message,
+          };
+          const err = new Error(`Could not reach Ollama at ${endpoint}: ${directErr.message}`);
+          (err as any).rawDebug = rawDebug;
+          throw err;
+        }
+      }
+
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => '');
+        rawDebug.error = {
+          message: `Ollama HTTP ${res.status}: ${errorText}`,
+          rawError: errorText,
+          statusCode: res.status,
+        };
+        const err = new Error(`Ollama HTTP ${res.status}: ${errorText}`);
+        (err as any).rawDetails = errorText;
+        (err as any).status = res.status;
+        (err as any).rawDebug = rawDebug;
+        throw err;
+      }
+
+      const data = await res.json();
+      const message = data.message;
+
+      if (data.prompt_eval_count) promptTokens += data.prompt_eval_count;
+      if (data.eval_count) completionTokens += data.eval_count;
+
+      rawDebug.response = {
+        status: res.status,
+        text: message?.content || '',
+        rawContent: message,
+        toolCalls: message?.tool_calls,
+        rawResponse: data,
+        usage: {
+          promptTokens,
+          completionTokens,
+          totalTokens: promptTokens + completionTokens,
+        },
+        timestamp: Date.now(),
+      };
+
+      if (!message) {
+        const err = new Error('No valid message returned by Ollama /api/chat.');
+        (err as any).rawDebug = rawDebug;
+        throw err;
+      }
+
+      if (message.tool_calls && message.tool_calls.length > 0) {
+        messages.push(message);
+
+        for (const toolCall of message.tool_calls) {
+          if (signal?.aborted) {
+            const abortErr = new Error('Análise interrompida pelo usuário.');
+            abortErr.name = 'AbortError';
+            (abortErr as any).isCancelled = true;
+            (abortErr as any).rawDebug = rawDebug;
+            throw abortErr;
+          }
+
+          const fnName = toolCall.function?.name;
+          let parsedArgs = {};
+          const rawArgs = toolCall.function?.arguments;
+          if (typeof rawArgs === 'object' && rawArgs !== null) {
+            parsedArgs = rawArgs;
+          } else if (typeof rawArgs === 'string') {
+            try {
+              parsedArgs = JSON.parse(rawArgs);
+            } catch {
+              parsedArgs = {};
+            }
+          }
+
+          if (onToolInvoking && fnName) {
+            onToolInvoking(fnName);
+          }
+
+          const toolRes = await aiToolRegistry.executeToolCall(fnName, parsedArgs);
+
+          toolsInvoked.push({
+            name: fnName,
+            args: parsedArgs,
+            executionTimeMs: toolRes.executionTimeMs,
+            resultSummary: toolRes.error || 'Executado com sucesso',
+          });
+
+          toolsExecutionDebug.push({
+            turn: turns,
+            name: fnName,
+            inputArgs: parsedArgs,
+            rawResult: toolRes.result,
+            executionTimeMs: toolRes.executionTimeMs,
+            error: toolRes.error,
+          });
+
+          // In Ollama native /api/chat, return tool output as role: 'tool'
+          messages.push({
+            role: 'tool',
+            content: JSON.stringify(toolRes.result || { error: toolRes.error }),
+          });
+        }
+      } else {
+        // Model returned text response without invoking tools
+        if (isFinancialQuery && isIncompatible) {
+          const blockedAnswer = `### ⚠️ Consulta Bloqueada: Modelo Incompatível com Ferramentas
+
+O modelo **${model.name}** (\`${model.modelId}\`) não possui suporte para executar ferramentas (*Function Calling*) no Ollama.
+
+Modelos da família **DeepSeek-R1** (raciocínio puro com \`<think>\`) ignoram a especificação de ferramentas locais e geram números, saldos e posições fictícias.
+
+Para proteger sua integridade operacional e evitar erros com dados alucinados:
+- **A resposta inventada foi bloqueada.**
+- Selecione um modelo recomendado com suporte nativo a ferramentas:
+  - **\`gpt-oss:20b\`** (OpenAI Open-Weight no Ollama)
+  - **\`qwen2.5:7b\`** (versão instruct geral)
+  - **\`llama3.1:8b\`** ou **\`llama3.2:3b\`**
+  - **\`mistral-nemo:12b\`**
+  - **\`gemini-3.8-flash\`** (Cloud)`;
+
+          return {
+            answer: blockedAnswer,
+            toolsInvoked: [],
+            promptTokens: promptTokens || Math.round(userMessage.length / 4) + 100,
+            completionTokens: completionTokens || Math.round(blockedAnswer.length / 4),
+            rawDebug,
+            incompatibleToolModel: true,
+            unverifiedData: true,
+            auditWarning: `O modelo ${model.modelId} não possui suporte a ferramentas no Ollama. A resposta com números fictícios foi bloqueada por segurança.`,
+            recommendedModelSuggestion: 'gpt-oss:20b, qwen2.5:7b ou llama3.1:8b',
           };
         }
 

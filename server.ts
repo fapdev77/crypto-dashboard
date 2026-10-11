@@ -475,6 +475,55 @@ async function startServer() {
     }
   });
 
+  // Ollama Chat Proxy (resolves CORS and Mixed-Content when connecting to local or remote Ollama machines)
+  app.post("/api/ai/ollama-chat", async (req, res) => {
+    try {
+      const isChatbotEnabled = process.env.AI_CHAT_BOT_ENABLED !== 'false' && process.env.VITE_AI_CHAT_BOT_ENABLED !== 'false';
+      if (!isChatbotEnabled) {
+        return res.status(403).json({ error: "The AI Assistant feature is disabled in server environment settings." });
+      }
+
+      const { endpoint, headers = {}, payload } = req.body || {};
+      if (!endpoint || !payload) {
+        return res.status(400).json({ error: "Missing required 'endpoint' or 'payload' parameters." });
+      }
+
+      const cleanHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...headers,
+      };
+      delete cleanHeaders.host;
+      delete cleanHeaders.origin;
+      delete cleanHeaders.referer;
+
+      const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+        ? AbortSignal.timeout(90000)
+        : undefined;
+
+      const upstreamResp = await fetch(endpoint, {
+        method: 'POST',
+        headers: cleanHeaders,
+        body: JSON.stringify(payload),
+        signal: timeoutSignal,
+      });
+
+      const responseText = await upstreamResp.text();
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch {
+        responseData = { error: responseText };
+      }
+
+      return res.status(upstreamResp.status).json(responseData);
+    } catch (err: any) {
+      ServerLogger.error('AI', 'Ollama chat proxy error:', err);
+      return res.status(500).json({
+        error: err.message || "Failed to communicate with remote Ollama endpoint.",
+      });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

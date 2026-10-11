@@ -43,6 +43,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
   const [systemInstruction, setSystemInstruction] = useState('');
   const [maxRpm, setMaxRpm] = useState(60);
   const [maxRpd, setMaxRpd] = useState(0);
+  const [supportsTools, setSupportsTools] = useState<boolean>(true);
 
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
@@ -77,6 +78,12 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
       setSystemInstruction(modelToEdit.systemInstruction || '');
       setMaxRpm(modelToEdit.maxRpm || 0);
       setMaxRpd(modelToEdit.maxRpd || 0);
+      setSupportsTools(
+        modelToEdit.supportsTools !== undefined
+          ? modelToEdit.supportsTools
+          : !modelToEdit.modelId.toLowerCase().includes('deepseek-r1') &&
+            !modelToEdit.modelId.toLowerCase().includes('coder')
+      );
     } else {
       setName('Gemini 3.8 Flash');
       setProvider('gemini');
@@ -94,6 +101,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
       setSystemInstruction('');
       setMaxRpm(60);
       setMaxRpd(0);
+      setSupportsTools(true);
     }
     setTestResult(null);
     setSaveValidationWarning(null);
@@ -235,10 +243,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
         lastPingLatencyMs: pingResult?.latencyMs,
         lastPingMessage: pingResult?.details || pingResult?.error,
         lastPingAt: Date.now(),
-        supportsTools:
-          !modelId.toLowerCase().includes('deepseek-r1') &&
-          !modelId.toLowerCase().includes('deepseek_r1') &&
-          !modelId.toLowerCase().includes('coder'),
+        supportsTools: Boolean(supportsTools),
       },
       modelToEdit?.id
     );
@@ -488,8 +493,20 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
+                          setModelId('gpt-oss:20b');
+                          if (!modelToEdit) setName('GPT-OSS 20B');
+                          setSupportsTools(true);
+                        }}
+                        className="px-2 py-0.5 rounded bg-[#1e1f24] hover:bg-[#282a33] text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer font-bold"
+                      >
+                        gpt-oss:20b
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
                           setModelId('qwen2.5:7b');
                           if (!modelToEdit) setName('Qwen 2.5 7B (Instruct)');
+                          setSupportsTools(true);
                         }}
                         className="px-2 py-0.5 rounded bg-[#1e1f24] hover:bg-[#282a33] text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
                       >
@@ -500,6 +517,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                         onClick={() => {
                           setModelId('llama3.1:8b');
                           if (!modelToEdit) setName('Llama 3.1 8B (Instruct)');
+                          setSupportsTools(true);
                         }}
                         className="px-2 py-0.5 rounded bg-[#1e1f24] hover:bg-[#282a33] text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
                       >
@@ -510,6 +528,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                         onClick={() => {
                           setModelId('mistral-nemo:12b');
                           if (!modelToEdit) setName('Mistral Nemo 12B');
+                          setSupportsTools(true);
                         }}
                         className="px-2 py-0.5 rounded bg-[#1e1f24] hover:bg-[#282a33] text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
                       >
@@ -520,6 +539,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                         onClick={() => {
                           setModelId('llama3.2:3b');
                           if (!modelToEdit) setName('Llama 3.2 3B');
+                          setSupportsTools(true);
                         }}
                         className="px-2 py-0.5 rounded bg-[#1e1f24] hover:bg-[#282a33] text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
                       >
@@ -631,6 +651,37 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                   className="w-4 h-4 rounded border-[#2a2b30] text-cyan-500 focus:ring-cyan-500"
                 />
                 <span className="font-medium text-cyan-400">Contingency (Fallback)</span>
+              </label>
+            </div>
+
+            {/* Tool Calling / Function Calling capability toggle */}
+            <div className="p-3.5 bg-[#151619] border border-[#2a2b30] rounded-xl flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-white">Suporte a Ferramentas (Function Calling)</span>
+                  {supportsTools ? (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      ATIVO (TOOL CALLING HABILITADO)
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      DESATIVADO (BLOQUEIO ANTI-ALUCINAÇÃO)
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[#8E9299] leading-relaxed">
+                  Permite ao modelo executar ferramentas locais para inspecionar saldos reais, posições e taxas. Se desativado, o PIKA bloqueia respostas operacionais com dados fictícios.
+                </p>
+              </div>
+
+              <label className="flex items-center gap-2 cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={supportsTools}
+                  onChange={(e) => setSupportsTools(e.target.checked)}
+                  className="w-4 h-4 rounded border-[#2a2b30] text-[#2F6BFF] focus:ring-[#2F6BFF]"
+                />
+                <span className="text-xs font-mono text-gray-300">{supportsTools ? 'Ativo' : 'Inativo'}</span>
               </label>
             </div>
 
