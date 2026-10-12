@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/fapdev77/crypto-dashboard/compare/v2.4.0...v2.4.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* resolve Ollama model fetching and update version ([02fd686](https://github.com/fapdev77/crypto-dashboard/commit/02fd686f5b53bc0221bc767e37a568d33ce3633a))
+
 # [2.4.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.3.0...v2.4.0) (2026-10-11)
 
 
