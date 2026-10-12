@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, AlertCircle, Loader2, Sparkles, Server, Key, Sliders, ShieldCheck, RefreshCw, AlertTriangle, Cloud } from 'lucide-react';
+import { X, Check, AlertCircle, Loader2, Sparkles, Server, Key, Sliders, ShieldCheck, RefreshCw, AlertTriangle, Cloud, Save, BookmarkCheck } from 'lucide-react';
 import { AiModelConfig, AiProviderType } from '../../types/aiTypes';
 import { aiConnectionTester, ConnectionTestResult, DiscoveredModel } from '../../services/ai/aiConnectionTester';
+import { useAiSettingsStore } from '../../store/aiSettingsStore';
 import { AppTooltip } from '../ui/Tooltip';
 import toast from 'react-hot-toast';
 
@@ -610,16 +611,48 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
 
             {(provider === 'ollama' || provider === 'openrouter' || provider === 'custom') && (
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1.5">
-                  Base URL / Endpoint {provider === 'ollama' && '(Default: http://localhost:11434)'}
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-gray-300">
+                    Base URL / Endpoint {provider === 'ollama' && '(Default: http://localhost:11434)'}
+                  </label>
+                  {(provider === 'ollama' || provider === 'custom') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const trimmedUrl = baseUrl.trim();
+                        if (!trimmedUrl) {
+                          toast.error('Please enter a valid URL.');
+                          return;
+                        }
+                        if (modelToEdit?.id) {
+                          useAiSettingsStore.getState().updateModel(modelToEdit.id, {
+                            baseUrl: trimmedUrl,
+                          });
+                          toast.success(`Endpoint saved: ${trimmedUrl}`);
+                        } else {
+                          toast.success(`Endpoint set to ${trimmedUrl}. Will apply on save.`);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#1e1f24] hover:bg-[#282a33] text-gray-300 hover:text-white border border-[#2a2b30] hover:border-[#383b42] transition cursor-pointer"
+                      title="Quick save endpoint URL without re-saving all form fields"
+                    >
+                      <Save className="w-3 h-3 text-[#2F6BFF]" />
+                      <span>Save Endpoint</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
-                  placeholder="http://localhost:11434"
+                  placeholder={provider === 'ollama' ? 'http://localhost:11434 (or http://192.168.1.X:11434)' : 'http://localhost:11434'}
                   className="w-full bg-[#151619] border border-[#2a2b30] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#2F6BFF] font-mono"
                 />
+                <span className="text-[10px] text-[#8E9299] mt-1 block">
+                  {provider === 'ollama'
+                    ? 'Tip: You can use a local IP like http://192.168.1.50:11434. Click "Save Endpoint" to update immediately.'
+                    : 'Custom endpoint URL for local or remote model execution.'}
+                </span>
               </div>
             )}
 

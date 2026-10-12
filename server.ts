@@ -275,6 +275,7 @@ async function startServer() {
           if (!resp.ok) {
             return res.status(resp.status).json({ error: `Ollama returned HTTP ${resp.status}` });
           }
+          const data: any = await resp.json();
           const models = (data.models || []).map((m: any) => {
             const capabilities: string[] = Array.isArray(m.capabilities) ? m.capabilities : [];
             const hasTools = capabilities.length > 0 ? capabilities.includes('tools') : undefined;
