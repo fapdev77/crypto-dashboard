@@ -55,6 +55,11 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
       { path: '/api/v2/earn/account/assets', type: 'EARN' }
     ];
 
+    LogManager.info(
+      'BitgetClassicAdapter.Balance',
+      `[${key.label}] Fetching balance from https://api.bitget.com (SPOT, Futures, Margin, Earn)`
+    );
+
     const requests = endpoints.map(async (ep) => {
       try {
         const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', ep.path);
@@ -117,12 +122,12 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
             const totalEquity = parseFloat(item.usdtEquity || item.accountEquity || '0');
             const walletBalance = parseFloat(item.crossedMaxAvailable || item.available || '0');
             balances.push({
-              id: `${key.id}-${type}-${item.marginCoin}`,
+              id: `${key.id}-${type}-${item.marginCoin || 'UNKNOWN'}`,
               connectionId: key.id,
               exchange: 'bitget',
               accountType: 'classic',
               label: `${key.label} (${type})`,
-              ccy: item.marginCoin.toUpperCase(),
+              ccy: (item.marginCoin || '').toUpperCase(),
               amount: parseFloat(item.accountEquity || item.available || '0'),
               usdValue: totalEquity,
               totalEquity,
@@ -142,16 +147,27 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
   // REST Positions
   public async getOpenPositions(key: ApiCredentials): Promise<UnifiedPosition[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+
+    LogManager.info(
+      'BitgetClassicAdapter.Positions',
+      `[${key.label}] Fetching open positions from https://api.bitget.com (USDT/COIN/USDC-FUTURES)`
+    );
+
     const requests = productTypes.map(async (pType) => {
       const path = `/api/v2/mix/position/all-position?productType=${pType}`;
       const headers = await BitgetClassicAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
-      const res = await proxyFetch({
-        targetUrl: `https://api.bitget.com${path}`,
-        method: 'GET',
-        headers
-      });
-      if (res.code !== '00000') throw new Error(res.msg);
-      return (res.data || []).map((item: any) => ({ ...item, productType: pType }));
+      try {
+        const res = await proxyFetch({
+          targetUrl: `https://api.bitget.com${path}`,
+          method: 'GET',
+          headers
+        });
+        if (res.code !== '00000') throw new Error(res.msg);
+        return (res.data || []).map((item: any) => ({ ...item, productType: pType }));
+      } catch (err) {
+        LogManager.warn('BitgetClassicAdapter.Positions', `Error fetching ${pType}:`, err);
+        return [];
+      }
     });
 
     const results = await Promise.all(requests);
@@ -237,6 +253,12 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
   // REST Closed PnL History
   public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+
+    LogManager.info(
+      'BitgetClassicAdapter.History',
+      `[${key.label}] Fetching closed PnL history from https://api.bitget.com`
+    );
+
     const fetchType = async (pType: string) => {
       let list: any[] = [];
       let lastId = '';
@@ -306,6 +328,11 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
 
   // REST Deposits / Withdrawals (Bills)
   public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+    LogManager.info(
+      'BitgetClassicAdapter.Bills',
+      `[${key.label}] Fetching deposits/withdrawals from https://api.bitget.com`
+    );
+
     const fetchRecords = async (type: 'deposit' | 'withdrawal') => {
       const endpoint = type === 'deposit' ? '/api/v2/spot/wallet/deposit-records' : '/api/v2/spot/wallet/withdrawal-records';
       let list: any[] = [];
@@ -364,6 +391,11 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
   public async getOpenOrders(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     let allOrders: any[] = [];
+
+    LogManager.info(
+      'BitgetClassicAdapter.OpenOrders',
+      `[${key.label}] Fetching open orders from https://api.bitget.com`
+    );
     
     // Futures Standard & Plan Orders
     for (const pType of productTypes) {
@@ -430,6 +462,11 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
   public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
     const productTypes = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     let allOrders: any[] = [];
+
+    LogManager.info(
+      'BitgetClassicAdapter.HistoryOrders',
+      `[${key.label}] Fetching order history from https://api.bitget.com`
+    );
 
     // Futures History
     for (const pType of productTypes) {
@@ -656,6 +693,11 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
   ): Promise<{ list: any[]; nextPageCursor: string }> {
     const now = Date.now();
     const minAllowed = now - (89 * 24 * 60 * 60 * 1000); // 89 days access window (safe 90-day window)
+
+    LogManager.info(
+      'BitgetClassicAdapter.TransactionLog',
+      `[${key.label}] Fetching financial records from https://api.bitget.com (category: ${category || 'USDT-FUTURES'}, range: ${new Date(startTime).toISOString()} - ${new Date(endTime).toISOString()})`
+    );
 
     // If requested range is entirely beyond Bitget's 90-day limit, return empty to prevent error 25200
     if (endTime < minAllowed) {

@@ -46,6 +46,11 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
   public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const balances: UnifiedBalance[] = [];
 
+    LogManager.info(
+      'BitgetUTAAdapter.Balance',
+      `[${key.label}] Fetching UTA balance from https://api.bitget.com (Unified + Funding assets)`
+    );
+
     // 1. UTA Unified Account Assets (/api/v3/account/assets)
     try {
       const path = '/api/v3/account/assets';
@@ -153,17 +158,28 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
   // REST Positions (UTA v3)
   public async getOpenPositions(key: ApiCredentials): Promise<UnifiedPosition[]> {
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
+
+    LogManager.info(
+      'BitgetUTAAdapter.Positions',
+      `[${key.label}] Fetching open positions from https://api.bitget.com (USDT/COIN/USDC-FUTURES, UTA v3)`
+    );
+
     const requests = categories.map(async (category) => {
       const path = `/api/v3/position/current-position?category=${category}`;
       const headers = await BitgetUTAAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
-      const res = await proxyFetch({
-        targetUrl: `https://api.bitget.com${path}`,
-        method: 'GET',
-        headers
-      });
-      if (res.code !== '00000') throw new Error(res.msg);
-      const list = Array.isArray(res.data) ? res.data : (res.data?.list || []);
-      return list.map((item: any) => ({ ...item, category }));
+      try {
+        const res = await proxyFetch({
+          targetUrl: `https://api.bitget.com${path}`,
+          method: 'GET',
+          headers
+        });
+        if (res.code !== '00000') throw new Error(res.msg);
+        const list = Array.isArray(res.data) ? res.data : (res.data?.list || []);
+        return list.map((item: any) => ({ ...item, category }));
+      } catch (err) {
+        LogManager.warn('BitgetUTAAdapter.Positions', `Error fetching ${category}:`, err);
+        return [];
+      }
     });
 
     const results = await Promise.all(requests);
@@ -254,6 +270,12 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
   public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES'];
     const THIRTY_DAYS_MS = 29 * 24 * 60 * 60 * 1000; // 29-day safe window (Bitget UTA max 30 days)
+
+    LogManager.info(
+      'BitgetUTAAdapter.History',
+      `[${key.label}] Fetching closed PnL history from https://api.bitget.com (UTA v3)`
+    );
+
     const now = Date.now();
     const effectiveEnd = end ? Math.min(end, now) : now;
     const minAllowed = now - (90 * 24 * 60 * 60 * 1000); // 90 days access window
@@ -354,6 +376,11 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
 
   // REST Deposits / Withdrawals (UTA v3)
   public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+    LogManager.info(
+      'BitgetUTAAdapter.Bills',
+      `[${key.label}] Fetching deposits/withdrawals from https://api.bitget.com (UTA v3)`
+    );
+
     const THIRTY_DAYS_MS = 29 * 24 * 60 * 60 * 1000;
     const now = Date.now();
     const effectiveEnd = end ? Math.min(end, now) : now;
@@ -417,6 +444,11 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'SPOT', 'MARGIN'];
     let allOrders: any[] = [];
 
+    LogManager.info(
+      'BitgetUTAAdapter.OpenOrders',
+      `[${key.label}] Fetching open orders from https://api.bitget.com (UTA v3)`
+    );
+
     // 1. Regular Unfilled Orders (/api/v3/trade/unfilled-orders)
     for (const category of categories) {
       const path = `/api/v3/trade/unfilled-orders?category=${category}&limit=100`;
@@ -457,6 +489,12 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
   public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedOrder[]> {
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'SPOT', 'MARGIN'];
     const THIRTY_DAYS_MS = 29 * 24 * 60 * 60 * 1000;
+
+    LogManager.info(
+      'BitgetUTAAdapter.HistoryOrders',
+      `[${key.label}] Fetching order history from https://api.bitget.com (UTA v3)`
+    );
+
     const now = Date.now();
     const effectiveEnd = end ? Math.min(end, now) : now;
     const minAllowed = now - (90 * 24 * 60 * 60 * 1000);
@@ -685,6 +723,11 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
   ): Promise<{ list: any[]; nextPageCursor: string }> {
     const now = Date.now();
     const minAllowed = now - (89 * 24 * 60 * 60 * 1000); // 89 days access window (safe 90-day window)
+
+    LogManager.info(
+      'BitgetUTAAdapter.TransactionLog',
+      `[${key.label}] Fetching financial records from https://api.bitget.com (category: ${category || 'USDT-FUTURES'}, range: ${new Date(startTime).toISOString()} - ${new Date(endTime).toISOString()})`
+    );
 
     // If requested range is entirely beyond Bitget's 90-day limit, return empty to prevent error 25200
     if (endTime < minAllowed) {
