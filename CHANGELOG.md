@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.4.1...v2.5.0) (2026-10-13)
+
+
+### Features
+
+* add BitgetClassicAdapter, BitgetUTAAdapter, OkxAdapter, and corresponding test files ([1cdcc15](https://github.com/fapdev77/crypto-dashboard/commit/1cdcc152253bff132cf6dd5cc9549fe9c7764100))
+
 ## [2.4.1](https://github.com/fapdev77/crypto-dashboard/compare/v2.4.0...v2.4.1) (2026-10-12)
 
 
