@@ -70,11 +70,8 @@ describe('BitgetClassicAdapter.getOpenPositions - logging', () => {
   });
 
   it('emits a WARN log on per-productType error and returns remaining results', async () => {
-    let callCount = 0;
-    vi.mocked(proxyModule.proxyFetch).mockImplementation(async () => {
-      callCount++;
-      // First productType (USDT-FUTURES) returns an error code
-      if (callCount === 1) return { code: 'ERR', msg: 'Simulated error' };
+    vi.mocked(proxyModule.proxyFetch).mockImplementation(async ({ targetUrl }: { targetUrl: string }) => {
+      if (targetUrl.includes('USDT-FUTURES')) return { code: 'ERR', msg: 'Simulated error' };
       return { code: '00000', data: [] };
     });
 
@@ -88,25 +85,25 @@ describe('BitgetClassicAdapter.getOpenPositions - logging', () => {
   });
 
   it('returns positions from successful categories even when one category fails', async () => {
-    let callCount = 0;
-    vi.mocked(proxyModule.proxyFetch).mockImplementation(async () => {
-      callCount++;
-      if (callCount === 1) throw new Error('Network error on USDT-FUTURES');
-      // COIN-FUTURES succeeds with one position
-      return {
-        code: '00000',
-        data: [{
-          symbol: 'ETHUSD_CM',
-          total: '10',
-          holdSide: 'long',
-          marginMode: 'crossed',
-          markPrice: '3000',
-          openPriceAvg: '2900',
-          marginSize: '100',
-          leverage: '10',
-          productType: 'COIN-FUTURES',
-        }],
-      };
+    vi.mocked(proxyModule.proxyFetch).mockImplementation(async ({ targetUrl }: { targetUrl: string }) => {
+      if (targetUrl.includes('USDT-FUTURES')) throw new Error('Network error on USDT-FUTURES');
+      if (targetUrl.includes('COIN-FUTURES')) {
+        return {
+          code: '00000',
+          data: [{
+            symbol: 'ETHUSD_CM',
+            total: '10',
+            holdSide: 'long',
+            marginMode: 'crossed',
+            markPrice: '3000',
+            openPriceAvg: '2900',
+            marginSize: '100',
+            leverage: '10',
+            productType: 'COIN-FUTURES',
+          }],
+        };
+      }
+      return { code: '00000', data: [] };
     });
 
     const result = await adapter.getOpenPositions(mockKey);

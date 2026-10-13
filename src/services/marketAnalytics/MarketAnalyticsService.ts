@@ -14,7 +14,7 @@ import {
 import { generateMockSnapshot, getTimeframeStepMs, formatPointTime, POPULAR_SYMBOLS } from '../../mock/marketAnalyticsMock';
 import { hybridFetch } from '../../utils/proxyFetch';
 import { useSettingsStore } from '../../store/settingsStore';
-import { LogManager } from '../logger';
+import { LogManager } from '../LogManager';
 
 interface CacheEntry {
   timestamp: number;

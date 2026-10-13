@@ -49,22 +49,22 @@ async function syncRestData(config: ApiCredentials): Promise<void> {
     if (balanceResult.status === 'fulfilled') {
       useBalancesStore.getState().updateBalances(config.id, balanceResult.value as any);
     } else {
-      LogManager.warn(`REST-${config.id}`, `Failed to fetch balances for ${config.exchange}:`, balanceResult.reason);
+      LogManager.warn('Connection.REST', `[${config.label}] Failed to fetch balances for ${config.exchange}:`, balanceResult.reason);
     }
 
     if (positionsResult.status === 'fulfilled') {
       usePositionsStore.getState().updatePositions(config.id, positionsResult.value);
     } else {
-      LogManager.warn(`REST-${config.id}`, `Failed to fetch open positions for ${config.exchange}:`, positionsResult.reason);
+      LogManager.warn('Connection.REST', `[${config.label}] Failed to fetch open positions for ${config.exchange}:`, positionsResult.reason);
     }
 
     if (ordersResult.status === 'fulfilled') {
       useOrdersStore.getState().updateOpenOrders(config.id, ordersResult.value);
     } else {
-      LogManager.warn(`REST-${config.id}`, `Failed to fetch open orders for ${config.exchange}:`, ordersResult.reason);
+      LogManager.warn('Connection.REST', `[${config.label}] Failed to fetch open orders for ${config.exchange}:`, ordersResult.reason);
     }
   } catch (err) {
-    LogManager.error(`REST-${config.id}`, `${config.exchange} REST polling failed:`, err);
+    LogManager.error('Connection.REST', `[${config.label}] ${config.exchange} REST polling failed:`, err);
   }
 }
 
@@ -136,10 +136,10 @@ export async function bootload(
   const { id, label, exchange } = config;
 
   try {
-    LogManager.info(`REST-${id}`, 'Bootloading initial balances, positions and open orders...');
+    LogManager.info('Connection.REST', `[${label}] Bootloading initial balances, positions and open orders...`);
     await ExchangeAggregator.bootloadConnection(config);
     await syncRestData(config);
-    LogManager.info(`REST-${id}`, 'REST Bootload completed.');
+    LogManager.info('Connection.REST', `[${label}] REST Bootload completed.`);
 
     // Reset attempt counter on success
     delete retryAttempts[id];
@@ -152,13 +152,13 @@ export async function bootload(
     if (existing) clearTimeout(existing);
     startRestPolling(config, intervals);
   } catch (error: any) {
-    LogManager.error(`REST-${id}`, 'REST Bootload failed:', error);
+    LogManager.error('Connection.REST', `[${label}] REST Bootload failed:`, error);
 
     // Unrecoverable authentication or permission error: abort automatic retries immediately
     if (isAuthError(error)) {
       LogManager.error(
-        `REST-${id}`,
-        `Authentication failure for ${exchange.toUpperCase()} (${label}): ${error.message}. Automatic retries aborted to prevent IP ban.`
+        'Connection.REST',
+        `[${label}] Authentication failure for ${exchange.toUpperCase()}: ${error.message}. Automatic retries aborted to prevent IP ban.`
       );
       const errMsg = `Authentication Error: ${error.message}`;
       setStatus(id, 'error', errMsg);
@@ -177,8 +177,8 @@ export async function bootload(
     // Check if max retry threshold reached
     if (currentAttempt > BOOTLOAD_MAX_RETRIES) {
       LogManager.warn(
-        `REST-${id}`,
-        `Max bootload retries (${BOOTLOAD_MAX_RETRIES}) reached for ${exchange.toUpperCase()} (${label}). Halting automatic retries.`
+        'Connection.REST',
+        `[${label}] Max bootload retries (${BOOTLOAD_MAX_RETRIES}) reached for ${exchange.toUpperCase()}. Halting automatic retries.`
       );
       const errMsg = `Connection failed after ${BOOTLOAD_MAX_RETRIES} attempts: ${error.message}`;
       setStatus(id, 'error', errMsg);
@@ -208,8 +208,8 @@ export async function bootload(
     const currentConfig = useApiKeysStore.getState().keys.find((k) => k.id === id);
     if (currentConfig?.isActive && !useSettingsStore.getState().useMockData) {
       LogManager.info(
-        `REST-${id}`,
-        `Transient failure (attempt ${currentAttempt}/${BOOTLOAD_MAX_RETRIES}). Retrying in ${(delayMs / 1000).toFixed(1)}s...`
+        'Connection.REST',
+        `[${label}] Transient failure (attempt ${currentAttempt}/${BOOTLOAD_MAX_RETRIES}). Retrying in ${(delayMs / 1000).toFixed(1)}s...`
       );
       intervals[id + '-poll'] = setTimeout(() => {
         bootload(config, intervals, retryAttempts, setStatus, setError);

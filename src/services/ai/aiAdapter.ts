@@ -11,6 +11,7 @@ import {
   AiRawDebugData,
   AiRawDebugToolExecution,
 } from '../../types/aiTypes';
+import { LogManager } from '../LogManager';
 
 export interface SendMessageOptions {
   userMessage: string;
@@ -194,6 +195,11 @@ class AiAdapter {
       try {
         aiRateLimiter.recordRequest(model.id);
 
+        LogManager.info(
+          'AI.Service',
+          `[${model.name}] Dispatching query (provider: ${model.provider}, fallback: ${isFallbackModel})`
+        );
+
         const result = await this.executeChatWithModel({
           model,
           userMessage,
@@ -204,6 +210,25 @@ class AiAdapter {
         });
 
         const durationMs = Math.round(performance.now() - startTime);
+
+        LogManager.info(
+          'AI.Service',
+          `[${model.name}] Query completed successfully in ${durationMs}ms (tools: ${result.toolsInvoked.length}, tokens: ${result.promptTokens + result.completionTokens})`
+        );
+
+        if (result.unverifiedData) {
+          LogManager.warn(
+            'AI.Service',
+            `[${model.name}] Response generated without exchange tool verification (unverified data).`
+          );
+        }
+
+        if (result.incompatibleToolModel) {
+          LogManager.warn(
+            'AI.Service',
+            `[${model.name}] Model does not support exchange tools. Financial query guarded.`
+          );
+        }
 
         // Record audit with complete raw payload snapshot and debug trace
         const logId = await aiAuditLogger.logEntry({
@@ -260,6 +285,10 @@ class AiAdapter {
         };
       } catch (err: any) {
         lastError = err;
+        LogManager.warn(
+          'AI.Service',
+          `[${model.name}] Model execution failed: ${err.message || err}. ${globalSettings.autoFallback ? 'Attempting fallback...' : 'Fallback disabled.'}`
+        );
         // Do not attempt fallback models if the user cancelled the request
         if (signal?.aborted || err?.name === 'AbortError' || err?.message?.toLowerCase().includes('aborted')) {
           break;
@@ -300,7 +329,7 @@ class AiAdapter {
           },
         });
       } catch (auditErr) {
-        console.warn('Failed to record cancelled audit log:', auditErr);
+        LogManager.warn('AI.Service', 'Failed to record cancelled audit log:', auditErr);
       }
 
       const cancelledErr = new Error('Análise interrompida pelo usuário.');
@@ -308,12 +337,13 @@ class AiAdapter {
       (cancelledErr as any).isCancelled = true;
       (cancelledErr as any).auditLogId = cancelAuditLogId;
       (cancelledErr as any).rawDebug = (lastError as any)?.rawDebug;
+      LogManager.info('AI.Service', 'AI query was cancelled by user.');
       throw cancelledErr;
     }
     const parsedError = formatUserFriendlyAiError(lastError);
 
-    // Full technical error recorded in audit logs and console
-    console.error('[AI Assistant Error]:', parsedError.technicalDetails);
+    // Full technical error recorded in audit logs and LogManager
+    LogManager.error('AI.Service', `AI execution error (${parsedError.friendlyMessage}):`, parsedError.technicalDetails);
 
     const errorAuditLogId = await aiAuditLogger.logEntry({
       timestamp: Date.now(),

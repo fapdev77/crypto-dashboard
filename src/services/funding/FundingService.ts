@@ -1,7 +1,7 @@
 import Big from 'big.js';
 import { ExchangeName, FundingRateSummary } from '../../types';
 import { hybridFetch } from '../../utils/proxyFetch';
-import { LogManager } from '../logger';
+import { LogManager } from '../LogManager';
 import { getStartOfTodayInMs } from '../../utils/dateTimeHelper';
 import { executeWithRetry } from '../../utils/retryHelper';
 
@@ -85,7 +85,7 @@ export class FundingService {
 
       return this.aggregateData(records, exchange, symbol, instrumentType, boundaries);
     } catch (error) {
-      LogManager.error('FundingService', `fetchAndAggregateSummary error for ${exchange} ${symbol}:`, error);
+      LogManager.error('Funding.Service', `fetchAndAggregateSummary error for ${exchange} ${symbol}:`, error);
       return this.zeroSummary(exchange, symbol, instrumentType);
     }
   }
@@ -480,7 +480,7 @@ export class FundingService {
           }
         }
       } catch (e) {
-        LogManager.error('FundingService', `Bybit current rates error for ${category}:`, e);
+        LogManager.error('Funding.Service', `Bybit current rates error for ${category}:`, e);
       }
     }
 
@@ -514,7 +514,7 @@ export class FundingService {
         }
       }
     } catch (e) {
-      LogManager.error('FundingService', 'OKX current rates error:', e);
+      LogManager.error('Funding.Service', 'OKX current rates error:', e);
     }
     return results;
   }
@@ -564,7 +564,7 @@ export class FundingService {
           }
         }
       } catch (e) {
-        LogManager.error('FundingService', `Bitget current rates error for ${productType}:`, e);
+        LogManager.error('Funding.Service', `Bitget current rates error for ${productType}:`, e);
       }
     }
     return results;

@@ -37,14 +37,14 @@ export class BybitTransactionService {
     // If we have cache, return it immediately and sync incrementally
     if (cached.length > 0 && meta && meta.latestTransactionTime > 0) {
       this.syncIncremental(key, meta.latestTransactionTime).catch(err =>
-        LogManager.warn('BybitTransactionService', `Incremental sync failed for ${key.label}:`, err)
+        LogManager.warn('Sync.Transactions', `[${key.label}] Incremental sync failed:`, err)
       );
       return cached;
     }
 
     // No cache: trigger deep sync and return empty for now
     this.syncAll(key).catch(err =>
-      LogManager.warn('BybitTransactionService', `Deep sync failed for ${key.label}:`, err)
+      LogManager.warn('Sync.Transactions', `[${key.label}] Deep sync failed:`, err)
     );
     return [];
   }
@@ -53,6 +53,10 @@ export class BybitTransactionService {
    * Incremental sync: fetch only records newer than the latest cached timestamp.
    */
   async syncIncremental(key: ApiCredentials, latestTime: number): Promise<BybitTransactionLogEntry[]> {
+    LogManager.info(
+      'Sync.Transactions',
+      `[${key.label}] Starting incremental transaction sync (since ${new Date(latestTime).toISOString()})`
+    );
     const now = Date.now();
     let allNew: BybitTransactionLogEntry[] = [];
     const categories = [''];
@@ -84,7 +88,7 @@ export class BybitTransactionService {
             }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BybitTransactionService', `Incremental chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
+          LogManager.warn('Sync.Transactions', `[${key.label}] Incremental chunk error (${category || 'all'} [${chunkStart}-${chunkEnd}]):`, err);
           hasError = true;
           lastChunkError = err;
           break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
@@ -132,6 +136,7 @@ export class BybitTransactionService {
       throw new Error(`Partial sync failure for ${key.label} (${cause})`);
     }
 
+    LogManager.info('Sync.Transactions', `[${key.label}] Incremental sync complete: ${allNew.length} new records`);
     return allNew;
   }
 
@@ -143,6 +148,10 @@ export class BybitTransactionService {
     key: ApiCredentials,
     onProgress?: (pct: number, records: number) => void
   ): Promise<void> {
+    LogManager.info(
+      'Sync.Transactions',
+      `[${key.label}] Starting deep transaction sync (max backfill: 2 years)`
+    );
     const now = Date.now();
     let twoYearsAgo = now - TWO_YEARS_MS;
     const categories = [''];
@@ -185,7 +194,7 @@ export class BybitTransactionService {
             }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BybitTransactionService', `Deep sync chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
+          LogManager.warn('Sync.Transactions', `[${key.label}] Deep sync chunk error (${category || 'all'} [${chunkStart}-${chunkEnd}]):`, err);
           hasError = true;
           lastChunkError = err;
           break; // Stop deep sync regress to preserve continuous historical cache without gaps
@@ -193,7 +202,7 @@ export class BybitTransactionService {
       }
 
       if (hasError) {
-        LogManager.warn('BybitTransactionService', `Halting deep sync for ${key.label} at ${new Date(chunkStart).toISOString()} due to chunk error.`);
+        LogManager.warn('Sync.Transactions', `[${key.label}] Halting deep sync at ${new Date(chunkStart).toISOString()} due to chunk error.`);
         break;
       }
 
@@ -231,7 +240,7 @@ export class BybitTransactionService {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    LogManager.info('BybitTransactionService', `Deep sync complete for ${key.label}: ${totalNew} records`);
+    LogManager.info('Sync.Transactions', `[${key.label}] Deep sync complete: ${totalNew} records backfilled`);
 
     // Signal partial failure to the caller after all partial data has been persisted
     if (hasError) {

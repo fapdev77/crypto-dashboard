@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
+import { LogManager } from '../LogManager';
 
 export interface ExportReportOptions {
   title?: string;
@@ -216,7 +217,7 @@ export async function exportAiAnalysisToPdf(options: ExportReportOptions): Promi
       },
     });
   } catch (err) {
-    console.error('Failed to export PDF report', err);
+    LogManager.error('AI.Reports', 'Failed to export PDF report:', err);
     toast.error('Failed to generate PDF document');
   }
 }

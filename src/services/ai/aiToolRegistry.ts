@@ -1,5 +1,6 @@
 import { AiToolDefinition, AiToolCallResult } from '../../types/aiTypes';
 import { aiToolExecutors } from './aiToolExecutors';
+import { LogManager } from '../LogManager';
 
 export const AI_TOOL_DEFINITIONS: AiToolDefinition[] = [
   {
@@ -135,6 +136,7 @@ class AiToolRegistry {
 
   public async executeToolCall(name: string, args: Record<string, any> = {}): Promise<AiToolCallResult> {
     const startTime = performance.now();
+    LogManager.info('AI.Tools', `Invoking tool "${name}"`, args);
 
     try {
       let result: any;
@@ -169,24 +171,31 @@ class AiToolRegistry {
           });
           break;
         default:
+          const unknownError = `Tool '${name}' not found or not allowed in PIKA tool catalog.`;
+          LogManager.warn('AI.Tools', unknownError);
           return {
             name,
             result: null,
             executionTimeMs: Math.round(performance.now() - startTime),
-            error: `Tool '${name}' not found or not allowed in PIKA tool catalog.`,
+            error: unknownError,
           };
       }
+
+      const executionTimeMs = Math.round(performance.now() - startTime);
+      LogManager.info('AI.Tools', `Tool "${name}" executed successfully (${executionTimeMs}ms)`);
 
       return {
         name,
         result,
-        executionTimeMs: Math.round(performance.now() - startTime),
+        executionTimeMs,
       };
     } catch (err: any) {
+      const executionTimeMs = Math.round(performance.now() - startTime);
+      LogManager.warn('AI.Tools', `Tool "${name}" execution failed:`, err);
       return {
         name,
         result: null,
-        executionTimeMs: Math.round(performance.now() - startTime),
+        executionTimeMs,
         error: `Failed to execute local tool '${name}': ${err.message || 'Unknown error'}`,
       };
     }
