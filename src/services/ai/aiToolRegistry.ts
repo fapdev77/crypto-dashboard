@@ -47,23 +47,70 @@ export const AI_TOOL_DEFINITIONS: AiToolDefinition[] = [
   },
   {
     name: 'aiGetFundingFeesHistory',
-    description: 'Queries funding fee history, live funding rates in pure 8-decimal precision (e.g. 0.00010000 = +0.01%), multi-horizon cumulative rates (today, current month, last 3 months, and up to 2 years for Bybit), and actual cash-flow funding fees paid/received.',
+    description: 'Queries actual cash-flow funding fees credited/debited to your wallet from real exchange transaction logs in USD. Returns exact pre-computed total received ($), total paid ($), net funding ($), per-asset breakdown with position status (OPEN/CLOSED), and individual audit settlements. Use this when the user asks how much funding they received or paid.',
     parameters: {
       type: 'object',
       properties: {
+        period: {
+          type: 'string',
+          description: "Timeframe period to analyze. Use 'today_utc' for calendar day starting 00:00 UTC (standard exchange settlement day), 'today_local' for user local day, 'yesterday_utc', 'yesterday_local', '7d', or '30d'.",
+          enum: ['today_utc', 'today_local', 'yesterday_utc', 'yesterday_local', '7d', '30d', 'custom'],
+        },
         days: {
           type: 'number',
-          description: 'Number of past days to analyze (default 7 days, up to 730 days for Bybit, up to 90 days for OKX and Bitget).',
-          default: 7,
+          description: 'Number of past days to analyze (e.g. 1, 7, 30). Optional fallback.',
         },
         symbol: {
           type: 'string',
-          description: 'Optional symbol ticker to filter (e.g. BTC, ETH, BTCUSDT).',
+          description: 'Optional symbol ticker to filter (e.g. BTC, ETH, ADA).',
         },
         exchange: {
           type: 'string',
           description: 'Optional exchange filter (bybit, okx, bitget).',
           enum: ['bybit', 'okx', 'bitget'],
+        },
+        startDate: {
+          type: 'string',
+          description: 'Optional start date in YYYY-MM-DD or ISO format for custom period.',
+        },
+        endDate: {
+          type: 'string',
+          description: 'Optional end date in YYYY-MM-DD or ISO format for custom period.',
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'aiGetMarketFundingRates',
+    description: 'Queries market-wide perpetual funding rates (%), historical multi-horizon cumulative rates (today, current month, last month, 3 months, 6-12 months for Bybit), cross-exchange rate comparisons for a coin (e.g. BTC across Bybit vs OKX vs Bitget), or rankings of top highest/lowest funding rate assets in the market. Use this when the user asks about market rates, which exchange pays more/less, or coin rate benchmarks.',
+    parameters: {
+      type: 'object',
+      properties: {
+        symbol: {
+          type: 'string',
+          description: 'Optional symbol ticker (e.g. BTC, ETH, SOL) to inspect or compare across active exchanges.',
+        },
+        exchange: {
+          type: 'string',
+          description: 'Optional exchange filter (bybit, okx, bitget).',
+          enum: ['bybit', 'okx', 'bitget'],
+        },
+        ranking: {
+          type: 'string',
+          description: "Optional ranking mode: 'top_positive' (highest rates), 'top_negative' (lowest/most negative rates), or 'top_and_bottom' (both highest and lowest).",
+          enum: ['top_positive', 'top_negative', 'top_and_bottom'],
+        },
+        horizon: {
+          type: 'string',
+          description: "Historical rate horizon for comparison/ranking: 'last_rate' (current/latest), 'today', 'current_month', 'last_month', 'last_3_months', 'last_6_months', 'last_12_months'.",
+          enum: ['last_rate', 'today', 'current_month', 'last_month', 'last_3_months', 'last_6_months', 'last_12_months'],
+          default: 'last_rate',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of items to return in ranking or list (default: 5, max: 20).',
+          default: 5,
         },
       },
       required: [],
@@ -152,11 +199,10 @@ class AiToolRegistry {
           result = await aiToolExecutors.aiGetHedgeCorrelationSummary();
           break;
         case 'aiGetFundingFeesHistory':
-          result = await aiToolExecutors.aiGetFundingFeesHistory({
-            days: args?.days || 7,
-            symbol: args?.symbol,
-            exchange: args?.exchange,
-          });
+          result = await aiToolExecutors.aiGetFundingFeesHistory(args);
+          break;
+        case 'aiGetMarketFundingRates':
+          result = await aiToolExecutors.aiGetMarketFundingRates(args);
           break;
         case 'aiGetTradingFeesHistory':
           result = await aiToolExecutors.aiGetTradingFeesHistory({

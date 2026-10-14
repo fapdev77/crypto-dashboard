@@ -123,6 +123,30 @@ export function isModelKnownIncompatibleWithTools(model: AiModelConfig): boolean
   return false;
 }
 
+export function buildEffectiveSystemPrompt(baseSystemPrompt: string, userMessage: string): string {
+  const now = new Date();
+  const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo';
+  const temporalInfo = `\n\n[TEMPORAL AUDIT CONTEXT]:\n- Current Date/Time (UTC): ${now.toISOString()}\n- Current Date/Time (Local - ${userTz}): ${now.toLocaleString()} (Offset: ${now.getTimezoneOffset()} min)\n- Exchange Daily Settlement Convention: Daily funding settlements are evaluated on UTC days starting at 00:00:00 UTC (with standard cycles at 00:00, 08:00, 16:00 UTC).`;
+
+  const isFinancial = isOperationalFinancialQuery(userMessage);
+  let prompt = `${baseSystemPrompt}${temporalInfo}`;
+
+  if (isFinancial) {
+    prompt += `\n\n[STRICT FINANCIAL AUDIT MANDATE]:
+The user is asking about specific exchange portfolio metrics. You MUST invoke the corresponding real tools from the tool catalog:
+1. ACCOUNT BALANCES & EQUITY: Call 'aiGetPortfolioBalances'.
+2. OPEN POSITIONS & RISK: Call 'aiGetOpenPositions'.
+3. CROSS-EXCHANGE HEDGES & NET DELTA: Call 'aiGetHedgeCorrelationSummary'.
+4. PERSONAL WALLET FUNDING FEES ($): Call 'aiGetFundingFeesHistory'. Pre-computed totals provide total received ($), total paid ($), and net funding ($). If no transactions exist, report $0.00 explicitly.
+5. MARKET PERPETUAL FUNDING RATES (%): Call 'aiGetMarketFundingRates'. Use this tool whenever the user asks about market rates, comparisons between exchanges for a coin (e.g. BTC across Bybit vs OKX vs Bitget), or rankings of top/bottom paying assets in the market.
+6. TRADING FEES & COMMISSIONS: Call 'aiGetTradingFeesHistory'.
+7. HISTORICAL CLOSED TRADES: Call 'aiGetClosedPositionsSummary'.
+DO NOT fabricate, hallucinate, extrapolate or invent nominal amounts or positions under any circumstances.`;
+  }
+
+  return prompt;
+}
+
 class AiAdapter {
   public getPrimaryActiveModel(): AiModelConfig | null {
     const models = useAiSettingsStore.getState().models;
@@ -476,10 +500,7 @@ class AiAdapter {
     const isFinancialQuery = isOperationalFinancialQuery(userMessage);
     const isIncompatible = isModelKnownIncompatibleWithTools(model);
 
-    let effectiveSystemPrompt = systemPrompt;
-    if (isFinancialQuery) {
-      effectiveSystemPrompt += `\n\n[STRICT AUDIT MANDATE]: The user is asking about specific exchange portfolio metrics (balances, open positions, funding fees, liquidation risk, or orders). You MUST call the corresponding tools (e.g. get_balances, get_positions, get_funding_fees, get_account_summary) to inspect the actual database and connected exchanges. DO NOT fabricate, hallucinate, extrapolate or invent nominal amounts or positions under any circumstances.`;
-    }
+    const effectiveSystemPrompt = buildEffectiveSystemPrompt(systemPrompt, userMessage);
 
     const messages: any[] = [{ role: 'system', content: effectiveSystemPrompt }];
 
@@ -734,10 +755,7 @@ To protect your live operations from hallucinated data:
     const isFinancialQuery = isOperationalFinancialQuery(userMessage);
     const isIncompatible = isModelKnownIncompatibleWithTools(model);
 
-    let effectiveSystemPrompt = systemPrompt;
-    if (isFinancialQuery) {
-      effectiveSystemPrompt += `\n\n[STRICT AUDIT MANDATE]: The user is asking about specific exchange portfolio metrics (balances, open positions, funding fees, liquidation risk, or orders). You MUST invoke the appropriate local tool (get_balances, get_positions, get_funding_fees, get_account_summary) to read real metrics from the active databases and exchanges. DO NOT invent nominal amounts or open positions.`;
-    }
+    const effectiveSystemPrompt = buildEffectiveSystemPrompt(systemPrompt, userMessage);
 
     const messages: any[] = [{ role: 'system', content: effectiveSystemPrompt }];
 
@@ -1036,12 +1054,14 @@ To protect your live operations from hallucinated data:
 
     currentMessages.push({ role: 'user', content: userMessage });
 
+    const effectiveSystemPrompt = buildEffectiveSystemPrompt(systemPrompt, userMessage);
+
     const rawDebug: AiRawDebugData = {
       request: {
         endpoint: '/api/ai/chat',
         modelId: model.modelId,
         provider: 'gemini',
-        systemInstruction: systemPrompt,
+        systemInstruction: effectiveSystemPrompt,
         messages: JSON.parse(JSON.stringify(currentMessages)),
         toolsDeclarations: tools,
         parameters: {
@@ -1051,7 +1071,7 @@ To protect your live operations from hallucinated data:
         rawPayload: {
           modelId: model.modelId,
           messages: currentMessages,
-          systemInstruction: systemPrompt,
+          systemInstruction: effectiveSystemPrompt,
           tools,
           temperature: model.temperature ?? 0.1,
           maxTokens: model.maxTokens ?? 2048,
@@ -1081,7 +1101,7 @@ To protect your live operations from hallucinated data:
         modelId: model.modelId,
         apiKey: model.apiKey,
         messages: currentMessages,
-        systemInstruction: systemPrompt,
+        systemInstruction: effectiveSystemPrompt,
         tools,
         temperature: model.temperature ?? 0.1,
         maxTokens: model.maxTokens ?? 2048,

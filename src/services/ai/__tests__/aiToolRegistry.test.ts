@@ -37,6 +37,19 @@ describe('aiToolRegistry', () => {
     expect(res.error).toBeUndefined();
   });
 
+  it('exposes and executes aiGetMarketFundingRates tool', async () => {
+    const tools = aiToolRegistry.getToolDefinitions();
+    const marketRatesTool = tools.find((t) => t.name === 'aiGetMarketFundingRates');
+    expect(marketRatesTool).toBeDefined();
+    expect(marketRatesTool?.parameters.properties.ranking).toBeDefined();
+    expect(marketRatesTool?.parameters.properties.horizon).toBeDefined();
+
+    const res = await aiToolRegistry.executeToolCall('aiGetMarketFundingRates', { ranking: 'top_positive', limit: 3 });
+    expect(res.name).toBe('aiGetMarketFundingRates');
+    expect(res.error).toBeUndefined();
+    expect(res.result.mode).toBe('RANKING');
+  });
+
   it('handles unknown tool gracefully with error response', async () => {
     const res = await aiToolRegistry.executeToolCall('unknownTool', {});
     expect(res.name).toBe('unknownTool');

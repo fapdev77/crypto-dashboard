@@ -622,7 +622,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
 
         {/* Scrollable Message List / Zero State */}
         <div className={`flex-1 overflow-y-auto p-4 space-y-4 bg-[#0b0c10] ${isMaximized ? 'w-full' : ''}`}>
-          <div className={isMaximized ? 'max-w-7xl mx-auto w-full space-y-4' : 'space-y-4'}>
+          <div className={isMaximized ? 'w-full space-y-4 px-2 xl:px-8 2xl:px-16' : 'space-y-4'}>
           {!isEnabled ? (
             /* First-Access 1-Click Activation Card */
             <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-4">
@@ -885,7 +885,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
         {/* Footer Input Area */}
         {isEnabled && (
           <footer className="p-3.5 border-t border-[#2a2b30] bg-[#151619] shrink-0">
-            <div className={isMaximized ? 'max-w-7xl mx-auto w-full' : ''}>
+            <div className={isMaximized ? 'w-full px-2 xl:px-8 2xl:px-16' : ''}>
               <div className="relative rounded-xl bg-[#0b0c10] border border-[#2a2b30] focus-within:border-[#2F6BFF] transition shadow-inner">
               <textarea
                 ref={inputRef}

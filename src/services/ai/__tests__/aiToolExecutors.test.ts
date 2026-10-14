@@ -392,5 +392,68 @@ describe('aiToolExecutors', () => {
       expect(pos.liquidationPrice).toBe(0.0000042);
       expect(pos.liquidationPriceRaw).toBe('0.0000042');
     });
+
+    it('aiGetFundingFeesHistory correctly resolves today_utc, today_local, and yesterday_utc intervals', async () => {
+      const todayUtcRes = await aiToolExecutors.aiGetFundingFeesHistory({ period: 'today_utc' });
+      expect(todayUtcRes.period).toBe('today_utc');
+      expect(todayUtcRes.periodStartIsoUtc).toContain('T00:00:00.000Z');
+      expect(todayUtcRes.periodStartTimestamp).toBeLessThanOrEqual(todayUtcRes.periodEndTimestamp);
+
+      const yesterdayUtcRes = await aiToolExecutors.aiGetFundingFeesHistory({ period: 'yesterday_utc' });
+      expect(yesterdayUtcRes.period).toBe('yesterday_utc');
+      expect(yesterdayUtcRes.periodStartIsoUtc).toContain('T00:00:00.000Z');
+      expect(yesterdayUtcRes.periodEndIsoUtc).toContain('T23:59:59.999Z');
+
+      const todayLocalRes = await aiToolExecutors.aiGetFundingFeesHistory({ period: 'today_local' });
+      expect(todayLocalRes.period).toBe('today_local');
+      expect(todayLocalRes.periodStartTimestamp).toBeDefined();
+    });
+
+    it('aiGetMarketFundingRates supports cross-exchange coin comparisons and ranking modes', async () => {
+      const { useFundingStore } = await import('../../../store/fundingStore');
+      useFundingStore.setState({
+        currentRates: [
+          {
+            exchange: 'bybit',
+            symbol: 'BTCUSDT',
+            instrumentType: 'USDT-M',
+            fundingRate: 0.00015,
+            nextFundingTime: 1700000000000,
+          },
+          {
+            exchange: 'okx',
+            symbol: 'BTC-USDT-SWAP',
+            instrumentType: 'USDT-M',
+            fundingRate: 0.0001,
+            nextFundingTime: 1700000000000,
+          },
+          {
+            exchange: 'bitget',
+            symbol: 'SOLUSDT',
+            instrumentType: 'USDT-M',
+            fundingRate: -0.00025,
+            nextFundingTime: 1700000000000,
+          },
+        ],
+      });
+
+      // 1. Cross-exchange comparison for BTC
+      const compRes = await aiToolExecutors.aiGetMarketFundingRates({ symbol: 'BTC' });
+      expect(compRes.mode).toBe('CROSS_EXCHANGE_COMPARISON');
+      expect(compRes.filterSymbol).toBe('BTC');
+      expect(compRes.exchangesComparison.length).toBeGreaterThanOrEqual(2);
+      const bybitItem = compRes.exchangesComparison.find((i) => i.exchange === 'bybit');
+      expect(bybitItem).toBeDefined();
+      expect(bybitItem?.latestRate).toBe('0.00015000');
+      expect(bybitItem?.latestRatePct).toBe('+0.0150%');
+
+      // 2. Ranking mode: top_and_bottom
+      const rankRes = await aiToolExecutors.aiGetMarketFundingRates({ ranking: 'top_and_bottom', limit: 2 });
+      expect(rankRes.mode).toBe('RANKING');
+      expect(rankRes.highestFundingRateAssets).toBeDefined();
+      expect(rankRes.lowestFundingRateAssets).toBeDefined();
+      expect(rankRes.highestFundingRateAssets?.[0]?.currentSettlementRate).toBe('0.00015000');
+      expect(rankRes.lowestFundingRateAssets?.[0]?.currentSettlementRate).toBe('-0.00025000');
+    });
   });
 });

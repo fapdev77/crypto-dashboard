@@ -169,5 +169,20 @@ describe('aiAdapter', () => {
       expect(withoutTools.length).toBe(1);
       expect(withoutTools[0].id).toBe('pure-chat:latest');
     });
+
+    it('buildEffectiveSystemPrompt injects temporal audit context and accurate tool mandate', async () => {
+      const { buildEffectiveSystemPrompt } = await import('../aiAdapter');
+      const base = 'You are PIKA assistant.';
+      const prompt = buildEffectiveSystemPrompt(base, 'quanto recebi de funding fee hoje?');
+
+      expect(prompt).toContain(base);
+      expect(prompt).toContain('[TEMPORAL AUDIT CONTEXT]');
+      expect(prompt).toContain('Current Date/Time (UTC)');
+      expect(prompt).toContain('[STRICT FINANCIAL AUDIT MANDATE]');
+      expect(prompt).toContain('aiGetFundingFeesHistory');
+      expect(prompt).toContain('aiGetMarketFundingRates');
+      expect(prompt).toContain('aiGetPortfolioBalances');
+      expect(prompt).toContain('aiGetOpenPositions');
+    });
   });
 });
