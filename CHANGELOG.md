@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.7.0...v2.8.0) (2026-10-14)
+
+
+### Features
+
+* add sidebar component, AI tool executors, and transaction components with test suites ([f28c2e2](https://github.com/fapdev77/crypto-dashboard/commit/f28c2e272ac8b5a7d8de8834308860d376ee2770))
+
 # [2.7.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.6.0...v2.7.0) (2026-10-14)
 
 
