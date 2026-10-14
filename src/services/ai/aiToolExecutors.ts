@@ -110,6 +110,133 @@ export function formatRate8(val: unknown): string {
   }
 }
 
+/**
+ * Envelope shared by every AI tool payload, describing local data availability and whether a
+ * broker synchronization is currently running.
+ */
+export interface AiSyncEnvelope {
+  syncStatus: 'NORMAL' | 'NO_DATA' | 'NO_DATA_SYNCING' | 'DATA_SYNCING';
+  syncInProgress: boolean;
+  syncNotice?: string;
+}
+
+/** Per-asset cash-flow funding fees aggregated from real exchange transaction logs. */
+export interface FundingFeeCashFlowItem {
+  symbol: string;
+  exchange: string;
+  positionStatus: 'OPEN' | 'CLOSED';
+  fundingReceivedUsd: number | string;
+  fundingPaidUsd: number | string;
+  netFundingUsd: number | string;
+  fundingTransactionsCount: number;
+  lastSettlementTime: string | null;
+  settlementsCount: number;
+}
+
+/**
+ * Per-asset benchmark funding rate row, emitted when no transaction log exists in the period but
+ * live market rates are available.
+ */
+export interface FundingFeeRateBenchmarkItem {
+  symbol: string;
+  exchange: string;
+  instrumentType: string;
+  fundingRate: string;
+  fundingRateDecimal: number;
+  cumulativeRates: {
+    today: string;
+    currentMonth: string;
+    lastMonth: string;
+    last3Months: string;
+    last6Months: string | undefined;
+    last12Months: string | undefined;
+    exchangeMaxCoverage: string;
+  };
+  actualFundingFeePaidUsd: number;
+  actualFundingFeePaidUsdRaw: string;
+  fundingTransactionsCount: number;
+  lastSettlementTime: string | null;
+}
+
+export type FundingFeeSymbolItem = FundingFeeCashFlowItem | FundingFeeRateBenchmarkItem;
+
+/** Ranked asset entry for the RANKING mode of the market funding rates tool. */
+export interface AiFundingRateRankedAsset {
+  symbol: string;
+  exchange: string;
+  rateHorizon: string;
+  cumulativeRate: string;
+  cumulativeRatePct: string;
+  currentSettlementRate: string;
+  currentSettlementRatePct: string;
+  instrumentType: string;
+}
+
+/** Single exchange row for the CROSS_EXCHANGE_COMPARISON mode of the market funding rates tool. */
+export interface AiFundingRateComparisonRow {
+  symbol: string;
+  exchange: string;
+  instrumentType: string;
+  latestRate: string;
+  latestRatePct: string;
+  todayCumulativeRate: string;
+  todayCumulativeRatePct: string;
+  currentMonthCumulativeRate: string;
+  currentMonthCumulativeRatePct: string;
+  lastMonthCumulativeRate: string;
+  lastMonthCumulativeRatePct: string;
+  last3MonthsCumulativeRate: string;
+  last3MonthsCumulativeRatePct: string;
+  last6MonthsCumulativeRate: string | undefined;
+  last6MonthsCumulativeRatePct: string | undefined;
+  last12MonthsCumulativeRate: string | undefined;
+  last12MonthsCumulativeRatePct: string | undefined;
+  exchangeMaxCoverage: string;
+}
+
+/** Single market rate row for the MARKET_RATES_LIST mode of the market funding rates tool. */
+export interface AiMarketRateRow {
+  symbol: string;
+  exchange: string;
+  instrumentType: string;
+  latestRate: string;
+  latestRatePct: string;
+  todayCumulativeRate: string;
+  todayCumulativeRatePct: string;
+  currentMonthCumulativeRate: string;
+  currentMonthCumulativeRatePct: string;
+  lastMonthCumulativeRate: string;
+  lastMonthCumulativeRatePct: string;
+  last3MonthsCumulativeRate: string;
+  last3MonthsCumulativeRatePct: string;
+}
+
+/**
+ * Payload of the market funding rates tool, discriminated by `mode` so callers can narrow to the
+ * exact shape their request produced.
+ */
+export type AiMarketFundingRatesResult = AiSyncEnvelope &
+  (
+    | {
+        mode: 'RANKING';
+        rankingHorizon: string;
+        totalAssetsEvaluated: number;
+        highestFundingRateAssets?: AiFundingRateRankedAsset[];
+        lowestFundingRateAssets?: AiFundingRateRankedAsset[];
+      }
+    | {
+        mode: 'CROSS_EXCHANGE_COMPARISON';
+        filterSymbol: string;
+        totalMatches: number;
+        exchangesComparison: AiFundingRateComparisonRow[];
+      }
+    | {
+        mode: 'MARKET_RATES_LIST';
+        totalMatches: number;
+        rates: AiMarketRateRow[];
+      }
+  );
+
 export const aiToolExecutors = {
   /**
    * Retrieves aggregated portfolio balances and equity per exchange.
@@ -775,17 +902,7 @@ export const aiToolExecutors = {
     const activePositions = Object.values(usePositionsStore.getState().positions || {});
 
     // 2. Build structured per-asset list (ONLY assets that had real transactions)
-    const resultSymbols: Array<{
-      symbol: string;
-      exchange: string;
-      positionStatus: 'OPEN' | 'CLOSED';
-      fundingReceivedUsd: any;
-      fundingPaidUsd: any;
-      netFundingUsd: any;
-      fundingTransactionsCount: number;
-      lastSettlementTime: string | null;
-      settlementsCount: number;
-    }> = [];
+    const resultSymbols: FundingFeeSymbolItem[] = [];
 
     const sortedAssetKeys = Object.keys(assetAggregates).sort((a, b) => {
       // Sort by absolute net funding magnitude descending
@@ -825,7 +942,7 @@ export const aiToolExecutors = {
           if (exchange && r.exchange.toLowerCase() !== exchange.toLowerCase()) continue;
           if (symbol && !r.symbol.toUpperCase().includes(symbol.toUpperCase())) continue;
           const rate8 = formatRate8(r.fundingRate);
-          (resultSymbols as any[]).push({
+          resultSymbols.push({
             symbol: r.symbol,
             exchange: r.exchange,
             instrumentType: r.instrumentType || 'USDT-M',
@@ -898,7 +1015,7 @@ export const aiToolExecutors = {
     ranking?: 'top_positive' | 'top_negative' | 'top_and_bottom';
     horizon?: 'last_rate' | 'today' | 'current_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'last_12_months';
     limit?: number;
-  } = {}) {
+  } = {}): Promise<AiMarketFundingRatesResult> {
     const { symbol, exchange, ranking, horizon = 'last_rate', limit = 5 } = args;
     const clampedLimit = Math.min(Math.max(limit || 5, 1), 20);
 

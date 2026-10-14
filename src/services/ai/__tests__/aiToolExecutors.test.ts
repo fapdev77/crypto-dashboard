@@ -338,20 +338,27 @@ describe('aiToolExecutors', () => {
       expect(result.exchangeCoverage.bybit).toContain('2 years');
       expect(result.exchangeCoverage.okx).toContain('90 days');
 
+      // Without transaction logs in the period the payload falls back to benchmark rate rows.
       const bybitBtc = result.symbols.find((s) => s.exchange === 'bybit' && s.symbol === 'BTCUSDT');
       expect(bybitBtc).toBeDefined();
-      expect(bybitBtc?.fundingRate).toBe('0.00010000');
-      expect(bybitBtc?.fundingRateDecimal).toBe(0.0001);
-      expect(bybitBtc?.cumulativeRates.today).toBe('0.00000000');
-      expect(bybitBtc?.cumulativeRates.last3Months).toBe('0.00000000');
-      expect(bybitBtc?.cumulativeRates.last6Months).toBe('0.00000000');
-      expect(bybitBtc?.cumulativeRates.last12Months).toBe('0.00000000');
-      expect(bybitBtc?.cumulativeRates.exchangeMaxCoverage).toContain('2 years');
+      if (!bybitBtc || !('fundingRate' in bybitBtc)) {
+        throw new Error('Expected a benchmark funding rate row for bybit BTCUSDT');
+      }
+      expect(bybitBtc.fundingRate).toBe('0.00010000');
+      expect(bybitBtc.fundingRateDecimal).toBe(0.0001);
+      expect(bybitBtc.cumulativeRates.today).toBe('0.00000000');
+      expect(bybitBtc.cumulativeRates.last3Months).toBe('0.00000000');
+      expect(bybitBtc.cumulativeRates.last6Months).toBe('0.00000000');
+      expect(bybitBtc.cumulativeRates.last12Months).toBe('0.00000000');
+      expect(bybitBtc.cumulativeRates.exchangeMaxCoverage).toContain('2 years');
 
       const okxEth = result.symbols.find((s) => s.exchange === 'okx' && s.symbol === 'ETH-USDT-SWAP');
       expect(okxEth).toBeDefined();
-      expect(okxEth?.fundingRate).toBe('0.00006543');
-      expect(okxEth?.cumulativeRates.exchangeMaxCoverage).toContain('90 days');
+      if (!okxEth || !('fundingRate' in okxEth)) {
+        throw new Error('Expected a benchmark funding rate row for okx ETH-USDT-SWAP');
+      }
+      expect(okxEth.fundingRate).toBe('0.00006543');
+      expect(okxEth.cumulativeRates.exchangeMaxCoverage).toContain('90 days');
     });
 
     it('preserves full decimal precision for micro-prices and fractional asset amounts', async () => {
@@ -440,6 +447,9 @@ describe('aiToolExecutors', () => {
       // 1. Cross-exchange comparison for BTC
       const compRes = await aiToolExecutors.aiGetMarketFundingRates({ symbol: 'BTC' });
       expect(compRes.mode).toBe('CROSS_EXCHANGE_COMPARISON');
+      if (compRes.mode !== 'CROSS_EXCHANGE_COMPARISON') {
+        throw new Error(`Expected CROSS_EXCHANGE_COMPARISON mode, received ${compRes.mode}`);
+      }
       expect(compRes.filterSymbol).toBe('BTC');
       expect(compRes.exchangesComparison.length).toBeGreaterThanOrEqual(2);
       const bybitItem = compRes.exchangesComparison.find((i) => i.exchange === 'bybit');
@@ -450,6 +460,9 @@ describe('aiToolExecutors', () => {
       // 2. Ranking mode: top_and_bottom
       const rankRes = await aiToolExecutors.aiGetMarketFundingRates({ ranking: 'top_and_bottom', limit: 2 });
       expect(rankRes.mode).toBe('RANKING');
+      if (rankRes.mode !== 'RANKING') {
+        throw new Error(`Expected RANKING mode, received ${rankRes.mode}`);
+      }
       expect(rankRes.highestFundingRateAssets).toBeDefined();
       expect(rankRes.lowestFundingRateAssets).toBeDefined();
       expect(rankRes.highestFundingRateAssets?.[0]?.currentSettlementRate).toBe('0.00015000');

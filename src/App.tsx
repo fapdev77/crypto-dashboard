@@ -142,6 +142,7 @@ export default function App() {
   if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
   if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
   if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
+  if (activeTab.startsWith('transactions-history-')) activeTabName = 'Transactions History';
   if (activeTab === 'analytics-market-advanced') activeTabName = 'Market Analytics';
   else if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
   if (activeTab === 'reports') activeTabName = 'Reports';
@@ -212,9 +213,9 @@ export default function App() {
                     {activeTab === 'positions-history' && <ClosedPositions />}
                     {activeTab === 'analytics-market-advanced' && <MarketAnalyticsDashboard />}
                     {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
-                    {activeTab === 'analytics-bybit-tx' && <BybitTransactions />}
-                    {activeTab === 'analytics-bitget-tx' && <BitgetTransactions />}
-                    {activeTab === 'analytics-okx-tx' && <OkxTransactions />}
+                    {activeTab === 'transactions-history-bybit' && <BybitTransactions />}
+                    {activeTab === 'transactions-history-bitget' && <BitgetTransactions />}
+                    {activeTab === 'transactions-history-okx' && <OkxTransactions />}
                     {activeTab === 'analytics-funding' && <FundingDashboard />}
                     {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
                     {activeTab === 'reports' && <ReportsDashboard />}

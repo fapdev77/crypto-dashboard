@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight, BrainCircuit } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight, BrainCircuit, History } from 'lucide-react';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
@@ -40,6 +40,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   const [isMobile, setIsMobile] = useState(false);
 
   const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
+  const activeExchanges = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.exchange.toLowerCase())), [keys]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -80,6 +81,19 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     ).length;
   }, [openOrders, useMockData, activeKeyIds]);
 
+  // Transaction history entries are only offered for exchanges that actually hold data:
+  // an active API key, or the Simulation Mode mock logs (which cover every exchange).
+  const transactionHistoryItems = useMemo<SubItem[]>(() => {
+    const exchanges = [
+      { id: 'transactions-history-bybit', label: 'Bybit Transactions', exchange: 'bybit' },
+      { id: 'transactions-history-bitget', label: 'Bitget Transactions', exchange: 'bitget' },
+      { id: 'transactions-history-okx', label: 'OKX Transactions', exchange: 'okx' },
+    ];
+    return exchanges
+      .filter(({ exchange }) => useMockData || activeExchanges.has(exchange))
+      .map(({ id, label }) => ({ id, label }));
+  }, [activeExchanges, useMockData]);
+
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     {
@@ -99,13 +113,15 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         { id: 'trade-history', label: 'Trade History' }
       ]
     },
+    ...(transactionHistoryItems.length > 0
+      ? [{
+          id: 'transactions-history', label: 'Transactions History', icon: History, subItems: transactionHistoryItems
+        }]
+      : []),
     {
       id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
         { id: 'analytics-market-advanced', label: 'Market Analytics' },
         { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
-        { id: 'analytics-bybit-tx', label: 'Bybit Transactions' },
-        { id: 'analytics-bitget-tx', label: 'Bitget Transactions' },
-        { id: 'analytics-okx-tx', label: 'OKX Transactions' },
         { id: 'analytics-funding', label: 'Funding Fees' },
         { id: 'analytics-hedge-pro', label: 'Hedge Pro' }
       ]
