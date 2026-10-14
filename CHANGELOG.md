@@ -1,3 +1,10 @@
+# [2.7.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.6.0...v2.7.0) (2026-10-14)
+
+
+### Features
+
+* add AI chat drawer, settings store, adapter, and tool registry with tests ([5e25fc0](https://github.com/fapdev77/crypto-dashboard/commit/5e25fc02399b5d4c1f0c577cd4da95dc1a3c0b26))
+
 # [2.6.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.5.0...v2.6.0) (2026-10-13)
 
 
