@@ -1,3 +1,10 @@
+# [2.10.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.9.0...v2.10.0) (2026-10-15)
+
+
+### Features
+
+* reset scroll position on tab navigation ([1b46073](https://github.com/fapdev77/crypto-dashboard/commit/1b460731ebac698571ea5dc112262bcf6aaa59b6))
+
 # [2.9.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.8.0...v2.9.0) (2026-10-15)
 
 
