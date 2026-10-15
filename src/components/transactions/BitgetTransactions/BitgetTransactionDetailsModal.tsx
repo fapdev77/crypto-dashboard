@@ -154,6 +154,38 @@ export function BitgetTransactionDetailsModal({
             </>
           )}
         </div>
+
+        <div className="p-4 border-t border-[#2a2b30] flex items-center justify-between">
+          <span className="text-[#8E9299] text-sm uppercase tracking-wider">
+            {detailsModalType === 'tx' ? 'Total Transactions' : 'Total (USD Eq.)'}
+          </span>
+          <span className="text-white font-bold font-mono text-lg">
+            {(() => {
+              if (detailsModalType === 'tx') return stats.totalCount.toLocaleString();
+
+              let val = '0';
+              if (detailsModalType === 'funding') val = stats.aggregatedUsd.totalFunding;
+              if (detailsModalType === 'fees') val = stats.aggregatedUsd.totalFees;
+              if (detailsModalType === 'balance') val = stats.aggregatedUsd.finalBalance;
+              if (detailsModalType === 'netchange') val = stats.aggregatedUsd.totalChange;
+              
+              const valBig = new Big(val);
+              
+              if (detailsModalType === 'fees') {
+                if (valBig.eq(0)) return `${maskVal(0)} USD`;
+                if (valBig.lt(0)) return `${maskVal(valBig.toString())} USD`;
+                return `+${maskVal(valBig.toString())} USD`;
+              }
+              
+              if (detailsModalType === 'netchange' || detailsModalType === 'funding') {
+                const prefix = valBig.gt(0) ? '+' : '';
+                return `${prefix}${maskVal(valBig.toString())} USD`;
+              }
+
+              return `${maskVal(valBig.toString())} USD`;
+            })()}
+          </span>
+        </div>
       </div>
     </div>
   );

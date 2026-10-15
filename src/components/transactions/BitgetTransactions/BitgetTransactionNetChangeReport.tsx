@@ -2,9 +2,7 @@ import React, { useMemo, useState } from 'react';
 import Big from 'big.js';
 import { BitgetTransactionLogEntry } from '../../../types';
 import { BitgetTxStats } from '../../../hooks/useBitgetTransactions';
-import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
-import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, Activity } from 'lucide-react';
-import { CoinIcon } from '../../ui/CoinIcon';
+import { getBitgetUniversalType } from '../../../utils/transactionTypeMapper';
 
 interface BitgetTransactionNetChangeReportProps {
   filteredEntries: BitgetTransactionLogEntry[];
@@ -20,7 +18,6 @@ export function BitgetTransactionNetChangeReport({
   isPrivateMode = false,
 }: BitgetTransactionNetChangeReportProps) {
   const [expandedReportCurrencies, setExpandedReportCurrencies] = useState<Record<string, boolean>>({});
-  const formatCurrency = useFormatCurrency();
 
   const currencyReports = useMemo(() => {
     if (filteredEntries.length === 0) return [];
@@ -65,19 +62,24 @@ export function BitgetTransactionNetChangeReport({
       const ganhoPercentual = curStats.percentageChange;
       
       const changeBig = new Big(totalChange);
-      
       const rate = stableMatch ? 1 : (tokenRates[cur] || 0);
       const ganhoAbsolutoUSD = changeBig.times(rate).toString();
       
-      const totalTrades = curEntries.filter(e => e.type.toUpperCase().includes('TRADE') || e.type.toUpperCase().includes('LONG') || e.type.toUpperCase().includes('SHORT')).length;
-      const buysCount = curEntries.filter(e => e.side.toLowerCase().includes('buy') || e.side.toLowerCase().includes('long')).length;
-      const sellsCount = curEntries.filter(e => e.side.toLowerCase().includes('sell') || e.side.toLowerCase().includes('short')).length;
+      const tradeEntries = curEntries.filter(e => getBitgetUniversalType(e.type) === 'TRADE');
+      const totalTrades = tradeEntries.length;
+      const buysCount = tradeEntries.filter(e => {
+        const side = (e.side || '').toLowerCase();
+        return side.includes('buy') || side.includes('long');
+      }).length;
+      const sellsCount = tradeEntries.filter(e => {
+        const side = (e.side || '').toLowerCase();
+        return side.includes('sell') || side.includes('short');
+      }).length;
       const buysPct = totalTrades > 0 ? (buysCount / totalTrades) * 100 : 0;
       const sellsPct = totalTrades > 0 ? (sellsCount / totalTrades) * 100 : 0;
       const tradesPerDay = totalTrades / days;
       
-      const tradesLiquido = curEntries
-        .filter(e => e.type.toUpperCase().includes('TRADE') || e.type.toUpperCase().includes('LONG') || e.type.toUpperCase().includes('SHORT'))
+      const tradesLiquido = tradeEntries
         .reduce((sum, e) => sum.plus(new Big(e.change || e.cashFlow || '0')), new Big(0))
         .toString();
         
@@ -109,137 +111,217 @@ export function BitgetTransactionNetChangeReport({
         fundingRate,
         cashFlowTotal,
         feesPagos,
-        roiMedioDiario
+        roiMedioDiario,
+        isStable: stableMatch,
       };
+    }).sort((a, b) => {
+      if (a.isStable && !b.isStable) return 1;
+      if (!a.isStable && b.isStable) return -1;
+      return Math.abs(Number(b.ganhoAbsolutoUSD)) - Math.abs(Number(a.ganhoAbsolutoUSD));
     });
   }, [filteredEntries, stats, tokenRates]);
 
-  const toggleCurrency = (cur: string) => {
-    setExpandedReportCurrencies(prev => ({
-      ...prev,
-      [cur]: !prev[cur]
-    }));
-  };
-
-  const maskVal = (val: string | number, isFiat: boolean = true) => {
-    if (isPrivateMode) return '****';
-    const num = Number(val);
-    return isFiat ? formatCurrency(num, 'usd') : num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 });
-  };
-
-  if (currencyReports.length === 0) {
-    return <div className="text-center py-6 text-sm text-[#8E9299]">No transactions found for the selected filters.</div>;
-  }
-
   return (
-    <div className="space-y-4">
-      {/* Overview Totals Card */}
-      <div className="bg-[#111215] border border-[#2a2b30] rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          <span className="text-xs text-[#8E9299] block mb-1">Total Net Change (Aggregated USD)</span>
-          <div className="flex items-center gap-2">
-            <span className={`text-xl font-bold font-mono ${Number(stats.aggregatedUsd.totalChange) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-              {maskVal(stats.aggregatedUsd.totalChange)}
-            </span>
-            <span className={`text-xs px-2 py-0.5 rounded font-mono font-medium ${stats.aggregatedUsd.percentageChange >= 0 ? 'bg-[#00C853]/10 text-[#00C853]' : 'bg-[#FF4444]/10 text-[#FF4444]'}`}>
-              {stats.aggregatedUsd.percentageChange >= 0 ? '+' : ''}{stats.aggregatedUsd.percentageChange.toFixed(2)}%
-            </span>
+    <div className="flex flex-col gap-4 text-white">
+      <p className="text-xs text-[#8E9299]">
+        Detailed operational performance by asset, calculating absolute returns, trade distributions, funding impact, and fees.
+      </p>
+      
+      {currencyReports.length === 0 ? (
+        <div className="text-[#8E9299] text-sm text-center py-8">No transaction data available for report.</div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-end gap-2.5 text-xs border-b border-[#2a2b30]/30 pb-2">
+            <button
+              type="button"
+              onClick={() => {
+                const allExpanded: Record<string, boolean> = {};
+                currencyReports.forEach(r => {
+                  allExpanded[r.currency] = true;
+                });
+                setExpandedReportCurrencies(allExpanded);
+              }}
+              className="text-[#F0B90B] hover:text-[#f3c73e] transition-colors font-medium px-2.5 py-1 rounded bg-[#2a2b30]/40 hover:bg-[#2a2b30]/70 cursor-pointer"
+            >
+              Expand All
+            </button>
+            <button
+              type="button"
+              onClick={() => setExpandedReportCurrencies({})}
+              className="text-[#8E9299] hover:text-white transition-colors font-medium px-2.5 py-1 rounded bg-[#2a2b30]/40 hover:bg-[#2a2b30]/70 cursor-pointer"
+            >
+              Collapse All
+            </button>
           </div>
-        </div>
-        <div className="flex items-center gap-6 text-xs text-[#8E9299]">
-          <div>
-            <span>Initial (Est): </span>
-            <span className="text-white font-mono">{maskVal(stats.aggregatedUsd.initialBalance)}</span>
-          </div>
-          <div>
-            <span>Final: </span>
-            <span className="text-white font-mono">{maskVal(stats.aggregatedUsd.finalBalance)}</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Currency breakdown */}
-      <div className="space-y-3">
-        {currencyReports.map((rep) => {
-          const isExpanded = !!expandedReportCurrencies[rep.currency];
-          const isProfit = Number(rep.ganhoAbsoluto) >= 0;
-
-          return (
-            <div key={rep.currency} className="bg-[#111215] border border-[#2a2b30] rounded-xl overflow-hidden">
+          {currencyReports.map((report) => {
+            const isPositive = new Big(report.ganhoAbsoluto).gte(0);
+            const hasTrades = report.totalTrades > 0;
+            const feesBig = new Big(report.feesPagos);
+            const isExpanded = !!expandedReportCurrencies[report.currency];
+            
+            return (
               <div 
-                onClick={() => toggleCurrency(rep.currency)}
-                className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#161b22] transition-colors"
+                key={report.currency} 
+                className="bg-[#1e232b] rounded-lg border border-[#2a2b30] overflow-hidden transition-all duration-200"
               >
-                <div className="flex items-center gap-3">
-                  <CoinIcon symbol={rep.currency} size={24} />
-                  <div>
-                    <span className="text-sm font-bold text-white flex items-center gap-2">
-                      {rep.currency}
-                      <span className="text-[11px] font-normal text-[#8E9299]">({rep.days} days)</span>
+                {/* Header Panel (Accordion Trigger) */}
+                <div 
+                  onClick={() => {
+                    setExpandedReportCurrencies(prev => ({
+                      ...prev,
+                      [report.currency]: !prev[report.currency]
+                    }));
+                  }}
+                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-[#2a2b30]/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-white text-lg">{report.currency}</span>
+                    <span className="text-[#8E9299] text-xs px-2 py-0.5 bg-[#2a2b30]/50 rounded-full">
+                      {report.days} active {report.days === 1 ? 'day' : 'days'}
                     </span>
-                    <span className="text-xs text-[#8E9299] font-mono">
-                      {maskVal(rep.initialBalance, false)} → {maskVal(rep.finalBalance, false)} {rep.currency}
-                    </span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-end">
+                      <span className={`font-bold font-mono ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                        {isPositive ? '+' : ''}{report.ganhoPercentual.toFixed(2)}%
+                      </span>
+                      <span className="text-xs text-[#8E9299] font-mono">
+                        {isPrivateMode ? "****" : `${isPositive ? "+" : ""}${Number(report.ganhoAbsolutoUSD).toFixed(2)} USD`}
+                      </span>
+                    </div>
+                    <svg 
+                      className={`w-5 h-5 text-[#8E9299] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <span className={`text-sm font-bold font-mono block ${isProfit ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                      {isProfit ? '+' : ''}{maskVal(rep.ganhoAbsoluto, false)} {rep.currency}
-                    </span>
-                    <span className="text-[11px] font-mono text-[#8E9299]">
-                      ≈ {maskVal(rep.ganhoAbsolutoUSD)} ({rep.ganhoPercentual >= 0 ? '+' : ''}{rep.ganhoPercentual.toFixed(2)}%)
-                    </span>
+                {/* Expanded Details Body */}
+                {isExpanded && (
+                  <div className="p-4 border-t border-[#2a2b30]/50 bg-[#161b22]/50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      
+                      {/* Left Column: Balances and Gains */}
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-white flex items-center justify-between pb-1 border-b border-[#2a2b30]">
+                          <span>Primary Result</span>
+                          <span className="text-[9px] text-[#8E9299]/70 capitalize font-normal">Asset Summary</span>
+                        </h4>
+                        <div className="flex flex-col gap-1.5 text-xs font-mono">
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Initial Balance</span>
+                            <span className="text-[#d1d5db] font-medium">{isPrivateMode ? "****" : `${Number(report.initialBalance).toFixed(6)} ${report.currency}`}</span>
+                          </div>
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Total Inflow</span>
+                            <span className="text-[#00C853] font-medium">{isPrivateMode ? "****" : `+${Number(report.totalInflow).toFixed(6)} ${report.currency}`}</span>
+                          </div>
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Total Outflow</span>
+                            <span className="text-[#FF4444] font-medium">{isPrivateMode ? "****" : `-${Number(report.totalOutflow).toFixed(6)} ${report.currency}`}</span>
+                          </div>
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Final Balance</span>
+                            <span className="text-white font-bold">{isPrivateMode ? "****" : `${Number(report.finalBalance).toFixed(6)} ${report.currency}`}</span>
+                          </div>
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Percentage Gain</span>
+                            <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                              {isPositive ? '+' : ''}{report.ganhoPercentual.toFixed(2)}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Absolute Gain</span>
+                            <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                              {isPrivateMode ? "****" : `${isPositive ? "+" : ""}${Number(report.ganhoAbsoluto).toFixed(6)} ${report.currency}`}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1.5">
+                            <span className="text-[#8E9299]">Absolute Gain (USD)</span>
+                            <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                              {isPrivateMode ? "****" : `${isPositive ? "+$" : "-$"}${Math.abs(Number(report.ganhoAbsolutoUSD)).toFixed(2)}`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column: Operational Metrics */}
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-white flex items-center justify-between pb-1 border-b border-[#2a2b30]">
+                          <span>Operational Metrics</span>
+                          <span className="text-[9px] text-[#8E9299]/70 capitalize font-normal">Operational Stats</span>
+                        </h4>
+                        <div className="flex flex-col gap-1.5 text-xs font-mono">
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Total Trades Executed</span>
+                            <span className="text-[#d1d5db] font-medium">{report.totalTrades} trades</span>
+                          </div>
+                          
+                          {hasTrades && (
+                            <>
+                              <div className="flex justify-between py-1 border-b border-[#2a2b30]/20 pl-1.5">
+                                <span className="text-[#8E9299]/80">─ Buys (BUY)</span>
+                                <span className="text-[#00C853] font-medium">
+                                  {report.buysCount} ({report.buysPct.toFixed(1)}%)
+                                </span>
+                              </div>
+                              <div className="flex justify-between py-1 border-b border-[#2a2b30]/20 pl-1.5">
+                                <span className="text-[#8E9299]/80">─ Sells (SELL)</span>
+                                <span className="text-[#FF4444] font-medium">
+                                  {report.sellsCount} ({report.sellsPct.toFixed(1)}%)
+                                </span>
+                              </div>
+                              <div className="flex justify-between py-1 border-b border-[#2a2b30]/20 pl-1.5">
+                                <span className="text-[#8E9299]/80">─ Daily Average</span>
+                                <span className="text-[#d1d5db] font-medium">{report.tradesPerDay.toFixed(2)} trades/day</span>
+                              </div>
+                              <div className="flex justify-between py-1 border-b border-[#2a2b30]/30 pl-1.5">
+                                <span className="text-[#8E9299]/80">─ Net Trades</span>
+                                <span className={`font-medium ${new Big(report.tradesLiquido).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                                  {isPrivateMode ? "****" : `${new Big(report.tradesLiquido).gt(0) ? "+" : ""}${Number(report.tradesLiquido).toFixed(6)} ${report.currency}`}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                          
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Funding Settled</span>
+                            <span className={`font-medium ${new Big(report.fundingRate).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                              {isPrivateMode ? "****" : `${new Big(report.fundingRate).gt(0) ? "+" : ""}${Number(report.fundingRate).toFixed(6)} ${report.currency}`}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Total Cash Flow</span>
+                            <span className="text-[#d1d5db] font-medium">
+                              {isPrivateMode ? "****" : `${Number(report.cashFlowTotal).toFixed(6)} ${report.currency}`}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
+                            <span className="text-[#8E9299]">Fees Paid</span>
+                            <span className="text-[#FF4444] font-medium">
+                              {isPrivateMode ? "****" : `${feesBig.gt(0) ? "-" : ""}${Number(report.feesPagos).toFixed(6)} ${report.currency}`}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1.5">
+                            <span className="text-[#8E9299]">Daily Avg ROI</span>
+                            <span className={`font-bold ${report.roiMedioDiario >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                              {report.roiMedioDiario >= 0 ? '+' : ''}{report.roiMedioDiario.toFixed(4)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                    </div>
                   </div>
-                  <div className="text-[#8E9299] p-1">
-                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </div>
-                </div>
+                )}
               </div>
-
-              {isExpanded && (
-                <div className="p-4 bg-[#0d0e11] border-t border-[#2a2b30] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 text-xs">
-                  <div>
-                    <span className="text-[#8E9299] block mb-1">Total Inflow / Deposits:</span>
-                    <span className="text-[#00C853] font-mono font-medium">+{maskVal(rep.totalInflow, false)} {rep.currency}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#8E9299] block mb-1">Total Outflow / Withdrawals:</span>
-                    <span className="text-[#FF4444] font-mono font-medium">-{maskVal(rep.totalOutflow, false)} {rep.currency}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#8E9299] block mb-1">Fees Paid:</span>
-                    <span className="text-[#FF4444] font-mono font-medium">{maskVal(rep.feesPagos, false)} {rep.currency}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#8E9299] block mb-1">Funding Settled:</span>
-                    <span className="text-white font-mono font-medium">{maskVal(rep.fundingRate, false)} {rep.currency}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#8E9299] block mb-1">Trades Count:</span>
-                    <span className="text-white font-mono font-medium">{rep.totalTrades} ({rep.tradesPerDay.toFixed(1)}/day)</span>
-                  </div>
-                  <div>
-                    <span className="text-[#8E9299] block mb-1">Buy / Sell Ratio:</span>
-                    <span className="text-white font-mono font-medium">{rep.buysCount} ({rep.buysPct.toFixed(0)}%) / {rep.sellsCount} ({rep.sellsPct.toFixed(0)}%)</span>
-                  </div>
-                  <div>
-                    <span className="text-[#8E9299] block mb-1">Daily Avg ROI:</span>
-                    <span className={`font-mono font-medium ${rep.roiMedioDiario >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                      {rep.roiMedioDiario >= 0 ? '+' : ''}{rep.roiMedioDiario.toFixed(2)}%/day
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[#8E9299] block mb-1">Cash Flow Net:</span>
-                    <span className="text-white font-mono font-medium">{maskVal(rep.cashFlowTotal, false)} {rep.currency}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
