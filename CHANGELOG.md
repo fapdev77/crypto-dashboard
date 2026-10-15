@@ -1,3 +1,10 @@
+# [2.9.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.8.0...v2.9.0) (2026-10-15)
+
+
+### Features
+
+* **ui:** add total stats summary to transaction modals ([9a458ae](https://github.com/fapdev77/crypto-dashboard/commit/9a458ae7f23053245dfbdb590728f11418d10e3d))
+
 # [2.8.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.7.0...v2.8.0) (2026-10-14)
 
 
