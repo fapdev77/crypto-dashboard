@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Menu, Bot, Sparkles } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ApiKeys } from './components/ApiKeys';
@@ -55,6 +55,16 @@ export default function App() {
   const isAiFeatureEnabled = isAiChatbotFeatureEnabled();
   const isAiEnabled = useAiSettingsStore((state) => state.globalSettings.isEnabled);
   const openChatDrawer = useAiChatStore((state) => state.openDrawer);
+  const mainContentRef = useRef<HTMLDivElement>(null);
+
+  // Instantly reset scroll position to the top of the container and window whenever navigating to a new tab
+  useLayoutEffect(() => {
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+      mainContentRef.current.scrollLeft = 0;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [activeTab]);
 
   useEffect(() => {
     if (!isAiFeatureEnabled && activeTab === 'ai-settings') {
@@ -206,7 +216,7 @@ export default function App() {
                   </div>
                 </header>
 
-                <div className="flex-1 overflow-auto hide-scrollbar relative">
+                <div ref={mainContentRef} className="flex-1 overflow-auto hide-scrollbar relative">
                   <ErrorBoundary isolateScope={activeTabName} key={activeTab}>
                     {activeTab === 'dashboard' && <Dashboard />}
                     {activeTab === 'positions-open' && <OpenPositions />}
