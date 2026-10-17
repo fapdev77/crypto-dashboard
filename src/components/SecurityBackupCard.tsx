@@ -336,6 +336,8 @@ export function SecurityBackupCard() {
                           <AccountTypeBadge
                             exchange={k.exchange}
                             accountType={k.accountType}
+                            environment={k.environment}
+                            bybitRegion={k.bybitRegion}
                           />
                         </label>
                       ))}
@@ -460,6 +462,8 @@ export function SecurityBackupCard() {
                           <AccountTypeBadge
                             exchange={ik.exchange}
                             accountType={ik.accountType}
+                            environment={ik.environment}
+                            bybitRegion={ik.bybitRegion}
                           />
                         </label>
                         

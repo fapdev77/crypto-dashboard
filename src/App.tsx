@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { Menu } from 'lucide-react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { Menu, Bot, Sparkles } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ApiKeys } from './components/ApiKeys';
 import { WorkSpace } from './components/WorkSpace';
@@ -17,9 +17,12 @@ import { StatusBar } from './components/StatusBar';
 import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
 import { PnLBySymbol } from './components/analytics/PnLBySymbol';
-import { BybitTransactions } from './components/analytics/BybitTransactions/BybitTransactions';
+import { BybitTransactions } from './components/transactions/BybitTransactions/BybitTransactions';
+import { BitgetTransactions } from './components/transactions/BitgetTransactions/BitgetTransactions';
+import { OkxTransactions } from './components/transactions/OkxTransactions/OkxTransactions';
 import { FundingDashboard } from './components/analytics/FundingFees/FundingDashboard';
-import { HedgeProDashboard } from './components/analytics/HedgePro/HedgeProDashboard';
+import { HedgeProDashboard } from './components/HedgePro/HedgeProDashboard';
+import { MarketAnalyticsDashboard } from './components/analytics/MarketAnalytics/MarketAnalyticsDashboard';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 import { PrivacyProvider } from './context/PrivacyContext';
@@ -34,6 +37,13 @@ import { WelcomeHelpModal } from './components/WelcomeHelpModal';
 import { UpdateNotification } from './components/UpdateNotification';
 import { useApiKeysStore } from './store/apiKeysStore';
 import { GlobalUnlockScreen } from './components/GlobalUnlockScreen';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { AiSettings } from './components/ai/AiSettings';
+import { AiChatDrawer } from './components/ai/AiChatDrawer';
+import { AiPikaChatButton } from './components/ai/AiPikaChatButton';
+import { useAiSettingsStore } from './store/aiSettingsStore';
+import { useAiChatStore } from './store/aiChatStore';
+import { isAiChatbotFeatureEnabled } from './utils/aiFeatureFlag';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -42,6 +52,25 @@ export default function App() {
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
 
   const { isEncrypted, isUnlocked } = useApiKeysStore();
+  const isAiFeatureEnabled = isAiChatbotFeatureEnabled();
+  const isAiEnabled = useAiSettingsStore((state) => state.globalSettings.isEnabled);
+  const openChatDrawer = useAiChatStore((state) => state.openDrawer);
+  const mainContentRef = useRef<HTMLDivElement>(null);
+
+  // Instantly reset scroll position to the top of the container and window whenever navigating to a new tab
+  useLayoutEffect(() => {
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+      mainContentRef.current.scrollLeft = 0;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!isAiFeatureEnabled && activeTab === 'ai-settings') {
+      setActiveTab('dashboard');
+    }
+  }, [isAiFeatureEnabled, activeTab]);
 
   // Listen for global tab navigation requests
   useEffect(() => {
@@ -118,11 +147,15 @@ export default function App() {
   if (activeTab === 'api-keys') activeTabName = 'API Keys Manager';
   if (activeTab === 'logs') activeTabName = 'Live Connection Logs';
   if (activeTab === 'settings') activeTabName = 'Settings';
+  if (activeTab === 'ai-settings') activeTabName = 'AI Settings';
   if (activeTab === 'api-tester') activeTabName = 'API Tester';
   if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
   if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
   if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
-  if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
+  if (activeTab.startsWith('transactions-history-')) activeTabName = 'Transactions History';
+  if (activeTab === 'analytics-hedge-pro') activeTabName = 'Hedge Pro';
+  else if (activeTab === 'analytics-market-advanced') activeTabName = 'Market Analytics';
+  else if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
   if (activeTab === 'reports') activeTabName = 'Reports';
 
   return (
@@ -178,27 +211,34 @@ export default function App() {
                     </h2>
                   </div>
                   <div className="flex items-center gap-2">
+                    {isAiFeatureEnabled && <AiPikaChatButton onClick={openChatDrawer} isEnabled={isAiEnabled} />}
                     <HelpToggleButton isOpen={isWelcomeOpen} onClick={() => setIsWelcomeOpen(!isWelcomeOpen)} />
                     <PrivacyToggleButton />
                   </div>
                 </header>
 
-                <div className="flex-1 overflow-auto hide-scrollbar relative">
-                  {activeTab === 'dashboard' && <Dashboard />}
-                  {activeTab === 'positions-open' && <OpenPositions />}
-                  {activeTab === 'positions-history' && <ClosedPositions />}
-                  {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
-                  {activeTab === 'analytics-bybit-tx' && <BybitTransactions />}
-                  {activeTab === 'analytics-funding' && <FundingDashboard />}
-                  {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
-                  {activeTab === 'reports' && <ReportsDashboard />}
-                  {activeTab === 'orders-open' && <OpenOrders />}
-                  {activeTab === 'orders-history' && <OrderHistory />}
-                  {activeTab === 'trade-history' && <TradeHistory />}
-                  {activeTab === 'api-keys' && <ApiKeys />}
-                  {activeTab === 'logs' && <ConnectionLogTerminal />}
-                  {activeTab === 'settings' && <Settings />}
-                  {activeTab === 'api-tester' && <ApiTester />}
+                <div ref={mainContentRef} className="flex-1 overflow-auto hide-scrollbar relative">
+                  <ErrorBoundary isolateScope={activeTabName} key={activeTab}>
+                    {activeTab === 'dashboard' && <Dashboard />}
+                    {activeTab === 'positions-open' && <OpenPositions />}
+                    {activeTab === 'positions-history' && <ClosedPositions />}
+                    {activeTab === 'analytics-market-advanced' && <MarketAnalyticsDashboard />}
+                    {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
+                    {activeTab === 'transactions-history-bybit' && <BybitTransactions />}
+                    {activeTab === 'transactions-history-bitget' && <BitgetTransactions />}
+                    {activeTab === 'transactions-history-okx' && <OkxTransactions />}
+                    {activeTab === 'analytics-funding' && <FundingDashboard />}
+                    {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
+                    {activeTab === 'reports' && <ReportsDashboard />}
+                    {activeTab === 'orders-open' && <OpenOrders />}
+                    {activeTab === 'orders-history' && <OrderHistory />}
+                    {activeTab === 'trade-history' && <TradeHistory />}
+                    {activeTab === 'api-keys' && <ApiKeys />}
+                    {activeTab === 'logs' && <ConnectionLogTerminal />}
+                    {isAiFeatureEnabled && activeTab === 'ai-settings' && <AiSettings />}
+                    {activeTab === 'settings' && <Settings />}
+                    {activeTab === 'api-tester' && <ApiTester />}
+                  </ErrorBoundary>
                 </div>
               </main>
 
@@ -214,6 +254,7 @@ export default function App() {
           </div>
           <WelcomeHelpModal isOpen={isWelcomeOpen} onClose={() => setIsWelcomeOpen(false)} />
           <UpdateNotification />
+          {isAiFeatureEnabled && <AiChatDrawer onNavigateToSettings={() => setActiveTab('ai-settings')} />}
         </WorkSpace>
       </TooltipProvider>
     </PrivacyProvider>

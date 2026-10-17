@@ -16,13 +16,6 @@ const cleanAccountLabel = (label: string) => {
 };
 
 const getAssetOrigin = (b: BalanceItem) => {
-  const ex = b.exchange.toLowerCase();
-
-  if (ex === 'bybit') {
-    return 'UNIFIED';
-  }
-
-  // Bitget and OKX logic
   const connId = b.connectionId;
   const prefix = connId + '-';
   if (b.id.startsWith(prefix)) {
@@ -220,10 +213,17 @@ export function ExchangeHierarchyTable({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{cleanAccountLabel(accData.label)}</span>
-                        <AccountTypeBadge
-                          exchange={exchange}
-                          accountType={keys.find(k => k.id === connId)?.accountType}
-                        />
+                        {(() => {
+                          const matchedKey = keys.find(k => k.id === connId);
+                          return (
+                            <AccountTypeBadge
+                              exchange={exchange}
+                              accountType={matchedKey?.accountType}
+                              environment={matchedKey?.environment}
+                              bybitRegion={matchedKey?.bybitRegion}
+                            />
+                          );
+                        })()}
                       </div>
                     </div>
                     <span className="text-sm font-bold text-white font-mono">{formatCurrency(accData.total, 'usd')}</span>

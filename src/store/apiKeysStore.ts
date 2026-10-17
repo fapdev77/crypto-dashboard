@@ -2,9 +2,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ExchangeName } from '../types';
 import { encryptData, decryptData } from '../utils/cryptoLib';
+import { ApiEnvironment, BybitRegion } from '../utils/bybitEndpoints';
+import { LogManager } from '../services/LogManager';
 
 export type Exchange = ExchangeName;
 export type AccountType = 'classic' | 'uta';
+export type { ApiEnvironment, BybitRegion };
 
 /** Credentials for a single exchange API connection. */
 export interface ApiCredentials {
@@ -16,6 +19,8 @@ export interface ApiCredentials {
   passphrase?: string;
   isActive: boolean;
   accountType?: AccountType;
+  environment?: ApiEnvironment;
+  bybitRegion?: BybitRegion;
 }
 
 interface ApiKeysState {
@@ -56,16 +61,26 @@ export const useApiKeysStore = create<ApiKeysState>()(
 
       addKey: (credentials) => {
         const accountType = credentials.accountType || (credentials.exchange === 'bitget' ? 'classic' : undefined);
+        const environment = credentials.exchange === 'bybit' ? (credentials.environment || 'mainnet') : credentials.environment;
+        const bybitRegion = credentials.exchange === 'bybit' ? (credentials.bybitRegion || 'global') : undefined;
         set((state) => ({
           keys: [
             ...state.keys,
-            { ...credentials, accountType, id: crypto.randomUUID(), isActive: true },
+            {
+              ...credentials,
+              accountType,
+              environment,
+              bybitRegion,
+              id: crypto.randomUUID(),
+              isActive: true,
+            },
           ],
         }));
         const state = get();
         if (state.isEncrypted && currentPassphrase) {
           state.syncEncryption(currentPassphrase);
         }
+        LogManager.system('Security.Keys', `Added API connection [${credentials.label}] (${credentials.exchange}).`);
       },
       toggleKey: (id) => {
         set((state) => ({
@@ -79,6 +94,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
         }
       },
       removeKey: (id) => {
+        const target = get().keys.find(k => k.id === id);
         set((state) => ({
           keys: state.keys.filter((apiKey) => apiKey.id !== id),
         }));
@@ -86,6 +102,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
         if (state.isEncrypted && currentPassphrase) {
           state.syncEncryption(currentPassphrase);
         }
+        LogManager.system('Security.Keys', `Removed API connection ${target ? `[${target.label}]` : id}.`);
       },
       updateKey: (id, updates) => {
         set((state) => ({
@@ -101,7 +118,9 @@ export const useApiKeysStore = create<ApiKeysState>()(
       importKeys: (newKeys) => {
         const normalized = newKeys.map(k => ({
           ...k,
-          accountType: k.accountType || (k.exchange === 'bitget' ? 'classic' : undefined)
+          accountType: k.accountType || (k.exchange === 'bitget' ? 'classic' : undefined),
+          environment: k.exchange === 'bybit' ? (k.environment || 'mainnet') : k.environment,
+          bybitRegion: k.exchange === 'bybit' ? (k.bybitRegion || 'global') : undefined,
         }));
         set((state) => ({
           keys: [...state.keys, ...normalized],
@@ -123,6 +142,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
         const encrypted = await encryptData(JSON.stringify(keys), passphrase);
         currentPassphrase = passphrase;
         set({ isEncrypted: true, encryptedData: encrypted, isUnlocked: true });
+        LogManager.system('Security.Keys', 'Vault encryption enabled.');
       },
 
       disableEncryption: async (passphrase: string) => {
@@ -132,6 +152,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
         }
         currentPassphrase = '';
         set({ isEncrypted: false, encryptedData: null, isUnlocked: true });
+        LogManager.system('Security.Keys', 'Vault encryption disabled.');
       },
 
       unlock: async (passphrase: string) => {
@@ -139,11 +160,21 @@ export const useApiKeysStore = create<ApiKeysState>()(
         if (!encryptedData) return false;
         try {
           const decrypted = await decryptData(encryptedData, passphrase);
-          const keys = JSON.parse(decrypted);
+          const rawKeys = JSON.parse(decrypted);
+          const keys = Array.isArray(rawKeys)
+            ? rawKeys.map((k: any) => ({
+                ...k,
+                accountType: k.accountType || (k.exchange === 'bitget' ? 'classic' : undefined),
+                environment: k.exchange === 'bybit' ? (k.environment || 'mainnet') : k.environment,
+                bybitRegion: k.exchange === 'bybit' ? (k.bybitRegion || 'global') : undefined,
+              }))
+            : [];
           currentPassphrase = passphrase;
           set({ keys, isUnlocked: true });
+          LogManager.system('Security.Keys', `Vault unlocked successfully (${keys.length} credentials loaded).`);
           return true;
         } catch (err) {
+          LogManager.warn('Security.Keys', 'Vault unlock attempt failed: invalid passphrase or corrupted payload.');
           return false;
         }
       },
@@ -151,6 +182,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
       lock: () => {
         currentPassphrase = '';
         set({ keys: [], isUnlocked: false });
+        LogManager.system('Security.Keys', 'Vault locked.');
       }
     }),
     {
@@ -161,9 +193,18 @@ export const useApiKeysStore = create<ApiKeysState>()(
         keys: state.isEncrypted ? [] : state.keys,
       }),
       onRehydrateStorage: () => (state) => {
-        if (state && state.isEncrypted) {
-          state.isUnlocked = false;
-          state.keys = [];
+        if (state) {
+          if (state.isEncrypted) {
+            state.isUnlocked = false;
+            state.keys = [];
+          } else if (state.keys) {
+            state.keys = state.keys.map((k) => ({
+              ...k,
+              accountType: k.accountType || (k.exchange === 'bitget' ? 'classic' : undefined),
+              environment: k.exchange === 'bybit' ? (k.environment || 'mainnet') : k.environment,
+              bybitRegion: k.exchange === 'bybit' ? (k.bybitRegion || 'global') : undefined,
+            }));
+          }
         }
       }
     }

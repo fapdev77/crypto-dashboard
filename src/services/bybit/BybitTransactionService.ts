@@ -4,6 +4,8 @@ import { BybitTransactionLogEntry } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { BybitAdapter } from '../adapters/BybitAdapter';
+import { matchUniversalTxType, getBybitUniversalType } from '../../utils/transactionTypeMapper';
+import { executeWithRetry, classifyError } from '../../utils/retryHelper';
 import {
   getBybitTxLogCache,
   saveBybitTxLogCache,
@@ -35,14 +37,14 @@ export class BybitTransactionService {
     // If we have cache, return it immediately and sync incrementally
     if (cached.length > 0 && meta && meta.latestTransactionTime > 0) {
       this.syncIncremental(key, meta.latestTransactionTime).catch(err =>
-        LogManager.warn('BybitTransactionService', `Incremental sync failed for ${key.label}:`, err)
+        LogManager.warn('Sync.Transactions', `[${key.label}] Incremental sync failed:`, err)
       );
       return cached;
     }
 
     // No cache: trigger deep sync and return empty for now
     this.syncAll(key).catch(err =>
-      LogManager.warn('BybitTransactionService', `Deep sync failed for ${key.label}:`, err)
+      LogManager.warn('Sync.Transactions', `[${key.label}] Deep sync failed:`, err)
     );
     return [];
   }
@@ -51,10 +53,15 @@ export class BybitTransactionService {
    * Incremental sync: fetch only records newer than the latest cached timestamp.
    */
   async syncIncremental(key: ApiCredentials, latestTime: number): Promise<BybitTransactionLogEntry[]> {
+    LogManager.info(
+      'Sync.Transactions',
+      `[${key.label}] Starting incremental transaction sync (since ${new Date(latestTime).toISOString()})`
+    );
     const now = Date.now();
     let allNew: BybitTransactionLogEntry[] = [];
     const categories = [''];
     let hasError = false;
+    let lastChunkError: any = null;
 
     for (const category of categories) {
       let chunkStart = latestTime + 1;
@@ -64,21 +71,33 @@ export class BybitTransactionService {
         let pages = 0;
         try {
           do {
-            const { list, nextPageCursor } = await this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined);
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => this.adapter.getTransactionLog(key, chunkStart, chunkEnd, category, cursor || undefined),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `BybitTransactionService.${key.label}`,
+              }
+            );
             for (const raw of list) {
               allNew.push(BybitAdapter.normalizeTxLogEntry(raw, key));
             }
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BybitTransactionService', `Incremental chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('Sync.Transactions', `[${key.label}] Incremental chunk error (${category || 'all'} [${chunkStart}-${chunkEnd}]):`, err);
           hasError = true;
+          lastChunkError = err;
+          break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
         }
         chunkStart = chunkEnd + 1;
         // Throttle to avoid rate-limiting
         await new Promise(resolve => setTimeout(resolve, 100));
       }
+      if (hasError) break;
     }
 
     // Deduplicate
@@ -110,6 +129,14 @@ export class BybitTransactionService {
        await updateBybitTxLogMeta(key.id, oldest, nextLatestTime, totalRecords);
     }
 
+
+    // Signal partial failure to the caller after all partial data has been persisted
+    if (hasError) {
+      const cause = classifyError(lastChunkError);
+      throw new Error(`Partial sync failure for ${key.label} (${cause})`);
+    }
+
+    LogManager.info('Sync.Transactions', `[${key.label}] Incremental sync complete: ${allNew.length} new records`);
     return allNew;
   }
 
@@ -121,6 +148,10 @@ export class BybitTransactionService {
     key: ApiCredentials,
     onProgress?: (pct: number, records: number) => void
   ): Promise<void> {
+    LogManager.info(
+      'Sync.Transactions',
+      `[${key.label}] Starting deep transaction sync (max backfill: 2 years)`
+    );
     const now = Date.now();
     let twoYearsAgo = now - TWO_YEARS_MS;
     const categories = [''];
@@ -130,6 +161,8 @@ export class BybitTransactionService {
     // Process chunks from most recent to oldest
     let chunkEnd = now;
     let allEntries: BybitTransactionLogEntry[] = [];
+    let hasError = false;
+    let lastChunkError: any = null;
 
     while (chunkEnd > twoYearsAgo) {
       const chunkStart = Math.max(twoYearsAgo, chunkEnd - SEVEN_DAYS_MS);
@@ -140,8 +173,14 @@ export class BybitTransactionService {
 
         try {
           do {
-            const { list, nextPageCursor } = await this.adapter.getTransactionLog(
-              key, chunkStart, chunkEnd, category, cursor || undefined
+            const { list, nextPageCursor } = await executeWithRetry(
+              () => this.adapter.getTransactionLog(
+                key, chunkStart, chunkEnd, category, cursor || undefined
+              ),
+              {
+                maxRetries: MAX_RETRIES,
+                context: `BybitTransactionService.${key.label}`,
+              }
             );
 
             for (const raw of list) {
@@ -150,10 +189,21 @@ export class BybitTransactionService {
 
             cursor = nextPageCursor;
             pages++;
+            if (cursor) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BybitTransactionService', `Chunk error ${key.label}/${category}:`, err);
+          LogManager.warn('Sync.Transactions', `[${key.label}] Deep sync chunk error (${category || 'all'} [${chunkStart}-${chunkEnd}]):`, err);
+          hasError = true;
+          lastChunkError = err;
+          break; // Stop deep sync regress to preserve continuous historical cache without gaps
         }
+      }
+
+      if (hasError) {
+        LogManager.warn('Sync.Transactions', `[${key.label}] Halting deep sync at ${new Date(chunkStart).toISOString()} due to chunk error.`);
+        break;
       }
 
       // Save batch and report progress
@@ -190,7 +240,13 @@ export class BybitTransactionService {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    LogManager.info('BybitTransactionService', `Deep sync complete for ${key.label}: ${totalNew} records`);
+    LogManager.info('Sync.Transactions', `[${key.label}] Deep sync complete: ${totalNew} records backfilled`);
+
+    // Signal partial failure to the caller after all partial data has been persisted
+    if (hasError) {
+      const cause = classifyError(lastChunkError);
+      throw new Error(`Partial sync failure for ${key.label} (${cause})`);
+    }
   }
 
   /**
@@ -254,8 +310,8 @@ export class BybitTransactionService {
       filtered = filtered.filter(e => e.category.toLowerCase() === filters.category!.toLowerCase());
     }
 
-    if (filters.type && filters.type !== 'All') {
-      filtered = filtered.filter(e => e.type === filters.type);
+    if (filters.type && filters.type !== 'All' && filters.type !== 'ALL') {
+      filtered = filtered.filter(e => matchUniversalTxType('bybit', e, filters.type!));
     }
 
     if (filters.currency && filters.currency !== 'All') {
@@ -304,7 +360,8 @@ export class BybitTransactionService {
     const EXCHANGE_TYPES = ['SPOT', 'CONVERT', 'CURRENCY_BUY', 'CURRENCY_SELL'];
 
     for (const e of entries) {
-      typeBreakdown[e.type] = (typeBreakdown[e.type] || 0) + 1;
+      const uType = getBybitUniversalType(e.type, e.funding);
+      typeBreakdown[uType] = (typeBreakdown[uType] || 0) + 1;
 
       const stableMatch = isStable(e.currency);
       const bucket = stableMatch ? stable : (perCurrency[e.currency] || (perCurrency[e.currency] = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) }));

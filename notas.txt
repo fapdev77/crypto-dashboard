@@ -1,2 +1,3 @@
-Anotações para futuras implementações de Ideias e melhorias:
-- bitget UTA
+Anotações para futuras implementações de Ideias e melhorias
+- fix release bump.  (feito)
+- buscar por novas melhorias e ideias. 
