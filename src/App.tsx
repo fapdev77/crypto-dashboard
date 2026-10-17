@@ -21,7 +21,7 @@ import { BybitTransactions } from './components/transactions/BybitTransactions/B
 import { BitgetTransactions } from './components/transactions/BitgetTransactions/BitgetTransactions';
 import { OkxTransactions } from './components/transactions/OkxTransactions/OkxTransactions';
 import { FundingDashboard } from './components/analytics/FundingFees/FundingDashboard';
-import { HedgeProDashboard } from './components/analytics/HedgePro/HedgeProDashboard';
+import { HedgeProDashboard } from './components/HedgePro/HedgeProDashboard';
 import { MarketAnalyticsDashboard } from './components/analytics/MarketAnalytics/MarketAnalyticsDashboard';
 import { ReportsDashboard } from './components/analytics/ReportsDashboard';
 import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
@@ -153,7 +153,8 @@ export default function App() {
   if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
   if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
   if (activeTab.startsWith('transactions-history-')) activeTabName = 'Transactions History';
-  if (activeTab === 'analytics-market-advanced') activeTabName = 'Market Analytics';
+  if (activeTab === 'analytics-hedge-pro') activeTabName = 'Hedge Pro';
+  else if (activeTab === 'analytics-market-advanced') activeTabName = 'Market Analytics';
   else if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
   if (activeTab === 'reports') activeTabName = 'Reports';
 

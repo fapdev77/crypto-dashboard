@@ -1,6 +1,6 @@
 import React from 'react';
-import { HedgeCoinSummary } from '../../../utils/hedgeUtils';
-import { AppTooltip } from '../../ui/Tooltip';
+import { HedgeCoinSummary } from '../../utils/hedgeUtils';
+import { AppTooltip } from '../ui/Tooltip';
 import { HedgePnlConceptMode } from './HedgeProDashboard';
 
 interface HedgeProCoinDrawerMetricsProps {
@@ -104,11 +104,10 @@ export function HedgeProCoinDrawerMetrics({
 
       {/* Card 3: Real Hedge Protected */}
       <div
-        className={`p-2.5 rounded-lg border flex flex-col justify-between ${
-          isNetProtectedPositive
+        className={`p-2.5 rounded-lg border flex flex-col justify-between ${isNetProtectedPositive
             ? 'bg-emerald-500/5 border-emerald-500/20'
             : 'bg-red-500/5 border-red-500/20'
-        }`}
+          }`}
       >
         <div className="flex items-center justify-between">
           <AppTooltip
@@ -116,28 +115,25 @@ export function HedgeProCoinDrawerMetrics({
             side="top"
           >
             <span
-              className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${
-                isNetProtectedPositive
+              className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${isNetProtectedPositive
                   ? 'text-emerald-400 border-emerald-500/40'
                   : 'text-red-400 border-red-500/40'
-              }`}
+                }`}
             >
               Real Hedge
             </span>
           </AppTooltip>
           <span
-            className={`text-[10px] font-mono font-semibold ${
-              isNetProtectedPositive ? 'text-emerald-400' : 'text-red-400'
-            }`}
+            className={`text-[10px] font-mono font-semibold ${isNetProtectedPositive ? 'text-emerald-400' : 'text-red-400'
+              }`}
           >
             {coin.realHedgeProtectedPct.toFixed(1)}%
           </span>
         </div>
         <div className="mt-1">
           <div
-            className={`font-mono text-sm font-semibold ${
-              isNetProtectedPositive ? 'text-emerald-400' : 'text-red-400'
-            }`}
+            className={`font-mono text-sm font-semibold ${isNetProtectedPositive ? 'text-emerald-400' : 'text-red-400'
+              }`}
           >
             {formatCurrency(coin.netProtectedUsd, 'usd', 2)}
           </div>
@@ -174,11 +170,10 @@ export function HedgeProCoinDrawerMetrics({
 
       {/* Card 5: Total Leveraged */}
       <div
-        className={`p-2.5 rounded-lg border flex flex-col justify-between ${
-          coin.leveragedUsd > 0
+        className={`p-2.5 rounded-lg border flex flex-col justify-between ${coin.leveragedUsd > 0
             ? 'bg-amber-500/5 border-amber-500/20'
             : 'bg-[#151619] border-[#26282d]'
-        }`}
+          }`}
       >
         <div className="flex items-center justify-between">
           <AppTooltip
@@ -186,26 +181,23 @@ export function HedgeProCoinDrawerMetrics({
             side="top"
           >
             <span
-              className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${
-                coin.leveragedUsd > 0 ? 'text-amber-400 border-amber-500/40' : 'text-[#8E9299] border-[#8E9299]/50'
-              }`}
+              className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${coin.leveragedUsd > 0 ? 'text-amber-400 border-amber-500/40' : 'text-[#8E9299] border-[#8E9299]/50'
+                }`}
             >
               Leveraged
             </span>
           </AppTooltip>
           <span
-            className={`text-[10px] font-mono font-semibold ${
-              coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-[#8E9299]'
-            }`}
+            className={`text-[10px] font-mono font-semibold ${coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-[#8E9299]'
+              }`}
           >
             {coin.leveragedOfEquityPct.toFixed(1)}%
           </span>
         </div>
         <div className="mt-1">
           <div
-            className={`font-mono text-sm font-semibold ${
-              coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-white'
-            }`}
+            className={`font-mono text-sm font-semibold ${coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-white'
+              }`}
           >
             {coin.leveragedUsd > 0 ? '+' : ''}{formatCurrency(coin.leveragedUsd, 'usd', 2)}
           </div>

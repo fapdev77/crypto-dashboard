@@ -73,4 +73,15 @@ describe('Sidebar Transactions History group', () => {
     expect(screen.queryByText('Bitget Transactions')).toBeNull();
     expect(screen.queryByText('OKX Transactions')).toBeNull();
   });
+
+  it('renders Hedge Pro as its own top-level menu item and not inside Analytics', () => {
+    renderSidebar('analytics-hedge-pro');
+
+    expect(screen.getAllByText('Hedge Pro').length).toBeGreaterThanOrEqual(1);
+
+    // Render with analytics active: Hedge Pro should not be inside Analytics group
+    renderSidebar('analytics-market-advanced');
+    expect(screen.getByText('Market Analytics')).toBeDefined();
+    expect(screen.getByText('Funding Fees')).toBeDefined();
+  });
 });

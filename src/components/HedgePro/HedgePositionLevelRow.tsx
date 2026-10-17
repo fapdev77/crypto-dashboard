@@ -1,8 +1,8 @@
 import React from 'react';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
-import { HedgePositionLevels } from '../../../utils/hedgeUtils';
-import { AppTooltip } from '../../ui/Tooltip';
-import { formatPrice } from '../../../utils/formatters';
+import { HedgePositionLevels } from '../../utils/hedgeUtils';
+import { AppTooltip } from '../ui/Tooltip';
+import { formatPrice } from '../../utils/formatters';
 import { HedgeExposureBar } from './HedgeExposureBar';
 import { HedgePnlConceptMode } from './HedgeProDashboard';
 

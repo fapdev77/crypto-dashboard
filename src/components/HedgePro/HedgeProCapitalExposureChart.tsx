@@ -9,8 +9,8 @@ import {
   Cell,
 } from 'recharts';
 import { ShieldCheck, Activity, DollarSign, TrendingUp, Shield } from 'lucide-react';
-import { AppTooltip } from '../../ui/Tooltip';
-import { HedgeTotals } from '../../../utils/hedgeUtils';
+import { AppTooltip } from '../ui/Tooltip';
+import { HedgeTotals } from '../../utils/hedgeUtils';
 
 interface HedgeProCapitalExposureChartProps {
   totals: HedgeTotals;
@@ -57,13 +57,12 @@ const CustomTooltip = ({ active, payload, formatCurrency, totals }: CustomToolti
           <span className="font-semibold text-white">{data.name}</span>
         </div>
         <span
-          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-            data.category === 'Protected'
+          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${data.category === 'Protected'
               ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
               : data.category === 'Leveraged'
                 ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
                 : 'bg-white/10 text-white border border-white/20'
-          }`}
+            }`}
         >
           {data.category}
         </span>
@@ -166,17 +165,17 @@ export function HedgeProCapitalExposureChart({
     },
     ...(hasLeveraged
       ? [
-          {
-            id: 'leveraged',
-            name: 'Leveraged (Longs)',
-            shortName: 'Leveraged',
-            category: 'Leveraged' as const,
-            usd: totals.totalLeveraged,
-            equityPct: totals.leveragedPct,
-            color: '#f59e0b', // amber-400
-            description: 'Inverse long positions adding directional leveraged market risk.',
-          },
-        ]
+        {
+          id: 'leveraged',
+          name: 'Leveraged (Longs)',
+          shortName: 'Leveraged',
+          category: 'Leveraged' as const,
+          usd: totals.totalLeveraged,
+          equityPct: totals.leveragedPct,
+          color: '#f59e0b', // amber-400
+          description: 'Inverse long positions adding directional leveraged market risk.',
+        },
+      ]
       : []),
   ];
 

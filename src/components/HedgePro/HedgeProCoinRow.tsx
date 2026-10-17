@@ -1,11 +1,11 @@
 import React from 'react';
 import { ChevronDown, AlertTriangle, ShieldCheck, Activity, TrendingUp } from 'lucide-react';
-import { HedgeCoinSummary, getExchangeDisplayName } from '../../../utils/hedgeUtils';
-import { CoinIcon } from '../../ui/CoinIcon';
-import { ExchangeIcon } from '../../ui/ExchangeIcon';
-import { AccountTypeBadge } from '../../ui/AccountTypeBadge';
-import { AppTooltip } from '../../ui/Tooltip';
-import { useApiKeysStore } from '../../../store/apiKeysStore';
+import { HedgeCoinSummary, getExchangeDisplayName } from '../../utils/hedgeUtils';
+import { CoinIcon } from '../ui/CoinIcon';
+import { ExchangeIcon } from '../ui/ExchangeIcon';
+import { AccountTypeBadge } from '../ui/AccountTypeBadge';
+import { AppTooltip } from '../ui/Tooltip';
+import { useApiKeysStore } from '../../store/apiKeysStore';
 import { HedgeExposureBar } from './HedgeExposureBar';
 import { HedgePositionLevelRow } from './HedgePositionLevelRow';
 import { HedgeProCoinDrawerMetrics } from './HedgeProCoinDrawerMetrics';
@@ -110,9 +110,8 @@ export function HedgeProCoinRow({
               {coin.positions.length} {coin.positions.length === 1 ? 'position' : 'positions'}
             </span>
             <div
-              className={`p-1 rounded hover:bg-[#202226] text-[#8E9299] hover:text-white transition-transform duration-200 ${
-                isExpanded ? 'rotate-180 text-white' : ''
-              }`}
+              className={`p-1 rounded hover:bg-[#202226] text-[#8E9299] hover:text-white transition-transform duration-200 ${isExpanded ? 'rotate-180 text-white' : ''
+                }`}
             >
               <ChevronDown className="w-4 h-4" />
             </div>

@@ -1,8 +1,8 @@
 import React from 'react';
 import { ShieldCheck, Activity } from 'lucide-react';
-import { HedgeCoinSummary, getHedgeCoinChartRows, getExchangeDisplayName } from '../../../utils/hedgeUtils';
-import { CoinIcon } from '../../ui/CoinIcon';
-import { AppTooltip } from '../../ui/Tooltip';
+import { HedgeCoinSummary, getHedgeCoinChartRows, getExchangeDisplayName } from '../../utils/hedgeUtils';
+import { CoinIcon } from '../ui/CoinIcon';
+import { AppTooltip } from '../ui/Tooltip';
 
 interface HedgeProBreakdownChartProps {
   summaries: HedgeCoinSummary[];
@@ -54,19 +54,19 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
 
       <div className="flex flex-col gap-2.5">
         {rows.map(row => {
-        const baseRef = (row.protectedUsd + row.exposedBaseUsd > 0)
-          ? (row.protectedUsd + row.exposedBaseUsd)
-          : row.balanceUsd;
-        const balancePct = pctOfBalance(baseRef, maxStack);
-        const leveragedPct = pctOfBalance(row.leveragedUsd, maxStack);
-        const protectedPct = pctOfBalance(row.protectedUsd, baseRef);
-        const exposedPct = pctOfBalance(row.exposedBaseUsd, baseRef);
-        const leveragedOfBalancePct =
-          baseRef > 0
-            ? pctOfBalance(row.leveragedUsd, baseRef)
-            : row.leveragedUsd > 0
-              ? 100
-              : 0;
+          const baseRef = (row.protectedUsd + row.exposedBaseUsd > 0)
+            ? (row.protectedUsd + row.exposedBaseUsd)
+            : row.balanceUsd;
+          const balancePct = pctOfBalance(baseRef, maxStack);
+          const leveragedPct = pctOfBalance(row.leveragedUsd, maxStack);
+          const protectedPct = pctOfBalance(row.protectedUsd, baseRef);
+          const exposedPct = pctOfBalance(row.exposedBaseUsd, baseRef);
+          const leveragedOfBalancePct =
+            baseRef > 0
+              ? pctOfBalance(row.leveragedUsd, baseRef)
+              : row.leveragedUsd > 0
+                ? 100
+                : 0;
 
           const tooltipRows = [
             {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppTooltip } from '../../ui/Tooltip';
+import { AppTooltip } from '../ui/Tooltip';
 
 interface HedgeExposureBarProps {
   /** Protected segment as % of the capital reference (emerald). */

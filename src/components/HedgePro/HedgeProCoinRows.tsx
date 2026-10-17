@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { HedgeCoinSummary } from '../../../utils/hedgeUtils';
+import { HedgeCoinSummary } from '../../utils/hedgeUtils';
 import { HedgeProCoinRow } from './HedgeProCoinRow';
-import { usePagination } from '../../../hooks/usePagination';
-import { Pagination } from '../../ui/Pagination';
+import { usePagination } from '../../hooks/usePagination';
+import { Pagination } from '../ui/Pagination';
 import { HedgePnlConceptMode } from './HedgeProDashboard';
 
 interface HedgeProCoinRowsProps {

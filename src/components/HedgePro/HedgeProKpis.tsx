@@ -1,8 +1,8 @@
 import React from 'react';
 import { ShieldCheck, Landmark, TrendingUp, Percent, Wallet, Layers } from 'lucide-react';
-import { KpiMetricCard } from '../FundingFees/KpiMetricCard';
-import { HedgeTotals } from '../../../utils/hedgeUtils';
-import { AppTooltip } from '../../ui/Tooltip';
+import { KpiMetricCard } from '../analytics/FundingFees/KpiMetricCard';
+import { HedgeTotals } from '../../utils/hedgeUtils';
+import { AppTooltip } from '../ui/Tooltip';
 
 interface HedgeProKpisProps {
   totals: HedgeTotals;

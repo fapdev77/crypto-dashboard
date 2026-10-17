@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight, BrainCircuit, History } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight, BrainCircuit, History, ShieldCheck } from 'lucide-react';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
@@ -97,6 +97,11 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     {
+      id: 'hedge-pro', label: 'Hedge Pro', icon: ShieldCheck, subItems: [
+        { id: 'analytics-hedge-pro', label: 'Hedge Pro' }
+      ]
+    },
+    {
       id: 'positions', label: 'Positions', icon: Activity, subItems: [
         { id: 'positions-open', label: 'Open Positions', badge: openCount },
         { id: 'positions-history', label: 'Positions History' }
@@ -122,8 +127,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
         { id: 'analytics-market-advanced', label: 'Market Analytics' },
         { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
-        { id: 'analytics-funding', label: 'Funding Fees' },
-        { id: 'analytics-hedge-pro', label: 'Hedge Pro' }
+        { id: 'analytics-funding', label: 'Funding Fees' }
       ]
     },
     { id: 'reports', label: 'Reports', icon: FileText },

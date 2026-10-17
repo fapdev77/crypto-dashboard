@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Activity, Layers, Scale } from 'lucide-react';
-import { useHedgeData } from '../../../hooks/useHedgeData';
-import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
-import { FilterBar } from '../../ui/FilterBar';
-import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
-import { AppTooltip } from '../../ui/Tooltip';
+import { useHedgeData } from '../../hooks/useHedgeData';
+import { useFormatCurrency } from '../../hooks/useFormatCurrency';
+import { FilterBar } from '../ui/FilterBar';
+import { SimulationModeBadge } from '../ui/SimulationModeBadge';
+import { AppTooltip } from '../ui/Tooltip';
 import { HedgeProKpis } from './HedgeProKpis';
 import { HedgeProCoinRows } from './HedgeProCoinRows';
 import { HedgeProBreakdownChart } from './HedgeProBreakdownChart';
@@ -79,11 +79,10 @@ export function HedgeProDashboard() {
           >
             <button
               onClick={() => handleTogglePnlConcept('standard')}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
-                pnlConceptMode === 'standard'
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${pnlConceptMode === 'standard'
                   ? 'bg-[#26282d] text-white shadow-sm'
                   : 'text-[#8E9299] hover:text-white'
-              }`}
+                }`}
             >
               <Layers className="w-3 h-3" />
               <span>Classic PnL</span>
@@ -96,11 +95,10 @@ export function HedgeProDashboard() {
           >
             <button
               onClick={() => handleTogglePnlConcept('hedge')}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
-                pnlConceptMode === 'hedge'
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${pnlConceptMode === 'hedge'
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
                   : 'text-[#8E9299] hover:text-white'
-              }`}
+                }`}
             >
               <Scale className="w-3 h-3" />
               <span>Hedge Concept</span>
