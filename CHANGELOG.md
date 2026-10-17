@@ -1,3 +1,10 @@
+# [2.11.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.10.0...v2.11.0) (2026-10-17)
+
+
+### Features
+
+* Reorganize the Hedge Pro sidebar location and automated tests. ([fb3f788](https://github.com/fapdev77/crypto-dashboard/commit/fb3f788723442993b073f3f7c8a4172d9ea0fe70))
+
 # [2.10.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.9.0...v2.10.0) (2026-10-15)
 
 
