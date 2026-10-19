@@ -1,3 +1,2 @@
 Anotações para futuras implementações de Ideias e melhorias
-- fix release bump.  (feito)
-- buscar por novas melhorias e ideias. 
+- [RESOLVIDO] fix valor incorreto no dashboard para bitget funding (precificação dinâmica via Spot Ticker e controle de Funding em subcontas)

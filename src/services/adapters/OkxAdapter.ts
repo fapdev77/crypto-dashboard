@@ -11,6 +11,7 @@ import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { calculateOkxTradeDetails } from '../../utils/okxUtils';
 import { ApiRateLimitError } from '../../utils/retryHelper';
+import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -120,34 +121,49 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     let additionalFundingUsd = 0;
     const fundingBalances: UnifiedBalance[] = [];
 
-    fundingData.forEach((item: any) => {
-      if (!item || !item.ccy) return;
-      const ccy = item.ccy.toUpperCase();
-      const amount = parseFloat(item.bal || '0');
-      if (amount <= 0) return;
+    if (key.includeFunding !== false) {
+      for (const item of fundingData) {
+        if (!item || !item.ccy) continue;
+        const ccy = item.ccy.toUpperCase();
+        const amount = parseFloat(item.bal || '0');
+        if (amount <= 0) continue;
 
-      const price = prices[ccy] || 0;
-      const usdValue = amount * price;
-      additionalFundingUsd += usdValue;
-
-      fundingBalances.push({
-        id: `${key.id}-FUNDING-${ccy}`,
-        connectionId: key.id,
-        exchange: 'okx' as const,
-        label: key.label,
-        ccy,
-        amount,
-        usdValue,
-        walletBalance: amount,
-        availableMargin: parseFloat(item.availBal || item.bal || '0'),
-        unrealizedPnl: 0,
-        raw: {
-          ...item,
-          equity: amount,
-          usdValue,
+        let price = prices[ccy];
+        if (price === undefined || price <= 0) {
+          try {
+            const fallbackPrice = await fetchTokenUsdPrice(ccy);
+            if (fallbackPrice && fallbackPrice > 0) {
+              price = fallbackPrice;
+              prices[ccy] = fallbackPrice;
+            }
+          } catch {
+            // ignore
+          }
         }
-      });
-    });
+        price = price || 0;
+        const usdValue = amount * price;
+        additionalFundingUsd += usdValue;
+
+        fundingBalances.push({
+          id: `${key.id}-FUNDING-${ccy}`,
+          connectionId: key.id,
+          exchange: 'okx' as const,
+          label: key.label,
+          ccy,
+          amount,
+          usdValue,
+          walletBalance: amount,
+          availableMargin: parseFloat(item.availBal || item.bal || '0'),
+          unrealizedPnl: 0,
+          raw: {
+            ...item,
+            equity: amount,
+            usdValue,
+            coinPrice: price,
+          }
+        });
+      }
+    }
 
     const baseTotalEquity = parseFloat(data.totalEq || '0');
     const baseWalletBalance = parseFloat(data.adjEq || '0');

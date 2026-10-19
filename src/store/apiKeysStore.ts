@@ -21,6 +21,8 @@ export interface ApiCredentials {
   accountType?: AccountType;
   environment?: ApiEnvironment;
   bybitRegion?: BybitRegion;
+  includeFunding?: boolean;
+  isSubAccount?: boolean;
 }
 
 interface ApiKeysState {
@@ -71,6 +73,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
               accountType,
               environment,
               bybitRegion,
+              includeFunding: credentials.includeFunding !== undefined ? credentials.includeFunding : true,
               id: crypto.randomUUID(),
               isActive: true,
             },

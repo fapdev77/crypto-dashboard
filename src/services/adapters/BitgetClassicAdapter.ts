@@ -11,10 +11,54 @@ import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { ApiRateLimitError } from '../../utils/retryHelper';
 
+import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
+
 const MAX_DEEP_PAGES = 30;
 
 export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchangeAdapter {
   static _timeSyncUrl = 'https://api.bitget.com/api/v2/public/time';
+  private static tickerPriceCache: Record<string, { price: number; timestamp: number }> = {};
+  private static CACHE_TTL_MS = 60 * 1000;
+
+  public async getCoinPrice(coin: string): Promise<number> {
+    const c = (coin || '').toUpperCase();
+    if (!c) return 0;
+    if (['USDT', 'USDC', 'USD', 'DAI', 'USDE', 'FDUSD', 'PYUSD', 'EURT', 'USDD'].includes(c)) return 1.0;
+
+    const now = Date.now();
+    const cached = BitgetClassicAdapter.tickerPriceCache[c];
+    if (cached && now - cached.timestamp < BitgetClassicAdapter.CACHE_TTL_MS) {
+      return cached.price;
+    }
+
+    try {
+      const tickerPath = `/api/v2/spot/market/tickers?symbol=${c}USDT`;
+      const res = await proxyFetch({ targetUrl: `https://api.bitget.com${tickerPath}`, method: 'GET', headers: {} });
+      if (res?.code === '00000' && Array.isArray(res.data) && res.data.length > 0) {
+        const item = res.data[0];
+        const p = parseFloat(item.lastPr || item.lastPrice || '0');
+        if (p > 0) {
+          BitgetClassicAdapter.tickerPriceCache[c] = { price: p, timestamp: now };
+          return p;
+        }
+      }
+    } catch (err) {
+      LogManager.warn('BitgetClassicAdapter.Price', `Failed to fetch Bitget classic ticker for ${c}USDT:`, err);
+    }
+
+    try {
+      const fallbackPrice = await fetchTokenUsdPrice(c);
+      if (fallbackPrice && fallbackPrice > 0) {
+        BitgetClassicAdapter.tickerPriceCache[c] = { price: fallbackPrice, timestamp: now };
+        return fallbackPrice;
+      }
+    } catch {
+      // ignore
+    }
+
+    return 0;
+  }
+
   static _parseTimeResponse(data: any): number | null {
     if (data?.code === '00000' && data.data?.serverTime) {
       return parseInt(data.data.serverTime, 10);
@@ -74,60 +118,83 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
     const results = await Promise.all(requests);
     const balances: UnifiedBalance[] = [];
 
-    results.forEach(({ res, type }) => {
+    for (const { res, type } of results) {
       if (res.code === '00000' && Array.isArray(res.data)) {
         if (type === 'SPOT' || type === 'MARGIN_CROSS' || type === 'MARGIN_ISOLATED') {
-          res.data.forEach((item: any) => {
+          for (const item of res.data) {
             const available = parseFloat(item.available || '0');
             const frozen = parseFloat(item.frozen || '0');
             const amount = available + frozen;
             if (amount > 0) {
+              const coin = (item.coin || item.symbol || '').toUpperCase();
+              const price = await this.getCoinPrice(coin);
+              const usdValue = price > 0 ? amount * price : (['USDT', 'USDC', 'USD'].includes(coin) ? amount : 0);
+
               balances.push({
-                id: `${key.id}-${type}-${item.coin || item.symbol}`,
+                id: `${key.id}-${type}-${coin}`,
                 connectionId: key.id,
                 exchange: 'bitget',
                 accountType: 'classic',
                 label: `${key.label} (${type.replace('_', ' ')})`,
-                ccy: (item.coin || item.symbol || '').toUpperCase(),
+                ccy: coin,
                 amount,
-                usdValue: amount,
+                usdValue,
+                totalEquity: amount,
                 walletBalance: amount,
                 availableMargin: available,
-                raw: item
+                unrealizedPnl: 0,
+                raw: {
+                  ...item,
+                  equity: amount,
+                  usdValue,
+                  coinPrice: price
+                }
               });
             }
-          });
+          }
         } else if (type === 'EARN') {
-          res.data.forEach((item: any) => {
+          for (const item of res.data) {
             const amount = parseFloat(item.amount || '0');
             if (amount > 0) {
+              const coin = (item.coin || '').toUpperCase();
+              const price = await this.getCoinPrice(coin);
+              const usdValue = price > 0 ? amount * price : (['USDT', 'USDC', 'USD'].includes(coin) ? amount : 0);
+
               balances.push({
-                id: `${key.id}-${type}-${item.coin}`,
+                id: `${key.id}-${type}-${coin}`,
                 connectionId: key.id,
                 exchange: 'bitget',
                 accountType: 'classic',
                 label: `${key.label} (${type})`,
-                ccy: (item.coin || '').toUpperCase(),
+                ccy: coin,
                 amount,
-                usdValue: amount,
+                usdValue,
+                totalEquity: amount,
                 walletBalance: amount,
                 availableMargin: amount,
-                raw: item
+                unrealizedPnl: 0,
+                raw: {
+                  ...item,
+                  equity: amount,
+                  usdValue,
+                  coinPrice: price
+                }
               });
             }
-          });
+          }
         } else {
           // Futures
           res.data.forEach((item: any) => {
             const totalEquity = parseFloat(item.usdtEquity || item.accountEquity || '0');
             const walletBalance = parseFloat(item.crossedMaxAvailable || item.available || '0');
+            const coin = (item.marginCoin || 'UNKNOWN').toUpperCase();
             balances.push({
-              id: `${key.id}-${type}-${item.marginCoin || 'UNKNOWN'}`,
+              id: `${key.id}-${type}-${coin}`,
               connectionId: key.id,
               exchange: 'bitget',
               accountType: 'classic',
               label: `${key.label} (${type})`,
-              ccy: (item.marginCoin || '').toUpperCase(),
+              ccy: coin,
               amount: parseFloat(item.accountEquity || item.available || '0'),
               usdValue: totalEquity,
               totalEquity,
@@ -139,7 +206,7 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
           });
         }
       }
-    });
+    }
 
     return balances;
   }

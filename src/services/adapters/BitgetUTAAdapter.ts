@@ -10,10 +10,55 @@ import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { ApiRateLimitError } from '../../utils/retryHelper';
 
+import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
+
 const MAX_DEEP_PAGES = 30;
 
 export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAdapter {
   static _timeSyncUrl = 'https://api.bitget.com/api/v2/public/time';
+  private static tickerPriceCache: Record<string, { price: number; timestamp: number }> = {};
+  private static CACHE_TTL_MS = 60 * 1000;
+
+  public async getCoinPrice(coin: string, knownPrices: Record<string, number> = {}): Promise<number> {
+    const c = (coin || '').toUpperCase();
+    if (!c) return 0;
+    if (knownPrices[c] !== undefined && knownPrices[c] > 0) return knownPrices[c];
+    if (['USDT', 'USDC', 'USD', 'DAI', 'USDE', 'FDUSD', 'PYUSD', 'EURT', 'USDD'].includes(c)) return 1.0;
+
+    const now = Date.now();
+    const cached = BitgetUTAAdapter.tickerPriceCache[c];
+    if (cached && now - cached.timestamp < BitgetUTAAdapter.CACHE_TTL_MS) {
+      return cached.price;
+    }
+
+    try {
+      const tickerPath = `/api/v3/market/tickers?category=SPOT&symbol=${c}USDT`;
+      const res = await proxyFetch({ targetUrl: `https://api.bitget.com${tickerPath}`, method: 'GET', headers: {} });
+      if (res?.code === '00000' && Array.isArray(res.data) && res.data.length > 0) {
+        const item = res.data[0];
+        const p = parseFloat(item.lastPrice || item.askPr || item.bidPr || '0');
+        if (p > 0) {
+          BitgetUTAAdapter.tickerPriceCache[c] = { price: p, timestamp: now };
+          return p;
+        }
+      }
+    } catch (err) {
+      LogManager.warn('BitgetUTAAdapter.Price', `Failed to fetch Bitget spot ticker for ${c}USDT:`, err);
+    }
+
+    try {
+      const fallbackPrice = await fetchTokenUsdPrice(c);
+      if (fallbackPrice && fallbackPrice > 0) {
+        BitgetUTAAdapter.tickerPriceCache[c] = { price: fallbackPrice, timestamp: now };
+        return fallbackPrice;
+      }
+    } catch {
+      // ignore
+    }
+
+    return 0;
+  }
+
   static _parseTimeResponse(data: any): number | null {
     if (data?.code === '00000' && data.data?.serverTime) {
       return parseInt(data.data.serverTime, 10);
@@ -45,6 +90,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
   // REST Balances (UTA v3)
   public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const balances: UnifiedBalance[] = [];
+    const knownPrices: Record<string, number> = {};
 
     LogManager.info(
       'BitgetUTAAdapter.Balance',
@@ -69,6 +115,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
         const mgnRatio = parseFloat(res.data.mgnRatio || '0');
 
         list.forEach((item: any) => {
+          const coinName = (item.coin || '').toUpperCase();
           const balance = parseFloat(item.balance || '0');
           const available = parseFloat(item.available || '0');
           const equity = parseFloat(item.equity || '0');
@@ -77,7 +124,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
           const subTotalEquity = crossedEquity + isolatedEquity > 0 ? (crossedEquity + isolatedEquity) : 0;
           const totalEquity = equity > 0 ? equity : (subTotalEquity > 0 ? subTotalEquity : balance);
           const usdVal = parseFloat(item.usdValue || '0');
-          const unrealizedPnl = parseFloat(item.unrealisedPnl || '0') || (item.coin?.toUpperCase() === 'USDT' ? accountUnrealizedPnl : 0);
+          const unrealizedPnl = parseFloat(item.unrealisedPnl || '0') || (coinName === 'USDT' ? accountUnrealizedPnl : 0);
 
           // In Bitget UTA, item.usdValue represents the USD valuation of item.equity (net balance / equity).
           // Derive the coin price in USD to correctly compute the gross wallet balance in USD (amount * coinPrice):
@@ -86,6 +133,10 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
             coinPrice = usdVal / totalEquity;
           } else if (balance > 0 && usdVal > 0) {
             coinPrice = usdVal / balance;
+          }
+
+          if (coinPrice > 0 && coinName) {
+            knownPrices[coinName] = coinPrice;
           }
 
           const walletBalance = balance > 0 ? balance : totalEquity;
@@ -98,10 +149,10 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
               exchange: 'bitget',
               accountType: 'uta',
               label: `${key.label} (UTA)`,
-              ccy: (item.coin || '').toUpperCase(),
+              ccy: coinName,
               amount: walletBalance,
               usdValue: walletUsdValue,
-              totalEquity: totalEquity > 0 ? totalEquity : (item.coin?.toUpperCase() === 'USDT' && accountEquity > 0 ? accountEquity : balance),
+              totalEquity: totalEquity > 0 ? totalEquity : (coinName === 'USDT' && accountEquity > 0 ? accountEquity : balance),
               walletBalance: balance,
               availableMargin: available,
               unrealizedPnl,
@@ -109,6 +160,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
                 ...item,
                 equity: totalEquity,
                 usdValue: usdVal,
+                coinPrice,
                 accountMetrics: { accountEquity, accountUsdtEquity, accountUnrealizedPnl, mmr, mgnRatio }
               }
             });
@@ -120,36 +172,50 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
     }
 
     // 2. UTA Funding Assets (/api/v3/account/funding-assets)
-    try {
-      const path = '/api/v3/account/funding-assets';
-      const headers = await BitgetUTAAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
-      const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
+    // Only query/include funding assets if key.includeFunding is not explicitly false
+    if (key.includeFunding !== false) {
+      try {
+        const path = '/api/v3/account/funding-assets';
+        const headers = await BitgetUTAAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
+        const res = await proxyFetch({ targetUrl: `https://api.bitget.com${path}`, method: 'GET', headers });
 
-      if (res.code === '00000' && Array.isArray(res.data)) {
-        res.data.forEach((item: any) => {
-          const available = parseFloat(item.available || '0');
-          const frozen = parseFloat(item.frozen || '0');
-          const balance = parseFloat(item.balance || '0') || (available + frozen);
+        if (res.code === '00000' && Array.isArray(res.data)) {
+          for (const item of res.data) {
+            const available = parseFloat(item.available || '0');
+            const frozen = parseFloat(item.frozen || '0');
+            const balance = parseFloat(item.balance || '0') || (available + frozen);
 
-          if (balance > 0) {
-            balances.push({
-              id: `${key.id}-uta-funding-${item.coin}`,
-              connectionId: key.id,
-              exchange: 'bitget',
-              accountType: 'uta',
-              label: `${key.label} (Funding)`,
-              ccy: (item.coin || '').toUpperCase(),
-              amount: balance,
-              usdValue: balance,
-              walletBalance: balance,
-              availableMargin: available,
-              raw: item
-            });
+            if (balance > 0) {
+              const coin = (item.coin || '').toUpperCase();
+              const price = await this.getCoinPrice(coin, knownPrices);
+              const usdVal = price > 0 ? balance * price : (['USDT', 'USDC', 'USD'].includes(coin) ? balance : 0);
+
+              balances.push({
+                id: `${key.id}-uta-funding-${coin}`,
+                connectionId: key.id,
+                exchange: 'bitget',
+                accountType: 'uta',
+                label: `${key.label} (Funding)`,
+                ccy: coin,
+                amount: balance,
+                usdValue: usdVal,
+                totalEquity: balance,
+                walletBalance: balance,
+                availableMargin: available,
+                unrealizedPnl: 0,
+                raw: {
+                  ...item,
+                  equity: balance,
+                  usdValue: usdVal,
+                  coinPrice: price
+                }
+              });
+            }
           }
-        });
+        }
+      } catch (err) {
+        LogManager.warn('BitgetUTAAdapter', 'Fetch failed for /api/v3/account/funding-assets', err);
       }
-    } catch (err) {
-      LogManager.warn('BitgetUTAAdapter', 'Fetch failed for /api/v3/account/funding-assets', err);
     }
 
     return balances;

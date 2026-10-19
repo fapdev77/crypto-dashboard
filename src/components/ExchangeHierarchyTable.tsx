@@ -44,6 +44,7 @@ const formatOriginLabel = (origin: string) => {
     case 'UNIFIED':
       return 'Unified';
     case 'FUNDING':
+    case 'UTA-FUNDING':
       return 'Funding';
     case 'MARGIN_CROSS':
       return 'Margin Cross';
@@ -67,6 +68,7 @@ const getOriginBadgeStyle = (origin: string) => {
     case 'EARN':
       return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
     case 'FUNDING':
+    case 'UTA-FUNDING':
       return 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
     case 'USDT-FUTURES':
     case 'COIN-FUTURES':
@@ -221,6 +223,7 @@ export function ExchangeHierarchyTable({
                               accountType={matchedKey?.accountType}
                               environment={matchedKey?.environment}
                               bybitRegion={matchedKey?.bybitRegion}
+                              isSubAccount={matchedKey?.isSubAccount}
                             />
                           );
                         })()}
