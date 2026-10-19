@@ -1,3 +1,10 @@
+# [2.12.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.11.0...v2.12.0) (2026-10-19)
+
+
+### Features
+
+* **bitget:** add sub-account and funding toggle support ([cbe377a](https://github.com/fapdev77/crypto-dashboard/commit/cbe377a62fe3fd7fa0f16d011a8cd7e5eef82af5))
+
 # [2.11.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.10.0...v2.11.0) (2026-10-17)
 
 
