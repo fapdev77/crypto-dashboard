@@ -11,6 +11,7 @@ import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { calculateOkxTradeDetails } from '../../utils/okxUtils';
 import { ApiRateLimitError } from '../../utils/retryHelper';
+import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -48,6 +49,12 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
   // REST Balances
   public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const path = '/api/v5/account/balance';
+
+    LogManager.info(
+      'OKXAdapter.Balance',
+      `[${key.label}] Fetching trading & funding balance from https://www.okx.com`
+    );
+
     const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
     const response = await proxyFetch({
       targetUrl: `https://www.okx.com${path}`,
@@ -56,7 +63,9 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     });
 
     if (response.code && response.code !== '0') {
-      throw new Error(`OKX balance API Error (${response.code}): ${response.msg}`);
+      const msg = `OKX balance API Error (${response.code}): ${response.msg}`;
+      LogManager.error('OKXAdapter.Balance', msg, { code: response.code });
+      throw new Error(msg);
     }
 
     const data = response.data?.[0];
@@ -84,6 +93,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     // Build price map from trading balance details
     const prices: Record<string, number> = {};
     data.details.forEach((item: any) => {
+      if (!item || !item.ccy) return;
       const ccy = item.ccy.toUpperCase();
       const cashBal = parseFloat(item.cashBal || '0');
       const eqUsd = parseFloat(item.eqUsd || '0');
@@ -111,33 +121,49 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     let additionalFundingUsd = 0;
     const fundingBalances: UnifiedBalance[] = [];
 
-    fundingData.forEach((item: any) => {
-      const ccy = item.ccy.toUpperCase();
-      const amount = parseFloat(item.bal || '0');
-      if (amount <= 0) return;
+    if (key.includeFunding !== false) {
+      for (const item of fundingData) {
+        if (!item || !item.ccy) continue;
+        const ccy = item.ccy.toUpperCase();
+        const amount = parseFloat(item.bal || '0');
+        if (amount <= 0) continue;
 
-      const price = prices[ccy] || 0;
-      const usdValue = amount * price;
-      additionalFundingUsd += usdValue;
-
-      fundingBalances.push({
-        id: `${key.id}-FUNDING-${ccy}`,
-        connectionId: key.id,
-        exchange: 'okx' as const,
-        label: key.label,
-        ccy,
-        amount,
-        usdValue,
-        walletBalance: amount,
-        availableMargin: parseFloat(item.availBal || item.bal || '0'),
-        unrealizedPnl: 0,
-        raw: {
-          ...item,
-          equity: amount,
-          usdValue,
+        let price = prices[ccy];
+        if (price === undefined || price <= 0) {
+          try {
+            const fallbackPrice = await fetchTokenUsdPrice(ccy);
+            if (fallbackPrice && fallbackPrice > 0) {
+              price = fallbackPrice;
+              prices[ccy] = fallbackPrice;
+            }
+          } catch {
+            // ignore
+          }
         }
-      });
-    });
+        price = price || 0;
+        const usdValue = amount * price;
+        additionalFundingUsd += usdValue;
+
+        fundingBalances.push({
+          id: `${key.id}-FUNDING-${ccy}`,
+          connectionId: key.id,
+          exchange: 'okx' as const,
+          label: key.label,
+          ccy,
+          amount,
+          usdValue,
+          walletBalance: amount,
+          availableMargin: parseFloat(item.availBal || item.bal || '0'),
+          unrealizedPnl: 0,
+          raw: {
+            ...item,
+            equity: amount,
+            usdValue,
+            coinPrice: price,
+          }
+        });
+      }
+    }
 
     const baseTotalEquity = parseFloat(data.totalEq || '0');
     const baseWalletBalance = parseFloat(data.adjEq || '0');
@@ -148,7 +174,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     const walletBalance = baseWalletBalance + additionalFundingUsd;
 
     // Map trading balances with updated totalEquity and walletBalance
-    const tradingBalances = data.details.map((item: any) => {
+    const tradingBalances = data.details.filter((item: any) => item && item.ccy).map((item: any) => {
       const ccy = item.ccy.toUpperCase();
       const rawCashBal = parseFloat(item.cashBal || '0');
       const rawEq = parseFloat(item.eq || '0');
@@ -199,6 +225,12 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
   // REST Positions
   public async getOpenPositions(key: ApiCredentials): Promise<UnifiedPosition[]> {
     const path = '/api/v5/account/positions';
+
+    LogManager.info(
+      'OKXAdapter.Positions',
+      `[${key.label}] Fetching open positions from https://www.okx.com`
+    );
+
     const headers = await OkxAdapter.getHeaders(key.apiKey, key.apiSecret, key.passphrase || '', 'GET', path);
     const response = await proxyFetch({
       targetUrl: `https://www.okx.com${path}`,
@@ -207,7 +239,9 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     });
 
     if (response.code && response.code !== '0') {
-      throw new Error(`OKX positions API Error (${response.code}): ${response.msg}`);
+      const msg = `OKX positions API Error (${response.code}): ${response.msg}`;
+      LogManager.error('OKXAdapter.Positions', msg, { code: response.code });
+      throw new Error(msg);
     }
 
     return (response.data || []).map((pos: any) => {
@@ -290,6 +324,11 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
   public async fetchAndNormalize(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     const instTypes = ['SWAP', 'FUTURES', 'MARGIN'];
 
+    LogManager.info(
+      'OKXAdapter.History',
+      `[${key.label}] Fetching closed PnL history from https://www.okx.com`
+    );
+
     const fetchType = async (type: string) => {
       let list: any[] = [];
       let after = '';
@@ -365,6 +404,11 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
 
   // REST Deposits / Withdrawals (Bills)
   public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+    LogManager.info(
+      'OKXAdapter.Bills',
+      `[${key.label}] Fetching deposits/withdrawals from https://www.okx.com`
+    );
+
     const fetchRecords = async (type: 'deposit' | 'withdrawal') => {
       const endpoint = type === 'deposit' ? '/api/v5/asset/deposit-history' : '/api/v5/asset/withdrawal-history';
       let list: any[] = [];
@@ -433,6 +477,12 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
   // Orders
   public async getOpenOrders(key: ApiCredentials): Promise<import('../../types').UnifiedOrder[]> {
     const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
+
+    LogManager.info(
+      'OKXAdapter.OpenOrders',
+      `[${key.label}] Fetching open orders from https://www.okx.com`
+    );
+
     let allOrders: any[] = [];
 
     // 1. Regular Pending Orders
@@ -474,6 +524,12 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
 
   public async getHistoryOrders(key: ApiCredentials, start?: number, end?: number): Promise<import('../../types').UnifiedOrder[]> {
     const instTypes = ['SWAP', 'FUTURES', 'SPOT', 'MARGIN'];
+
+    LogManager.info(
+      'OKXAdapter.HistoryOrders',
+      `[${key.label}] Fetching order history from https://www.okx.com`
+    );
+
     let allOrders: any[] = [];
 
     // Query both "/api/v5/trade/orders-history" (active last 7 days) and 
@@ -748,6 +804,11 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
     category: string = '',
     cursor?: string
   ): Promise<{ list: any[]; nextPageCursor: string }> {
+    LogManager.info(
+      'OKXAdapter.TransactionLog',
+      `[${key.label}] Fetching transaction log (bills) from https://www.okx.com (category: ${category || 'all'}, range: ${new Date(startTime).toISOString()} - ${new Date(endTime).toISOString()})`
+    );
+
     await OkxAdapter.ensureInstrumentsLoaded().catch(() => {});
 
     const query = new URLSearchParams();

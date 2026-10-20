@@ -1,7 +1,38 @@
 {
-  "branches": ["main", "master"],
+  "branches": [
+    "main",
+    "master"
+  ],
   "plugins": [
-    "@semantic-release/commit-analyzer",
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "angular",
+        "releaseRules": [
+          {
+            "type": "feat",
+            "release": "minor"
+          },
+          {
+            "type": "fix",
+            "release": "patch"
+          },
+          {
+            "breaking": true,
+            "release": "major"
+          }
+        ],
+        "parserOpts": {
+          "headerPattern": "^(\\w+)(?:\\(([^)]+)\\))?(!)?\\: (.*)$",
+          "headerCorrespondence": [
+            "type",
+            "scope",
+            "breaking",
+            "subject"
+          ]
+        }
+      }
+    ],
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     [
@@ -14,7 +45,11 @@
     [
       "@semantic-release/git",
       {
-        "assets": ["package.json", "package-lock.json", "CHANGELOG.md"],
+        "assets": [
+          "package.json",
+          "package-lock.json",
+          "CHANGELOG.md"
+        ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ]

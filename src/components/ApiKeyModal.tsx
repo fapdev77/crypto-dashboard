@@ -35,6 +35,9 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
   const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
   const [isRegionDropdownOpen, setIsRegionDropdownOpen] = useState(false);
   
+  const [includeFunding, setIncludeFunding] = useState(true);
+  const [isSubAccount, setIsSubAccount] = useState(false);
+  
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState('');
 
@@ -66,6 +69,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
         setApiKey(existingKey.apiKey);
         setApiSecret(''); 
         setPassphrase('');
+        setIncludeFunding(existingKey.includeFunding !== undefined ? existingKey.includeFunding : true);
+        setIsSubAccount(existingKey.isSubAccount || false);
       } else {
         setExchange('bitget');
         setAccountType('classic');
@@ -75,6 +80,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
         setApiKey('');
         setApiSecret('');
         setPassphrase('');
+        setIncludeFunding(true);
+        setIsSubAccount(false);
       }
       setShowDeleteConfirm(false);
       setShowSecret(false);
@@ -123,6 +130,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
         apiKey,
         apiSecret,
         passphrase,
+        includeFunding,
+        isSubAccount,
       });
       const extraMeta = exchange === 'bitget' 
         ? ` - ${accountType.toUpperCase()}` 
@@ -139,6 +148,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
           accountType: k.exchange === 'bitget' ? accountType : k.accountType,
           environment: k.exchange === 'bybit' ? environment : k.environment,
           bybitRegion: k.exchange === 'bybit' ? bybitRegion : k.bybitRegion,
+          includeFunding,
+          isSubAccount,
         } : k)
       });
       const extraMeta = existingKey.exchange === 'bitget' 
@@ -509,6 +520,43 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                )}
              </>
           )}
+
+          {/* Account Options (Funding & Sub-account) */}
+          <div className="p-3 bg-[#151619] border border-[#2a2b30] rounded-lg space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs font-medium text-white flex items-center gap-1.5 cursor-pointer">
+                  <span>Include Funding Account</span>
+                </label>
+                <p className="text-[10px] text-[#8E9299]">
+                  Fetch and display assets held in the Funding/Spot wallet for this account.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={includeFunding}
+                onChange={(e) => setIncludeFunding(e.target.checked)}
+                className="w-4 h-4 rounded bg-[#1a1b1e] border-[#2a2b30] text-[#2F6BFF] focus:ring-0 cursor-pointer"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-[#202125]">
+              <div>
+                <label className="text-xs font-medium text-white flex items-center gap-1.5 cursor-pointer">
+                  <span>Sub-account</span>
+                </label>
+                <p className="text-[10px] text-[#8E9299]">
+                  Mark this connection as a sub-account under a main master account.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={isSubAccount}
+                onChange={(e) => setIsSubAccount(e.target.checked)}
+                className="w-4 h-4 rounded bg-[#1a1b1e] border-[#2a2b30] text-[#2F6BFF] focus:ring-0 cursor-pointer"
+              />
+            </div>
+          </div>
 
           <div className="pt-4 flex gap-3">
              {mode === 'edit' && (

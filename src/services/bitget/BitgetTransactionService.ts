@@ -6,6 +6,7 @@ import { BitgetUTAAdapter } from '../adapters/BitgetUTAAdapter';
 import { BitgetClassicAdapter } from '../adapters/BitgetClassicAdapter';
 import { matchUniversalTxType, getBitgetUniversalType } from '../../utils/transactionTypeMapper';
 import { executeWithRetry, classifyError } from '../../utils/retryHelper';
+import { isStablecoin } from '../../utils/formatters';
 import {
   getBitgetTxLogCache,
   saveBitgetTxLogCache,
@@ -43,14 +44,14 @@ export class BitgetTransactionService {
     // If we have cache, return it immediately and sync incrementally
     if (cached.length > 0 && meta && meta.latestTransactionTime > 0) {
       this.syncIncremental(key, meta.latestTransactionTime).catch(err =>
-        LogManager.warn('BitgetTransactionService', `Incremental sync failed for ${key.label}:`, err)
+        LogManager.warn('Sync.Transactions', `[${key.label}] Incremental sync failed:`, err)
       );
       return cached;
     }
 
     // No cache: trigger deep sync and return empty for now
     this.syncAll(key).catch(err =>
-      LogManager.warn('BitgetTransactionService', `Deep sync failed for ${key.label}:`, err)
+      LogManager.warn('Sync.Transactions', `[${key.label}] Deep sync failed:`, err)
     );
     return [];
   }
@@ -59,6 +60,10 @@ export class BitgetTransactionService {
    * Incremental sync: fetch only records newer than the latest cached timestamp.
    */
   async syncIncremental(key: ApiCredentials, latestTime: number): Promise<BitgetTransactionLogEntry[]> {
+    LogManager.info(
+      'Sync.Transactions',
+      `[${key.label}] Starting incremental transaction sync (since ${new Date(latestTime).toISOString()})`
+    );
     const now = Date.now();
     const minAllowedTime = now - NINETY_DAYS_MS;
     let allNew: BitgetTransactionLogEntry[] = [];
@@ -96,7 +101,7 @@ export class BitgetTransactionService {
             }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BitgetTransactionService', `Incremental chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
+          LogManager.warn('Sync.Transactions', `[${key.label}] Incremental chunk error (${category} [${chunkStart}-${chunkEnd}]):`, err);
           hasError = true;
           lastChunkError = err;
           break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
@@ -144,6 +149,7 @@ export class BitgetTransactionService {
       throw new Error(`Partial sync failure for ${key.label} (${cause})`);
     }
 
+    LogManager.info('Sync.Transactions', `[${key.label}] Incremental sync complete: ${allNew.length} new records`);
     return allNew;
   }
 
@@ -158,6 +164,10 @@ export class BitgetTransactionService {
     const now = Date.now();
     const maxLookback = now - NINETY_DAYS_MS;
     const categories = ['USDT-FUTURES', 'COIN-FUTURES', 'USDC-FUTURES', 'SPOT', 'MARGIN', 'OTHER'];
+    LogManager.info(
+      'Sync.Transactions',
+      `[${key.label}] Starting deep transaction sync (max lookback: 90 days, categories: ${categories.join(', ')})`
+    );
     let totalNew = 0;
     const targetStart = maxLookback;
     const adapter = this.getAdapter(key);
@@ -202,7 +212,7 @@ export class BitgetTransactionService {
             }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('BitgetTransactionService', `Deep sync chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
+          LogManager.warn('Sync.Transactions', `[${key.label}] Deep sync chunk error (${category} [${chunkStart}-${chunkEnd}]):`, err);
           hasError = true;
           lastChunkError = err;
           break; // Stop deep sync regress to preserve continuous historical cache without gaps
@@ -210,7 +220,7 @@ export class BitgetTransactionService {
       }
 
       if (hasError) {
-        LogManager.warn('BitgetTransactionService', `Halting deep sync for ${key.label} at ${new Date(chunkStart).toISOString()} due to chunk error.`);
+        LogManager.warn('Sync.Transactions', `[${key.label}] Halting deep sync at ${new Date(chunkStart).toISOString()} due to chunk error.`);
         break;
       }
 
@@ -248,7 +258,7 @@ export class BitgetTransactionService {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    LogManager.info('BitgetTransactionService', `Deep sync complete for ${key.label}: ${totalNew} records`);
+    LogManager.info('Sync.Transactions', `[${key.label}] Deep sync complete: ${totalNew} records backfilled`);
 
     // Signal partial failure to the caller after all partial data has been persisted
     if (hasError) {
@@ -379,7 +389,7 @@ export class BitgetTransactionService {
     const stable = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) };
     const perCurrency: Record<string, { totalFunding: Big; totalFees: Big; totalCashFlow: Big; totalChange: Big; finalBalance: Big; totalInflow: Big; totalOutflow: Big }> = {};
 
-    const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD', 'BUSD'].includes(currency.toUpperCase());
+    const isStable = (currency: string) => isStablecoin(currency)
 
     const latestBalance: Record<string, { time: number; balance: Big }> = {};
 

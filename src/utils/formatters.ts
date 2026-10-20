@@ -9,7 +9,7 @@ export function isStablecoin(ccy: string | undefined | null): boolean {
     'BUSD', 'PYUSD', 'TUSD', 'USDP', 'EURT', 'GUSD', 'BRL', 'USDG'
   ]);
   if (knownStables.has(normalized)) return true;
-  return ['USDT', 'USDC', 'USDG', 'USD', 'BRL', 'EURT'].some(stable => normalized.includes(stable));
+  return false;
 }
 
 export function formatValue(val: number | undefined | null, decimalsOrSymbol: number | string = 2): string {

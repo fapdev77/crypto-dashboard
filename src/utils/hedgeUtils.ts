@@ -302,28 +302,31 @@ export function getHedgePositionLevels(
     : [];
 
   const markPrice = pos.markPrice || 0;
+  const isBybit = (pos.exchange || '').toLowerCase().includes('bybit');
   const isBitget = (pos.exchange || '').toLowerCase().includes('bitget');
+  const isOkx = (pos.exchange || '').toLowerCase().includes('okx');
+  const isInverseHedgeExchange = isBybit || isBitget || isOkx;
 
   let rawBalanceAmount = 0;
   let rawBalanceUsd = 0;
 
-  if (isBitget) {
-    // In Bitget (both UTA and Classic), accounts can have multiple balance rows for the same coin
+  if (isInverseHedgeExchange) {
+    // In Bybit, Bitget, and OKX, accounts can have multiple balance rows for the same coin
     // (e.g. trading/futures account assets vs funding assets, or spot vs mix futures).
     // Sum all matching balance records for this connection and currency to reflect the real wallet balance.
-    const bitgetMatchingBalances = balanceList.filter(
+    const matchingBalances = balanceList.filter(
       b => b.connectionId === pos.connectionId &&
         (b.ccy.toUpperCase() === posCcy || (pos.baseCoin && b.ccy.toUpperCase() === pos.baseCoin.toUpperCase()))
     );
 
-    if (bitgetMatchingBalances.length > 0) {
-      rawBalanceAmount = bitgetMatchingBalances.reduce(
+    if (matchingBalances.length > 0) {
+      rawBalanceAmount = matchingBalances.reduce(
         (acc, b) => acc.plus(b.amount || 0),
         new Big(0)
       ).toNumber();
       rawBalanceUsd = (markPrice > 0 && rawBalanceAmount > 0)
         ? rawBalanceAmount * markPrice
-        : bitgetMatchingBalances.reduce(
+        : matchingBalances.reduce(
             (acc, b) => acc.plus(b.usdValue || 0),
             new Big(0)
           ).toNumber();
@@ -375,10 +378,6 @@ export function getHedgePositionLevels(
   const initialSizeInCoin = (pos.entryPrice && pos.entryPrice > 0)
     ? (initialValueUsd / pos.entryPrice)
     : (isShort && markPrice > 0 ? initialValueUsd / markPrice : openPosSize);
-
-  const isBybit = (pos.exchange || '').toLowerCase().includes('bybit');
-  const isOkx = (pos.exchange || '').toLowerCase().includes('okx');
-  const isInverseHedgeExchange = isBybit || isBitget || isOkx;
 
   if (pos.instrumentType === 'INVERSE') {
     if (isShort) {

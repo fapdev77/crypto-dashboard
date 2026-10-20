@@ -326,4 +326,28 @@ Sim! O design do CPM é totalmente responsivo e adapta todas as tabelas, barras 
 
 ---
 
+## 12. PIKA Assistant (Portfolio Information & Knowledge Assistant)
+
+O **PIKA** é o assistente analítico e auditor quantitativo integrado ao CPM. Ele é capaz de sintetizar relatórios narrativos, auditar riscos de liquidação e calcular descasamentos de hedge cruzado em linguagem natural, utilizando exclusivamente ferramentas de leitura local (Local Tool-Calling).
+
+### 🔒 Princípios de Segurança e Privacidade
+1. **Desabilitado por Padrão**: Por padrão, o assistente permanece inativo. Para utilizá-lo, acesse o menu lateral em **AI Settings** e ative o botão mestre.
+2. **Zero-Trust de Credenciais**: As chaves de API das corretoras (`API Key`, `API Secret`, `Passphrase`) jamais são acessíveis ao motor de IA.
+3. **Modo Estritamente Consultivo (Read-Only)**: O PIKA não possui nenhuma ferramenta para criar, modificar ordens ou movimentar ativos.
+4. **Auditoria Transparente**: Toda chamada, tempo de resposta, latência e consumo de tokens é registrado na tabela de Auditoria em **AI Settings**, podendo ser exportado em JSON ou CSV.
+
+### ⚙️ Provedores Suportados e Modelos de Contingência (Fallback)
+* **Ollama (Local / 100% Privado)**: Permite executar modelos como `llama3.2` ou `qwen2.5` localmente em sua máquina (`http://localhost:11434`), garantindo que nenhum dado financeiro trafegue pela internet.
+* **Google Gemini (Nativo Server-Side)**: Suporte pronto para uso com alta velocidade e baixo consumo.
+* **OpenRouter / OpenAI / Anthropic**: Conexão com qualquer provedor compatível com a API padrão via chave própria salva localmente.
+* **Política de Fallback**: Caso o modelo primário (ex: Ollama local) esteja desligado ou atinja timeout, o PIKA recorre automaticamente ao modelo de contingência configurado.
+
+### ⚠️ Aviso Padrão
+> **Importante**: `( ! ) A IA pode cometer erros. Por isso, cheque as respostas.` Sempre valide decisões operacionais e financeiras críticas.
+
+### ⌨️ Atalhos Rápidos
+* Pressione **`Ctrl + J`** (ou **`Cmd + J`** no Mac) de qualquer tela para abrir ou recolher o painel lateral do PIKA Assistant.
+
+---
+
 *Crypto Portfolio Manager — Conectividade Profissional, Segurança Absoluta.*

@@ -11,6 +11,7 @@ import {
   getOkxTxLogMeta,
   updateOkxTxLogMeta,
 } from '../historyCache';
+import { isStablecoin } from '../../utils/formatters';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000; // OKX archive supports up to 3 months
@@ -36,14 +37,14 @@ export class OkxTransactionService {
     // If we have cache, return it immediately and sync incrementally
     if (cached.length > 0 && meta && meta.latestTransactionTime > 0) {
       this.syncIncremental(key, meta.latestTransactionTime).catch(err =>
-        LogManager.warn('OkxTransactionService', `Incremental sync failed for ${key.label}:`, err)
+        LogManager.warn('Sync.Transactions', `[${key.label}] Incremental sync failed:`, err)
       );
       return cached;
     }
 
     // No cache: trigger deep sync and return empty for now
     this.syncAll(key).catch(err =>
-      LogManager.warn('OkxTransactionService', `Deep sync failed for ${key.label}:`, err)
+      LogManager.warn('Sync.Transactions', `[${key.label}] Deep sync failed:`, err)
     );
     return [];
   }
@@ -52,6 +53,10 @@ export class OkxTransactionService {
    * Incremental sync: fetch only records newer than the latest cached timestamp.
    */
   async syncIncremental(key: ApiCredentials, latestTime: number): Promise<OkxTransactionLogEntry[]> {
+    LogManager.info(
+      'Sync.Transactions',
+      `[${key.label}] Starting incremental transaction sync (since ${new Date(latestTime).toISOString()})`
+    );
     const now = Date.now();
     let allNew: OkxTransactionLogEntry[] = [];
     const categories = [''];
@@ -83,7 +88,7 @@ export class OkxTransactionService {
             }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('OkxTransactionService', `Incremental chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
+          LogManager.warn('Sync.Transactions', `[${key.label}] Incremental chunk error (${category || 'all'} [${chunkStart}-${chunkEnd}]):`, err);
           hasError = true;
           lastChunkError = err;
           break; // Stop loop on failure to prevent skipping over the failed chunk and creating historical gaps
@@ -131,6 +136,7 @@ export class OkxTransactionService {
       throw new Error(`Partial sync failure for ${key.label} (${cause})`);
     }
 
+    LogManager.info('Sync.Transactions', `[${key.label}] Incremental sync complete: ${allNew.length} new records`);
     return allNew;
   }
 
@@ -142,6 +148,10 @@ export class OkxTransactionService {
     key: ApiCredentials,
     onProgress?: (pct: number, records: number) => void
   ): Promise<void> {
+    LogManager.info(
+      'Sync.Transactions',
+      `[${key.label}] Starting deep transaction sync (max backfill: 3 months)`
+    );
     const now = Date.now();
     let threeMonthsAgo = now - THREE_MONTHS_MS;
     const categories = [''];
@@ -184,7 +194,7 @@ export class OkxTransactionService {
             }
           } while (cursor && pages < MAX_PAGES_PER_CHUNK);
         } catch (err) {
-          LogManager.warn('OkxTransactionService', `Deep sync chunk error ${key.label}/${category} [${chunkStart}-${chunkEnd}]:`, err);
+          LogManager.warn('Sync.Transactions', `[${key.label}] Deep sync chunk error (${category || 'all'} [${chunkStart}-${chunkEnd}]):`, err);
           hasError = true;
           lastChunkError = err;
           break; // Stop deep sync regress to preserve continuous historical cache without gaps
@@ -192,7 +202,7 @@ export class OkxTransactionService {
       }
 
       if (hasError) {
-        LogManager.warn('OkxTransactionService', `Halting deep sync for ${key.label} at ${new Date(chunkStart).toISOString()} due to chunk error.`);
+        LogManager.warn('Sync.Transactions', `[${key.label}] Halting deep sync at ${new Date(chunkStart).toISOString()} due to chunk error.`);
         break;
       }
 
@@ -230,7 +240,7 @@ export class OkxTransactionService {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    LogManager.info('OkxTransactionService', `Deep sync complete for ${key.label}: ${totalNew} records`);
+    LogManager.info('Sync.Transactions', `[${key.label}] Deep sync complete: ${totalNew} records backfilled`);
 
     // Signal partial failure to the caller after all partial data has been persisted
     if (hasError) {
@@ -331,7 +341,7 @@ export class OkxTransactionService {
     const stable = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) };
     const perCurrency: Record<string, { totalFunding: Big; totalFees: Big; totalCashFlow: Big; totalChange: Big; finalBalance: Big; totalInflow: Big; totalOutflow: Big }> = {};
 
-    const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD'].includes(currency.toUpperCase());
+    const isStable = (currency: string) => isStablecoin(currency)
 
     const latestBalance: Record<string, { time: number; balance: Big }> = {};
 

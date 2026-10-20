@@ -9,7 +9,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
 import { getInverseUsdValues, getOpenPositionSizeAndValue } from '../utils/inverseUtils';
 import { getHedgePositionLevels } from '../utils/hedgeUtils';
-import { HedgeExposureBar } from './analytics/HedgePro/HedgeExposureBar';
+import { HedgeExposureBar } from './HedgePro/HedgeExposureBar';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useBalancesStore } from '../store/balancesStore';

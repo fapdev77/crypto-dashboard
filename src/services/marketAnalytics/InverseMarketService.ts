@@ -6,7 +6,7 @@ import {
 import { hybridFetch } from '../../utils/proxyFetch';
 import { getAllFundingSummaries } from '../historyCache';
 import { useSettingsStore } from '../../store/settingsStore';
-import { LogManager } from '../logger';
+import { LogManager } from '../LogManager';
 
 // Standard names for popular crypto assets
 const ASSET_NAMES: Record<string, string> = {

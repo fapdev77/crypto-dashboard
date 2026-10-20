@@ -29,6 +29,11 @@ export class OrderHistoryService {
     const lastFetch = await getLastOrderFetchTimestamp(connectionId);
     const now = Date.now();
 
+    LogManager.info(
+      'History.Orders',
+      `[${key.label}] Fetching order history (cached: ${cachedOrders.length} items)...`
+    );
+
     // Look back at least 14 days to cover any open orders that were created in the last 14 days and subsequently closed/canceled.
     const minLookback = 14 * 24 * 60 * 60 * 1000; // 14 days
     const startTime = lastFetch > 0 
@@ -49,10 +54,15 @@ export class OrderHistoryService {
       }
       
       // Return fully merged set from cache
-      return await getCachedOrders(connectionId);
+      const finalOrders = await getCachedOrders(connectionId);
+      LogManager.info(
+        'History.Orders',
+        `[${key.label}] Order history synchronized: ${newOrders.length} new orders fetched, ${finalOrders.length} total in cache`
+      );
+      return finalOrders;
     } catch (err: any) {
       const errMsg = err?.message || String(err);
-      LogManager.warn('OrderHistoryCache', `Incremental fetch failed for ${connectionId}, returning cached data: ${errMsg}`);
+      LogManager.warn('History.Orders', `[${key.label}] Incremental fetch failed, returning cached data: ${errMsg}`);
       // Re-throw so the caller can aggregate errors across keys; stale cache remains in IndexedDB
       throw err;
     }

@@ -11,6 +11,7 @@ import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { getBybitBaseUrl, getBybitCustomHeaders } from '../../utils/bybitEndpoints';
 import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
+import { isStablecoin } from '../../utils/formatters';
 import { ApiRateLimitError } from '../../utils/retryHelper';
 
 const MAX_DEEP_PAGES = 30;
@@ -64,7 +65,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   private async getCoinPrice(coin: string, baseUrl: string, knownPrices: Record<string, number>): Promise<number> {
     const c = coin.toUpperCase();
     if (knownPrices[c] !== undefined && knownPrices[c] > 0) return knownPrices[c];
-    if (['USDT', 'USDC', 'USD', 'DAI', 'USDE', 'FDUSD', 'PYUSD'].includes(c)) return 1.0;
+    if (isStablecoin(c)) return 1.0;
 
     try {
       const tickerUrl = `${baseUrl}/v5/market/tickers?category=spot&symbol=${c}USDT`;
@@ -97,17 +98,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   // REST Balances (UNIFIED + FUNDING)
   public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
-    const balances: UnifiedBalance[] = [];
-    const coinPrices: Record<string, number> = {
-      USDT: 1.0,
-      USDC: 1.0,
-      USD: 1.0,
-      DAI: 1.0,
-      USDE: 1.0,
-      FDUSD: 1.0,
-      PYUSD: 1.0,
-    };
-
+    const balances: UnifiedBalance[] = [];const coinPrices: Record<string, number> = {}
     LogManager.info(
       'BybitAdapter.Balance',
       `[${key.label}] Fetching wallet balance from ${baseUrl} (env: ${key.environment || 'mainnet'}, region: ${key.bybitRegion || 'global'}${key.bybitRegion === 'brazil_int' || key.bybitRegion === 'argentina_int' ? ', X-Site-Id applied' : ''})`
@@ -174,42 +165,49 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     }
 
     // 2. Fetch Funding Account Balances
-    try {
-      const fundQuery = 'accountType=FUND';
-      const fundTargetUrl = `${baseUrl}/v5/asset/transfer/query-account-coins-balance?${fundQuery}`;
-      const fundHeaders = await BybitAdapter.getHeaders(key, fundQuery);
+    if (key.includeFunding !== false) {
+      try {
+        const fundQuery = 'accountType=FUND';
+        const fundTargetUrl = `${baseUrl}/v5/asset/transfer/query-account-coins-balance?${fundQuery}`;
+        const fundHeaders = await BybitAdapter.getHeaders(key, fundQuery);
 
-      const fundResponse = await hybridFetch(fundTargetUrl, 'GET', fundHeaders);
-      if (fundResponse.retCode === 0) {
-        const fundBalances = fundResponse.result?.balance || [];
-        for (const item of fundBalances) {
-          const amount = parseFloat(item.walletBalance || '0');
-          if (amount > 0) {
-            const price = await this.getCoinPrice(item.coin, baseUrl, coinPrices);
-            const usdValue = amount * price;
+        const fundResponse = await hybridFetch(fundTargetUrl, 'GET', fundHeaders);
+        if (fundResponse.retCode === 0) {
+          const fundBalances = fundResponse.result?.balance || [];
+          for (const item of fundBalances) {
+            const amount = parseFloat(item.walletBalance || '0');
+            if (amount > 0) {
+              const price = await this.getCoinPrice(item.coin, baseUrl, coinPrices);
+              const usdValue = amount * price;
 
-            balances.push({
-              id: `${key.id}-FUNDING-${item.coin}`,
-              connectionId: key.id,
-              exchange: 'bybit',
-              environment: key.environment,
-              bybitRegion: key.bybitRegion,
-              label: `${key.label} (Funding)`,
-              ccy: item.coin,
-              amount,
-              usdValue,
-              availableMargin: parseFloat(item.transferBalance || '0'),
-              unrealizedPnl: 0,
-              raw: item,
-            });
+              balances.push({
+                id: `${key.id}-FUNDING-${item.coin}`,
+                connectionId: key.id,
+                exchange: 'bybit',
+                environment: key.environment,
+                bybitRegion: key.bybitRegion,
+                label: `${key.label} (Funding)`,
+                ccy: item.coin,
+                amount,
+                usdValue,
+                availableMargin: parseFloat(item.transferBalance || '0'),
+                unrealizedPnl: 0,
+                raw: {
+                  ...item,
+                  equity: amount,
+                  usdValue,
+                  coinPrice: price
+                },
+              });
+            }
           }
+        } else {
+          LogManager.warn('BybitAdapter.Balance', `Failed to fetch Funding balance (${fundResponse.retCode}): ${fundResponse.retMsg}`);
         }
-      } else {
-        LogManager.warn('BybitAdapter.Balance', `Failed to fetch Funding balance (${fundResponse.retCode}): ${fundResponse.retMsg}`);
+      } catch (fundingErr: unknown) {
+        const fundMsg = fundingErr instanceof Error ? fundingErr.message : String(fundingErr);
+        LogManager.warn('BybitAdapter.Balance', `Non-critical error fetching Funding balance: ${fundMsg}`);
       }
-    } catch (fundingErr: unknown) {
-      const fundMsg = fundingErr instanceof Error ? fundingErr.message : String(fundingErr);
-      LogManager.warn('BybitAdapter.Balance', `Non-critical error fetching Funding balance: ${fundMsg}`);
     }
 
     return balances;

@@ -1,3 +1,124 @@
+# [2.13.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.12.0...v2.13.0) (2026-10-20)
+
+
+### Features
+
+* refactor stablecoin checks and integrate proxy fetch for token price retrieval ([a83106b](https://github.com/fapdev77/crypto-dashboard/commit/a83106bf0bdde3281ea641e9008f214b9121f237))
+
+# [2.12.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.11.0...v2.12.0) (2026-10-19)
+
+
+### Features
+
+* **bitget:** add sub-account and funding toggle support ([cbe377a](https://github.com/fapdev77/crypto-dashboard/commit/cbe377a62fe3fd7fa0f16d011a8cd7e5eef82af5))
+
+# [2.11.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.10.0...v2.11.0) (2026-10-17)
+
+
+### Features
+
+* Reorganize the Hedge Pro sidebar location and automated tests. ([fb3f788](https://github.com/fapdev77/crypto-dashboard/commit/fb3f788723442993b073f3f7c8a4172d9ea0fe70))
+
+# [2.10.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.9.0...v2.10.0) (2026-10-15)
+
+
+### Features
+
+* reset scroll position on tab navigation ([1b46073](https://github.com/fapdev77/crypto-dashboard/commit/1b460731ebac698571ea5dc112262bcf6aaa59b6))
+
+# [2.9.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.8.0...v2.9.0) (2026-10-15)
+
+
+### Features
+
+* **ui:** add total stats summary to transaction modals ([9a458ae](https://github.com/fapdev77/crypto-dashboard/commit/9a458ae7f23053245dfbdb590728f11418d10e3d))
+
+# [2.8.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.7.0...v2.8.0) (2026-10-14)
+
+
+### Features
+
+* add sidebar component, AI tool executors, and transaction components with test suites ([f28c2e2](https://github.com/fapdev77/crypto-dashboard/commit/f28c2e272ac8b5a7d8de8834308860d376ee2770))
+
+# [2.7.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.6.0...v2.7.0) (2026-10-14)
+
+
+### Features
+
+* add AI chat drawer, settings store, adapter, and tool registry with tests ([5e25fc0](https://github.com/fapdev77/crypto-dashboard/commit/5e25fc02399b5d4c1f0c577cd4da95dc1a3c0b26))
+
+# [2.6.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.5.0...v2.6.0) (2026-10-13)
+
+
+### Features
+
+* implement logging features across all services and define logging patterns for application. ([941dadd](https://github.com/fapdev77/crypto-dashboard/commit/941dadd21a29d60372ba7122eab8641653cb577f))
+
+# [2.5.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.4.1...v2.5.0) (2026-10-13)
+
+
+### Features
+
+* add BitgetClassicAdapter, BitgetUTAAdapter, OkxAdapter, and corresponding test files ([1cdcc15](https://github.com/fapdev77/crypto-dashboard/commit/1cdcc152253bff132cf6dd5cc9549fe9c7764100))
+
+## [2.4.1](https://github.com/fapdev77/crypto-dashboard/compare/v2.4.0...v2.4.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* resolve Ollama model fetching and update version ([02fd686](https://github.com/fapdev77/crypto-dashboard/commit/02fd686f5b53bc0221bc767e37a568d33ce3633a))
+
+# [2.4.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.3.0...v2.4.0) (2026-10-11)
+
+
+### Features
+
+* **ai:** enhance Ollama model metadata and localization ([0bbf7e3](https://github.com/fapdev77/crypto-dashboard/commit/0bbf7e3ec4cae32fd17adf16f20dd7d2cf7e97b8))
+
+# [2.3.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.2.0...v2.3.0) (2026-10-11)
+
+
+### Features
+
+* **ai:** add Ollama proxy and improve model tool management ([8f97976](https://github.com/fapdev77/crypto-dashboard/commit/8f9797604ea630c5f8a5e3f3b10ed3d7099efc70))
+
+# [2.2.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.1.0...v2.2.0) (2026-10-11)
+
+
+### Features
+
+* **ai:** implement tool compatibility audit ([7f7457a](https://github.com/fapdev77/crypto-dashboard/commit/7f7457a7fc1927c70ee4a2fe92d8bd4f5de44c04))
+
+# [2.1.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.0.0...v2.1.0) (2026-10-11)
+
+# [1.84.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.83.0...v1.84.0) (2026-10-11)
+
+# [1.83.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.5...v1.83.0) (2026-10-11)
+
+
+### Features
+
+* release version 2.0.0 with PIKA AI assistant ([e8d8111](https://github.com/fapdev77/crypto-dashboard/commit/e8d811188f6b5569b108fdb68e00d08e17a260f0))
+
+# [2.0.0](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.5...v2.0.0) (2026-10-09)
+
+
+### Features
+
+* **pika-ai:** introduce PIKA (Portfolio Information & Knowledge Assistant), a quantitative AI auditor with multi-provider architecture (Ollama Local & Google Gemini Cloud)
+* **audit-telemetry:** implement deep diagnostic modal with complete raw request payload, tool executions history, token usage analytics, and local audit logs
+* **sync-intelligence:** add smart sync-state detection (no data, sync in progress, and consistency warnings) for real-time tool execution
+* **privacy-mode:** add automatic percentage-based balance and nominal value obfuscation in AI tools when Privacy Mode is active
+* **quick-activation:** add 1-click instant activation card inside PIKA drawer for friction-free onboarding
+* **feature-toggle:** add environment variable kill-switch (AI_CHAT_BOT_ENABLED) to completely disable AI chatbot and related settings
+
+## [1.82.5](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.4...v1.82.5) (2026-10-06)
+
+
+### Bug Fixes
+
+* aggregate multiple balances for Bybit and OKX ([0150a83](https://github.com/fapdev77/crypto-dashboard/commit/0150a83dc4c38fe824b280110c3fd35d78e6e967))
+
 ## [1.82.4](https://github.com/fapdev77/crypto-dashboard/compare/v1.82.3...v1.82.4) (2026-10-06)
 
 

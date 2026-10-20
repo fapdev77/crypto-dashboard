@@ -1,6 +1,6 @@
 import { AssetKind, ExchangeId, MarketType, SpecificMarketType, SymbolEntry } from '../../types/marketAnalytics';
 import { hybridFetch } from '../../utils/proxyFetch';
-import { LogManager } from '../logger';
+import { LogManager } from '../LogManager';
 
 export type CoinCategory =
   | 'Layer 1'
