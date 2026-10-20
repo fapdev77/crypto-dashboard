@@ -922,3 +922,166 @@ A barra global de exposição consolida o capital do portfólio usando como base
 *   `Protected % = (Total Protected / Total Equity) * 100`
 *   `Exposed % = (max(0, Total Equity - Total Protected) / Total Equity) * 100`
 *   `Leveraged % = (Total Leveraged / Total Equity) * 100` (estende além dos 100% da barra para indicar risco de alavancagem direcional).
+
+---
+
+## 16. API Credentials & Configuration Interface (`ApiCredentials`)
+
+Localizada em `src/store/apiKeysStore.ts`, define a estrutura canônica das credenciais de conexão do usuário com suporte a roteamento regional, subcontas e carteiras de funding:
+
+```typescript
+export type Exchange = 'bybit' | 'bitget' | 'okx';
+export type AccountType = 'classic' | 'uta';
+export type ApiEnvironment = 'mainnet' | 'testnet';
+export type BybitRegion =
+  | 'global'
+  | 'netherlands'
+  | 'turkey'
+  | 'hongkong'
+  | 'kazakhstan'
+  | 'georgia'
+  | 'brazil_int'
+  | 'argentina_int';
+
+export interface ApiCredentials {
+  id: string;
+  label: string;
+  exchange: Exchange;
+  apiKey: string;
+  apiSecret: string;
+  passphrase?: string;
+  isActive: boolean;
+  accountType?: AccountType; // Bitget: 'classic' vs 'uta'
+  environment?: ApiEnvironment; // Bybit: 'mainnet' vs 'testnet'
+  bybitRegion?: BybitRegion; // Bybit: regional domain / origin header
+  includeFunding?: boolean; // Seletor para ler saldo de funding/spot
+  isSubAccount?: boolean; // Marcação visual de subconta subordinada
+}
+```
+
+---
+
+## 17. Market Analytics & Quantitative Derivatives Interfaces (`src/types/marketAnalytics.ts`)
+
+Define as estruturas normalizadas para o terminal quantitativo cross-exchange:
+
+```typescript
+export type MarketType = 'ALL' | 'PERP' | 'INVERSE' | 'SPOT';
+export type MarketAnalyticsTimeframe = '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
+
+export type MarketRegime =
+  | 'LONG_ACCUMULATION'
+  | 'SHORT_SQUEEZE'
+  | 'AGGRESSIVE_SHORTING'
+  | 'LONG_LIQUIDATION'
+  | 'NEUTRAL_CONSOLIDATION';
+
+export interface FundingArbitrageOpportunity {
+  symbol: string;
+  highestExchange: ExchangeName;
+  highestRate: number;
+  lowestExchange: ExchangeName;
+  lowestRate: number;
+  spread8h: number;
+  spreadApr: number; // spread8h * 3 * 365
+  longExchange: ExchangeName;
+  shortExchange: ExchangeName;
+  nextFundingTime: number;
+}
+
+export type CvdDivergenceType = 'BULLISH_ABSORPTION' | 'BEARISH_ABSORPTION' | 'NONE';
+
+export interface MarketAnalyticsSnapshot {
+  symbol: string;
+  timestamp: number;
+  currentPrice: number;
+  priceChange24h: number;
+  volume24h: number;
+  openInterestUsd: number;
+  openInterestChange24h: number;
+  benchmarkFundingRate8h: number;
+  benchmarkFundingApr: number;
+  netTakerCvd: number;
+  sentimentIndex: number; // 0 to 100 (Fear & Greed)
+  regime: MarketRegime;
+  arbitrage: FundingArbitrageOpportunity[];
+  cvdDivergence: CvdDivergenceType;
+  smartMoneySentiment: {
+    retailRatio: number;
+    topTraderRatio: number;
+    divergenceAlert: boolean;
+  };
+}
+```
+
+---
+
+## 18. PIKA AI Subsystem Interfaces (`src/types/aiTypes.ts`)
+
+Define as estruturas de dados para o subsistema de inteligência quantitativa e auditoria:
+
+```typescript
+export type AiProviderType = 'ollama' | 'gemini' | 'openrouter' | 'custom';
+
+export type AiToolName =
+  | 'get_consolidated_balances'
+  | 'get_open_positions'
+  | 'get_order_history'
+  | 'get_funding_rates'
+  | 'get_hedge_pro_metrics'
+  | 'get_market_analytics'
+  | 'get_transaction_summary'
+  | 'get_exchange_connection_health'
+  | 'get_pnl_by_symbol';
+
+export interface AiChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string;
+  timestamp: number;
+  toolCalls?: Array<{
+    id: string;
+    name: AiToolName;
+    arguments: Record<string, unknown>;
+  }>;
+  toolResults?: Array<{
+    toolCallId: string;
+    result: unknown;
+  }>;
+  tokenUsage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  latencyMs?: number;
+}
+
+export interface AiAuditLogEntry {
+  id: string;
+  timestamp: number;
+  provider: AiProviderType;
+  model: string;
+  promptSnippet: string;
+  toolsInvoked: AiToolName[];
+  latencyMs: number;
+  tokensTotal: number;
+  status: 'success' | 'error' | 'cancelled';
+  rawRequestPayload?: unknown;
+  rawResponsePayload?: unknown;
+  errorMessage?: string;
+}
+
+export interface AiTelemetryStats {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  totalTokensUsed: number;
+  averageLatencyMs: number;
+  dailyUsage: Array<{
+    date: string;
+    tokens: number;
+    requests: number;
+  }>;
+}
+```
+
