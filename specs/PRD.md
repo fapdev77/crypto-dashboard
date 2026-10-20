@@ -1,237 +1,161 @@
 # Crypto Portfolio Manager — Product Requirements Document (PRD)
 
-> **Status:** Revisado — consolidado a partir do `README.md`, `specs/ARCHITECTURE.md`, `specs/EVOLUTION_TASKS.md` e `specs/unified-interfaces.md`
-> **Versão:** 1.0
-> **Produto:** Crypto Portfolio Manager (CPM) — Multi-Exchange Dashboard
+> **Versão do Documento:** 2.13.0  
+> **Status:** Aprovado & Em Produção  
+> **Produto:** Crypto Portfolio Manager (CPM) — Multi-Exchange Terminal  
+> **Testes Automatizados:** 56 arquivos de teste, 604 testes passando (Vitest v8)
 
 ---
 
 ## 1. Resumo Executivo
 
-O **Crypto Portfolio Manager** resolve o problema de fragmentação de informações no trading de criptomoedas. Ele consolida, em tempo real, saldos de carteiras, histórico financeiro, ordens e posições de derivativos de **três exchanges** (Bitget, Bybit e OKX) sob uma interface de "painel único de vidro" (Single Pane of Glass).
+O **Crypto Portfolio Manager (CPM)** é um terminal de inteligência analítica, consolidação patrimonial e auditoria contábil para operadores de derivativos de criptomoedas. Ele unifica, em tempo real, dados de três grandes corretoras globais (**Bitget**, **Bybit** e **OKX**) sob uma interface única, ágil e customizável ("Single Pane of Glass").
 
-O produto entrega velocidade analítica e uma postura de segurança **Zero-Trust**: as chaves de API do usuário **nunca** são armazenadas em servidores de terceiros, operando estritamente de forma local no navegador (`localStorage`), com toda a criptografia e assinatura HMAC-SHA256 executada na ponta do cliente via Web Crypto API.
+O produto combina alta performance analítica (gráficos de Open Interest, Cumulative Volume Delta, regimes de mercado, funding arbitrage, gestão delta-neutral em contratos inversos no **Hedge Pro** e o assistente quantitativo **PIKA**) com uma postura intransigente de segurança **Zero-Trust**: todas as credenciais de API permanecem exclusivamente no navegador do usuário (`localStorage`), protegidas por criptografia nativa **Web Crypto API (PBKDF2 com 100.000 iterações + AES-GCM 256-bit)**. O backend em Node/Express atua puramente como um relé inerte para contornar restrições de CORS sem conhecer, registrar ou adulterar segredos.
 
-## 2. Problema
+---
 
-Traders de criptomoedas que operam em múltiplas corretoras enfrentam:
+## 2. Problema de Mercado
 
-1. **Fragmentação de dados:** saldos, posições e histórico dispersos em dashboards isolados de cada corretora (Bitget, Bybit, OKX).
-2. **Impossibilidade de consolidação:** sem uma visão unificada de patrimônio, exposição e PnL em tempo real.
-3. **Falta de auditoria contábil:** histórico de taxas, funding e PnL realizado espalhado em formatos proprietários de cada API.
-4. **Risco de segurança:** armazenar chaves de API em servidores de terceiros expõe o usuário a vazamentos e uso indevido.
+Traders e gestores de criptoativos que operam simultaneamente em múltiplas corretoras enfrentam:
+
+1. **Fragmentação Extrema de Informações**: Saldos, posições de futuros e históricos de liquidação espalhados em interfaces proprietárias e desconexas.
+2. **Incerteza no Risco de Hedge e Delta-Neutral**: Dificuldade em calcular com precisão a proteção real de capital proporcionada por contratos inversos (COIN-M) versus contratos lineares (USDT-M), arriscando sobre-exposição e liquidações em cascata.
+3. **Opacidade Contábil e de Taxas**: Dispersão de taxas de corretagem (trading fees), taxas de financiamento (funding fees), saques, depósitos e liquidações forçadas.
+4. **Vulnerabilidade de Segurança em Soluções SaaS**: Plataformas convencionais de gestão de portfólio exigem envio de chaves de API para servidores na nuvem, criando vetores catastróficos de vazamento de credenciais.
+
+---
 
 ## 3. Objetivos do Produto
 
 | Objetivo | Descrição |
-|----------|-----------|
-| **Consolidação em tempo real** | Unificar saldos, posições, ordens e histórico de Bitget, Bybit e OKX em uma única interface (REST Polling near real-time). |
-| **Zero-Trust Security** | Manter todas as credenciais localmente no navegador; o backend atua apenas como proxy "burro" (sem conhecer segredos). |
-| **Velocidade analítica** | Histórico com latência zero via cache local IndexedDB (padrão SWR — Stale-While-Revalidate). |
-| **Auditoria contábil pessoal** | Extração rigorosa de taxas (Trading Fees), PnL Realizado e Funding Fees baseada em fluxo de caixa (cashflow). |
-| **Escalabilidade de integração** | Adição de novas corretoras via camada de adaptadores (Strategy Pattern) sem impactar a UI. |
+|---|---|
+| **Consolidação em Tempo Real** | Unificar saldos, ordens, posições e históricos de Bitget, Bybit e OKX em uma única interface reativa com curto intervalo de polling. |
+| **Zero-Trust Client Security** | Manter todas as credenciais criptografadas no navegador; o backend atua como relé inerte com validação de allowlist contra SSRF. |
+| **Inteligência Quantitativa Integrada** | Prover scanners de arbitragem de funding, rastreamento de CVD, detecção algorítmica de regimes de mercado e auditoria assistida por IA (**PIKA**). |
+| **Gestão de Risco Delta-Neutral (Hedge Pro)** | Modelar com precisão matemática (Beyond-100% Model) o capital protegido e exposto em contratos inversos (COIN-M). |
+| **Auditoria Contábil Rigorosa** | Extrair históricos transacionais contínuos de até 2 anos com reconciliação matemática de fluxo de caixa (`cashFlow + funding - fee`). |
+| **Governança de Armazenamento Local** | Controlar a quota de disco do navegador e oferecer janelas de retenção configuráveis com ação de expurgo ("Prune History"). |
+
+---
 
 ## 4. Público-Alvo e Personas
 
-- **Trader individual (crypto):** opera contratos perpétuos e inversos em múltiplas exchanges e precisa de visão consolidada de patrimônio, exposição e PnL.
-- **Operador de capital (hedger):** utiliza posições inversas (Coin-M) para proteção de capital e acompanha o indicador de Hedge.
-- **Usuário que audita resultados:** precisa de relatórios contábeis (taxas, funding, PnL por símbolo) e exportação para PDF/Excel/CSV.
-- **Desenvolvedor/testador:** usa o Modo Simulação (Mock Data) para testar a UI sem chaves reais.
+- **Trader Quantitativo & Arbitrador de Funding**: Busca discrepâncias de taxas entre Bybit, OKX e Bitget para abrir operações delta-neutras e capturar retornos anualizados (APR).
+- **Gestor de Portfólio / Hedger**: Utiliza posições vendidas em contratos inversos (COIN-M) para travar o valor em USD dos criptoativos e proteger a custódia patrimonial.
+- **Trader Ativo de Futuros Perpétuos**: Necessita monitorar dezenas de posições simultâneas com alertas de liquidação, cálculo de ROE% e visualização de fluxo de ordens (CVD).
+- **Auditor Fiscal e Contábil**: Demanda extratos estruturados de fluxo de caixa, histórico de taxas pagas e exportação em PDF, Excel (.xlsx) e CSV.
+- **Usuário com Rigor de Privacidade**: Utiliza o Modo Privacidade para ofuscar valores nominais em transmissões e gravações de tela.
 
-## 5. Escopo
+---
+
+## 5. Escopo do Produto
 
 ### 5.1. Suportado (In Scope)
-
-- **Exchanges:** Bitget (API V2), Bybit (API V5 Unified Trading Account) e OKX (API V5).
-- **Contas:** Spot, Futuros lineares (USDT-M/USDC-M) e Contratos Inversos (Coin-M).
-- **OKX Dual-Wallet:** conta unificada de trading + conta de funding, com tags visuais `UNIFIED` e `FUNDING`.
-- **Dados consolidados:** saldos, posições abertas, histórico de posições fechadas, ordens abertas/históricas, bills (depósitos/saques), funding rates e transaction log da Bybit.
+- **Exchanges Integradas:**
+  - **Bybit:** API V5 (Unified Trading Account), suporte a Mainnet e Testnet, roteamento multi-regional (Global, Holanda, Turquia, Hong Kong, Cazaquistão, Geórgia) e injeção automática de cabeçalhos de conformidade para Brasil (`x-site-id: 10001`) e Argentina (`x-site-id: 10002`).
+  - **Bitget:** API V2 com adaptadores dedicados para contas **Classic** (Mix/Futures e Spot) e **UTA** (Unified Trading Account), precificação dinâmica de moedas via Spot Tickers, suporte a subcontas e inclusão seletiva da carteira de financiamento.
+  - **OKX:** API V5 com suporte a contas unificadas de trading e carteiras de funding (Dual-Wallet) com segregação visual e tags `UNIFIED` e `FUNDING`.
+- **Módulos Operacionais e Analíticos:**
+  - Dashboard consolidado com Positions Ticker contínuo no topo.
+  - Hedge Pro Dashboard com modelo Beyond-100% de capital protegido/exposto e alertas de sobre-exposição.
+  - Open Positions com modos de exibição Detailed e Lite.
+  - Closed Positions com análise estatística (Win Rate, Profit Factor, avg trade).
+  - Order Reports (Open Orders e Order History com busca regex).
+  - Trade History com discriminação de liquidez Maker/Taker e fees.
+  - Histórico de Transações Multi-Corretora com 10 categorias universais e modais com Total Stats Summary.
+  - Market Analytics com Open Interest, Regimes de Mercado, Arbitragem de Funding, CVD e Inverse Coin-M Dashboard.
+  - Funding Fees Dashboard com somatórios pré-calculados no serviço e comparador horizontal.
+  - PIKA Assistant com 9 ferramentas de leitura, auditoria de compatibilidade de modelos, telemetria de tokens e exportação de logs.
+  - Progressive Web App (PWA) instalável com Service Worker e cache offline.
 
 ### 5.2. Não Suportado (Out of Scope)
+- Envio de ordens de negociação ativas (compra/venda) a partir do CPM — o terminal opera em **estrito modo de leitura e auditoria (Read-Only)**.
+- Armazenamento em nuvem de históricos privados do usuário.
+- WebSockets para dados financeiros sensíveis (REST Polling near real-time para compatibilidade serverless).
 
-- Execução/ordens de trading dentro do produto (apenas leitura).
-- Streaming WebSocket para dados sensíveis no dashboard principal (REST Polling apenas; WebSocket isolado no API Tester diagnóstico).
-- Suporte a instrumentos spot/options no Funding Dashboard (apenas perpetual swaps USDT-M + COIN-M).
-- OKX deep sync além de ~3 meses de histórico via API (limitação da própria OKX).
-- Suporte a exchanges além de Bitget, Bybit e OKX.
+---
 
-## 6. Regras de Negócio
+## 6. Regras de Negócio e Princípios Arquiteturais
 
-### 6.1. Segurança (Zero-Trust)
+### 6.1. Segurança Zero-Trust e Proteção de Credenciais
+1. **Custódia Local Estrita:** Credenciais de API são persistidas apenas no `localStorage` do navegador do usuário.
+2. **Criptografia Opcional com Desbloqueio Global:** Ao habilitar Master Password, as chaves são cifradas com PBKDF2 (100.000 iterações) e AES-GCM 256-bit. A tela `GlobalUnlockScreen` bloqueia todo o acesso sem a senha correta.
+3. **Backup Criptografado:** Exportação e importação em arquivo `.cpmbackup` protegido por senha mestra.
+4. **Proxy Inerte:** O relé `/api/proxy` recebe cabeçalhos criptografados e parâmetros já assinados na ponta do cliente, repassando-os sem registrar logs nem armazenar chaves.
+5. **Fail-Fast de Autenticação:** Detecção algorítmica de erros 401/403 e códigos de rejeição das exchanges (Bybit `10003/10004/10005/33004`, OKX `50100/50105/50111/50113`, Bitget `40001/40005/40006/40014`). Ao identificar falha de credenciais, o sistema cancela imediatamente retries automáticos para proteger o IP do usuário contra banimentos de rate limit.
+6. **Backoff com Jitter e Circuit Breaker:** Erros de rede e respostas 5xx utilizam backoff exponencial com jitter (5s a 60s) e pausa automática após 5 tentativas consecutivas.
 
-1. **Credenciais locais:** chaves de API (`apiKey`, `apiSecret`, `passphrase`, `label`, `isActive`) persistidas exclusivamente no `localStorage` do navegador, com criptografia opcional.
-2. **Proxy inerte:** o backend (Node/Express + Serverless Vercel `/api/proxy`) recebe apenas URLs e headers **já assinados** pelo cliente, repassando sem adulterar assinaturas nem registrar logs sensíveis.
-3. **Assinatura nativa:** HMAC-SHA256 e payloads (ISO Timestamp OKX, Nano Time Bitget, Hex Signatures Bybit) gerados com `window.crypto.subtle`.
-4. **Allowlist anti-SSRF:** o proxy valida domínios oficiais das três exchanges (mitigação de SSRF/DoS).
-5. **Time-Sync Engine:** cada adaptador sincroniza o relógio com o servidor da exchange (offset calculado, throttling de 5 min) para evitar rejeições por timestamp expirado (`recvWindow` < 5000ms na Bybit).
-6. **Privacidade:** o Privacy Mode mascara todos os valores monetários com um clique (`$••••`), persistindo a preferência.
-7. **Fail-Fast de Autenticação e Proteção de IP:** detecção rigorosa de falhas de autenticação (`isAuthError`) cobrindo status HTTP 401/403, códigos proprietários das corretoras (Bybit `10003/10004/10005/33004`, OKX `50100/50105/50111/50113`, Bitget `40001/40005/40006/40014`) e mensagens de assinatura/permissão. Em caso de falha de credenciais, o bootload aborta imediatamente novas tentativas automáticas, protegendo o IP do cliente contra bloqueios por rate limit ou banimentos Cloudflare/Akamai. Falhas transitórias utilizam backoff exponencial com jitter (5s a 60s) e circuit breaker de 5 tentativas.
+### 6.2. Precisão Numérica e Normalização de Derivativos
+1. **Aritmética com Big.js:** Todos os cálculos de taxas acumuladas, ratios de hedge, montantes de balanço e PnL por símbolo usam a biblioteca Big.js, banindo erros de arredondamento de floats JavaScript.
+2. **Normalização de Contratos Inversos vs Lineares (`inverseUtils.ts`):**
+   - *Bybit Inversa:* O campo `size` representa o montante em USD; a quantidade em cripto base é calculada via `cumEntryValue / entryPrice`.
+   - *Bybit Linear:* O campo `size` representa a quantidade em cripto; o notional em USD é `cumEntryValue`.
+   - *Bitget Inversa:* Multiplica o número bruto de contratos pelo valor contratual (`getBitgetInverseContractVal`) para encontrar o tamanho real em moeda.
+   - *OKX:* Escalonamento pelo multiplicador de contrato (`ctVal`).
+3. **Precificação Dinâmica de Tokens:** Para ativos mantidos na carteira de funding ou pares alternativos da Bitget, o sistema consulta `/api/v2/spot/market/tickers` e aciona fallback proxy (`fetchTokenUsdPrice`) para evitar avaliações distorcidas de patrimônio.
 
-### 6.2. Consolidação e Normalização
+### 6.3. Sincronização SWR e Caching em IndexedDB
+1. **Carregamento Instantâneo:** As visões analíticas renderizam imediatamente os dados persistidos no IndexedDB (`crypto-dashboard-cache`), disparando fetches incrementais em segundo plano.
+2. **Coordenação Global (`lastSyncTime`):** A navegação entre abas de histórico reaproveita o snapshot cacheado caso uma sincronização recente já tenha ocorrido.
+3. **Retenção e Expurgo sob Demanda:** Janelas configuráveis (30d a 2 anos) e botão "Prune History" para limpar registros antigos de posições encerradas e transações sem zerar o cache ativo.
+4. **Auto-Reset de Scroll (`useLayoutEffect`):** A troca de aba na sidebar reseta a rolagem imediatamente para o topo da visualização.
 
-1. **Camada de adaptadores:** toda resposta bruta das exchanges passa por adaptadores (`BybitAdapter`, `OkxAdapter`, `BitgetAdapter`) que implementam a interface `IExchangeAdapter` e normalizam para interfaces unificadas (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, `UnifiedOrder`, `UnifiedBillRecord`).
-2. **Tipagem estrita:** respostas brutas tipadas em `src/types/raw.ts` — proibido `any`/`Record<string, unknown>` no campo `raw` de dados sensíveis.
-3. **Contratos inversos vs lineares:** o sistema distingue pares Fiat/Stablecoin (BTCUSDT) de Contratos Inversos Puros (BTCUSD), aplicando conversões centralizadas em `src/utils/inverseUtils.ts`:
-   - **Bybit Inversa:** `size` = montante em USD; tamanho em cripto = `cumEntryValue`; notional USD = `size`.
-   - **Bybit Linear:** `size` = quantidade em cripto; notional USD = `cumEntryValue`.
-   - **Bitget Inversa:** tamanho = quantidade bruta de contratos × valor contratual (`getBitgetInverseContractVal`).
-   - **OKX:** tamanho escalado pelo multiplicador de contrato (`ctVal`).
-4. **Mapeamento de ordens da Bitget:** quantidade retornada na unidade da moeda (sem multiplicador); valor USD = `quoteVolume` ou `qty × price`.
-5. **Classificador de ativos:** `AssetClassifierAggregator` classifica ativos como `CRYPTO` ou `STOCK` usando listagens das APIs das exchanges, com hierarquia de cache em 4 níveis (em-memória → IndexedDB → API ao vivo → fallback).
-6. **Cálculos com precisão:** todos os cálculos financeiros críticos usam **Big.js** (sem floats nativos).
+### 6.4. Auditoria Contábil de Transações (10 Categorias Universais)
+Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canônicos:
+*Trade & Orders*, *Funding Fee*, *Transfer In / Deposit*, *Transfer Out / Withdraw*, *Liquidation & ADL*, *Interest & Loans*, *Rewards & Bonus*, *Delivery & Settle*, *Others*, *All Types*. Modais de detalhes fornecem o **Total Stats Summary** com volume total, taxas e variação líquida do lote.
 
-### 6.3. Sincronização e Cache (Histórico)
+### 6.5. Assistente Quantitativo PIKA
+1. **Desabilitado por Padrão:** Requer ativação explícita em **AI Settings**.
+2. **Zero-Trust de Chaves:** O motor de IA nunca tem acesso a credenciais de API.
+3. **9 Ferramentas de Leitura:** Saldos consolidados, posições abertas, ordens, funding rates, métricas de hedge, market analytics, extratos contábeis, saúde das conexões e PnL por símbolo.
+4. **Mascaramento no Modo Privacidade:** Converte valores nominais em proporções percentuais quando o Modo Privacidade estiver ativo.
+5. **Multi-Provedor com Fallback:** Suporte a Ollama local (`localhost:11434`), Google Gemini Cloud (`@google/genai`) e OpenRouter, com comutação automática para modelo secundário em caso de falha.
+6. **Auditoria e Telemetria:** Registro de cada interação com payload bruto, latência e consumo de tokens, com exportação em JSON e CSV.
 
-1. **SWR (Stale-While-Revalidate):** hooks de histórico (`usePositionHistory`, `useOrderReports`) carregam instantaneamente o cache do IndexedDB e, em segundo plano, fazem fetch incremental de deltas.
-2. **Coordenação global de sync (`lastSyncTime`):** se uma aba de histórico sincronizou recentemente, as demais abas (Orders History, Positions History, Trade History, PnL by Symbol) reaproveitam o cache sem disparar requisições redundantes.
-3. **Background Polling:** intervalos configuráveis (5–60 min) mantêm o cache quente.
-4. **Controles manuais:** Settings permitem purgar o cache (Clear Local Cache) e re-sincronizar (Force Sync), com feedback via Toast UI.
-5. **Bills (depósitos/saques):** altamente mutáveis → ignoram o IndexedDB e são buscados direto nas APIs para garantir precisão transacional.
-6. **Política de Retenção e Pruning Histórico:** seletor configurável de retenção histórica (30 dias, 60 dias, 90 dias, 180 dias, 365 dias padrão e 730 dias / 2 anos) acompanhado do botão "Prune History" para expurgo sob demanda de dados encerrados antigos, além de monitoramento visual da quota de disco do navegador via `navigator.storage.estimate()`.
+---
 
-### 6.4. Módulos de Transações / Transaction Logs (Auditoria Contábil)
+## 7. Requisitos Funcionais (Matriz Completa)
 
-1. **Bybit Transactions:**
-   - **Deep Sync Progressivo:** na inicialização, `useBybitTransactionSync` faz backfill do `/v5/account/transaction-log` em chunks de 7 dias (categorias linear, inverse e spot), com checkpoints no IndexedDB.
-   - **Sync Incremental:** após o deep sync, busca apenas registros com `transactionTime > latestTransactionTime + 1`.
-   - **PnL Realizado:** calculado pelo fluxo de caixa — `change = cashFlow + funding − fee` — excluindo transfers dos totais de cash flow.
-   - **Cache:** stores `bybit-transaction-log` (indexada por connectionId, transactionTime, symbol, type, currency, category) e `bybit-transaction-meta`.
+| ID | Requisito Funcional | Módulo |
+|---|---|---|
+| **FR-1** | Exibir saldos consolidados multi-exchange com tags `UNIFIED` / `FUNDING` e ordenação flexível | Dashboard |
+| **FR-2** | Monitorar posições ativas com mark price em tempo real, ROE%, alavancagem, margem e views Detailed/Lite | Open Positions |
+| **FR-3** | Registrar histórico de posições fechadas com métricas analíticas (Win Rate, Profit Factor) e exportação | Closed Positions |
+| **FR-4** | Exibir ordens abertas e histórico de ordens com filtros multicritério e busca regex | Order Reports |
+| **FR-5** | Auditar execuções de ordens (trades) com identificação Maker/Taker e taxa cobrada | Trade History |
+| **FR-6** | Calcular e exibir distribuição de PnL fechado por ativo (Long vs Short) | PnL by Symbol |
+| **FR-7** | Auditar transaction log da Bybit UTA (até 2 anos) com conciliação contábil e Total Stats Summary | Bybit Transactions |
+| **FR-8** | Auditar extrato transacional da Bitget (Classic e UTA) com Total Stats Summary | Bitget Transactions |
+| **FR-9** | Auditar extrato contábil da OKX (recente e arquivo de 3 meses) com Total Stats Summary | OKX Transactions |
+| **FR-10** | Mapeamento universal de transações em 10 categorias padronizadas | Universal Tx Mapper |
+| **FR-11** | Painel Hedge Pro com modelo Beyond-100%, barra de exposição e resumo por moeda | Hedge Pro |
+| **FR-12** | Market Analytics com Open Interest, Regimes de Mercado, Arbitragem de Funding, CVD e Inverse Dashboard | Market Analytics |
+| **FR-13** | Dashboard de taxas de financiamento multi-período com agregação no serviço e auto-sync inteligente | Funding Fees |
+| **FR-14** | Exportação de relatórios gerenciais em PDF, Excel (.xlsx) e CSV | Reports |
+| **FR-15** | Gerenciador de chaves de API com validação imediata, status em tempo real e encriptação local | API Keys |
+| **FR-16** | Terminal de logs de rede em tempo real com máscara de dados sensíveis e filtros | Connection Logs |
+| **FR-17** | Testador de conectividade REST e WebSockets isolados | API Tester |
+| **FR-18** | Ticker deslizante no topo do workspace espelhando posições em aberto (Positions Ticker) | Positions Ticker |
+| **FR-19** | Assistente PIKA com 9 ferramentas de leitura, multi-provedor (Ollama/Gemini), telemetria e auditoria | PIKA Assistant |
+| **FR-20** | Roteamento multi-regional da Bybit (NL, TR, HK, KZ, GE) e injeção de cabeçalhos oficiais para Brasil e Argentina | Bybit Endpoints |
+| **FR-21** | Suporte a adaptadores Bitget Classic vs UTA, subcontas e inclusão da carteira de funding | Bitget Adapters |
+| **FR-22** | Modo Simulação (Mock Data) com interrupção programática de chamadas reais e badge visual | Simulation Mode |
+| **FR-23** | Modo Privacidade com mascaramento instantâneo de valores e ofuscação automática nas ferramentas de IA | Privacy Mode |
+| **FR-24** | Governança de disco no IndexedDB com leitura de quota e expurgo seletivo sob demanda ("Prune History") | Storage Governance |
+| **FR-25** | PWA instalável com Service Worker, cache offline e notificação de atualizações | PWA Integration |
+| **FR-26** | Resiliência global com Fail-Fast de autenticação, circuit breaker e Global Error Boundary com Safe Recovery | System Resilience |
 
-2. **Bitget Transactions:**
-   - **Deep Sync Progressivo:** `useBitgetTransactionSync` suporta contas Classic (`/mix/account/bill`, `/spot/account/bills`) e UTA (`/user/bills-record`), com paginação temporal e por cursors `lastEndId`.
-   - **Sync Incremental:** busca incremental após o maior timestamp cacheado.
-   - **Métricas:** Cash Flow, Fees, Net Change, PnL por símbolo e histórico com agrupamento de Stablecoins vs Moedas Nativas.
-   - **Cache:** stores `bitget-transaction-log` e `bitget-transaction-meta`.
-
-3. **OKX Transactions:**
-   - **Deep Sync Progressivo:** `useOkxTransactionSync` varre endpoints `/api/v5/account/bills` (recente) e `/api/v5/account/bills-archive` (histórico até 3 meses) em janelas de 7 dias com cursors `after` (`billId`).
-   - **Sync Incremental:** atualizações frequentes via `/bills` recente.
-   - **Métricas:** Normalização dos dezenas de tipos/subtipos operacionais da OKX, balanço patrimonial após transação (`bal`) e variação de saldo (`balChg`).
-   - **Cache:** stores `okx-transaction-log` e `okx-transaction-meta`.
-
-4. **UI SWR Comum:** Todas as 3 abas de transações carregam dados instantaneamente do IndexedDB, executam filtros em memória sem latência de rede, mostram badges de progresso de sync, relatórios de Net Change / ROI e suporte a exportação em CSV, Excel e PDF.
-
-### 6.5. Funding Fees Dashboard
-
-1. **Aggregation-first:** somatórios por período pré-calculados no serviço (`FundingService.fetchAndAggregateSummary`) e persistidos como `FundingRateSummary` (uma linha por exchange-symbol) — nunca registros brutos.
-2. **Períodos:** Next, Last, Today, Mês Atual, Mês Anterior, 3M, 6M, 1Y.
-   - **Regra crítica:** agregações multi-mês (Mês Anterior, 3M, 6M, 1Y) **excluem o mês corrente**; o corte é ancorado no dia 1º do mês corrente.
-   - **OKX:** 6M e 1Y ficam `undefined` (limite de ~3 meses da API) e são excluídos das médias de nível de moeda.
-   - **Bybit:** sempre popula todos os campos (cobertura 400+ dias).
-3. **Full recalculation:** cada sync refaz o fetch completo das APIs e re-agrega (não há fetch incremental).
-4. **Auto-sync inteligente:** timer agendado para `próximo funding time + 60s`; sync manual via "Run Sync Now" ou "Clear Cache + Sync".
-5. **Locks singleton (module-level):** `syncInProgressRef`, `fetchingRef`, `restartRequestedRef` previnem execução concorrente; ForceSync durante sync ativo termina o atual e reinicia.
-6. **Freshness guard:** símbolos com metadata < 8h desde o último update são pulados (reduz cada ciclo a 10–30% dos símbolos).
-7. **Concorrência por exchange:** `asyncPool` com 6 (Bybit/Bitget) e 4 (OKX); retry com backoff exponencial (1s, 2s, 4s).
-
-### 6.6. Analytics e Relatórios
-
-1. **Métricas:** Win Rate, Profit Factor, taxas brutas e líquidas pagas, sazonalidade por dia da semana e janela operacional de 4h.
-2. **External Flow:** leitura de Bills (depósitos/saques) para isolar o crescimento patrimonial puramente operacional.
-3. **Milestone Matrix:** flutuação patrimonial em relação aos brackets de preços do Bitcoin.
-4. **PnL by Symbol:** tabela e gráfico com distribuição de PnL fechado por ativo, respeitando particularidades de alavancagem por corretora (USDT-M, USDC-M, Coin-M Bitget; Inverse/Linear Bybit; SWAP OKX) e filtro por tipo de instrumento.
-5. **Exports:** PDF (jspdf + jspdf-autotable), Excel (xlsx) e CSV puro.
-
-### 6.7. Modo Simulação (Mock Data)
-
-1. Ativar em Settings injeta dados fictícios (saldos, posições, PnL, bills, históricos) na UI e **encerra programaticamente qualquer streaming real**.
-2. Quando ativo: badge pulsante "Simulation Mode" no StatusBar e botão "Sync Now" desabilitado com tooltip explicativo.
-3. Desativar restaura o Real-Time instantaneamente.
-
-### 6.8. Market Analytics
-
-1. **Agregação Quantitativa Cross-Exchange:** consolidação em tempo real de liquidez, derivativos e order flow entre Bybit, OKX e Bitget com suporte a múltiplos tipos de mercado (Linear PERP, Inverse COIN-M, Spot e ALL).
-2. **Open Interest & Regime Detector:** correlação gráfica entre preço e Open Interest (USD) por exchange, diagnosticando automaticamente 5 regimes estruturais: `LONG_ACCUMULATION`, `SHORT_SQUEEZE`, `AGGRESSIVE_SHORTING`, `LONG_LIQUIDATION` e `NEUTRAL_CONSOLIDATION`.
-3. **Cross-Exchange Funding Arbitrage:** scanner de oportunidades de arbitragem delta-neutra entre corretoras, calculando spread 8h e APR anualizado (`Spread APR = Spread * 3 * 365`), indicando exchange ideal para Long e Short e contagem regressiva para liquidação.
-4. **Order Flow & Cumulative Volume Delta (CVD):** mensuração de agressões de mercado (`Net Delta = Taker Buy - Taker Sell`) e curva de volume acumulado (CVD) com detecção algorítmica de divergências altistas (Bullish) e baixistas (Bearish).
-5. **Sentimento Smart Money vs. Retail:** comparação do sentimento do varejo (ponderado por contas) contra o Smart Money (ponderado por volume nocional do top 20% de traders) com índice Fear & Greed e alertas de divergência institucional.
-6. **Sub-View Especializada — Inverse Coin-M Dashboard:** painel analítico comutável dedicado a contratos inversos (COIN-M) consolidando métricas cross-exchange, favoritos com persistência local, desdobramento expansível por corretora (taxa de funding, volume 24h, OI e spread arbitrage) e controles de Expand/Collapse All.
-7. **Tooltips e Controles Padronizados:** tooltips matemáticos detalhados ancorados no Radix UI, seleção com favoritos, seletor de timeframes e atualização automática configurável com contador circular.
-
-### 6.9. Resiliência de Interface (Global Error Boundary & Safe Crash Recovery)
-
-1. **Captura Global de Exceções:** Um componente `GlobalErrorBoundary` envolve a aplicação, capturando falhas não tratadas na árvore do React sem quebrar o documento inteiro.
-2. **Tela de Recuperação Graciosa:** Exibe aviso visual intuitivo com relatório da falha e detalhes técnicos (stack trace) em accordion recolhível para diagnóstico.
-3. **Mecanismos de Recuperação em 1 Clique:**
-   - **Reload Dashboard:** Realiza reinicialização limpa do aplicativo para restabelecer o ciclo de vida dos componentes.
-   - **Clear Cache & Reload:** Pura completamente o banco local IndexedDB e reinicia o aplicativo, permitindo restaurar a estabilidade mesmo em cenários de corrupção ou inconsistência de dados locais.
-
-## 7. Requisitos Funcionais (Resumo)
-
-| ID | Requisito | Módulo |
-|----|-----------|--------|
-| FR-1 | Exibir saldos consolidados multi-exchange com tags `UNIFIED`/`FUNDING` e sorting/filtro | Dashboard |
-| FR-2 | Exibir posições abertas com PnL não realizado, ROE, margem, preço de liquidação e views Detailed/Lite | Open Positions |
-| FR-3 | Exibir histórico de posições fechadas com filtros temporais e exportação | Closed Positions |
-| FR-4 | Exibir ordens abertas e histórico de ordens com filtros multicritério | Order Reports |
-| FR-5 | Calcular e exibir PnL por símbolo com intensity bars | PnL by Symbol |
-| FR-6 | Auditar transaction log da Bybit (até 2 anos) com stats e exportação | Bybit Transactions |
-| FR-7 | Dashboard de funding rates multi-período com KPI cards, ranking Top Payers e comparison | Funding Fees |
-| FR-8 | Métricas avançadas (Win Rate, Profit Factor, seasonality, external flow) | Reports Dashboard |
-| FR-9 | Gerenciar chaves de API com validação em tempo real e criptografia | API Keys |
-| FR-10 | Diagnosticar conectividade via API Tester (REST + WebSocket isolado) | API Tester |
-| FR-11 | Exibir telemetria e latência das conexões | Connection Logs |
-| FR-12 | Ticker de mercado em tempo real (marquee) das posições abertas | Positions Ticker |
-| FR-13 | PWA: instalação, cache offline e notificação de atualização | PWA |
-| FR-14 | Auditar extrato transacional e bills da Bitget (Classic e UTA) | Bitget Transactions |
-| FR-15 | Auditar extrato e bills archive da OKX com reconciliação contábil | OKX Transactions |
-| FR-16 | Mapeamento universal de transações (10 categorias universais e badges padronizados) | Universal Tx Mapper |
-| FR-17 | Modo Hedge Pro com monitoramento de delta, ratio de hedge e alertas de risco | Hedge Monitoring |
-| FR-18 | Inteligência de mercado multi-exchange com Open Interest, regimes de mercado, Funding Arbitrage, fluxo de ordens (CVD), sentimento Smart Money e Inverse Coin-M Dashboard | Market Analytics |
+---
 
 ## 8. Requisitos Não-Funcionais
 
-| Categoria | Requisito |
-|-----------|-----------|
-| **Segurança** | Zero-Trust; chaves apenas no navegador; Web Crypto API; proxy com allowlist; criptografia das chaves com tela de desbloqueio global. |
-| **Performance** | Histórico com latência zero (IndexedDB SWR); polling paralelo no boot (`ExchangeAggregator`); memoização para evitar re-renders em cascata. |
-| **Confiabilidade** | Exponential backoff para WebSocket (teto 60s); retry com backoff nas APIs; tolerância a clock skew via Time-Sync Engine. |
-| **Precisão** | Big.js para todo cálculo financeiro; formatação dinâmica (8 casas para valores pequenos, 2 para $10k+). |
-| **Compatibilidade** | 100% Serverless (Vercel); deploy em Node LTS (engines >= 24); PWA Desktop/Mobile. |
-| **Testabilidade** | Vitest + jsdom; módulos de funding com 140+ testes unitários (235 testes no total no projeto). |
-| **Manutenibilidade** | Micro-stores Zustand (SRP); padrão Adapter/Strategy; tipos unificados estritos; protocolo de consistência Mocks↔IndexedDB↔UI. |
+- **Segurança:** Postura Zero-Trust; chaves nunca saem do navegador; Web Crypto nativo; proxy inerte com allowlist anti-SSRF.
+- **Confiabilidade:** 56 arquivos de teste e 604 testes unitários automatizados com 100% de sucesso; tolerância a clock skew das exchanges.
+- **Performance:** Latência zero no carregamento inicial de telas analíticas via IndexedDB; memoização rigorosa para prevenir renderizações desnecessárias.
+- **Precisão Matemática:** Uso universal de Big.js para aritmética de funding, hedge e saldos.
+- **Compatibilidade:** Suporte nativo a navegadores Desktop e Mobile (PWA); compatibilidade com ambientes serverless (Vercel) e instâncias Node.js (engines `>=24`).
 
-## 9. Arquitetura (Resumo)
+---
 
-Ver `specs/ARCHITECTURE.md` para o diagrama completo. Visão de alto nível:
-
-```
-[UI React 19 + Zustand + Tailwind v4]
-        │  (assinaturas HMAC geradas no cliente — Web Crypto)
-        ▼
-[ExchangeAggregator / Hooks]
-        │  hybridFetch (client-side primeiro; fallback proxy)
-        ▼
-[/api/proxy — Express + Vercel Serverless]
-        │  (proxy "burro" — allowlist, sem segredos)
-        ▼
-[Bitget V2 | Bybit V5 | OKX V5]  ──►  [Adapters normalizam → Unified* types]
-                                              │
-                                     [IndexedDB cache (SWR)]
-```
-
-## 10. Métricas de Sucesso
-
-- **Tempo para visão consolidada:** usuário vê patrimônio agregado em < 5s após boot com chaves ativas.
-- **Redução de chamadas de API:** cache IndexedDB + coordenação global de sync reduzem requisições redundantes ao alternar abas de histórico.
-- **Precisão contábil:** PnL Realizado do Bybit Transactions reconcilia com o fluxo de caixa (`change = cashFlow + funding − fee`).
-- **Cobertura de testes:** ≥ 235 testes unitários passando; typecheck (`tsc --noEmit`) sem erros.
-
-## 11. Histórico de Evolução e Entregas
-
-Sprints concluídos e consolidados no projeto incluem:
-- Resolução de débitos críticos de segurança (SSRF/DoS, backoff exponencial, migração para Web Crypto nativa PBKDF2/AES-GCM).
-- Arquitetura de adapters e micro-stores Zustand (SRP e Strategy Pattern).
-- Relatórios de performance, PnL by Symbol e auditoria unificada de transações (Bybit, Bitget e OKX Transactions).
-- Funding Fees Dashboard com agregação analítica no serviço e cache IndexedDB.
-- Hedge Pro Dashboard para monitoramento Delta-Neutral em contratos inversos COIN-M.
-- Market Analytics completo com Open Interest, regimes de mercado, funding arbitrage, CVD e Inverse Coin-M Dashboard.
-- Progressive Web App (PWA), Privacy Mode e Ticker de mercado em tempo real.
-
-## 12. Documentação Relacionada
-
-- [Arquitetura Técnica e Fluxo de Dados](./ARCHITECTURE.md): Detalhamento do Hybrid-Proxy, micro-stores, caching IndexedDB e engines de sincronização.
-- [Interfaces Unificadas](./unified-interfaces.md): Especificação dos tipos normalizados e raw responses de Bybit, Bitget e OKX.
-- [Manual do Usuário (Português)](../user_manual/cpm_user_manual_pt-br.md): Guia operacional completo com fluxo de telas, segurança e troubleshooting.
-- [User Manual (English)](../user_manual/cpm_user_manual_en-us.md): Complete English user manual.
-- [Referências das APIs](./bybit_v5_api_doc.md), [OKX V5](./okx_v5_api_doc.md), [Bitget Classic](./bitget_classic_api_doc.md) e [Bitget UTA](./bitget_uta_api_doc.md).
+*Crypto Portfolio Manager — Product Requirements Document (PRD v2.13.0).*
