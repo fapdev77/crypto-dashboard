@@ -1,3 +1,10 @@
+# [2.13.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.12.0...v2.13.0) (2026-10-20)
+
+
+### Features
+
+* refactor stablecoin checks and integrate proxy fetch for token price retrieval ([a83106b](https://github.com/fapdev77/crypto-dashboard/commit/a83106bf0bdde3281ea641e9008f214b9121f237))
+
 # [2.12.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.11.0...v2.12.0) (2026-10-19)
 
 
