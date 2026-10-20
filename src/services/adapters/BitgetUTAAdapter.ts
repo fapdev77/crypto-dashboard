@@ -9,8 +9,9 @@ import { LogManager } from '../LogManager';
 import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { ApiRateLimitError } from '../../utils/retryHelper';
-
 import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
+
+import { isStablecoin } from '../../utils/formatters';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -23,7 +24,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
     const c = (coin || '').toUpperCase();
     if (!c) return 0;
     if (knownPrices[c] !== undefined && knownPrices[c] > 0) return knownPrices[c];
-    if (['USDT', 'USDC', 'USD', 'DAI', 'USDE', 'FDUSD', 'PYUSD', 'EURT', 'USDD'].includes(c)) return 1.0;
+    if (isStablecoin(c)) return 1.0;
 
     const now = Date.now();
     const cached = BitgetUTAAdapter.tickerPriceCache[c];
@@ -188,7 +189,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
             if (balance > 0) {
               const coin = (item.coin || '').toUpperCase();
               const price = await this.getCoinPrice(coin, knownPrices);
-              const usdVal = price > 0 ? balance * price : (['USDT', 'USDC', 'USD'].includes(coin) ? balance : 0);
+              const usdVal = price > 0 ? balance * price : (isStablecoin(coin) ? balance : 0);
 
               balances.push({
                 id: `${key.id}-uta-funding-${coin}`,

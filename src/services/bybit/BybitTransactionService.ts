@@ -12,6 +12,7 @@ import {
   getBybitTxLogMeta,
   updateBybitTxLogMeta,
 } from '../historyCache';
+import { isStablecoin } from '../../utils/formatters';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const TWO_YEARS_MS = 2 * 365 * 24 * 60 * 60 * 1000;
@@ -351,7 +352,7 @@ export class BybitTransactionService {
     const stable = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) };
     const perCurrency: Record<string, { totalFunding: Big; totalFees: Big; totalCashFlow: Big; totalChange: Big; finalBalance: Big; totalInflow: Big; totalOutflow: Big }> = {};
 
-    const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD'].includes(currency.toUpperCase());
+    const isStable = (currency: string) => isStablecoin(currency)
 
     const latestBalance: Record<string, { time: number; balance: Big }> = {};
 

@@ -11,6 +11,7 @@ import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { getBybitBaseUrl, getBybitCustomHeaders } from '../../utils/bybitEndpoints';
 import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
+import { isStablecoin } from '../../utils/formatters';
 import { ApiRateLimitError } from '../../utils/retryHelper';
 
 const MAX_DEEP_PAGES = 30;
@@ -64,7 +65,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   private async getCoinPrice(coin: string, baseUrl: string, knownPrices: Record<string, number>): Promise<number> {
     const c = coin.toUpperCase();
     if (knownPrices[c] !== undefined && knownPrices[c] > 0) return knownPrices[c];
-    if (['USDT', 'USDC', 'USD', 'DAI', 'USDE', 'FDUSD', 'PYUSD'].includes(c)) return 1.0;
+    if (isStablecoin(c)) return 1.0;
 
     try {
       const tickerUrl = `${baseUrl}/v5/market/tickers?category=spot&symbol=${c}USDT`;
@@ -97,17 +98,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   // REST Balances (UNIFIED + FUNDING)
   public async getBalance(key: ApiCredentials): Promise<UnifiedBalance[]> {
     const baseUrl = getBybitBaseUrl(key.environment, key.bybitRegion);
-    const balances: UnifiedBalance[] = [];
-    const coinPrices: Record<string, number> = {
-      USDT: 1.0,
-      USDC: 1.0,
-      USD: 1.0,
-      DAI: 1.0,
-      USDE: 1.0,
-      FDUSD: 1.0,
-      PYUSD: 1.0,
-    };
-
+    const balances: UnifiedBalance[] = [];const coinPrices: Record<string, number> = {}
     LogManager.info(
       'BybitAdapter.Balance',
       `[${key.label}] Fetching wallet balance from ${baseUrl} (env: ${key.environment || 'mainnet'}, region: ${key.bybitRegion || 'global'}${key.bybitRegion === 'brazil_int' || key.bybitRegion === 'argentina_int' ? ', X-Site-Id applied' : ''})`

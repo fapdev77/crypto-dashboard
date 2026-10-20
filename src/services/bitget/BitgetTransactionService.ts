@@ -6,6 +6,7 @@ import { BitgetUTAAdapter } from '../adapters/BitgetUTAAdapter';
 import { BitgetClassicAdapter } from '../adapters/BitgetClassicAdapter';
 import { matchUniversalTxType, getBitgetUniversalType } from '../../utils/transactionTypeMapper';
 import { executeWithRetry, classifyError } from '../../utils/retryHelper';
+import { isStablecoin } from '../../utils/formatters';
 import {
   getBitgetTxLogCache,
   saveBitgetTxLogCache,
@@ -388,7 +389,7 @@ export class BitgetTransactionService {
     const stable = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) };
     const perCurrency: Record<string, { totalFunding: Big; totalFees: Big; totalCashFlow: Big; totalChange: Big; finalBalance: Big; totalInflow: Big; totalOutflow: Big }> = {};
 
-    const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD', 'BUSD'].includes(currency.toUpperCase());
+    const isStable = (currency: string) => isStablecoin(currency)
 
     const latestBalance: Record<string, { time: number; balance: Big }> = {};
 
