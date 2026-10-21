@@ -368,8 +368,8 @@ export function SecurityBackupCard() {
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-amber-400" />
                   <div>
-                    <h4 className="text-white font-medium text-xs">Aviso de Cofre na Inicialização</h4>
-                    <p className="text-[#8E9299] text-[10px]">Alerta temporário de 5s ao abrir o app sem senha mestra</p>
+                    <h4 className="text-white font-medium text-xs">Startup Vault Notice</h4>
+                    <p className="text-[#8E9299] text-[10px]">5-second notice on launch when vault is uninitialized</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
@@ -379,14 +379,14 @@ export function SecurityBackupCard() {
                     checked={showVaultSetupNoticeOnStartup}
                     onChange={(e) => {
                       setShowVaultSetupNoticeOnStartup(e.target.checked);
-                      toast.success(`Aviso de Cofre na Inicialização ${e.target.checked ? 'Ativado' : 'Desativado'}`);
+                      toast.success(`Startup Vault Notice ${e.target.checked ? 'Enabled' : 'Disabled'}`);
                     }}
                   />
                   <div className="w-9 h-5 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2F6BFF]"></div>
                 </label>
               </div>
               <p className="text-[#8E9299] text-[11px] leading-relaxed">
-                Exibe um aviso discreto de 5 segundos ao abrir a aplicação caso o cofre local ainda não tenha sido inicializado com uma senha mestra.
+                Displays a subtle 5-second prompt on application startup if the local vault has not yet been initialized with a master passphrase.
               </p>
             </div>
 

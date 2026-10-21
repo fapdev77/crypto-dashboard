@@ -31,6 +31,10 @@ import { isAiChatbotFeatureEnabled } from './utils/aiFeatureFlag';
 import { useVaultAutoLock } from './hooks/useVaultAutoLock';
 import { TabLoadingSkeleton } from './components/ui/TabLoadingSkeleton';
 import { VaultSetupNoticeModal } from './components/VaultSetupNoticeModal';
+import { VaultSetupModal } from './components/VaultSetupModal';
+import { MandatoryVaultMigrationScreen } from './components/MandatoryVaultMigrationScreen';
+import { detectLegacyUnencryptedKeys } from './utils/vaultHelpers';
+import { ApiCredentials } from './store/apiKeysStore';
 
 // Code Splitting: Lazy-loaded secondary & heavy tabs with named exports
 const ClosedPositions = React.lazy(() => import('./components/ClosedPositions').then(m => ({ default: m.ClosedPositions })));
@@ -56,11 +60,13 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
   const [isVaultNoticeOpen, setIsVaultNoticeOpen] = useState(false);
+  const [isVaultSetupModalOpen, setIsVaultSetupModalOpen] = useState(false);
+  const [legacyKeys, setLegacyKeys] = useState<ApiCredentials[]>(() => detectLegacyUnencryptedKeys());
 
   // Activate Zero-Trust Inactivity Auto-Lock hook
   useVaultAutoLock();
 
-  const { isEncrypted, isUnlocked, encryptedData } = useApiKeysStore();
+  const { isEncrypted, isUnlocked, encryptedData, isInitialized } = useApiKeysStore();
   const isAiFeatureEnabled = isAiChatbotFeatureEnabled();
   const isAiEnabled = useAiSettingsStore((state) => state.globalSettings.isEnabled);
   const openChatDrawer = useAiChatStore((state) => state.openDrawer);
@@ -124,6 +130,13 @@ export default function App() {
     return () => window.removeEventListener('navigate-to-tab', handleNavigate);
   }, []);
 
+  // Listen for global request to open vault setup modal
+  useEffect(() => {
+    const handleOpenVaultSetup = () => setIsVaultSetupModalOpen(true);
+    window.addEventListener('open-vault-setup', handleOpenVaultSetup);
+    return () => window.removeEventListener('open-vault-setup', handleOpenVaultSetup);
+  }, []);
+
   // Handle responsive layout transitions for mobile, tablet, and desktop/wide screens
   useEffect(() => {
     const handleResize = () => {
@@ -141,9 +154,9 @@ export default function App() {
   }, []);
 
   const checkAndTriggerVaultNotice = () => {
-    const { isInitialized, encryptedData: data } = useApiKeysStore.getState();
+    const { isInitialized: initialized, encryptedData: data } = useApiKeysStore.getState();
     const shouldShowNotice = useSettingsStore.getState().showVaultSetupNoticeOnStartup;
-    if ((!isInitialized || !data) && shouldShowNotice) {
+    if ((!initialized || !data) && shouldShowNotice) {
       setTimeout(() => {
         setIsVaultNoticeOpen(true);
       }, 300);
@@ -166,19 +179,21 @@ export default function App() {
   };
 
   const handleConfigureVaultNow = () => {
-    setActiveTab('settings');
-    setTimeout(() => {
-      const el = document.getElementById('security-settings-card');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
-        setTimeout(() => {
-          el.classList.remove('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
-        }, 2000);
-      }
-    }, 150);
+    setIsVaultNoticeOpen(false);
+    setIsVaultSetupModalOpen(true);
   };
 
+  // 1. Mandatory lockout for users with unencrypted legacy keys
+  if (legacyKeys.length > 0 && (!isInitialized || !encryptedData)) {
+    return (
+      <MandatoryVaultMigrationScreen
+        legacyKeys={legacyKeys}
+        onMigrated={() => setLegacyKeys([])}
+      />
+    );
+  }
+
+  // 2. Global unlock screen for locked vault
   if (isEncrypted && encryptedData && !isUnlocked) {
     return <GlobalUnlockScreen />;
   }
@@ -299,6 +314,11 @@ export default function App() {
             isOpen={isVaultNoticeOpen}
             onClose={() => setIsVaultNoticeOpen(false)}
             onConfigureNow={handleConfigureVaultNow}
+          />
+          <VaultSetupModal
+            isOpen={isVaultSetupModalOpen}
+            onClose={() => setIsVaultSetupModalOpen(false)}
+            reason="Activate client-side vault protection to securely store your exchange credentials."
           />
           <UpdateNotification />
           {isAiFeatureEnabled && <AiChatDrawer onNavigateToSettings={() => setActiveTab('ai-settings')} />}

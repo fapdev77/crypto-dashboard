@@ -32,7 +32,7 @@ export interface ApiCredentials {
   isSubAccount?: boolean;
 }
 
-interface ApiKeysState {
+export interface ApiKeysState {
   /** Decrypted in-memory API credentials. NEVER persisted unencrypted. */
   keys: ApiCredentials[];
   

@@ -12,7 +12,6 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
   const { showVaultSetupNoticeOnStartup, setShowVaultSetupNoticeOnStartup } = useSettingsStore();
   const [timeLeft, setTimeLeft] = useState(5);
   const isPausedRef = useRef(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -64,18 +63,18 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold text-white">Cofre Local Não Inicializado</h3>
+                <h3 className="text-base font-semibold text-white">Local Vault Not Initialized</h3>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   {timeLeft}s
                 </span>
               </div>
-              <p className="text-xs text-[#8E9299] mt-0.5">Segurança Zero-Trust recomendada</p>
+              <p className="text-xs text-[#8E9299] mt-0.5">Recommended Zero-Trust Security</p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 text-[#8E9299] hover:text-white hover:bg-[#202125] rounded-lg transition-colors"
-            aria-label="Fechar aviso"
+            aria-label="Close notice"
           >
             <X className="w-4 h-4" />
           </button>
@@ -83,7 +82,7 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
 
         {/* Body */}
         <p className="text-xs text-[#8E9299] leading-relaxed">
-          Seu cofre de chaves ainda não possui uma senha mestra configurada. Ative a criptografia local (PBKDF2 600k iterações + AES-GCM-256) em Configurações para proteger suas credenciais contra acessos indevidos.
+          Your key vault does not have a master passphrase configured yet. Enable local encryption (PBKDF2 600k iterations + AES-GCM-256) to protect your credentials against unauthorized local access.
         </p>
 
         {/* Action Buttons */}
@@ -96,18 +95,18 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
             className="flex-1 py-2 px-3.5 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-[#2F6BFF]/20"
           >
             <Lock className="w-3.5 h-3.5" />
-            Configurar Cofre Agora
+            Configure Vault Now
             <ArrowRight className="w-3 h-3 ml-0.5" />
           </button>
           <button
             onClick={onClose}
             className="py-2 px-3 border border-[#2a2b30] hover:bg-[#202125] text-[#8E9299] hover:text-white rounded-lg text-xs font-medium transition-colors"
           >
-            Dispensar
+            Dismiss
           </button>
         </div>
 
-        {/* Footer Toggle (like WelcomeHelpModal) */}
+        {/* Footer Toggle */}
         <div className="flex items-center justify-between border-t border-[#2a2b30] pt-3 mt-1 select-none">
           <div className="flex items-center gap-2">
             <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
@@ -119,9 +118,9 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
               />
               <div className="w-8 h-4 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#2F6BFF]" />
             </label>
-            <span className="text-[11px] text-[#8E9299]">Exibir aviso ao iniciar</span>
+            <span className="text-[11px] text-[#8E9299]">Show notice on startup</span>
           </div>
-          <span className="text-[10px] text-[#8E9299]/70">Pode ser reativado em Settings</span>
+          <span className="text-[10px] text-[#8E9299]/70">Can be re-enabled in Settings</span>
         </div>
       </div>
     </div>

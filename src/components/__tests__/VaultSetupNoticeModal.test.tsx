@@ -16,27 +16,27 @@ describe('VaultSetupNoticeModal', () => {
 
   it('renders nothing when isOpen is false', () => {
     render(<VaultSetupNoticeModal isOpen={false} onClose={onClose} onConfigureNow={onConfigureNow} />);
-    expect(screen.queryByText(/Cofre Local Não Inicializado/i)).toBeNull();
+    expect(screen.queryByText(/Local Vault Not Initialized/i)).toBeNull();
   });
 
   it('renders notice modal with countdown and message when isOpen is true', () => {
     render(<VaultSetupNoticeModal isOpen={true} onClose={onClose} onConfigureNow={onConfigureNow} />);
-    expect(screen.getByText(/Cofre Local Não Inicializado/i)).toBeInTheDocument();
-    expect(screen.getByText(/PBKDF2 600k iterações/i)).toBeInTheDocument();
+    expect(screen.getByText(/Local Vault Not Initialized/i)).toBeInTheDocument();
+    expect(screen.getByText(/PBKDF2 600k iterations/i)).toBeInTheDocument();
     expect(screen.getByText('5s')).toBeInTheDocument();
   });
 
-  it('triggers onConfigureNow and onClose when clicking Configurar Cofre Agora', () => {
+  it('triggers onConfigureNow and onClose when clicking Configure Vault Now', () => {
     render(<VaultSetupNoticeModal isOpen={true} onClose={onClose} onConfigureNow={onConfigureNow} />);
-    const configureBtn = screen.getByRole('button', { name: /Configurar Cofre Agora/i });
+    const configureBtn = screen.getByRole('button', { name: /Configure Vault Now/i });
     fireEvent.click(configureBtn);
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onConfigureNow).toHaveBeenCalledTimes(1);
   });
 
-  it('triggers onClose when clicking Dispensar', () => {
+  it('triggers onClose when clicking Dismiss', () => {
     render(<VaultSetupNoticeModal isOpen={true} onClose={onClose} onConfigureNow={onConfigureNow} />);
-    const dismissBtn = screen.getByRole('button', { name: /Dispensar/i });
+    const dismissBtn = screen.getByRole('button', { name: /Dismiss/i });
     fireEvent.click(dismissBtn);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -64,7 +64,7 @@ describe('VaultSetupNoticeModal', () => {
     act(() => {
       vi.advanceTimersByTime(3000);
     });
-    expect(onClose).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
   });
 });
