@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ServerLogger } from '../src/utils/serverLogger';
+import { validateSafeUpstreamUrl } from '../src/utils/ssrfValidator';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Configurar headers CORS para permitir o uso adequado via Vercel
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  // Configurar headers CORS seguros para Vercel
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader(
     'Access-Control-Allow-Headers',
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
@@ -50,14 +50,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'api.alternative.me',
     ];
 
-    try {
-      const urlObj = new URL(targetUrl);
-      if (!allowedDomains.includes(urlObj.hostname)) {
-        ServerLogger.error('Vercel-Proxy', `SSRF-Block — unauthorized domain: ${urlObj.hostname}`);
-        return res.status(403).json({ error: "Forbidden: Domain not in proxy allowlist" });
-      }
-    } catch (err) {
-      return res.status(400).json({ error: "Invalid targetUrl format" });
+    const validation = validateSafeUpstreamUrl(targetUrl, {
+      allowedProtocols: ['https:'],
+      allowedDomains,
+    });
+
+    if (!validation.isValid) {
+      ServerLogger.error('Vercel-Proxy', `SSRF-Block: rejected upstream '${targetUrl}' - ${validation.reason}`);
+      return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
     }
 
     ServerLogger.info('Vercel-Proxy', `${method} ${targetUrl}`);

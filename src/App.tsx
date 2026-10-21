@@ -3,34 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, Suspense } from 'react';
 import { Menu, Bot, Sparkles } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ApiKeys } from './components/ApiKeys';
 import { WorkSpace } from './components/WorkSpace';
 import { Dashboard } from './components/Dashboard';
 import { OpenPositions } from './components/OpenPositions';
-import { ClosedPositions } from './components/ClosedPositions';
-import { Settings } from './components/Settings';
-import { ApiTester } from './components/ApiTester';
 import { StatusBar } from './components/StatusBar';
 import { PositionsTicker } from './components/PositionsTicker';
 import { Toaster } from 'react-hot-toast';
-import { PnLBySymbol } from './components/analytics/PnLBySymbol';
-import { BybitTransactions } from './components/transactions/BybitTransactions/BybitTransactions';
-import { BitgetTransactions } from './components/transactions/BitgetTransactions/BitgetTransactions';
-import { OkxTransactions } from './components/transactions/OkxTransactions/OkxTransactions';
-import { FundingDashboard } from './components/analytics/FundingFees/FundingDashboard';
-import { HedgeProDashboard } from './components/HedgePro/HedgeProDashboard';
-import { MarketAnalyticsDashboard } from './components/analytics/MarketAnalytics/MarketAnalyticsDashboard';
-import { ReportsDashboard } from './components/analytics/ReportsDashboard';
-import { ConnectionLogTerminal } from './components/ConnectionLogTerminal';
 import { PrivacyProvider } from './context/PrivacyContext';
 import { PrivacyToggleButton } from './components/PrivacyToggleButton';
 import { TooltipProvider } from './components/ui/Tooltip';
-import { OpenOrders } from './components/analytics/OrderReports/OpenOrders';
-import { OrderHistory } from './components/analytics/OrderReports/OrderHistory';
-import { TradeHistory } from './components/trade/TradeHistory';
 import { useSettingsStore } from './store/settingsStore';
 import { HelpToggleButton } from './components/HelpToggleButton';
 import { WelcomeHelpModal } from './components/WelcomeHelpModal';
@@ -38,20 +23,44 @@ import { UpdateNotification } from './components/UpdateNotification';
 import { useApiKeysStore } from './store/apiKeysStore';
 import { GlobalUnlockScreen } from './components/GlobalUnlockScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { AiSettings } from './components/ai/AiSettings';
 import { AiChatDrawer } from './components/ai/AiChatDrawer';
 import { AiPikaChatButton } from './components/ai/AiPikaChatButton';
 import { useAiSettingsStore } from './store/aiSettingsStore';
 import { useAiChatStore } from './store/aiChatStore';
 import { isAiChatbotFeatureEnabled } from './utils/aiFeatureFlag';
+import { useVaultAutoLock } from './hooks/useVaultAutoLock';
+import { TabLoadingSkeleton } from './components/ui/TabLoadingSkeleton';
+import { VaultSetupNoticeModal } from './components/VaultSetupNoticeModal';
+
+// Code Splitting: Lazy-loaded secondary & heavy tabs with named exports
+const ClosedPositions = React.lazy(() => import('./components/ClosedPositions').then(m => ({ default: m.ClosedPositions })));
+const MarketAnalyticsDashboard = React.lazy(() => import('./components/analytics/MarketAnalytics/MarketAnalyticsDashboard').then(m => ({ default: m.MarketAnalyticsDashboard })));
+const PnLBySymbol = React.lazy(() => import('./components/analytics/PnLBySymbol').then(m => ({ default: m.PnLBySymbol })));
+const BybitTransactions = React.lazy(() => import('./components/transactions/BybitTransactions/BybitTransactions').then(m => ({ default: m.BybitTransactions })));
+const BitgetTransactions = React.lazy(() => import('./components/transactions/BitgetTransactions/BitgetTransactions').then(m => ({ default: m.BitgetTransactions })));
+const OkxTransactions = React.lazy(() => import('./components/transactions/OkxTransactions/OkxTransactions').then(m => ({ default: m.OkxTransactions })));
+const FundingDashboard = React.lazy(() => import('./components/analytics/FundingFees/FundingDashboard').then(m => ({ default: m.FundingDashboard })));
+const HedgeProDashboard = React.lazy(() => import('./components/HedgePro/HedgeProDashboard').then(m => ({ default: m.HedgeProDashboard })));
+const ReportsDashboard = React.lazy(() => import('./components/analytics/ReportsDashboard').then(m => ({ default: m.ReportsDashboard })));
+const OpenOrders = React.lazy(() => import('./components/analytics/OrderReports/OpenOrders').then(m => ({ default: m.OpenOrders })));
+const OrderHistory = React.lazy(() => import('./components/analytics/OrderReports/OrderHistory').then(m => ({ default: m.OrderHistory })));
+const TradeHistory = React.lazy(() => import('./components/trade/TradeHistory').then(m => ({ default: m.TradeHistory })));
+const ConnectionLogTerminal = React.lazy(() => import('./components/ConnectionLogTerminal').then(m => ({ default: m.ConnectionLogTerminal })));
+const AiSettings = React.lazy(() => import('./components/ai/AiSettings').then(m => ({ default: m.AiSettings })));
+const Settings = React.lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
+const ApiTester = React.lazy(() => import('./components/ApiTester').then(m => ({ default: m.ApiTester })));
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+  const [isVaultNoticeOpen, setIsVaultNoticeOpen] = useState(false);
 
-  const { isEncrypted, isUnlocked } = useApiKeysStore();
+  // Activate Zero-Trust Inactivity Auto-Lock hook
+  useVaultAutoLock();
+
+  const { isEncrypted, isUnlocked, encryptedData } = useApiKeysStore();
   const isAiFeatureEnabled = isAiChatbotFeatureEnabled();
   const isAiEnabled = useAiSettingsStore((state) => state.globalSettings.isEnabled);
   const openChatDrawer = useAiChatStore((state) => state.openDrawer);
@@ -131,15 +140,46 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Trigger welcome modal on app load if enabled
+  const checkAndTriggerVaultNotice = () => {
+    const { isInitialized, encryptedData: data } = useApiKeysStore.getState();
+    const shouldShowNotice = useSettingsStore.getState().showVaultSetupNoticeOnStartup;
+    if ((!isInitialized || !data) && shouldShowNotice) {
+      setTimeout(() => {
+        setIsVaultNoticeOpen(true);
+      }, 300);
+    }
+  };
+
+  // Trigger welcome modal or vault setup notice on app load
   useEffect(() => {
-    const shouldShow = useSettingsStore.getState().showWelcomeOnStartup;
-    if (shouldShow) {
+    const shouldShowWelcome = useSettingsStore.getState().showWelcomeOnStartup;
+    if (shouldShowWelcome) {
       setIsWelcomeOpen(true);
+    } else {
+      checkAndTriggerVaultNotice();
     }
   }, []);
 
-  if (isEncrypted && !isUnlocked) {
+  const handleCloseWelcome = () => {
+    setIsWelcomeOpen(false);
+    checkAndTriggerVaultNotice();
+  };
+
+  const handleConfigureVaultNow = () => {
+    setActiveTab('settings');
+    setTimeout(() => {
+      const el = document.getElementById('security-settings-card');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
+        setTimeout(() => {
+          el.classList.remove('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
+        }, 2000);
+      }
+    }, 150);
+  };
+
+  if (isEncrypted && encryptedData && !isUnlocked) {
     return <GlobalUnlockScreen />;
   }
 
@@ -219,25 +259,27 @@ export default function App() {
 
                 <div ref={mainContentRef} className="flex-1 overflow-auto hide-scrollbar relative">
                   <ErrorBoundary isolateScope={activeTabName} key={activeTab}>
-                    {activeTab === 'dashboard' && <Dashboard />}
-                    {activeTab === 'positions-open' && <OpenPositions />}
-                    {activeTab === 'positions-history' && <ClosedPositions />}
-                    {activeTab === 'analytics-market-advanced' && <MarketAnalyticsDashboard />}
-                    {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
-                    {activeTab === 'transactions-history-bybit' && <BybitTransactions />}
-                    {activeTab === 'transactions-history-bitget' && <BitgetTransactions />}
-                    {activeTab === 'transactions-history-okx' && <OkxTransactions />}
-                    {activeTab === 'analytics-funding' && <FundingDashboard />}
-                    {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
-                    {activeTab === 'reports' && <ReportsDashboard />}
-                    {activeTab === 'orders-open' && <OpenOrders />}
-                    {activeTab === 'orders-history' && <OrderHistory />}
-                    {activeTab === 'trade-history' && <TradeHistory />}
-                    {activeTab === 'api-keys' && <ApiKeys />}
-                    {activeTab === 'logs' && <ConnectionLogTerminal />}
-                    {isAiFeatureEnabled && activeTab === 'ai-settings' && <AiSettings />}
-                    {activeTab === 'settings' && <Settings />}
-                    {activeTab === 'api-tester' && <ApiTester />}
+                    <Suspense fallback={<TabLoadingSkeleton />}>
+                      {activeTab === 'dashboard' && <Dashboard />}
+                      {activeTab === 'positions-open' && <OpenPositions />}
+                      {activeTab === 'positions-history' && <ClosedPositions />}
+                      {activeTab === 'analytics-market-advanced' && <MarketAnalyticsDashboard />}
+                      {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
+                      {activeTab === 'transactions-history-bybit' && <BybitTransactions />}
+                      {activeTab === 'transactions-history-bitget' && <BitgetTransactions />}
+                      {activeTab === 'transactions-history-okx' && <OkxTransactions />}
+                      {activeTab === 'analytics-funding' && <FundingDashboard />}
+                      {activeTab === 'analytics-hedge-pro' && <HedgeProDashboard />}
+                      {activeTab === 'reports' && <ReportsDashboard />}
+                      {activeTab === 'orders-open' && <OpenOrders />}
+                      {activeTab === 'orders-history' && <OrderHistory />}
+                      {activeTab === 'trade-history' && <TradeHistory />}
+                      {activeTab === 'api-keys' && <ApiKeys />}
+                      {activeTab === 'logs' && <ConnectionLogTerminal />}
+                      {isAiFeatureEnabled && activeTab === 'ai-settings' && <AiSettings />}
+                      {activeTab === 'settings' && <Settings />}
+                      {activeTab === 'api-tester' && <ApiTester />}
+                    </Suspense>
                   </ErrorBoundary>
                 </div>
               </main>
@@ -252,7 +294,12 @@ export default function App() {
             </div>
             <StatusBar />
           </div>
-          <WelcomeHelpModal isOpen={isWelcomeOpen} onClose={() => setIsWelcomeOpen(false)} />
+          <WelcomeHelpModal isOpen={isWelcomeOpen} onClose={handleCloseWelcome} />
+          <VaultSetupNoticeModal
+            isOpen={isVaultNoticeOpen}
+            onClose={() => setIsVaultNoticeOpen(false)}
+            onConfigureNow={handleConfigureVaultNow}
+          />
           <UpdateNotification />
           {isAiFeatureEnabled && <AiChatDrawer onNavigateToSettings={() => setActiveTab('ai-settings')} />}
         </WorkSpace>

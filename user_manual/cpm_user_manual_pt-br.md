@@ -101,18 +101,30 @@ O `OkxAdapter` executa chamadas concorrentes para a conta de negociação (`/api
 
 ---
 
-## 3. Senha Mestra Global e Backups Criptografados
+## 3. Senha Mestra Global, Cofre Zero-Trust e Auto-Lock por Inatividade
 
-Para proteger suas informações caso utilize um computador compartilhado ou dispositivo pessoal de uso misto:
+Para proteger suas informações caso utilize um computador compartilhado ou dispositivo pessoal de uso misto, o CPM integra uma suíte completa de governança e segurança para suas credenciais:
 
-1. **Bloqueio Global de Sessão (Global Unlock Screen)**:
-   - Em **Settings**, ative a opção de **Master Password** no card **Security Settings**.
-   - O CPM criptografa todo o conjunto de credenciais com **AES-GCM 256-bit** e derivação **PBKDF2** (com sal aleatório único e 100.000 iterações).
-   - Ao recarregar a página ou abrir o aplicativo, uma tela de bloqueio impede qualquer renderização de dados sensíveis até a digitação correta da senha.
-2. **Exportação de Backups Criptografados (`.cpmbackup`)**:
+1. **Inicialização do Cofre no Primeiro Cadastro**:
+   - Ao adicionar sua primeira chave de API no modal (**+ Add Exchange**), o CPM detecta automaticamente se o cofre local ainda não foi inicializado e solicita a criação de uma **Senha Mestra (Master Passphrase)** com no mínimo 8 caracteres.
+   - Todas as credenciais de API são criptografadas no navegador antes de serem persistidas, utilizando derivação de chave **PBKDF2-SHA256 (600.000 iterações)** e cifra simétrica autenticada **AES-GCM 256-bit**.
+2. **Bloqueio Global de Sessão (Global Unlock Screen)**:
+   - Ao recarregar a página, fechar a aba ou reabrir o aplicativo, uma tela de bloqueio impede qualquer renderização de dados sensíveis até a digitação correta da senha mestra.
+   - Em caso de esquecimento, a tela oferece opção de reset de fábrica (*Wipe Data*) para purgar as credenciais locais e recomeçar de forma segura.
+3. **Auto-Lock por Inatividade (Inactivity Auto-Lock)**:
+   - No card **Security Settings** (em **Settings**), você pode ativar o **Auto-Lock on Inactivity**.
+   - **Slider de Intervalo**: Configure livremente o tempo de tolerância para ociosidade entre **1 e 60 minutos** (padrão de 15 minutos).
+   - O hook `useVaultAutoLock` monitora eventos de interação (movimentos do mouse, digitação, toques e rolagem). Caso o usuário se ausente pelo tempo definido, o CPM bloqueia o cofre automaticamente e **purga instantaneamente todas as credenciais em texto puro da memória RAM**.
+4. **Bloqueio Sob Demanda (Lock Vault Now)**:
+   - No painel de segurança, clique no botão **Lock Vault Now** para travar imediatamente a aplicação e descartar chaves ativas da memória sem precisar recarregar o navegador.
+5. **Alteração e Re-criptografia de Senha Mestra**:
+   - Deseja trocar sua senha? Acesse **Security Settings** $\to$ **Change Passphrase**. Informe a senha atual e a nova senha mestra (mínimo 8 caracteres). O CPM re-criptografa todas as suas chaves cadastradas em lote, preservando suas contas intactas.
+6. **Aviso Temporário de Inicialização (Vault Setup Notice Modal)**:
+   - Caso você utilize o aplicativo sem configurar uma senha mestra, um aviso sutil de 5 segundos é exibido na inicialização alertando sobre os benefícios de segurança do cofre e oferecendo um botão direto para configuração. Esse aviso pode ser desativado a qualquer momento nas configurações.
+7. **Exportação de Backups Criptografados (`.cpmbackup`)**:
    - Clique em **Export Backup File** para gerar um arquivo seguro contendo todas as conexões, preferências e configurações.
    - O arquivo pode ser transferido com total segurança por pen drive, nuvem ou armazenado em cofre offline.
-3. **Restauração de Backup**:
+8. **Restauração de Backup**:
    - Clique em **Import Backup**, selecione seu arquivo `.cpmbackup` e forneça a senha mestra correspondente para restaurar instantaneamente o ambiente.
 
 ---
@@ -332,12 +344,20 @@ Para garantir que ativos na carteira de financiamento (Spot/Funding) ou moedas a
 
 ---
 
-## 11. Resiliência de Conexão, Fail-Fast e Global Error Boundary
+## 11. Resiliência de Conexão, Proteção Anti-SSRF, Code-Splitting e Global Error Boundary
 
+- **Proteção Avançada contra SSRF (`ssrfValidator.ts`)**:
+  - Tanto o servidor local (`server.ts`) quanto a função serverless (`/api/proxy.ts`) implementam um motor robusto de validação de URLs upstream.
+  - Bloqueio estrito de requisições direcionadas a serviços de metadados de nuvem (como `169.254.169.254`, `metadata.google.internal`), portas de rede reservadas ou perigosas e esquemas não permitidos.
+  - Domínios de API de corretoras e de provedores de IA autorizados (OpenAI, OpenRouter) são checados contra allowlists estritas. Para instâncias locais do Ollama, redes LAN e localhost são permitidas com segurança (`allowLanIps: true`).
+- **Code-Splitting e Carregamento Rápido (React Suspense & TabLoadingSkeleton)**:
+  - Para garantir um carregamento inicial quase instantâneo do bundle da aplicação, todas as abas analíticas pesadas (`MarketAnalyticsDashboard`, `HedgeProDashboard`, `FundingDashboard`, `ClosedPositions`, transações, relatórios e configurações) utilizam `React.lazy`.
+  - Durante a alternância entre abas, o componente `TabLoadingSkeleton` exibe esqueletos visuais elegantes, eliminando congelamentos na interface do usuário.
 - **Fail-Fast em Falha de Autenticação**: Se uma chave for cadastrada com segredo incorreto, permissão insuficiente ou IP não autorizado (status HTTP 401/403, códigos de erro Bybit `10003/10004/10005/33004`, OKX `50100/50105/50111/50113`, Bitget `40001/40005/40006/40014`), o CPM interrompe imediatamente os retries automáticos. Isso impede que seu IP seja bloqueado pelas defesas anti-força-bruta da Cloudflare ou Akamai.
 - **Backoff Exponencial com Jitter para Falhas de Rede**: Em instabilidades transitórias de conexão, o sistema re-tenta com intervalos progressivos (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) adicionados de variação aleatória (jitter), limitado a 5 tentativas antes de acionar o circuit breaker.
 - **Global Error Boundary**: Se ocorrer uma falha inesperada na árvore do React, a aplicação não quebra em tela branca. Uma tela de proteção graciosa (**Safe Recovery**) oferece diagnóstico do incidente e dois botões de restauração em um clique: **Reload Dashboard** e **Clear Cache & Reload**.
 - **Reset Automático de Scroll**: Ao navegar entre abas no menu lateral, o leitor de layout do React reseta instantaneamente a rolagem para o topo da página, garantindo foco imediato nas informações principais.
+- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **61 arquivos de teste com 631 testes unitários e de integração**.
 
 ---
 

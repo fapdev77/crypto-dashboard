@@ -1,2 +1,2 @@
 Anotações para futuras implementações de Ideias e melhorias
-- Buscando novas ideias.
+- [RESOLVIDO] implementar fix de segurança (SSRF Validator avançado, Auto-Lock de inatividade no Vault, Code-Splitting com Suspense, Notice de inicialização do cofre e 631 testes verdes)

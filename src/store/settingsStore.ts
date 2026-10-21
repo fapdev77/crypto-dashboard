@@ -42,6 +42,15 @@ interface SettingsState {
   /** Exposed balance calculation mode for hedge positions ('gross' or 'net'). */
   hedgeExposedMode: 'gross' | 'net';
   setHedgeExposedMode: (mode: 'gross' | 'net') => void;
+  /** Whether the encrypted vault automatically locks on user inactivity. Default true. */
+  vaultAutoLockEnabled: boolean;
+  setVaultAutoLockEnabled: (enabled: boolean) => void;
+  /** Inactivity timeout in minutes before auto-locking (1 to 60). Default 15. */
+  vaultAutoLockMinutes: number;
+  setVaultAutoLockMinutes: (minutes: number) => void;
+  /** Whether to show the 5-second unencrypted vault notice on startup. Default true. */
+  showVaultSetupNoticeOnStartup: boolean;
+  setShowVaultSetupNoticeOnStartup: (show: boolean) => void;
   /** IndexedDB health and schema status */
   indexedDBStatus: 'healthy' | 'error' | 'recovering';
   indexedDBError: string | null;
@@ -77,6 +86,12 @@ export const useSettingsStore = create<SettingsState>()(
       setFundingHistoryInterval: (val: number) => set({ fundingHistoryInterval: Math.max(4, Math.min(8, val)) }),
       hedgeExposedMode: 'gross',
       setHedgeExposedMode: (hedgeExposedMode: 'gross' | 'net') => set({ hedgeExposedMode }),
+      vaultAutoLockEnabled: true,
+      setVaultAutoLockEnabled: (vaultAutoLockEnabled: boolean) => set({ vaultAutoLockEnabled }),
+      vaultAutoLockMinutes: 15,
+      setVaultAutoLockMinutes: (val: number) => set({ vaultAutoLockMinutes: Math.max(1, Math.min(60, Math.round(val))) }),
+      showVaultSetupNoticeOnStartup: true,
+      setShowVaultSetupNoticeOnStartup: (showVaultSetupNoticeOnStartup: boolean) => set({ showVaultSetupNoticeOnStartup }),
       indexedDBStatus: 'healthy',
       indexedDBError: null,
       indexedDBVersion: 12,
