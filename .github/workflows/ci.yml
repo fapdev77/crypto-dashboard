@@ -1,0 +1,33 @@
+name: CI Quality Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  validate:
+    name: Lint, Test & Build Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript Check (tsc --noEmit)
+        run: npm run lint
+
+      - name: Unit & Integration Tests (vitest)
+        run: npm test
+
+      - name: Production Build Check (vite build)
+        run: npm run build

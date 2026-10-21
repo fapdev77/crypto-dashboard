@@ -5,8 +5,9 @@ import { useOpenPositionKeys, getBaseCoin } from '../../../hooks/useOpenPosition
 import { SymbolMultiSelect, SymbolOption } from './SymbolMultiSelect';
 import { PeriodSegmentedControl, PeriodOption } from './PeriodSegmentedControl';
 import { FundingComparisonChart, ChartDataPoint } from './FundingComparisonChart';
-import { BarChart2, X, Star, Briefcase } from 'lucide-react';
+import { BarChart2, X, Star, Briefcase, Coins } from 'lucide-react';
 import clsx from 'clsx';
+import { isInverseSymbol } from '../../../utils/inverseUtils';
 
 export const FundingRateComparison = () => {
   const { aggregatedData, isLoading } = useFundingData();
@@ -20,6 +21,9 @@ export const FundingRateComparison = () => {
   const [showOpenPositionsOnly, setShowOpenPositionsOnly] = useState(() => {
     return localStorage.getItem('fundingComparison_showOpenPositionsOnly') === 'true';
   });
+  const [showCoinMOnly, setShowCoinMOnly] = useState(() => {
+    return localStorage.getItem('fundingComparison_showCoinMOnly') === 'true';
+  });
 
   useEffect(() => {
     localStorage.setItem('fundingComparison_showFavoritesOnly', String(showFavoritesOnly));
@@ -28,6 +32,10 @@ export const FundingRateComparison = () => {
   useEffect(() => {
     localStorage.setItem('fundingComparison_showOpenPositionsOnly', String(showOpenPositionsOnly));
   }, [showOpenPositionsOnly]);
+
+  useEffect(() => {
+    localStorage.setItem('fundingComparison_showCoinMOnly', String(showCoinMOnly));
+  }, [showCoinMOnly]);
 
   // Set default to favorites if they have any and no explicit preference was previously set
   useEffect(() => {
@@ -50,10 +58,19 @@ export const FundingRateComparison = () => {
       
       const hasOpenPos = openPositionKeys.has(`${row.exchange}|${coin}|${row.instrumentType}`);
       if (showOpenPositionsOnly && !hasOpenPos) return false;
+
+      if (showCoinMOnly) {
+        const isCoinM = 
+          row.instrumentType === 'COIN-M' ||
+          isInverseSymbol(row.symbol) ||
+          (row.symbol.endsWith('USD') && !row.symbol.endsWith('USDT') && !row.symbol.endsWith('USDC')) ||
+          row.symbol.includes('-USD-SWAP');
+        if (!isCoinM) return false;
+      }
       
       return true;
     });
-  }, [aggregatedData, showFavoritesOnly, showOpenPositionsOnly, openPositionKeys, comparisonFavorites]);
+  }, [aggregatedData, showFavoritesOnly, showOpenPositionsOnly, showCoinMOnly, openPositionKeys, comparisonFavorites]);
 
   // Extract unique combinations for the selector
   const availableSymbols: SymbolOption[] = useMemo(() => {
@@ -68,7 +85,7 @@ export const FundingRateComparison = () => {
 
   const comparisonData = useMemo(() => {
     // If no filters are active and nothing is selected, we should show empty state
-    const isNothingSelected = selectedSymbols.length === 0 && !showFavoritesOnly && !showOpenPositionsOnly;
+    const isNothingSelected = selectedSymbols.length === 0 && !showFavoritesOnly && !showOpenPositionsOnly && !showCoinMOnly;
     if (isNothingSelected) return [];
 
     let targetData = filteredAggregatedData;
@@ -128,7 +145,7 @@ export const FundingRateComparison = () => {
     });
 
     return rows;
-  }, [filteredAggregatedData, selectedSymbols, period]);
+  }, [filteredAggregatedData, selectedSymbols, showFavoritesOnly, showOpenPositionsOnly, showCoinMOnly, period]);
 
   const periodLabels: Record<PeriodOption, string> = {
     'last': 'Last Funding Rate',
@@ -148,13 +165,14 @@ export const FundingRateComparison = () => {
             onChange={setPeriod}
           />
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
+              id="funding-comparison-favorites-btn"
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
               className={clsx(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 showFavoritesOnly 
-                  ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" 
+                  ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
                   : "bg-[#0e0f11] text-[#8E9299] border-[#2a2b30] hover:text-white"
               )}
             >
@@ -163,11 +181,12 @@ export const FundingRateComparison = () => {
             </button>
             {hasOpenPositions && (
               <button
+                id="funding-comparison-positions-btn"
                 onClick={() => setShowOpenPositionsOnly(!showOpenPositionsOnly)}
                 className={clsx(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                   showOpenPositionsOnly 
-                    ? "bg-[#2F6BFF]/10 text-[#2F6BFF] border-[#2F6BFF]/20" 
+                    ? "bg-[#2F6BFF]/10 text-[#2F6BFF] border-[#2F6BFF]/20 shadow-[0_0_10px_rgba(47,107,255,0.1)]" 
                     : "bg-[#0e0f11] text-[#8E9299] border-[#2a2b30] hover:text-white"
                 )}
               >
@@ -175,9 +194,25 @@ export const FundingRateComparison = () => {
                 Open Positions
               </button>
             )}
+
+            <button
+              id="funding-comparison-coinm-btn"
+              onClick={() => setShowCoinMOnly(!showCoinMOnly)}
+              className={clsx(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                showCoinMOnly 
+                  ? "bg-purple-500/15 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]" 
+                  : "bg-[#0e0f11] text-[#8E9299] border-[#2a2b30] hover:text-purple-300"
+              )}
+              title="Exibir comparativo somente dos ativos com instrumentos COIN-M / Inverse"
+            >
+              <Coins className={clsx("w-3.5 h-3.5", showCoinMOnly ? "text-purple-400" : "text-[#8E9299]")} />
+              <span>COIN-M / Inverse</span>
+            </button>
             
             {selectedSymbols.length > 0 && (
               <button 
+                id="funding-comparison-clear-btn"
                 onClick={() => setSelectedSymbols([])} 
                 className="flex items-center gap-1.5 text-sm text-[#8E9299] hover:text-white bg-[#0e0f11] px-3 py-1.5 rounded-lg border border-[#2a2b30] transition-colors ml-2"
               >
@@ -199,14 +234,14 @@ export const FundingRateComparison = () => {
 
       {/* Chart Area */}
       <div className="w-full p-6 min-h-[400px]">
-        {(selectedSymbols.length === 0 && !showFavoritesOnly && !showOpenPositionsOnly) ? (
+        {(selectedSymbols.length === 0 && !showFavoritesOnly && !showOpenPositionsOnly && !showCoinMOnly) ? (
           <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
             <div className="w-16 h-16 bg-[#2a2b30] rounded-full flex items-center justify-center mb-4">
               <BarChart2 className="w-8 h-8 text-[#8E9299]" />
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">Select symbols</h3>
+            <h3 className="text-xl font-medium text-white mb-2">Select symbols or active filters</h3>
             <p className="text-[#8E9299] max-w-sm">
-              Choose up to 25 symbols from the dropdown above to compare their funding rates over time.
+              Choose up to 25 symbols from the dropdown above, or click Favorites, Open Positions, or COIN-M / Inverse to compare their funding rates.
             </p>
           </div>
         ) : comparisonData.length === 0 ? (
@@ -233,4 +268,5 @@ export const FundingRateComparison = () => {
     </div>
   );
 };
+
 

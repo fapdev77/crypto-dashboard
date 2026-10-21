@@ -1,9 +1,11 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight } from 'lucide-react';
+import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight, BrainCircuit, History, ShieldCheck } from 'lucide-react';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
+import { useAiSettingsStore } from '../store/aiSettingsStore';
+import { isAiChatbotFeatureEnabled } from '../utils/aiFeatureFlag';
 import logo1 from '../assets/CriptoDashboard-logo1.PNG';
 
 interface SubItem {
@@ -38,6 +40,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   const [isMobile, setIsMobile] = useState(false);
 
   const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
+  const activeExchanges = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.exchange.toLowerCase())), [keys]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -78,8 +81,26 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     ).length;
   }, [openOrders, useMockData, activeKeyIds]);
 
+  // Transaction history entries are only offered for exchanges that actually hold data:
+  // an active API key, or the Simulation Mode mock logs (which cover every exchange).
+  const transactionHistoryItems = useMemo<SubItem[]>(() => {
+    const exchanges = [
+      { id: 'transactions-history-bybit', label: 'Bybit Transactions', exchange: 'bybit' },
+      { id: 'transactions-history-bitget', label: 'Bitget Transactions', exchange: 'bitget' },
+      { id: 'transactions-history-okx', label: 'OKX Transactions', exchange: 'okx' },
+    ];
+    return exchanges
+      .filter(({ exchange }) => useMockData || activeExchanges.has(exchange))
+      .map(({ id, label }) => ({ id, label }));
+  }, [activeExchanges, useMockData]);
+
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    {
+      id: 'hedge-pro', label: 'Hedge Pro', icon: ShieldCheck, subItems: [
+        { id: 'analytics-hedge-pro', label: 'Hedge Pro' }
+      ]
+    },
     {
       id: 'positions', label: 'Positions', icon: Activity, subItems: [
         { id: 'positions-open', label: 'Open Positions', badge: openCount },
@@ -97,12 +118,16 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         { id: 'trade-history', label: 'Trade History' }
       ]
     },
+    ...(transactionHistoryItems.length > 0
+      ? [{
+          id: 'transactions-history', label: 'Transactions History', icon: History, subItems: transactionHistoryItems
+        }]
+      : []),
     {
       id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
+        { id: 'analytics-market-advanced', label: 'Market Analytics' },
         { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
-        { id: 'analytics-bybit-tx', label: 'Bybit Transactions' },
-        { id: 'analytics-funding', label: 'Funding Fees' },
-        { id: 'analytics-hedge-pro', label: 'Hedge Pro' }
+        { id: 'analytics-funding', label: 'Funding Fees' }
       ]
     },
     { id: 'reports', label: 'Reports', icon: FileText },
@@ -308,6 +333,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
           { id: 'api-keys', label: 'API Keys', icon: KeyRound },
           { id: 'logs', label: 'Logs', icon: AlignLeft },
           { id: 'api-tester', label: 'API Tester', icon: Terminal },
+          ...(isAiChatbotFeatureEnabled() ? [{ id: 'ai-settings', label: 'AI Settings', icon: BrainCircuit }] : []),
           { id: 'settings', label: 'Settings', icon: Settings },
         ].map((item) => (
           <button
@@ -315,8 +341,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
             onClick={() => handleTabClick(item.id)}
             title={item.label}
             className={`w-full flex items-center ${
-              collapsed ? 'justify-center py-3.5' : 'gap-3 px-3.5 py-2.5'
-            } text-sm font-medium rounded-lg transition-colors mt-1 ${
+              collapsed ? 'justify-center py-3' : 'gap-3 px-3.5 py-2'
+            } text-sm font-medium rounded-lg transition-colors mt-0.5 relative ${
               activeTab === item.id
                 ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
                 : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'

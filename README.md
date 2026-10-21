@@ -1,126 +1,168 @@
 # Crypto Portfolio Manager: Multi-Exchange
 
-Um gerenciador e painel unificado avançado para consolidar dados (carteira, saldos e posições) de forma unificada e em tempo real. Atualmente suporta Bitget, OKX e Bybit.
+[![Version](https://img.shields.io/badge/version-2.13.0-blue.svg)](package.json)
+[![Tests](https://img.shields.io/badge/tests-604%20passed-success.svg)](specs/PRD.md)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
+[![Security](https://img.shields.io/badge/security-Zero--Trust%20Client-orange.svg)](user_manual/cpm_user_manual_pt-br.md)
 
-## 🚀 Visão Geral e Arquitetura
+Um gerenciador de portfólio, terminal analítico institucional e auditor contábil avançado para consolidar saldos, posições abertas e históricas, risco de hedge delta-neutral, taxas de financiamento (funding rates) e histórico completo de transações em tempo real entre as corretoras **Bitget**, **Bybit** e **OKX**.
 
-O projeto foi construído com a premissa de **Zero Trust Security** e eficiência operacional. Nenhuma credencial de API trafega livremente para servidores de terceiros não autorizados ou é armazenada em banco de dados centralizado. Todas as chaves são armazenadas exclusivamente de forma local no navegador do usuário (`localStorage`).
+---
 
-A arquitetura resolve o problema tradicional de CORS e as restrições arquiteturais para clientes puros (browsers) da seguinte forma:
+## 🚀 Visão Geral e Arquitetura Zero-Trust
 
-1. **REST Polling (Near Real-time):** A conexão e o consumo de dados das corretoras são feitos via requisições REST (Polling). A arquitetura exclui WebSockets de dados sensíveis para garantir 100% de compatibilidade Serverless (Ex: Vercel) e evitar problemas de quebra de conexão (Timeouts). O fluxo Serverless (`/api/proxy`) e o Híbrido cuidam da mitigação CORS e bloqueios geográficos.
-2. **REST API via Local Proxy:** Como navegadores encaram o bloqueio rigoroso do CORS (Cross-Origin Resource Sharing) ao fazer GET/POST para endpoints da API V5/V2 das corretoras, empregamos um Proxy local reverso e seguro construído com Node.js e Express (`server.ts`). O Frontend cuida de toda a criptografia na ponta do usuário, assinando as requisições gerando os cabeçalhos (`headers`) necessários. O Proxy então atua de forma inerte e "burra", apenas recebendo os cabeçalhos já verificados e as URLs destino, repassando o payload real sem adulterar assinaturas ou armazenar logs. 
-3. **Camada de Normalização (Adapters):** Todos os dados recebidos via REST não são repassados isoladamente à UI. Eles encontram primeiramente um conjunto modular de adaptadores `src/services/adapters/[exchange]`, processando "Raw API Responses" oriundas da OKX, Bitget e Bybit. Isso obedece rigorosamente ao **Single Responsibility Principle (SRP)** e ao padrão **Strategy**, delegando a geração de headers e normalização para os próprios adapters, extinguindo arquivos "God Object" de requisição.
+O **Crypto Portfolio Manager (CPM)** foi construído com a premissa fundamental de **Zero-Trust Security**:
+- **Nenhuma Credencial em Servidores Terceiros**: Não existem bancos de dados na nuvem armazenando suas chaves de API, senhas ou histórico patrimonial. Todas as credenciais residem exclusivamente no armazenamento local do seu navegador (`localStorage`).
+- **Criptografia Militar no Cliente**: As chaves podem ser protegidas por Senha Mestra utilizando algoritmos nativos da **Web Crypto API (PBKDF2 com 100.000 iterações + AES-GCM 256-bit)**, com bloqueio global de sessão (`GlobalUnlockScreen`) e suporte a exportação/importação de backups cifrados (`.cpmbackup`).
+- **Proxy Inerte Local e Serverless (`server.ts` & `/api/proxy.ts`)**: Para contornar restrições de CORS impostas pelos navegadores, o sistema utiliza um relé de alta performance em Node.js/Express. O frontend assina todas as requisições na ponta do cliente gerando os cabeçalhos criptográficos correspondentes. O proxy repassa os dados aos endpoints oficiais das corretoras de forma transparente, sem reter dados, sem manter logs sensíveis e com validação rígida de allowlist para prevenir SSRF.
+- **Auditor Quantitativo PIKA com Modo Privacidade**: Assistente analítico integrado que opera exclusivamente via chamadas de ferramentas de leitura local (Local Tool-Calling), convertendo automaticamente valores nominais em proporções percentuais quando o Modo Privacidade estiver ativo.
 
-   *Observação:* O Proxy Híbrido permite que as requisições, sempre que possível, transitem pelo client-side, mitigando restrições de IP na nuvem (Bybit US).
+---
 
 ## ⚙️ Tecnologias Utilizadas (A Stack)
-O sistema é inteiramente fundamentado no ecossistema de TypeScript moderno:
-- **Frontend / Interface**: React 19, TypeScript, **Vite**, **Tailwind CSS v4**. Interface de usuário amigável equipada com **Lucide React** para ícones otimizados.
-- **Gerenciamento de Estado**: **Zustand**. Migrado de uma única store inchada para uma arquitetura de micro-stores especializadas e de alta coesão: `useBalancesStore` (saldos), `usePositionsStore` (posições), `useOrdersStore` (ordens em aberto), `useConnectionStore` (status de conectividade) e `useApiKeysStore` (persistência das chaves locais), garantindo renderização ultra-eficiente e SRP (Single Responsibility Principle). Limpezas coordenadas de chaves desativadas são tratadas globalmente via `src/store/crossStoreCleanup.ts`.
-- **Tabelas Analíticas:** Visualização rica com ordenação multidirecional de resultados e sistemas de busca em tempo-real embutidos nas Views (filtros multicritério por ativo, nome ou corretora).
-- **Backend / Proxy de Hospedagem**: Servidor minimalista escalável fundado no Node.js com Express e roteamento local Vite injetado para desenvolvimento. Possui também compatibilidade estrita Serverless para Produção via Vercel Edge/Serverless functions (`/api/proxy`).
-- **Criptografia SecOps**: A espinha dorsal para assinatura de rotas REST, payloads ISO Timestamp (OKX), Nano Time (Bitget) e Hex Signatures (Bybit). Todos utilizando a nativa Web Crypto API (`window.crypto.subtle`).
+
+- **Frontend & Interface**: React 19, TypeScript ~5.8, **Vite 6**, **Tailwind CSS v4**, **Lucide React** para ícones otimizados e Radix UI para tooltips conceituais.
+- **Gerenciamento de Estado**: **Zustand 5.0** com arquitetura desacoplada de micro-stores de alta coesão:
+  - `useBalancesStore` (saldos consolidados e fatias de carteira)
+  - `usePositionsStore` (posições ativas e margens)
+  - `useOrdersStore` (ordens em aberto)
+  - `useApiKeysStore` (persistência segura e criptografia de chaves)
+  - `useConnectionStore` (conectividade em tempo real)
+  - `useFundingStore` (taxas de funding e auto-sync)
+  - `useMarketAnalyticsStore` (indicadores quantitativos e regimes de mercado)
+  - `useAiChatStore`, `useAiSettingsStore` e `useAiTelemetryStore` (subsistema do PIKA AI)
+  - `useLogStore` (terminal de logs do sistema)
+  - `usePwaUpdateStore` (ciclo de vida e atualização do Service Worker)
+- **Persistência e Cache**: **IndexedDB** (`idb` 8.0) estruturado em 14 object stores sob o padrão **SWR (Stale-While-Revalidate)**, garantindo renderização com latência zero.
+- **Aritmética Financeira**: **Big.js** para cálculos de alta precisão em taxas de funding, ratios de hedge e fluxo de caixa contábil.
+- **Subsistema de IA**: `@google/genai` (SDK 1.29.0) para Google Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm`.
+- **Relatórios & Gráficos**: **Recharts 3.8** (curvas de Open Interest, CVD, Hedge Pro e gráficos de tokens), **jsPDF** com **jsPDF-AutoTable** e **SheetJS (xlsx)**.
+- **Testes Automatizados**: **Vitest 4.1** com jsdom e `@testing-library/react`. Suíte abrangente com **56 arquivos de teste e 604 testes unitários automatizados** 100% verdes.
+
+---
 
 ## 📦 Configuração Inicial e Execução
 
 ### Pré-requisitos
-- Node.js (versão 18 ou 20+, a Engine LTS mais atual é recomendada).
-- Gerenciador de Pacotes (`npm` incluído com o Node).
+- Node.js (versão `>=24` recomendada).
+- Gerenciador de Pacotes `npm`.
 
-### 1. Clonagem e Instalação de Dependências
-Clone ou realize o download direto do projeto no seu ambiente. Na raiz do projeto, instale o cache oficial dos módulos em execução profunda:
+### 1. Instalação de Dependências
+Clone ou faça o download do repositório e execute na raiz do projeto:
 ```bash
 npm install
 ```
 
-### 2. Rodando o Ambiente (Modo Desenvolvimento)
-Esta configuração irá ativar uma dupla infraestrutura unificada: O Node server (Proxy de APIs) atuará e delegará o serviço dinâmico para a compilação Hot Module Replacement (HMR) integrada do Vite, gerando acessos locais via Porta Padrão `3000`:
+### 2. Execução em Desenvolvimento
+Inicia o servidor Express (Proxy reverso) e o servidor de desenvolvimento do Vite na porta padrão `3000`:
 ```bash
 npm run dev
 ```
+Acesse a aplicação no seu navegador em: `http://localhost:3000`
 
-### 3. Deploy e Execução em Produção
-Seu aplicativo pode rodar confiavelmente em serviços de Nuvem Serverless como Google Cloud Run, Railway ou instâncias Dockerizadas em provedores VPS (como AWS EC2, Droplets DigitalOcean, Hostinger).
+### 3. Build e Execução em Produção
 ```bash
-# 1. Empacotar, compilar otimizações de árvore e purgar o CSS do Frontend
+# 1. Compilar os assets estáticos com otimizações de árvore e Tailwind CSS v4
 npm run build
 
-# 2. Iniciar o Server com as capacidades unificadas para Distribuição Estática no ambiente gerado.
-npm start # Executa tsx server.ts com as flags NODE_ENV=production necessárias.
+# 2. Iniciar o servidor integrado para distribuição dos assets da pasta /dist
+npm start
 ```
-*Note que pelo design reverso da `server.ts` ao rodar fora do Node_Env dev, ele atua ativamente lendo da pasta compilada de produção local (`/dist`)*.
 
-Atente-se de assegurar ou configurar o provisionamento HTTPS em Produção se for acoplar em Domínios customizados — navegadores modernos como o Chrome bloqueiam a API WebCrypto caso a hospedagem use HTTP (não segura), exceto em Localhost.
+### 4. Verificação de Tipos e Testes
+```bash
+# Validação estrita de tipagem TypeScript (zero erros)
+npm run lint
 
-## 🧰 Guia Prático - Configurando as Corretores no Client Local
+# Execução completa da suíte de 604 testes automatizados
+npm test
+```
 
-1. Com o app aberto (ex.: `http://localhost:3000`), clique na pílula lateral com um símbolo de engrenagem **⚙️ API Keys**.
-2. Clique no Botão "+ Add Exchange".
-3. Aparecerá a palheta de corretoras: Forneça um rótulo local que preferir, em seguida, as informações oficiais provenientes da sua Plataforma Exchange correspondente para o usuário atual da aba. (Necessário preenchimento da *Passphrase* em Bitget e OKX).
-4. Assim que confirmado o Modal, os algoritmos do sistema efetuarão validações imediatas via endpoints REST seguros. Indicadores (Ponto vermelho/verde) em tempo real serão exibidos confirmando que tudo está síncrono.
-5. Volte para a rota principal "Dashboard", agora deverá ver seus saldos totais atualizando globalmente.
+---
 
-## 🛠 Features e UI/UX Recentes
-- ✅ **Dashboard Multi-Período de Funding Fees (Taxas de Financiamento):** Consolidação profunda do histórico (via IndexedDB) de cobranças/recebimentos de Funding em contratos perpétuos e inversos, categorizados temporalmente e apoiados por cartões de métricas (Market Overview).
-- ✅ **Auditoria Contábil Pessoal (Bybit Transactions & PnL by Symbol):** Uma central unificada que isola o histórico contínuo da corretora para gerar extrações rigorosas de Taxas (Trading Fees), Realized PnL (Lucros Realizados Isolados) baseados integralmente em fluxo de caixa (Cashflow).
-- ✅ **Relatórios Consolidados de Ordens (Order Reports):** Rastreio avançado separando ordens abertas de ordens finalizadas (History), equipadas com filtragem multicritério e extrações analíticas.
-- ✅ **Integração OKX Dual-Wallet (Trading + Funding Account):**
-  - **Saldos Unificados e de Financiamento:** O `OkxAdapter` foi expandido para ler de forma concorrente tanto a conta unificada de trading (`/api/v5/account/balance`) quanto a conta de financiamento/funding (`/api/v5/asset/balances`).
-  - **Avaliação Patrimonial Precisa:** Ativos na carteira de funding são dinamicamente avaliados com base nos preços da conta de trading (ou fallbacks estáveis de $1.00 para stablecoins) e agregados ao patrimônio líquido (`totalEquity`) e saldo de carteira (`walletBalance`) globais da conexão.
-  - **Visual Segregation:** No frontend, saldos originários da carteira de funding são distinguidos visualmente através da tag `FUNDING` (fundo verde-azulado/teal), enquanto saldos de trading recebem a tag `UNIFIED` (fundo cinza/unified), permitindo controle transparente e granular de ativos.
-- ✅ **Suporte PWA (Progressive Web App):** Instalação nativa via navegador com cache offline garantindo acesso ultra-rápido, notificações locais e funcionamento como aplicativo independente no Desktop e Mobile.
-- ✅ **Tipagem Estrita de Respostas de Corretores (Raw Type-Safety):**
-  - **Tipos Isolados (`src/types/raw.ts`):** Centralização e declaração estrita de interfaces TypeScript para todas as respostas brutas ("Raw Responses") das corretoras (ex: `RawPositionData`, `RawOrderData`, `RawHistoryPositionData`, `RawBalanceItem`), banindo o uso de tipos frouxos como `any` ou `Record<string, unknown>` no campo `raw`.
-  - **Previsibilidade e Robustez:** Isso previne quebras em tempo de compilação, otimiza o autocompletion nos adaptadores e assegura total segurança de dados na manipulação dos metadados originais das exchanges.
-- ✅ **Múltiplos Formatos de Contratos e Exatidão de Precisão:** 
-  - **Identificação Dinâmica de Pares:** O sistema distingue ativamente pares Fiats/Stablecoins (Ex: BTCUSDT, EURUSD) de Contratos Inversos Puros ("Inverse Contracts" como BTCUSD) em toda a arquitetura UI e de cálculo em background.
-  - **Tamanho e Valores de Posição:** Foram realizadas estabilizações robustas do cálculo de tamanho em criptomoedas (Base Coin Size) versus Volume Financeiro em Dólar (Notional USD) para ativos peculiares em *Bybit* (Contratos onde "Size" é enviado como USD) e em *OKX* onde o *Size* costuma vir como número de Contratos (Contracts). As inferências ocorrem retroativamente calculando margens puras em `Close/Entry Prices` em registros históricos PnL.
-  - **Formatadores Globais Inteligentes:** Funções utilitárias customizadas (`formatCrypto`, `formatPrice`, `formatValue`) que reagem ativamente ao tipo e à magnitude do valor (0.0000 -> 8 casas, enquanto $10k -> 2 casas) sem intervenção manual.
-  - **Posições Abertas:** Monitoramento em tempo real com informações detalhadas como PnL Não Realizado, ROE, Margem, Preço de Liquidação. Inclui suporte para modos de visualização alternativos (**Detailed** e **Lite**) para adaptar a densidade da interface segundo a preferência do usuário.
-  - **Capital Protection (Hedge) em Contratos Inversos:** Implementação nativa de cálculos de Exposição e Proteção de capital para posições de Contratos Inversos Puros (ex: BTCUSD). O sistema infere ativamente as estatísticas de Hedge dinamicamente (progress bar de Hedge %) contra o volume total da carteira spot pareando Short e Longs.
-  - **Posições Encerradas (Histórico) e IndexedDB Cache:** Aba especializada para o histórico de trades via REST APIs para cada corretora (suportando Bitget, Bybit e OKX). Para mitigar restrições de chamadas de API (Rate Limits) das corretoras e permitir acesso ágil ao longo histórico, o Dashboard implementa um sistema agressivo e robusto de **Local Caching via IndexedDB** (`idb`). Com ele, o sistema garante:
-    - Sincronização e Download progressivo em segundo plano (Background Polling configurável de 5 a 60 minutos).
-    - **Engine de Sincronização Unificada (Global Sync Coordination):** Introdução de um estado global sincronizado (`lastSyncTime` via Zustand) que serve como gatekeeper absoluto e coordenada unificada de tempo para evitar múltiplos requests concorrentes ou redundantes ao alternar entre as abas históricas do painel (**Orders History**, **Positions History**, **Trade History** e **PnL by Symbol**). Se uma aba efetuar o sync, as demais abas de histórico reaproveitam a última janela de cache sem disparar chamadas redundantes de rede ou reiniciar timers.
-    - Opções avançadas via modal de `Settings` para purgar (Clear Local Cache), re-sincronizar (Force Sync) de forma indolor o histórico diretamente das exchanges, emitindo notificações instantâneas de sucesso/erro via **Toast UI**.
-    - Filtros ricos e avançados que realizam varreduras de dados via banco in-memory, possibilitando visualização em recortes temporais predefinidos ou datas customizadas sem delays de requisições externas.
-- ✅ **Classificador Dinâmico Global de Ativos e Identidade Visual Automatizada (Logo.dev):**
-  - **Identificação Multi-Corretora (AssetClassifierAggregator):** Implementação de um orquestrador centralizado que classifica a categoria nativa de um ativo (como `STOCK` ou `CRYPTO`) utilizando listagens e dados provenientes diretamente das APIs das Exchanges integradas (como a OKX via `/api/v5/public/instruments?instType=SWAP`). Operações de pareamento de sintaxe foram implementadas para ativos tradicionais, isolando o base asset (como `NVDA-USDT` p/ `NVDA`).
-  - **Hierarquia de Cache em 4 Níveis:** Redução drástica da latência e sobrecarga da API das exchanges ao priorizar 1) Cache Em-Memória (Local Cache); 2) Bancos Locais IndexedDB Persistentes (`historyCache`); 3) Requisições ao Vivo em série (OKX -> Bybit -> Bitget); 4) Padrão de salvamento.
-  - **Integração Robusta de Logotipos (Logo.dev) e Badges Visuais:** Para refletir em interfaces visualmente coerentes as classificações, os ícones implementados no componente nativo `CoinIcon` adotam inteligência condicional de fallbacks da `Logo.dev` e utilizam o parâmetro `fallback=404`. Diferentes origens de mercado roteam chamadas transparentemente, atuando primariamente no endpoint `/crypto/`, caindo graciosamente para o `/ticker/` e endpoint `/name/` antes de utilizar fallback nativo, preenchendo todos os gaps visuais em painéis de *Open Positions*, *Histórico* e *Dashboards*. Adicionalmente, indicadores tipo "Badge" mostram no card de posições qual sua categoria na tela em tempo real.
-- ✅ **Insights & Analytics Dashboard:** Extração de inteligência dos trades passados contendo:
-  - **Métricas Avançadas:** *Win Rate*, *Profit Factor*, Taxas brutas e líquidas pagas.
-  - **Sazonalidade (Seasonality):** Desempenho mapeado por dia da semana e horários da janela operacional (4 horas).
-  - **External Flow:** Leitura nativa de *Bills* (Depósitos e Saques) para isolar o crescimento patrimonial *puramente operacional*.
-  - **Milestone Matrix:** Acompanhamento da flutuação patrimonial em relação aos "brackets" de preços atingidos pelo Bitcoin.
-  - **PnL By Symbol (Distribuição de Lucros/Prejuízos por Moeda):** Tabela e Gráfico detalhado categorizando o PnL fechado associado aos ativos da carteira com precisão nas particularidades de alavancagem de cada corretora (USDT-M, USDC-M e Coin-Margined na Bitget; Inverse/Linear na Bybit; e SWAP na OKX), com um filtro customizável para cada tipo de Instrumento transacionado.
-- ✅ **Modo de Desenvolvimento e Testes (Mock Data):** Por meio do novo menu de `Settings`, desenvolvedores ou usuários testando o produto podem ativar de forma nativa o preenchimento da UI com Dados Simulados (Mockados). O ativar da opção encerra programaticamente qualquer streaming real e insere PNL, saldos, bills (depósitos) e tabelas de histórico fictícias para debug de componentes de UI. Ao desabilitar, a recuperação do Real-Time é feita instantaneamente.
-  - **Sinalização Visual e Trava de Segurança (Simulation Mode):** Quando ativo, um badge pulsante indicador de "Simulation Mode" é exibido na barra de status de sincronização, enquanto o botão de sincronização forçada instantânea ("Sync Now") é desabilitado preventivamente com tooltips explicativas para alertar o usuário que as chamadas reais de API estão offline.
-- ✅ **Modo de Privacidade Global (Privacy Mode):** Ícone de controle integrado na navegação (`PrivacyToggleButton`) que oculta todos os valores patrimoniais e sensíveis da interface com um único clique (mascarando saldos totais, PnL e valores de contas), perfeito para utilização do dashboard em ambientes públicos ou apresentações.
-- ✅ **Refinamentos na Tabela de Balances:** Visualização por colunas incluindo Asset (Moedas), Labels e Accounts e suas designações para a respectiva infraestrutura, Exigência para saldos base em unificados e quantias decimais flexíveis. Além disso, as colunas contam com sorting interativo e barra multi-buscas (Filtros locais via Regex).
-- ✅ **Monitoramento de Telemetria e Latência:** Um painel de *Connection Health* na barra de status que monitora o estado do polling REST e latência das chamadas para a Vercel e provedores externos.
-- ✅ **Layout Dashboard Masonry:** O painel de saldos foi refinado para utilizar um formato responsivo em *Masonry Layout* utilizando CSS Native Columns (1, 2, ou até 3 colunas baseadas na largura da tela), garantindo que a expansão de saldos não afete negativamente as corretoras adjacentes.
-- ✅ **Sidebar Inteligente e Sparklines Estilizados:** A barra de menus (Sidebar) foi atualizada para permitir o recurso "Collapsible", oferecendo uma área expansível ou oculta que prioriza o espaço utilitário da tela. Sparklines de PnL Diário foram introduzidos nativamente na lista de subcontas nos modais das corretoras.
-- ✅ **Ticker de Mercado Dinâmico (Real-Time):** Adicionado ao cabeçalho global do sistema um mostrador deslizante (Marquee Carousel) interativo que espelha os ativos das posições em aberto, revelando a variação base e preço das moedas operadas em tempo real.
-- ✅ **Refinamentos na Interface (UI/UX) e Tooltips Padronizados:** Ocultamento inteligente de scrollbars verticais e personalização das barras horizontais implementando o estilo responsivo nativo Dark Mode (`index.css`), o que traz uma imersão muito mais elegante. Além disso, criamos um sistema de tooltip reaproveitável, ancorado no Radix UI e lucide-react para garantir informações concisas, suspensas e formatadas de modo padronizado em todo o aplicativo sem sujar a tela principal.
-- ✅ **Bootloading REST Paralelo (ExchangeAggregator):** O dashboard orquestra uma carga paralela assíncrona agressiva ao iniciar a aplicação buscando simultaneamente balanços e posições (`v5/account/wallet-balance`, `api/v2/spot/account/assets`, etc.) para **todas** as corretoras integradas.
-- ✅ **Ocultamento de PNL de Posições Nulas:** Só aparecem recursos em execução com size > 0 .
+## 🛠 Principais Funcionalidades e Recursos
 
-### Manutenção - Adicionando Nova Corretora
-Caso deseja escalonar o dashboard: 
-1. Crie um único arquivo adapter (ex: `NovaCorretoraAdapter.ts`) na pasta `src/services/adapters/` estendendo a interface comum `IExchangeAdapter`. Ele deve agrupar métodos de `getBalance`, `getOpenPositions`, polling de histórico REST, e fetch de bills (limitado a < 400 linhas para preservar o contexto e a regra do *Clean Code*).
-2. Inclua o nome referenciado no Union type `ExchangeName` do tipo de configurações (em `types.ts` ou `store/apiKeysStore.ts`) e propague sua tipagem via React Forms no modal de Configurações `components/ApiConfigModal.tsx`.
-3. Direcione a inicialização na classe `ExchangeAggregator.ts` e instancie-a nas fábricas de histórico REST.
+### 1. PIKA Assistant (Portfolio Information & Knowledge Assistant — v2.0+)
+- **Auditor Quantitativo com 9 Ferramentas de Leitura**:
+  - `get_consolidated_balances`, `get_open_positions`, `get_order_history`, `get_funding_rates`, `get_hedge_pro_metrics`, `get_market_analytics`, `get_transaction_summary`, `get_exchange_connection_health`, `get_pnl_by_symbol`.
+- **Arquitetura Multi-Provedor**:
+  - **Ollama Local (100% Privado)**: Comunica-se com o Ollama em `http://localhost:11434`, descobre modelos locais (`llama3.2`, `qwen2.5`) e audita compatibilidade com Tool Calling.
+  - **Google Gemini Cloud**: Integração de alta performance via SDK `@google/genai`.
+  - **OpenRouter / Provedores Customizados**: Chaves salvas exclusivamente no navegador com política de fallback automático.
+- **Proteção no Modo Privacidade**: Converte dados sensíveis em porcentagens quando o Privacy Mode estiver ativado.
+- **Telemetria Completa e Auditoria**: Gráfico diário de consumo de tokens, tempo de resposta, histórico de requisições com visualizador de JSON bruto e exportação de relatórios em JSON/CSV.
+- **Atalho Global**: Pressione **`Ctrl + J`** (ou **`Cmd + J`** no macOS) para alternar o drawer lateral.
 
-## 📚 Documentação para Desenvolvedores e Engenharia de IA
-Este projeto adota o modelo **Spec-Driven Development (SDD)** e está preparado para recriação ou refatoração por IAs Generativas (ex: Antigravity, Claude, ChatGPT). 
+### 2. Hedge Pro Dashboard (Gestão Delta-Neutral em Contratos Inversos)
+- Promovido a módulo de primeiro nível na navegação lateral.
+- **Modelo de Risco Beyond-100%**:
+  - *Short em Contratos Inversos (COIN-M)*: Trava o valor em USD no preço de entrada (`entryPrice`), garantindo proteção do ativo base contra quedas de mercado até o limite do saldo.
+  - *Long em Contratos Inversos*: Representa exposição direcional pura com efeito de alavancagem.
+- **Portfolio Exposure Bar**: Barra visual tricolor destacando % Protegido, % Exposto e Extensão de Alavancagem.
+- **Tabela de Resumo por Moeda**: Acompanhamento de saldos, montante protegido/exposto e alertas visuais de sobre-exposição (*Overexposed*).
+- **Gráficos Decompostos**: `HedgeProBreakdownChart` e `HedgeProCapitalExposureChart` com gaveta expansível de posições individuais.
 
-Todos os documentos e diagramas arquiteturais estão disponíveis no diretório `/specs`:
-- [PRD (Regras de Negócio)](./specs/PRD.md): Product Requirements Document com o escopo, regras de negócio e requisitos do produto.
-- [Arquitetura e Fluxo de Dados](./specs/ARCHITECTURE.md): Diagrama estático e funcionamento híbrido Proxy-Frontend.
-- [Evolução e Refatorações](./specs/EVOLUTION_TASKS.md): Histórico de refatorações estruturais, melhorias de qualidade e segurança (auditoria técnica).
-- [Interfaces Unificadas](./specs/unified-interfaces.md): Especificação dos tipos e interfaces normalizadas (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, etc.) — fonte única de verdade para a UI.
-- [Funding Fees Dashboard](./specs/FUNDING_FEES_DASHBOARD.md): Especificação de design do dashboard de taxas de financiamento (v3.0).
-- [Transações Bybit](./specs/bybit-transactions-spec.md): Especificação técnica do módulo de auditoria de transações da Bybit (`/v5/account/transaction-log`).
-- [KPI Funding Cards](./specs/kpi-funding-cards.md): Especificação dos cards de KPI de mercado do Funding Dashboard.
-- [Documentação das APIs](./specs/bybit_v5_api_doc.md): Referências técnicas oficiais das corretoras integradas (Bybit V5, [OKX V5](./specs/okx_v5_api_doc.md) e [Bitget Classic](./specs/bitget_classic_api_doc.md)).
+### 3. Market Analytics (Inteligência Quantitativa Cross-Exchange)
+- **Multi-Market Overview**:
+  - *Seletor de Ativos com Favoritos* persistidos no `localStorage`.
+  - *Monitor de Open Interest (OI) & Alavancagem* correlacionando preço e volume em aberto em USD.
+  - *Detector Algorítmico de Regime de Mercado*: `Long Accumulation`, `Short Squeeze`, `Aggressive Shorting`, `Long Liquidation`, `Neutral Consolidation`.
+  - *Scanner de Arbitragem de Funding*: Identifica discrepâncias de taxas entre Bybit, OKX e Bitget com spread 8h e APR anualizado delta-neutro (`Spread APR = Spread * 3 * 365`).
+  - *Cumulative Volume Delta (CVD)*: Rastreamento de agressões de mercado (`Net Delta = Taker Buy - Taker Sell`) com alertas de divergência altista e baixista.
+  - *Sentimento Smart Money vs Retail*: Proporção Long/Short do varejo comparada ao top 20% de operadores nocionais.
+  - *Auto-Refresh com Contador Circular*: Intervalos de 5s a 60s ou modo pausado.
+- **Inverse Coin-M Dashboard**: Visão analítica exclusiva para contratos na moeda com desdobramento expansível por corretora e controles de Expand/Collapse All.
+
+### 4. Conectividade Especializada por Corretora
+- **Bybit (API V5 UTA)**:
+  - Suporte a ambientes **Mainnet** e **Testnet**.
+  - Roteamento multi-regional: Global (`api.bybit.com`), Holanda (`api.bybit.nl`), Turquia (`api.bybit-tr.com`), Hong Kong (`api.bybit.com.hk`), Cazaquistão e Geórgia.
+  - Injeção automática de cabeçalhos de conformidade para contas internacionais do Brasil (`x-site-id: 10001`) e Argentina (`x-site-id: 10002`).
+- **Bitget (API V2 Classic & UTA)**:
+  - Adaptadores dedicados: `BitgetClassicAdapter` (carteiras segregadas Spot e Mix/Futures) e `BitgetUTAAdapter` (conta unificada).
+  - Precificação dinâmica de ativos via `/api/v2/spot/market/tickers` e proxy fallback (`fetchTokenUsdPrice`).
+  - Marcação de subcontas (`isSubAccount`) e controle de inclusão da carteira de funding (`includeFunding`).
+- **OKX (API V5 Dual-Wallet)**:
+  - Leitura concorrente da conta de trading (`/api/v5/account/balance`) e da carteira de financiamento (`/api/v5/asset/balances`).
+  - Segregação visual explícita com tags `UNIFIED` e `FUNDING`.
+
+### 5. Auditoria Contábil de Transações (Bybit, Bitget e OKX Transactions)
+- Sincronização profunda progressiva em blocos de 7 dias com checkpoints no IndexedDB (até 2 anos de histórico).
+- Navegação dinâmica na sidebar (exibe apenas corretoras com contas ativas ou modo simulação).
+- **Mapeador Universal (10 Categorias)**: Trade & Orders, Funding Fee, Transfer In, Transfer Out, Liquidation, Interest, Rewards, Delivery, Others, All Types.
+- **Modal de Detalhes com Total Stats Summary**: Resumo consolidado de volume total, taxas líquidas e variação cambial.
+- Reconciliação contábil por fluxo de caixa: `Net Change = Cashflow + Funding - Fees`.
+
+### 6. Funding Fees Dashboard
+- Pipeline de agregação pré-calculada no serviço (`FundingService`) com armazenamento condensado (`FundingRateSummary`) no IndexedDB.
+- Análise multi-período: Next, Last, Today, Mês Atual, Mês Anterior, 3M, 6M, 1Y (excluindo mês corrente de janelas multi-mês).
+- Comparador horizontal de taxas com filtros de Favoritos, Posições Abertas e COIN-M / Inverse.
+- Auto-sync inteligente agendado para `próximo acerto de funding + 60s`.
+
+### 7. Resiliência de Conexão, Quota de Disco e Global Error Boundary
+- **Fail-Fast de Autenticação**: Cancela retries automáticos imediatamente em caso de credenciais inválidas para blindar o IP do cliente contra bloqueios Cloudflare/Akamai.
+- **Backoff Exponencial com Jitter e Circuit Breaker**: Recuperação suave para quedas de internet e erros 5xx.
+- **Monitoramento de Quota e Pruning Histórico**: Medição de disco do navegador (`navigator.storage.estimate()`) e botão "Prune History" com janelas de retenção (30d a 2 anos).
+- **Global Error Boundary**: Tela de recuperação graciosa (**Safe Recovery**) com ações em 1 clique ("Reload Dashboard" e "Clear Cache & Reload").
+- **Auto-Reset de Scroll**: Reposiciona a rolagem para o topo instantaneamente ao alternar abas (`useLayoutEffect`).
+
+### 8. PWA, Modo Simulação e Modo Privacidade
+- **Progressive Web App (PWA)**: Instalação nativa Desktop/Mobile com Service Worker, cache offline e avisos discretos de atualização (`UpdateNotification`).
+- **Modo Simulação (Mock Data)**: Injeta dados simulados completos e pausa conexões de rede para testes seguros de interface.
+- **Modo Privacidade (Privacy Mode)**: Mascaramento instantâneo de valores financeiros com um clique no botão de olho.
+- **Positions Ticker**: Marquee deslizante contínuo no topo espelhando posições em aberto e cotações ao vivo.
+
+---
+
+## 📚 Documentação Técnica e Manuais
+
+Todos os manuais e especificações técnicas estão disponíveis no repositório:
+- 📖 [Manual do Usuário em Português](./user_manual/cpm_user_manual_pt-br.md): Guia operacional completo com telas, segurança e troubleshooting.
+- 📖 [User Manual in English](./user_manual/cpm_user_manual_en-us.md): Comprehensive operational guide in English.
+- 📐 [Product Requirements Document (PRD)](./specs/PRD.md): Especificação de produto, regras de negócio e matriz de requisitos funcionais.
+- 🏛 [Technical Specifications & Architecture](./specs/ARCHITECTURE.md): Detalhamento do Hybrid-Proxy, micro-stores, engines de sincronização e subsistema de IA.
+- 📑 [Unified Interfaces Specification](./specs/unified-interfaces.md): Definição de tipos TypeScript e mapeamento de payloads de API.
+
+---
+
+*Crypto Portfolio Manager — Institutional Analytics, Delta-Neutral Intelligence & Zero-Trust Security.*

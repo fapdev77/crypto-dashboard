@@ -2,6 +2,7 @@ import { UnifiedHistoryPosition } from '../../types';
 import { ApiCredentials } from '../../store/apiKeysStore';
 import { LogManager } from '../LogManager';
 import { ExchangeAggregator } from '../adapters/ExchangeAggregator';
+
 import {
   getCachedHistory,
   saveCachedHistory,
@@ -15,13 +16,13 @@ export class PositionHistoryService {
    */
   public async fetchExchangeHistory(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedHistoryPosition[]> {
     try {
-      LogManager.info('PositionHistoryService', `Fetching history for ${key.exchange} (${key.label})`);
+      LogManager.info('History.Positions', `[${key.label}] Fetching closed positions history from ${key.exchange}...`);
       const adapter = ExchangeAggregator.getAdapter(key);
       return await adapter.fetchAndNormalize(key, start, end);
     } catch (error) {
-      LogManager.error('PositionHistoryService', `Fetching history for ${key.exchange} (${key.label}):`, error);
+      LogManager.error('History.Positions', `[${key.label}] Failed to fetch position history:`, error);
+      throw error;
     }
-    return [];
   }
 
   /**
@@ -36,7 +37,7 @@ export class PositionHistoryService {
 
     // Step 1: Load existing cache
     const cachedPositions = await getCachedHistory(connectionId);
-    LogManager.info('HistoryCache', `${connectionId}: ${cachedPositions.length} records in cache`);
+    LogManager.info('History.Positions', `[${key.label}] Position cache loaded (${cachedPositions.length} records)`);
 
     // Step 2: Determine incremental start
     const lastTimestamp = await getLastFetchTimestamp(connectionId);
@@ -47,10 +48,12 @@ export class PositionHistoryService {
     let newPositions: UnifiedHistoryPosition[] = [];
     try {
       newPositions = await this.fetchExchangeHistory(key, incrementalStart, now);
-      LogManager.info('HistoryCache', `${connectionId}: ${newPositions.length} new records fetched`);
-    } catch (err) {
-      LogManager.warn('HistoryCache', `Incremental fetch failed for ${connectionId}, returning stale cache`, err);
-      return cachedPositions; // Graceful fallback to stale data (AGENTS.md §5)
+      LogManager.info('History.Positions', `[${key.label}] ${newPositions.length} new position records fetched`);
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      LogManager.warn('History.Positions', `[${key.label}] Incremental position fetch failed, returning stale cache: ${errMsg}`);
+      // Re-throw so the caller can aggregate errors across keys; stale cache remains in IndexedDB
+      throw err;
     }
 
     // Step 4: Persist new records and update metadata

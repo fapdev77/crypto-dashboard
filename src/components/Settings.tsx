@@ -1,109 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useSettingsStore } from '../store/settingsStore';
-import { useApiKeysStore } from '../store/apiKeysStore';
 import { useFundingStore } from '../store/fundingStore';
-import { clearAllCache, getCacheSize, getAssetMetadataCacheSize, clearAssetMetadataCache, clearFundingSummariesCache } from '../services/historyCache';
-import { PositionHistoryService } from '../services/positions/PositionHistoryService';
+import { clearFundingSummariesCache } from '../services/historyCache';
 import {
-  Database, Trash2, CheckCircle2, Loader2, RefreshCw,
-  Briefcase, AlertTriangle, FlaskConical, Gauge, Settings as SettingsIcon
+  Trash2, Loader2, RefreshCw,
+  AlertTriangle, FlaskConical, Gauge, Settings as SettingsIcon, Layers
 } from 'lucide-react';
 import { LogManager } from '../services/LogManager';
 import { AppTooltip } from './ui/Tooltip';
 import { FundingSyncTimingPanel } from './sync/FundingSyncTimingPanel';
 import { SecurityBackupCard } from './SecurityBackupCard';
 import { VersionInfoCard } from './VersionInfoCard';
+import { IndexedDBCacheCard } from './IndexedDBCacheCard';
+import { exchangeCoinCatalog } from '../services/marketAnalytics/exchangeCoinCatalog';
 
 export function Settings() {
   const {
     useMockData, setUseMockData,
     pollingInterval, setPollingInterval,
-    historyCacheInterval, setHistoryCacheInterval,
-    metadataCacheTtlHours, setMetadataCacheTtlHours,
     showWelcomeOnStartup, setShowWelcomeOnStartup,
     fundingPollingInterval, setFundingPollingInterval,
-    fundingHistoryInterval, setFundingHistoryInterval
+    fundingHistoryInterval, setFundingHistoryInterval,
+    symbolCatalogRefreshHours, setSymbolCatalogRefreshHours
   } = useSettingsStore();
 
-  const keys = useApiKeysStore(state => state.keys);
-
-  const [isClearing, setIsClearing] = useState(false);
-  const [cleared, setCleared] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [synced, setSynced] = useState(false);
-  const [cacheSize, setCacheSize] = useState<number | null>(null);
-  const [metaCacheSize, setMetaCacheSize] = useState<number | null>(null);
-  const [isClearingMeta, setIsClearingMeta] = useState(false);
   const [isClearingFunding, setIsClearingFunding] = useState(false);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
+  const [isRefreshingCatalog, setIsRefreshingCatalog] = useState(false);
+  const [isClearingCatalog, setIsClearingCatalog] = useState(false);
+  const [lastCatalogFetch, setLastCatalogFetch] = useState<number | null>(null);
+  const [staleExchanges, setStaleExchanges] = useState<string[]>([]);
+
+  const syncCatalogInfo = () => {
+    setLastCatalogFetch(exchangeCoinCatalog.getRegistryUpdatedAt());
+    setStaleExchanges(exchangeCoinCatalog.getStaleExchanges());
+  };
+
+  const handleRefreshCatalog = async () => {
+    setIsRefreshingCatalog(true);
+    try {
+      await exchangeCoinCatalog.refresh();
+      syncCatalogInfo();
+      toast.success('Symbol catalog refreshed', { id: 'symbol-catalog-refresh' });
+    } catch (e: any) {
+      LogManager.error('Settings', 'Failed to refresh symbol catalog:', e);
+      toast.error(`Failed to refresh symbol catalog: ${e.message || 'Unknown error'}`, { id: 'err-symbol-catalog-refresh' });
+    } finally {
+      setIsRefreshingCatalog(false);
+    }
+  };
+
+  const handleClearCatalog = async () => {
+    setIsClearingCatalog(true);
+    try {
+      await exchangeCoinCatalog.clearAndSync();
+      syncCatalogInfo();
+      toast.success('Symbol catalog cleared and re-synced', { id: 'symbol-catalog-clear' });
+    } catch (e: any) {
+      LogManager.error('Settings', 'Failed to clear symbol catalog:', e);
+      toast.error(`Failed to clear symbol catalog: ${e.message || 'Unknown error'}`, { id: 'err-symbol-catalog-clear' });
+    } finally {
+      setIsClearingCatalog(false);
+    }
+  };
 
   useEffect(() => {
-    getCacheSize().then(setCacheSize).catch(err => LogManager.error('Settings', 'Failed to get cache size:', err));
-    getAssetMetadataCacheSize().then(setMetaCacheSize).catch(err => LogManager.error('Settings', 'Failed to get metadata cache size:', err));
+    syncCatalogInfo();
   }, []);
-
-  const handleForceSync = async () => {
-    const activeKeys = keys.filter(k => k.isActive);
-    if (activeKeys.length === 0) {
-      toast.error('No active API keys found to sync', { id: 'cache-sync' });
-      return;
-    }
-    setIsSyncing(true);
-    setSynced(false);
-    try {
-      const service = new PositionHistoryService();
-      await Promise.all(activeKeys.map(apiKey => service.fetchWithCache(apiKey)));
-      const newSize = await getCacheSize();
-      setCacheSize(newSize);
-      setSynced(true);
-      toast.success('Cache synced successfully', { id: 'cache-sync' });
-      setTimeout(() => setSynced(false), 3000);
-    } catch (e: any) {
-      LogManager.error('Settings', 'Failed to sync cache:', e);
-      toast.error(`Failed to sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-sync' });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleClearCache = async () => {
-    setIsClearing(true);
-    setCleared(false);
-    try {
-      await clearAllCache();
-      setCacheSize(0);
-      const activeKeys = keys.filter(k => k.isActive);
-      if (activeKeys.length > 0) {
-        const service = new PositionHistoryService();
-        await Promise.all(activeKeys.map(apiKey => service.fetchWithCache(apiKey)));
-        const newSize = await getCacheSize();
-        setCacheSize(newSize);
-      }
-      setCleared(true);
-      toast.success('Cache cleared and re-synced successfully', { id: 'cache-clear' });
-      setTimeout(() => setCleared(false), 3000);
-    } catch (e: any) {
-      LogManager.error('Settings', 'Failed to clear and sync cache:', e);
-      toast.error(`Failed to clear and sync cache: ${e.message || 'Unknown error'}`, { id: 'err-cache-clear' });
-    } finally {
-      setIsClearing(false);
-    }
-  };
-
-  const handleClearMetaCache = async () => {
-    setIsClearingMeta(true);
-    try {
-      await clearAssetMetadataCache();
-      setMetaCacheSize(0);
-      toast.success('Metadata cache cleared', { id: 'meta-cache-clear' });
-    } catch (e: any) {
-      LogManager.error('Settings', 'Failed to clear metadata cache:', e);
-      toast.error(`Failed to clear metadata cache: ${e.message || 'Unknown error'}`, { id: 'err-meta-cache-clear' });
-    } finally {
-      setIsClearingMeta(false);
-    }
-  };
 
   const handleClearFundingCache = async () => {
     setIsClearingFunding(true);
@@ -224,97 +188,8 @@ export function Settings() {
         {/* Card 1.8: Version & Changelog Details */}
         <VersionInfoCard />
 
-        {/* Card 2: History Cache Management */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
-          <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
-            <Database className="w-4 h-4 text-blue-400" />
-            History Cache
-          </h3>
-          <p className="text-[#8E9299] text-xs mb-5">Manage local position history cache</p>
-
-          <div className="flex flex-col gap-5 flex-1">
-            {/* Background Update Interval */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <AppTooltip description="Mainly used in History Views and PnL by Symbol. Sets the interval for the background service that syncs your historic data. A longer interval saves API calls and data usage, but delays historical charts updates.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Background Update Interval</h4>
-                </AppTooltip>
-                <span className="text-[#00C853] font-mono text-xs bg-[#00C853]/10 px-2 py-0.5 rounded-md">{historyCacheInterval}m</span>
-              </div>
-              <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Keeps historical PnL sync running periodically in the background. Adjust between 1 and 60 minutes.  Lower values provide faster updates but increase network consumption and Exchanges can temporarily block API calls.
-              </p>
-              <input
-                type="range"
-                min="1"
-                max="60"
-                step="1"
-                value={historyCacheInterval}
-                onChange={(e) => setHistoryCacheInterval(Number(e.target.value))}
-                onPointerUp={() => toast.success(`Background Update Interval set to ${historyCacheInterval}m\n(Effective next background run)`, { id: 'cache-interval' })}
-                className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-[#00C853]"
-              />
-              <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
-                <span>1m</span>
-                <span>60m</span>
-              </div>
-            </div>
-
-            <div className="border-t border-[#2a2b30]" />
-
-            {/* Force Sync */}
-            <div>
-              <AppTooltip description="Instantly triggers a manual synchronization of your entire position history from all connected exchanges.">
-                <button
-                  onClick={handleForceSync}
-                  disabled={isSyncing || synced || isClearing || keys.length === 0}
-                  className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  {isSyncing
-                    ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
-                    : synced
-                      ? <CheckCircle2 className="w-4 h-4 text-green-400" />
-                      : <RefreshCw className="w-4 h-4 text-blue-400" />
-                  }
-                  {isSyncing ? 'Syncing Now...' : synced ? 'Synced!' : 'Force Sync Now'}
-                </button>
-              </AppTooltip>
-            </div>
-
-            <div className="border-t border-[#2a2b30]" />
-
-            {/* Clear Cache */}
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <AppTooltip description="Deletes your locally stored history records and triggers a fresh download from all connected exchanges. Useful if data appears corrupted or missing.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Clear Local Cache</h4>
-                </AppTooltip>
-                {cacheSize !== null && (
-                  <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
-                    <span className="text-[#8E9299] text-[10px]">Records:</span>
-                    <span className="text-blue-400 font-mono text-xs font-medium">{cacheSize}</span>
-                  </div>
-                )}
-              </div>
-              <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Forces a fresh download of your entire positional history from the exchange.
-              </p>
-              <button
-                onClick={handleClearCache}
-                disabled={isClearing || cleared || isSyncing}
-                className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                {isClearing
-                  ? <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
-                  : cleared
-                    ? <CheckCircle2 className="w-4 h-4 text-green-400" />
-                    : <Trash2 className="w-4 h-4 text-red-400" />
-                }
-                {isClearing ? 'Clearing & Re-syncing...' : cleared ? 'Cache Cleared!' : 'Clear Cache Now'}
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Card 2: Consolidated IndexedDB Storage & Cache */}
+        <IndexedDBCacheCard />
 
         {/* Card 3: Exchange Specifications */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
@@ -351,35 +226,35 @@ export function Settings() {
           </div>
         </div>
 
-        {/* Card 4: Asset Metadata Cache Management */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
+        {/* Card 4.2: Market Analytics Symbol Catalog */}
+        <div id="symbol-catalog-settings-card" className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-purple-400" />
-            Asset Metadata Cache
+            <Layers className="w-4 h-4 text-cyan-400" />
+            Symbol Catalog Cache
           </h3>
-          <p className="text-[#8E9299] text-xs mb-5">Control TTL and clear asset classification cache</p>
+          <p className="text-[#8E9299] text-xs mb-5">Market Analytics instrument lists (Spot / Perp / Inverse)</p>
 
           <div className="flex flex-col gap-5 flex-1">
-            {/* TTL Slider */}
+            {/* Refresh Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <AppTooltip description="Time To Live (TTL) sets how long asset metadata (like whether a coin is CRYPTO or a STOCK) stays in your browser memory before being updated again.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Metadata TTL</h4>
+                <AppTooltip description="How often the app re-downloads the full instrument listing (Spot, USDT Perp and Coin-M Inverse) from Bybit, OKX and Bitget. These lists rarely change, so a longer interval saves network and API calls.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Refresh Interval</h4>
                 </AppTooltip>
-                <span className="text-purple-400 font-mono text-xs bg-purple-400/10 px-2 py-0.5 rounded-md">{metadataCacheTtlHours}h</span>
+                <span className="text-cyan-400 font-mono text-xs bg-cyan-400/10 px-2 py-0.5 rounded-md">{symbolCatalogRefreshHours}h</span>
               </div>
               <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Validity duration of cached metadata for market assets (CRYPTO vs STOCK). Assets auto-refetch once TTL expires.
+                Controls the Market Analytics symbol catalog refresh cadence (1 to 24 hours).
               </p>
               <input
                 type="range"
                 min="1"
                 max="24"
                 step="1"
-                value={metadataCacheTtlHours}
-                onChange={(e) => setMetadataCacheTtlHours(Number(e.target.value))}
-                onPointerUp={() => toast.success(`Metadata TTL set to ${metadataCacheTtlHours}h`, { id: 'cache-ttl' })}
-                className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-purple-400"
+                value={symbolCatalogRefreshHours}
+                onChange={(e) => setSymbolCatalogRefreshHours(Number(e.target.value))}
+                onPointerUp={() => toast.success(`Symbol catalog refresh set to ${symbolCatalogRefreshHours}h`, { id: 'symbol-catalog-interval' })}
+                className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-cyan-400"
               />
               <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
                 <span>1h</span>
@@ -389,33 +264,47 @@ export function Settings() {
 
             <div className="border-t border-[#2a2b30]" />
 
-            {/* Clear Metadata Cache */}
+            {/* Last fetch, stale warning and actions */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <AppTooltip description="Deletes the locally cached asset classes (CRYPTO, STOCK, FOREX, etc.) causing the app to query for updated classifications on the next load.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Clear Metadata Cache</h4>
+                <AppTooltip description="Timestamp of the last successful catalog download across the three exchanges.">
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Last Fetch</h4>
                 </AppTooltip>
-                {metaCacheSize !== null && (
-                  <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
-                    <span className="text-[#8E9299] text-[10px]">Records:</span>
-                    <span className="text-purple-400 font-mono text-xs font-medium">{metaCacheSize}</span>
-                  </div>
-                )}
+                <span className="text-cyan-400 font-mono text-xs">
+                  {lastCatalogFetch ? new Date(lastCatalogFetch).toLocaleString() : 'Never'}
+                </span>
               </div>
-              <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Force refetch of symbol definitions by clearing cached CRYPTO or STOCK classifications.
-              </p>
-              <button
-                onClick={handleClearMetaCache}
-                disabled={isClearingMeta}
-                className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                {isClearingMeta
-                  ? <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
-                  : <Trash2 className="w-4 h-4 text-red-400" />
-                }
-                {isClearingMeta ? 'Clearing...' : 'Clear Metadata Cache'}
-              </button>
+              {staleExchanges.length > 0 && (
+                <p className="text-[11px] text-amber-400 leading-relaxed">
+                  Partial data — kept the previous lists for: {staleExchanges.join(', ')}
+                </p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                <button
+                  onClick={handleRefreshCatalog}
+                  disabled={isRefreshingCatalog || isClearingCatalog}
+                  className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {isRefreshingCatalog
+                    ? <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                    : <RefreshCw className="w-4 h-4 text-cyan-400" />
+                  }
+                  {isRefreshingCatalog ? 'Refreshing...' : 'Refresh Now'}
+                </button>
+
+                <button
+                  onClick={handleClearCatalog}
+                  disabled={isRefreshingCatalog || isClearingCatalog}
+                  className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {isClearingCatalog
+                    ? <Loader2 className="w-4 h-4 text-red-400 animate-spin" />
+                    : <Trash2 className="w-4 h-4 text-red-400" />
+                  }
+                  {isClearingCatalog ? 'Clearing & Syncing...' : 'Clear Cache & Sync'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -16,13 +16,6 @@ const cleanAccountLabel = (label: string) => {
 };
 
 const getAssetOrigin = (b: BalanceItem) => {
-  const ex = b.exchange.toLowerCase();
-
-  if (ex === 'bybit') {
-    return 'UNIFIED';
-  }
-
-  // Bitget and OKX logic
   const connId = b.connectionId;
   const prefix = connId + '-';
   if (b.id.startsWith(prefix)) {
@@ -51,6 +44,7 @@ const formatOriginLabel = (origin: string) => {
     case 'UNIFIED':
       return 'Unified';
     case 'FUNDING':
+    case 'UTA-FUNDING':
       return 'Funding';
     case 'MARGIN_CROSS':
       return 'Margin Cross';
@@ -74,6 +68,7 @@ const getOriginBadgeStyle = (origin: string) => {
     case 'EARN':
       return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
     case 'FUNDING':
+    case 'UTA-FUNDING':
       return 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
     case 'USDT-FUTURES':
     case 'COIN-FUTURES':
@@ -220,10 +215,18 @@ export function ExchangeHierarchyTable({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{cleanAccountLabel(accData.label)}</span>
-                        <AccountTypeBadge
-                          exchange={exchange}
-                          accountType={keys.find(k => k.id === connId)?.accountType}
-                        />
+                        {(() => {
+                          const matchedKey = keys.find(k => k.id === connId);
+                          return (
+                            <AccountTypeBadge
+                              exchange={exchange}
+                              accountType={matchedKey?.accountType}
+                              environment={matchedKey?.environment}
+                              bybitRegion={matchedKey?.bybitRegion}
+                              isSubAccount={matchedKey?.isSubAccount}
+                            />
+                          );
+                        })()}
                       </div>
                     </div>
                     <span className="text-sm font-bold text-white font-mono">{formatCurrency(accData.total, 'usd')}</span>

@@ -3,10 +3,19 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import fetch from "node-fetch"; // natively available globally in Node 18+ but let's use standard global fetch
 import { ServerLogger } from './src/utils/serverLogger';
+import { validateSafeUpstreamUrl } from './src/utils/ssrfValidator';
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT || 3000;
+  const PORT = Number(process.env.PORT) || 3000;
+
+  // Health check endpoint
+  app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: Date.now() });
+  });
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: Date.now() });
+  });
 
   // We need express.text or raw to parse arbitrary body formats, but json is also good
   // ONLY for non-websocket proxy routes
@@ -25,19 +34,34 @@ async function startServer() {
       // SSRF prevention: Domain validation (Allowlist)
       const allowedDomains = [
         'api.bybit.com',
+        'api.bytick.com',
+        'api-testnet.bybit.com',
+        'api.bybit.nl',
+        'api.bybit.tr',
+        'api.bybit.kz',
+        'api.bybitgeorgia.ge',
+        'api.bybit.ae',
+        'api.bybit.eu',
+        'api.bybit.id',
+        'api.manepa.jp',
+        'api-testnet.manepa.jp',
+        'api.spark-fintech.com',
+        'api-testnet.spark-fintech.com',
         'api.bitget.com',
         'www.okx.com',
-        'api.okx.com'
+        'api.okx.com',
+        'aws.okx.com',
+        'api.alternative.me',
       ];
 
-      try {
-        const urlObj = new URL(targetUrl);
-        if (!allowedDomains.includes(urlObj.hostname)) {
-          ServerLogger.error('Proxy', `SSRF-Block — unauthorized domain: ${urlObj.hostname}`);
-          return res.status(403).json({ error: "Forbidden: Domain not in proxy allowlist" });
-        }
-      } catch (err) {
-        return res.status(400).json({ error: "Invalid targetUrl format" });
+      const validation = validateSafeUpstreamUrl(targetUrl, {
+        allowedProtocols: ['https:'],
+        allowedDomains,
+      });
+
+      if (!validation.isValid) {
+        ServerLogger.error('Proxy', `SSRF-Block: rejected upstream '${targetUrl}' - ${validation.reason}`);
+        return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
       }
 
       ServerLogger.info('Proxy', `${method} ${targetUrl}`);
@@ -48,9 +72,14 @@ async function startServer() {
       delete cleanHeaders.origin;
       delete cleanHeaders.referer;
 
+      const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+        ? AbortSignal.timeout(20000)
+        : undefined;
+
       const fetchOptions: any = {
         method,
         headers: cleanHeaders,
+        signal: timeoutSignal,
       };
 
       if (method !== "GET" && method !== "HEAD" && body) {
@@ -74,7 +103,464 @@ async function startServer() {
 
     } catch (error: any) {
       ServerLogger.error('Proxy', 'Proxy error:', error);
-      res.status(500).json({ error: error.message });
+      const isTimeout = error.name === 'TimeoutError' || error.name === 'AbortError' || error.message?.includes('timeout') || error.message?.includes('aborted');
+      const statusCode = isTimeout ? 504 : 500;
+      res.status(statusCode).json({
+        error: isTimeout
+          ? 'Gateway Timeout: upstream exchange did not respond within 20s'
+          : (error.message || 'Internal Server Error')
+      });
+    }
+  });
+
+  // AI Assistant Endpoints (PIKA)
+  app.post("/api/ai/ping", async (req, res) => {
+    try {
+      const { modelId = "gemini-2.5-flash", apiKey: clientApiKey, provider = "gemini" } = req.body || {};
+      const key = clientApiKey || process.env.GEMINI_API_KEY;
+
+      if (provider === "gemini") {
+        if (!key) {
+          return res.status(503).json({
+            error: "GEMINI_API_KEY is not configured on the server, and no private API key was provided.",
+            status: "unreachable",
+          });
+        }
+        const { GoogleGenAI } = await import("@google/genai");
+        const ai = new GoogleGenAI({ apiKey: key });
+
+        try {
+          const response = await ai.models.generateContent({
+            model: modelId,
+            contents: "ping",
+          });
+          return res.json({
+            success: true,
+            status: "healthy",
+            modelId,
+            text: response.text || "OK",
+          });
+        } catch (genErr: any) {
+          const errMsg = genErr.message || "";
+          ServerLogger.warn('AI', `Ping error for model ${modelId}:`, errMsg);
+
+          // Detect deprecated or non-existent model
+          const isNotFoundOrDeprecated =
+            errMsg.includes("NOT_FOUND") ||
+            errMsg.includes("404") ||
+            errMsg.includes("not found") ||
+            errMsg.includes("is not supported") ||
+            errMsg.includes("deprecated");
+
+          if (isNotFoundOrDeprecated) {
+            return res.status(404).json({
+              error: `Model '${modelId}' is not found or has been deprecated by Google.`,
+              status: "deprecated",
+              rawError: errMsg,
+            });
+          }
+
+          // Detect quota or tier limits
+          const isQuota =
+            errMsg.includes("RESOURCE_EXHAUSTED") ||
+            errMsg.includes("429") ||
+            errMsg.includes("quota");
+
+          if (isQuota) {
+            return res.status(429).json({
+              error: `Quota exceeded or model requires a paid tier for '${modelId}'.`,
+              status: "quota_exceeded",
+              rawError: errMsg,
+            });
+          }
+
+          return res.status(500).json({
+            error: errMsg || "Failed to communicate with model.",
+            status: "unreachable",
+            rawError: errMsg,
+          });
+        }
+      }
+
+      // Fallback for generic provider ping
+      return res.json({ success: true, status: "healthy", modelId });
+    } catch (err: any) {
+      ServerLogger.error('AI', 'Ping failed:', err);
+      return res.status(500).json({
+        error: err.message || "Failed to test connection.",
+        status: "unreachable",
+      });
+    }
+  });
+
+  // Dynamic Models Listing
+  app.post("/api/ai/fetch-models", async (req, res) => {
+    try {
+      const isChatbotEnabled = process.env.AI_CHAT_BOT_ENABLED !== 'false' && process.env.VITE_AI_CHAT_BOT_ENABLED !== 'false';
+      if (!isChatbotEnabled) {
+        return res.status(403).json({ error: "The AI Assistant feature is disabled in server environment settings." });
+      }
+      const { provider = 'gemini', apiKey: clientApiKey, baseUrl } = req.body || {};
+
+      if (provider === 'gemini') {
+        const key = clientApiKey || process.env.GEMINI_API_KEY;
+        if (!key) {
+          return res.status(400).json({
+            error: "No Gemini API key provided, and GEMINI_API_KEY is not configured on the server."
+          });
+        }
+
+        const { GoogleGenAI } = await import("@google/genai");
+        const ai = new GoogleGenAI({ apiKey: key });
+        const listResponse = await ai.models.list();
+
+        const models: Array<{ id: string; name: string; displayName: string; description?: string; isRecommended?: boolean }> = [];
+        for await (const m of listResponse) {
+          const methods = (m as any).supportedActions || (m as any).supportedGenerationMethods || [];
+          const supportsGenerate = Array.isArray(methods) && methods.some((method: string) =>
+            typeof method === 'string' && method.toLowerCase().includes('generatecontent')
+          );
+
+          if (!supportsGenerate) continue;
+
+          const rawId = (m.name || '').replace(/^models\//, '');
+          if (!rawId) continue;
+
+          // Filter out models that are unsuitable for chat/reasoning
+          const lower = rawId.toLowerCase();
+          if (
+            lower.includes('tts') ||
+            lower.includes('embedding') ||
+            lower.includes('aqa') ||
+            lower.includes('imagen') ||
+            lower.includes('robotics')
+          ) {
+            continue;
+          }
+
+          const isRecommended = rawId === 'gemini-2.5-flash' || rawId === 'gemini-2.5-pro' || rawId === 'gemini-1.5-flash';
+
+          models.push({
+            id: rawId,
+            name: m.displayName ? `${m.displayName} (${rawId})` : rawId,
+            displayName: m.displayName || rawId,
+            description: m.description,
+            isRecommended,
+          });
+        }
+
+        // Sort: Recommended first, then 2.5 flash, then 2.5 pro, then latest, then alphabetical
+        models.sort((a, b) => {
+          if (a.isRecommended && !b.isRecommended) return -1;
+          if (!a.isRecommended && b.isRecommended) return 1;
+          if (a.id.includes('2.5-flash') && !b.id.includes('2.5-flash')) return -1;
+          if (!a.id.includes('2.5-flash') && b.id.includes('2.5-flash')) return 1;
+          return a.id.localeCompare(b.id);
+        });
+
+        return res.json({
+          success: true,
+          provider: 'gemini',
+          count: models.length,
+          models,
+        });
+      }
+
+      if (provider === 'ollama') {
+        const rawUrl = baseUrl || 'http://localhost:11434';
+        const validation = validateSafeUpstreamUrl(rawUrl, {
+          allowLanIps: true,
+          allowedProtocols: ['http:', 'https:'],
+        });
+        if (!validation.isValid) {
+          ServerLogger.error('AI', `SSRF-Block: rejected Ollama baseUrl '${rawUrl}' - ${validation.reason}`);
+          return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
+        }
+        const url = rawUrl.replace(/\/+$/, '');
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        try {
+          const resp = await fetch(`${url}/api/tags`, { signal: controller.signal });
+          clearTimeout(timeout);
+          if (!resp.ok) {
+            return res.status(resp.status).json({ error: `Ollama returned HTTP ${resp.status}` });
+          }
+          const data: any = await resp.json();
+          const models = (data.models || []).map((m: any) => {
+            const capabilities: string[] = Array.isArray(m.capabilities) ? m.capabilities : [];
+            const hasTools = capabilities.length > 0 ? capabilities.includes('tools') : undefined;
+            const paramSize = m.details?.parameter_size;
+            const family = m.details?.family || (Array.isArray(m.details?.families) ? m.details.families[0] : undefined);
+            const sizeGb = Math.round((m.size || 0) / (1024 * 1024 * 1024) * 10) / 10;
+            return {
+              id: m.name,
+              name: m.name,
+              displayName: paramSize ? `${m.name} (${paramSize})` : m.name,
+              description: `Size: ${sizeGb} GB${paramSize ? ` • Params: ${paramSize}` : ''}${family ? ` • Family: ${family}` : ''}`,
+              capabilities,
+              supportsTools: hasTools,
+              parameterSize: paramSize,
+              family,
+            };
+          });
+          return res.json({ success: true, provider: 'ollama', count: models.length, models });
+        } catch (fetchErr: any) {
+          clearTimeout(timeout);
+          return res.status(503).json({
+            error: `Could not reach Ollama at ${url}. Ensure Ollama is running ('ollama serve').`
+          });
+        }
+      }
+
+      if (provider === 'openai' || provider === 'openrouter') {
+        const defaultBase = provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
+        const rawUrl = baseUrl || defaultBase;
+        const validation = validateSafeUpstreamUrl(rawUrl, {
+          allowedProtocols: ['https:'],
+          allowedDomains: ['api.openai.com', 'openrouter.ai'],
+        });
+        if (!validation.isValid) {
+          ServerLogger.error('AI', `SSRF-Block: rejected AI provider baseUrl '${rawUrl}' - ${validation.reason}`);
+          return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
+        }
+        const url = rawUrl.replace(/\/+$/, '');
+        const headers: Record<string, string> = {};
+        if (clientApiKey) headers['Authorization'] = `Bearer ${clientApiKey}`;
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 6000);
+        try {
+          const resp = await fetch(`${url}/models`, { headers, signal: controller.signal });
+          clearTimeout(timeout);
+          if (!resp.ok) {
+            return res.status(resp.status).json({ error: `Provider returned HTTP ${resp.status}` });
+          }
+          const data = await resp.json();
+          const models = (data.data || [])
+            .filter((m: any) => {
+              const id = (m.id || '').toLowerCase();
+              return id.includes('gpt') || id.includes('claude') || id.includes('llama') || id.includes('gemini') || id.includes('deepseek');
+            })
+            .map((m: any) => ({
+              id: m.id,
+              name: m.id,
+              displayName: m.id,
+            }));
+          return res.json({ success: true, provider, count: models.length, models });
+        } catch (fetchErr: any) {
+          clearTimeout(timeout);
+          return res.status(503).json({ error: `Failed to fetch models from ${url}: ${fetchErr.message}` });
+        }
+      }
+
+      return res.status(400).json({ error: `Provider '${provider}' does not support remote model catalog listing.` });
+    } catch (err: any) {
+      ServerLogger.error('AI', 'Fetch models error:', err);
+      return res.status(500).json({ error: err.message || "Failed to fetch models." });
+    }
+  });
+
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      const isChatbotEnabled = process.env.AI_CHAT_BOT_ENABLED !== 'false' && process.env.VITE_AI_CHAT_BOT_ENABLED !== 'false';
+      if (!isChatbotEnabled) {
+        return res.status(403).json({ error: "The AI Assistant feature is disabled in server environment settings." });
+      }
+      const {
+        modelId: rawModelId = "gemini-3.8-flash",
+        apiKey: clientApiKey,
+        messages,
+        systemInstruction,
+        tools,
+        temperature,
+        maxTokens,
+      } = req.body || {};
+
+      const apiKey = clientApiKey || process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(503).json({ error: "No API Key configured and GEMINI_API_KEY missing on server." });
+      }
+
+      let modelId = typeof rawModelId === 'string' ? rawModelId.trim().replace(/^models\//, '') : 'gemini-3.8-flash';
+      if (modelId === 'gemini-3.7') modelId = 'gemini-3.7-flash';
+      if (modelId === 'gemini-3.8') modelId = 'gemini-3.8-flash';
+      if (modelId === 'gemini-2.5' || modelId === 'gemini-2.5-flash') modelId = 'gemini-3.8-flash';
+
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
+      // Transform messages into GenAI contents format while strictly preserving parts & thought signatures
+      const contents = (messages || []).map((msg: any) => {
+        if (msg.parts && Array.isArray(msg.parts)) {
+          return {
+            role: msg.role === 'assistant' ? 'model' : msg.role,
+            parts: msg.parts,
+          };
+        }
+        return {
+          role: msg.role === 'assistant' ? 'model' : msg.role,
+          parts: [{ text: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content || '') }],
+        };
+      });
+
+      // Prepare function declarations if tools provided
+      const functionDeclarations = (tools || []).map((t: any) => ({
+        name: t.name,
+        description: t.description,
+        parameters: t.parameters,
+      }));
+
+      const config: any = {
+        systemInstruction,
+        temperature: temperature ?? 0.1,
+        maxOutputTokens: maxTokens ?? 2048,
+      };
+
+      if (functionDeclarations.length > 0) {
+        config.tools = [{ functionDeclarations }];
+      }
+
+      const result = await ai.models.generateContent({
+        model: modelId,
+        contents,
+        config,
+      });
+
+      const candidate = result.candidates?.[0];
+      const parts = candidate?.content?.parts || [];
+      const functionCalls: any[] = [];
+      let textContent = "";
+
+      for (const part of parts) {
+        if (part.functionCall) {
+          functionCalls.push(part.functionCall);
+        }
+        if (part.text) {
+          textContent += part.text;
+        }
+      }
+
+      return res.json({
+        text: textContent || result.text || "",
+        rawContent: candidate?.content || null,
+        toolCalls: functionCalls.length > 0 ? functionCalls : undefined,
+        usage: {
+          promptTokens: result.usageMetadata?.promptTokenCount || 0,
+          completionTokens: result.usageMetadata?.candidatesTokenCount || 0,
+          totalTokens: result.usageMetadata?.totalTokenCount || 0,
+        },
+        rawResponse: {
+          candidates: result.candidates,
+          usageMetadata: result.usageMetadata,
+          modelVersion: (result as any).modelVersion,
+          responseId: (result as any).responseId,
+        },
+        sentConfig: {
+          model: modelId,
+          systemInstruction,
+          temperature: config.temperature,
+          maxOutputTokens: config.maxOutputTokens,
+          toolsCount: functionDeclarations.length,
+          messagesCount: contents.length,
+        },
+      });
+    } catch (err: any) {
+      ServerLogger.error('AI', 'Chat error:', err);
+
+      let rawMessage = err?.message || "Error processing AI request.";
+      let parsedMessage = rawMessage;
+      let statusCode = 500;
+      let errorCode: string | number = 500;
+
+      // Extract details if err.message contains serialized JSON (Google GenAI error format)
+      try {
+        const jsonMatch = rawMessage.match(/\{[\s\S]*"error"[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.error) {
+            parsedMessage = parsed.error.message || parsedMessage;
+            errorCode = parsed.error.code || parsed.error.status || errorCode;
+            if (typeof parsed.error.code === 'number' && parsed.error.code >= 400 && parsed.error.code < 600) {
+              statusCode = parsed.error.code;
+            }
+          }
+        }
+      } catch {
+        // use rawMessage
+      }
+
+      return res.status(statusCode).json({
+        error: parsedMessage,
+        rawError: rawMessage,
+        code: errorCode,
+        stack: process.env.NODE_ENV !== 'production' ? err?.stack : undefined,
+      });
+    }
+  });
+
+  // Ollama Chat Proxy (resolves CORS and Mixed-Content when connecting to local or remote Ollama machines)
+  app.post("/api/ai/ollama-chat", async (req, res) => {
+    try {
+      const isChatbotEnabled = process.env.AI_CHAT_BOT_ENABLED !== 'false' && process.env.VITE_AI_CHAT_BOT_ENABLED !== 'false';
+      if (!isChatbotEnabled) {
+        return res.status(403).json({ error: "The AI Assistant feature is disabled in server environment settings." });
+      }
+
+      const { endpoint, headers = {}, payload } = req.body || {};
+      if (!endpoint || !payload) {
+        return res.status(400).json({ error: "Missing required 'endpoint' or 'payload' parameters." });
+      }
+
+      // SSRF validation: allow local network / LAN / localhost, block cloud metadata and dangerous system ports
+      const validation = validateSafeUpstreamUrl(endpoint, {
+        allowLanIps: true,
+        allowedProtocols: ['http:', 'https:'],
+      });
+      if (!validation.isValid) {
+        ServerLogger.error('AI', `SSRF-Block: rejected Ollama endpoint '${endpoint}' - ${validation.reason}`);
+        return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
+      }
+
+      const cleanHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...headers,
+      };
+      delete cleanHeaders.host;
+      delete cleanHeaders.origin;
+      delete cleanHeaders.referer;
+
+      const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+        ? AbortSignal.timeout(90000)
+        : undefined;
+
+      const upstreamResp = await fetch(endpoint, {
+        method: 'POST',
+        headers: cleanHeaders,
+        body: JSON.stringify(payload),
+        signal: timeoutSignal,
+      });
+
+      const responseText = await upstreamResp.text();
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch {
+        responseData = { error: responseText };
+      }
+
+      return res.status(upstreamResp.status).json(responseData);
+    } catch (err: any) {
+      ServerLogger.error('AI', 'Ollama chat proxy error:', err);
+      return res.status(500).json({
+        error: err.message || "Failed to communicate with remote Ollama endpoint.",
+      });
     }
   });
 
@@ -87,8 +573,15 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('sw.js') || filePath.endsWith('registerSW.js') || filePath.endsWith('manifest.webmanifest') || filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+      }
+    }));
     app.get("*", (req, res) => {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
@@ -98,4 +591,7 @@ async function startServer() {
   });
 }
 
-startServer();
+startServer().catch((err) => {
+  ServerLogger.error('Server', 'Fatal error during server startup:', err);
+  process.exit(1);
+});

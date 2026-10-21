@@ -41,6 +41,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   });
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(syncStore.positionsSyncError);
 
   // Turn off loading if active keys count goes to 0
   useEffect(() => {
@@ -134,13 +135,19 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
       try {
         const service = new PositionHistoryService();
+        const syncErrors: string[] = [];
+
         for (const key of activeKeys) {
           if (!key.isActive) continue;
           if (isMounted) setSyncMessage(`Syncing ${key.exchange} (${key.label})...`);
-          await service.fetchWithCache(key);
+          try {
+            await service.fetchWithCache(key);
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
+          }
         }
 
-        // Fetch complete updated list from cache
+        // Fetch complete updated list from cache (includes stale data for failed keys)
         let cachedTotal: UnifiedHistoryPosition[] = [];
         const cachePromises = activeKeys.map(apiKey => getCachedHistory(apiKey.id));
         const cacheResults = await Promise.all(cachePromises);
@@ -151,15 +158,27 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
         if (isMounted) {
           setRawCachedPositions(cachedTotal);
           useSyncCoordinatorStore.getState().setCachedPositions(cachedTotal);
+
+          if (syncErrors.length > 0) {
+            const errorMessage = syncErrors.join('; ');
+            useSyncCoordinatorStore.getState().setPositionsSyncError(errorMessage);
+            setSyncError(errorMessage);
+          } else {
+            useSyncCoordinatorStore.getState().setPositionsSyncError(null);
+            setSyncError(null);
+            setLastSyncTime(Date.now());
+          }
+
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
-          
-          setLastSyncTime(Date.now());
         }
-      } catch (err) {
+      } catch (err: any) {
         LogManager.error('PositionHistory', 'Error syncing network positions:', err);
         if (isMounted) {
+          const errorMessage = err?.message || 'Error syncing position history';
+          setSyncError(errorMessage);
+          useSyncCoordinatorStore.getState().setPositionsSyncError(errorMessage);
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
@@ -215,5 +234,5 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
     setPositions(applyFilters(filtered));
   }, [rawCachedPositions, keys, period, exchange, searchTerm, useMockData]);
 
-  return { positions, setPositions, isLoading, isSyncing, syncMessage };
+  return { positions, setPositions, isLoading, isSyncing, syncMessage, syncError };
 }
