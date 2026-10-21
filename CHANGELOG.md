@@ -1,3 +1,10 @@
+# [2.14.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.13.0...v2.14.0) (2026-10-21)
+
+
+### Features
+
+* implement mandatory vault migration ([e9d9c2c](https://github.com/fapdev77/crypto-dashboard/commit/e9d9c2ccb5fe499ec9535ef10b118f515e7cac86))
+
 # [2.13.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.12.0...v2.13.0) (2026-10-20)
 
 
