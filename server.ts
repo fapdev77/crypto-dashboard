@@ -34,11 +34,6 @@ async function startServer() {
       // SSRF prevention: Domain validation (Allowlist)
       const validation = validateSafeUpstreamUrl(targetUrl, SSRF_VALIDATION_CONFIG);
 
-      const validation = validateSafeUpstreamUrl(targetUrl, {
-        allowedProtocols: ['https:'],
-        allowedDomains,
-      });
-
       if (!validation.isValid) {
         ServerLogger.error('Proxy', `SSRF-Block: rejected upstream '${targetUrl}' - ${validation.reason}`);
         return res.status(403).json({ error: `Forbidden: ${validation.reason}` });

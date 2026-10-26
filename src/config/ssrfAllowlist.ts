@@ -54,5 +54,7 @@ export const SSRF_VALIDATION_CONFIG = {
   allowedDomains: SSRF_ALLOWED_DOMAINS,
 };
 
+export { validateSafeUpstreamUrl } from '../utils/ssrfValidator';
+
 // Default export for convenience when used as options parameter
 export default SSRF_ALLOWED_DOMAINS;

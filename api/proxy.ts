@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ServerLogger } from '../src/utils/serverLogger';
-import { validateSafeUpstreamUrl } from '../src/utils/ssrfValidator';
+import { validateSafeUpstreamUrl, SSRF_VALIDATION_CONFIG } from '../src/config/ssrfAllowlist';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Configurar headers CORS seguros para Vercel
@@ -27,33 +27,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing targetUrl or method" });
     }
 
-    // SSRF prevention: Domain validation (Allowlist)
-    const allowedDomains = [
-      'api.bybit.com',
-      'api.bytick.com',
-      'api-testnet.bybit.com',
-      'api.bybit.nl',
-      'api.bybit.tr',
-      'api.bybit.kz',
-      'api.bybitgeorgia.ge',
-      'api.bybit.ae',
-      'api.bybit.eu',
-      'api.bybit.id',
-      'api.manepa.jp',
-      'api-testnet.manepa.jp',
-      'api.spark-fintech.com',
-      'api-testnet.spark-fintech.com',
-      'api.bitget.com',
-      'www.okx.com',
-      'api.okx.com',
-      'aws.okx.com',
-      'api.alternative.me',
-    ];
-
-    const validation = validateSafeUpstreamUrl(targetUrl, {
-      allowedProtocols: ['https:'],
-      allowedDomains,
-    });
+    // SSRF prevention: Consolidated Domain validation (Allowlist)
+    const validation = validateSafeUpstreamUrl(targetUrl, SSRF_VALIDATION_CONFIG);
 
     if (!validation.isValid) {
       ServerLogger.error('Vercel-Proxy', `SSRF-Block: rejected upstream '${targetUrl}' - ${validation.reason}`);
