@@ -3,7 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import fetch from "node-fetch"; // natively available globally in Node 18+ but let's use standard global fetch
 import { ServerLogger } from './src/utils/serverLogger';
-import { validateSafeUpstreamUrl } from './src/utils/ssrfValidator';
+import { validateSafeUpstreamUrl, SSRF_VALIDATION_CONFIG } from './src/config/ssrfAllowlist';
 
 async function startServer() {
   const app = express();
@@ -32,27 +32,7 @@ async function startServer() {
       }
 
       // SSRF prevention: Domain validation (Allowlist)
-      const allowedDomains = [
-        'api.bybit.com',
-        'api.bytick.com',
-        'api-testnet.bybit.com',
-        'api.bybit.nl',
-        'api.bybit.tr',
-        'api.bybit.kz',
-        'api.bybitgeorgia.ge',
-        'api.bybit.ae',
-        'api.bybit.eu',
-        'api.bybit.id',
-        'api.manepa.jp',
-        'api-testnet.manepa.jp',
-        'api.spark-fintech.com',
-        'api-testnet.spark-fintech.com',
-        'api.bitget.com',
-        'www.okx.com',
-        'api.okx.com',
-        'aws.okx.com',
-        'api.alternative.me',
-      ];
+      const validation = validateSafeUpstreamUrl(targetUrl, SSRF_VALIDATION_CONFIG);
 
       const validation = validateSafeUpstreamUrl(targetUrl, {
         allowedProtocols: ['https:'],

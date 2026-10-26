@@ -24,4 +24,4 @@ fable-method/
 *.local
 .vercel/
 .aistudio/
-.tmp
+tmp
