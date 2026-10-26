@@ -1,3 +1,10 @@
+# [2.15.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.14.0...v2.15.0) (2026-10-26)
+
+
+### Features
+
+* consolidate SSRF domain allowlist and enhance logging sanitization ([5a073d1](https://github.com/fapdev77/crypto-dashboard/commit/5a073d10715669ba72c10dd1b9cd8ef0f70ea6ae))
+
 # [2.14.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.13.0...v2.14.0) (2026-10-21)
 
 
