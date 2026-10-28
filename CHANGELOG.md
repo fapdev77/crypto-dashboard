@@ -1,3 +1,10 @@
+# [2.16.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.15.0...v2.16.0) (2026-10-28)
+
+
+### Features
+
+* **transactions:** add consolidated net change dashboard ([2856ff9](https://github.com/fapdev77/crypto-dashboard/commit/2856ff98a00fe446ba85cc20a48ee4178e953606))
+
 # [2.15.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.14.0...v2.15.0) (2026-10-26)
 
 
