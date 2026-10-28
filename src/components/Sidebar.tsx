@@ -89,9 +89,13 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       { id: 'transactions-history-bitget', label: 'Bitget Transactions', exchange: 'bitget' },
       { id: 'transactions-history-okx', label: 'OKX Transactions', exchange: 'okx' },
     ];
-    return exchanges
-      .filter(({ exchange }) => useMockData || activeExchanges.has(exchange))
-      .map(({ id, label }) => ({ id, label }));
+    const available = exchanges.filter(({ exchange }) => useMockData || activeExchanges.has(exchange));
+    if (available.length === 0) return [];
+
+    return [
+      { id: 'transactions-history-consolidated', label: 'Consolidated Net Change' },
+      ...available.map(({ id, label }) => ({ id, label })),
+    ];
   }, [activeExchanges, useMockData]);
 
   const navItems: NavItem[] = [

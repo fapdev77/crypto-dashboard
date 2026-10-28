@@ -43,6 +43,7 @@ const PnLBySymbol = React.lazy(() => import('./components/analytics/PnLBySymbol'
 const BybitTransactions = React.lazy(() => import('./components/transactions/BybitTransactions/BybitTransactions').then(m => ({ default: m.BybitTransactions })));
 const BitgetTransactions = React.lazy(() => import('./components/transactions/BitgetTransactions/BitgetTransactions').then(m => ({ default: m.BitgetTransactions })));
 const OkxTransactions = React.lazy(() => import('./components/transactions/OkxTransactions/OkxTransactions').then(m => ({ default: m.OkxTransactions })));
+const ConsolidatedTransactions = React.lazy(() => import('./components/transactions/ConsolidatedTransactions/ConsolidatedTransactions').then(m => ({ default: m.ConsolidatedTransactions })));
 const FundingDashboard = React.lazy(() => import('./components/analytics/FundingFees/FundingDashboard').then(m => ({ default: m.FundingDashboard })));
 const HedgeProDashboard = React.lazy(() => import('./components/HedgePro/HedgeProDashboard').then(m => ({ default: m.HedgeProDashboard })));
 const ReportsDashboard = React.lazy(() => import('./components/analytics/ReportsDashboard').then(m => ({ default: m.ReportsDashboard })));
@@ -207,7 +208,8 @@ export default function App() {
   if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
   if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
   if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
-  if (activeTab.startsWith('transactions-history-')) activeTabName = 'Transactions History';
+  if (activeTab === 'transactions-history-consolidated') activeTabName = 'Consolidated Net Change';
+  else if (activeTab.startsWith('transactions-history-')) activeTabName = 'Transactions History';
   if (activeTab === 'analytics-hedge-pro') activeTabName = 'Hedge Pro';
   else if (activeTab === 'analytics-market-advanced') activeTabName = 'Market Analytics';
   else if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
@@ -280,6 +282,7 @@ export default function App() {
                       {activeTab === 'positions-history' && <ClosedPositions />}
                       {activeTab === 'analytics-market-advanced' && <MarketAnalyticsDashboard />}
                       {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
+                      {activeTab === 'transactions-history-consolidated' && <ConsolidatedTransactions />}
                       {activeTab === 'transactions-history-bybit' && <BybitTransactions />}
                       {activeTab === 'transactions-history-bitget' && <BitgetTransactions />}
                       {activeTab === 'transactions-history-okx' && <OkxTransactions />}
