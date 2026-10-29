@@ -1,6 +1,6 @@
 # 📘 User Manual - Crypto Portfolio Manager (CPM)
 
-> **Application Version:** 2.13.0  
+> **Application Version:** 2.16.0  
 > **Supported Exchanges:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Security Architecture:** Zero-Trust Client-Side (Web Crypto PBKDF2 + AES-GCM 256-bit Encryption)
 
@@ -17,7 +17,7 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [Bybit Regional Endpoints & Origin Headers](#bybit-regional-endpoints--origin-headers)
    - [Bitget: Classic vs UTA Selection, Sub-Accounts & Funding](#bitget-classic-vs-uta-selection-sub-accounts--funding)
    - [OKX: Dual-Wallet (Trading & Funding Accounts)](#okx-dual-wallet-trading--funding-accounts)
-3. [Global Master Password & Encrypted Backups](#3-global-master-password--encrypted-backups)
+3. [Global Master Password, Encrypted Backups & Mandatory Vault Migration](#3-global-master-password-encrypted-backups--mandatory-vault-migration)
 4. [Simulation Mode (Mock Data)](#4-simulation-mode-mock-data)
 5. [Integrated Log Terminal (Connection Logs)](#5-integrated-log-terminal-connection-logs)
 6. [Synchronization, Retention & Cache Settings](#6-synchronization-retention--cache-settings)
@@ -29,8 +29,14 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [📂 Closed Positions (Historical Positions & Analytics)](#-closed-positions-historical-positions--analytics)
    - [📝 Order Reports (Open Orders & Order History)](#-order-reports-open-orders--order-history)
    - [🔄 Trade History (Fill Executions & Fee Auditing)](#-trade-history-fill-executions--fee-auditing)
-   - [📜 Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)](#-multi-exchange-transactions-log-bybit-bitget--okx-transactions)
+   - [📜 Consolidated Net Change & Multi-Exchange Transactions](#-consolidated-net-change--multi-exchange-transactions)
+   - [📊 Portfolio Performance (Evolution Analytics & Institutional Metrics)](#-portfolio-performance-evolution-analytics--institutional-metrics)
    - [📈 Market Analytics (Quantitative Intelligence & Derivatives Flow)](#-market-analytics-quantitative-intelligence--derivatives-flow)
+   - [📊 PnL by Symbol (Profit & Loss Distribution)](#-pnl-by-symbol-profit--loss-distribution)
+   - [💸 Funding Fees Dashboard (Cross-Exchange Analytics)](#-funding-fees-dashboard-cross-exchange-analytics)
+   - [📑 Reports (Operational & Executive Export)](#-reports-operational--executive-export)
+   - [⚡ API Tester (REST & WebSocket Diagnostics)](#-api-tester-rest--websocket-diagnostics)
+   - [👁️ Privacy Mode](#-privacy-mode)
    - [📊 PnL by Symbol (Profit & Loss Distribution)](#-pnl-by-symbol-profit--loss-distribution)
    - [💸 Funding Fees Dashboard (Cross-Exchange Analytics)](#-funding-fees-dashboard-cross-exchange-analytics)
    - [📑 Reports (Operational & Executive Export)](#-reports-operational--executive-export)
@@ -218,8 +224,26 @@ Promoted to a **dedicated top-level module** in the sidebar, tailored for fundin
 ### 🔄 Trade History (Fill Executions & Fee Auditing)
 - Detailed trade execution log with fill price, contract size, Maker vs Taker liquidity flag, and exact fee currency deducted.
 
-### 📜 Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)
-Comprehensive accounting ledger and cash flow reconciliation:
+### 📜 Consolidated Net Change & Multi-Exchange Transactions
+
+#### 🔹 Consolidated Net Change (Cross-Exchange Executive Dashboard)
+Positioned as the **first item at the top of the Transactions History submenu**, this dashboard provides a unified view of your net capital movement and cash flow across all connected exchanges:
+- **4 Consolidated Macro KPI Cards**:
+  - **Total Transactions**: Total number of normalized ledger events across all accounts.
+  - **Total Funding**: Consolidated net funding fees earned (credits) or paid (debits).
+  - **Total Fees**: Total brokerage trading fees and transaction charges.
+  - **Consolidated Net Change**: Total net cash flow variation in USD (`Net Change = Cash Flow + Funding - Fees`), highlighting overall profitability.
+- **Hierarchical Two-Tier Grouping**:
+  - **Tier 1 (By Exchange)**: Bybit, Bitget, and OKX summaries with total transactions, total fees, total funding, and USD Net Change. Each exchange group can be individually collapsed or expanded.
+  - **Tier 2 (By Currency/Asset)**: Under each exchange, individual assets (BTC, ETH, SOL, USDT, etc.) are itemized with trade volume, deposit and withdrawal counts, fees paid, funding received, and net change in both the **base currency** and equivalent **USD**.
+- **Sync Coordination & Privacy Controls**:
+  - Integrated sync controls with real-time feedback and SWR cache invalidation.
+  - Full **Privacy Mode** compatibility, replacing nominal values with secure masks.
+- **Comprehensive Multi-Format Export**:
+  - Instant export to **CSV**, formatted **Excel (.xlsx)**, or professional **PDF** audit reports with executive summaries.
+
+#### 🔹 Exchange-Specific Transactions Log (Bybit, Bitget & OKX Transactions)
+Comprehensive accounting ledger and cash flow reconciliation per broker:
 - **Dynamic Navigation**: Sidebar transactions section automatically reflects only the exchanges that currently have active keys or simulation data.
 - **Progressive Deep Sync**: 7-day chunked backfills with IndexedDB checkpoints for extensive historical depth (Bybit UTA up to 2 years; OKX recent and 3-month archive; Bitget Classic & UTA).
 - **Universal Transaction Mapper (10 Normalized Categories)**:
@@ -235,6 +259,65 @@ Comprehensive accounting ledger and cash flow reconciliation:
   10. *All Types* (Unfiltered ledger)
 - **Details Modal with Total Stats Summary**: Clicking a transaction opens a detailed modal with an executive top summary showing total volume, net fees, and net change.
 - **Cash Flow Reconciliation**: Mathematical validation: `Net Change = Cash Flow + Funding - Fees`.
+
+---
+
+### 📊 Portfolio Performance (Evolution Analytics & Institutional Metrics)
+Located at the top of the **Analytics** menu, this quantitative dashboard implements the executive portfolio evolution model and institutional metrics glossary:
+
+#### 1. Filter Controls & Denomination
+- **Denomination Selector**: Toggle between the native base asset (e.g., *BTC Native*) or consolidated **USD** portfolio denomination.
+- **Time Periods**: Ultra-fast default initial window of **7 Days**, with presets for **30 Days**, **90 Days**, **180 Days**, **1 Year**, and **All Time**.
+- **Exchange & Account Filters**: Filter by specific exchange connection or evaluate cross-exchange combined portfolios.
+- **Export Report**: Export full metrics, tables, and distribution breakdowns to CSV, Excel, or PDF.
+
+#### 2. Balance Evolution & Cash Flow (Area Chart)
+- **Dual Area Curve**:
+  - **Balance Evolution**: Real-time line reflecting total asset portfolio value over time.
+  - **Cumulative Net Result / Net Change**: Net cumulative profit/loss trajectory, separating trading alpha from inbound/outbound capital deposits.
+- **Interactive Tooltips**: Date, balance, daily delta, and cumulative return at each timestamp.
+
+#### 3. Temporal Performance Breakdown
+- **Monthly PnL**: Vertical bar chart highlighting profit and loss per calendar month (green for profit, red for loss).
+- **Day of Week PnL**: Statistical analysis of performance grouped from Monday to Sunday, revealing day-of-week seasonality and alpha patterns.
+
+#### 4. Price Milestone Analysis
+- Segmented performance analysis relative to the underlying asset's price levels:
+- **Configurable Intervals**: Intelligent asset-specific presets (e.g., $1,000 for BTC, $100 for ETH) or custom interval inputs.
+- **Return by Price Band**: Identifies at which price intervals strategy performance yielded maximum return.
+
+#### 5. Primary Results & Executive Return
+- **Invested Capital**: Baseline capital committed to operations.
+- **Final Balance**: Net portfolio value at the end of the selected period.
+- **Gross vs. Net Result**: Clear segregation between operational gains and post-fee results.
+- **Net ROI %**: Net percentage return on invested capital.
+- **Annualized Return**: Compounded annualized rate of return for institutional comparison.
+
+#### 6. Operations & Fee Deconstruction (Operations & Fees)
+- **Total Operations Count**: Transaction frequency in the selected period.
+- **Trades vs. Account Transfers**: Clear distinction between active trading transactions and deposit/withdrawal transfers.
+- **Fee Breakdown**: Deconstructs Trading Fees, Funding Fees, and Transfer charges.
+- **Fee Drag Ratio**: Percentage of gross trading performance absorbed by transaction and financing fees.
+
+#### 7. Advanced Risk & Consistency Metrics
+- **Profit Factor**: Ratio of gross profits to gross losses (`Gross Gains / |Gross Losses|`), tagged with qualitative badges:
+  - *Excellent* (> 2.0)
+  - *Good* (1.5 - 2.0)
+  - *Acceptable* (1.1 - 1.5)
+  - *Poor* (< 1.1)
+- **Daily Win Rate**: Percentage of days with positive return vs. total days evaluated.
+- **Consistency Index**: Statistical measurement of daily return dispersion and stability:
+  - *High Consistency*: Stable daily returns with low tail risk.
+  - *Moderate Consistency*: Balanced performance with controlled dispersion.
+  - *High Dispersion*: High variance with dependency on few outlier sessions.
+
+#### 8. High-Performance Architecture
+- Defaults to 7-day window for instant rendering without lag.
+- Downsamples long series to maximum 80 data points for responsive interaction.
+- Recharts SVG animations disabled (`isAnimationActive={false}`) for immediate tab and filter switches.
+- Granular Zustand subscriptions and memoized sub-sections (`React.memo`).
+
+---
 
 ### 📈 Market Analytics (Quantitative Intelligence & Derivatives Flow)
 Cross-exchange derivatives intelligence terminal:
@@ -357,7 +440,7 @@ To ensure non-USDT funding balances and smaller cap tokens on Bitget and OKX are
 - **Exponential Backoff with Jitter for Network Drops**: Transient connectivity drops retry on an exponential delay schedule (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) with random jitter, stopping after 5 attempts via circuit breaker.
 - **Global Error Boundary**: Unhandled React rendering errors trigger an intuitive **Safe Recovery** screen with error stack diagnostics and single-click recovery buttons: **Reload Dashboard** and **Clear Cache & Reload**.
 - **Instant Scroll Position Reset**: Tab transitions automatically reset scroll positions to top-left (`useLayoutEffect`), ensuring optimal viewing upon switching views.
-- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **61 test files with 631 unit and integration tests**.
+- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **65 test files with 660 unit and integration tests**.
 
 ---
 

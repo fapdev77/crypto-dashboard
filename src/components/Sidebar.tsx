@@ -129,6 +129,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       : []),
     {
       id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
+        { id: 'analytics-portfolio-performance', label: 'Portfolio Performance' },
         { id: 'analytics-market-advanced', label: 'Market Analytics' },
         { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
         { id: 'analytics-funding', label: 'Funding Fees' }

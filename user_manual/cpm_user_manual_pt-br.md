@@ -1,6 +1,6 @@
 # 📘 Manual do Usuário - Crypto Portfolio Manager (CPM)
 
-> **Versão da Aplicação:** 2.13.0  
+> **Versão da Aplicação:** 2.16.0  
 > **Plataformas Suportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitetura de Segurança:** Zero-Trust Client-Side (Criptografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -17,7 +17,7 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
    - [Configurações Regionais e Origem Bybit](#configurações-regionais-e-origem-bybit)
    - [Bitget: Seleção Classic vs UTA, Subcontas e Funding](#bitget-seleção-classic-vs-uta-subcontas-e-funding)
    - [OKX: Dual-Wallet (Trading e Funding)](#okx-dual-wallet-trading-e-funding)
-3. [Senha Mestra Global e Backups Criptografados](#3-senha-mestra-global-e-backups-criptografados)
+3. [Senha Mestra Global, Backups Criptografados e Migração Mandatória de Vault](#3-senha-mestra-global-backups-criptografados-e-migração-mandatória-de-vault)
 4. [Modo Simulação (Mock Data)](#4-modo-simulação-mock-data)
 5. [Terminal de Logs Integrado (Connection Logs)](#5-terminal-de-logs-integrado-connection-logs)
 6. [Sincronização, Retenção e Configurações de Cache (Settings)](#6-sincronização-retenção-e-configurações-de-cache-settings)
@@ -29,8 +29,14 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
    - [📂 Closed Positions (Histórico de Posições e Analytics)](#-closed-positions-histórico-de-posições-e-analytics)
    - [📝 Order Reports (Ordens Abertas e Histórico de Ordens)](#-order-reports-ordens-abertas-e-histórico-de-ordens)
    - [🔄 Trade History (Histórico de Execuções)](#-trade-history-histórico-de-execuções)
-   - [📜 Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)](#-histórico-de-transações-multi-corretora-bybit-bitget-e-okx-transactions)
+   - [📜 Histórico de Transações e Variação Líquida Consolidada (Consolidated Net Change & Transactions)](#-histórico-de-transações-e-variação-líquida-consolidada-consolidated-net-change--transactions)
+   - [📊 Portfolio Performance (Evolução Patrimonial e Métricas Institucionais)](#-portfolio-performance-evolução-patrimonial-e-métricas-institucionais)
    - [📈 Market Analytics (Inteligência Quantitativa e Derivativos)](#-market-analytics-inteligência-quantitativa-e-derivativos)
+   - [📊 PnL by Symbol (Lucros e Perdas por Símbolo)](#-pnl-by-symbol-lucros-e-perdas-por-símbolo)
+   - [💸 Dashboard de Taxas de Financiamento (Funding Fees)](#-dashboard-de-taxas-de-financiamento-funding-fees)
+   - [📑 Reports (Exportação de Relatórios Gerenciais)](#-reports-exportação-de-relatórios-gerenciais)
+   - [⚡ API Tester (Testador de Conexões e Endpoints)](#-api-tester-testador-de-conexões-e-endpoints)
+   - [👁️ Modo Privacidade (Privacy Mode)](#-modo-privacidade-privacy-mode)
    - [📊 PnL by Symbol (Lucros e Perdas por Símbolo)](#-pnl-by-symbol-lucros-e-perdas-por-símbolo)
    - [💸 Dashboard de Taxas de Financiamento (Funding Fees)](#-dashboard-de-taxas-de-financiamento-funding-fees)
    - [📑 Reports (Exportação de Relatórios Gerenciais)](#-reports-exportação-de-relatórios-gerenciais)
@@ -218,8 +224,26 @@ Promovido a um **módulo de navegação de primeiro nível** no menu lateral, pr
 ### 🔄 Trade History (Histórico de Execuções)
 - Acompanhe cada execução de ordem preenchida (fills) com registro do preço executado, tamanho na moeda base, papel na liquidez (Maker vs Taker) e moeda exata utilizada para cobrança de taxas.
 
-### 📜 Histórico de Transações Multi-Corretora (Bybit, Bitget e OKX Transactions)
-Módulos avançados de auditoria contábil e conciliação de fluxo de caixa:
+### 📜 Histórico de Transações e Variação Líquida Consolidada (Consolidated Net Change & Transactions)
+
+#### 🔹 Consolidated Net Change (Painel Executivo Unificado)
+Posicionado estrategicamente como o **primeiro item do submenu Transactions History**, este painel resolve o desafio de auditar o fluxo de caixa agregado entre múltiplas contas e corretoras:
+- **4 Cards Macro no Topo (Cross-Exchange KPIs)**:
+  - **Total Transactions**: Contagem global de transações registradas no período.
+  - **Total Funding**: Soma líquida de todas as taxas de financiamento recebidas (crédito) e pagas (débito).
+  - **Total Fees**: Custo acumulado total com taxas de corretagem (trading fees) e transferências.
+  - **Consolidated Net Change**: Variação líquida consolidada de capital em USD (`Net Change = Cashflow + Funding - Fees`), destacando com clareza a rentabilidade do período.
+- **Agrupamento Hierárquico em Cascata**:
+  - **1º Nível (Corretora)**: Consolida Bybit, Bitget e OKX com seus respectivos totais de transações, taxas, funding e Net Change em USD. Permite expandir e recolher cada exchange individualmente.
+  - **2º Nível (Ativo/Moeda)**: Dentro de cada corretora, os ativos (BTC, ETH, SOL, USDT, etc.) são desdobrados com métricas completas: contagem de operações, volume de trades, depósitos, saques, taxas pagas, funding e a variação líquida tanto na **moeda nativa** quanto convertida em **USD**.
+- **Controles de Sincronismo e Privacidade**:
+  - Botão de sincronização manual com feedback de progresso e respeito aos dados cacheados via SWR.
+  - Compatibilidade nativa com o **Modo Privacidade**, ofuscando montantes nominais sem prejudicar a usabilidade.
+- **Exportação Multiformato (Export Action)**:
+  - Exporte o relatório sumarizado completo nos formatos **CSV**, **Excel (.xlsx)** ou **PDF** formatado com cabeçalho institucional.
+
+#### 🔹 Extratos Transacionais Específicos (Bybit, Bitget e OKX Transactions)
+Módulos avançados de auditoria contábil individual por corretora:
 - **Navegação Dinâmica**: A seção de transações no menu lateral se adapta automaticamente, exibindo apenas as abas correspondentes às corretoras com contas ativas ou modo simulação.
 - **Sincronização Profunda Progressiva**: Backfill estruturado em blocos de 7 dias com checkpoints no IndexedDB para cobertura de longos períodos (Bybit UTA até 2 anos; OKX recente + arquivo de 3 meses; Bitget Classic e UTA).
 - **Mapeador Universal (Universal Transaction Mapper — 10 Categorias)**:
@@ -235,6 +259,66 @@ Módulos avançados de auditoria contábil e conciliação de fluxo de caixa:
   10. *All Types* (Visão integral)
 - **Modal de Detalhes com Sumário de Totais (Total Stats Summary)**: Ao abrir o modal de detalhes de uma transação, um cabeçalho resumido exibe o volume financeiro total, taxas líquidas e variação patrimonial associada.
 - **Cálculo Real de Fluxo de Caixa**: Fórmulas rigorosas de conciliação: `Variação = Cashflow + Funding - Fees`.
+
+---
+
+### 📊 Portfolio Performance (Evolução Patrimonial e Métricas Institucionais)
+Localizado no topo do menu **Analytics**, este painel quantitativo foi desenvolvido estritamente a partir do modelo executivo de performance e do glossário analítico institucional:
+
+#### 1. Barra de Filtros e Seletores
+- **Denominação Flexível**: Permite alternar entre a moeda nativa de um ativo selecionado (ex: *BTC Native*) ou a carteira consolidada em **USD**.
+- **Janelas Temporais**: Padrão inicial ultra-rápido de **7 Dias**, com alternativas para **30 Dias**, **90 Dias**, **180 Dias**, **1 Ano** e **All Time**.
+- **Seletores de Corretora e Conta**: Filtre por corretora específica ou visualize todas de forma agregada.
+- **Exportação do Relatório de Performance**: Botão no topo para exportar o conjunto completo de métricas e tabelas em CSV, Excel ou PDF.
+
+#### 2. Evolução de Saldo e Fluxo de Caixa (Balance Evolution)
+- **Gráfico de Área Dual**: Plota simultaneamente duas trajetórias essenciais:
+  - **Balance Evolution**: Curva contínua que representa o valor patrimonial total da carteira ao longo do tempo.
+  - **Cumulative Net Result / Net Change**: Curva da variação líquida acumulada, permitindo isolar os ganhos operacionais reais de aportes e saques de capital.
+- **Tooltips Interativos**: Apresentam data, saldo, variação diária e resultado acumulado em cada ponto temporal.
+
+#### 3. Desempenho Temporal (Temporal Performance)
+- **PnL Mensal**: Gráfico de barras verticais destacando a lucratividade de cada mês calendário (barras verdes para lucro, vermelhas para prejuízo).
+- **PnL por Dia da Semana**: Decomposição estatística dos resultados entre Segunda-feira e Domingo, revelando sazonalidades e os dias estatisticamente mais rentáveis da estratégia.
+
+#### 4. Marcos de Preço (Price Milestone Breakdown)
+- Segmenta os resultados operacionais por faixas de preço de cotação do ativo base:
+- **Intervalos Configuráveis**: Presets inteligentes ajustados por criptoativo (ex: $1.000 para BTC, $100 para ETH) ou intervalo personalizado.
+- **Visualização de Retorno por Nível**: Identifica em quais patamares de preço suas operações capturaram maior valor financeiro.
+
+#### 5. Resultados Primários e Retorno (Primary Results)
+Quadro de cartões com os principais indicadores executivos:
+- **Capital Investido**: Base de capital alocada para as operações.
+- **Saldo Final**: Patrimônio líquido apurado no encerramento da janela analisada.
+- **Resultado Bruto vs Resultado Líquido**: Discrimina o ganho operacional total antes e depois do desconto de taxas e financiamentos.
+- **Net ROI %**: Retorno sobre o investimento líquido percentual.
+- **Taxa Anualizada (Annualized Return)**: Projeção proporcional da rentabilidade acumulada anualizada.
+
+#### 6. Operações e Decomposição de Taxas (Operations & Fees)
+- **Contagem Total de Operações**: Quantidade de transações executadas no período.
+- **Trades vs Movimentações de Conta**: Separação clara entre eventos de negociação ativa e transferências/depósitos/saques.
+- **Composição de Custos**: Discrimina taxas de negociação (Trading Fees), taxas de financiamento (Funding Fees) e taxas de transferência.
+- **Fee Drag Ratio (Arrasto de Taxas)**: Percentual do resultado bruto consumido exclusivamente por custos operacionais e de financiamento.
+
+#### 7. Métricas Avançadas de Risco e Consistência (Advanced Performance)
+- **Profit Factor**: Razão matemática entre os Ganhos Brutos e as Perdas Brutas (`Ganhos / |Perdas|`). Avaliado com selos conceituais:
+  - *Excellent* (> 2.0)
+  - *Good* (1.5 a 2.0)
+  - *Acceptable* (1.1 a 1.5)
+  - *Poor* (< 1.1)
+- **Win Rate Diário**: Proporção percentual de dias em que o saldo ou PnL fechou positivo versus o total de dias operados.
+- **Consistency Index (Índice de Consistência)**: Avaliação estatística da dispersão e estabilidade dos retornos diários normalizados:
+  - *High Consistency*: Retornos uniformes e baixo risco de cauda.
+  - *Moderate Consistency*: Desempenho equilibrado com dispersão controlada.
+  - *High Dispersion*: Elevada volatilidade diária com forte dependência de poucos dias atípicos.
+
+#### 8. Arquitetura de Desempenho Instantâneo
+- Inicialização padrão com janela de 7 dias para latência imperceptível.
+- Downsampling algorítmico limitando a densidade dos gráficos a no máximo 80 pontos.
+- Animações pesadas de SVG desativadas para transições imediatas entre filtros.
+- Micro-stores desacopladas com seletores granulares e memoização em bloco (`React.memo`).
+
+---
 
 ### 📈 Market Analytics (Inteligência Quantitativa e Derivativos)
 Terminal analítico cross-exchange que consolida dados de derivativos em tempo real:
@@ -357,7 +441,7 @@ Para garantir que ativos na carteira de financiamento (Spot/Funding) ou moedas a
 - **Backoff Exponencial com Jitter para Falhas de Rede**: Em instabilidades transitórias de conexão, o sistema re-tenta com intervalos progressivos (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) adicionados de variação aleatória (jitter), limitado a 5 tentativas antes de acionar o circuit breaker.
 - **Global Error Boundary**: Se ocorrer uma falha inesperada na árvore do React, a aplicação não quebra em tela branca. Uma tela de proteção graciosa (**Safe Recovery**) oferece diagnóstico do incidente e dois botões de restauração em um clique: **Reload Dashboard** e **Clear Cache & Reload**.
 - **Reset Automático de Scroll**: Ao navegar entre abas no menu lateral, o leitor de layout do React reseta instantaneamente a rolagem para o topo da página, garantindo foco imediato nas informações principais.
-- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **61 arquivos de teste com 631 testes unitários e de integração**.
+- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **65 arquivos de teste com 660 testes unitários e de integração**.
 
 ---
 

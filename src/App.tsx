@@ -44,6 +44,7 @@ const BybitTransactions = React.lazy(() => import('./components/transactions/Byb
 const BitgetTransactions = React.lazy(() => import('./components/transactions/BitgetTransactions/BitgetTransactions').then(m => ({ default: m.BitgetTransactions })));
 const OkxTransactions = React.lazy(() => import('./components/transactions/OkxTransactions/OkxTransactions').then(m => ({ default: m.OkxTransactions })));
 const ConsolidatedTransactions = React.lazy(() => import('./components/transactions/ConsolidatedTransactions/ConsolidatedTransactions').then(m => ({ default: m.ConsolidatedTransactions })));
+const PortfolioPerformance = React.lazy(() => import('./components/analytics/PortfolioPerformance/PortfolioPerformance').then(m => ({ default: m.PortfolioPerformance })));
 const FundingDashboard = React.lazy(() => import('./components/analytics/FundingFees/FundingDashboard').then(m => ({ default: m.FundingDashboard })));
 const HedgeProDashboard = React.lazy(() => import('./components/HedgePro/HedgeProDashboard').then(m => ({ default: m.HedgeProDashboard })));
 const ReportsDashboard = React.lazy(() => import('./components/analytics/ReportsDashboard').then(m => ({ default: m.ReportsDashboard })));
@@ -210,7 +211,8 @@ export default function App() {
   if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
   if (activeTab === 'transactions-history-consolidated') activeTabName = 'Consolidated Net Change';
   else if (activeTab.startsWith('transactions-history-')) activeTabName = 'Transactions History';
-  if (activeTab === 'analytics-hedge-pro') activeTabName = 'Hedge Pro';
+  if (activeTab === 'analytics-portfolio-performance') activeTabName = 'Portfolio Performance';
+  else if (activeTab === 'analytics-hedge-pro') activeTabName = 'Hedge Pro';
   else if (activeTab === 'analytics-market-advanced') activeTabName = 'Market Analytics';
   else if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
   if (activeTab === 'reports') activeTabName = 'Reports';
@@ -280,6 +282,7 @@ export default function App() {
                       {activeTab === 'dashboard' && <Dashboard />}
                       {activeTab === 'positions-open' && <OpenPositions />}
                       {activeTab === 'positions-history' && <ClosedPositions />}
+                      {activeTab === 'analytics-portfolio-performance' && <PortfolioPerformance />}
                       {activeTab === 'analytics-market-advanced' && <MarketAnalyticsDashboard />}
                       {activeTab === 'analytics-pnl-symbol' && <PnLBySymbol />}
                       {activeTab === 'transactions-history-consolidated' && <ConsolidatedTransactions />}

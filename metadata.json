@@ -1,6 +1,6 @@
 {
   "name": "Crypto Portfolio Manager",
-  "description": "Unified cryptocurrency portfolio manager and dashboard supporting Bitget, Bybit, and OKX. Version 2.13.0 featuring PIKA quantitative AI auditor, consolidated balances, active positions, Hedge Pro risk analytics, order reports, execution history, symbol-level PnL, funding fees, and secure real-time transaction logs.",
+  "description": "Unified cryptocurrency portfolio manager and institutional analytics terminal supporting Bitget, Bybit, and OKX. Version 2.16.0 featuring Portfolio Performance analytics, Consolidated Net Change auditing, PIKA quantitative AI auditor, consolidated balances, active positions, Hedge Pro risk analytics, order reports, execution history, symbol-level PnL, funding fees, and secure real-time transaction logs.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
