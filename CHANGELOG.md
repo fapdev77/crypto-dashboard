@@ -1,3 +1,10 @@
+# [2.17.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.16.0...v2.17.0) (2026-10-29)
+
+
+### Features
+
+* **new:** Implemented portfolio performance analytics component and bump version to 2.16.0 ([87d18ec](https://github.com/fapdev77/crypto-dashboard/commit/87d18ec3bb9b2367099378e1f3d8be042b13dcfe))
+
 # [2.16.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.15.0...v2.16.0) (2026-10-28)
 
 
