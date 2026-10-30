@@ -8,7 +8,7 @@ import { BybitTransactionService } from '../services/bybit/BybitTransactionServi
 import { getBybitTxLogCache } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
 import { fetchTokenUsdPrice } from './useTokenUsdPrice';
-import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
+import { getStartOfTodayInMs, resolvePeriodDateRange } from '../utils/dateTimeHelper';
 import Big from 'big.js';
 
 export interface TxFilters {
@@ -17,7 +17,9 @@ export interface TxFilters {
   type: string;         // 'All' | 'TRADE' | 'SETTLEMENT' | ...
   currency: string;     // 'All' | 'USDT' | 'USDC' | 'BTC' | ...
   accountId: string;    // 'All' or connectionId
-  timePeriod: number;   // ms
+  timePeriod: number | string; // ms (0 = All Time), 'mtd', 'ytd', 'custom'
+  customStartDate?: string;
+  customEndDate?: string;
 }
 
 const defaultFilters: TxFilters = {
@@ -124,19 +126,11 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
 
   // Apply filters
   const filteredEntries = useMemo(() => {
-    let startTime: number | undefined;
-    let endTime: number | undefined;
-    const now = Date.now();
-
-    // timePeriod === 0 means "All Time" — no time filter
-    if (filters.timePeriod > 0) {
-      if (filters.timePeriod === 24 * 60 * 60 * 1000) {
-        startTime = getStartOfTodayInMs();
-      } else {
-        startTime = now - filters.timePeriod;
-      }
-      endTime = now;
-    }
+    const { startTime, endTime } = resolvePeriodDateRange(
+      filters.timePeriod,
+      filters.customStartDate,
+      filters.customEndDate
+    );
 
     return BybitTransactionService.filterEntries(entries, {
       search: filters.search || undefined,
@@ -144,8 +138,8 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
       type: filters.type.toLowerCase() !== 'all' ? filters.type : undefined,
       currency: filters.currency.toLowerCase() !== 'all' ? filters.currency : undefined,
       accountId: filters.accountId.toLowerCase() !== 'all' ? filters.accountId : undefined,
-      startTime,
-      endTime,
+      startTime: startTime ?? undefined,
+      endTime: endTime ?? undefined,
     });
   }, [entries, filters]);
 
@@ -259,7 +253,7 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
     isSyncing: syncStore.isBybitTxSyncing,
     isCalculatingUsd,
     progress: syncStore.bybitTxProgress,
-    error,
+    error: error || syncStore.bybitTxSyncError,
     stats,
     tokenRates,
   };

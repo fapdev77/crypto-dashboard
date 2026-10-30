@@ -12,13 +12,7 @@ interface Props {
 
 const ORDER_TYPES = ['All', 'LIMIT', 'MARKET', 'TP', 'SL', 'CONDITIONAL'];
 const STATUS_OPTIONS = ['All', 'FILLED', 'CANCELLED', 'PARTIALLY_FILLED', 'REJECTED'];
-const TIME_PERIODS = [
-  { label: 'Today', ms: 24 * 60 * 60 * 1000 },
-  { label: '7 Days', ms: 7 * 24 * 60 * 60 * 1000 },
-  { label: '14 Days', ms: 14 * 24 * 60 * 60 * 1000 },
-  { label: '30 Days', ms: 30 * 24 * 60 * 60 * 1000 },
-  { label: '90 Days', ms: 90 * 24 * 60 * 60 * 1000 },
-];
+import { TIME_PERIOD_OPTIONS } from '../../../utils/dateTimeHelper';
 
 export function OrderFilters({ filters, setFilters, showPeriod = false, showStatusFilter = false }: Props) {
   const { keys } = useApiKeysStore();
@@ -58,7 +52,7 @@ export function OrderFilters({ filters, setFilters, showPeriod = false, showStat
   const accountConfig = {
     value: filters.accountId,
     onChange: (val: string) => setFilters(p => ({ ...p, accountId: val })),
-    options: activeKeys.map(k => ({ id: k.id, label: k.label || k.exchange, exchange: k.exchange })),
+    options: activeKeys.map(k => ({ id: k.id, label: k.label || k.exchange, exchange: k.exchange, accountType: k.accountType })),
     disabled: filters.exchange === 'All',
     labelAll: 'All Accounts',
   };
@@ -99,8 +93,21 @@ export function OrderFilters({ filters, setFilters, showPeriod = false, showStat
   const periodConfig = showPeriod
     ? {
         value: String(filters.timePeriod),
-        onChange: (val: any) => setFilters(p => ({ ...p, timePeriod: Number(val) })),
-        options: TIME_PERIODS.map(tp => ({ value: String(tp.ms), label: tp.label })),
+        onChange: (val: any) => setFilters(p => ({
+          ...p,
+          timePeriod: val,
+          customStartDate: val === 'custom' ? p.customStartDate : undefined,
+          customEndDate: val === 'custom' ? p.customEndDate : undefined,
+        })),
+        options: TIME_PERIOD_OPTIONS.map(tp => ({ value: tp.value, label: tp.label, tooltip: tp.tooltip, isCustom: tp.isCustom })),
+        customStartDate: filters.customStartDate,
+        customEndDate: filters.customEndDate,
+        onCustomDateChange: (start: string, end: string) => setFilters(p => ({
+          ...p,
+          timePeriod: 'custom',
+          customStartDate: start,
+          customEndDate: end,
+        })),
       }
     : undefined;
 

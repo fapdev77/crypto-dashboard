@@ -15,6 +15,7 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { Pagination } from '../../ui/Pagination';
 import { usePagination } from '../../../hooks/usePagination';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
+import { resolvePeriodDateRange } from '../../../utils/dateTimeHelper';
 
 export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -62,8 +63,13 @@ export function OrderHistory() {
     const fetchFunding = async () => {
       let total = 0;
       const now = Date.now();
-      const start = now - filters.timePeriod;
-      const end = now;
+      const { startTime, endTime } = resolvePeriodDateRange(
+        filters.timePeriod,
+        filters.customStartDate,
+        filters.customEndDate
+      );
+      const start = startTime ?? (now - 7 * 24 * 60 * 60 * 1000);
+      const end = endTime ?? now;
 
       // Helper to lazily fetch prices for non-USD currencies if needed
       const priceCache: Record<string, number> = {};
@@ -161,7 +167,11 @@ export function OrderHistory() {
           if (o.exchange === 'bybit') {
             // Bybit inverse: o.value is in COIN. Multiply by price to get USD value
             valUsd = o.value && o.value > 0 && p > 0 ? Number(new Big(o.value).times(p)) : o.filledQty;
-          } else if (o.value && o.value > 0 && o.exchange !== 'bitget') {
+          } else if (o.exchange === 'bitget') {
+            // Bitget inverse: filledQty is contracts in USD. raw quoteVolume is USD volume if available
+            const rawQuoteVol = o.raw?.quoteVolume ? parseFloat(o.raw.quoteVolume) : 0;
+            valUsd = rawQuoteVol > 0 ? rawQuoteVol : (o.value && o.value > 0 && o.value !== o.filledQty * p ? o.value : o.filledQty);
+          } else if (o.value && o.value > 0) {
             valUsd = o.filledQty > 0 && o.filledQty !== o.qty ? (p > 0 ? Number(new Big(o.filledQty).times(p)) : 0) : o.value;
           } else if (!qtyIsCoin) {
             valUsd = o.filledQty; // Qty is mostly in USD already
@@ -234,7 +244,7 @@ export function OrderHistory() {
             <History className="w-5 h-5 text-[#2F6BFF]" />
             Orders History
           </h2>
-          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} />
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} syncError={error} />
         </div>
         <div className="relative">
           <button

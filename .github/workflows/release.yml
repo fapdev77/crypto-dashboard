@@ -29,6 +29,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate TypeScript
+        run: npm run lint
+
+      - name: Run Test Suite
+        run: npm test
+
+      - name: Validate Production Build
+        run: npm run build
+
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

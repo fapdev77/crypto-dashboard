@@ -9,6 +9,7 @@ export interface KpiMetricCardProps {
   tooltip?: React.ReactNode;
   color?: 'green' | 'red' | 'white' | 'amber';
   className?: string;
+  subtext?: React.ReactNode;
 }
 
 const colorClasses: Record<string, string> = {
@@ -32,6 +33,7 @@ export const KpiMetricCard = ({
   tooltip,
   color = 'white',
   className = '',
+  subtext,
 }: KpiMetricCardProps) => {
   const content = (
     <div className={`bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col gap-1.5 hover:border-[#3a3b40] transition-colors ${className}`}>
@@ -49,6 +51,11 @@ export const KpiMetricCard = ({
       <span className={`text-xl font-bold font-mono tracking-tight ${colorClasses[color] ?? colorClasses.white}`}>
         {value}
       </span>
+      {subtext && (
+        <div className="text-[11px] font-mono mt-0.5 text-[#8E9299]">
+          {subtext}
+        </div>
+      )}
     </div>
   );
 

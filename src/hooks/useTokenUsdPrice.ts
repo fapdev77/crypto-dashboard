@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { proxyFetch } from '../utils/proxyFetch';
 import { LogManager } from '../services/LogManager';
 
 const cache: Record<string, { price: number; timestamp: number }> = {};
@@ -15,15 +16,16 @@ export async function fetchTokenUsdPrice(ccy: string): Promise<number | null> {
 
   try {
     const instId = `${cleanCcy}-USDT`;
-    const res = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${instId}`);
-    if (res.ok) {
-      const json = await res.json();
-      if (json.code === '0' && json.data && json.data.length > 0) {
-        const p = parseFloat(json.data[0].last);
-        if (!isNaN(p)) {
-          cache[cleanCcy] = { price: p, timestamp: Date.now() };
-          return p;
-        }
+    const res = await proxyFetch({
+      targetUrl: `https://www.okx.com/api/v5/market/ticker?instId=${instId}`,
+      method: 'GET',
+      headers: {}
+    });
+    if (res?.code === '0' && res?.data && res?.data.length > 0) {
+      const p = parseFloat(res.data[0].last);
+      if (!isNaN(p)) {
+        cache[cleanCcy] = { price: p, timestamp: Date.now() };
+        return p;
       }
     }
   } catch (err) {

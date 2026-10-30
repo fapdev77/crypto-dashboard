@@ -7,6 +7,8 @@ import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import { ApiKeyModal } from './ApiKeyModal';
+import { VaultSetupModal } from './VaultSetupModal';
+import { isVaultConfigured } from '../utils/vaultHelpers';
 import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 
@@ -17,14 +19,26 @@ const EXCHANGES: { id: Exchange; name: string }[] = [
 ];
 
 export function ApiKeys() {
-  const { keys, toggleKey, removeKey } = useApiKeysStore();
+  const { keys, toggleKey, removeKey, isInitialized, encryptedData } = useApiKeysStore();
   const { statuses } = useConnectionStore();
   const useMockData = useSettingsStore(state => state.useMockData);
 
+  const isConfigured = isVaultConfigured({ isInitialized, encryptedData });
   const [modalOpen, setModalOpen] = useState(false);
+  const [vaultSetupOpen, setVaultSetupOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedKey, setSelectedKey] = useState<ApiCredentials | undefined>();
   const [keyToDelete, setKeyToDelete] = useState<string | null>(null);
+
+  const handleNewKeyClick = () => {
+    if (!isConfigured) {
+      setVaultSetupOpen(true);
+    } else {
+      setSelectedKey(undefined);
+      setModalMode('create');
+      setModalOpen(true);
+    }
+  };
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     bitget: false,
@@ -88,18 +102,36 @@ export function ApiKeys() {
                 </button>
               </div>
               <button
-                onClick={() => {
-                  setSelectedKey(undefined);
-                  setModalMode('create');
-                  setModalOpen(true);
-                }}
-                className="flex items-center gap-2 py-2 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white text-sm font-medium rounded-lg transition-colors shrink-0"
+                onClick={handleNewKeyClick}
+                className="flex items-center gap-2 py-2 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white text-sm font-medium rounded-lg transition-colors shrink-0 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 New API Key
               </button>
             </div>
           </div>
+
+          {/* Empty state when no keys configured */}
+          {keys.length === 0 && (
+            <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-8 sm:p-10 text-center max-w-md mx-auto my-12 flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#2F6BFF]/10 border border-[#2F6BFF]/25 flex items-center justify-center text-[#2F6BFF] mb-4">
+                <Shield className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-1.5">No API Connections</h3>
+              <p className="text-xs text-[#8E9299] max-w-sm mb-6 leading-relaxed">
+                {!isConfigured
+                  ? 'Before adding exchange API keys, the Zero-Trust Security Vault must be activated to ensure all your credentials are encrypted locally.'
+                  : 'Connect your Bitget, Bybit, or OKX read-only API keys to monitor consolidated balances, open positions, and risk metrics.'}
+              </p>
+              <button
+                onClick={handleNewKeyClick}
+                className="flex items-center gap-2 py-2.5 px-5 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-[#2F6BFF]/25 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                {!isConfigured ? 'Activate Vault & Add Key' : 'Add First API Key'}
+              </button>
+            </div>
+          )}
 
           {/* Groups */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -149,7 +181,15 @@ export function ApiKeys() {
                                 <AccountTypeBadge
                                   exchange={apiKey.exchange}
                                   accountType={apiKey.accountType}
+                                  environment={apiKey.environment}
+                                  bybitRegion={apiKey.bybitRegion}
+                                  isSubAccount={apiKey.isSubAccount}
                                 />
+                                {apiKey.includeFunding === false && (
+                                  <span className="text-[9px] font-mono px-1 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400" title="Funding account excluded">
+                                    No Funding
+                                  </span>
+                                )}
                               </div>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono leading-none border uppercase tracking-wider shrink-0 ${!apiKey.isActive ? 'bg-[#8E9299]/10 text-[#8E9299] border-[#8E9299]/20' :
                                 status === 'connected' ? 'bg-[#00C853]/10 text-[#00C853] border-[#00C853]/30' :
@@ -165,23 +205,22 @@ export function ApiKeys() {
                             <div className="flex items-center justify-end gap-2.5 pt-1">
                               {keyToDelete === apiKey.id ? (
                                 <div className="flex items-center gap-1 bg-[#FF4444]/10 border border-[#FF4444]/20 p-0.5 rounded">
-                                  <span className="text-[15px] font-medium text-[#FF4444] px-15">Deletar a chave?</span>
+                                  <span className="text-[13px] font-medium text-[#FF4444] px-2">Delete key?</span>
                                   <button
                                     onClick={() => {
                                       clearConnectionData(apiKey.id);
                                       removeKey(apiKey.id);
                                       setKeyToDelete(null);
                                     }}
-                                    className="text-[15px] px-4 py-0.5 bg-[#FF4444] hover:bg-[#CC0000] text-white rounded transition-colors"
+                                    className="text-[12px] px-2.5 py-0.5 bg-[#FF4444] hover:bg-[#CC0000] text-white rounded transition-colors"
                                   >
-                                    Sim
+                                    Yes
                                   </button>
-                                  |
                                   <button
                                     onClick={() => setKeyToDelete(null)}
-                                    className="text-[15px] px-4 py-0.5 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded transition-colors"
+                                    className="text-[12px] px-2.5 py-0.5 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded transition-colors"
                                   >
-                                    Não
+                                    No
                                   </button>
                                 </div>
                               ) : (
@@ -232,6 +271,17 @@ export function ApiKeys() {
           </div>
         </div>
       </div>
+
+      <VaultSetupModal
+        isOpen={vaultSetupOpen}
+        onClose={() => setVaultSetupOpen(false)}
+        reason="To add exchange API keys, you must first create a master passphrase to activate the local security vault."
+        onSuccess={() => {
+          setSelectedKey(undefined);
+          setModalMode('create');
+          setModalOpen(true);
+        }}
+      />
 
       <ApiKeyModal
         isOpen={modalOpen}

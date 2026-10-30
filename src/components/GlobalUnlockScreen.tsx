@@ -12,6 +12,9 @@ export function GlobalUnlockScreen() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const releaseInfo = typeof __APP_RELEASE_INFO__ !== 'undefined' ? __APP_RELEASE_INFO__ : null;
+  const version = releaseInfo?.version || (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.36.0');
+
   useEffect(() => {
     // Focus the input when the component mounts
     if (inputRef.current) {
@@ -59,7 +62,12 @@ export function GlobalUnlockScreen() {
               <ShieldAlert className="w-8 h-8 text-[#FF4444]" />
             </div>
           </div>
-          <h2 className="text-xl font-medium text-white text-center mb-2">Encrypted Storage</h2>
+          <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
+            <h2 className="text-xl font-medium text-white text-center">Encrypted Storage</h2>
+            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#2F6BFF]/10 text-[#2F6BFF] border border-[#2F6BFF]/20">
+              v{version}
+            </span>
+          </div>
           <p className="text-sm text-[#8E9299] text-center mb-6">
             Your API keys are encrypted locally. Please enter your passphrase to unlock them.
           </p>

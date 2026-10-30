@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { ServerLogger } from '../src/utils/serverLogger';
+import { validateSafeUpstreamUrl, SSRF_VALIDATION_CONFIG } from '../src/config/ssrfAllowlist';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Configurar headers CORS para permitir o uso adequado via Vercel
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  // Configurar headers CORS seguros para Vercel
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
   res.setHeader(
     'Access-Control-Allow-Headers',
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
@@ -27,22 +27,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing targetUrl or method" });
     }
 
-    // SSRF prevention: Domain validation (Allowlist)
-    const allowedDomains = [
-      'api.bybit.com',
-      'api.bitget.com',
-      'www.okx.com',
-      'api.okx.com'
-    ];
+    // SSRF prevention: Consolidated Domain validation (Allowlist)
+    const validation = validateSafeUpstreamUrl(targetUrl, SSRF_VALIDATION_CONFIG);
 
-    try {
-      const urlObj = new URL(targetUrl);
-      if (!allowedDomains.includes(urlObj.hostname)) {
-        ServerLogger.error('Vercel-Proxy', `SSRF-Block — unauthorized domain: ${urlObj.hostname}`);
-        return res.status(403).json({ error: "Forbidden: Domain not in proxy allowlist" });
-      }
-    } catch (err) {
-      return res.status(400).json({ error: "Invalid targetUrl format" });
+    if (!validation.isValid) {
+      ServerLogger.error('Vercel-Proxy', `SSRF-Block: rejected upstream '${targetUrl}' - ${validation.reason}`);
+      return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
     }
 
     ServerLogger.info('Vercel-Proxy', `${method} ${targetUrl}`);
@@ -53,9 +43,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     delete cleanHeaders.origin;
     delete cleanHeaders.referer;
 
+    const timeoutSignal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+      ? AbortSignal.timeout(20000)
+      : undefined;
+
     const fetchOptions: RequestInit = {
       method,
       headers: cleanHeaders,
+      signal: timeoutSignal,
     };
 
     if (method !== "GET" && method !== "HEAD" && body) {
@@ -80,6 +75,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error: any) {
     ServerLogger.error('Vercel-Proxy', 'Proxy error:', error);
-    res.status(500).json({ error: error.message || "Internal Server Error" });
+    const isTimeout = error.name === 'TimeoutError' || error.name === 'AbortError' || error.message?.includes('timeout') || error.message?.includes('aborted');
+    const statusCode = isTimeout ? 504 : 500;
+    res.status(statusCode).json({
+      error: isTimeout
+        ? 'Gateway Timeout: upstream exchange did not respond within 20s'
+        : (error.message || "Internal Server Error")
+    });
   }
 }

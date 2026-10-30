@@ -62,6 +62,12 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
   const effPrice = order.price || order.avgPrice || 0;
 
+  const isTp = order.type.toUpperCase().includes('TAKE_PROFIT') || order.type.toUpperCase() === 'TP';
+  const isSl = order.type.toUpperCase().includes('STOP_LOSS') || order.type.toUpperCase() === 'SL';
+  const isTrailing = order.type.toUpperCase().includes('TRAILING');
+  const isScopeFull = order.executionScope === 'FULL_POSITION';
+  const isScopePartial = order.executionScope === 'PARTIAL';
+
   let valUsd = 0;
   let actualCoinSize = order.qty || 0;
   let filledValUsd = 0;
@@ -81,7 +87,22 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
       filledValUsd = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.filledQty * effPrice : 0);
       actualFilledCoinSize = order.filledQty;
     }
-  } else if (order.value && order.value > 0 && order.exchange !== 'bitget') {
+  } else if (order.exchange === 'bitget') {
+    if (isInverse) {
+      const rawQuoteVol = order.raw?.quoteVolume ? parseFloat(order.raw.quoteVolume) : 0;
+      valUsd = rawQuoteVol > 0 ? rawQuoteVol : (order.value && order.value > 0 && order.value !== order.qty * effPrice ? order.value : order.qty);
+      actualCoinSize = effPrice > 0 ? valUsd / effPrice : 0;
+      filledValUsd = rawQuoteVol > 0 ? rawQuoteVol : (order.filledQty > 0 ? order.filledQty : 0);
+      actualFilledCoinSize = effPrice > 0 ? filledValUsd / effPrice : 0;
+    } else {
+      valUsd = order.value && order.value > 0 ? order.value : (effPrice > 0 ? order.qty * effPrice : 0);
+      actualCoinSize = order.qty;
+      filledValUsd = order.value && order.value > 0 && order.filledQty === order.qty
+        ? order.value
+        : (effPrice > 0 ? order.filledQty * effPrice : 0);
+      actualFilledCoinSize = order.filledQty;
+    }
+  } else if (order.value && order.value > 0) {
     valUsd = order.value;
     actualCoinSize = isInverse ? (effPrice > 0 ? order.value / effPrice : order.qty) : order.qty;
     filledValUsd = order.filledQty > 0 && order.filledQty !== order.qty ? (effPrice > 0 ? order.filledQty * effPrice : 0) : order.value;
@@ -148,8 +169,38 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
             <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Side & Type</span>
           </AppTooltip>
           <span className={`font-mono text-xs ${sideColor}`}>{sideText}</span>
-          <div className="flex flex-wrap items-center gap-2 mt-0.5 max-w-[120px]">
+          <div className="flex flex-wrap items-center gap-1 mt-0.5 max-w-[140px]">
             <span className="text-xs text-[#8E9299] font-mono">{order.type}</span>
+            {isTp && (
+              <span className="text-[9px] px-1 py-0.5 rounded bg-emerald-500/10 text-[#00C853] font-medium border border-emerald-500/20">
+                TP
+              </span>
+            )}
+            {isSl && (
+              <span className="text-[9px] px-1 py-0.5 rounded bg-red-500/10 text-[#FF4444] font-medium border border-red-500/20">
+                SL
+              </span>
+            )}
+            {isTrailing && (
+              <span className="text-[9px] px-1 py-0.5 rounded bg-purple-500/10 text-purple-400 font-medium border border-purple-500/20">
+                Trailing
+              </span>
+            )}
+            {isScopeFull && (
+              <span className="text-[9px] px-1 py-0.5 rounded bg-cyan-500/10 text-cyan-400 font-medium border border-cyan-500/20" title="Full Position Scope">
+                Full Pos
+              </span>
+            )}
+            {isScopePartial && (
+              <span className="text-[9px] px-1 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium border border-blue-500/20" title="Partial Close">
+                Partial{order.closeFraction ? ` ${(order.closeFraction * 100).toFixed(0)}%` : ''}
+              </span>
+            )}
+            {order.isPositionTpsl && (
+              <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/10 text-amber-400 font-medium border border-amber-500/20" title="Linked Position TP/SL">
+                Pos TP/SL
+              </span>
+            )}
             {order.reduceOnly && (
               <AppTooltip description="This order will only reduce your position size.">
                 <span className="text-[9px] px-1 py-0.5 bg-[#2a2b30] text-[#8E9299] rounded cursor-help font-medium border border-[#3a3b40]">Reduce</span>
@@ -189,8 +240,17 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
               'Market'
             )}
           </span>
-          {order.triggerPrice ? (
-            <span className="font-mono text-orange-400 text-xs">
+          {order.tpTriggerPrice || order.slTriggerPrice ? (
+            <div className="flex flex-col text-xs font-mono">
+              {order.tpTriggerPrice && (
+                <span className="text-[#00C853]">TP: {formatCurrency(order.tpTriggerPrice, 'crypto', 8)}</span>
+              )}
+              {order.slTriggerPrice && (
+                <span className="text-[#FF4444]">SL: {formatCurrency(order.slTriggerPrice, 'crypto', 8)}</span>
+              )}
+            </div>
+          ) : order.triggerPrice ? (
+            <span className={`font-mono text-xs ${isTp ? 'text-[#00C853]' : isSl ? 'text-[#FF4444]' : 'text-orange-400'}`}>
               Trig: {formatCurrency(order.triggerPrice, 'crypto', 8)}
             </span>
           ) : (
@@ -314,6 +374,40 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
               <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Updated Time</span>
               <span className="text-white font-mono text-sm">{formatFullDateTime(order.updatedTime)}</span>
             </div>
+
+            {order.executionScope && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Scope</span>
+                <span className="text-white font-mono text-sm">
+                  {order.executionScope === 'FULL_POSITION'
+                    ? 'Entire Position (Full)'
+                    : `Partial Close${order.closeFraction ? ` (${(order.closeFraction * 100).toFixed(0)}%)` : ''}`}
+                </span>
+              </div>
+            )}
+
+            {order.isPositionTpsl !== undefined && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Position TP/SL</span>
+                <span className="text-white font-mono text-sm">
+                  {order.isPositionTpsl ? 'Position-level TP/SL' : 'Independent Order'}
+                </span>
+              </div>
+            )}
+
+            {order.tpTriggerPrice !== undefined && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">TP Trigger</span>
+                <span className="text-[#00C853] font-mono text-sm">{formatCurrency(order.tpTriggerPrice, 'crypto', 8)}</span>
+              </div>
+            )}
+
+            {order.slTriggerPrice !== undefined && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">SL Trigger</span>
+                <span className="text-[#FF4444] font-mono text-sm">{formatCurrency(order.slTriggerPrice, 'crypto', 8)}</span>
+              </div>
+            )}
           </div>
         </div>
       )}

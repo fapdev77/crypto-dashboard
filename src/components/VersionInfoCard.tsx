@@ -1,8 +1,27 @@
-import React, { useState } from 'react';
-import { Tag, Github, ExternalLink, Calendar, GitCommit, Sparkles, FileText, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Tag, Github, ExternalLink, Calendar, GitCommit, Sparkles, FileText, ChevronDown, ChevronUp, CheckCircle2, RefreshCw, Database, AlertCircle } from 'lucide-react';
+import { usePwaUpdateStore } from '../store/pwaUpdateStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { checkIndexedDBHealth, recoverAndResetIndexedDB, DB_VERSION } from '../services/historyCache';
 
 export function VersionInfoCard() {
   const [showFullChangelog, setShowFullChangelog] = useState(false);
+  const { needRefresh, isUpdating, triggerUpdate } = usePwaUpdateStore();
+  const { indexedDBStatus, indexedDBError, indexedDBVersion } = useSettingsStore();
+  const [isRecoveringDb, setIsRecoveringDb] = useState(false);
+
+  useEffect(() => {
+    checkIndexedDBHealth().catch(() => {});
+  }, []);
+
+  const handleClearAndRecover = async () => {
+    setIsRecoveringDb(true);
+    try {
+      await recoverAndResetIndexedDB();
+    } finally {
+      setIsRecoveringDb(false);
+    }
+  };
 
   const releaseInfo = typeof __APP_RELEASE_INFO__ !== 'undefined' ? __APP_RELEASE_INFO__ : null;
 
@@ -41,9 +60,33 @@ export function VersionInfoCard() {
           v{version}
         </span>
       </div>
-      <p className="text-[#8E9299] text-xs mb-5">
+      <p className="text-[#8E9299] text-xs mb-4">
         Application metadata, GitHub repository source, and latest release notes
       </p>
+
+      {/* New Version Ready Banner */}
+      {needRefresh && (
+        <div className="mb-4 px-3.5 py-2.5 rounded-lg bg-[#2F6BFF]/10 border border-[#2F6BFF]/30 flex items-center justify-between gap-3 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-1.5 rounded-md bg-[#2F6BFF]/20 text-[#2F6BFF] shrink-0 border border-[#2F6BFF]/30">
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-white block truncate">New Version Available</span>
+              <span className="text-[10px] text-gray-400 block truncate">Ready to install</span>
+            </div>
+          </div>
+          <button
+            onClick={() => triggerUpdate()}
+            disabled={isUpdating}
+            className="px-3 py-1.5 bg-[#2F6BFF] hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 text-white text-xs font-medium rounded-md cursor-pointer transition-colors shrink-0 flex items-center gap-1.5 shadow-sm shadow-blue-500/20"
+          >
+            <RefreshCw className={`w-3 h-3 ${isUpdating ? 'animate-spin' : ''}`} />
+            <span>{isUpdating ? 'Updating...' : 'Update Now'}</span>
+          </button>
+        </div>
+
+      )}
 
       <div className="flex flex-col gap-4 flex-1">
         {/* Info Grid */}
@@ -78,20 +121,71 @@ export function VersionInfoCard() {
                 href={githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-[#2F6BFF] hover:text-blue-400 font-mono truncate flex items-center gap-1 group w-fit"
+                className="text-xs text-[#2F6BFF] hover:text-blue-400 font-medium inline-flex items-center gap-1 group w-fit cursor-pointer"
               >
-                <span className="truncate">{githubUrl.replace('https://', '')}</span>
+                <span>Click here</span>
                 <ExternalLink className="w-3 h-3 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
               </a>
             </div>
           </div>
+
+          {/* IndexedDB Cache Database Status Row */}
+          <div className="flex items-center justify-between sm:col-span-2 border-t border-[#2a2b30]/50 pt-2.5 mt-0.5">
+            <div className="flex items-center gap-2.5">
+              <div className={`p-2 rounded-md ${
+                indexedDBStatus === 'healthy' 
+                  ? 'bg-emerald-500/10 text-emerald-400' 
+                  : 'bg-red-500/10 text-red-400 animate-pulse'
+              }`}>
+                <Database className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">
+                  IndexedDB Cache Database
+                </span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs font-mono font-semibold text-white">v{indexedDBVersion || DB_VERSION}</span>
+                  {/* Color-coded indicator: green for healthy, red for error */}
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                    indexedDBStatus === 'healthy'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      indexedDBStatus === 'healthy' ? 'bg-emerald-400' : 'bg-red-500'
+                    }`} />
+                    {indexedDBStatus === 'healthy' ? 'Healthy' : indexedDBStatus === 'recovering' ? 'Recovering...' : 'Error / Conflict'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {indexedDBStatus === 'error' && (
+              <button
+                onClick={handleClearAndRecover}
+                disabled={isRecoveringDb}
+                className="px-2.5 py-1 text-xs bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-50 text-white rounded font-medium transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+                title="Clear Cache & Rebuild Database"
+              >
+                {isRecoveringDb && <RefreshCw className="w-3 h-3 animate-spin" />}
+                Clear Cache
+              </button>
+            )}
+          </div>
+
+          {indexedDBStatus === 'error' && indexedDBError && (
+            <div className="sm:col-span-2 bg-red-500/10 border border-red-500/20 rounded p-2 text-[11px] text-red-300 flex items-start gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+              <span>{indexedDBError}</span>
+            </div>
+          )}
         </div>
 
         {/* Latest Release Summary */}
         <div className="bg-[#1a1b1e] p-3.5 rounded-lg border border-[#2a2b30]/60 flex-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <h4 className="text-xs font-semibold text-white tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 Latest Release Highlights (v{version})
               </h4>
