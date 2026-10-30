@@ -1,6 +1,7 @@
 /**
  * Helper assíncrono genérico usando Web Crypto API
  * Usado pelas classes de Adapters para gerar assinaturas de requisições API
+ * e pelo cofre local para criptografia AES-GCM-256 + PBKDF2 (600.000 iterações).
  */
 export async function hmacSha256(prehash: string, secret: string, format: 'hex' | 'base64'): Promise<string> {
   const encoder = new TextEncoder();
@@ -21,11 +22,25 @@ export async function hmacSha256(prehash: string, secret: string, format: 'hex' 
   }
 }
 
-export async function encryptData(data: string, passphrase: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const salt = window.crypto.getRandomValues(new Uint8Array(16));
-  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+export const DEFAULT_PBKDF2_ITERATIONS = 600000;
 
+export interface EncryptedPayloadEnvelope {
+  v?: number;
+  iter?: number;
+  s: string;
+  i: string;
+  c: string;
+}
+
+/**
+ * Derives an AES-GCM 256-bit CryptoKey from passphrase + salt using PBKDF2-SHA-256.
+ */
+export async function deriveVaultKey(
+  passphrase: string,
+  salt: Uint8Array,
+  iterations = DEFAULT_PBKDF2_ITERATIONS
+): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
   const keyMaterial = await window.crypto.subtle.importKey(
     'raw',
     encoder.encode(passphrase),
@@ -34,67 +49,68 @@ export async function encryptData(data: string, passphrase: string): Promise<str
     ['deriveKey']
   );
 
-  const key = await window.crypto.subtle.deriveKey(
+  return window.crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
       salt,
-      iterations: 100000,
+      iterations,
       hash: 'SHA-256'
     },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
     false,
-    ['encrypt']
+    ['encrypt', 'decrypt']
   );
+}
 
+/**
+ * Encrypts data using an already derived CryptoKey and salt (sub-millisecond execution).
+ */
+export async function encryptWithDerivedKey(
+  data: string,
+  key: CryptoKey,
+  salt: Uint8Array,
+  iterations = DEFAULT_PBKDF2_ITERATIONS
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
   const encryptedBuffer = await window.crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
     key,
     encoder.encode(data)
   );
 
-  const encryptedArray = Array.from(new Uint8Array(encryptedBuffer));
-  const saltArray = Array.from(salt);
-  const ivArray = Array.from(iv);
-
-  const payload = {
-    s: btoa(String.fromCharCode(...saltArray)),
-    i: btoa(String.fromCharCode(...ivArray)),
-    c: btoa(String.fromCharCode(...encryptedArray))
+  const payload: EncryptedPayloadEnvelope = {
+    v: 2,
+    iter: iterations,
+    s: btoa(String.fromCharCode(...Array.from(salt))),
+    i: btoa(String.fromCharCode(...Array.from(iv))),
+    c: btoa(String.fromCharCode(...Array.from(new Uint8Array(encryptedBuffer))))
   };
 
   return btoa(JSON.stringify(payload));
 }
 
+export async function encryptData(
+  data: string,
+  passphrase: string,
+  iterations = DEFAULT_PBKDF2_ITERATIONS
+): Promise<string> {
+  const salt = window.crypto.getRandomValues(new Uint8Array(16));
+  const key = await deriveVaultKey(passphrase, salt, iterations);
+  return encryptWithDerivedKey(data, key, salt, iterations);
+}
+
 export async function decryptData(encryptedPayload: string, passphrase: string): Promise<string> {
   try {
-    const payload = JSON.parse(atob(encryptedPayload));
+    const payload: EncryptedPayloadEnvelope = JSON.parse(atob(encryptedPayload));
+    const iterations = typeof payload.iter === 'number' && payload.iter > 0 ? payload.iter : 100000;
     
     const salt = new Uint8Array(atob(payload.s).split('').map(c => c.charCodeAt(0)));
     const iv = new Uint8Array(atob(payload.i).split('').map(c => c.charCodeAt(0)));
     const cipherText = new Uint8Array(atob(payload.c).split('').map(c => c.charCodeAt(0)));
 
-    const encoder = new TextEncoder();
-    const keyMaterial = await window.crypto.subtle.importKey(
-      'raw',
-      encoder.encode(passphrase),
-      { name: 'PBKDF2' },
-      false,
-      ['deriveKey']
-    );
-
-    const key = await window.crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt,
-        iterations: 100000,
-        hash: 'SHA-256'
-      },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['decrypt']
-    );
+    const key = await deriveVaultKey(passphrase, salt, iterations);
 
     const decryptedBuffer = await window.crypto.subtle.decrypt(
       { name: 'AES-GCM', iv },
@@ -108,4 +124,3 @@ export async function decryptData(encryptedPayload: string, passphrase: string):
     throw new Error('Invalid passphrase or corrupted data');
   }
 }
-

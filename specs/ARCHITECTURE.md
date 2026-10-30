@@ -1,8 +1,8 @@
 # Technical Specifications & Architecture Design
 
-> **Document Version:** 2.13.0  
+> **Document Version:** 2.16.0  
 > **Status:** Production-Ready & Verified  
-> **Test Coverage:** 56 test files, 604 passing tests (Vitest v8)
+> **Test Coverage:** 65 test files, 660 passing tests (Vitest v8)
 
 ---
 
@@ -150,12 +150,33 @@ O CPM opera múltiplos mecanismos especializados de sincronização em segundo p
 - **Sync Incremental:** Concluído o deep sync, requisições de baixa frequência buscam apenas eventos ocorridos após o último timestamp cacheado.
 - **Sumário Executivo nos Modais (Total Stats Summary):** Modais de detalhes calculam em tempo real totais agregados de volume, taxas pagas e variação patrimonial do lote transacional.
 
-### 5.3. Funding Sync Engine (Aggregation-First)
+### 5.3. Consolidated Net Change Aggregation Pipeline
+- **Orquestração Cross-Exchange:** O hook `useConsolidatedTransactions` consome logs normalizados de Bybit, Bitget e OKX através da interface unificada.
+- **Agregação Hierárquica:** O pipeline agrupa dados primariamente por Corretora (`exchange`) e secundariamente por Ativo (`currency`), computando somatórios de volume de trades, depósitos, saques, taxas e funding com precisão decimal via `Big.js`.
+- **4 Macro KPI Cards:** Calcula os indicadores consolidados no topo do painel (*Total Transactions*, *Total Funding PnL*, *Total Transaction Fees*, *Consolidated Net Change*).
+- **Exportação Multiformato:** Emissão de relatórios em CSV, Excel (.xlsx) e PDF diagramado com jsPDF-AutoTable.
+
+### 5.4. Portfolio Performance Engine (`usePortfolioPerformance.ts`)
+- **Pipeline Analítico Integrado:** Transforma os extratos contínuos de transações e saldos em um conjunto completo de métricas executivas de desempenho e risco:
+  - *Balance Evolution & Cash Flow:* Curva dual de evolução patrimonial e variação líquida acumulada.
+  - *Temporal Breakdown:* Decomposição de resultados por mês e por dia da semana (segunda a domingo).
+  - *Price Milestone Analysis:* Amostragem de PnL por faixas/degraus de preço do ativo selecionado.
+  - *Primary Results:* Capital Investido, Saldo Final, Resultado Bruto, Resultado Líquido, ROI Líquido %, Retorno Acumulado e Taxa Anualizada.
+  - *Operations & Fees:* Contagem de transações, segregação de taxas (Trading vs Funding vs Transfers) e cálculo da Razão de Arrasto de Taxas (**Fee Drag Ratio**).
+  - *Advanced Risk Metrics:* Profit Factor com classificação qualitativa, Win Rate diário e Índice de Consistência (desvio padronizado dos retornos diários).
+- **Arquitetura de Alta Eficiência e Responsividade:**
+  - Janela temporal padrão inicial de **7 dias** para cálculo instantâneo.
+  - Downsampling inteligente limitando séries temporais a um máximo de **80 pontos**.
+  - Animações SVG Recharts desativadas (`isAnimationActive={false}`) para renderização sem atraso.
+  - Subscrições atômicas e granulares no Zustand para eliminar re-renderizações durante sincronizações de fundo.
+  - Componentes memoizados (`React.memo`) em todas as 6 seções analíticas.
+
+### 5.5. Funding Sync Engine (Aggregation-First)
 - **Pré-Agregação no Serviço:** `FundingService.fetchAndAggregateSummary()` realiza o fetch completo das APIs de taxas de financiamento e pré-calcula os somatórios mensais e acumulados usando Big.js, persistindo apenas registros condensados (`FundingRateSummary`) na store `funding-summaries`.
 - **Auto-Sync Inteligente:** O timer de atualização é automaticamente calculado para disparar em `nearestFutureFundingTime + 60s`, atualizando o painel imediatamente após o fechamento da janela de funding.
 - **Singleton Locks:** Flags em memória (`syncInProgressRef`, `fetchingRef`, `restartRequestedRef`) previnem disparos concorrentes entre múltiplos componentes.
 
-### 5.4. IndexedDB Schema Overview (DB_VERSION 12)
+### 5.6. IndexedDB Schema Overview (DB_VERSION 12)
 A base local IndexedDB (`crypto-dashboard-cache`) consolida 14 object stores:
 
 | Store Name | Key Path | Índices | Finalidade |
@@ -254,13 +275,16 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 - **Hedge Pro (`HedgeProDashboard.tsx`):** Localizado no nível raiz da sidebar, monitora proteção e exposição Delta-Neutral em contratos inversos (COIN-M).
 - **Positions (`OpenPositions.tsx` & `ClosedPositions.tsx`):** Posições abertas (Detailed & Lite) e histórico contábil de posições fechadas com estatísticas completas e exportações.
 - **Orders (`OpenOrders.tsx` & `OrderHistory.tsx`):** Ordens abertas com visualização de gatilhos e histórico de ordens com regex.
-- **Trade History (`TradeHistory.tsx`):** Histórico de execuções com auditoria granular de taxas.
-- **Transactions History (`BybitTransactions.tsx`, `BitgetTransactions.tsx`, `OkxTransactions.tsx`):** Extratos contábeis com mapeamento universal de 10 categorias e modal com sumário de totais.
-- **Market Analytics (`MarketAnalyticsDashboard.tsx`):** Terminal quantitativo cross-exchange com regimes de mercado, arbitragem de funding, CVD e Inverse Coin-M Dashboard.
-- **PnL by Symbol (`PnLBySymbol.tsx`):** Distribuição de lucros e prejuízos por ativo com segregação Long vs Short.
-- **Funding Fees (`FundingDashboard.tsx`):** Monitoramento e comparação de taxas de financiamento multi-período.
+- **Transactions History:**
+  - **Consolidated Net Change (`ConsolidatedNetChangeReport.tsx`):** Painel executivo consolidado com 4 macro KPI cards, agrupamento hierárquico por Corretora e Moeda, e exportação multiformato.
+  - **Corretoras Específicas (`BybitTransactions.tsx`, `BitgetTransactions.tsx`, `OkxTransactions.tsx`):** Extratos contábeis normalizados em 10 categorias universais e modais com Total Stats Summary.
+- **Analytics:**
+  - **Portfolio Performance (`PortfolioPerformanceDashboard.tsx`):** Painel no topo do submenu Analytics com evolução de balanço/resultado, análise temporal mensal e dia-a-dia, marcos de preço, resultados primários, análise de taxas e métricas de risco (Profit Factor, Win Rate, Consistency Index).
+  - **Market Analytics (`MarketAnalyticsDashboard.tsx`):** Terminal quantitativo cross-exchange com regimes de mercado, arbitragem de funding, CVD e Inverse Coin-M Dashboard.
+  - **PnL by Symbol (`PnLBySymbol.tsx`):** Distribuição de lucros e prejuízos por ativo com segregação Long vs Short.
+  - **Funding Fees (`FundingDashboard.tsx`):** Monitoramento e comparação de taxas de financiamento multi-período.
 - **Reports (`ReportsDashboard.tsx`):** Central de exportação de relatórios em PDF, Excel e CSV.
-- **System Tools (`ApiKeys.tsx`, `ConnectionLogTerminal.tsx`, `Settings.tsx`, `ApiTester.tsx`, `AiSettings.tsx`):** Gerenciamento de credenciais, logs, diagnósticos de conectividade e parâmetros de IA.
+- **System Tools & Security (`ApiKeys.tsx`, `MandatoryVaultMigrationScreen.tsx`, `ConnectionLogTerminal.tsx`, `Settings.tsx`, `ApiTester.tsx`, `AiSettings.tsx`):** Gerenciamento seguro de credenciais, fluxo obrigatório de migração de vault, logs em tempo real, diagnósticos e parâmetros de IA.
 
 ---
 
@@ -269,9 +293,9 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 Qualquer alteração em interfaces unificadas (`src/types.ts`) ou schemas de banco de dados deve obedecer ao protocolo rigoroso de sincronização:
 1. **Mock Generators:** Atualizar `src/mock/generateMocks.js` e regenerar os arquivos mock em `src/mock/`.
 2. **IndexedDB Versioning:** Incrementar `DB_VERSION` em `historyCache.ts` e registrar funções de migração para novos índices.
-3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que todos os 604 testes continuem verdes.
+3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde.
 4. **Validação em Modo Simulação:** Ativar temporariamente `useMockData = true` para verificar visualmente todos os painéis e gráficos antes do deploy.
 
 ---
 
-*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering.*
+*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.16.0).*

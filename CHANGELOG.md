@@ -1,3 +1,31 @@
+# [2.17.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.16.0...v2.17.0) (2026-10-29)
+
+
+### Features
+
+* **new:** Implemented portfolio performance analytics component and bump version to 2.16.0 ([87d18ec](https://github.com/fapdev77/crypto-dashboard/commit/87d18ec3bb9b2367099378e1f3d8be042b13dcfe))
+
+# [2.16.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.15.0...v2.16.0) (2026-10-28)
+
+
+### Features
+
+* **transactions:** add consolidated net change dashboard ([2856ff9](https://github.com/fapdev77/crypto-dashboard/commit/2856ff98a00fe446ba85cc20a48ee4178e953606))
+
+# [2.15.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.14.0...v2.15.0) (2026-10-26)
+
+
+### Features
+
+* consolidate SSRF domain allowlist and enhance logging sanitization ([5a073d1](https://github.com/fapdev77/crypto-dashboard/commit/5a073d10715669ba72c10dd1b9cd8ef0f70ea6ae))
+
+# [2.14.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.13.0...v2.14.0) (2026-10-21)
+
+
+### Features
+
+* implement mandatory vault migration ([e9d9c2c](https://github.com/fapdev77/crypto-dashboard/commit/e9d9c2ccb5fe499ec9535ef10b118f515e7cac86))
+
 # [2.13.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.12.0...v2.13.0) (2026-10-20)
 
 

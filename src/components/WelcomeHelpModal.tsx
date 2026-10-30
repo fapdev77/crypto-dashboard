@@ -14,7 +14,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
   const [isManualOpen, setIsManualOpen] = useState(false);
 
   const releaseInfo = typeof __APP_RELEASE_INFO__ !== 'undefined' ? __APP_RELEASE_INFO__ : null;
-  const version = releaseInfo?.version || (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.36.0');
+  const version = releaseInfo?.version || (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '2.13.0');
 
   if (!isOpen) return null;
 

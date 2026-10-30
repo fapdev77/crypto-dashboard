@@ -1,9 +1,9 @@
 # Crypto Portfolio Manager — Product Requirements Document (PRD)
 
-> **Versão do Documento:** 2.13.0  
+> **Versão do Documento:** 2.16.0  
 > **Status:** Aprovado & Em Produção  
 > **Produto:** Crypto Portfolio Manager (CPM) — Multi-Exchange Terminal  
-> **Testes Automatizados:** 56 arquivos de teste, 604 testes passando (Vitest v8)
+> **Testes Automatizados:** 65 arquivos de teste, 660 testes passando (Vitest v8)
 
 ---
 
@@ -64,10 +64,13 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
   - Order Reports (Open Orders e Order History com busca regex).
   - Trade History com discriminação de liquidez Maker/Taker e fees.
   - Histórico de Transações Multi-Corretora com 10 categorias universais e modais com Total Stats Summary.
+  - **Consolidated Net Change Dashboard**: Painel posicionado como primeiro item de Transactions History com 4 macro KPI cards, agrupamento hierárquico por exchange e moeda, e exportação multiformato.
+  - **Portfolio Performance Dashboard**: Painel posicionado no topo de Analytics com evolução patrimonial (duplo gráfico de saldo e resultado acumulado), análise temporal por mês e dia da semana, marcos de preço, resultados primários, análise de taxas/arrasto e métricas avançadas (Profit Factor, Win Rate, Índice de Consistência).
   - Market Analytics com Open Interest, Regimes de Mercado, Arbitragem de Funding, CVD e Inverse Coin-M Dashboard.
   - Funding Fees Dashboard com somatórios pré-calculados no serviço e comparador horizontal.
   - PIKA Assistant com 9 ferramentas de leitura, auditoria de compatibilidade de modelos, telemetria de tokens e exportação de logs.
   - Progressive Web App (PWA) instalável com Service Worker e cache offline.
+  - Migração Obrigatória de Vault para formatos de criptografia PBKDF2/AES-GCM.
 
 ### 5.2. Não Suportado (Out of Scope)
 - Envio de ordens de negociação ativas (compra/venda) a partir do CPM — o terminal opera em **estrito modo de leitura e auditoria (Read-Only)**.
@@ -145,17 +148,21 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 | **FR-24** | Governança de disco no IndexedDB com leitura de quota e expurgo seletivo sob demanda ("Prune History") | Storage Governance |
 | **FR-25** | PWA instalável com Service Worker, cache offline e notificação de atualizações | PWA Integration |
 | **FR-26** | Resiliência global com Fail-Fast de autenticação, circuit breaker e Global Error Boundary com Safe Recovery | System Resilience |
+| **FR-27** | Consolidated Net Change Dashboard com 4 macro KPI cards, agrupamento por exchange/moeda e exportação CSV/Excel/PDF | Consolidated Transactions |
+| **FR-28** | Portfolio Performance Dashboard com curvas de saldo/resultado, análise temporal (mês/dia), marcos de preço, resultados primários e métricas avançadas (Profit Factor, Win Rate, Consistency Index) | Portfolio Performance |
+| **FR-29** | Tela e fluxo de migração mandatória de vault para credenciais legadas em texto plano | Security & Vault |
+| **FR-30** | Otimização de renderização com downsampling a 80 pontos, animations desativadas e seletores atômicos no Zustand | Performance Optimization |
 
 ---
 
 ## 8. Requisitos Não-Funcionais
 
 - **Segurança:** Postura Zero-Trust; chaves nunca saem do navegador; Web Crypto nativo; proxy inerte com allowlist anti-SSRF.
-- **Confiabilidade:** 56 arquivos de teste e 604 testes unitários automatizados com 100% de sucesso; tolerância a clock skew das exchanges.
-- **Performance:** Latência zero no carregamento inicial de telas analíticas via IndexedDB; memoização rigorosa para prevenir renderizações desnecessárias.
+- **Confiabilidade:** Suíte abrangente de testes unitários e de integração verdes; tolerância a clock skew das exchanges.
+- **Performance:** Latência zero no carregamento inicial de telas analíticas via IndexedDB; período padrão inicial de 7 dias, downsampling de séries e memoização rigorosa para prevenir renderizações desnecessárias.
 - **Precisão Matemática:** Uso universal de Big.js para aritmética de funding, hedge e saldos.
 - **Compatibilidade:** Suporte nativo a navegadores Desktop e Mobile (PWA); compatibilidade com ambientes serverless (Vercel) e instâncias Node.js (engines `>=24`).
 
 ---
 
-*Crypto Portfolio Manager — Product Requirements Document (PRD v2.13.0).*
+*Crypto Portfolio Manager — Product Requirements Document (PRD v2.16.0).*

@@ -1,6 +1,6 @@
 # 📘 User Manual - Crypto Portfolio Manager (CPM)
 
-> **Application Version:** 2.13.0  
+> **Application Version:** 2.16.0  
 > **Supported Exchanges:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Security Architecture:** Zero-Trust Client-Side (Web Crypto PBKDF2 + AES-GCM 256-bit Encryption)
 
@@ -17,7 +17,7 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [Bybit Regional Endpoints & Origin Headers](#bybit-regional-endpoints--origin-headers)
    - [Bitget: Classic vs UTA Selection, Sub-Accounts & Funding](#bitget-classic-vs-uta-selection-sub-accounts--funding)
    - [OKX: Dual-Wallet (Trading & Funding Accounts)](#okx-dual-wallet-trading--funding-accounts)
-3. [Global Master Password & Encrypted Backups](#3-global-master-password--encrypted-backups)
+3. [Global Master Password, Encrypted Backups & Mandatory Vault Migration](#3-global-master-password-encrypted-backups--mandatory-vault-migration)
 4. [Simulation Mode (Mock Data)](#4-simulation-mode-mock-data)
 5. [Integrated Log Terminal (Connection Logs)](#5-integrated-log-terminal-connection-logs)
 6. [Synchronization, Retention & Cache Settings](#6-synchronization-retention--cache-settings)
@@ -29,8 +29,14 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [📂 Closed Positions (Historical Positions & Analytics)](#-closed-positions-historical-positions--analytics)
    - [📝 Order Reports (Open Orders & Order History)](#-order-reports-open-orders--order-history)
    - [🔄 Trade History (Fill Executions & Fee Auditing)](#-trade-history-fill-executions--fee-auditing)
-   - [📜 Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)](#-multi-exchange-transactions-log-bybit-bitget--okx-transactions)
+   - [📜 Consolidated Net Change & Multi-Exchange Transactions](#-consolidated-net-change--multi-exchange-transactions)
+   - [📊 Portfolio Performance (Evolution Analytics & Institutional Metrics)](#-portfolio-performance-evolution-analytics--institutional-metrics)
    - [📈 Market Analytics (Quantitative Intelligence & Derivatives Flow)](#-market-analytics-quantitative-intelligence--derivatives-flow)
+   - [📊 PnL by Symbol (Profit & Loss Distribution)](#-pnl-by-symbol-profit--loss-distribution)
+   - [💸 Funding Fees Dashboard (Cross-Exchange Analytics)](#-funding-fees-dashboard-cross-exchange-analytics)
+   - [📑 Reports (Operational & Executive Export)](#-reports-operational--executive-export)
+   - [⚡ API Tester (REST & WebSocket Diagnostics)](#-api-tester-rest--websocket-diagnostics)
+   - [👁️ Privacy Mode](#-privacy-mode)
    - [📊 PnL by Symbol (Profit & Loss Distribution)](#-pnl-by-symbol-profit--loss-distribution)
    - [💸 Funding Fees Dashboard (Cross-Exchange Analytics)](#-funding-fees-dashboard-cross-exchange-analytics)
    - [📑 Reports (Operational & Executive Export)](#-reports-operational--executive-export)
@@ -101,19 +107,31 @@ The `OkxAdapter` concurrently queries the Unified Trading account (`/api/v5/acco
 
 ---
 
-## 3. Global Master Password & Encrypted Backups
+## 3. Global Master Password, Zero-Trust Vault & Inactivity Auto-Lock
 
-To protect your financial data on personal or shared computers:
+To safeguard your sensitive financial telemetry and credentials on personal, shared, or office workstations, CPM incorporates a comprehensive security vault lifecycle:
 
-1. **Global Session Lock Screen**:
-   - In **Settings**, enable the **Master Password** toggle under the **Security Settings** card.
-   - Credentials in `localStorage` are encrypted using **AES-GCM 256-bit** with **PBKDF2** key derivation.
-   - Upon page refresh or app reload, a full-screen lock screen blocks all data rendering until the correct master password is entered.
-2. **Export Encrypted Backups (`.cpmbackup`)**:
-   - Click **Export Backup File** to download a single encrypted snapshot of your accounts, labels, and system settings.
-   - This backup file can be safely stored in an offline password manager or transferred to another device.
-3. **Restoring a Backup**:
-   - Click **Import Backup**, choose your `.cpmbackup` file, and type your master password to immediately restore your entire workspace.
+1. **Vault Initialization upon First Connection Setup**:
+   - When adding your very first API key (**+ Add Exchange**), CPM detects if your local vault has not yet been initialized and prompts you to configure a **Master Passphrase** (minimum 8 characters).
+   - All credentials are encrypted on the client side prior to persistence in `localStorage`, using **PBKDF2-SHA256 key derivation with 600,000 iterations** coupled with authenticated **AES-GCM 256-bit** symmetric encryption.
+2. **Global Session Lock Screen**:
+   - Upon page refresh, browser restart, or opening the tab, a full-screen lock prompt prevents data rendering until your correct master passphrase is provided.
+   - If forgotten, a factory reset option (*Wipe Data*) is available to purge local records and start fresh securely.
+3. **Inactivity Auto-Lock (`useVaultAutoLock`)**:
+   - Under **Settings** $\to$ **Security Settings**, you can enable the **Auto-Lock on Inactivity** engine.
+   - **Customizable Idle Slider**: Set your preferred idle timeout between **1 and 60 minutes** (default: 15 minutes).
+   - The `useVaultAutoLock` hook tracks active user inputs (mouse moves, keyboard strokes, touch gestures, and scroll events). Once the idle duration elapses, CPM automatically locks the vault and **instantly purges all decrypted keys from system RAM**.
+4. **On-Demand Manual Lock (Lock Vault Now)**:
+   - In the security panel, click the **Lock Vault Now** button to immediately lock the application and discard active keys from memory without needing to refresh the page.
+5. **Master Passphrase Updating & Re-encryption**:
+   - Need to change your master passphrase? Go to **Security Settings** $\to$ **Change Passphrase**. Provide your current passphrase and your new passphrase (minimum 8 characters). CPM safely re-encrypts all configured connections in a single atomic batch, preserving all your account labels and configurations.
+6. **Startup Vault Setup Notice Modal**:
+   - If you use the application without having configured a master password, an unobtrusive 5-second countdown alert appears at startup informing you of the vault's security benefits and providing a 1-click shortcut to set it up. This notice can be toggled off at any time in Settings.
+7. **Encrypted File Backups (`.cpmbackup`)**:
+   - Export all your configured exchange connections and preferences in a single encrypted `.cpmbackup` file.
+   - The backup can be safely moved to another device or saved in an offline password vault.
+8. **Backup Restoration**:
+   - Import your `.cpmbackup` file and enter your master password to instantly recover all connections and preferences.
 
 ---
 
@@ -206,8 +224,26 @@ Promoted to a **dedicated top-level module** in the sidebar, tailored for fundin
 ### 🔄 Trade History (Fill Executions & Fee Auditing)
 - Detailed trade execution log with fill price, contract size, Maker vs Taker liquidity flag, and exact fee currency deducted.
 
-### 📜 Multi-Exchange Transactions Log (Bybit, Bitget & OKX Transactions)
-Comprehensive accounting ledger and cash flow reconciliation:
+### 📜 Consolidated Net Change & Multi-Exchange Transactions
+
+#### 🔹 Consolidated Net Change (Cross-Exchange Executive Dashboard)
+Positioned as the **first item at the top of the Transactions History submenu**, this dashboard provides a unified view of your net capital movement and cash flow across all connected exchanges:
+- **4 Consolidated Macro KPI Cards**:
+  - **Total Transactions**: Total number of normalized ledger events across all accounts.
+  - **Total Funding**: Consolidated net funding fees earned (credits) or paid (debits).
+  - **Total Fees**: Total brokerage trading fees and transaction charges.
+  - **Consolidated Net Change**: Total net cash flow variation in USD (`Net Change = Cash Flow + Funding - Fees`), highlighting overall profitability.
+- **Hierarchical Two-Tier Grouping**:
+  - **Tier 1 (By Exchange)**: Bybit, Bitget, and OKX summaries with total transactions, total fees, total funding, and USD Net Change. Each exchange group can be individually collapsed or expanded.
+  - **Tier 2 (By Currency/Asset)**: Under each exchange, individual assets (BTC, ETH, SOL, USDT, etc.) are itemized with trade volume, deposit and withdrawal counts, fees paid, funding received, and net change in both the **base currency** and equivalent **USD**.
+- **Sync Coordination & Privacy Controls**:
+  - Integrated sync controls with real-time feedback and SWR cache invalidation.
+  - Full **Privacy Mode** compatibility, replacing nominal values with secure masks.
+- **Comprehensive Multi-Format Export**:
+  - Instant export to **CSV**, formatted **Excel (.xlsx)**, or professional **PDF** audit reports with executive summaries.
+
+#### 🔹 Exchange-Specific Transactions Log (Bybit, Bitget & OKX Transactions)
+Comprehensive accounting ledger and cash flow reconciliation per broker:
 - **Dynamic Navigation**: Sidebar transactions section automatically reflects only the exchanges that currently have active keys or simulation data.
 - **Progressive Deep Sync**: 7-day chunked backfills with IndexedDB checkpoints for extensive historical depth (Bybit UTA up to 2 years; OKX recent and 3-month archive; Bitget Classic & UTA).
 - **Universal Transaction Mapper (10 Normalized Categories)**:
@@ -223,6 +259,65 @@ Comprehensive accounting ledger and cash flow reconciliation:
   10. *All Types* (Unfiltered ledger)
 - **Details Modal with Total Stats Summary**: Clicking a transaction opens a detailed modal with an executive top summary showing total volume, net fees, and net change.
 - **Cash Flow Reconciliation**: Mathematical validation: `Net Change = Cash Flow + Funding - Fees`.
+
+---
+
+### 📊 Portfolio Performance (Evolution Analytics & Institutional Metrics)
+Located at the top of the **Analytics** menu, this quantitative dashboard implements the executive portfolio evolution model and institutional metrics glossary:
+
+#### 1. Filter Controls & Denomination
+- **Denomination Selector**: Toggle between the native base asset (e.g., *BTC Native*) or consolidated **USD** portfolio denomination.
+- **Time Periods**: Ultra-fast default initial window of **7 Days**, with presets for **30 Days**, **90 Days**, **180 Days**, **1 Year**, and **All Time**.
+- **Exchange & Account Filters**: Filter by specific exchange connection or evaluate cross-exchange combined portfolios.
+- **Export Report**: Export full metrics, tables, and distribution breakdowns to CSV, Excel, or PDF.
+
+#### 2. Balance Evolution & Cash Flow (Area Chart)
+- **Dual Area Curve**:
+  - **Balance Evolution**: Real-time line reflecting total asset portfolio value over time.
+  - **Cumulative Net Result / Net Change**: Net cumulative profit/loss trajectory, separating trading alpha from inbound/outbound capital deposits.
+- **Interactive Tooltips**: Date, balance, daily delta, and cumulative return at each timestamp.
+
+#### 3. Temporal Performance Breakdown
+- **Monthly PnL**: Vertical bar chart highlighting profit and loss per calendar month (green for profit, red for loss).
+- **Day of Week PnL**: Statistical analysis of performance grouped from Monday to Sunday, revealing day-of-week seasonality and alpha patterns.
+
+#### 4. Price Milestone Analysis
+- Segmented performance analysis relative to the underlying asset's price levels:
+- **Configurable Intervals**: Intelligent asset-specific presets (e.g., $1,000 for BTC, $100 for ETH) or custom interval inputs.
+- **Return by Price Band**: Identifies at which price intervals strategy performance yielded maximum return.
+
+#### 5. Primary Results & Executive Return
+- **Invested Capital**: Baseline capital committed to operations.
+- **Final Balance**: Net portfolio value at the end of the selected period.
+- **Gross vs. Net Result**: Clear segregation between operational gains and post-fee results.
+- **Net ROI %**: Net percentage return on invested capital.
+- **Annualized Return**: Compounded annualized rate of return for institutional comparison.
+
+#### 6. Operations & Fee Deconstruction (Operations & Fees)
+- **Total Operations Count**: Transaction frequency in the selected period.
+- **Trades vs. Account Transfers**: Clear distinction between active trading transactions and deposit/withdrawal transfers.
+- **Fee Breakdown**: Deconstructs Trading Fees, Funding Fees, and Transfer charges.
+- **Fee Drag Ratio**: Percentage of gross trading performance absorbed by transaction and financing fees.
+
+#### 7. Advanced Risk & Consistency Metrics
+- **Profit Factor**: Ratio of gross profits to gross losses (`Gross Gains / |Gross Losses|`), tagged with qualitative badges:
+  - *Excellent* (> 2.0)
+  - *Good* (1.5 - 2.0)
+  - *Acceptable* (1.1 - 1.5)
+  - *Poor* (< 1.1)
+- **Daily Win Rate**: Percentage of days with positive return vs. total days evaluated.
+- **Consistency Index**: Statistical measurement of daily return dispersion and stability:
+  - *High Consistency*: Stable daily returns with low tail risk.
+  - *Moderate Consistency*: Balanced performance with controlled dispersion.
+  - *High Dispersion*: High variance with dependency on few outlier sessions.
+
+#### 8. High-Performance Architecture
+- Defaults to 7-day window for instant rendering without lag.
+- Downsamples long series to maximum 80 data points for responsive interaction.
+- Recharts SVG animations disabled (`isAnimationActive={false}`) for immediate tab and filter switches.
+- Granular Zustand subscriptions and memoized sub-sections (`React.memo`).
+
+---
 
 ### 📈 Market Analytics (Quantitative Intelligence & Derivatives Flow)
 Cross-exchange derivatives intelligence terminal:
@@ -332,12 +427,20 @@ To ensure non-USDT funding balances and smaller cap tokens on Bitget and OKX are
 
 ---
 
-## 11. Connection Resilience, Fail-Fast Auth & Global Error Boundary
+## 11. Connection Resilience, Anti-SSRF Defense, Code-Splitting & Global Error Boundary
 
+- **Advanced Anti-SSRF Protection (`ssrfValidator.ts`)**:
+  - Both the local server proxy (`server.ts`) and Vercel serverless functions (`/api/proxy.ts`) implement strict upstream URL validation.
+  - Active blocking of cloud instance metadata IP endpoints (such as `169.254.169.254`, `metadata.google.internal`), reserved system ports, and disallowed URL protocols.
+  - Exchange APIs and authorized AI providers (OpenAI, OpenRouter) are verified against strict domain allowlists. For local Ollama instances, local network (LAN) and localhost routes are securely permitted (`allowLanIps: true`).
+- **Performance Code-Splitting (React Suspense & TabLoadingSkeleton)**:
+  - To ensure instant application bundle startup, heavy analytical tabs (`MarketAnalyticsDashboard`, `HedgeProDashboard`, `FundingDashboard`, `ClosedPositions`, transaction views, reports, and settings) are dynamically split using `React.lazy`.
+  - Seamless loading skeletons (`TabLoadingSkeleton`) render smoothly during tab switches, preventing UI freezes on lower-end devices.
 - **Fail-Fast Authentication Detection**: If an API key fails with invalid credentials, insufficient permissions, or whitelist restrictions (HTTP 401/403, Bybit `10003/10004/10005/33004`, OKX `50100/50105/50111/50113`, Bitget `40001/40005/40006/40014`), CPM aborts retries immediately to prevent your IP from being banned by Cloudflare or Akamai rate limiters.
 - **Exponential Backoff with Jitter for Network Drops**: Transient connectivity drops retry on an exponential delay schedule (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) with random jitter, stopping after 5 attempts via circuit breaker.
 - **Global Error Boundary**: Unhandled React rendering errors trigger an intuitive **Safe Recovery** screen with error stack diagnostics and single-click recovery buttons: **Reload Dashboard** and **Clear Cache & Reload**.
 - **Instant Scroll Position Reset**: Tab transitions automatically reset scroll positions to top-left (`useLayoutEffect`), ensuring optimal viewing upon switching views.
+- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **65 test files with 660 unit and integration tests**.
 
 ---
 

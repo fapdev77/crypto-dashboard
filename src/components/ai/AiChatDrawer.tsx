@@ -23,7 +23,13 @@ import {
   PanelRight,
   Square,
   FileText,
+  Lock,
+  Unlock,
+  ArrowRight,
 } from 'lucide-react';
+import { useApiKeysStore } from '../../store/apiKeysStore';
+import { isVaultConfigured } from '../../utils/vaultHelpers';
+import { VaultSetupModal } from '../VaultSetupModal';
 import { useAiChatStore } from '../../store/aiChatStore';
 import { useAiSettingsStore } from '../../store/aiSettingsStore';
 import { aiAdapter } from '../../services/ai/aiAdapter';
@@ -70,6 +76,10 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
   const isEnabled = useAiSettingsStore((state) => state.globalSettings.isEnabled);
   const setIsEnabled = useAiSettingsStore((state) => state.setIsEnabled);
   const primaryModel = aiAdapter.getPrimaryActiveModel();
+
+  const { isInitialized, encryptedData, isUnlocked } = useApiKeysStore();
+  const isVaultActive = isVaultConfigured({ isInitialized, encryptedData });
+  const [isVaultSetupModalOpen, setIsVaultSetupModalOpen] = useState(false);
 
   const [inputMessage, setInputMessage] = useState('');
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -623,7 +633,86 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
         {/* Scrollable Message List / Zero State */}
         <div className={`flex-1 overflow-y-auto p-4 space-y-4 bg-[#0b0c10] ${isMaximized ? 'w-full' : ''}`}>
           <div className={isMaximized ? 'w-full space-y-4 px-2 xl:px-8 2xl:px-16' : 'space-y-4'}>
-          {!isEnabled ? (
+          {!isVaultActive ? (
+            /* Mandatory Vault Setup Required State */
+            <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 my-auto space-y-4">
+              <div className="p-6 sm:p-8 bg-gradient-to-b from-[#181a20] to-[#121316] border border-[#2a2b30] rounded-2xl max-w-md w-full shadow-2xl space-y-4 text-gray-300">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center mx-auto text-amber-400 shadow-inner">
+                  <ShieldAlert className="w-8 h-8 text-amber-400" />
+                </div>
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 mb-2 text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 rounded-full border border-amber-500/30">
+                    Security Lockout • Vault Required
+                  </span>
+                  <h3 className="text-base sm:text-lg font-bold text-white">
+                    PIKA AI Assistant Locked
+                  </h3>
+                  <p className="text-xs text-[#8E9299] mt-2 leading-relaxed">
+                    The PIKA quantitative AI auditor operates exclusively under zero-trust security. Real-time portfolio analysis, balance auditing, and risk metrics are completely locked until your local vault is configured with a master passphrase.
+                  </p>
+                </div>
+
+                <div className="bg-[#151619] p-3.5 rounded-xl border border-[#2a2b30]/60 text-left text-[11px] text-[#A0A4AB] space-y-1.5">
+                  <div className="flex items-center gap-2 text-white font-medium text-xs mb-1">
+                    <Lock className="w-4 h-4 text-[#2F6BFF] shrink-0" />
+                    Zero-Trust Protection
+                  </div>
+                  <p>• Military-grade PBKDF2 (600,000 iterations) + AES-GCM-256 client encryption.</p>
+                  <p>• API credentials and account balances are never transmitted in plaintext.</p>
+                  <p>• Protects against unauthorized local extensions and session hijacking.</p>
+                </div>
+
+                <div className="pt-2 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsVaultSetupModalOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-[#2F6BFF] hover:bg-[#1E56DF] active:scale-[0.99] text-white rounded-xl text-xs font-bold shadow-lg shadow-[#2F6BFF]/25 transition cursor-pointer min-h-[44px]"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>Activate Security Vault to Unlock</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-[10px] text-[#8E9299]">
+                  You can explore mock simulation data across the dashboard without configuring keys, but PIKA live analysis requires an active vault.
+                </p>
+              </div>
+            </div>
+          ) : !isUnlocked && encryptedData ? (
+            /* Vault Configured but Locked in Memory State */
+            <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 my-auto space-y-4">
+              <div className="p-6 sm:p-8 bg-gradient-to-b from-[#181a20] to-[#121316] border border-[#2a2b30] rounded-2xl max-w-md w-full shadow-2xl space-y-4 text-gray-300">
+                <div className="w-16 h-16 rounded-2xl bg-[#2F6BFF]/10 border border-[#2F6BFF]/25 flex items-center justify-center mx-auto text-[#2F6BFF] shadow-inner">
+                  <Lock className="w-8 h-8 text-[#2F6BFF]" />
+                </div>
+                <div>
+                  <span className="inline-block px-2.5 py-0.5 mb-2 text-[10px] font-bold uppercase tracking-wider bg-[#2F6BFF]/15 text-[#2F6BFF] rounded-full border border-[#2F6BFF]/30">
+                    Vault Locked
+                  </span>
+                  <h3 className="text-base sm:text-lg font-bold text-white">
+                    Unlock Vault to Use PIKA
+                  </h3>
+                  <p className="text-xs text-[#8E9299] mt-2 leading-relaxed">
+                    Your security vault is currently locked. Enter your master passphrase to allow PIKA to read audited exchange balances and position calculations.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeDrawer();
+                      window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'settings' }));
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-[#2F6BFF] hover:bg-[#1E56DF] active:scale-[0.99] text-white rounded-xl text-xs font-bold shadow-lg shadow-[#2F6BFF]/25 transition cursor-pointer min-h-[44px]"
+                  >
+                    <Unlock className="w-4 h-4" />
+                    <span>Go to Settings to Unlock</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : !isEnabled ? (
             /* First-Access 1-Click Activation Card */
             <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-4">
               <div className="p-6 bg-gradient-to-b from-[#181a20] to-[#121316] border border-[#2a2b30] rounded-2xl text-gray-300 max-w-md shadow-2xl space-y-4">
@@ -883,7 +972,21 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
         </div>
 
         {/* Footer Input Area */}
-        {isEnabled && (
+        {!isVaultActive ? (
+          <footer className="p-3.5 border-t border-[#2a2b30] bg-[#151619] shrink-0 text-center">
+            <div className="flex items-center justify-center gap-2 text-xs text-[#8E9299]">
+              <Lock className="w-3.5 h-3.5 text-amber-400" />
+              <span>Security Vault must be activated to enable PIKA AI chat.</span>
+            </div>
+          </footer>
+        ) : !isUnlocked && encryptedData ? (
+          <footer className="p-3.5 border-t border-[#2a2b30] bg-[#151619] shrink-0 text-center">
+            <div className="flex items-center justify-center gap-2 text-xs text-[#8E9299]">
+              <Lock className="w-3.5 h-3.5 text-amber-400" />
+              <span>Security Vault is locked. Enter master passphrase to send messages.</span>
+            </div>
+          </footer>
+        ) : isEnabled && (
           <footer className="p-3.5 border-t border-[#2a2b30] bg-[#151619] shrink-0">
             <div className={isMaximized ? 'w-full px-2 xl:px-8 2xl:px-16' : ''}>
               <div className="relative rounded-xl bg-[#0b0c10] border border-[#2a2b30] focus-within:border-[#2F6BFF] transition shadow-inner">
@@ -899,24 +1002,24 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
               />
 
               {isThinking ? (
-                <AppTooltip description="Parar requisição (Esc)" side="top">
+                <AppTooltip description="Stop request (Esc)" side="top">
                   <button
                     type="button"
                     onClick={handleCancelRequest}
                     className="absolute right-2 bottom-2 w-7 h-7 flex items-center justify-center bg-rose-600 hover:bg-rose-500 active:scale-95 text-white rounded-lg transition shadow-md cursor-pointer animate-pulse"
-                    aria-label="Parar requisição (Esc)"
+                    aria-label="Stop request (Esc)"
                   >
                     <Square className="w-3 h-3 fill-current" />
                   </button>
                 </AppTooltip>
               ) : (
-                <AppTooltip description="Enviar mensagem (Enter)" side="top">
+                <AppTooltip description="Send message (Enter)" side="top">
                   <button
                     type="button"
                     onClick={() => handleSendMessage()}
                     disabled={!inputMessage.trim()}
                     className="absolute right-2 bottom-2 w-7 h-7 flex items-center justify-center bg-[#2F6BFF] hover:bg-[#2F6BFF]/80 active:scale-95 disabled:bg-[#1e1f24] text-white disabled:text-[#8E9299] rounded-lg transition shadow-md cursor-pointer disabled:cursor-not-allowed"
-                    aria-label="Enviar mensagem"
+                    aria-label="Send message"
                   >
                     <Send className="w-3.5 h-3.5" />
                   </button>
@@ -980,6 +1083,13 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
             </div>
           </div>
         )}
+
+        {/* Vault Setup Modal when invoked from locked drawer */}
+        <VaultSetupModal
+          isOpen={isVaultSetupModalOpen}
+          onClose={() => setIsVaultSetupModalOpen(false)}
+          reason="The PIKA AI Assistant requires an active security vault before auditing financial metrics or connections."
+        />
       </aside>
     </>
   );

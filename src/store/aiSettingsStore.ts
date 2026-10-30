@@ -248,6 +248,11 @@ export const useAiSettingsStore = create<AiSettingsState>()(
     {
       name: 'pika-ai-settings-v1',
       version: 1,
+      partialize: (state) => ({
+        globalSettings: state.globalSettings,
+        // ZERO-TRUST RULE: Strip sensitive apiKeys before writing to localStorage
+        models: state.models.map(({ apiKey: _unused, ...modelWithoutKey }) => modelWithoutKey),
+      }),
     }
   )
 );

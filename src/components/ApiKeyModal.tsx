@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Eye, EyeOff, Save, Trash2, Globe, Server, ChevronDown, Check, Info, X } from 'lucide-react';
+import { Eye, EyeOff, Save, Trash2, Globe, Server, ChevronDown, Check, Info, X, Lock } from 'lucide-react';
 import { useApiKeysStore, Exchange, AccountType, ApiEnvironment, BybitRegion, ApiCredentials } from '../store/apiKeysStore';
 import { LogManager } from '../services/LogManager';
 import { BYBIT_REGIONS, getBybitRegionOption, getBybitBaseUrl } from '../utils/bybitEndpoints';
@@ -20,7 +20,7 @@ const EXCHANGES: { id: Exchange; name: string; requiresPassphrase?: boolean }[] 
 ];
 
 export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalProps) {
-  const { addKey, removeKey } = useApiKeysStore();
+  const { addKey, removeKey, isInitialized, initializeVault } = useApiKeysStore();
   
   const [exchange, setExchange] = useState<Exchange>('bitget');
   const [accountType, setAccountType] = useState<AccountType>('classic');
@@ -31,6 +31,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [passphrase, setPassphrase] = useState('');
+  const [masterPassphrase, setMasterPassphrase] = useState('');
+  const [showMasterPassphrase, setShowMasterPassphrase] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
   const [isExchangeDropdownOpen, setIsExchangeDropdownOpen] = useState(false);
   const [isRegionDropdownOpen, setIsRegionDropdownOpen] = useState(false);
@@ -80,6 +82,8 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
         setApiKey('');
         setApiSecret('');
         setPassphrase('');
+        setMasterPassphrase('');
+        setShowMasterPassphrase(false);
         setIncludeFunding(true);
         setIsSubAccount(false);
       }
@@ -97,7 +101,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
   const currentRegionOpt = getBybitRegionOption(bybitRegion);
   const resolvedBaseUrl = getBybitBaseUrl(environment, bybitRegion);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (label.trim().length < 3) {
@@ -121,7 +125,15 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
     setError('');
 
     if (mode === 'create') {
-      addKey({
+      if (!isInitialized) {
+        if (!masterPassphrase || masterPassphrase.length < 8) {
+          setError('Master Passphrase must be at least 8 characters long to initialize the encrypted vault.');
+          return;
+        }
+        await initializeVault(masterPassphrase);
+      }
+
+      await addKey({
         exchange,
         accountType: exchange === 'bitget' ? accountType : undefined,
         environment: exchange === 'bybit' ? environment : undefined,
@@ -519,6 +531,36 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                  </div>
                )}
              </>
+          )}
+
+          {/* Zero-Trust Master Passphrase initialization if not initialized yet */}
+          {mode === 'create' && !isInitialized && (
+            <div className="p-3 bg-[#2F6BFF]/10 border border-[#2F6BFF]/30 rounded-lg space-y-2">
+              <div className="flex items-center gap-1.5 text-white font-medium text-xs">
+                <Lock className="w-3.5 h-3.5 text-[#2F6BFF]" />
+                <span>Zero-Trust Vault Setup (Master Passphrase)</span>
+              </div>
+              <p className="text-[11px] text-[#8E9299] leading-relaxed">
+                This is your first API connection. Set a master passphrase (minimum 8 characters) to encrypt all credentials safely in your browser.
+              </p>
+              <div className="relative">
+                <input
+                  type={showMasterPassphrase ? "text" : "password"}
+                  required
+                  value={masterPassphrase}
+                  onChange={(e) => setMasterPassphrase(e.target.value)}
+                  className="w-full bg-[#151619] border border-[#2a2b30] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#2F6BFF] pr-9 font-mono"
+                  placeholder="Enter Master Passphrase (min. 8 chars)"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowMasterPassphrase(!showMasterPassphrase)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9299] hover:text-white"
+                >
+                  {showMasterPassphrase ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Account Options (Funding & Sub-account) */}

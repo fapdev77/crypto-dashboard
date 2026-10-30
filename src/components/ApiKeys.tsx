@@ -7,6 +7,8 @@ import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import { ApiKeyModal } from './ApiKeyModal';
+import { VaultSetupModal } from './VaultSetupModal';
+import { isVaultConfigured } from '../utils/vaultHelpers';
 import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 
@@ -17,14 +19,26 @@ const EXCHANGES: { id: Exchange; name: string }[] = [
 ];
 
 export function ApiKeys() {
-  const { keys, toggleKey, removeKey } = useApiKeysStore();
+  const { keys, toggleKey, removeKey, isInitialized, encryptedData } = useApiKeysStore();
   const { statuses } = useConnectionStore();
   const useMockData = useSettingsStore(state => state.useMockData);
 
+  const isConfigured = isVaultConfigured({ isInitialized, encryptedData });
   const [modalOpen, setModalOpen] = useState(false);
+  const [vaultSetupOpen, setVaultSetupOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedKey, setSelectedKey] = useState<ApiCredentials | undefined>();
   const [keyToDelete, setKeyToDelete] = useState<string | null>(null);
+
+  const handleNewKeyClick = () => {
+    if (!isConfigured) {
+      setVaultSetupOpen(true);
+    } else {
+      setSelectedKey(undefined);
+      setModalMode('create');
+      setModalOpen(true);
+    }
+  };
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     bitget: false,
@@ -88,18 +102,36 @@ export function ApiKeys() {
                 </button>
               </div>
               <button
-                onClick={() => {
-                  setSelectedKey(undefined);
-                  setModalMode('create');
-                  setModalOpen(true);
-                }}
-                className="flex items-center gap-2 py-2 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white text-sm font-medium rounded-lg transition-colors shrink-0"
+                onClick={handleNewKeyClick}
+                className="flex items-center gap-2 py-2 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white text-sm font-medium rounded-lg transition-colors shrink-0 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 New API Key
               </button>
             </div>
           </div>
+
+          {/* Empty state when no keys configured */}
+          {keys.length === 0 && (
+            <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-8 sm:p-10 text-center max-w-md mx-auto my-12 flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#2F6BFF]/10 border border-[#2F6BFF]/25 flex items-center justify-center text-[#2F6BFF] mb-4">
+                <Shield className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-1.5">No API Connections</h3>
+              <p className="text-xs text-[#8E9299] max-w-sm mb-6 leading-relaxed">
+                {!isConfigured
+                  ? 'Before adding exchange API keys, the Zero-Trust Security Vault must be activated to ensure all your credentials are encrypted locally.'
+                  : 'Connect your Bitget, Bybit, or OKX read-only API keys to monitor consolidated balances, open positions, and risk metrics.'}
+              </p>
+              <button
+                onClick={handleNewKeyClick}
+                className="flex items-center gap-2 py-2.5 px-5 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-[#2F6BFF]/25 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                {!isConfigured ? 'Activate Vault & Add Key' : 'Add First API Key'}
+              </button>
+            </div>
+          )}
 
           {/* Groups */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -239,6 +271,17 @@ export function ApiKeys() {
           </div>
         </div>
       </div>
+
+      <VaultSetupModal
+        isOpen={vaultSetupOpen}
+        onClose={() => setVaultSetupOpen(false)}
+        reason="To add exchange API keys, you must first create a master passphrase to activate the local security vault."
+        onSuccess={() => {
+          setSelectedKey(undefined);
+          setModalMode('create');
+          setModalOpen(true);
+        }}
+      />
 
       <ApiKeyModal
         isOpen={modalOpen}

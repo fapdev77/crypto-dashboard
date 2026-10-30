@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import fetch from "node-fetch"; // natively available globally in Node 18+ but let's use standard global fetch
 import { ServerLogger } from './src/utils/serverLogger';
+import { validateSafeUpstreamUrl, SSRF_VALIDATION_CONFIG } from './src/config/ssrfAllowlist';
 
 async function startServer() {
   const app = express();
@@ -31,36 +32,11 @@ async function startServer() {
       }
 
       // SSRF prevention: Domain validation (Allowlist)
-      const allowedDomains = [
-        'api.bybit.com',
-        'api.bytick.com',
-        'api-testnet.bybit.com',
-        'api.bybit.nl',
-        'api.bybit.tr',
-        'api.bybit.kz',
-        'api.bybitgeorgia.ge',
-        'api.bybit.ae',
-        'api.bybit.eu',
-        'api.bybit.id',
-        'api.manepa.jp',
-        'api-testnet.manepa.jp',
-        'api.spark-fintech.com',
-        'api-testnet.spark-fintech.com',
-        'api.bitget.com',
-        'www.okx.com',
-        'api.okx.com',
-        'aws.okx.com',
-        'api.alternative.me',
-      ];
+      const validation = validateSafeUpstreamUrl(targetUrl, SSRF_VALIDATION_CONFIG);
 
-      try {
-        const urlObj = new URL(targetUrl);
-        if (!allowedDomains.includes(urlObj.hostname)) {
-          ServerLogger.error('Proxy', `SSRF-Block — unauthorized domain: ${urlObj.hostname}`);
-          return res.status(403).json({ error: "Forbidden: Domain not in proxy allowlist" });
-        }
-      } catch (err) {
-        return res.status(400).json({ error: "Invalid targetUrl format" });
+      if (!validation.isValid) {
+        ServerLogger.error('Proxy', `SSRF-Block: rejected upstream '${targetUrl}' - ${validation.reason}`);
+        return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
       }
 
       ServerLogger.info('Proxy', `${method} ${targetUrl}`);
@@ -266,7 +242,16 @@ async function startServer() {
       }
 
       if (provider === 'ollama') {
-        const url = (baseUrl || 'http://localhost:11434').replace(/\/+$/, '');
+        const rawUrl = baseUrl || 'http://localhost:11434';
+        const validation = validateSafeUpstreamUrl(rawUrl, {
+          allowLanIps: true,
+          allowedProtocols: ['http:', 'https:'],
+        });
+        if (!validation.isValid) {
+          ServerLogger.error('AI', `SSRF-Block: rejected Ollama baseUrl '${rawUrl}' - ${validation.reason}`);
+          return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
+        }
+        const url = rawUrl.replace(/\/+$/, '');
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 4000);
         try {
@@ -304,7 +289,16 @@ async function startServer() {
 
       if (provider === 'openai' || provider === 'openrouter') {
         const defaultBase = provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1';
-        const url = (baseUrl || defaultBase).replace(/\/+$/, '');
+        const rawUrl = baseUrl || defaultBase;
+        const validation = validateSafeUpstreamUrl(rawUrl, {
+          allowedProtocols: ['https:'],
+          allowedDomains: ['api.openai.com', 'openrouter.ai'],
+        });
+        if (!validation.isValid) {
+          ServerLogger.error('AI', `SSRF-Block: rejected AI provider baseUrl '${rawUrl}' - ${validation.reason}`);
+          return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
+        }
+        const url = rawUrl.replace(/\/+$/, '');
         const headers: Record<string, string> = {};
         if (clientApiKey) headers['Authorization'] = `Bearer ${clientApiKey}`;
 
@@ -497,6 +491,16 @@ async function startServer() {
       const { endpoint, headers = {}, payload } = req.body || {};
       if (!endpoint || !payload) {
         return res.status(400).json({ error: "Missing required 'endpoint' or 'payload' parameters." });
+      }
+
+      // SSRF validation: allow local network / LAN / localhost, block cloud metadata and dangerous system ports
+      const validation = validateSafeUpstreamUrl(endpoint, {
+        allowLanIps: true,
+        allowedProtocols: ['http:', 'https:'],
+      });
+      if (!validation.isValid) {
+        ServerLogger.error('AI', `SSRF-Block: rejected Ollama endpoint '${endpoint}' - ${validation.reason}`);
+        return res.status(403).json({ error: `Forbidden: ${validation.reason}` });
       }
 
       const cleanHeaders: Record<string, string> = {
