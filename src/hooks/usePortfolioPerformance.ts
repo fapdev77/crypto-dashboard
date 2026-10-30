@@ -10,7 +10,7 @@ import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getBybitTxLogCache, getBitgetTxLogCache, getOkxTxLogCache } from '../services/historyCache';
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../utils/transactionTypeMapper';
 import { fetchTokenUsdPrice } from './useTokenUsdPrice';
-import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
+import { getStrictCalendarStartTime } from '../utils/dateTimeHelper';
 
 export interface PortfolioPerformanceFilters {
   exchange: string;       // 'All' | 'bybit' | 'bitget' | 'okx'
@@ -413,7 +413,7 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
   // Apply filters to unified entries
   const filteredEntries = useMemo(() => {
     const exchFilter = filters.exchange.toLowerCase();
-    const startTime = filters.timePeriod > 0 ? getStartOfTodayInMs() - filters.timePeriod : undefined;
+    const startTime = getStrictCalendarStartTime(filters.timePeriod);
     const isUsdDenom = filters.denomination === 'USD';
 
     return unifiedEntries.filter(e => {

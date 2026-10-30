@@ -12,7 +12,7 @@ import { OkxTransactionService } from '../services/okx/OkxTransactionService';
 import { getBybitTxLogCache, getBitgetTxLogCache, getOkxTxLogCache } from '../services/historyCache';
 import { matchUniversalTxType, UniversalTxType } from '../utils/transactionTypeMapper';
 import { fetchTokenUsdPrice } from './useTokenUsdPrice';
-import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
+import { getStrictCalendarStartTime } from '../utils/dateTimeHelper';
 import Big from 'big.js';
 
 export interface ConsolidatedTxFilters {
@@ -215,7 +215,7 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
   // Filter entries per exchange
   const filteredByExchange = useMemo(() => {
     const filterExch = filters.exchange.toLowerCase();
-    const startTime = filters.timePeriod > 0 ? getStartOfTodayInMs() - filters.timePeriod : undefined;
+    const startTime = getStrictCalendarStartTime(filters.timePeriod);
 
     // Helper filter function
     const matchesCommon = (

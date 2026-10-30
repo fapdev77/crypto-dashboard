@@ -233,3 +233,22 @@ export function getTodayRange(): { startMs: number; endMs: number } {
     endMs: getEndOfTodayInMs(),
   };
 }
+
+/**
+ * Calculates the start timestamp (in ms) for strict calendar periods.
+ * - timePeriodMs <= 0 or undefined: returns undefined (All Time, no start boundary).
+ * - 1 day (e.g., 24 * 60 * 60 * 1000 for "Today"): returns 00:00:00.000 of today.
+ * - N days: returns 00:00:00.000 of (N - 1) days before today, covering exactly N calendar days ending today.
+ *
+ * @param timePeriodMs - Duration in milliseconds (e.g., 24h, 7d, 30d) or 0 for All Time.
+ * @returns Start timestamp in milliseconds, or undefined if no time filter.
+ */
+export function getStrictCalendarStartTime(timePeriodMs: number | undefined): number | undefined {
+  if (!timePeriodMs || timePeriodMs <= 0) return undefined;
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const days = Math.round(timePeriodMs / ONE_DAY_MS);
+  if (days <= 1) {
+    return getStartOfTodayInMs();
+  }
+  return getStartOfTodayInMs() - (days - 1) * ONE_DAY_MS;
+}
