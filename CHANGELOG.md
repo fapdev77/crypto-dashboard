@@ -1,3 +1,10 @@
+# [2.18.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.17.0...v2.18.0) (2026-10-30)
+
+
+### Features
+
+* **analytics:** add custom date range support ([fdb6c72](https://github.com/fapdev77/crypto-dashboard/commit/fdb6c72f8ee846edcbe4e99b0a73aae2ab65fb7d))
+
 # [2.17.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.16.0...v2.17.0) (2026-10-29)
 
 
