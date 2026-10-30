@@ -12,7 +12,7 @@ import { OkxTransactionService } from '../services/okx/OkxTransactionService';
 import { getBybitTxLogCache, getBitgetTxLogCache, getOkxTxLogCache } from '../services/historyCache';
 import { matchUniversalTxType, UniversalTxType } from '../utils/transactionTypeMapper';
 import { fetchTokenUsdPrice } from './useTokenUsdPrice';
-import { getStrictCalendarStartTime } from '../utils/dateTimeHelper';
+import { getStrictCalendarStartTime, resolvePeriodDateRange } from '../utils/dateTimeHelper';
 import Big from 'big.js';
 
 export interface ConsolidatedTxFilters {
@@ -22,7 +22,9 @@ export interface ConsolidatedTxFilters {
   type: string;         // 'All' | UniversalTxType
   currency: string;     // 'All' | coin symbol
   accountId: string;    // 'All' | connectionId
-  timePeriod: number;   // ms (0 = All Time)
+  timePeriod: number | string;   // ms (0 = All Time), 'mtd', 'ytd', 'custom'
+  customStartDate?: string;      // 'YYYY-MM-DD'
+  customEndDate?: string;        // 'YYYY-MM-DD'
 }
 
 export const defaultConsolidatedFilters: ConsolidatedTxFilters = {
@@ -215,7 +217,11 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
   // Filter entries per exchange
   const filteredByExchange = useMemo(() => {
     const filterExch = filters.exchange.toLowerCase();
-    const startTime = getStrictCalendarStartTime(filters.timePeriod);
+    const { startTime, endTime } = resolvePeriodDateRange(
+      filters.timePeriod,
+      filters.customStartDate,
+      filters.customEndDate
+    );
 
     // Helper filter function
     const matchesCommon = (
@@ -238,7 +244,8 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
       }
 
       // Time period filter
-      if (startTime && entry.transactionTime < startTime) return false;
+      if (startTime !== null && entry.transactionTime < startTime) return false;
+      if (endTime !== null && entry.transactionTime > endTime) return false;
 
       // Currency filter
       if (filters.currency && filters.currency.toLowerCase() !== 'all') {

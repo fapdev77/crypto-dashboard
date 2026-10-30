@@ -72,17 +72,7 @@ const CATEGORIES = [
   { value: 'inverse', label: 'Inverse', tooltip: 'Inverse contracts including Inverse perpetual and Inverse futures.' },
   { value: 'option', label: 'Options', tooltip: 'Options contracts.' }
 ];
-const TIME_PERIODS = [
-  { label: 'All Time', ms: 0 },
-  { label: 'Today', ms: 24 * 60 * 60 * 1000 },
-  { label: '7 Days', ms: 7 * 24 * 60 * 60 * 1000 },
-  { label: '14 Days', ms: 14 * 24 * 60 * 60 * 1000 },
-  { label: '30 Days', ms: 30 * 24 * 60 * 60 * 1000 },
-  { label: '90 Days', ms: 90 * 24 * 60 * 60 * 1000 },
-  { label: '120 Days', ms: 120 * 24 * 60 * 60 * 1000 },
-  { label: '6 Months', ms: 180 * 24 * 60 * 60 * 1000 },
-  { label: '1 Year', ms: 365 * 24 * 60 * 60 * 1000 },
-];
+import { TIME_PERIOD_OPTIONS } from '../../../utils/dateTimeHelper';
 
 interface Props {
   filters: TxFilters;
@@ -132,8 +122,21 @@ export function BybitTransactionFilters({ filters, setFilters, availableCurrenci
       // Period filter
       period={{
         value: String(filters.timePeriod),
-        onChange: (val) => setFilters(p => ({ ...p, timePeriod: Number(val) })),
-        options: TIME_PERIODS.map(tp => ({ value: String(tp.ms), label: tp.label })),
+        onChange: (val) => setFilters(p => ({
+          ...p,
+          timePeriod: val,
+          customStartDate: val === 'custom' ? p.customStartDate : undefined,
+          customEndDate: val === 'custom' ? p.customEndDate : undefined,
+        })),
+        options: TIME_PERIOD_OPTIONS.map(tp => ({ value: tp.value, label: tp.label, tooltip: tp.tooltip, isCustom: tp.isCustom })),
+        customStartDate: filters.customStartDate,
+        customEndDate: filters.customEndDate,
+        onCustomDateChange: (start, end) => setFilters(p => ({
+          ...p,
+          timePeriod: 'custom',
+          customStartDate: start,
+          customEndDate: end,
+        })),
       }}
     />
   );

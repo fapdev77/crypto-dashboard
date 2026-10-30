@@ -3,6 +3,8 @@ import { AppTooltip } from './Tooltip';
 import { Search, X, ChevronDown, Calendar, Users } from 'lucide-react';
 import { useApiKeysStore } from '../../store/apiKeysStore';
 import { ExchangeIcon } from './ExchangeIcon';
+import { TIME_PERIOD_OPTIONS } from '../../utils/dateTimeHelper';
+import { CustomDateRangeModal } from './CustomDateRangeModal';
 
 export interface FilterBarProps {
   // Search Filter
@@ -47,10 +49,13 @@ export interface FilterBarProps {
 
   // Period Filter
   period?: {
-    value: string;
+    value: string | number;
     onChange: (val: any) => void;
-    options: Array<{ value: string; label: string; icon?: React.ReactNode; tooltip?: string }>;
+    options?: Array<{ value: string; label: string; icon?: React.ReactNode; tooltip?: string; isCustom?: boolean }>;
     tooltip?: string;
+    customStartDate?: string;
+    customEndDate?: string;
+    onCustomDateChange?: (startDate: string, endDate: string) => void;
   };
 
   // Side Filter
@@ -97,12 +102,18 @@ function getStatusTooltip(status: string): string {
 function getPeriodTooltip(label: string, value: string): string {
   const l = label.toLowerCase();
   const v = String(value).toLowerCase();
-  if (l === 'today' || v === 'today') return 'View records from the last 24 hours';
-  if (l.includes('7 day') || v === '7d') return 'View records from the last 7 days';
-  if (l.includes('14 day') || v === '14d') return 'View records from the last 14 days';
-  if (l.includes('30 day') || v === '30d') return 'View records from the last 30 days';
-  if (l.includes('90 day') || v === '90d') return 'View records from the last 90 days';
-  if (l === 'all' || v === 'all') return 'View all historical records';
+  if (l === 'today' || v === 'today') return 'View records from the current calendar day (00:00:00 today)';
+  if (l.includes('7 day') || v === '7d') return 'View records from the last 7 calendar days';
+  if (l.includes('14 day') || v === '14d') return 'View records from the last 14 calendar days';
+  if (l.includes('30 day') || v === '30d') return 'View records from the last 30 calendar days';
+  if (l.includes('90 day') || v === '90d') return 'View records from the last 90 calendar days';
+  if (l.includes('120 day') || v === '120d') return 'View records from the last 120 calendar days';
+  if (l.includes('6 month') || v === '6m') return 'View records from the last 6 calendar months';
+  if (l.includes('1 year') || v === '1y') return 'View records from the last calendar year';
+  if (l === 'mtd' || v === 'mtd') return 'Month-to-Date: from the 1st of the current month to today';
+  if (l === 'ytd' || v === 'ytd') return 'Year-to-Date: from January 1st of the current year to today';
+  if (l.includes('custom') || v === 'custom') return 'Filter by custom calendar start and end date';
+  if (l === 'all' || v === 'all' || v === '0') return 'View all historical records';
   return `Filter period: ${label}`;
 }
 
@@ -119,7 +130,26 @@ export function FilterBar({
 }: FilterBarProps) {
   const { keys } = useApiKeysStore();
   const [activeDropdown, setActiveDropdown] = useState<DropdownKey>(null);
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const activeDropdownRef = useRef<HTMLDivElement>(null);
+
+  const effectivePeriodOptions: Array<{
+    value: string;
+    label: string;
+    icon?: React.ReactNode;
+    tooltip?: string;
+    isCustom?: boolean;
+  }> = useMemo(() => {
+    if (period?.options && period.options.length > 0) {
+      return period.options;
+    }
+    return TIME_PERIOD_OPTIONS.map(opt => ({
+      value: opt.value,
+      label: opt.label,
+      tooltip: opt.tooltip,
+      isCustom: opt.isCustom,
+    }));
+  }, [period?.options]);
 
   const toggleDropdown = (key: DropdownKey) => {
     setActiveDropdown(current => (current === key ? null : key));
@@ -707,70 +737,106 @@ export function FilterBar({
 
       {/* 7. Custom Period Select */}
       {period && (
-        <div
-          ref={activeDropdown === 'period' ? activeDropdownRef : null}
-          className={`relative w-full sm:w-auto ${activeDropdown === 'period' ? 'z-40' : 'z-20'}`}
-        >
-          <AppTooltip description={period.tooltip || 'Filter by time period'} side="top">
-            <button
-              type="button"
-              onClick={() => toggleDropdown('period')}
-              className="w-full sm:w-auto bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between sm:min-w-[130px] cursor-pointer"
-            >
-              <div className="flex items-center gap-2 truncate">
-                {(() => {
-                  const selectedOpt = period.options.find(o => String(o.value) === String(period.value));
+        <>
+          <div
+            ref={activeDropdown === 'period' ? activeDropdownRef : null}
+            className={`relative w-full sm:w-auto ${activeDropdown === 'period' ? 'z-40' : 'z-20'}`}
+          >
+            <AppTooltip description={period.tooltip || 'Filter by time period'} side="top">
+              <button
+                type="button"
+                onClick={() => toggleDropdown('period')}
+                className="w-full sm:w-auto bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between sm:min-w-[130px] cursor-pointer"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  {(() => {
+                    const isCustom = String(period.value).toLowerCase() === 'custom';
+                    if (isCustom && period.customStartDate && period.customEndDate) {
+                      return (
+                        <>
+                          <Calendar className="w-4 h-4 shrink-0 text-blue-400" />
+                          <span className="truncate text-xs text-blue-300 font-mono">
+                            {period.customStartDate} ~ {period.customEndDate}
+                          </span>
+                        </>
+                      );
+                    }
+                    const selectedOpt = effectivePeriodOptions.find(o => String(o.value) === String(period.value));
+                    return (
+                      <>
+                        {selectedOpt?.icon || <Calendar className="w-4 h-4 shrink-0 text-[#8E9299]" />}
+                        <span className="truncate">{selectedOpt?.label || (isCustom ? 'Custom Range' : period.value)}</span>
+                      </>
+                    );
+                  })()}
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
+                    activeDropdown === 'period' ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+            </AppTooltip>
+
+            {activeDropdown === 'period' && (
+              <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[170px] mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden max-h-[340px] overflow-y-auto custom-scrollbar">
+                {effectivePeriodOptions.map((opt, i) => {
+                  const tooltipDesc = opt.tooltip || getPeriodTooltip(opt.label, opt.value);
+                  const isSelected = String(period.value) === String(opt.value);
+                  const isCustomOpt = opt.value === 'custom' || opt.isCustom;
+
                   return (
-                    <>
-                      {selectedOpt?.icon || <Calendar className="w-4 h-4 shrink-0 text-[#8E9299]" />}
-                      <span className="truncate">{selectedOpt?.label || period.value}</span>
-                    </>
+                    <AppTooltip key={`${opt.value}-${i}`} description={tooltipDesc} side="right">
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isCustomOpt) {
+                              setActiveDropdown(null);
+                              setIsCustomModalOpen(true);
+                            } else {
+                              period.onChange(opt.value);
+                              setActiveDropdown(null);
+                            }
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#2F6BFF] text-white'
+                              : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                          }`}
+                        >
+                          {opt.icon ? (
+                            <span className="shrink-0">{opt.icon}</span>
+                          ) : (
+                            <Calendar className="w-4 h-4 shrink-0" />
+                          )}
+                          <span className="truncate">{opt.label}</span>
+                          {isCustomOpt && isSelected && period.customStartDate && period.customEndDate && (
+                            <span className="ml-auto text-[10px] text-blue-300 font-mono">Edit</span>
+                          )}
+                        </button>
+                      </div>
+                    </AppTooltip>
                   );
-                })()}
+                })}
               </div>
-              <ChevronDown
-                className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
-                  activeDropdown === 'period' ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-          </AppTooltip>
+            )}
+          </div>
 
-          {activeDropdown === 'period' && (
-            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[150px] mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
-              {period.options.map((opt, i) => {
-                const tooltipDesc = opt.tooltip || getPeriodTooltip(opt.label, opt.value);
-                const isSelected = String(period.value) === String(opt.value);
-
-                return (
-                  <AppTooltip key={`${opt.value}-${i}`} description={tooltipDesc} side="right">
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          period.onChange(opt.value);
-                          setActiveDropdown(null);
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#2F6BFF] text-white'
-                            : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
-                        }`}
-                      >
-                        {opt.icon ? (
-                          <span className="shrink-0">{opt.icon}</span>
-                        ) : (
-                          <Calendar className="w-4 h-4 shrink-0" />
-                        )}
-                        <span className="truncate">{opt.label}</span>
-                      </button>
-                    </div>
-                  </AppTooltip>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          {/* Custom Date Range Modal */}
+          <CustomDateRangeModal
+            isOpen={isCustomModalOpen}
+            onClose={() => setIsCustomModalOpen(false)}
+            initialStartDate={period.customStartDate}
+            initialEndDate={period.customEndDate}
+            onApply={(start, end) => {
+              if (period.onCustomDateChange) {
+                period.onCustomDateChange(start, end);
+              }
+              period.onChange('custom');
+            }}
+          />
+        </>
       )}
 
       {/* 7. Search Input */}

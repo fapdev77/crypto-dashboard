@@ -8,7 +8,7 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { OrderHistoryService } from '../services/orders/OrderHistoryService';
 import { LogManager } from '../services/LogManager';
-import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
+import { getStartOfTodayInMs, resolvePeriodDateRange } from '../utils/dateTimeHelper';
 import mockOrdersData from '../mock/orders.json';
 
 /** Filter configuration for the Order Reports view. */
@@ -25,8 +25,11 @@ export interface OrderFilters {
   side: string;
   /** Whether to show open or closed orders. */
   status: 'OPEN' | 'CLOSED';
-  /** Time period in ms for closed orders (only orders newer than this). */
-  timePeriod: number;
+  /** Time period in ms for closed orders (only orders newer than this), or 'mtd', 'ytd', 'custom'. */
+  timePeriod: number | string;
+  /** Optional custom date range boundaries (YYYY-MM-DD). */
+  customStartDate?: string;
+  customEndDate?: string;
   /** Account/connection filter: 'All' | connectionId. */
   accountId: string;
   /** Optional fine-grained status filter for closed orders ('All' | 'FILLED' | 'CANCELLED' etc). */
@@ -210,6 +213,12 @@ export function useOrderReports(filters: OrderFilters) {
   }, [keys, filters.status, useMockData, historyCacheVersion, historyCacheInterval, lastSyncTime, setLastSyncTime]);
 
   const orders = useMemo(() => {
+    const { startTime, endTime } = resolvePeriodDateRange(
+      filters.timePeriod,
+      filters.customStartDate,
+      filters.customEndDate
+    );
+
     if (useMockData) {
       // Source: global in-memory cache for open orders, local state for closed
       const rawOrders: UnifiedOrder[] = filters.status === 'OPEN'
@@ -217,13 +226,13 @@ export function useOrderReports(filters: OrderFilters) {
         : closedRawOrders;
 
       const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
-      const now = Date.now();
-      const isToday = filters.timePeriod === 24 * 60 * 60 * 1000;
-      const cutoffTime = isToday ? getStartOfTodayInMs() : now - filters.timePeriod;
 
       const filtered = rawOrders.filter(order => {
         if (filters.exchange.toLowerCase() !== 'all' && order.exchange.toLowerCase() !== filters.exchange.toLowerCase()) return false;
-        if (filters.status === 'CLOSED' && order.createdTime < cutoffTime) return false;
+        if (filters.status === 'CLOSED') {
+          if (startTime !== null && order.createdTime < startTime) return false;
+          if (endTime !== null && order.createdTime > endTime) return false;
+        }
         if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
         if (!matchesOrderType(filters.type, order.type)) return false;
         if (filters.side.toLowerCase() !== 'all' && order.side.toLowerCase() !== filters.side.toLowerCase()) return false;
@@ -247,16 +256,16 @@ export function useOrderReports(filters: OrderFilters) {
       : closedRawOrders;
 
     const symbolsList = filters.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
-    const now = Date.now();
-    const isToday = filters.timePeriod === 24 * 60 * 60 * 1000;
-    const cutoffTime = isToday ? getStartOfTodayInMs() : now - filters.timePeriod;
 
     const filtered = rawOrders.filter(order => {
       // Rule: Do not display orders for inactive/deactivated API keys
       if (!activeKeyIds.has(order.connectionId)) return false;
 
       if (filters.exchange.toLowerCase() !== 'all' && order.exchange.toLowerCase() !== filters.exchange.toLowerCase()) return false;
-      if (filters.status === 'CLOSED' && order.createdTime < cutoffTime) return false;
+      if (filters.status === 'CLOSED') {
+        if (startTime !== null && order.createdTime < startTime) return false;
+        if (endTime !== null && order.createdTime > endTime) return false;
+      }
       if (symbolsList.length > 0 && !symbolsList.some(sym => order.symbol.toUpperCase().includes(sym))) return false;
       if (!matchesOrderType(filters.type, order.type)) return false;
       if (filters.side.toLowerCase() !== 'all' && order.side.toLowerCase() !== filters.side.toLowerCase()) return false;

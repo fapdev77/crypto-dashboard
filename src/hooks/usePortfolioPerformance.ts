@@ -10,13 +10,15 @@ import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getBybitTxLogCache, getBitgetTxLogCache, getOkxTxLogCache } from '../services/historyCache';
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../utils/transactionTypeMapper';
 import { fetchTokenUsdPrice } from './useTokenUsdPrice';
-import { getStrictCalendarStartTime } from '../utils/dateTimeHelper';
+import { getStrictCalendarStartTime, resolvePeriodDateRange } from '../utils/dateTimeHelper';
 
 export interface PortfolioPerformanceFilters {
   exchange: string;       // 'All' | 'bybit' | 'bitget' | 'okx'
   accountId: string;      // 'All' | connectionId
   denomination: string;   // 'USD' | 'BTC' | 'ETH' | 'USDT' | ...
-  timePeriod: number;     // ms (0 = All Time)
+  timePeriod: number | string; // ms (0 = All Time), 'mtd', 'ytd', 'custom'
+  customStartDate?: string;    // 'YYYY-MM-DD'
+  customEndDate?: string;      // 'YYYY-MM-DD'
   milestoneStep: number;  // Price interval (e.g. 2500 for BTC)
 }
 
@@ -413,7 +415,11 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
   // Apply filters to unified entries
   const filteredEntries = useMemo(() => {
     const exchFilter = filters.exchange.toLowerCase();
-    const startTime = getStrictCalendarStartTime(filters.timePeriod);
+    const { startTime, endTime } = resolvePeriodDateRange(
+      filters.timePeriod,
+      filters.customStartDate,
+      filters.customEndDate
+    );
     const isUsdDenom = filters.denomination === 'USD';
 
     return unifiedEntries.filter(e => {
@@ -421,7 +427,8 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
       if (filters.accountId && filters.accountId.toLowerCase() !== 'all' && e.connectionId !== filters.accountId) {
         return false;
       }
-      if (startTime && e.transactionTime < startTime) return false;
+      if (startTime !== null && e.transactionTime < startTime) return false;
+      if (endTime !== null && e.transactionTime > endTime) return false;
 
       // Currency / Denomination filter
       if (!isUsdDenom) {
