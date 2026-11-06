@@ -1,3 +1,11 @@
+# [2.19.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.18.0...v2.19.0) (2026-11-06)
+
+
+### Features
+
+* add internationalization and currency support ([c004ea1](https://github.com/fapdev77/crypto-dashboard/commit/c004ea1e43933d55ca98bac0b9cb37267ccc75e2))
+* **new:** add internationalization and currency support ([e25e847](https://github.com/fapdev77/crypto-dashboard/commit/e25e84753d717d1b6227012386bc69dbc5d01c86))
+
 # [2.18.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.17.0...v2.18.0) (2026-10-30)
 
 
