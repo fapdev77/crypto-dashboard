@@ -1,3 +1,10 @@
+# [2.20.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.19.0...v2.20.0) (2026-11-06)
+
+
+### Features
+
+* add multi-currency support, localization, and currency API diagnostics ([5c1b44a](https://github.com/fapdev77/crypto-dashboard/commit/5c1b44a375c5056c2b51fbce3d3755f249b79510))
+
 # [2.19.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.18.0...v2.19.0) (2026-11-06)
 
 
