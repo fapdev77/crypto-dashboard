@@ -22,6 +22,7 @@ import {
   SupportedFiatCurrency,
 } from '../services/currency/currencyTypes';
 import { CurrencyService } from '../services/currency/CurrencyService';
+import { CurrencyApiDiagnostics } from './currency/CurrencyApiDiagnostics';
 
 export function Settings() {
   const { t } = useTranslation();
@@ -199,7 +200,7 @@ export function Settings() {
             {/* TTL Cache Configuration Slider */}
             <div className="pt-2">
               <div className="flex items-center justify-between mb-1.5">
-                <AppTooltip description="Defines how long exchange rates remain cached in the browser before querying open.er-api.com again (5 to 60 minutes).">
+                <AppTooltip description="Defines how long exchange rates remain cached in the browser before querying api.frankfurter.dev again (5 to 60 minutes).">
                   <label className="text-white font-medium text-xs cursor-help border-b border-dashed border-[#8E9299]/50">
                     {t('settings.ttlLabel', 'Exchange Rates Cache TTL')}
                   </label>
@@ -283,6 +284,11 @@ export function Settings() {
                 <RefreshCw className={`w-3 h-3 ${isRefreshingRates ? 'animate-spin text-[#2F6BFF]' : 'text-[#8E9299]'}`} />
                 <span>{t('settings.refreshNow', 'Refresh Rates Now')}</span>
               </button>
+            </div>
+
+            {/* Currency API Connection Diagnostics */}
+            <div className="pt-2">
+              <CurrencyApiDiagnostics />
             </div>
 
             <div className="border-t border-[#2a2b30]/50 pt-3 mt-auto">

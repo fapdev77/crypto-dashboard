@@ -46,6 +46,10 @@ export const SSRF_ALLOWED_DOMAINS = [
 
   // Alternative.me (fear & greed index)
   'api.alternative.me',
+
+  // Currency & Rate Providers
+  'api.frankfurter.dev',
+  'api.coingecko.com',
 ];
 
 // Export a reusable validation config object for ssrfValidator

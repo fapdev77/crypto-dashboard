@@ -2,14 +2,17 @@ import {
   SupportedFiatCurrency,
   SupportedLocale,
   DEFAULT_FIAT_RATES,
+  DEFAULT_USDT_RATE,
   SUPPORTED_FIAT_CURRENCIES,
   SUPPORTED_LOCALES,
+  CurrencyApiDiagnostics,
 } from './currencyTypes';
 import { proxyFetch } from '../../utils/proxyFetch';
 import { LogManager } from '../LogManager';
 import { useSettingsStore } from '../../store/settingsStore';
 
 const CACHE_KEY = 'cpm_fiat_rates_cache_v2';
+const USDT_CACHE_KEY = 'cpm_usdt_rate_cache_v1';
 const DEFAULT_TTL_MINUTES = 30;
 
 export interface FiatRatesResult {
@@ -26,15 +29,38 @@ interface CachedRates {
   timestamp: number;
 }
 
+interface CachedUsdtRate {
+  rate: number;
+  status: 'live' | 'cached' | 'fallback';
+  timestamp: number;
+}
+
 export class CurrencyService {
   private static inMemoryCache: CachedRates | null = null;
+  private static inMemoryUsdtCache: CachedUsdtRate | null = null;
   private static isFetching = false;
   private static listeners: Array<(rates: Record<SupportedFiatCurrency, number>) => void> = [];
+
+  /**
+   * Clears in-memory and local storage cache (useful for testing and reset)
+   */
+  public static clearCache(): void {
+    this.inMemoryCache = null;
+    this.inMemoryUsdtCache = null;
+    this.isFetching = false;
+    try {
+      localStorage.removeItem(CACHE_KEY);
+      localStorage.removeItem(USDT_CACHE_KEY);
+    } catch {
+      // Ignore
+    }
+  }
 
   /**
    * Helper to retrieve currently configured TTL in milliseconds.
    */
   public static getTtlMs(customMinutes?: number): number {
+    if (customMinutes === 0) return 0;
     const mins = customMinutes ?? useSettingsStore.getState?.()?.fiatRatesTtlMinutes ?? DEFAULT_TTL_MINUTES;
     return Math.max(5, Math.min(60, mins)) * 60 * 1000;
   }
@@ -46,7 +72,7 @@ export class CurrencyService {
     const ttlMs = this.getTtlMs(customTtlMinutes);
     const now = Date.now();
 
-    if (this.inMemoryCache && now - this.inMemoryCache.timestamp < ttlMs) {
+    if (ttlMs > 0 && this.inMemoryCache && now - this.inMemoryCache.timestamp < ttlMs) {
       return { ...this.inMemoryCache };
     }
 
@@ -55,7 +81,7 @@ export class CurrencyService {
       if (stored) {
         const parsed: CachedRates = JSON.parse(stored);
         if (parsed?.rates) {
-          const isFresh = now - parsed.timestamp < ttlMs;
+          const isFresh = ttlMs > 0 && now - parsed.timestamp < ttlMs;
           this.inMemoryCache = {
             ...parsed,
             status: isFresh ? parsed.status : 'cached',
@@ -83,34 +109,62 @@ export class CurrencyService {
   }
 
   /**
-   * Fetches latest fiat exchange rates for USD -> [EUR, GBP, BRL].
-   * Fallback hierarchy:
-   * 1. Primary: open.er-api.com
-   * 2. Secondary: api.frankfurter.dev
-   * 3. Fallback Level 1: Previously saved localStorage rates (cached)
-   * 4. Fallback Level 2: Static hardcoded default rates (fallback)
+   * Returns current USDT rate in USD (from memory, localStorage or fallback).
+   */
+  public static getUsdtRate(): number {
+    const now = Date.now();
+    const ttlMs = this.getTtlMs();
+
+    if (ttlMs > 0 && this.inMemoryUsdtCache && now - this.inMemoryUsdtCache.timestamp < ttlMs) {
+      return this.inMemoryUsdtCache.rate;
+    }
+
+    try {
+      const stored = localStorage.getItem(USDT_CACHE_KEY);
+      if (stored) {
+        const parsed: CachedUsdtRate = JSON.parse(stored);
+        if (typeof parsed?.rate === 'number') {
+          this.inMemoryUsdtCache = parsed;
+          return parsed.rate;
+        }
+      }
+    } catch {
+      // Ignore storage error
+    }
+
+    return DEFAULT_USDT_RATE;
+  }
+
+  /**
+   * Fetches latest fiat exchange rates from Frankfurter v2 and USDT rate from CoinGecko.
+   * Fallback hierarchy (2 Levels):
+   * 1. Primary: api.frankfurter.dev (v2) & api.coingecko.com (v3)
+   * 2. Fallback Level 1: Previously saved localStorage rates (cached)
+   * 3. Fallback Level 2: Static hardcoded default rates (fallback)
    */
   public static async fetchFiatRates(customTtlMinutes?: number): Promise<Record<SupportedFiatCurrency, number>> {
     const ttlMs = this.getTtlMs(customTtlMinutes);
     const now = Date.now();
 
-    // If cache is still valid, return it immediately
-    if (this.inMemoryCache && now - this.inMemoryCache.timestamp < ttlMs) {
+    // If cache is still valid and not forcing refresh (ttlMs > 0), return it immediately
+    if (ttlMs > 0 && this.inMemoryCache && now - this.inMemoryCache.timestamp < ttlMs) {
       return this.inMemoryCache.rates;
     }
 
-    // Try reading fresh cache from localStorage
-    try {
-      const stored = localStorage.getItem(CACHE_KEY);
-      if (stored) {
-        const parsed: CachedRates = JSON.parse(stored);
-        if (parsed?.rates && now - parsed.timestamp < ttlMs) {
-          this.inMemoryCache = parsed;
-          return parsed.rates;
+    // Try reading fresh cache from localStorage (if not forcing refresh)
+    if (ttlMs > 0) {
+      try {
+        const stored = localStorage.getItem(CACHE_KEY);
+        if (stored) {
+          const parsed: CachedRates = JSON.parse(stored);
+          if (parsed?.rates && now - parsed.timestamp < ttlMs) {
+            this.inMemoryCache = parsed;
+            return parsed.rates;
+          }
         }
+      } catch {
+        // Continue to fetch
       }
-    } catch {
-      // Continue to fetch
     }
 
     if (this.isFetching) {
@@ -119,55 +173,130 @@ export class CurrencyService {
 
     this.isFetching = true;
 
+    const frankfurterEndpoint = 'https://api.frankfurter.dev/v2/rates?base=USD&quotes=BRL,EUR,GBP';
+    const coingeckoEndpoint = 'https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd';
+
+    let fetchedRates: Record<SupportedFiatCurrency, number> | null = null;
+    let fetchedUsdt: number | null = null;
+    const activeSource = 'api.frankfurter.dev';
+
+    let frankfurterLatency = 0;
+    let frankfurterError: string | null = null;
+    let coingeckoLatency = 0;
+    let coingeckoError: string | null = null;
+
     try {
-      let fetchedRates: Record<SupportedFiatCurrency, number> | null = null;
-      let activeSource = 'open.er-api.com';
+      // Execute both Frankfurter v2 and CoinGecko calls concurrently
+      const [frankfurterResult, coingeckoResult] = await Promise.allSettled([
+        (async () => {
+          const start = performance.now();
+          const res = await proxyFetch({
+            targetUrl: frankfurterEndpoint,
+            method: 'GET',
+            headers: {},
+          });
+          frankfurterLatency = Math.round(performance.now() - start);
+          return res;
+        })(),
+        (async () => {
+          const start = performance.now();
+          const res = await proxyFetch({
+            targetUrl: coingeckoEndpoint,
+            method: 'GET',
+            headers: {},
+          });
+          coingeckoLatency = Math.round(performance.now() - start);
+          return res;
+        })(),
+      ]);
 
-      // 1. Try high-availability primary provider (open.er-api.com)
-      try {
-        const res = await proxyFetch({
-          targetUrl: 'https://open.er-api.com/v6/latest/USD',
-          method: 'GET',
-          headers: {},
-        });
+      // Process Frankfurter v2 Response
+      if (frankfurterResult.status === 'fulfilled') {
+        const res = frankfurterResult.value;
+        // Frankfurter v2 returns an array: [{ date, base, quote, rate }, ...]
+        if (Array.isArray(res) && res.length > 0) {
+          const parsedRates: Record<SupportedFiatCurrency, number> = {
+            USD: 1.0,
+            EUR: DEFAULT_FIAT_RATES.EUR,
+            GBP: DEFAULT_FIAT_RATES.GBP,
+            BRL: DEFAULT_FIAT_RATES.BRL,
+          };
 
-        if (res && res.result === 'success' && res.rates) {
+          for (const item of res) {
+            if (item && typeof item.quote === 'string' && typeof item.rate === 'number') {
+              if (item.quote === 'EUR') parsedRates.EUR = item.rate;
+              if (item.quote === 'GBP') parsedRates.GBP = item.rate;
+              if (item.quote === 'BRL') parsedRates.BRL = item.rate;
+            }
+          }
+
+          fetchedRates = parsedRates;
+        } else if (res && typeof res === 'object' && res.rates) {
+          // Compatibility with v1 format if ever returned
           fetchedRates = {
             USD: 1.0,
             EUR: typeof res.rates.EUR === 'number' ? res.rates.EUR : DEFAULT_FIAT_RATES.EUR,
             GBP: typeof res.rates.GBP === 'number' ? res.rates.GBP : DEFAULT_FIAT_RATES.GBP,
             BRL: typeof res.rates.BRL === 'number' ? res.rates.BRL : DEFAULT_FIAT_RATES.BRL,
           };
-          activeSource = 'open.er-api.com';
+        } else {
+          frankfurterError = 'Invalid response payload format from Frankfurter v2';
+          LogManager.warn('CurrencyService', frankfurterError, res);
         }
-      } catch (err) {
-        LogManager.warn('CurrencyService', 'Failed fetching from primary rates provider (open.er-api.com)', err);
+      } else {
+        frankfurterError = frankfurterResult.reason?.message || 'Network error fetching Frankfurter v2';
+        LogManager.warn('CurrencyService', 'Failed fetching from Frankfurter v2', frankfurterResult.reason);
       }
 
-      // 2. Try secondary ECB public provider (api.frankfurter.dev)
-      if (!fetchedRates) {
-        try {
-          const res = await proxyFetch({
-            targetUrl: 'https://api.frankfurter.dev/v1/latest?base=USD&symbols=EUR,GBP,BRL',
-            method: 'GET',
-            headers: {},
-          });
-
-          if (res && res.rates) {
-            fetchedRates = {
-              USD: 1.0,
-              EUR: typeof res.rates.EUR === 'number' ? res.rates.EUR : DEFAULT_FIAT_RATES.EUR,
-              GBP: typeof res.rates.GBP === 'number' ? res.rates.GBP : DEFAULT_FIAT_RATES.GBP,
-              BRL: typeof res.rates.BRL === 'number' ? res.rates.BRL : DEFAULT_FIAT_RATES.BRL,
-            };
-            activeSource = 'api.frankfurter.dev';
-          }
-        } catch (secErr) {
-          LogManager.warn('CurrencyService', 'Failed fetching from secondary rates provider (api.frankfurter.dev)', secErr);
+      // Process CoinGecko Response
+      if (coingeckoResult.status === 'fulfilled') {
+        const res = coingeckoResult.value;
+        if (res && res.tether && typeof res.tether.usd === 'number') {
+          fetchedUsdt = res.tether.usd;
+        } else {
+          coingeckoError = 'Invalid response payload format from CoinGecko';
+          LogManager.warn('CurrencyService', coingeckoError, res);
         }
+      } else {
+        coingeckoError = coingeckoResult.reason?.message || 'Network error fetching CoinGecko';
+        LogManager.warn('CurrencyService', 'Failed fetching from CoinGecko', coingeckoResult.reason);
       }
 
-      // If network calls succeeded:
+      // Update USDT store & cache
+      if (fetchedUsdt !== null) {
+        const usdtData: CachedUsdtRate = {
+          rate: fetchedUsdt,
+          status: 'live',
+          timestamp: Date.now(),
+        };
+        this.saveUsdtCache(usdtData);
+        useSettingsStore.getState?.()?.setUsdtRate?.(fetchedUsdt, 'live');
+      } else {
+        // Fallback for USDT
+        const fallbackUsdt = this.getFallbackUsdt();
+        useSettingsStore.getState?.()?.setUsdtRate?.(fallbackUsdt.rate, fallbackUsdt.status);
+      }
+
+      // Update Diagnostics
+      const diagnostics: CurrencyApiDiagnostics = {
+        frankfurter: {
+          status: fetchedRates ? 'connected' : 'error',
+          lastUpdated: fetchedRates ? Date.now() : (useSettingsStore.getState?.()?.apiDiagnostics?.frankfurter?.lastUpdated ?? null),
+          latencyMs: frankfurterLatency,
+          error: frankfurterError,
+          endpoint: frankfurterEndpoint,
+        },
+        coingecko: {
+          status: fetchedUsdt !== null ? 'connected' : 'error',
+          lastUpdated: fetchedUsdt !== null ? Date.now() : (useSettingsStore.getState?.()?.apiDiagnostics?.coingecko?.lastUpdated ?? null),
+          latencyMs: coingeckoLatency,
+          error: coingeckoError,
+          endpoint: coingeckoEndpoint,
+        },
+      };
+      useSettingsStore.getState?.()?.setApiDiagnostics?.(diagnostics);
+
+      // If fiat network call succeeded:
       if (fetchedRates) {
         const result: CachedRates = {
           rates: fetchedRates,
@@ -186,13 +315,13 @@ export class CurrencyService {
 
         return fetchedRates;
       }
-    } catch (err) {
+    } catch (err: any) {
       LogManager.warn('CurrencyService', 'All fiat rate lookups failed, utilizing fallback rates', err);
     } finally {
       this.isFetching = false;
     }
 
-    // 3. Fallback Level 1: Use previously cached rates even if expired
+    // Fallback Level 1: Use previously cached rates even if expired
     try {
       const stored = localStorage.getItem(CACHE_KEY);
       if (stored) {
@@ -215,7 +344,7 @@ export class CurrencyService {
       // Continue to Fallback Level 2
     }
 
-    // 4. Fallback Level 2: Static hardcoded default rates
+    // Fallback Level 2: Static hardcoded default rates
     const fallbackResult: CachedRates = {
       rates: { ...DEFAULT_FIAT_RATES },
       source: 'fallback',
@@ -242,6 +371,36 @@ export class CurrencyService {
     } catch {
       // Ignore storage errors
     }
+  }
+
+  /**
+   * Save USDT rate to both memory and localStorage
+   */
+  private static saveUsdtCache(data: CachedUsdtRate) {
+    this.inMemoryUsdtCache = data;
+    try {
+      localStorage.setItem(USDT_CACHE_KEY, JSON.stringify(data));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  /**
+   * Retrieves USDT rate from cache (Level 1) or static default (Level 2)
+   */
+  private static getFallbackUsdt(): { rate: number; status: 'cached' | 'fallback' } {
+    try {
+      const stored = localStorage.getItem(USDT_CACHE_KEY);
+      if (stored) {
+        const parsed: CachedUsdtRate = JSON.parse(stored);
+        if (typeof parsed?.rate === 'number') {
+          return { rate: parsed.rate, status: 'cached' };
+        }
+      }
+    } catch {
+      // Fallback to static
+    }
+    return { rate: DEFAULT_USDT_RATE, status: 'fallback' };
   }
 
   /**

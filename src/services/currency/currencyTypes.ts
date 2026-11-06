@@ -136,3 +136,18 @@ export const DEFAULT_FIAT_RATES: Record<SupportedFiatCurrency, number> = {
   GBP: 0.79,
   BRL: 5.65,
 };
+
+export const DEFAULT_USDT_RATE = 1.0;
+
+export interface ApiProviderDiagnostic {
+  status: 'connected' | 'cached' | 'error';
+  lastUpdated: number | null;
+  latencyMs?: number;
+  error?: string | null;
+  endpoint: string;
+}
+
+export interface CurrencyApiDiagnostics {
+  frankfurter: ApiProviderDiagnostic;
+  coingecko: ApiProviderDiagnostic;
+}

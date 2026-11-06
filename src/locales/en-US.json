@@ -136,7 +136,7 @@
     "sourceLive": "Connected via {{source}} (Live)",
     "sourceCached": "Using local browser cache ({{source}})",
     "sourceFallback": "Safety Mode Active (Static default rates)",
-    "fallbackExplanation": "If external rate providers (open.er-api.com and api.frankfurter.dev) become unreachable, the terminal uses your most recent cached rates. In complete offline situations, fixed safety rates ensure the portfolio display remains uninterrupted.",
+    "fallbackExplanation": "If external rate providers (api.frankfurter.dev and api.coingecko.com) become unreachable, the terminal uses your most recent cached rates. In complete offline situations, fixed safety rates ensure the portfolio display remains uninterrupted.",
     "refreshNow": "Refresh Rates Now"
   }
 }

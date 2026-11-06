@@ -136,7 +136,7 @@
     "sourceLive": "Ligado via {{source}} (Ao vivo)",
     "sourceCached": "A utilizar dados em cache local ({{source}})",
     "sourceFallback": "Modo de Segurança Ativo (Taxas padrão estáticas)",
-    "fallbackExplanation": "Se as APIs públicas (open.er-api.com e api.frankfurter.dev) ficarem indisponíveis, o sistema utiliza a cache mais recente do navegador. Na ausência total de ligação, taxas fixas de segurança são aplicadas automaticamente.",
+    "fallbackExplanation": "Se as APIs públicas (api.frankfurter.dev e api.coingecko.com) ficarem indisponíveis, o sistema utiliza a cache mais recente do navegador. Na ausência total de ligação, taxas fixas de segurança são aplicadas automaticamente.",
     "refreshNow": "Atualizar Cotações Agora"
   }
 }

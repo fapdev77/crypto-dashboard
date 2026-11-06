@@ -136,7 +136,7 @@
     "sourceLive": "Connesso tramite {{source}} (In tempo reale)",
     "sourceCached": "Utilizzo dati nella cache del browser ({{source}})",
     "sourceFallback": "Modalità di Sicurezza Attiva (Tassi predefiniti statici)",
-    "fallbackExplanation": "Se le API pubbliche (open.er-api.com e api.frankfurter.dev) non sono raggiungibili, il sistema utilizza i tassi salvati più recenti. In caso di assenza totale di rete, vengono applicati tassi di sicurezza fissi per evitare interruzioni.",
+    "fallbackExplanation": "Se le API pubbliche (api.frankfurter.dev e api.coingecko.com) non sono raggiungibili, il sistema utilizza i tassi salvati più recenti. In caso di assenza totale di rete, vengono applicati tassi di sicurezza fissi per evitare interruzioni.",
     "refreshNow": "Aggiorna Tassi Adesso"
   }
 }
