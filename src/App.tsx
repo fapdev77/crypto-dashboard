@@ -35,6 +35,9 @@ import { VaultSetupModal } from './components/VaultSetupModal';
 import { MandatoryVaultMigrationScreen } from './components/MandatoryVaultMigrationScreen';
 import { detectLegacyUnencryptedKeys } from './utils/vaultHelpers';
 import { ApiCredentials } from './store/apiKeysStore';
+import { LanguageCurrencyButton } from './components/ui/LanguageCurrencyButton';
+import { CurrencyService } from './services/currency/CurrencyService';
+import { useTranslation } from 'react-i18next';
 
 // Code Splitting: Lazy-loaded secondary & heavy tabs with named exports
 const ClosedPositions = React.lazy(() => import('./components/ClosedPositions').then(m => ({ default: m.ClosedPositions })));
@@ -69,10 +72,18 @@ export default function App() {
   useVaultAutoLock();
 
   const { isEncrypted, isUnlocked, encryptedData, isInitialized } = useApiKeysStore();
+  const { t } = useTranslation();
   const isAiFeatureEnabled = isAiChatbotFeatureEnabled();
   const isAiEnabled = useAiSettingsStore((state) => state.globalSettings.isEnabled);
   const openChatDrawer = useAiChatStore((state) => state.openDrawer);
   const mainContentRef = useRef<HTMLDivElement>(null);
+
+  // Fetch live fiat rates on mount to keep conversions up to date
+  useEffect(() => {
+    CurrencyService.fetchFiatRates().then((rates) => {
+      useSettingsStore.getState().setFiatRates(rates);
+    });
+  }, []);
 
   // Instantly reset scroll position to the top of the container and window whenever navigating to a new tab
   useLayoutEffect(() => {
@@ -201,21 +212,28 @@ export default function App() {
   }
 
   let activeTabName = activeTab.replace('analytics-', '').replace('-', ' ');
-  if (activeTab === 'api-keys') activeTabName = 'API Keys Manager';
-  if (activeTab === 'logs') activeTabName = 'Live Connection Logs';
-  if (activeTab === 'settings') activeTabName = 'Settings';
-  if (activeTab === 'ai-settings') activeTabName = 'AI Settings';
-  if (activeTab === 'api-tester') activeTabName = 'API Tester';
-  if (activeTab.startsWith('positions-')) activeTabName = 'Positions';
-  if (activeTab.startsWith('orders-')) activeTabName = 'Orders';
-  if (activeTab.startsWith('trade-')) activeTabName = 'Trade';
-  if (activeTab === 'transactions-history-consolidated') activeTabName = 'Consolidated Net Change';
-  else if (activeTab.startsWith('transactions-history-')) activeTabName = 'Transactions History';
-  if (activeTab === 'analytics-portfolio-performance') activeTabName = 'Portfolio Performance';
-  else if (activeTab === 'analytics-hedge-pro') activeTabName = 'Hedge Pro';
-  else if (activeTab === 'analytics-market-advanced') activeTabName = 'Market Analytics';
-  else if (activeTab.startsWith('analytics-')) activeTabName = 'Analytics';
-  if (activeTab === 'reports') activeTabName = 'Reports';
+  if (activeTab === 'dashboard') activeTabName = t('nav.dashboard', 'Dashboard');
+  else if (activeTab === 'api-keys') activeTabName = t('nav.apiKeys', 'API Keys Manager');
+  else if (activeTab === 'logs') activeTabName = t('nav.connectionLogs', 'Live Connection Logs');
+  else if (activeTab === 'settings') activeTabName = t('nav.settings', 'Settings');
+  else if (activeTab === 'ai-settings') activeTabName = t('nav.aiSettings', 'AI Settings');
+  else if (activeTab === 'api-tester') activeTabName = t('nav.apiTester', 'API Tester');
+  else if (activeTab === 'positions-open') activeTabName = t('nav.openPositions', 'Open Positions');
+  else if (activeTab === 'positions-history') activeTabName = t('nav.closedPositions', 'Closed Positions');
+  else if (activeTab.startsWith('positions-')) activeTabName = t('nav.openPositions', 'Positions');
+  else if (activeTab === 'orders-open') activeTabName = t('nav.openOrders', 'Open Orders');
+  else if (activeTab === 'orders-history') activeTabName = t('nav.orderHistory', 'Order History');
+  else if (activeTab.startsWith('orders-')) activeTabName = t('nav.orders', 'Orders');
+  else if (activeTab.startsWith('trade-')) activeTabName = t('nav.trade', 'Trade');
+  else if (activeTab === 'transactions-history-consolidated') activeTabName = t('nav.consolidated', 'Consolidated Net Change');
+  else if (activeTab.startsWith('transactions-history-')) activeTabName = t('nav.transactions', 'Transactions History');
+  else if (activeTab === 'analytics-portfolio-performance') activeTabName = t('nav.portfolioPerformance', 'Portfolio Performance');
+  else if (activeTab === 'analytics-hedge-pro') activeTabName = t('nav.hedgePro', 'Hedge Pro');
+  else if (activeTab === 'analytics-market-advanced') activeTabName = t('nav.marketAnalytics', 'Market Analytics');
+  else if (activeTab === 'analytics-funding-fees') activeTabName = t('nav.fundingDashboard', 'Funding & Fees');
+  else if (activeTab === 'analytics-pnl-symbol') activeTabName = t('nav.pnlBySymbol', 'PnL by Symbol');
+  else if (activeTab.startsWith('analytics-')) activeTabName = t('nav.analytics', 'Analytics');
+  else if (activeTab === 'reports') activeTabName = t('nav.reports', 'Reports');
 
   return (
     <PrivacyProvider>
@@ -270,6 +288,7 @@ export default function App() {
                     </h2>
                   </div>
                   <div className="flex items-center gap-2">
+                    <LanguageCurrencyButton />
                     {isAiFeatureEnabled && <AiPikaChatButton onClick={openChatDrawer} isEnabled={isAiEnabled} />}
                     <HelpToggleButton isOpen={isWelcomeOpen} onClick={() => setIsWelcomeOpen(!isWelcomeOpen)} />
                     <PrivacyToggleButton />

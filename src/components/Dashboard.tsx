@@ -10,6 +10,7 @@ import { Sparkline } from './ui/Sparkline';
 import { MacroCapitalChart } from './analytics/MacroCapitalChart';
 import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
 import { MarketSentiment } from './analytics/MarketSentiment';
+import { CurrencyRatesWidget } from './analytics/CurrencyRatesWidget';
 import { ExchangeHierarchyTable } from './ExchangeHierarchyTable';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
@@ -582,6 +583,9 @@ export function Dashboard() {
 
       {/* Market Sentiment & Fear / Greed Analysis (Positioned right below Balances table) */}
       <MarketSentiment />
+
+      {/* Global Currency Rates Panel (Directly below Fear & Greed) */}
+      <CurrencyRatesWidget />
     </div>
   );
 }

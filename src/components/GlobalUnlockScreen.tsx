@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ShieldAlert, Unlock, HelpCircle, Trash2, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { AppTooltip, TooltipProvider } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
+import { LanguageCurrencyButton } from './ui/LanguageCurrencyButton';
 
 export function GlobalUnlockScreen() {
+  const { t } = useTranslation();
   const { unlock } = useApiKeysStore();
   const [unlockPassphrase, setUnlockPassphrase] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -23,10 +26,13 @@ export function GlobalUnlockScreen() {
   }, []);
 
   const handleUnlock = async () => {
-    if (!unlockPassphrase) return;
+    if (!unlockPassphrase) {
+      setUnlockError(t('unlock.errorEmpty', 'Please enter your passphrase.'));
+      return;
+    }
     const success = await unlock(unlockPassphrase);
     if (!success) {
-      setUnlockError('Incorrect passphrase or corrupted data.');
+      setUnlockError(t('unlock.errorIncorrect', 'Incorrect passphrase or corrupted data.'));
     } else {
       setUnlockError('');
       setUnlockPassphrase('');
@@ -56,21 +62,30 @@ export function GlobalUnlockScreen() {
   return (
     <TooltipProvider>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0b0c10] backdrop-blur-sm">
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-8 max-w-sm w-full shadow-2xl">
-          <div className="flex justify-center mb-4">
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-8 max-w-sm w-full shadow-2xl relative">
+          {/* Header row with Language Selector */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-16" /> {/* spacer for balance */}
             <div className="p-3 bg-[#FF4444]/10 rounded-full">
               <ShieldAlert className="w-8 h-8 text-[#FF4444]" />
             </div>
+            <div className="w-16 flex justify-end">
+              <LanguageCurrencyButton showText={false} className="border-[#2a2b30] bg-[#1e2024] p-2" />
+            </div>
           </div>
+
           <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
-            <h2 className="text-xl font-medium text-white text-center">Encrypted Storage</h2>
+            <h2 className="text-xl font-medium text-white text-center">
+              {t('unlock.title', 'Encrypted Storage')}
+            </h2>
             <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#2F6BFF]/10 text-[#2F6BFF] border border-[#2F6BFF]/20">
               v{version}
             </span>
           </div>
           <p className="text-sm text-[#8E9299] text-center mb-6">
-            Your API keys are encrypted locally. Please enter your passphrase to unlock them.
+            {t('unlock.subtitle', 'Your API keys are encrypted locally. Please enter your passphrase to unlock them.')}
           </p>
+
           <div className="space-y-4">
             <div>
               <div className="relative">
@@ -80,13 +95,14 @@ export function GlobalUnlockScreen() {
                   value={unlockPassphrase}
                   onChange={(e) => setUnlockPassphrase(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                  className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-2 pr-10 text-white focus:outline-none focus:border-[#2F6BFF]"
-                  placeholder="Enter passphrase"
+                  className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-2 pr-10 text-white focus:outline-hidden focus:border-[#2F6BFF]"
+                  placeholder={t('unlock.placeholder', 'Enter passphrase')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E9299] hover:text-[#e1e2e6] transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -95,17 +111,17 @@ export function GlobalUnlockScreen() {
             </div>
             <button
               onClick={handleUnlock}
-              className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white font-medium rounded-lg transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white font-medium rounded-lg transition-colors cursor-pointer"
             >
               <Unlock className="w-4 h-4" />
-              Unlock Keys
+              {t('unlock.button', 'Unlock')}
             </button>
           </div>
 
           <div className="border-t border-[#2a2b30]/60 my-5 pt-4">
             <div className="flex items-start gap-2 text-xs text-[#8E9299]">
               <div className="flex-1 leading-relaxed">
-                Forgot your passphrase? No worries, You can perform a full app reset to clear local data and app will load with default settings.
+                {t('unlock.troubleDesc', 'If you forgot your passphrase, you can perform a full app reset to clear local data and app will load with default settings.')}
               </div>
               <AppTooltip
                 side="top"
@@ -119,7 +135,7 @@ export function GlobalUnlockScreen() {
                   </div>
                 }
               >
-                <button className="text-[#2F6BFF] hover:text-[#1E56DF] p-0.5 rounded focus:outline-none shrink-0" type="button" aria-label="Reset Information">
+                <button className="text-[#2F6BFF] hover:text-[#1E56DF] p-0.5 rounded focus:outline-hidden shrink-0" type="button" aria-label="Reset Information">
                   <HelpCircle className="w-4 h-4" />
                 </button>
               </AppTooltip>
@@ -128,30 +144,30 @@ export function GlobalUnlockScreen() {
             {showResetConfirm ? (
               <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg space-y-2">
                 <p className="text-xs font-medium text-red-400 leading-tight">
-                  Warning: This action is final and will permanently delete all local keys and saved data!
+                  {t('unlock.confirmResetDesc', 'Warning: This action is final and will permanently delete all local keys and saved data!')}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={handleFactoryReset}
-                    className="flex-1 py-1.5 px-3 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded transition-colors"
+                    className="flex-1 py-1.5 px-3 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded transition-colors cursor-pointer"
                   >
-                    Yes, Clear Everything
+                    {t('unlock.confirmResetAction', 'Yes, Clear Everything')}
                   </button>
                   <button
                     onClick={() => setShowResetConfirm(false)}
-                    className="flex-1 py-1.5 px-3 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] hover:text-white text-xs font-semibold rounded transition-colors"
+                    className="flex-1 py-1.5 px-3 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] hover:text-white text-xs font-semibold rounded transition-colors cursor-pointer"
                   >
-                    Cancel
+                    {t('unlock.cancelResetAction', 'Cancel')}
                   </button>
                 </div>
               </div>
             ) : (
               <button
                 onClick={() => setShowResetConfirm(true)}
-                className="mt-3 w-full py-2 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="mt-3 w-full py-2 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Reset Application (Factory Reset)
+                {t('unlock.factoryResetBtn', 'Reset Application (Factory Reset)')}
               </button>
             )}
           </div>

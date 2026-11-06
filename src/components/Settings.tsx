@@ -5,8 +5,9 @@ import { useFundingStore } from '../store/fundingStore';
 import { clearFundingSummariesCache } from '../services/historyCache';
 import {
   Trash2, Loader2, RefreshCw,
-  AlertTriangle, FlaskConical, Gauge, Settings as SettingsIcon, Layers
+  AlertTriangle, FlaskConical, Gauge, Settings as SettingsIcon, Layers, Globe
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { LogManager } from '../services/LogManager';
 import { AppTooltip } from './ui/Tooltip';
 import { FundingSyncTimingPanel } from './sync/FundingSyncTimingPanel';
@@ -14,16 +15,31 @@ import { SecurityBackupCard } from './SecurityBackupCard';
 import { VersionInfoCard } from './VersionInfoCard';
 import { IndexedDBCacheCard } from './IndexedDBCacheCard';
 import { exchangeCoinCatalog } from '../services/marketAnalytics/exchangeCoinCatalog';
+import {
+  SUPPORTED_LOCALES,
+  SUPPORTED_FIAT_CURRENCIES,
+  SupportedLocale,
+  SupportedFiatCurrency,
+} from '../services/currency/currencyTypes';
+import { CurrencyService } from '../services/currency/CurrencyService';
 
 export function Settings() {
+  const { t } = useTranslation();
   const {
     useMockData, setUseMockData,
     pollingInterval, setPollingInterval,
     showWelcomeOnStartup, setShowWelcomeOnStartup,
     fundingPollingInterval, setFundingPollingInterval,
     fundingHistoryInterval, setFundingHistoryInterval,
-    symbolCatalogRefreshHours, setSymbolCatalogRefreshHours
+    symbolCatalogRefreshHours, setSymbolCatalogRefreshHours,
+    locale, setLocale,
+    fiatCurrency, setFiatCurrency,
+    fiatRates, fiatRatesLastUpdated,
+    fiatRatesTtlMinutes, setFiatRatesTtlMinutes,
+    fiatRatesSource, fiatRatesStatus,
   } = useSettingsStore();
+
+  const [isRefreshingRates, setIsRefreshingRates] = useState(false);
 
   const [isClearingFunding, setIsClearingFunding] = useState(false);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
@@ -121,6 +137,161 @@ export function Settings() {
 
       {/* Responsive Card Grid: 1 col mobile, 2 col tablet, 3 col desktop */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
+
+        {/* Card 0: Language & Currency */}
+        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
+          <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
+            <Globe className="w-4 h-4 text-[#2F6BFF]" />
+            {t('settings.languageAndCurrency', 'Language & Currency')}
+          </h3>
+          <p className="text-[#8E9299] text-xs mb-5">
+            {t('settings.languageDesc', 'Configure your display language and preferred currency for portfolio calculations.')}
+          </p>
+
+          <div className="space-y-4 flex-1 flex flex-col">
+            {/* Language Selection */}
+            <div>
+              <label className="text-white font-medium text-xs block mb-1.5">
+                {t('settings.languageLabel', 'Language')}
+              </label>
+              <select
+                value={locale}
+                onChange={(e) => {
+                  const newLocale = e.target.value as SupportedLocale;
+                  setLocale(newLocale);
+                  toast.success(`Language set to ${SUPPORTED_LOCALES[newLocale]?.name || newLocale}`, { id: 'lang-change' });
+                }}
+                className="w-full bg-[#1e2024] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-[#2F6BFF] transition-colors"
+              >
+                {Object.values(SUPPORTED_LOCALES).map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.flag} {loc.name} ({loc.englishName})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Currency Selection */}
+            <div>
+              <label className="text-white font-medium text-xs block mb-1.5">
+                {t('settings.currencyLabel', 'Display Currency')}
+              </label>
+              <select
+                value={fiatCurrency}
+                onChange={(e) => {
+                  const newCurr = e.target.value as SupportedFiatCurrency;
+                  setFiatCurrency(newCurr);
+                  toast.success(`Display currency set to ${newCurr}`, { id: 'curr-change' });
+                }}
+                className="w-full bg-[#1e2024] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-[#2F6BFF] transition-colors"
+              >
+                {Object.values(SUPPORTED_FIAT_CURRENCIES).map((curr) => {
+                  const rate = fiatRates?.[curr.id] || 1;
+                  return (
+                    <option key={curr.id} value={curr.id}>
+                      {curr.flag} {curr.code} ({curr.symbol}) — {curr.nativeName} [1 USD ≈ {rate.toFixed(curr.id === 'USD' ? 2 : 3)}]
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* TTL Cache Configuration Slider */}
+            <div className="pt-2">
+              <div className="flex items-center justify-between mb-1.5">
+                <AppTooltip description="Defines how long exchange rates remain cached in the browser before querying open.er-api.com again (5 to 60 minutes).">
+                  <label className="text-white font-medium text-xs cursor-help border-b border-dashed border-[#8E9299]/50">
+                    {t('settings.ttlLabel', 'Exchange Rates Cache TTL')}
+                  </label>
+                </AppTooltip>
+                <span className="text-xs font-mono font-semibold text-[#2F6BFF] bg-[#2F6BFF]/10 px-2 py-0.5 rounded">
+                  {t('settings.ttlMinutes', { minutes: fiatRatesTtlMinutes })}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="60"
+                step="5"
+                value={fiatRatesTtlMinutes}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setFiatRatesTtlMinutes(val);
+                }}
+                className="w-full h-1.5 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-[#2F6BFF]"
+              />
+              <div className="flex justify-between text-[10px] text-[#8E9299] mt-1 font-mono">
+                <span>5m</span>
+                <span>30m (Default)</span>
+                <span>60m</span>
+              </div>
+            </div>
+
+            {/* Source & Resilient Fallback Status Box */}
+            <div className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-3 space-y-2 mt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-white flex items-center gap-1.5">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      fiatRatesStatus === 'live'
+                        ? 'bg-emerald-400 animate-pulse'
+                        : fiatRatesStatus === 'cached'
+                        ? 'bg-amber-400'
+                        : 'bg-rose-400'
+                    }`}
+                  />
+                  {t('settings.sourceTitle', 'Exchange Rates Source Status')}
+                </span>
+                <span
+                  className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded ${
+                    fiatRatesStatus === 'live'
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : fiatRatesStatus === 'cached'
+                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                  }`}
+                >
+                  {fiatRatesStatus}
+                </span>
+              </div>
+
+              <p className="text-[11px] text-[#8E9299] leading-relaxed">
+                {fiatRatesStatus === 'live' && t('settings.sourceLive', { source: fiatRatesSource })}
+                {fiatRatesStatus === 'cached' && t('settings.sourceCached', { source: fiatRatesSource })}
+                {fiatRatesStatus === 'fallback' && t('settings.sourceFallback')}
+              </p>
+
+              <div className="text-[10px] text-[#6b6f76] leading-normal pt-1 border-t border-[#2a2b30]/60">
+                {t('settings.fallbackExplanation')}
+              </div>
+
+              <button
+                onClick={async () => {
+                  setIsRefreshingRates(true);
+                  try {
+                    await CurrencyService.fetchFiatRates(0);
+                    toast.success(t('currencyWidget.refreshedSuccess', 'Currency rates refreshed successfully'), { id: 'rates-refresh-settings' });
+                  } catch {
+                    toast.error(t('currencyWidget.refreshedError', 'Could not refresh live rates. Using cached rates.'), { id: 'rates-refresh-err-settings' });
+                  } finally {
+                    setIsRefreshingRates(false);
+                  }
+                }}
+                disabled={isRefreshingRates}
+                className="w-full mt-1 py-1.5 px-3 bg-[#1e2024] hover:bg-[#2a2b30] border border-[#2a2b30] hover:border-[#3d4047] text-white rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3 h-3 ${isRefreshingRates ? 'animate-spin text-[#2F6BFF]' : 'text-[#8E9299]'}`} />
+                <span>{t('settings.refreshNow', 'Refresh Rates Now')}</span>
+              </button>
+            </div>
+
+            <div className="border-t border-[#2a2b30]/50 pt-3 mt-auto">
+              <p className="text-[11px] text-[#8E9299]">
+                {t('selector.ratesNote', 'Balances and KPIs are converted in real-time from USD/USDT.')}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Card 1: Preferences & Testing */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">

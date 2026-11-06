@@ -1,7 +1,31 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { SupportedFiatCurrency, SupportedLocale, DEFAULT_FIAT_RATES } from '../services/currency/currencyTypes';
+import i18n from '../i18n/config';
 
 interface SettingsState {
+  /** Selected display language/locale (e.g. 'pt-BR', 'en-US'). Default 'pt-BR'. */
+  locale: SupportedLocale;
+  setLocale: (locale: SupportedLocale) => void;
+  /** Selected display fiat currency (e.g. 'USD', 'BRL', 'EUR', 'GBP'). Default 'USD'. */
+  fiatCurrency: SupportedFiatCurrency;
+  setFiatCurrency: (currency: SupportedFiatCurrency) => void;
+  /** Cached exchange rates for USD against supported fiat currencies */
+  fiatRates: Record<SupportedFiatCurrency, number>;
+  fiatRatesLastUpdated: number;
+  setFiatRates: (rates: Record<SupportedFiatCurrency, number>) => void;
+  /** TTL for fiat currency exchange rates cache in minutes (5 to 60, default 30). */
+  fiatRatesTtlMinutes: number;
+  setFiatRatesTtlMinutes: (minutes: number) => void;
+  /** Name of the active exchange rate source (e.g. 'open.er-api.com', 'api.frankfurter.dev', 'cache', 'fallback'). */
+  fiatRatesSource: string;
+  /** Status of current exchange rates ('live', 'cached', 'fallback'). */
+  fiatRatesStatus: 'live' | 'cached' | 'fallback';
+  setFiatRatesMetadata: (data: {
+    rates: Record<SupportedFiatCurrency, number>;
+    source: string;
+    status: 'live' | 'cached' | 'fallback';
+  }) => void;
   /** Whether to use mock/Simulation data instead of live API calls. */
   useMockData: boolean;
   setUseMockData: (useMockData: boolean) => void;
@@ -62,6 +86,29 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
+      locale: 'en-US',
+      setLocale: (locale: SupportedLocale) => {
+        i18n.changeLanguage(locale);
+        set({ locale });
+      },
+      fiatCurrency: 'USD',
+      setFiatCurrency: (fiatCurrency: SupportedFiatCurrency) => set({ fiatCurrency }),
+      fiatRates: { ...DEFAULT_FIAT_RATES },
+      fiatRatesLastUpdated: Date.now(),
+      setFiatRates: (fiatRates: Record<SupportedFiatCurrency, number>) =>
+        set({ fiatRates, fiatRatesLastUpdated: Date.now() }),
+      fiatRatesTtlMinutes: 30,
+      setFiatRatesTtlMinutes: (minutes: number) =>
+        set({ fiatRatesTtlMinutes: Math.max(5, Math.min(60, Math.round(minutes))) }),
+      fiatRatesSource: 'open.er-api.com',
+      fiatRatesStatus: 'live',
+      setFiatRatesMetadata: ({ rates, source, status }) =>
+        set({
+          fiatRates: rates,
+          fiatRatesSource: source,
+          fiatRatesStatus: status,
+          fiatRatesLastUpdated: Date.now(),
+        }),
       useMockData: false,
       setUseMockData: (useMockData: boolean) => set({ useMockData }),
       pollingInterval: 5,

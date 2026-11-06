@@ -1,0 +1,49 @@
+import React, { useState } from 'react';
+import { Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../../store/settingsStore';
+import { LanguageCurrencyModal } from './LanguageCurrencyModal';
+import { SUPPORTED_LOCALES, SUPPORTED_FIAT_CURRENCIES } from '../../services/currency/currencyTypes';
+import { AppTooltip } from './Tooltip';
+
+interface LanguageCurrencyButtonProps {
+  className?: string;
+  showText?: boolean;
+}
+
+export function LanguageCurrencyButton({ className = '', showText = true }: LanguageCurrencyButtonProps) {
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const currentLocale = useSettingsStore(state => state.locale);
+  const currentFiat = useSettingsStore(state => state.fiatCurrency);
+
+  const langCode = (SUPPORTED_LOCALES[currentLocale]?.code?.split('-')[0] || 'EN').toUpperCase();
+  const fiatSymbol = SUPPORTED_FIAT_CURRENCIES[currentFiat]?.symbol || '$';
+
+  return (
+    <>
+      <AppTooltip description={`${t('selector.title', 'Language & Currency')}: ${currentLocale} / ${currentFiat}`}>
+        <button
+          onClick={() => setIsOpen(true)}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-[#1a1b1e] hover:bg-[#2a2b30] border border-[#2a2b30] hover:border-gray-600 rounded-lg transition-all duration-150 cursor-pointer ${className}`}
+          aria-label={t('selector.title', 'Language & Currency')}
+          aria-haspopup="dialog"
+          aria-expanded={isOpen}
+        >
+          <Globe className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
+          {showText && (
+            <span className="font-semibold tracking-wider text-gray-200">
+              {langCode} <span className="text-gray-500">/</span> {currentFiat}
+            </span>
+          )}
+        </button>
+      </AppTooltip>
+
+      <LanguageCurrencyModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+      />
+    </>
+  );
+}
