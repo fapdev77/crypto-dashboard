@@ -1,3 +1,11 @@
+# [2.21.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.20.0...v2.21.0) (2026-11-07)
+
+
+### Features
+
+* **i18n:** integrate react-i18next for localization ([18a572a](https://github.com/fapdev77/crypto-dashboard/commit/18a572a3b4b33dd39696bcc06009120c5d24dca5))
+* **i18n:** integrate react-i18next for localization ([7ba8f96](https://github.com/fapdev77/crypto-dashboard/commit/7ba8f96285fab755eced3809bc2495b3d1807326))
+
 # [2.20.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.19.0...v2.20.0) (2026-11-06)
 
 
