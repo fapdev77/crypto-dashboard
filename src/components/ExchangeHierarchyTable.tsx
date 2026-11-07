@@ -6,6 +6,7 @@ import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { Sparkline } from './ui/Sparkline';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
+import { useTranslation } from 'react-i18next';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -118,6 +119,7 @@ export function ExchangeHierarchyTable({
   hideSmallBalances,
   setHideSmallBalances,
 }: ExchangeHierarchyTableProps) {
+  const { t } = useTranslation();
   const { keys } = useApiKeysStore();
   const [expandedExchanges, setExpandedExchanges] = useState<Record<string, boolean>>({});
   const [expandedAccounts, setExpandedAccounts] = useState<Record<string, boolean>>({});
@@ -174,7 +176,7 @@ export function ExchangeHierarchyTable({
             <div className="text-left">
               <h4 className="text-base font-bold text-brand-normal capitalize">{exchange}</h4>
               <div className="text-xs text-[#8E9299] font-medium tracking-wide">
-                Total Balance: <span className="font-mono text-white">{formatCurrency(totalExchangeValue, 'usd')}</span>
+                {t('balances.totalBalance', 'Total Balance')}: <span className="font-mono text-white">{formatCurrency(totalExchangeValue, 'usd')}</span>
               </div>
             </div>
           </div>
@@ -288,7 +290,7 @@ export function ExchangeHierarchyTable({
     <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-4 md:p-6">
       {/* Header Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-        <h3 className="text-xl font-semibold text-white">Balances</h3>
+        <h3 className="text-xl font-semibold text-white">{t('balances.title', 'Balances')}</h3>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -296,7 +298,7 @@ export function ExchangeHierarchyTable({
             </div>
             <input
               type="text"
-              placeholder="Search asset..."
+              placeholder={t('balances.searchPlaceholder', 'Search asset, account or exchange...')}
               className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full"
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
@@ -316,7 +318,7 @@ export function ExchangeHierarchyTable({
             className="flex items-center gap-2 px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] hover:bg-[#2a2b30]/50 rounded-lg text-sm text-[#8E9299] hover:text-white transition-colors"
           >
             {hideSmallBalances ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span className="hidden sm:inline">Hide &lt; $1</span>
+            <span className="hidden sm:inline">{t('balances.hideSmall', 'Hide < $1')}</span>
           </button>
 
           <div className="flex items-center gap-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-1">
@@ -324,13 +326,13 @@ export function ExchangeHierarchyTable({
               onClick={expandAll}
               className="px-3 py-1.5 text-sm text-[#8E9299] hover:text-white hover:bg-[#2a2b30] rounded-md transition-colors"
             >
-              Expand All
+              {t('balances.expandAll', 'Expand All')}
             </button>
             <button
               onClick={collapseAll}
               className="px-3 py-1.5 text-sm text-[#8E9299] hover:text-white hover:bg-[#2a2b30] rounded-md transition-colors"
             >
-              Collapse All
+              {t('balances.collapseAll', 'Collapse All')}
             </button>
           </div>
         </div>
@@ -340,8 +342,8 @@ export function ExchangeHierarchyTable({
       {hierarchyEntries.length === 0 ? (
         <div className="py-12 flex flex-col items-center justify-center bg-[#1a1b1e] rounded-lg border border-[#2a2b30] border-dashed">
           <Wallet className="h-10 w-10 text-[#2a2b30] mb-3" />
-          <p className="text-[#8E9299] font-medium">No balances found</p>
-          <p className="text-[#8E9299]/60 text-sm mt-1">Connect your accounts to view balances.</p>
+          <p className="text-[#8E9299] font-medium">{t('balances.noBalances', 'No balances found')}</p>
+          <p className="text-[#8E9299]/60 text-sm mt-1">{t('balances.connectAccountsPrompt', 'Connect your accounts to view balances.')}</p>
         </div>
       ) : (
         <div className="w-full">

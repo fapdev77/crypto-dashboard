@@ -47,7 +47,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 className="flex items-center gap-1.5 px-3 py-1 bg-[#1c1d21] border border-[#2d2f34] hover:bg-[#2F6BFF]/10 hover:border-[#2F6BFF]/30 text-[#2F6BFF] rounded-lg text-[10px] font-semibold transition-all shadow-sm"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>{currentManualLang === 'pt' ? 'MANUAL DO USUÁRIO' : 'USER MANUAL'}</span>
+                <span>{t('manual.title', 'USER MANUAL')}</span>
               </button>
             </div>
 

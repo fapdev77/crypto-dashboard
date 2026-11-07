@@ -17,8 +17,10 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
 import { isStablecoin } from '../utils/formatters';
 import { AppTooltip } from './ui/Tooltip';
+import { useTranslation } from 'react-i18next';
 
 export function Dashboard() {
+  const { t } = useTranslation();
   const balances = useBalancesStore(state => state.balances);
   const positions = usePositionsStore(state => state.positions);
   const keys = useApiKeysStore(state => state.keys);
@@ -303,7 +305,8 @@ export function Dashboard() {
 
       if (outrosVal > 0) {
         segments.push({
-          name: 'Outros',
+          name: t('dashboardExtra.others', 'Others'),
+          isOthers: true,
           value: outrosVal,
           percent: totalNum > 0 ? (outrosVal / totalNum) * 100 : 0,
           percentOfGlobal: globalTotalNum > 0 ? (outrosVal / globalTotalNum) * 100 : 0
@@ -317,7 +320,7 @@ export function Dashboard() {
       const rowData: any = { exchange: exchange.toLowerCase(), total: totalNum, rawAssets };
       segments.forEach((seg: any, idx: number) => {
         rowData[`segment${idx}`] = seg.value;
-        rowData[`_meta${idx}`] = { name: seg.name, percent: seg.percent, percentOfGlobal: seg.percentOfGlobal };
+        rowData[`_meta${idx}`] = { name: seg.name, isOthers: seg.isOthers, percent: seg.percent, percentOfGlobal: seg.percentOfGlobal };
       });
 
       formattedData.push(rowData);
@@ -334,7 +337,9 @@ export function Dashboard() {
       {useMockData && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center justify-center gap-2">
           <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
-          <span className="text-yellow-500 text-sm font-medium tracking-wide uppercase">Simulation Mode Active - Displaying Mock Data</span>
+          <span className="text-yellow-500 text-sm font-medium tracking-wide uppercase">
+            {t('dashboardExtra.simulationBanner', 'Simulation Mode Active - Displaying Mock Data')}
+          </span>
         </div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
@@ -343,7 +348,9 @@ export function Dashboard() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Total Equity (USD)</span>
+                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">
+                  {t('dashboardExtra.totalEquityUsd', 'Total Equity (USD)')}
+                </span>
                 <span className={`inline-block w-2 h-2 rounded-full ${openPositionsTotalPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
               </div>
               <DollarSign className="w-4 h-4 text-[#8E9299]/60" />
@@ -360,7 +367,7 @@ export function Dashboard() {
             </div>
           </div>
           <div className="mt-4 text-xs text-[#8E9299] font-medium">
-            Net balance across all connected exchanges
+            {t('dashboardExtra.netBalanceDesc', 'Net balance across all connected exchanges')}
           </div>
         </div>
 
@@ -368,13 +375,13 @@ export function Dashboard() {
         <button
           type="button"
           onClick={handleOpenPositionsClick}
-          title="Click to view Open Positions"
+          title={t('dashboardExtra.clickToViewOpenPositions', 'Click to view Open Positions')}
           className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-[#3a3b40] transition-colors"
         >
           <div className="w-full">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
-                Open Positions P&L
+                {t('dashboardExtra.openPositionsPnl', 'Open Positions P&L')}
                 <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
               </span>
               <Activity className="w-4 h-4 text-[#8E9299]/70" />
@@ -384,7 +391,9 @@ export function Dashboard() {
               {/* Unrealized */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-0.5">Unrealized P&L</div>
+                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-0.5">
+                    {t('dashboardExtra.unrealizedPnlLabel', 'Unrealized P&L')}
+                  </div>
                   <div className="flex items-baseline gap-1.5">
                     <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '$••••' : `${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsUnrealizedPnL, 'usd')}`}
@@ -407,7 +416,9 @@ export function Dashboard() {
               {/* Realized */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-0.5">Realized P&L</div>
+                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-0.5">
+                    {t('dashboardExtra.realizedPnlLabel', 'Realized P&L')}
+                  </div>
                   <div className="flex items-baseline gap-1.5">
                     <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '$••••' : `${openPositionsRealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsRealizedPnL, 'usd')}`}
@@ -434,13 +445,13 @@ export function Dashboard() {
         <button
           type="button"
           onClick={handleOpenPositionsClick}
-          title="Click to view Open Positions"
+          title={t('dashboardExtra.clickToViewOpenPositions', 'Click to view Open Positions')}
           className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-[#3a3b40] transition-colors"
         >
           <div className="w-full">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
-                Active Positions
+                {t('dashboardExtra.activePositionsCount', 'Active Positions')}
                 <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
               </span>
               <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
@@ -449,17 +460,19 @@ export function Dashboard() {
               <p className="text-3xl font-bold text-white font-mono">
                 {openPositionsCount}
               </p>
-              <span className="text-xs text-[#8E9299] font-semibold">Active</span>
+              <span className="text-xs text-[#8E9299] font-semibold">
+                {t('dashboardExtra.active', 'Active')}
+              </span>
             </div>
 
             {/* Long vs Short Bar */}
             <div className="space-y-2 mt-4">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="text-emerald-500 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" /> Longs: {longPositions}
+                  <TrendingUp className="w-3 h-3" /> {t('dashboardExtra.longs', 'Longs')}: {longPositions}
                 </span>
                 <span className="text-red-500 flex items-center gap-1">
-                  <TrendingDown className="w-3 h-3" /> Shorts: {shortPositions}
+                  <TrendingDown className="w-3 h-3" /> {t('dashboardExtra.shorts', 'Shorts')}: {shortPositions}
                 </span>
               </div>
               <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">

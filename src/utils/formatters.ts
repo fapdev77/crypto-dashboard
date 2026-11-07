@@ -1,5 +1,7 @@
 import Big from 'big.js';
 import { UnifiedAssetCategory } from '../types';
+import { useSettingsStore } from '../store/settingsStore';
+import { SUPPORTED_LOCALES } from '../services/currency/currencyTypes';
 
 export function isStablecoin(ccy: string | undefined | null): boolean {
   if (!ccy) return false;
@@ -12,10 +14,19 @@ export function isStablecoin(ccy: string | undefined | null): boolean {
   return false;
 }
 
+function resolveNumberLocale(passedLocale?: string): string {
+  if (passedLocale && passedLocale !== 'en-US') return passedLocale;
+  const activeLocale = useSettingsStore.getState?.()?.locale;
+  if (activeLocale && SUPPORTED_LOCALES[activeLocale]?.numberLocale) {
+    return SUPPORTED_LOCALES[activeLocale].numberLocale;
+  }
+  return passedLocale || 'en-US';
+}
+
 export function formatValue(
   val: number | undefined | null,
   decimalsOrSymbol: number | string = 2,
-  locale: string = 'en-US'
+  locale?: string
 ): string {
   if (val === undefined || val === null || isNaN(val)) return '--';
   
@@ -31,13 +42,14 @@ export function formatValue(
     numericVal = 0;
   }
   
-  return numericVal.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  const targetLocale = resolveNumberLocale(locale);
+  return numericVal.toLocaleString(targetLocale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 export function formatCrypto(
   val: number | undefined | null,
   decimalsOrSymbol: number | string = 8,
-  locale: string = 'en-US'
+  locale?: string
 ): string {
   if (val === undefined || val === null || isNaN(val)) return '--';
   
@@ -56,26 +68,29 @@ export function formatCrypto(
     numericVal = 0;
   }
   
-  return numericVal.toLocaleString(locale, { minimumFractionDigits: minDecimals, maximumFractionDigits: decimals });
+  const targetLocale = resolveNumberLocale(locale);
+  return numericVal.toLocaleString(targetLocale, { minimumFractionDigits: minDecimals, maximumFractionDigits: decimals });
 }
 
 export function formatPrice(
   val: number | undefined | null,
   isFiatPair: boolean = true,
-  locale: string = 'en-US'
+  locale?: string
 ): string {
   if (val === undefined || val === null || isNaN(val)) return '--';
   const absVal = Math.abs(val);
   if (absVal === 0) return '0.00';
   
+  const targetLocale = resolveNumberLocale(locale);
+
   if (!isFiatPair) {
-    return val.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 8 });
+    return val.toLocaleString(targetLocale, { minimumFractionDigits: 2, maximumFractionDigits: 8 });
   }
 
-  if (absVal < 0.001) return val.toLocaleString(locale, { minimumFractionDigits: 4, maximumFractionDigits: 8 });
-  if (absVal < 1) return val.toLocaleString(locale, { minimumFractionDigits: 4, maximumFractionDigits: 6 });
-  if (absVal < 100) return val.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-  return val.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (absVal < 0.001) return val.toLocaleString(targetLocale, { minimumFractionDigits: 4, maximumFractionDigits: 8 });
+  if (absVal < 1) return val.toLocaleString(targetLocale, { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+  if (absVal < 100) return val.toLocaleString(targetLocale, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  return val.toLocaleString(targetLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function formatCompactFiat(

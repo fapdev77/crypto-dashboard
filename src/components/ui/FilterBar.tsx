@@ -5,6 +5,7 @@ import { useApiKeysStore } from '../../store/apiKeysStore';
 import { ExchangeIcon } from './ExchangeIcon';
 import { TIME_PERIOD_OPTIONS } from '../../utils/dateTimeHelper';
 import { CustomDateRangeModal } from './CustomDateRangeModal';
+import { useTranslation } from 'react-i18next';
 
 export interface FilterBarProps {
   // Search Filter
@@ -128,6 +129,7 @@ export function FilterBar({
   type,
   statusSelect,
 }: FilterBarProps) {
+  const { t } = useTranslation();
   const { keys } = useApiKeysStore();
   const [activeDropdown, setActiveDropdown] = useState<DropdownKey>(null);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
@@ -188,7 +190,7 @@ export function FilterBar({
   // Clean value for presentation
   const getExchangeLabel = (val: string) => {
     if (!val || val === 'All' || val === 'all') {
-      return exchange?.labelAll || 'All Exchanges';
+      return exchange?.labelAll || t('common.allExchanges', 'All Exchanges');
     }
     return val.charAt(0).toUpperCase() + val.slice(1);
   };
@@ -244,7 +246,7 @@ export function FilterBar({
                         : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
                     }`}
                   >
-                    <span>{exchange.labelAll || 'All Exchanges'}</span>
+                    <span>{exchange.labelAll || t('common.allExchanges', 'All Exchanges')}</span>
                   </button>
                 </div>
               </AppTooltip>

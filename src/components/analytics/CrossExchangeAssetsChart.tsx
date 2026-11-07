@@ -6,6 +6,7 @@ import { CoinIcon } from '../ui/CoinIcon';
 import { MoreHorizontal } from 'lucide-react';
 import { formatCompactUSD } from '../../utils/formatters';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
+import { useTranslation } from 'react-i18next';
 
 const CustomBarShape = (props: any) => {
   const { fill, x, y, width, height, payload, dataKey, fillOpacity, value } = props;
@@ -35,6 +36,7 @@ const CustomBarShape = (props: any) => {
   const isLightBackground = fill === '#ffffff';
   const textColor = isLightBackground ? '#4b5563' : '#ffffff';
   const textShadow = isLightBackground ? 'none' : '0px 1px 3px rgba(0,0,0,0.8), 0px 0px 1px rgba(0,0,0,0.5)';
+  const isOthersSegment = meta && (meta.isOthers || meta.name === 'Outros' || meta.name === 'Others' || meta.name?.toLowerCase() === 'outros' || meta.name?.toLowerCase() === 'others');
 
   return (
     <g>
@@ -44,12 +46,12 @@ const CustomBarShape = (props: any) => {
         <foreignObject x={x} y={y} width={width} height={height}>
           <div className="flex flex-col items-center justify-center w-full h-full pointer-events-none px-1 overflow-hidden">
             <div className="flex items-center gap-1.5 opacity-100 overflow-hidden bg-transparent">
-               {meta.name !== 'Outros' && width >= 55 && (
+               {!isOthersSegment && width >= 55 && (
                  <div className="w-[18px] h-[18px] flex-shrink-0" style={{ filter: isLightBackground ? 'none' : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
                    <CoinIcon symbol={meta.name} className="w-full h-full" />
                  </div>
                )}
-               {meta.name === 'Outros' && width >= 45 && (
+               {isOthersSegment && width >= 45 && (
                  <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center" style={{ filter: isLightBackground ? 'none' : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
                    <MoreHorizontal size={16} color={textColor} strokeWidth={3} />
                  </div>
@@ -69,7 +71,7 @@ const CustomBarShape = (props: any) => {
 };
 
 
-const CustomTooltip = ({ active, payload, formatCurrency }: any) => {
+const CustomTooltip = ({ active, payload, formatCurrency, t }: any) => {
   if (active && payload && payload.length) {
     const row = payload[0].payload;
     const assets = row.rawAssets || [];
@@ -80,7 +82,9 @@ const CustomTooltip = ({ active, payload, formatCurrency }: any) => {
           <div className="w-5 h-5 grayscale opacity-80 mix-blend-screen">
              <ExchangeIcon exchange={row.exchange} />
           </div>
-          <span className="text-brand-normal font-bold capitalize">{row.exchange} Composition</span>
+          <span className="text-brand-normal font-bold capitalize">
+            {row.exchange} {t ? t('dashboardExtra.composition', 'Composition') : 'Composition'}
+          </span>
         </div>
         <div className="space-y-2">
           {assets.map((asset: any, idx: number) => {
@@ -133,13 +137,16 @@ interface CrossExchangeAssetsChartProps {
 export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAssetsChartProps) {
   if (!data || data.length === 0) return null;
 
+  const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
   const segments = Array.from({ length: maxSegments }).map((_, i) => `segment${i}`);
   const maxTotal = Math.max(...data.map(d => d.total));
 
   return (
     <div className="bg-[#151619] border border-[#2a2b30] p-5 rounded-xl flex flex-col h-[300px]">
-      <h3 className="text-sm font-semibold text-white mb-4">Cross-Exchange Asset Composition</h3>
+      <h3 className="text-sm font-semibold text-white mb-4">
+        {t('dashboardExtra.crossExchangeAssetComposition', 'Cross-Exchange Asset Composition')}
+      </h3>
       <div className="flex-1 min-h-0 min-w-0 w-full relative">
         <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           <BarChart
@@ -150,7 +157,7 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
           >
             <XAxis type="number" domain={[0, maxTotal]} hide />
             <YAxis dataKey="exchange" type="category" axisLine={false} tickLine={false} tick={customYAxisTick} width={80} />
-            <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.03)' }} content={<CustomTooltip formatCurrency={formatCurrency} />} isAnimationActive={false} />
+            <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.03)' }} content={<CustomTooltip formatCurrency={formatCurrency} t={t} />} isAnimationActive={false} />
             
             {segments.map((key, i) => (
               <Bar

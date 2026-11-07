@@ -16,6 +16,7 @@ import { useBalancesStore } from '../store/balancesStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PositionCardProps {
   pos: UnifiedPosition;
@@ -24,6 +25,7 @@ interface PositionCardProps {
 }
 
 export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
+  const { t } = useTranslation();
   const balances = useBalancesStore(state => state.balances);
   const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
   const setHedgeExposedMode = useSettingsStore(state => state.setHedgeExposedMode);
@@ -188,25 +190,25 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     ),
     rows: [
       {
-        label: 'Side',
+        label: t('positions.side', 'Side'),
         value: sideLabel,
         labelClassName: 'text-[12px] text-[#8E9299]',
         valueClassName: `text-[12px] font-medium ${sideColor}`
       },
       {
-        label: 'Number of contracts',
-        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(pos.notionalUsd || Math.abs(pos.size), 'crypto', 0) : formatCurrency(Math.abs(pos.size), 'crypto')} contracts`,
+        label: t('positions.numberOfContracts', 'Number of contracts'),
+        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(pos.notionalUsd || Math.abs(pos.size), 'crypto', 0) : formatCurrency(Math.abs(pos.size), 'crypto')} ${t('positions.contracts', 'contracts')}`,
         labelClassName: 'text-[12px] text-[#8E9299]',
         valueClassName: 'text-[12px] font-mono text-white'
       },
       {
-        label: 'Total crypto',
+        label: t('positions.totalCrypto', 'Total crypto'),
         value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(hedgeLevels.openPosSize, 'crypto', 8) : formatCurrency(Math.abs(pos.size), 'crypto')} ${baseCoinClean}`,
         labelClassName: 'text-[12px] text-[#8E9299]',
         valueClassName: 'text-[12px] font-mono text-white'
       },
       {
-        label: 'Total value',
+        label: t('positions.totalValue', 'Total value'),
         value: `${formatCurrency(sizeValUsd, 'usd', 2)} USD`,
         labelClassName: 'text-[12px] text-[#8E9299]',
         valueClassName: 'text-[12px] font-mono text-white'

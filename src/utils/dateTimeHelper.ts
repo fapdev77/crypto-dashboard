@@ -3,8 +3,10 @@
  * Supports locale-aware user display formatting (24-hour clock) as well as standardized ISO date representations.
  */
 
+import { useSettingsStore } from '../store/settingsStore';
+
 export interface FormatDateTimeOptions {
-  /** Optional locale string (e.g., 'pt-BR', 'en-US'). If omitted, defaults to the browser locale. */
+  /** Optional locale string (e.g., 'pt-BR', 'en-US'). If omitted, defaults to the app locale. */
   locale?: string;
   /** Whether to include seconds in the time formatting. Default: true. */
   includeSeconds?: boolean;
@@ -55,7 +57,8 @@ export function formatDateTime(
     return { dateStr: '--', timeStr: '--', fullStr: '--' };
   }
 
-  const currentLocale = options.locale || undefined;
+  const storeLocale = useSettingsStore.getState?.()?.locale;
+  const currentLocale = options.locale || storeLocale || undefined;
   const includeSeconds = options.includeSeconds ?? true;
   const includeYear = options.includeYear ?? true;
   const monthFormat = options.monthFormat ?? '2-digit';

@@ -9,6 +9,8 @@ import {
 } from '../services/currency/currencyTypes';
 import i18n from '../i18n/config';
 
+export type { SupportedLocale, SupportedFiatCurrency };
+
 interface SettingsState {
   /** Selected display language/locale (e.g. 'pt-BR', 'en-US'). Default 'pt-BR'. */
   locale: SupportedLocale;
