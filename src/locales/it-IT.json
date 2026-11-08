@@ -142,7 +142,7 @@
   },
   "dashboardExtra": {
     "simulationBanner": "Modalità di Simulazione Attiva - Visualizzazione Dati Simulati",
-    "totalEquityUsd": "Patrimonio Totale (USD)",
+    "totalEquityUsd": "Patrimonio Totale ({{currency}})",
     "netBalanceDesc": "Saldo netto su tutti gli exchange collegati",
     "openPositionsPnl": "PnL Posizioni Aperte",
     "unrealizedPnlLabel": "PnL Non Realizzato",
@@ -151,12 +151,24 @@
     "active": "Attive",
     "longs": "Longs",
     "shorts": "Shorts",
+    "hedgeModeInverseCard": "Hedge Mode (Inverse)",
+    "clickToOpenHedgePro": "Clicca per aprire il dashboard Hedge Pro e visualizzare informazioni dettagliate sulla copertura",
+    "hedged": "Hedged",
+    "leveraged": "In Leva",
+    "protectedCapitalBreakdown": "Dettaglio del Capitale Protetto",
+    "hedgeShorts": "Hedge (Shorts):",
+    "stablecoins": "Stablecoins:",
+    "totalProtected": "Totale Protetto:",
+    "equity": "capitale",
+    "prot": "Prot:",
+    "exp": "Exp:",
     "macroCapitalDistribution": "Distribuzione Macro del Capitale",
-    "crossExchangeAssetComposition": "Composizione Asset tra Exchange",
+    "crossExchangeAssetComposition": "Composição Asset tra Exchange",
     "composition": "Composizione",
     "others": "Altri",
     "totalPositions": "Totale Posizioni",
-    "clickToViewOpenPositions": "Clicca per visualizzare le Posizioni Aperte"
+    "clickToViewOpenPositions": "Clicca per visualizzare le Posizioni Aperte",
+    "total": "Totale:"
   },
   "balances": {
     "title": "Saldi",
@@ -167,6 +179,9 @@
     "totalBalance": "Saldo Totale",
     "noBalances": "Nessun saldo trovato",
     "connectAccountsPrompt": "Collega i tuoi account per visualizzare i saldi.",
+    "asset": "Asset",
+    "amount": "Quantità",
+    "valueWithCurrency": "Valore (≈{{currency}})",
     "spot": "Spot",
     "funding": "Funding",
     "earn": "Earn",
@@ -177,6 +192,59 @@
     "usdtFutures": "Futures USDT",
     "coinFutures": "Futures COIN",
     "usdcFutures": "Futures USDC"
+  },
+  "sentiment": {
+    "title": "Sentimento di Mercato e Indice Fear / Greed",
+    "subtitle": "Punteggio in tempo reale dell'indice Fear & Greed e panoramica del regime macro",
+    "source": "Fonte: API Alternative.me",
+    "updatedAt": "Aggiornato: {{time}} (sincronizzazione {{minutes}}m)",
+    "liveFeedActive": "Feed in tempo reale attivo • Aggiornamento automatico ogni {{minutes}} minuti",
+    "manualRefreshTitle": "Aggiornamento manuale: Recupera i dati più recenti da Alternative.me",
+    "historicalTrend": "Tendenza Storica a 7 Giorni",
+    "dailyProgression": "Progressione giornaliera",
+    "today": "Oggi",
+    "regime": "Regime",
+    "volatility": "Volatilità",
+    "fundingBias": "Bias di Funding",
+    "btcDominance": "Dominanza BTC",
+    "tacticalOutlook": "Prospettiva Tattica di Mercato:",
+    "fallbackActive": "Modalità di emergenza attiva: {{error}}",
+    "levels": {
+      "Extreme Fear": "Paura Estrema",
+      "Fear": "Paura",
+      "Neutral": "Neutro",
+      "Greed": "Avidità",
+      "Extreme Greed": "Avidità Estrema"
+    },
+    "regimes": {
+      "Euphoric / High Risk": "Euforico / Alto Rischio",
+      "Bullish Expansion": "Espansione Rialzista",
+      "Extreme Capitulation": "Capitolazione Estrema",
+      "Defensive Contraction": "Contrazione Difensiva",
+      "Consolidation": "Consolidamento"
+    },
+    "volatilities": {
+      "High": "Alta",
+      "Elevated": "Elevada",
+      "Extreme": "Estrema",
+      "Moderate": "Moderata",
+      "Low": "Bassa"
+    },
+    "fundingBiases": {
+      "Long Heavy (Overheated)": "Prevalenza di Long (Surriscaldato)",
+      "Short Heavy (Squeeze Risk)": "Prevalenza di Short (Rischio Squeeze)",
+      "Neutral / Balanced": "Neutro / Bilanciato"
+    },
+    "tooltips": {
+      "currentIndex": "Indice Fear & Greed attuale: {{score}}/100 ({{classification}}). 0-24: Paura Estrema, 25-44: Paura, 45-55: Neutro, 56-75: Avidità, 76-100: Avidità Estrema.",
+      "change24h": "Variazione netta del sentimento nelle ultime 24 ore: {{change}} punti",
+      "change7d": "Variazione netta del sentimento negli ultimi 7 giorni: {{change}} punti",
+      "regime": "Regime Macro di Mercato: {{regime}}. Calcolato in base alle soglie di Fear & Greed, al momentum del trend e alla volatilità su più giorni.",
+      "volatility": "Livello Stimato di Volatilità: {{volatility}}. Livelli estremi indicano un rischio maggiore di liquidazioni improvvise.",
+      "fundingBias": "Bias delle Tasse di Funding: {{bias}}. Valutato in base al peso delle posizioni perpetual e ai tassi attuali di funding.",
+      "btcDominance": "Stima della Dominanza di Mercato del Bitcoin: ~{{dominance}}%. Riflette la quota di capitale allocata nella principale criptovaluta.",
+      "tacticalAdvice": "Raccomandazione tattica contestuale calcolata dal regime di mercato, dal momentum del sentimento e dal rischio di leva."
+    }
   },
   "positions": {
     "title": "Posizioni Aperte",

@@ -7,6 +7,7 @@ import { ExchangeIcon } from './ui/ExchangeIcon';
 import { Sparkline } from './ui/Sparkline';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../store/settingsStore';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -121,6 +122,7 @@ export function ExchangeHierarchyTable({
 }: ExchangeHierarchyTableProps) {
   const { t } = useTranslation();
   const { keys } = useApiKeysStore();
+  const currentFiat = useSettingsStore(state => state.fiatCurrency);
   const [expandedExchanges, setExpandedExchanges] = useState<Record<string, boolean>>({});
   const [expandedAccounts, setExpandedAccounts] = useState<Record<string, boolean>>({});
 
@@ -240,9 +242,9 @@ export function ExchangeHierarchyTable({
                       <table className="w-full text-left border-collapse">
                         <thead className="sticky top-0 bg-[#111216]">
                           <tr>
-                            <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">Asset</th>
-                            <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">Amount</th>
-                            <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">Value (≈USD)</th>
+                            <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">{t('balances.asset', 'Asset')}</th>
+                            <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">{t('balances.amount', 'Amount')}</th>
+                            <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">{t('balances.valueWithCurrency', 'Value (≈{{currency}})', { currency: currentFiat })}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#2a2b30]">

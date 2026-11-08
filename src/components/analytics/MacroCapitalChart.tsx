@@ -80,7 +80,7 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
                   return (
                     <g>
                       <text x={cx} y={cy - 10} fill="#8E9299" fontSize={12} textAnchor="middle" dominantBaseline="central">
-                        Total:
+                        {t('dashboardExtra.total', 'Total:')}
                       </text>
                       <text x={cx} y={cy + 12} fill="#ffffffc0" fontSize={20} fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="central">
                         {formatCurrency(totalValue, 'compact', 2)}

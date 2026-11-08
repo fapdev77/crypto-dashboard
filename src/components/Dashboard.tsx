@@ -25,6 +25,7 @@ export function Dashboard() {
   const positions = usePositionsStore(state => state.positions);
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const currentFiat = useSettingsStore(state => state.fiatCurrency);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
 
@@ -349,7 +350,7 @@ export function Dashboard() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">
-                  {t('dashboardExtra.totalEquityUsd', 'Total Equity (USD)')}
+                  {t('dashboardExtra.totalEquityUsd', 'Total Equity ({{currency}})', { currency: currentFiat })}
                 </span>
                 <span className={`inline-block w-2 h-2 rounded-full ${openPositionsTotalPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
               </div>
@@ -501,26 +502,26 @@ export function Dashboard() {
         <button
           type="button"
           onClick={handleHedgeProClick}
-          title="Click to open Hedge Pro dashboard for detailed information about hedge"
+          title={t('dashboardExtra.clickToOpenHedgePro', 'Click to open Hedge Pro dashboard for detailed information about hedge')}
           className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-[#3a3b40] transition-colors"
         >
           <div className="w-full">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
-                Hedge Mode (Inverse)
+                {t('dashboardExtra.hedgeModeInverseCard', 'Hedge Mode (Inverse)')}
                 <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-emerald-500">Hedged: {inverseShortCount}</span>
+                <span className="text-xs font-semibold text-emerald-500">{t('dashboardExtra.hedged', 'Hedged')}: {inverseShortCount}</span>
                 <span className="text-xs font-bold text-[#8E9299]">|</span>
-                <span className="text-xs font-semibold text-amber-400">Leveraged: {inverseLongCount}</span>
+                <span className="text-xs font-semibold text-amber-400">{t('dashboardExtra.leveraged', 'Leveraged')}: {inverseLongCount}</span>
               </div>
             </div>
             <div className="flex items-baseline gap-1.5">
               <p className="text-xl font-bold text-white font-mono">
                 {inverseOpenCount}
               </p>
-              <span className="text-xs text-[#8E9299] font-medium">Active Positions</span>
+              <span className="text-xs text-[#8E9299] font-medium">{t('dashboardExtra.activePositionsCount', 'Active Positions')}</span>
             </div>
 
             {/* Protected vs Exposed Bar */}
@@ -530,20 +531,20 @@ export function Dashboard() {
                   description={
                     <div className="text-xs space-y-1.5 p-1 min-w-[230px]">
                       <div className="font-semibold text-white border-b border-[#2a2b30] pb-1">
-                        Protected Capital Breakdown
+                        {t('dashboardExtra.protectedCapitalBreakdown', 'Protected Capital Breakdown')}
                       </div>
                       <div className="space-y-1 font-mono text-[11px]">
                         <div className="flex justify-between items-center text-emerald-400">
-                          <span>Hedge (Shorts):</span>
+                          <span>{t('dashboardExtra.hedgeShorts', 'Hedge (Shorts):')}</span>
                           <span>{formatCurrency(syntheticHedgeUsd, 'usd', 2)} ({hedgeOfProtectedPct.toFixed(2)}%)</span>
                         </div>
                         <div className="flex justify-between items-center text-blue-400">
-                          <span>Stablecoins:</span>
+                          <span>{t('dashboardExtra.stablecoins', 'Stablecoins:')}</span>
                           <span>{formatCurrency(stablecoinsProtectedUsd, 'usd', 2)} ({stablesOfProtectedPct.toFixed(2)}%)</span>
                         </div>
                         <div className="flex justify-between items-center text-white border-t border-[#2a2b30] pt-1 font-semibold">
-                          <span>Total Protected:</span>
-                          <span>{formatCurrency(totalProtected, 'usd', 2)} ({protectedPercent.toFixed(2)}% equity)</span>
+                          <span>{t('dashboardExtra.totalProtected', 'Total Protected:')}</span>
+                          <span>{formatCurrency(totalProtected, 'usd', 2)} ({protectedPercent.toFixed(2)}% {t('dashboardExtra.equity', 'equity')})</span>
                         </div>
                       </div>
                     </div>
@@ -552,10 +553,10 @@ export function Dashboard() {
                   align="start"
                 >
                   <span className="text-emerald-500/90 underline decoration-dotted decoration-emerald-500/50 cursor-help">
-                    Prot: {formatCurrency(totalProtected, 'usd', 2)}
+                    {t('dashboardExtra.prot', 'Prot:')} {formatCurrency(totalProtected, 'usd', 2)}
                   </span>
                 </AppTooltip>
-                <span className="text-white font-semibold">Exp: {formatCurrency(totalExposed, 'usd', 2)}</span>
+                <span className="text-white font-semibold">{t('dashboardExtra.exp', 'Exp:')} {formatCurrency(totalExposed, 'usd', 2)}</span>
               </div>
               <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
                 {totalEquity > 0 ? (

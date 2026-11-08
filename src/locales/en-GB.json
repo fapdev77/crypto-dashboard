@@ -142,7 +142,7 @@
   },
   "dashboardExtra": {
     "simulationBanner": "Simulation Mode Active - Displaying Mock Data",
-    "totalEquityUsd": "Total Equity (USD)",
+    "totalEquityUsd": "Total Equity ({{currency}})",
     "netBalanceDesc": "Net balance across all connected exchanges",
     "openPositionsPnl": "Open Positions P&L",
     "unrealizedPnlLabel": "Unrealized P&L",
@@ -151,12 +151,24 @@
     "active": "Active",
     "longs": "Longs",
     "shorts": "Shorts",
+    "hedgeModeInverseCard": "Hedge Mode (Inverse)",
+    "clickToOpenHedgePro": "Click to open Hedge Pro dashboard for detailed information about hedge",
+    "hedged": "Hedged",
+    "leveraged": "Leveraged",
+    "protectedCapitalBreakdown": "Protected Capital Breakdown",
+    "hedgeShorts": "Hedge (Shorts):",
+    "stablecoins": "Stablecoins:",
+    "totalProtected": "Total Protected:",
+    "equity": "equity",
+    "prot": "Prot:",
+    "exp": "Exp:",
     "macroCapitalDistribution": "Macro Capital Distribution",
     "crossExchangeAssetComposition": "Cross-Exchange Asset Composition",
     "composition": "Composition",
     "others": "Others",
     "totalPositions": "Total Positions",
-    "clickToViewOpenPositions": "Click to view Open Positions"
+    "clickToViewOpenPositions": "Click to view Open Positions",
+    "total": "Total:"
   },
   "balances": {
     "title": "Balances",
@@ -167,6 +179,9 @@
     "totalBalance": "Total Balance",
     "noBalances": "No balances found",
     "connectAccountsPrompt": "Connect your accounts to view balances.",
+    "asset": "Asset",
+    "amount": "Amount",
+    "valueWithCurrency": "Value (≈{{currency}})",
     "spot": "Spot",
     "funding": "Funding",
     "earn": "Earn",
@@ -177,6 +192,59 @@
     "usdtFutures": "USDT Futures",
     "coinFutures": "COIN Futures",
     "usdcFutures": "USDC Futures"
+  },
+  "sentiment": {
+    "title": "Market Sentiment & Fear / Greed Index",
+    "subtitle": "Live Fear & Greed Index score and macro market regime overview",
+    "source": "Source: Alternative.me API",
+    "updatedAt": "Updated: {{time}} ({{minutes}}m auto-sync)",
+    "liveFeedActive": "Live feed active • Auto-refreshes every {{minutes}} minutes",
+    "manualRefreshTitle": "Manual refresh: Fetch latest sentiment from Alternative.me",
+    "historicalTrend": "7-Day Historical Trend",
+    "dailyProgression": "Daily progression",
+    "today": "Today",
+    "regime": "Regime",
+    "volatility": "Volatility",
+    "fundingBias": "Funding Bias",
+    "btcDominance": "BTC Dominance",
+    "tacticalOutlook": "Tactical Market Outlook:",
+    "fallbackActive": "Fallback mode active: {{error}}",
+    "levels": {
+      "Extreme Fear": "Extreme Fear",
+      "Fear": "Fear",
+      "Neutral": "Neutral",
+      "Greed": "Greed",
+      "Extreme Greed": "Extreme Greed"
+    },
+    "regimes": {
+      "Euphoric / High Risk": "Euphoric / High Risk",
+      "Bullish Expansion": "Bullish Expansion",
+      "Extreme Capitulation": "Extreme Capitulation",
+      "Defensive Contraction": "Defensive Contraction",
+      "Consolidation": "Consolidation"
+    },
+    "volatilities": {
+      "High": "High",
+      "Elevated": "Elevated",
+      "Extreme": "Extreme",
+      "Moderate": "Moderate",
+      "Low": "Low"
+    },
+    "fundingBiases": {
+      "Long Heavy (Overheated)": "Long Heavy (Overheated)",
+      "Short Heavy (Squeeze Risk)": "Short Heavy (Squeeze Risk)",
+      "Neutral / Balanced": "Neutral / Balanced"
+    },
+    "tooltips": {
+      "currentIndex": "Current Fear & Greed Index: {{score}}/100 ({{classification}}). 0-24: Extreme Fear, 25-44: Fear, 45-55: Neutral, 56-75: Greed, 76-100: Extreme Greed.",
+      "change24h": "Net sentiment change over the last 24 hours: {{change}} points",
+      "change7d": "Net sentiment change over the last 7 days: {{change}} points",
+      "regime": "Macro Market Regime: {{regime}}. Derived from Fear & Greed thresholds, trend momentum, and multi-day volatility.",
+      "volatility": "Expected Volatility Level: {{volatility}}. Extreme levels indicate heightened risk of sudden liquidation flushes.",
+      "fundingBias": "Market Funding Bias: {{bias}}. Evaluated using active perpetual position weights and current funding rates.",
+      "btcDominance": "Estimated Bitcoin Market Dominance: ~{{dominance}}%. Reflects capital allocation share in top crypto benchmark.",
+      "tacticalAdvice": "Contextual tactical recommendation calculated from market regime, sentiment momentum, and leverage risk."
+    }
   },
   "positions": {
     "title": "Open Positions",

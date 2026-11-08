@@ -11,13 +11,35 @@ import {
   ShieldCheck,
   ExternalLink,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useMarketSentiment } from '../../hooks/useMarketSentiment';
 
 export const MarketSentiment: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const { sentiment, isLoading, error, refetch, pollingIntervalMinutes } = useMarketSentiment();
 
   const { currentIndex, historical, trendSummary, change24h, change7d, lastUpdated } = sentiment;
   const score = currentIndex.value;
+
+  // Helper for translating classification
+  const getLevelLabel = (classification: string) => {
+    return t(`sentiment.levels.${classification}`, classification);
+  };
+
+  // Helper for translating regime
+  const getRegimeLabel = (regime: string) => {
+    return t(`sentiment.regimes.${regime}`, regime);
+  };
+
+  // Helper for translating volatility
+  const getVolatilityLabel = (volatility: string) => {
+    return t(`sentiment.volatilities.${volatility}`, volatility);
+  };
+
+  // Helper for translating funding bias
+  const getFundingBiasLabel = (bias: string) => {
+    return t(`sentiment.fundingBiases.${bias}`, bias);
+  };
 
   // Color mapping based on score
   const getSentimentTheme = (val: number) => {
@@ -77,16 +99,16 @@ export const MarketSentiment: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-semibold text-white tracking-tight">
-                Market Sentiment & Fear / Greed Index
+                {t('sentiment.title', 'Market Sentiment & Fear / Greed Index')}
               </h3>
               <span 
                 className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]" 
-                title={`Live feed active • Auto-refreshes every ${pollingIntervalMinutes} minutes (synchronized with background cache interval)`}
+                title={t('sentiment.liveFeedActive', 'Live feed active • Auto-refreshes every {{minutes}} minutes', { minutes: pollingIntervalMinutes })}
               />
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <p className="text-xs text-[#8E9299]">
-                Live Fear & Greed Index score and macro market regime overview
+                {t('sentiment.subtitle', 'Live Fear & Greed Index score and macro market regime overview')}
               </p>
               <span className="text-[#8E9299]/50">•</span>
               {/* Discrete data source label */}
@@ -94,10 +116,10 @@ export const MarketSentiment: React.FC = () => {
                 href="https://alternative.me/crypto/fear-and-greed-index/"
                 target="_blank"
                 rel="noreferrer noopener"
-                title="Data Source: Alternative.me Crypto Fear & Greed Index API"
+                title={t('sentiment.sourceTitle', 'Data Source: Alternative.me Crypto Fear & Greed Index API')}
                 className="inline-flex items-center gap-1 text-[11px] text-[#8E9299] hover:text-[#2F6BFF] transition-colors"
               >
-                <span>Source: Alternative.me API</span>
+                <span>{t('sentiment.source', 'Source: Alternative.me API')}</span>
                 <ExternalLink className="w-3 h-3 opacity-60" />
               </a>
             </div>
@@ -107,15 +129,15 @@ export const MarketSentiment: React.FC = () => {
         <div className="flex items-center gap-3">
           <span 
             className="text-[11px] text-[#8E9299] font-mono hidden sm:inline-block cursor-help"
-            title={`Last updated at ${lastUpdated}. Periodic sync runs every ${pollingIntervalMinutes}m.`}
+            title={t('sentiment.updatedAt', 'Updated: {{time}} ({{minutes}}m auto-sync)', { time: lastUpdated, minutes: pollingIntervalMinutes })}
           >
-            Updated: {lastUpdated} ({pollingIntervalMinutes}m auto-sync)
+            {t('sentiment.updatedAt', 'Updated: {{time}} ({{minutes}}m auto-sync)', { time: lastUpdated, minutes: pollingIntervalMinutes })}
           </span>
           <button
             type="button"
             onClick={() => refetch()}
             disabled={isLoading}
-            title="Manual refresh: Fetch latest sentiment from Alternative.me"
+            title={t('sentiment.manualRefreshTitle', 'Manual refresh: Fetch latest sentiment from Alternative.me')}
             className="p-1.5 rounded-lg bg-[#1a1b1e] hover:bg-[#2a2b30] border border-[#2a2b30] text-slate-300 hover:text-white transition-all disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[#2F6BFF]' : ''}`} />
@@ -128,7 +150,7 @@ export const MarketSentiment: React.FC = () => {
         {error && (
           <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>Fallback mode active: {error}</span>
+            <span>{t('sentiment.fallbackActive', 'Fallback mode active: {{error}}', { error })}</span>
           </div>
         )}
 
@@ -136,7 +158,7 @@ export const MarketSentiment: React.FC = () => {
           {/* Gauge & Main Score (Col 1-5) */}
           <div 
             className="md:col-span-5 flex flex-col items-center justify-center p-4 rounded-xl bg-[#1a1b1e] border border-[#2a2b30]"
-            title={`Current Fear & Greed Index: ${score}/100 (${currentIndex.valueClassification}). 0-24: Extreme Fear, 25-44: Fear, 45-55: Neutral, 56-75: Greed, 76-100: Extreme Greed.`}
+            title={t('sentiment.tooltips.currentIndex', 'Current Fear & Greed Index: {{score}}/100 ({{classification}})', { score, classification: getLevelLabel(currentIndex.valueClassification) })}
           >
             {/* SVG Semicircle Dial */}
             <div className="relative w-48 h-26 flex items-end justify-center overflow-hidden pt-1">
@@ -188,8 +210,8 @@ export const MarketSentiment: React.FC = () => {
                 </g>
               </svg>
 
-              <span className="absolute left-2 bottom-0 text-[10px] font-mono font-semibold text-rose-400" title="0: Extreme Fear">0</span>
-              <span className="absolute right-2 bottom-0 text-[10px] font-mono font-semibold text-cyan-400" title="100: Extreme Greed">100</span>
+              <span className="absolute left-2 bottom-0 text-[10px] font-mono font-semibold text-rose-400" title={`0: ${getLevelLabel('Extreme Fear')}`}>0</span>
+              <span className="absolute right-2 bottom-0 text-[10px] font-mono font-semibold text-cyan-400" title={`100: ${getLevelLabel('Extreme Greed')}`}>100</span>
             </div>
 
             {/* Score & Classification */}
@@ -203,17 +225,17 @@ export const MarketSentiment: React.FC = () => {
 
               <div 
                 className="mt-1.5 inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-[#2a2b30] bg-[#151619] shadow-sm cursor-help"
-                title={`Classification: ${currentIndex.valueClassification}`}
+                title={getLevelLabel(currentIndex.valueClassification)}
               >
                 <span className={`w-2 h-2 rounded-full ${theme.bg.replace('/10', '')} animate-pulse`} />
-                <span className={theme.text}>{currentIndex.valueClassification}</span>
+                <span className={theme.text}>{getLevelLabel(currentIndex.valueClassification)}</span>
               </div>
 
               {/* Variations */}
               <div className="flex items-center justify-center gap-4 mt-3 text-xs text-[#8E9299]">
                 <span 
                   className="flex items-center gap-1 font-mono cursor-help"
-                  title={`Net sentiment change over the last 24 hours: ${change24h >= 0 ? '+' : ''}${change24h} points`}
+                  title={t('sentiment.tooltips.change24h', 'Net sentiment change over the last 24 hours: {{change}} points', { change: change24h >= 0 ? `+${change24h}` : change24h })}
                 >
                   <span className="text-[11px] text-[#8E9299]">24h:</span>
                   <span className={`font-semibold flex items-center ${change24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -224,7 +246,7 @@ export const MarketSentiment: React.FC = () => {
                 <span className="w-1 h-1 rounded-full bg-[#2a2b30]" />
                 <span 
                   className="flex items-center gap-1 font-mono cursor-help"
-                  title={`Net sentiment change over the last 7 days: ${change7d >= 0 ? '+' : ''}${change7d} points`}
+                  title={t('sentiment.tooltips.change7d', 'Net sentiment change over the last 7 days: {{change}} points', { change: change7d >= 0 ? `+${change7d}` : change7d })}
                 >
                   <span className="text-[11px] text-[#8E9299]">7d:</span>
                   <span className={`font-semibold flex items-center ${change7d >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -242,10 +264,10 @@ export const MarketSentiment: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-[#8E9299] uppercase tracking-wider">
-                  7-Day Historical Trend
+                  {t('sentiment.historicalTrend', '7-Day Historical Trend')}
                 </span>
                 <span className="text-[11px] text-[#8E9299] font-mono">
-                  Daily progression
+                  {t('sentiment.dailyProgression', 'Daily progression')}
                 </span>
               </div>
 
@@ -255,9 +277,10 @@ export const MarketSentiment: React.FC = () => {
                   const isCurrentDay = idx === 6;
                   const date = new Date(item.timestamp * 1000);
                   const dayLabel = isCurrentDay
-                    ? 'Today'
-                    : date.toLocaleDateString('en-US', { weekday: 'narrow' });
-                  const fullDateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    ? t('sentiment.today', 'Today')
+                    : date.toLocaleDateString(i18n.language, { weekday: 'narrow' });
+                  const fullDateStr = date.toLocaleDateString(i18n.language, { month: 'short', day: 'numeric', year: 'numeric' });
+                  const translatedClass = getLevelLabel(item.valueClassification);
 
                   return (
                     <div
@@ -267,7 +290,7 @@ export const MarketSentiment: React.FC = () => {
                           ? 'bg-[#1a1b1e] border-[#2F6BFF]/40 ring-1 ring-[#2F6BFF]/30'
                           : 'bg-[#1a1b1e]/50 border-[#2a2b30] hover:border-[#3a3b42]'
                       }`}
-                      title={`${fullDateStr}: Score ${item.value}/100 (${item.valueClassification})`}
+                      title={`${fullDateStr}: Score ${item.value}/100 (${translatedClass})`}
                     >
                       <span className="text-[10px] text-[#8E9299] font-medium uppercase">{dayLabel}</span>
                       
@@ -296,52 +319,52 @@ export const MarketSentiment: React.FC = () => {
               {/* Market Regime */}
               <div 
                 className="p-2.5 rounded-lg bg-[#1a1b1e] border border-[#2a2b30] flex flex-col cursor-help hover:border-[#3a3b42] transition-colors"
-                title={`Macro Market Regime: ${trendSummary.regime}. Derived from Fear & Greed thresholds, trend momentum, and multi-day volatility.`}
+                title={t('sentiment.tooltips.regime', 'Macro Market Regime: {{regime}}.', { regime: getRegimeLabel(trendSummary.regime) })}
               >
                 <span className="text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">
-                  Regime
+                  {t('sentiment.regime', 'Regime')}
                 </span>
                 <span className="text-xs font-bold text-white mt-1 flex items-center gap-1 font-mono">
                   <Activity className="w-3 h-3 text-[#2F6BFF]" />
-                  {trendSummary.regime}
+                  {getRegimeLabel(trendSummary.regime)}
                 </span>
               </div>
 
               {/* Volatility */}
               <div 
                 className="p-2.5 rounded-lg bg-[#1a1b1e] border border-[#2a2b30] flex flex-col cursor-help hover:border-[#3a3b42] transition-colors"
-                title={`Expected Volatility Level: ${trendSummary.volatilityIndex}. Extreme levels indicate heightened risk of sudden liquidation flushes.`}
+                title={t('sentiment.tooltips.volatility', 'Expected Volatility Level: {{volatility}}.', { volatility: getVolatilityLabel(trendSummary.volatilityIndex) })}
               >
                 <span className="text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">
-                  Volatility
+                  {t('sentiment.volatility', 'Volatility')}
                 </span>
                 <span className="text-xs font-bold text-amber-400 mt-1 flex items-center gap-1 font-mono">
                   <Zap className="w-3 h-3 text-amber-400" />
-                  {trendSummary.volatilityIndex}
+                  {getVolatilityLabel(trendSummary.volatilityIndex)}
                 </span>
               </div>
 
               {/* Funding Bias */}
               <div 
                 className="p-2.5 rounded-lg bg-[#1a1b1e] border border-[#2a2b30] flex flex-col cursor-help hover:border-[#3a3b42] transition-colors"
-                title={`Market Funding Bias: ${trendSummary.fundingBias}. Evaluated using active perpetual position weights and current funding rates.`}
+                title={t('sentiment.tooltips.fundingBias', 'Market Funding Bias: {{bias}}.', { bias: getFundingBiasLabel(trendSummary.fundingBias) })}
               >
                 <span className="text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">
-                  Funding Bias
+                  {t('sentiment.fundingBias', 'Funding Bias')}
                 </span>
                 <span className="text-xs font-bold text-emerald-400 mt-1 flex items-center gap-1 font-mono">
                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  {trendSummary.fundingBias}
+                  {getFundingBiasLabel(trendSummary.fundingBias)}
                 </span>
               </div>
 
               {/* BTC Dominance */}
               <div 
                 className="p-2.5 rounded-lg bg-[#1a1b1e] border border-[#2a2b30] flex flex-col cursor-help hover:border-[#3a3b42] transition-colors"
-                title={`Estimated Bitcoin Market Dominance: ~${trendSummary.btcDominanceEstimate}%. Reflects capital allocation share in top crypto benchmark.`}
+                title={t('sentiment.tooltips.btcDominance', 'Estimated Bitcoin Market Dominance: ~{{dominance}}%.', { dominance: trendSummary.btcDominanceEstimate })}
               >
                 <span className="text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">
-                  BTC Dominance
+                  {t('sentiment.btcDominance', 'BTC Dominance')}
                 </span>
                 <span className="text-xs font-bold text-white mt-1 font-mono">
                   ~{trendSummary.btcDominanceEstimate}%
@@ -354,14 +377,14 @@ export const MarketSentiment: React.FC = () => {
         {/* Tactical Advice / Trader Note */}
         <div 
           className="p-3 rounded-lg bg-[#1a1b1e] border border-[#2F6BFF]/20 flex items-start gap-2.5 cursor-help"
-          title="Contextual tactical recommendation calculated from market regime, sentiment momentum, and leverage risk."
+          title={t('sentiment.tooltips.tacticalAdvice', 'Contextual tactical recommendation calculated from market regime, sentiment momentum, and leverage risk.')}
         >
           <Info className="w-4 h-4 text-[#2F6BFF] shrink-0 mt-0.5" />
           <div className="text-xs text-slate-300 leading-relaxed">
             <span className="font-semibold text-[#2F6BFF] mr-1.5">
-              Tactical Market Outlook:
+              {t('sentiment.tacticalOutlook', 'Tactical Market Outlook:')}
             </span>
-            {trendSummary.traderAdvice.en}
+            {i18n.language.startsWith('pt') ? trendSummary.traderAdvice.pt : trendSummary.traderAdvice.en}
           </div>
         </div>
       </div>
@@ -370,3 +393,4 @@ export const MarketSentiment: React.FC = () => {
 };
 
 export default MarketSentiment;
+
