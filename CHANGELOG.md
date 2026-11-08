@@ -1,3 +1,10 @@
+# [2.22.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.21.0...v2.22.0) (2026-11-08)
+
+
+### Features
+
+* **ui:** replace flag emojis with FlagIcon component ([413df0d](https://github.com/fapdev77/crypto-dashboard/commit/413df0d99afa51ad6056a300885ab71b94ac0468))
+
 # [2.21.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.20.0...v2.21.0) (2026-11-07)
 
 
