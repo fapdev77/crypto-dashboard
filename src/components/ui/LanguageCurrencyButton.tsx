@@ -5,6 +5,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { LanguageCurrencyModal } from './LanguageCurrencyModal';
 import { SUPPORTED_LOCALES, SUPPORTED_FIAT_CURRENCIES } from '../../services/currency/currencyTypes';
 import { AppTooltip } from './Tooltip';
+import { FlagIcon } from './FlagIcon';
 
 interface LanguageCurrencyButtonProps {
   className?: string;
@@ -31,7 +32,7 @@ export function LanguageCurrencyButton({ className = '', showText = true }: Lang
           aria-haspopup="dialog"
           aria-expanded={isOpen}
         >
-          <Globe className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
+          <FlagIcon code={currentLocale} className="w-4 h-3 rounded-[2px] shadow-xs shrink-0" />
           {showText && (
             <span className="font-semibold tracking-wider text-gray-200">
               {langCode} <span className="text-gray-500">/</span> {currentFiat}

@@ -63,14 +63,15 @@ export function GlobalUnlockScreen() {
     <TooltipProvider>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0b0c10] backdrop-blur-sm">
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-8 max-w-sm w-full shadow-2xl relative">
-          {/* Header row with Language Selector */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-16" /> {/* spacer for balance */}
+          {/* Standard Language & Currency Selector identical to rest of app */}
+          <div className="absolute top-4 right-4">
+            <LanguageCurrencyButton />
+          </div>
+
+          {/* Centered Shield Icon */}
+          <div className="flex justify-center mb-4 mt-1">
             <div className="p-3 bg-[#FF4444]/10 rounded-full">
               <ShieldAlert className="w-8 h-8 text-[#FF4444]" />
-            </div>
-            <div className="w-16 flex justify-end">
-              <LanguageCurrencyButton showText={false} className="border-[#2a2b30] bg-[#1e2024] p-2" />
             </div>
           </div>
 

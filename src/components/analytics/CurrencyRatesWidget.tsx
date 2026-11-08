@@ -9,6 +9,7 @@ import {
   SupportedFiatCurrency,
 } from '../../services/currency/currencyTypes';
 import { AppTooltip } from '../ui/Tooltip';
+import { FlagIcon } from '../ui/FlagIcon';
 
 export function CurrencyRatesWidget() {
   const { t } = useTranslation();
@@ -157,9 +158,7 @@ export function CurrencyRatesWidget() {
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl leading-none" role="img" aria-label={curr.code}>
-                    {curr.flag}
-                  </span>
+                  <FlagIcon code={curr.id} className="w-6 h-4.5 rounded-xs shadow-xs" />
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-xs tracking-wider text-white">

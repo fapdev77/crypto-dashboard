@@ -9,6 +9,7 @@ import {
   SupportedFiatCurrency,
 } from '../../services/currency/currencyTypes';
 import { CurrencyService } from '../../services/currency/CurrencyService';
+import { FlagIcon } from './FlagIcon';
 
 interface LanguageCurrencyModalProps {
   isOpen: boolean;
@@ -198,9 +199,7 @@ export function LanguageCurrencyModal({
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl" role="img" aria-label={locale.name}>
-                        {locale.flag}
-                      </span>
+                      <FlagIcon code={locale.id} className="w-8 h-5.5 rounded-sm shadow-xs shrink-0" />
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-white">{locale.name}</span>
@@ -245,9 +244,12 @@ export function LanguageCurrencyModal({
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl" role="img" aria-label={currency.name}>
-                        {currency.flag}
-                      </span>
+                      <div className="relative shrink-0">
+                        <FlagIcon code={currency.id} className="w-8 h-5.5 rounded-sm shadow-xs" />
+                        <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-[#111215] border border-[#2a2b30] text-[9px] font-mono font-bold text-blue-400 leading-none shadow-xs">
+                          {currency.symbol}
+                        </span>
+                      </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-white tracking-wide">
