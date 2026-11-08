@@ -1,3 +1,10 @@
+# [2.25.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.24.0...v2.25.0) (2026-11-08)
+
+
+### Features
+
+* **i18n:** localize position and order components ([fa49a14](https://github.com/fapdev77/crypto-dashboard/commit/fa49a140a7d103fcc7dfa6b3321772d9d46ae841))
+
 # [2.24.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.23.0...v2.24.0) (2026-11-08)
 
 
