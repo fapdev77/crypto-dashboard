@@ -1,3 +1,10 @@
+# [2.24.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.23.0...v2.24.0) (2026-11-08)
+
+
+### Features
+
+* **i18n:** internationalize HedgePro components ([a667f93](https://github.com/fapdev77/crypto-dashboard/commit/a667f93da49a4f39396da370b69d8cf59769ea5e))
+
 # [2.23.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.22.0...v2.23.0) (2026-11-08)
 
 
