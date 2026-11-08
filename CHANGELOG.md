@@ -1,3 +1,10 @@
+# [2.23.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.22.0...v2.23.0) (2026-11-08)
+
+
+### Features
+
+* internationalize dashboard components ([037f3ad](https://github.com/fapdev77/crypto-dashboard/commit/037f3ad0fae1f4874014d7d4cf3b9ca04d3b4656))
+
 # [2.22.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.21.0...v2.22.0) (2026-11-08)
 
 
