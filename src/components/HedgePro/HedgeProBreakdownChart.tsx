@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Activity } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { HedgeCoinSummary, getHedgeCoinChartRows, getExchangeDisplayName } from '../../utils/hedgeUtils';
 import { CoinIcon } from '../ui/CoinIcon';
 import { AppTooltip } from '../ui/Tooltip';
@@ -21,6 +22,7 @@ interface HedgeProBreakdownChartProps {
  * and nothing overflows the card.
  */
 export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBreakdownChartProps) {
+  const { t } = useTranslation();
   const rows = getHedgeCoinChartRows(summaries);
   if (rows.length === 0) return null;
 
@@ -33,23 +35,23 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-sm font-semibold text-white flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          Protected vs Exposed vs Leveraged by Coin
+          {t('hedgePro.breakdownChart.title')}
         </h3>
         <div className="flex items-center gap-4 text-[10px] text-[#8E9299] uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm bg-emerald-500/80 inline-block" /> Protected
+            <span className="w-3 h-3 rounded-sm bg-emerald-500/80 inline-block" /> {t('hedgePro.breakdownChart.protected')}
           </span>
           <span className="flex items-center gap-1.5">
-            <Activity className="w-3 h-3 text-white" /> Exposed
+            <Activity className="w-3 h-3 text-white" /> {t('hedgePro.breakdownChart.exposed')}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm bg-amber-400/80 inline-block" /> Leveraged
+            <span className="w-3 h-3 rounded-sm bg-amber-400/80 inline-block" /> {t('hedgePro.breakdownChart.leveraged')}
           </span>
         </div>
       </div>
 
       <p className="text-[10px] text-[#8E9299] -mt-1.5">
-        Protected + Exposed = 100% of the coin&apos;s balance (marker). Leveraged (inverse longs) extends beyond 100%.
+        {t('hedgePro.breakdownChart.subtitle')}
       </p>
 
       <div className="flex flex-col gap-2.5">
@@ -70,17 +72,17 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
 
           const tooltipRows = [
             {
-              label: 'Protected',
+              label: t('hedgePro.breakdownChart.protected'),
               value: `${formatCurrency(row.protectedUsd, 'usd', 2)} · ${protectedPct.toFixed(1)}%`,
               valueClassName: 'text-emerald-400',
             },
             {
-              label: 'Exposed',
+              label: t('hedgePro.breakdownChart.exposed'),
               value: `${formatCurrency(row.exposedBaseUsd, 'usd', 2)} · ${exposedPct.toFixed(1)}%`,
               valueClassName: 'text-white',
             },
             {
-              label: 'Leveraged (longs)',
+              label: t('hedgePro.breakdownChart.leveragedLongs'),
               value: `${formatCurrency(row.leveragedUsd, 'usd', 2)} · +${leveragedOfBalancePct.toFixed(1)}%`,
               valueClassName: 'text-amber-400',
             },
@@ -102,7 +104,7 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
 
               {/* Bar — Protected + Exposed = 100% of the coin's balance; Leveraged extends beyond the marker */}
               <AppTooltip
-                description="Protected + Exposed = 100% of this coin's balance. Leveraged (inverse longs) extends beyond 100%."
+                description={t('hedgePro.breakdownChart.barTooltip')}
                 rows={tooltipRows}
                 side="top"
                 align="start"
@@ -146,3 +148,4 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
 }
 
 export default HedgeProBreakdownChart;
+

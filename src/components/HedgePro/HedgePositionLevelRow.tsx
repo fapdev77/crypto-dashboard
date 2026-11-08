@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { HedgePositionLevels } from '../../utils/hedgeUtils';
 import { AppTooltip } from '../ui/Tooltip';
 import { formatPrice } from '../../utils/formatters';
@@ -36,9 +37,10 @@ export function HedgePositionLevelRow({
   variant = 'table',
   pnlConceptMode = 'hedge',
 }: RowProps) {
+  const { t } = useTranslation();
   const isLong = !level.isShort;
   const sideLabel = level.isShort ? 'Short' : 'Long';
-  const marginModeLabel = level.marginMode === 'isolated' ? 'Isolated' : 'Cross';
+  const marginModeLabel = level.marginMode === 'isolated' ? t('hedgePro.positions.isolated') : t('hedgePro.positions.cross');
   const sideColor = isLong ? 'text-[#00C853]' : 'text-[#FF4444]';
   const isFiatPair = /USD|USDT|USDC|EUR|BRL/i.test(level.symbol);
 
@@ -54,8 +56,8 @@ export function HedgePositionLevelRow({
   const protectedAmount = level.protectedAmount;
 
   // Labels and tooltips for PnL / Concept
-  let uplLabel = 'Unrealized PnL';
-  let uplTooltip = 'Position unrealized profit/loss calculated from entry price and mark price.';
+  let uplLabel = t('hedgePro.drawer.unrealizedPnl');
+  let uplTooltip = t('hedgePro.positions.unrealizedPnlTooltip');
   let uplColor =
     level.unrealizedPnlUsd > 0
       ? 'text-[#00C853]'
@@ -66,16 +68,16 @@ export function HedgePositionLevelRow({
   if (pnlConceptMode === 'hedge') {
     if (level.isShort) {
       if (level.unrealizedPnlUsd < 0) {
-        uplLabel = 'Opportunity Cost';
+        uplLabel = t('hedgePro.drawer.opportunityCost');
         uplColor = 'text-amber-400';
-        uplTooltip = 'Uncaptured market upside on the USD-locked hedge leg since entry price. Your locked USD capital remains intact while uncovered balance gained.';
+        uplTooltip = t('hedgePro.positions.opportunityCostTooltip');
       } else if (level.unrealizedPnlUsd > 0) {
-        uplLabel = 'Accumulated Asset';
+        uplLabel = t('hedgePro.drawer.accumulatedAsset');
         uplColor = 'text-[#00C853]';
-        uplTooltip = 'Extra coin units accumulated by this short position to maintain the original USD protection as spot price decreased.';
+        uplTooltip = t('hedgePro.positions.accumulatedAssetTooltip');
       } else {
-        uplLabel = 'Hedge Balanced';
-        uplTooltip = 'Position currently at entry price.';
+        uplLabel = t('hedgePro.drawer.hedgeBalanced');
+        uplTooltip = t('hedgePro.positions.hedgeBalancedTooltip');
       }
     }
   }
@@ -104,7 +106,7 @@ export function HedgePositionLevelRow({
             type="button"
             onClick={handleNavigateToOpenPositions}
             className="flex items-center gap-1.5 font-bold text-white text-xs hover:text-[#2F6BFF] transition-colors group cursor-pointer"
-            title="Jump to position in Open Positions"
+            title={t('hedgePro.positions.jumpToPosition')}
           >
             <span>{level.symbol}</span>
             <ExternalLink className="w-3 h-3 text-[#8E9299] group-hover:text-[#2F6BFF] transition-colors" />
@@ -116,13 +118,15 @@ export function HedgePositionLevelRow({
 
         <div className="flex items-center gap-3 text-xs font-mono">
           <span className="text-[#8E9299]">
-            Entry: <span className="text-white font-medium">{formatPrice(level.entryPrice, isFiatPair)}</span>
+            {t('hedgePro.positions.entry')}{' '}
+            <span className="text-white font-medium">{formatPrice(level.entryPrice, isFiatPair)}</span>
           </span>
           <span className="text-[#8E9299]">
-            Mark: <span className="text-white font-medium">{formatPrice(level.markPrice, isFiatPair)}</span>
+            {t('hedgePro.positions.mark')}{' '}
+            <span className="text-white font-medium">{formatPrice(level.markPrice, isFiatPair)}</span>
           </span>
           <span className="text-[#8E9299]">
-            Size:{' '}
+            {t('hedgePro.positions.size')}{' '}
             <span className="text-white font-medium">
               {formatCoin(level.openPosSize, level.ccy, formatCurrency)} {level.ccy}
             </span>
@@ -134,9 +138,9 @@ export function HedgePositionLevelRow({
       {variant === 'card' ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-[#23252a] text-xs font-mono">
           <div className="flex flex-col">
-            <AppTooltip description="Initial notional position size valued at entry price." side="top">
+            <AppTooltip description={t('hedgePro.positions.initialPositionValueTooltip')} side="top">
               <span className="text-[10px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
-                Initial Position Value
+                {t('hedgePro.positions.initialPositionValue')}
               </span>
             </AppTooltip>
             <span className="font-semibold text-white">
@@ -148,9 +152,9 @@ export function HedgePositionLevelRow({
           </div>
 
           <div className="flex flex-col">
-            <AppTooltip description="Capital locked in USD by this short position at entry price." side="top">
+            <AppTooltip description={t('hedgePro.positions.protectedTooltip')} side="top">
               <span className="text-[10px] text-emerald-400 uppercase tracking-wider cursor-help border-b border-dashed border-emerald-500/40 w-fit">
-                Protected
+                {t('hedgePro.positions.protected')}
               </span>
             </AppTooltip>
             <span className="font-semibold text-emerald-400">
@@ -163,9 +167,9 @@ export function HedgePositionLevelRow({
           </div>
 
           <div className="flex flex-col">
-            <AppTooltip description="Unhedged coin balance portion subject to market price action." side="top">
+            <AppTooltip description={t('hedgePro.positions.exposedTooltip')} side="top">
               <span className="text-[10px] text-white uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
-                Exposed
+                {t('hedgePro.positions.exposed')}
               </span>
             </AppTooltip>
             <span className="font-semibold text-white">
@@ -203,14 +207,14 @@ export function HedgePositionLevelRow({
           />
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
             <span className="text-[#8E9299]">
-              Protected: <span className="font-mono text-emerald-400">{formatCurrency(level.protectedUsd, 'usd', 2)}</span>
+              {t('hedgePro.positions.protected')}: <span className="font-mono text-emerald-400">{formatCurrency(level.protectedUsd, 'usd', 2)}</span>
             </span>
             <span className="text-[#8E9299]">
-              Exposed: <span className="font-mono text-white">{formatCurrency(level.exposedBaseUsd, 'usd', 2)}</span>
+              {t('hedgePro.positions.exposed')}: <span className="font-mono text-white">{formatCurrency(level.exposedBaseUsd, 'usd', 2)}</span>
             </span>
             {!level.isShort && (
               <span className="text-[#8E9299]">
-                Leveraged: <span className="font-mono text-amber-400">{formatCurrency(level.positionValueUsd, 'usd', 2)}</span>
+                {t('hedgePro.drawer.leveraged')}: <span className="font-mono text-amber-400">{formatCurrency(level.positionValueUsd, 'usd', 2)}</span>
               </span>
             )}
           </div>
@@ -222,8 +226,8 @@ export function HedgePositionLevelRow({
           <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
           <span className="text-[9.5px] text-amber-300 font-medium leading-tight">
             {level.isShort
-              ? 'No matching coin balance found — this position has no identified coverage.'
-              : 'Leveraged! Focus on risk management! Always have a stop in place!'}
+              ? t('hedgePro.positions.noCoverageWarning')
+              : t('hedgePro.positions.leveragedWarning')}
           </span>
         </div>
       )}
@@ -232,3 +236,4 @@ export function HedgePositionLevelRow({
 }
 
 export default HedgePositionLevelRow;
+

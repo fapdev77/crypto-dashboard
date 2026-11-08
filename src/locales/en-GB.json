@@ -310,5 +310,147 @@
     "closeTooltip": "Close Manual",
     "scrollToTop": "Scroll to Top",
     "searchingText": "Searching for \"{{query}}\". Scroll to locate matching words."
+  },
+  "hedgePro": {
+    "dashboard": {
+      "subtitle": "Capital protection in inverse (Coin-M) contracts: shorts lock USD at entry; longs and uncovered balance stay exposed.",
+      "classicPnl": "Classic PnL",
+      "classicPnlTooltip": "Displays traditional accounting Unrealized PnL and ROI relative to wallet balance.",
+      "hedgeConcept": "Hedge Concept",
+      "hedgeConceptTooltip": "Hedge Concept: Frame PnL as Opportunity Cost (uncaptured upside when market rises) or Asset Accumulation (gaining coin units when market drops).",
+      "protected": "Protected",
+      "exposed": "Exposed",
+      "leveraged": "Leveraged",
+      "searchPlaceholder": "Search coin / account...",
+      "allSides": "All Sides",
+      "filteredTotals": "Filtered totals: Protected {{protected}} · Exposed {{exposed}} · Leveraged {{leveraged}}",
+      "capitalExposureTooltip": {
+        "title": "Capital Exposure Breakdown",
+        "hedgeShorts": "Hedge (Shorts):",
+        "stablecoins": "Stablecoins:",
+        "totalProtected": "Total Protected:",
+        "exposed": "Exposed:",
+        "leveragedLongs": "Leveraged (Longs):"
+      }
+    },
+    "kpis": {
+      "totalProtected": "Total Protected",
+      "totalProtectedTooltip": {
+        "title": "Total Protected Capital — capital protected against cryptocurrency market volatility.",
+        "hedge": "Hedge:",
+        "stablecoins": "Stablecoins:",
+        "hedgeDesc": "• Hedge: USD value locked at entry price by inverse shorts (Coin-M). Does not float with the asset price.",
+        "stablecoinsDesc": "• Stablecoins: Liquid balance held in USD-pegged tokens (USDT, USDC, etc.) protecting dollar purchasing power."
+      },
+      "totalEquity": "Total Equity ({{currency}})",
+      "totalEquityTooltip": {
+        "title": "Total portfolio capital — the entire equity the hedge protects. The hedge covers the whole account, not just the coins holding inverse positions.",
+        "formula": "Total Equity = Σ USD value of every balance (all exchanges, all coins, cash and stablecoins included) — the same source as the 'Total Equity' card on the main Dashboard, so the two reconcile.",
+        "reference": "This is the reference for Protected of Equity (Protected ÷ Equity) and Real Hedge Coverage ((Protected − Leveraged) ÷ Equity)."
+      },
+      "totalLeveraged": "Total Leveraged",
+      "totalLeveragedTooltip": "Sum of the notional (position value) of inverse LONGS. Longs in inverse contracts are leveraged exposure — they do not protect capital, they increase risk.",
+      "realHedgeCoverage": "Real Hedge Coverage",
+      "realHedgeCoverageTooltip": {
+        "title": "Net protection of the portfolio — protected capital minus leveraged exposure, relative to total equity. Only the protected leg counts: leveraged longs are NOT protected, they only add risk.",
+        "formula": "Formula: (Total Protected − Total Leveraged) ÷ Total Equity × 100. The leveraged leg is subtracted because it is exposure without protection.",
+        "negativeNote": "This can be negative: if you hold leveraged longs with no shorts protecting anything, nothing is shielded while leverage is still running — negative coverage means MORE risk, not less. Equal to Protected of Equity only when there are no leveraged longs."
+      },
+      "protectedOfEquity": "Protected of Equity",
+      "protectedOfEquityTooltip": {
+        "title": "Share of the entire portfolio equity protected by inverse shorts — how much of the whole account's capital is shielded from asset variation.",
+        "formula": "Formula: Total Protected ÷ Total Equity × 100. Same denominator as the 'Hedge Mode (Inverse)' indicator on the main Dashboard, so the two reconcile.",
+        "difference": "Difference vs Real Hedge Coverage: this card divides only by Total Equity; Real Hedge Coverage also subtracts the leveraged longs from the protected side, so it is always ≤ this card (and can go negative when leveraged exceeds protected). The leftover % here is the share of the whole account still exposed."
+      },
+      "activePositions": "Active Positions",
+      "activePositionsTooltip": "Inverse (Coin-M) positions open — Longs: {{longs}} | Shorts: {{shorts}} | Total: {{total}}"
+    },
+    "exposureChart": {
+      "title": "Capital Exposure Breakdown",
+      "subtitle": "Capital protection allocation (Synthetic Shorts + Native Stablecoins) compared to uncovered volatile exposure.",
+      "hedgeShorts": "Hedge (Shorts)",
+      "hedgeShortsDesc": "USD value locked at entry price via inverse short (Coin-M) positions.",
+      "stablecoins": "Stablecoins",
+      "stablecoinsDesc": "Liquid assets natively pegged to USD (USDT, USDC, DAI, etc.).",
+      "exposed": "Exposed (Volatile)",
+      "exposedShort": "Exposed",
+      "exposedDesc": "Uncovered volatile coin balance exposed to market price movements.",
+      "leveraged": "Leveraged (Longs)",
+      "leveragedShort": "Leveraged",
+      "leveragedDesc": "Inverse long positions adding directional leveraged market risk.",
+      "capitalValue": "Capital Value:",
+      "shareOfEquity": "Share of Equity:",
+      "shareOfProtected": "Share of Protected:",
+      "portfolioEquity": "Portfolio Equity:",
+      "allocationBreakdown": "Capital Allocation Breakdown"
+    },
+    "breakdownChart": {
+      "title": "Protected vs Exposed vs Leveraged by Coin",
+      "subtitle": "Protected + Exposed = 100% of the coin's balance (marker). Leveraged (inverse longs) extends beyond 100%.",
+      "protected": "Protected",
+      "exposed": "Exposed",
+      "leveraged": "Leveraged",
+      "leveragedLongs": "Leveraged (longs)",
+      "barTooltip": "Protected + Exposed = 100% of this coin's balance. Leveraged (inverse longs) extends beyond 100%."
+    },
+    "coinRows": {
+      "noPositions": "No inverse coin positions found matching the current filters.",
+      "inverseBadge": "INVERSE",
+      "positionsCount_one": "{{count}} position",
+      "positionsCount_other": "{{count}} positions",
+      "positionsTooltip": "Positions: {{longs}} Long(s) and {{shorts}} Short(s)",
+      "overexposedTooltip": "{{count}} position(s) with uncovered risk or overexposure",
+      "protectedTooltip": "Protected capital locked in USD by inverse shorts at entry price",
+      "exposedTooltip": "Unhedged spot balance exposed to market price movements",
+      "leveragedTooltip": "Directional long positions adding leveraged market exposure",
+      "noLeverage": "No Leverage",
+      "openPositionsHeader": "Open Positions for {{coin}} ({{count}})",
+      "openPositionsHint": "Click symbol to navigate and highlight in Open Positions"
+    },
+    "drawer": {
+      "walletBalance": "Wallet Balance",
+      "walletBalanceTooltip": "Fixed gross wallet balance in futures account without unrealized PnL (initial deposit + accumulated realized PnL).",
+      "netBalance": "Net Balance",
+      "netBalanceTooltip": "Liquid equity value of this coin if all positions were closed right now (Wallet Balance + Unrealized PnL).",
+      "realHedge": "Real Hedge",
+      "realHedgeTooltip": "Real net protection of this coin = (Protected USD − Total Leveraged USD) ÷ Net Balance USD. Negative values indicate long leverage exceeds short protection.",
+      "protOfEq": "Prot. of Eq.",
+      "protOfEqTooltip": "Portion of this coin's equity locked in USD by short hedge positions at entry price (Protected USD ÷ Net Balance USD). This USD value is immunised from market dips.",
+      "leveraged": "Leveraged",
+      "leveragedTooltip": "Total notional value of inverse long positions for this coin. Longs represent directional leverage and add market risk.",
+      "exposed": "Exposed",
+      "exposedTooltip": "Uncovered coin balance not hedged by shorts (Exposed USD ÷ Net Balance USD). Fully exposed to spot market appreciation and depreciation.",
+      "unrealizedPnl": "Unrealized PnL",
+      "unrealizedPnlTooltip": "Aggregated unrealized profit/loss across all short and long positions for this coin, plus total ROI relative to wallet balance.",
+      "opportunityCost": "Opportunity Cost",
+      "opportunityCostTooltip": "In inverse hedges, short PnL drops as market rises above entry. This is not capital loss, but uncaptured upside on the USD-locked leg, while your exposed balance captured full market appreciation.",
+      "accumulatedAsset": "Accumulated Asset",
+      "accumulatedAssetTooltip": "In inverse hedges, short PnL increases as spot price falls below entry. The position accumulates extra coin units to maintain the exact USD protection target while the exposed balance depreciated in USD.",
+      "hedgeBalanced": "Hedge Balanced",
+      "hedgeBalancedTooltip": "Short position is currently at entry price with zero delta divergence.",
+      "realizedPnl": "Realized PnL",
+      "realizedPnlTooltip": "Aggregated realized profit/loss across all positions for this coin (funding fees collected/paid, trade commissions, closed legs), plus ROI relative to wallet balance."
+    },
+    "positions": {
+      "jumpToPosition": "Jump to position in Open Positions",
+      "entry": "Entry:",
+      "mark": "Mark:",
+      "size": "Size:",
+      "initialPositionValue": "Initial Position Value",
+      "initialPositionValueTooltip": "Initial notional position size valued at entry price.",
+      "protected": "Protected",
+      "protectedTooltip": "Capital locked in USD by this short position at entry price.",
+      "exposed": "Exposed",
+      "exposedTooltip": "Unhedged coin balance portion subject to market price action.",
+      "unrealizedPnlTooltip": "Position unrealized profit/loss calculated from entry price and mark price.",
+      "opportunityCostTooltip": "Uncaptured market upside on the USD-locked hedge leg since entry price. Your locked USD capital remains intact while uncovered balance gained.",
+      "accumulatedAssetTooltip": "Extra coin units accumulated by this short position to maintain the original USD protection as spot price decreased.",
+      "hedgeBalancedTooltip": "Position currently at entry price.",
+      "noCoverageWarning": "No matching coin balance found — this position has no identified coverage.",
+      "leveragedWarning": "Leveraged! Focus on risk management! Always have a stop in place!",
+      "cross": "Cross",
+      "isolated": "Isolated"
+    }
   }
 }
+

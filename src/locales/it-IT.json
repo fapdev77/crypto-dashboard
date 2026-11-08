@@ -310,5 +310,147 @@
     "closeTooltip": "Chiudi Manuale",
     "scrollToTop": "Torna all'Inizio",
     "searchingText": "Ricerca di \"{{query}}\". Scorri per individuare i termini corrispondenti."
+  },
+  "hedgePro": {
+    "dashboard": {
+      "subtitle": "Protezione del capitale nei contratti inversi (Coin-M): gli short bloccano USD al prezzo di entrata; i long e il saldo scoperto rimangono esposti.",
+      "classicPnl": "PnL Classico",
+      "classicPnlTooltip": "Mostra il PnL Non Realizzato contabile tradizionale e il ROI rispetto al saldo del portafoglio.",
+      "hedgeConcept": "Concetto Hedge",
+      "hedgeConceptTooltip": "Concetto Hedge: Inquadra il PnL come Costo Opportunità (rialzo non catturato quando il mercato sale) o Accumulo Attivo (guadagno di unità di moneta quando il mercato scende).",
+      "protected": "Protetto",
+      "exposed": "Esposto",
+      "leveraged": "In Leva",
+      "searchPlaceholder": "Cerca moneta / conto...",
+      "allSides": "Tutti i Lati",
+      "filteredTotals": "Totali filtrati: Protetto {{protected}} · Esposto {{exposed}} · In Leva {{leveraged}}",
+      "capitalExposureTooltip": {
+        "title": "Dettaglio Esposizione del Capitale",
+        "hedgeShorts": "Hedge (Short):",
+        "stablecoins": "Stablecoin:",
+        "totalProtected": "Totale Protetto:",
+        "exposed": "Esposto:",
+        "leveragedLongs": "In Leva (Long):"
+      }
+    },
+    "kpis": {
+      "totalProtected": "Totale Protetto",
+      "totalProtectedTooltip": {
+        "title": "Capitale Totale Protetto — capitale al riparo dalla volatilità del mercato delle criptovalute.",
+        "hedge": "Hedge:",
+        "stablecoins": "Stablecoin:",
+        "hedgeDesc": "• Hedge: Valore in USD bloccato al prezzo di entrata da posizioni short inverse (Coin-M). Non oscilla con il prezzo dell'attivo.",
+        "stablecoinsDesc": "• Stablecoin: Saldo liquido detenuto in token ancorati a USD (USDT, USDC, ecc.) a tutela del potere d'acquisto in dollari."
+      },
+      "totalEquity": "Patrimonio Totale ({{currency}})",
+      "totalEquityTooltip": {
+        "title": "Capitale totale del portafoglio — l'intero patrimonio che l'hedge protegge. L'hedge copre l'intero conto, non solo le monete con posizioni inverse.",
+        "formula": "Patrimonio Totale = Σ valore in USD di ciascun saldo (tutti gli exchange, tutte le monete, liquidità e stablecoin incluse) — la stessa origine della scheda 'Patrimonio Totale' nella Dashboard principale per la riconciliazione.",
+        "reference": "Questo è il riferimento per Protetto del Patrimonio (Protetto ÷ Patrimonio) e Copertura Reale Hedge ((Protetto − In Leva) ÷ Patrimonio)."
+      },
+      "totalLeveraged": "Totale In Leva",
+      "totalLeveragedTooltip": "Somma del nozionale (valore della posizione) dei LONG inversi. I long nei contratti inversi costituiscono esposizione a leva — non proteggono capitale, aumentano il rischio.",
+      "realHedgeCoverage": "Copertura Reale Hedge",
+      "realHedgeCoverageTooltip": {
+        "title": "Protezione netta del portafoglio — capitale protetto meno esposizione in leva, rispetto al patrimonio totale. Conta solo la componente protetta: i long in leva NON sono protetti, aumentano solo il rischio.",
+        "formula": "Formula: (Totale Protetto − Totale In Leva) ÷ Patrimonio Totale × 100. La componente a leva viene sottratta in quanto esposizione priva di protezione.",
+        "negativeNote": "Può essere negativo: se si detengono long in leva senza alcuno short a protezione, nulla è coperto mentre la leva è attiva — una copertura negativa indica PIÙ rischio, non meno. Uguale a Protetto del Patrimonio solo in assenza di long in leva."
+      },
+      "protectedOfEquity": "Protetto del Patrimonio",
+      "protectedOfEquityTooltip": {
+        "title": "Quota dell'intero patrimonio del portafoglio protetta da posizioni short inverse — quanto capitale globale del conto è schermato dalle variazioni dell'attivo.",
+        "formula": "Formula: Totale Protetto ÷ Patrimonio Totale × 100. Stesso denominatore dell'indicatore 'Hedge Mode (Inverse)' nella Dashboard principale per consentire la riconciliazione.",
+        "difference": "Differenza rispetto a Copertura Reale Hedge: questa scheda divide unicamente per il Patrimonio Totale; Copertura Reale Hedge sottrae inoltre i long in leva dal lato protetto, risultando sempre ≤ a questa scheda (e potendo diventare negativa se la leva supera la protezione). La % residua rappresenta la parte dell'intero conto ancora esposta."
+      },
+      "activePositions": "Posizioni Attive",
+      "activePositionsTooltip": "Posizioni inverse (Coin-M) aperte — Long: {{longs}} | Short: {{shorts}} | Totale: {{total}}"
+    },
+    "exposureChart": {
+      "title": "Dettaglio Esposizione del Capitale",
+      "subtitle": "Allocazione della protezione del capitale (Short Sintetici + Stablecoin Native) rispetto all'esposizione volatile scoperta.",
+      "hedgeShorts": "Hedge (Short)",
+      "hedgeShortsDesc": "Valore in USD bloccato al prezzo di entrata tramite posizioni short inverse (Coin-M).",
+      "stablecoins": "Stablecoin",
+      "stablecoinsDesc": "Attivi liquidi nativamente ancorati al dollaro USD (USDT, USDC, DAI, ecc.).",
+      "exposed": "Esposto (Volatile)",
+      "exposedShort": "Esposto",
+      "exposedDesc": "Saldo scoperto di monete volatili esposto alle oscillazioni di prezzo del mercato.",
+      "leveraged": "In Leva (Long)",
+      "leveragedShort": "In Leva",
+      "leveragedDesc": "Posizioni long inverse che aggiungono rischio di mercato direzionale a leva.",
+      "capitalValue": "Valore Capitale:",
+      "shareOfEquity": "Quota del Patrimonio:",
+      "shareOfProtected": "Quota del Protetto:",
+      "portfolioEquity": "Patrimonio Portafoglio:",
+      "allocationBreakdown": "Dettaglio Allocazione Capitale"
+    },
+    "breakdownChart": {
+      "title": "Protetto vs Esposto vs In Leva per Moneta",
+      "subtitle": "Protetto + Esposto = 100% del saldo della moneta (marcatore). In Leva (long inversi) si estende oltre il 100%.",
+      "protected": "Protetto",
+      "exposed": "Esposto",
+      "leveraged": "In Leva",
+      "leveragedLongs": "In Leva (long)",
+      "barTooltip": "Protetto + Esposto = 100% del saldo di questa moneta. In Leva (long inversi) si estende oltre il 100%."
+    },
+    "coinRows": {
+      "noPositions": "Nessuna posizione inversa trovata corrispondente ai filtri attuali.",
+      "inverseBadge": "INVERSE",
+      "positionsCount_one": "{{count}} posizione",
+      "positionsCount_other": "{{count}} posizioni",
+      "positionsTooltip": "Posizioni: {{longs}} Long e {{shorts}} Short",
+      "overexposedTooltip": "{{count}} posizione/i con rischio scoperto o sovraesposizione",
+      "protectedTooltip": "Capitale protetto bloccato in USD da posizioni short inverse al prezzo di entrata",
+      "exposedTooltip": "Saldo spot non coperto esposto alle variazioni del prezzo di mercato",
+      "leveragedTooltip": "Posizioni long direzionali che aggiungono esposizione a leva sul mercato",
+      "noLeverage": "Nessuna Leva",
+      "openPositionsHeader": "Posizioni Aperte per {{coin}} ({{count}})",
+      "openPositionsHint": "Clicca sul simbolo per navigare ed evidenziare in Posizioni Aperte"
+    },
+    "drawer": {
+      "walletBalance": "Saldo Portafoglio",
+      "walletBalanceTooltip": "Saldo lordo fisso del portafoglio nel conto futures senza PnL non realizzato (deposito iniziale + PnL realizzato cumulato).",
+      "netBalance": "Saldo Netto",
+      "netBalanceTooltip": "Valore patrimoniale liquido di questa moneta se tutte le posizioni venissero chiuse adesso (Saldo Portafoglio + PnL Non Realizzato).",
+      "realHedge": "Hedge Reale",
+      "realHedgeTooltip": "Protezione netta reale di questa moneta = (USD Protetto − USD Totale In Leva) ÷ USD Saldo Netto. Valori negativi indicano che la leva dei long supera la protezione degli short.",
+      "protOfEq": "Prot. del Patr.",
+      "protOfEqTooltip": "Porzione del patrimonio di questa moneta bloccata in USD da posizioni short hedge al prezzo di entrata (USD Protetto ÷ USD Saldo Netto). Questo valore in USD è immune ai ribassi del mercato.",
+      "leveraged": "In Leva",
+      "leveragedTooltip": "Valore nozionale totale delle posizioni long inverse per questa moneta. I long rappresentano leva direzionale e aggiungono rischio di mercato.",
+      "exposed": "Esposto",
+      "exposedTooltip": "Saldo di moneta scoperto non coperto da short (USD Esposto ÷ USD Saldo Netto). Pienamente esposto all'apprezzamento e deprezzamento del mercato spot.",
+      "unrealizedPnl": "PnL Non Realizzato",
+      "unrealizedPnlTooltip": "Profitto/perdita non realizzato aggregato su tutte le posizioni short e long per questa moneta, con ROI complessivo rispetto al saldo del portafoglio.",
+      "opportunityCost": "Costo Opportunità",
+      "opportunityCostTooltip": "Negli hedge inversi, il PnL dello short si riduce quando il mercato sale al di sopra del prezzo di entrata. Non si tratta di una perdita di capitale, bensì di mancato guadagno sul ramo ancorato in USD, mentre il saldo scoperto ha beneficiato dell'intero rialzo del mercato.",
+      "accumulatedAsset": "Attivo Accumulato",
+      "accumulatedAssetTooltip": "Negli hedge inversi, il PnL dello short aumenta quando il prezzo spot scende al di sotto dell'entrata. La posizione accumula unità addizionali di moneta per preservare esattamente la protezione in USD prefissata mentre il saldo scoperto si è deprezzato in USD.",
+      "hedgeBalanced": "Hedge Bilanciato",
+      "hedgeBalancedTooltip": "La posizione short si trova attualmente al prezzo di entrata con divergenza delta nulla.",
+      "realizedPnl": "PnL Realizzato",
+      "realizedPnlTooltip": "Profitto/perdita realizzato aggregato su tutte le posizioni di questa moneta (tassi di finanziamento incassati/pagati, commissioni di trading, posizioni chiuse), con ROI rispetto al saldo del portafoglio."
+    },
+    "positions": {
+      "jumpToPosition": "Vai alla posizione in Posizioni Aperte",
+      "entry": "Entrata:",
+      "mark": "Mark:",
+      "size": "Dimensione:",
+      "initialPositionValue": "Valore Iniziale Posizione",
+      "initialPositionValueTooltip": "Dimensione nozionale iniziale della posizione valorizzata al prezzo di entrata.",
+      "protected": "Protetto",
+      "protectedTooltip": "Capitale bloccato in USD da questa posizione short al prezzo di entrata.",
+      "exposed": "Esposto",
+      "exposedTooltip": "Quota del saldo della moneta non coperta soggetta all'andamento del prezzo di mercato.",
+      "unrealizedPnlTooltip": "Profitto/perdita non realizzato della posizione calcolato tra prezzo di entrata e mark price.",
+      "opportunityCostTooltip": "Rialzo di mercato non catturato sul ramo hedge vincolato in USD rispetto al prezzo di entrata. Il capitale in USD bloccato resta intatto mentre il saldo scoperto ha guadagnato.",
+      "accumulatedAssetTooltip": "Unità addizionali di moneta accumulate da questa posizione short per mantenere la protezione in USD iniziale al diminuire del prezzo spot.",
+      "hedgeBalancedTooltip": "Posizione attualmente al prezzo di entrata.",
+      "noCoverageWarning": "Nessun saldo di moneta corrispondente trovato — questa posizione non dispone di copertura identificata.",
+      "leveragedWarning": "In Leva! Massima attenzione alla gestione del rischio! Mantieni sempre uno stop loss attivo!",
+      "cross": "Cross",
+      "isolated": "Isolated"
+    }
   }
 }
+

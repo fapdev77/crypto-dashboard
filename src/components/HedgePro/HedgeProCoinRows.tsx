@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { HedgeCoinSummary } from '../../utils/hedgeUtils';
 import { HedgeProCoinRow } from './HedgeProCoinRow';
 import { usePagination } from '../../hooks/usePagination';
@@ -21,6 +22,7 @@ export function HedgeProCoinRows({
   itemsPerPage = 25,
   pnlConceptMode = 'hedge',
 }: HedgeProCoinRowsProps) {
+  const { t } = useTranslation();
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
   const { page, setPage, paginated, totalItems } = usePagination(
@@ -32,7 +34,7 @@ export function HedgeProCoinRows({
   if (summaries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl flex-1 text-center">
-        <p className="text-[#8E9299] text-sm">No inverse coin positions found matching the current filters.</p>
+        <p className="text-[#8E9299] text-sm">{t('hedgePro.coinRows.noPositions')}</p>
       </div>
     );
   }
@@ -67,3 +69,4 @@ export function HedgeProCoinRows({
 }
 
 export default HedgeProCoinRows;
+
