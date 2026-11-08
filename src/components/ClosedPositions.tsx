@@ -268,20 +268,20 @@ export function ClosedPositions() {
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-              <span className="text-2xl text-[#8E9299] mb-1">Total PnL</span>
+              <span className="text-2xl text-[#8E9299] mb-1">{t('positionsHistory.totalPnl', 'Total PnL')}</span>
               <span className={`text-xl font-medium ${closedStats.totalPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                 {isPrivateMode ? '$••••' : `${closedStats.totalPnl >= 0 ? '+' : ''}${formatCurrency(closedStats.totalPnl, 'usd')}`}
               </span>
               <div className="w-full border-t border-dashed border-[#2a2b30] my-3"></div>
               <div className="flex flex-col gap-1">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-[#8E9299]">Trade Fees:</span>
+                  <span className="text-[#8E9299]">{t('positionsHistory.tradeFees', 'Trade Fees:')}</span>
                   <span className={`${closedStats.totalTradeFees < 0 ? 'text-[#FF4444]' : (closedStats.totalTradeFees > 0 ? 'text-[#00C853]' : 'text-[#8E9299]')}`}>
                     {isPrivateMode ? '$••••' : `${closedStats.totalTradeFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalTradeFees, 'usd')}`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-[#8E9299]">Funding Fees:</span>
+                  <span className="text-[#8E9299]">{t('positionsHistory.fundingFees', 'Funding Fees:')}</span>
                   <span className={`${closedStats.totalFundingFees < 0 ? 'text-[#FF4444]' : (closedStats.totalFundingFees > 0 ? 'text-[#00C853]' : 'text-[#8E9299]')}`}>
                     {isPrivateMode ? '$••••' : `${closedStats.totalFundingFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalFundingFees, 'usd')}`}
                   </span>
@@ -292,15 +292,15 @@ export function ClosedPositions() {
             <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
               <div className="flex flex-col">
                 <div className='flex items-center gap-2'>
-                  <span className="text-2xl text-[#8E9299]">Total Trades:</span>
+                  <span className="text-2xl text-[#8E9299]">{t('positionsHistory.totalTrades', 'Total Trades:')}</span>
                   <span className="text-xl font-medium text-white">{closedStats.totalTrades}</span>
                 </div>
                 <div className="flex items-baseline gap-2">
                   {closedStats.totalTrades > 0 && (
                     <div className="flex text-xm gap-2 font-mono">
-                      <span className="text-[#00C853]">{closedStats.longs} Longs ({((closedStats.longs / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
+                      <span className="text-[#00C853]">{t('positions.longCount', { count: closedStats.longs, defaultValue: `${closedStats.longs} Longs` })} ({((closedStats.longs / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
                       <span className="text-[#8E9299]">|</span>
-                      <span className="text-[#FF4444]">{closedStats.shorts} Shorts ({((closedStats.shorts / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
+                      <span className="text-[#FF4444]">{t('positions.shortCount', { count: closedStats.shorts, defaultValue: `${closedStats.shorts} Shorts` })} ({((closedStats.shorts / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
                     </div>
                   )}
                 </div>
@@ -325,13 +325,13 @@ export function ClosedPositions() {
             <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex gap-2 items-center">
-                  <span className="text-2xl text-[#8E9299]">Win Rate: </span>
+                  <span className="text-2xl text-[#8E9299]">{t('positionsHistory.winRate', 'Win Rate')}: </span>
                   <span className="text-xl font-medium text-white">{closedStats.winRate.toFixed(2)}%</span>
                 </div>
                 <div className="flex gap-2 text-xl font-mono">
-                  <span className="text-[#00C853]">{closedStats.wins} Wins</span>
+                  <span className="text-[#00C853]">{closedStats.wins} {t('positionsHistory.wins', 'Wins')}</span>
                   <span className="text-[#3f4046]">|</span>
-                  <span className="text-[#FF4444]">{closedStats.losses} Losses</span>
+                  <span className="text-[#FF4444]">{closedStats.losses} {t('positionsHistory.losses', 'Losses')}</span>
                 </div>
               </div>
 
@@ -391,7 +391,7 @@ export function ClosedPositions() {
             const pnlClass = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
 
             const leverage = (pos.raw?.leverage as string) || (pos.raw?.lever as string) || '1';
-            const marginModeLabel = ((pos.raw?.marginMode as string) || (pos.raw?.mgnMode as string) || 'cross').toLowerCase() === 'isolated' ? 'Isolated' : 'Cross';
+            const marginModeLabel = ((pos.raw?.marginMode as string) || (pos.raw?.mgnMode as string) || 'cross').toLowerCase() === 'isolated' ? t('positions.isolated', 'Isolated') : t('positions.cross', 'Cross');
             const symbolSuffix = extractBaseCoin(pos.exchange, pos.symbol);
 
             let roiStr = '--';
@@ -488,7 +488,7 @@ export function ClosedPositions() {
                   {/* Size / Value */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
                     <AppTooltip description="The peak size and USD value of this position before it was closed.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Pos Size / Value</span>
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('positions.positionSize', 'Pos Size')} / {t('positions.positionValue', 'Value')}</span>
                     </AppTooltip>
                     <span className="font-mono text-white text-sm">{displayQuantity} <span className="font-sans text-[10px] text-[#8E9299]">{displayUnit}</span></span>
                     {displaySecondaryQuantity !== '--' && (
@@ -499,7 +499,7 @@ export function ClosedPositions() {
                   {/* Entry / Exit Price */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
                     <AppTooltip description="Average entry price and average exit price of the position.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Entry / Exit Price</span>
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('positions.entryPrice', 'Entry Price')} / {t('positionsHistory.closePrice', 'Exit Price')}</span>
                     </AppTooltip>
                     <span className="font-mono text-white text-sm truncate">{formatPrice(pos.entryPrice, isFiatPair)}</span>
                     <span className="font-mono text-white text-xs truncate">{formatPrice(pos.closePrice, isFiatPair)}</span>
@@ -511,7 +511,7 @@ export function ClosedPositions() {
                       side="top"
                       description={
                         <div className="flex flex-col gap-1 w-full min-w-[180px]">
-                           <span className="text-[12px] font-medium text-[#8E9299]">Realized PnL</span>
+                           <span className="text-[12px] font-medium text-[#8E9299]">{t('positions.realizedPnl', 'Realized PnL')}</span>
                            <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                               {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{pnlCurrency}</span>
                            </span>
@@ -519,26 +519,26 @@ export function ClosedPositions() {
                       }
                       rows={[
                         { 
-                          label: 'Closed PnL', 
+                          label: t('positions.closedPnl', 'Closed Realized PnL'), 
                           value: `${(pos.closedPnl || 0) > 0 ? '+' : ''}${formatCcy(pos.closedPnl || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.realizedPnl - inverseVals.fundingFee - inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                           valueClassName: `text-[11px] font-mono font-bold ${(pos.closedPnl || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         },
                         { 
-                          label: 'Funding fee', 
+                          label: t('positions.fundingFee', 'Funding fee'), 
                           value: `${(pos.fundingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.fundingFee || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                           valueClassName: `text-[11px] font-mono font-bold ${(pos.fundingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         },
                         { 
-                          label: 'Trading fee', 
+                          label: t('positions.tradingFee', 'Trading fee'), 
                           value: `${(pos.tradingFee || 0) > 0 ? '+' : ''}${formatCcy(pos.tradingFee || 0)} ${pnlCurrency}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`, 
                           labelClassName: 'text-[11px] font-medium text-[#8E9299]', 
                           valueClassName: `text-[11px] font-mono font-bold ${(pos.tradingFee || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` 
                         }
                       ]}
                     >
-                      <span className="text-[10px] text-[#8E9299] uppercase cursor-help border-b border-dashed border-[#8E9299]/50 w-max mb-1 focus:outline-none">Realized PnL (ROE)</span>
+                      <span className="text-[10px] text-[#8E9299] uppercase cursor-help border-b border-dashed border-[#8E9299]/50 w-max mb-1 focus:outline-none">{t('positions.realizedPnl', 'Realized PnL')} ({t('positions.roe', 'ROE')})</span>
                     </AppTooltip>
                     <span className={`font-mono text-sm ${pnlClass}`}>
                       {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{pnlCurrency}</span>
@@ -556,7 +556,7 @@ export function ClosedPositions() {
                   {/* Open Time */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
                     <AppTooltip description="When the position was first opened.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Open Time</span>
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('positionsHistory.openTime', 'Open Time')}</span>
                     </AppTooltip>
                     <span className="font-mono text-white text-sm">
                       {formatDateTime(pos.createdTime).dateStr}
@@ -569,7 +569,7 @@ export function ClosedPositions() {
                   {/* Close Time */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
                     <AppTooltip description="When the position was completely closed.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Closed Time</span>
+                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('positionsHistory.closeTime', 'Closed Time')}</span>
                     </AppTooltip>
                     <span className="font-mono text-white text-sm">
                       {formatDateTime(pos.closeUpdateTime).dateStr}

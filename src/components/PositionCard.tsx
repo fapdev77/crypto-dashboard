@@ -37,7 +37,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const isShort = pos.side === 'short';
   const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
   const sideLabel = isLong ? 'Long' : isShort ? 'Short' : 'Net';
-  const marginModeLabel = pos.marginMode === 'isolated' ? 'Isolated' : 'Cross';
+  const marginModeLabel = pos.marginMode === 'isolated' ? t('positions.isolated', 'Isolated') : t('positions.cross', 'Cross');
 
   const uplColor = pos.unrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
   const roeColor = (pos.roe || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
@@ -98,10 +98,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[250px]">
         <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Entry Price
+          {t('positions.entryPrice', 'Entry Price')}
         </span>
         <p className="text-[12px] text-[#8E9299] leading-snug">
-          Current position average price.
+          {t('positions.entryPriceTooltip', 'Current position average price.')}
         </p>
       </div>
     )
@@ -112,10 +112,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
         <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Mark Price
+          {t('positions.markPrice', 'Mark Price')}
         </span>
         <p className="text-[12px] text-[#8E9299] leading-snug">
-          The mark price is determined by the real-time index price and the upcoming funding rate, reflecting the current fair price of the futures. The mark price is used to calculate the unrealized PnL of the position and trigger liquidations.
+          {t('positions.markPriceTooltip', 'The mark price is determined by the real-time index price and the upcoming funding rate, reflecting the current fair price of the futures. The mark price is used to calculate the unrealized PnL of the position and trigger liquidations.')}
         </p>
       </div>
     )
@@ -126,10 +126,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
         <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Unrealized PnL
+          {t('positions.unrealizedPnl', 'Unrealized PnL')}
         </span>
         <p className="text-[12px] text-[#8E9299] leading-snug">
-          Unrealized PnL calculation.
+          {t('positions.unrealizedPnl', 'Unrealized PnL')}
         </p>
       </div>
     )
@@ -140,10 +140,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
         <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Est. Liq. Price
+          {t('positions.liqPrice', 'Est. Liq. Price')}
         </span>
         <p className="text-[12px] text-[#8E9299] leading-snug">
-          The estimated price at which an open position will be liquidated. This price is for reference only. The actual liquidation price is determined when your maintenance margin ratio drops to 100% or lower and your position is liquidated or reduced.
+          {t('positions.liqPriceTooltip', 'The estimated price at which an open position will be liquidated. This price is for reference only. The actual liquidation price is determined when your maintenance margin ratio drops to 100% or lower and your position is liquidated or reduced.')}
         </p>
       </div>
     )
@@ -154,10 +154,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
         <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Margin
+          {t('positions.margin', 'Margin')}
         </span>
         <p className="text-[12px] text-[#8E9299] leading-snug">
-          The margin allocated to your open position.
+          {t('positions.margin', 'Margin')}
         </p>
       </div>
     )
@@ -168,12 +168,12 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
         <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          {pos.exchange === 'okx' ? 'Maintenance Margin Ratio (MMR)' : 'Maintenance Margin'}
+          {pos.exchange === 'okx' ? 'Maintenance Margin Ratio (MMR)' : t('positions.maintMargin', 'Maintenance Margin')}
         </span>
         <p className="text-[12px] text-[#8E9299] leading-snug">
           {pos.exchange === 'okx'
             ? 'Maintenance margin ratio (MMR) is a risk metric for your positions. The lower the maintenance margin ratio, the higher the risk. When the maintenance margin ratio reaches or drops below 100%, your positions will be reduced or liquidated.'
-            : 'The minimum amount of margin that must be maintained to keep the position open. If the margin drops below this value, the position will be liquidated.'}
+            : t('positions.maintMargin', 'The minimum amount of margin that must be maintained to keep the position open.')}
         </p>
       </div>
     )
@@ -293,7 +293,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           <AppTooltip {...sizeTooltipProps}>
             <div className="flex flex-col gap-0.5 cursor-help w-max focus:outline-none">
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max">Pos Size / Value</span>
+              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max">{t('positions.positionSize', 'Pos Size')} / {t('positions.positionValue', 'Value')}</span>
               <span className="font-mono text-white text-sm">{formatCurrency(pos.size, 'crypto')} {baseCoinClean}</span>
               <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
             </div>
@@ -304,11 +304,11 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           <div className="flex items-center gap-1">
             <AppTooltip {...entryPriceTooltipProps}>
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Entry</span>
+              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">{t('positions.entryPrice', 'Entry')}</span>
             </AppTooltip>
             <span className="text-[10px] text-[#8E9299] uppercase">/</span>
             <AppTooltip {...markPriceTooltipProps}>
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Mark</span>
+              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">{t('positions.markPrice', 'Mark')}</span>
             </AppTooltip>
           </div>
           <span className="font-mono text-white text-sm">{formatPrice(pos.entryPrice, isFiatPair)}</span>
@@ -319,11 +319,11 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           <div className="flex items-center gap-1">
             <AppTooltip {...liqPriceTooltipProps}>
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Liq Price</span>
+              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">{t('positions.liqPrice', 'Liq Price')}</span>
             </AppTooltip>
             <span className="text-[10px] text-[#8E9299] uppercase">/</span>
             <AppTooltip {...marginTooltipProps}>
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Margin</span>
+              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">{t('positions.margin', 'Margin')}</span>
             </AppTooltip>
           </div>
           <span className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
@@ -335,7 +335,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         {/* Unrealized PnL (ROE) */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           <AppTooltip {...unrealizedPnlTooltipProps}>
-            <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Unrealized PnL (ROE)</span>
+            <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">{t('positions.unrealizedPnl', 'Unrealized PnL')} ({t('positions.roe', 'ROE')})</span>
           </AppTooltip>
           <span className={`font-mono text-sm ${uplColor}`}>
             {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
@@ -354,7 +354,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             side="top"
             description={
               <div className="flex flex-col gap-1 w-full min-w-[180px]">
-                <span className="text-[12px] font-medium text-white">Realized PnL</span>
+                <span className="text-[12px] font-medium text-white">{t('positions.realizedPnl', 'Realized PnL')}</span>
                 <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                   {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
                 </span>
@@ -362,26 +362,26 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             }
             rows={[
               {
-                label: 'Closed PnL',
+                label: t('positions.closedPnl', 'Closed Realized PnL'),
                 value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.closedPnl, 'usd', 2)})` : ''}`,
                 labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                 valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
               },
               {
-                label: 'Funding fee',
+                label: t('positions.fundingFee', 'Funding fee'),
                 value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`,
                 labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                 valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
               },
               {
-                label: 'Trading fee',
+                label: t('positions.tradingFee', 'Trading fee'),
                 value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`,
                 labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                 valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
               }
             ]}
           >
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Realized PnL</span>
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('positions.realizedPnl', 'Realized PnL')}</span>
           </AppTooltip>
           <span className={`font-mono text-sm ${realizedPnlColor}`}>
             {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
@@ -482,7 +482,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             <div className="flex flex-col gap-1">
               <AppTooltip {...sizeTooltipProps}>
                 <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
-                  <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Position</span>
+                  <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">{t('positions.positionSize', 'Position')}</span>
                   <div className="flex items-baseline gap-1">
                     <span className="font-mono text-white">{formatCurrency(pos.size, 'crypto')}</span>
                     <span className="text-[#8E9299] text-xs">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
@@ -492,13 +492,13 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...entryPriceTooltipProps}>
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Entry price</span>
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">{t('positions.entryPrice', 'Entry price')}</span>
               </AppTooltip>
               <span className="font-mono text-white">{formatPrice(pos.entryPrice, isFiatPair)}</span>
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...marginTooltipProps}>
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Margin</span>
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">{t('positions.margin', 'Margin')}</span>
               </AppTooltip>
               <span className="font-mono text-white">
                 {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
@@ -511,7 +511,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               side="top"
               description={
                 <div className="flex flex-col gap-1 w-full min-w-[180px]">
-                  <span className="text-[12px] font-medium text-white">Realized PnL</span>
+                  <span className="text-[12px] font-medium text-white">{t('positions.realizedPnl', 'Realized PnL')}</span>
                   <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                     {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
                   </span>
@@ -519,19 +519,19 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               }
               rows={[
                 {
-                  label: 'Closed PnL',
+                  label: t('positions.closedPnl', 'Closed Realized PnL'),
                   value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.closedPnl, 'usd', 2)})` : ''}`,
                   labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                   valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                 },
                 {
-                  label: 'Funding fee',
+                  label: t('positions.fundingFee', 'Funding fee'),
                   value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`,
                   labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                   valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                 },
                 {
-                  label: 'Trading fee',
+                  label: t('positions.tradingFee', 'Trading fee'),
                   value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`,
                   labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                   valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
@@ -539,7 +539,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               ]}
             >
               <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Realized PnL</span>
+                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">{t('positions.realizedPnl', 'Realized PnL')}</span>
                 <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                   {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                   {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
@@ -614,10 +614,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             ) : (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
+                  <span className="text-[#8E9299] text-xs">{t('positions.takeProfit', 'TP')} / {t('positions.stopLoss', 'SL')}</span>
                   {hasEntireTpsl && (
                     <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/20">
-                      Full
+                      {t('positions.entirePosition', 'Full')}
                     </span>
                   )}
                 </div>
@@ -636,7 +636,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             {/* Linha 2 */}
             <div className="flex flex-col gap-1">
               <AppTooltip {...unrealizedPnlTooltipProps}>
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">Unrealized PnL</span>
+                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">{t('positions.unrealizedPnl', 'Unrealized PnL')}</span>
               </AppTooltip>
               <span className={`font-mono ${uplColor}`}>
                 {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{posCcy}</span>
@@ -647,13 +647,13 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...markPriceTooltipProps}>
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Mark price</span>
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">{t('positions.markPrice', 'Mark price')}</span>
               </AppTooltip>
               <span className="font-mono text-white">{formatPrice(pos.markPrice, isFiatPair)}</span>
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...maintenanceMarginTooltipProps}>
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">{pos.exchange === 'okx' ? 'Maint. Margin / MMR' : 'Maintenance Margin'}</span>
+                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">{pos.exchange === 'okx' ? 'Maint. Margin / MMR' : t('positions.maintMargin', 'Maintenance Margin')}</span>
               </AppTooltip>
               <span className="font-mono text-white">
                 {pos.maintenanceMargin !== undefined ? (
@@ -678,7 +678,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                     At the breakeven price, your total PnL will be zero if you close your remaining position. Note that the breakeven price, which includes the trading fee and funding fee, is updated every second.
                   </div>
                   <div className="flex flex-col gap-1 w-full min-w-[180px] pt-1">
-                    <span className="text-[12px] font-medium text-white">Realized PnL</span>
+                    <span className="text-[12px] font-medium text-white">{t('positions.realizedPnl', 'Realized PnL')}</span>
                     <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                       {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
                     </span>
@@ -688,19 +688,19 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               side="top"
               rows={[
                 {
-                  label: 'Closed PnL',
+                  label: t('positions.closedPnl', 'Closed Realized PnL'),
                   value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}`,
                   labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                   valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                 },
                 {
-                  label: 'Funding fee',
+                  label: t('positions.fundingFee', 'Funding fee'),
                   value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}`,
                   labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                   valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
                 },
                 {
-                  label: 'Trading fee',
+                  label: t('positions.tradingFee', 'Trading fee'),
                   value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}`,
                   labelClassName: 'text-[11px] font-medium text-[#8E9299]',
                   valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
@@ -715,10 +715,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             {pos.instrumentType !== 'INVERSE' && (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
+                  <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">{t('positions.takeProfit', 'TP')} / {t('positions.stopLoss', 'SL')} ({t('positions.partialPosition', 'Partial')})</span>
                   {hasPartialTpsl && (
                     <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-blue-400 font-mono border border-blue-500/20">
-                      Partial
+                      {t('positions.partialPosition', 'Partial')}
                     </span>
                   )}
                 </div>
@@ -736,14 +736,14 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
             {/* Linha 3 */}
             <div className="flex flex-col gap-1">
-              <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">ROE</span>
+              <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">{t('positions.roe', 'ROE')}</span>
               <span className={`font-mono ${roeColor}`}>
                 {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
               </span>
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...liqPriceTooltipProps}>
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">Est. liq. price</span>
+                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">{t('positions.liqPrice', 'Est. liq. price')}</span>
               </AppTooltip>
               <span className="font-mono text-orange-400">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
             </div>

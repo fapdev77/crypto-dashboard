@@ -16,8 +16,10 @@ import { Pagination } from '../../ui/Pagination';
 import { usePagination } from '../../../hooks/usePagination';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
 import { resolvePeriodDateRange } from '../../../utils/dateTimeHelper';
+import { useTranslation } from 'react-i18next';
 
 export function OrderHistory() {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<OrderFilters>({
     exchange: 'All',
     instrument: 'All',
@@ -198,14 +200,14 @@ export function OrderHistory() {
   }, [orders]);
 
   const SIDE_DONUT = [
-    { name: 'Buy', value: stats.buyCount, color: '#00C853' },
-    { name: 'Sell', value: stats.sellCount, color: '#FF4444' }
+    { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: '#00C853' },
+    { name: t('orders.sell', 'Sell'), value: stats.sellCount, color: '#FF4444' }
   ];
 
   const STATUS_DONUT = [
-    { name: 'Filled / Part', value: stats.filledCount, color: '#00C853' },
-    { name: 'Cancelled', value: stats.cancelledCount, color: '#8E9299' },
-    { name: 'Rejected', value: stats.rejectedCount, color: '#FF4444' }
+    { name: t('orders.statuses.filled', 'Filled'), value: stats.filledCount, color: '#00C853' },
+    { name: t('orders.statuses.cancelled', 'Cancelled'), value: stats.cancelledCount, color: '#8E9299' },
+    { name: t('orders.statuses.rejected', 'Rejected'), value: stats.rejectedCount, color: '#FF4444' }
   ];
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
@@ -242,7 +244,7 @@ export function OrderHistory() {
         <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <History className="w-5 h-5 text-[#2F6BFF]" />
-            Orders History
+            {t('orders.orderHistoryTitle', 'Orders History')}
           </h2>
           <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} syncError={error} />
         </div>
@@ -252,13 +254,13 @@ export function OrderHistory() {
             className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span> <ChevronDown className="w-3 h-3" />
+            <span className="hidden sm:inline">{t('positionsHistory.export', 'Export')}</span> <ChevronDown className="w-3 h-3" />
           </button>
           {exportMenuOpen && (
             <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
-              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export CSV</button>
-              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export Excel</button>
-              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export PDF</button>
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('positionsHistory.exportCsv', 'Export CSV')}</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('positionsHistory.exportExcel', 'Export Excel')}</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('positionsHistory.exportPdf', 'Export PDF')}</button>
             </div>
           )}
         </div>
@@ -274,13 +276,13 @@ export function OrderHistory() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
             <div className='flex flex-col'>
               <div className="flex items-center gap-2">
-                <span className="text-2xl text-[#8E9299]">Total Orders: </span>
+                <span className="text-2xl text-[#8E9299]">{t('orders.stats.totalOrders', 'Total Orders')}: </span>
                 <span className="text-xl font-medium text-white">{orders.length}</span>
               </div>
               <div className="flex flex-col text-[13px] gap-0.5 font-mono mt-1">
-                <span className="text-[#00C853]">Filled: {stats.filledCount}</span>
-                <span className="text-[#8E9299]">Cancelled: {stats.cancelledCount}</span>
-                <span className="text-[#FF4444]">Rejected: {stats.rejectedCount}</span>
+                <span className="text-[#00C853]">{t('orders.statuses.filled', 'Filled')}: {stats.filledCount}</span>
+                <span className="text-[#8E9299]">{t('orders.statuses.cancelled', 'Cancelled')}: {stats.cancelledCount}</span>
+                <span className="text-[#FF4444]">{t('orders.statuses.rejected', 'Rejected')}: {stats.rejectedCount}</span>
               </div>
             </div>
             <div className="w-24 h-24">
@@ -301,11 +303,11 @@ export function OrderHistory() {
           {/* Buy vs Sell */}
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
             <div className='flex flex-col'>
-              <span className="text-2xl text-[#8E9299]">Buy vs Sell</span>
+              <span className="text-2xl text-[#8E9299]">{t('orders.buy', 'Buy')} / {t('orders.sell', 'Sell')}</span>
               <div className="flex text-[15px] gap-2 font-mono mt-2">
-                <span className="text-[#00C853]">{stats.buyCount} B ({((stats.buyCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
+                <span className="text-[#00C853]">{stats.buyCount} {t('orders.buy', 'Buy')} ({((stats.buyCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
                 <span className="text-[#8E9299]"> | </span>
-                <span className="text-[#FF4444]">{stats.sellCount} S ({((stats.sellCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
+                <span className="text-[#FF4444]">{stats.sellCount} {t('orders.sell', 'Sell')} ({((stats.sellCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
               </div>
             </div>
             <div className="w-24 h-24">
@@ -327,7 +329,7 @@ export function OrderHistory() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-3">
             <div className="flex flex-col">
               <AppTooltip description="The total estimated USD value of all executed trades in the selected period.">
-                <span className="text-[13px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Traded Volume</span>
+                <span className="text-[13px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">{t('trade.tradedVolume', 'Traded Volume')}</span>
               </AppTooltip>
               <span className="text-xl font-medium text-white mt-1">
                 {formatCurrency(stats.totalTradedVolume, 'usd')}
@@ -335,7 +337,7 @@ export function OrderHistory() {
             </div>
             <div className="border-t border-[#2a2b30] pt-3 flex flex-col">
               <AppTooltip description="The total estimated USD value of trading fees paid for these orders.">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Trading Fees</span>
+                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">{t('positions.tradingFee', 'Trading Fees')}</span>
               </AppTooltip>
               <span className="text-[13px] font-medium text-[#FF4444] mt-1 font-mono">
                 {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
