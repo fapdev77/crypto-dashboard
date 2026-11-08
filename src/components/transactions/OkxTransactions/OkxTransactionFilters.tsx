@@ -64,17 +64,7 @@ const CATEGORIES = [
   { value: 'other', label: 'Other', tooltip: 'Other account bills.' }
 ];
 
-const TIME_PERIODS = [
-  { label: 'All Time', ms: 0 },
-  { label: 'Today', ms: 24 * 60 * 60 * 1000 },
-  { label: '7 Days', ms: 7 * 24 * 60 * 60 * 1000 },
-  { label: '14 Days', ms: 14 * 24 * 60 * 60 * 1000 },
-  { label: '30 Days', ms: 30 * 24 * 60 * 60 * 1000 },
-  { label: '90 Days', ms: 90 * 24 * 60 * 60 * 1000 },
-  { label: '120 Days', ms: 120 * 24 * 60 * 60 * 1000 },
-  { label: '6 Months', ms: 180 * 24 * 60 * 60 * 1000 },
-  { label: '1 Year', ms: 365 * 24 * 60 * 60 * 1000 },
-];
+import { TIME_PERIOD_OPTIONS } from '../../../utils/dateTimeHelper';
 
 interface Props {
   filters: OkxTxFilters;
@@ -119,8 +109,21 @@ export function OkxTransactionFilters({ filters, setFilters, availableCurrencies
       }}
       period={{
         value: String(filters.timePeriod),
-        onChange: (v) => setFilters(prev => ({ ...prev, timePeriod: Number(v) })),
-        options: TIME_PERIODS.map(p => ({ value: String(p.ms), label: p.label }))
+        onChange: (v) => setFilters(prev => ({
+          ...prev,
+          timePeriod: v,
+          customStartDate: v === 'custom' ? prev.customStartDate : undefined,
+          customEndDate: v === 'custom' ? prev.customEndDate : undefined,
+        })),
+        options: TIME_PERIOD_OPTIONS.map(p => ({ value: p.value, label: p.label, tooltip: p.tooltip, isCustom: p.isCustom })),
+        customStartDate: filters.customStartDate,
+        customEndDate: filters.customEndDate,
+        onCustomDateChange: (start, end) => setFilters(prev => ({
+          ...prev,
+          timePeriod: 'custom',
+          customStartDate: start,
+          customEndDate: end,
+        })),
       }}
     />
   );

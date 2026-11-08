@@ -6,6 +6,7 @@ import { useOrdersStore } from '../store/ordersStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useAiSettingsStore } from '../store/aiSettingsStore';
 import { isAiChatbotFeatureEnabled } from '../utils/aiFeatureFlag';
+import { useTranslation } from 'react-i18next';
 import logo1 from '../assets/CriptoDashboard-logo1.PNG';
 
 interface SubItem {
@@ -32,6 +33,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
+  const { t } = useTranslation();
   const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
   const openOrders = useOrdersStore(state => state.openOrders);
@@ -93,50 +95,50 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     if (available.length === 0) return [];
 
     return [
-      { id: 'transactions-history-consolidated', label: 'Consolidated Net Change' },
+      { id: 'transactions-history-consolidated', label: t('nav.consolidated', 'Consolidated Net Change') },
       ...available.map(({ id, label }) => ({ id, label })),
     ];
-  }, [activeExchanges, useMockData]);
+  }, [activeExchanges, useMockData, t]);
 
-  const navItems: NavItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  const navItems: NavItem[] = useMemo(() => [
+    { id: 'dashboard', label: t('nav.dashboard', 'Dashboard'), icon: LayoutDashboard },
     {
-      id: 'hedge-pro', label: 'Hedge Pro', icon: ShieldCheck, subItems: [
-        { id: 'analytics-hedge-pro', label: 'Hedge Pro' }
+      id: 'hedge-pro', label: t('nav.hedgePro', 'Hedge Pro'), icon: ShieldCheck, subItems: [
+        { id: 'analytics-hedge-pro', label: t('nav.hedgePro', 'Hedge Pro') }
       ]
     },
     {
-      id: 'positions', label: 'Positions', icon: Activity, subItems: [
-        { id: 'positions-open', label: 'Open Positions', badge: openCount },
-        { id: 'positions-history', label: 'Positions History' }
+      id: 'positions', label: t('nav.openPositions', 'Positions'), icon: Activity, subItems: [
+        { id: 'positions-open', label: t('nav.openPositions', 'Open Positions'), badge: openCount },
+        { id: 'positions-history', label: t('nav.closedPositions', 'Positions History') }
       ]
     },
     {
-      id: 'orders', label: 'Orders', icon: ClipboardList, subItems: [
-        { id: 'orders-open', label: 'Open Orders', badge: openOrdersCount },
-        { id: 'orders-history', label: 'Orders History' }
+      id: 'orders', label: t('nav.orders', 'Orders'), icon: ClipboardList, subItems: [
+        { id: 'orders-open', label: t('nav.openOrders', 'Open Orders'), badge: openOrdersCount },
+        { id: 'orders-history', label: t('nav.orderHistory', 'Orders History') }
       ]
     },
     {
-      id: 'trade', label: 'Trade', icon: ArrowLeftRight, subItems: [
-        { id: 'trade-history', label: 'Trade History' }
+      id: 'trade', label: t('nav.trade', 'Trade'), icon: ArrowLeftRight, subItems: [
+        { id: 'trade-history', label: t('nav.trade', 'Trade History') }
       ]
     },
     ...(transactionHistoryItems.length > 0
       ? [{
-          id: 'transactions-history', label: 'Transactions History', icon: History, subItems: transactionHistoryItems
+          id: 'transactions-history', label: t('nav.transactions', 'Transactions History'), icon: History, subItems: transactionHistoryItems
         }]
       : []),
     {
-      id: 'analytics', label: 'Analytics', icon: BarChart2, subItems: [
-        { id: 'analytics-portfolio-performance', label: 'Portfolio Performance' },
-        { id: 'analytics-market-advanced', label: 'Market Analytics' },
-        { id: 'analytics-pnl-symbol', label: 'PnL by Symbol' },
-        { id: 'analytics-funding', label: 'Funding Fees' }
+      id: 'analytics', label: t('nav.analytics', 'Analytics'), icon: BarChart2, subItems: [
+        { id: 'analytics-portfolio-performance', label: t('nav.portfolioPerformance', 'Portfolio Performance') },
+        { id: 'analytics-market-advanced', label: t('nav.marketAnalytics', 'Market Analytics') },
+        { id: 'analytics-pnl-symbol', label: t('nav.pnlBySymbol', 'PnL by Symbol') },
+        { id: 'analytics-funding', label: t('nav.fundingDashboard', 'Funding Fees') }
       ]
     },
-    { id: 'reports', label: 'Reports', icon: FileText },
-  ];
+    { id: 'reports', label: t('nav.reports', 'Reports'), icon: FileText },
+  ], [t, openCount, openOrdersCount, transactionHistoryItems]);
 
   // Accordion state management
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(() => {
@@ -335,11 +337,11 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
 
       <div className={`p-3 lg:p-4 border-t border-[#2a2b30] shrink-0 ${collapsed ? 'px-3' : ''}`}>
         {[
-          { id: 'api-keys', label: 'API Keys', icon: KeyRound },
-          { id: 'logs', label: 'Logs', icon: AlignLeft },
-          { id: 'api-tester', label: 'API Tester', icon: Terminal },
-          ...(isAiChatbotFeatureEnabled() ? [{ id: 'ai-settings', label: 'AI Settings', icon: BrainCircuit }] : []),
-          { id: 'settings', label: 'Settings', icon: Settings },
+          { id: 'api-keys', label: t('nav.apiKeys', 'API Keys'), icon: KeyRound },
+          { id: 'logs', label: t('nav.connectionLogs', 'Logs'), icon: AlignLeft },
+          { id: 'api-tester', label: t('nav.apiTester', 'API Tester'), icon: Terminal },
+          ...(isAiChatbotFeatureEnabled() ? [{ id: 'ai-settings', label: t('nav.aiSettings', 'AI Settings'), icon: BrainCircuit }] : []),
+          { id: 'settings', label: t('nav.settings', 'Settings'), icon: Settings },
         ].map((item) => (
           <button
             key={item.id}

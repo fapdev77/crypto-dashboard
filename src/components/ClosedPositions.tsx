@@ -19,8 +19,10 @@ import { getHistoryInverseUsdValues, getHistoryPositionSizeAndValue } from '../u
 import { FilterBar } from './ui/FilterBar';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../utils/exportUtils';
 import { Pagination } from './ui/Pagination';
+import { useTranslation } from 'react-i18next';
 
 export function ClosedPositions() {
+  const { t } = useTranslation();
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
@@ -204,7 +206,7 @@ export function ClosedPositions() {
         <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <History className="w-5 h-5 text-[#2F6BFF]" />
-            Positions History
+            {t('positionsHistory.title', 'Positions History')}
           </h2>
           <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} syncError={syncError} />
         </div>
@@ -214,13 +216,13 @@ export function ClosedPositions() {
             className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span> <ChevronDown className="w-3 h-3" />
+            <span className="hidden sm:inline">{t('positionsHistory.export', 'Export')}</span> <ChevronDown className="w-3 h-3" />
           </button>
           {exportMenuOpen && (
             <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
-              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export CSV</button>
-              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export Excel</button>
-              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export PDF</button>
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('positionsHistory.exportCsv', 'Export CSV')}</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('positionsHistory.exportExcel', 'Export Excel')}</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('positionsHistory.exportPdf', 'Export PDF')}</button>
             </div>
           )}
         </div>
@@ -233,23 +235,23 @@ export function ClosedPositions() {
             exchange={{
               value: exchangeFilter,
               onChange: setExchangeFilter,
-              labelAll: 'All Exchanges',
+              labelAll: t('positionsHistory.allExchanges', 'All Exchanges'),
             }}
             period={{
               value: period,
               onChange: setPeriod,
               options: [
-                { value: 'today', label: 'Today' },
-                { value: '7d', label: '7 Days' },
-                { value: '14d', label: '14 Days' },
-                { value: '30d', label: '30 Days' },
-                { value: '90d', label: '90 Days' },
+                { value: 'today', label: t('positionsHistory.periodToday', 'Today') },
+                { value: '7d', label: t('positionsHistory.period7d', '7 Days') },
+                { value: '14d', label: t('positionsHistory.period14d', '14 Days') },
+                { value: '30d', label: t('positionsHistory.period30d', '30 Days') },
+                { value: '90d', label: t('positionsHistory.period90d', '90 Days') },
               ],
             }}
             search={{
               value: filterText,
               onChange: setFilterText,
-              placeholder: 'Search...',
+              placeholder: t('common.search', 'Search...'),
             }}
           />
         </div>
@@ -358,7 +360,9 @@ export function ClosedPositions() {
 
       {filteredClosedPositions.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-          <p className="text-[#8E9299]">No history found for active Exchanges in the selected period.</p>
+          <p className="text-[#8E9299]">
+            {t('positionsHistory.noClosedPositions', 'No history found for active Exchanges in the selected period.')}
+          </p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">

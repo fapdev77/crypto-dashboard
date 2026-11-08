@@ -13,8 +13,10 @@ import { PositionCard } from './PositionCard';
 import { usePagination } from '../hooks/usePagination';
 import { Pagination } from './ui/Pagination';
 import { SimulationModeBadge } from './ui/SimulationModeBadge';
+import { useTranslation } from 'react-i18next';
 
 export function OpenPositions() {
+  const { t } = useTranslation();
   const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
   const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
@@ -150,18 +152,18 @@ export function OpenPositions() {
         exchange={{
           value: exchangeFilter,
           onChange: setExchangeFilter,
-          labelAll: 'All Exchanges',
+          labelAll: t('positions.allExchanges', 'All Exchanges'),
         }}
         search={{
           value: filterText,
           onChange: setFilterText,
-          placeholder: 'Search...',
+          placeholder: t('common.search', 'Search...'),
         }}
       />
 
       {activePositions.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-          <p className="text-[#8E9299]">No open positions found.</p>
+          <p className="text-[#8E9299]">{t('positions.noOpenPositions', 'No open positions found.')}</p>
         </div>
       ) : (
         <>
@@ -175,7 +177,7 @@ export function OpenPositions() {
                 <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
                   <div className='flex flex-col'>
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl text-[#8E9299]">Total Positions: </span>
+                      <span className="text-2xl text-[#8E9299]">{t('positions.totalPositions', 'Total Positions')}: </span>
                       <span className="text-xl font-medium text-white">{activePositions.length}</span>
                     </div>
                     <div className="flex items-baseline gap-2">
@@ -205,14 +207,14 @@ export function OpenPositions() {
                 </div>
 
                 <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-                  <span className="text-2xl text-[#8E9299] mb-1">Unrealized PnL</span>
+                  <span className="text-2xl text-[#8E9299] mb-1">{t('positions.unrealizedPnl', 'Unrealized PnL')}</span>
                   <span className={`text-xl font-medium ${totalUnrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                     {isPrivateMode ? '$••••' : `${totalUnrealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalUnrealizedPnl, 'usd')}`}
                   </span>
                 </div>
 
                 <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-                  <span className="text-2xl text-[#8E9299] mb-1">Realized PnL</span>
+                  <span className="text-2xl text-[#8E9299] mb-1">{t('positions.realizedPnl', 'Realized PnL')}</span>
                   <span className={`text-xl font-medium ${totalRealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                     {isPrivateMode ? '$••••' : `${totalRealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalRealizedPnl, 'usd')}`}
                   </span>

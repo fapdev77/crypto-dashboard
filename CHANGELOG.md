@@ -1,3 +1,47 @@
+# [2.23.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.22.0...v2.23.0) (2026-11-08)
+
+
+### Features
+
+* internationalize dashboard components ([037f3ad](https://github.com/fapdev77/crypto-dashboard/commit/037f3ad0fae1f4874014d7d4cf3b9ca04d3b4656))
+
+# [2.22.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.21.0...v2.22.0) (2026-11-08)
+
+
+### Features
+
+* **ui:** replace flag emojis with FlagIcon component ([413df0d](https://github.com/fapdev77/crypto-dashboard/commit/413df0d99afa51ad6056a300885ab71b94ac0468))
+
+# [2.21.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.20.0...v2.21.0) (2026-11-07)
+
+
+### Features
+
+* **i18n:** integrate react-i18next for localization ([18a572a](https://github.com/fapdev77/crypto-dashboard/commit/18a572a3b4b33dd39696bcc06009120c5d24dca5))
+* **i18n:** integrate react-i18next for localization ([7ba8f96](https://github.com/fapdev77/crypto-dashboard/commit/7ba8f96285fab755eced3809bc2495b3d1807326))
+
+# [2.20.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.19.0...v2.20.0) (2026-11-06)
+
+
+### Features
+
+* add multi-currency support, localization, and currency API diagnostics ([5c1b44a](https://github.com/fapdev77/crypto-dashboard/commit/5c1b44a375c5056c2b51fbce3d3755f249b79510))
+
+# [2.19.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.18.0...v2.19.0) (2026-11-06)
+
+
+### Features
+
+* add internationalization and currency support ([c004ea1](https://github.com/fapdev77/crypto-dashboard/commit/c004ea1e43933d55ca98bac0b9cb37267ccc75e2))
+* **new:** add internationalization and currency support ([e25e847](https://github.com/fapdev77/crypto-dashboard/commit/e25e84753d717d1b6227012386bc69dbc5d01c86))
+
+# [2.18.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.17.0...v2.18.0) (2026-10-30)
+
+
+### Features
+
+* **analytics:** add custom date range support ([fdb6c72](https://github.com/fapdev77/crypto-dashboard/commit/fdb6c72f8ee846edcbe4e99b0a73aae2ab65fb7d))
+
 # [2.17.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.16.0...v2.17.0) (2026-10-29)
 
 

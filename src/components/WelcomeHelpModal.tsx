@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe, ShieldAlert, Compass, AlertTriangle, BookOpen, Smartphone } from 'lucide-react';
+import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, ShieldAlert, Compass, AlertTriangle, BookOpen, Smartphone } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
 import { UserManualModal } from './UserManualModal';
+import { LanguageCurrencyButton } from './ui/LanguageCurrencyButton';
 
 interface WelcomeHelpModalProps {
   isOpen: boolean;
@@ -9,8 +11,8 @@ interface WelcomeHelpModalProps {
 }
 
 export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
-  const { showWelcomeOnStartup, setShowWelcomeOnStartup } = useSettingsStore();
-  const [lang, setLang] = useState<'en' | 'pt'>('pt');
+  const { t } = useTranslation();
+  const { showWelcomeOnStartup, setShowWelcomeOnStartup, locale } = useSettingsStore();
   const [isManualOpen, setIsManualOpen] = useState(false);
 
   const releaseInfo = typeof __APP_RELEASE_INFO__ !== 'undefined' ? __APP_RELEASE_INFO__ : null;
@@ -18,54 +20,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
 
   if (!isOpen) return null;
 
-  const texts = {
-    en: {
-      title: "Welcome to Crypto Portfolio Manager",
-      subtitle: "Onboarding & Quick Start Guide",
-      intro: "Monitor trading performance, balances, active positions, funding fees, order history, and transaction logs across Bitget, Bybit, and OKX in one unified terminal.",
-      privacyWarning: "Your API credentials are saved strictly in your browser's localStorage. Communication with the exchanges occurs directly from your browser (no intermediate servers). Always use READ-ONLY API keys. NEVER use keys that allow trading or withdrawals. You can erase all data instantly using the 'Wipe All Local Client Data' option under Settings.",
-      feature0Title: "Getting Started / Try Mock Mode",
-      feature0Desc: <>Create <strong>read-only</strong> API keys on Bitget, Bybit, or OKX to load your real account data. To test-drive the application without any credentials first, navigate to the <strong>Settings</strong> tab and toggle on the <strong>Use Mock Data</strong> option.</>,
-      feature1Title: "Overview & Analytics",
-      feature1Desc: "Track unified balances, positions, margin ratios, and view advanced analytics like Funding Fees, Order Reports, and realized/unrealized PnL charts.",
-      feature2Title: "Secure API Connections",
-      feature2Desc: <>Connect exchanges via the <strong>API Keys</strong> page. All credentials are saved strictly in your local browser storage using a zero-trust model.</>,
-      feature3Title: "Privacy Mode",
-      feature3Desc: <>Click the <strong>Eye Icon</strong> in the header to toggle Privacy Mode. This hides balance, size, and PnL values for safe public sharing or streaming.</>,
-      feature4Title: "Automatic Syncing & Cache",
-      feature4Desc: <>Position, Order, and Funding histories run on a background cache. Customize update intervals or trigger a manual sync under the <strong>Settings</strong> page.</>,
-      feature5Title: "PWA Support",
-      feature5Desc: <>Install the application as a Progressive Web App (PWA) on your mobile or desktop device for a native experience.</>,
-      showOnStartup: "Show on startup",
-      getStarted: "Get Started",
-      disclaimerTitle: "Beta Phase & Data Accuracy Disclaimer",
-      disclaimerDesc: "This application is currently in its testing phase. The focus is to simplify the lives of traders by unifying balances from various exchanges in one place to facilitate asset and trade tracking. However, each exchange has different calculation methods and data availability, so the presented data may contain errors or inconsistencies and might not be exactly equal to what is displayed directly by the exchange. If you do not agree with this, we do not recommend using the application."
-    },
-    pt: {
-      title: "Bem-vindo ao Crypto Portfolio Manager",
-      subtitle: "Guia de Integração e Início Rápido",
-      intro: "Monitore seu desempenho de trading, saldos, posições ativas, taxas de financiamento, histórico de ordens e logs de transações na Bitget, Bybit e OKX em um único terminal unificado.",
-      privacyWarning: "Suas chaves de API são salvas estritamente no localStorage do seu navegador. Toda comunicação com as corretoras ocorre de forma direta (sem servidores intermediários). Use apenas chaves de API com permissão de LEITURA (Read-Only). NUNCA use chaves que permitam negociação (Trade) ou saques. Você pode apagar todos os dados do cliente instantaneamente usando a opção 'Wipe All Local Client Data' nas configurações.",
-      feature0Title: "Primeiros Passos / Modo Testes",
-      feature0Desc: <>Crie chaves de API <strong>apenas leitura (Read-only)</strong> na Bitget, Bybit ou OKX para carregar seus dados reais. Caso queira experimentar a plataforma sem fornecer credenciais primeiro, acesse a aba <strong>Settings</strong> e ative a opção <strong>Use Mock Data</strong>.</>,
-      feature1Title: "Visão Geral e Analytics",
-      feature1Desc: "Acompanhe saldos unificados, posições, taxas de margem e visualize análises avançadas como Taxas de Financiamento (Funding), Relatórios de Ordens e gráficos de PnL realizado/não realizado.",
-      feature2Title: "Conexões Seguras de API",
-      feature2Desc: <>Conecte as corretoras através da página <strong>API Keys</strong>. Todas as credenciais são salvas estritamente no armazenamento local do seu navegador usando um modelo zero-trust.</>,
-      feature3Title: "Modo Privacidade",
-      feature3Desc: <>Clique no <strong>Ícone de Olho</strong> no cabeçalho para alternar o Modo Privacidade. Isso oculta os valores de saldo, tamanho e PnL para compartilhamento público ou transmissões seguras.</>,
-      feature4Title: "Sincronização Automática e Cache",
-      feature4Desc: <>O histórico de posições, ordens e funding é executado em um cache em segundo plano. Personalize os intervalos de atualização ou acione uma sincronização manual na página <strong>Settings</strong>.</>,
-      feature5Title: "Suporte a PWA",
-      feature5Desc: <>Instale o aplicativo como um Progressive Web App (PWA) em seu dispositivo móvel ou desktop para uma experiência nativa e rápida.</>,
-      showOnStartup: "Mostrar ao iniciar",
-      getStarted: "Começar",
-      disclaimerTitle: "Fase Beta e Aviso sobre Precisão de Dados",
-      disclaimerDesc: "Este aplicativo ainda está em fase de testes. O foco é facilitar a vida dos traders unificando os saldos de várias corretoras no mesmo local para facilitar o controle dos ativos e trades. No entanto, cada corretora tem formas diferentes de cálculos e disponibilização dos dados, então os dados apresentados podem conter erros ou inconsistências e não ser exatos aos que são exibidos diretamente pela corretora. Se você não concordar com isso, não recomendamos que use o aplicativo."
-    }
-  };
-
-  const t = texts[lang];
+  const currentManualLang: 'en' | 'pt' = locale.startsWith('pt') ? 'pt' : 'en';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -83,30 +38,8 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
           {/* Top Row: Language Selector and Close Button */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Premium Language Selector with Globe Icon */}
-              <div className="flex items-center gap-2 bg-[#1c1d21] border border-[#2d2f34] rounded-xl p-1 pl-2.5 pr-1 shadow-sm">
-                <Globe className="w-3.5 h-3.5 text-[#2F6BFF] animate-pulse" style={{ animationDuration: '3s' }} />
-                <div className="flex items-center bg-[#111215] border border-[#222327] rounded-lg p-0.5 shadow-inner">
-                  <button
-                    onClick={() => setLang('pt')}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'pt'
-                      ? 'bg-[#2F6BFF] text-white shadow-sm'
-                      : 'text-[#8E9299] hover:text-white'
-                      }`}
-                  >
-                    PT-BR
-                  </button>
-                  <button
-                    onClick={() => setLang('en')}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'en'
-                      ? 'bg-[#2F6BFF] text-white shadow-sm'
-                      : 'text-[#8E9299] hover:text-white'
-                      }`}
-                  >
-                    EN-US
-                  </button>
-                </div>
-              </div>
+              {/* Multi-language & Currency Selector Button */}
+              <LanguageCurrencyButton />
 
               {/* User Manual Button */}
               <button
@@ -114,7 +47,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 className="flex items-center gap-1.5 px-3 py-1 bg-[#1c1d21] border border-[#2d2f34] hover:bg-[#2F6BFF]/10 hover:border-[#2F6BFF]/30 text-[#2F6BFF] rounded-lg text-[10px] font-semibold transition-all shadow-sm"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>{lang === 'pt' ? 'MANUAL DO USUÁRIO' : 'USER MANUAL'}</span>
+                <span>{t('manual.title', 'USER MANUAL')}</span>
               </button>
             </div>
 
@@ -135,12 +68,12 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
             </div>
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h3 className="text-lg font-semibold text-white">{t.title}</h3>
+                <h3 className="text-lg font-semibold text-white">{t('welcome.title', 'Welcome to Crypto Portfolio Manager')}</h3>
                 <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#2F6BFF]/10 text-[#2F6BFF] border border-[#2F6BFF]/20">
                   v{version}
                 </span>
               </div>
-              <p className="text-xs text-[#8E9299] mt-0.5">{t.subtitle}</p>
+              <p className="text-xs text-[#8E9299] mt-0.5">{t('welcome.subtitle', 'Onboarding & Quick Start Guide')}</p>
             </div>
           </div>
         </div>
@@ -148,7 +81,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
         {/* Body content (scrollable) */}
         <div className="flex-1 overflow-y-auto pr-1 space-y-4 mb-6 custom-scrollbar">
           <p className="text-gray-300 text-sm leading-relaxed">
-            {t.intro}
+            {t('welcome.intro')}
           </p>
 
           {/* Privacy & Security Warning Banner */}
@@ -157,8 +90,8 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
               <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5 text-amber-400" />
             </div>
             <div className="text-xs leading-relaxed text-gray-300">
-              <strong className="text-amber-400 block mb-0.5">{lang === 'pt' ? 'Aviso de Segurança & Privacidade' : 'Security & Privacy Notice'}</strong>
-              {t.privacyWarning}
+              <strong className="text-amber-400 block mb-0.5">{currentManualLang === 'pt' ? 'Aviso de Segurança & Privacidade' : 'Security & Privacy Notice'}</strong>
+              {t('welcome.privacyWarning')}
             </div>
           </div>
 
@@ -168,8 +101,8 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
               <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-rose-400" />
             </div>
             <div className="text-xs leading-relaxed text-gray-300">
-              <strong className="text-rose-400 block mb-0.5">{t.disclaimerTitle}</strong>
-              {t.disclaimerDesc}
+              <strong className="text-rose-400 block mb-0.5">{t('welcome.disclaimerTitle')}</strong>
+              {t('welcome.disclaimerDesc')}
             </div>
           </div>
 
@@ -184,9 +117,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 <Compass className="w-4 h-4 text-[#2F6BFF]" />
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm">{t.feature0Title}</h4>
+                <h4 className="text-white font-medium text-sm">{t('welcome.feature0Title')}</h4>
                 <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature0Desc}
+                  {t('welcome.feature0Desc')}
                 </p>
               </div>
             </div>
@@ -197,9 +130,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 <LayoutDashboard className="w-4 h-4 text-[#00C853]" />
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm">{t.feature1Title}</h4>
+                <h4 className="text-white font-medium text-sm">{t('welcome.feature1Title')}</h4>
                 <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature1Desc}
+                  {t('welcome.feature1Desc')}
                 </p>
               </div>
             </div>
@@ -210,9 +143,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 <KeyRound className="w-4 h-4 text-purple-400" />
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm">{t.feature2Title}</h4>
+                <h4 className="text-white font-medium text-sm">{t('welcome.feature2Title')}</h4>
                 <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature2Desc}
+                  {t('welcome.feature2Desc')}
                 </p>
               </div>
             </div>
@@ -223,9 +156,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 <EyeOff className="w-4 h-4 text-amber-500" />
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm">{t.feature3Title}</h4>
+                <h4 className="text-white font-medium text-sm">{t('welcome.feature3Title')}</h4>
                 <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature3Desc}
+                  {t('welcome.feature3Desc')}
                 </p>
               </div>
             </div>
@@ -236,9 +169,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 <RefreshCw className="w-4 h-4 text-blue-400" />
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm">{t.feature4Title}</h4>
+                <h4 className="text-white font-medium text-sm">{t('welcome.feature4Title')}</h4>
                 <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature4Desc}
+                  {t('welcome.feature4Desc')}
                 </p>
               </div>
             </div>
@@ -249,9 +182,9 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 <Smartphone className="w-4 h-4 text-emerald-400" />
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm">{t.feature5Title}</h4>
+                <h4 className="text-white font-medium text-sm">{t('welcome.feature5Title')}</h4>
                 <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature5Desc}
+                  {t('welcome.feature5Desc')}
                 </p>
               </div>
             </div>
@@ -272,7 +205,7 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
               />
               <div className="w-9 h-5 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#00C853]" />
             </label>
-            <span className="text-xs text-[#8E9299]">{t.showOnStartup}</span>
+            <span className="text-xs text-[#8E9299]">{t('welcome.showOnStartup', 'Show on startup')}</span>
           </div>
 
           {/* Close Action */}
@@ -280,12 +213,12 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
             onClick={onClose}
             className="px-5 py-2 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white rounded-lg text-sm font-medium transition-colors shadow-lg hover:shadow-xl"
           >
-            {t.getStarted}
+            {t('welcome.getStarted', 'Get Started')}
           </button>
         </div>
 
       </div>
-      <UserManualModal isOpen={isManualOpen} onClose={() => setIsManualOpen(false)} initialLang={lang} />
+      <UserManualModal isOpen={isManualOpen} onClose={() => setIsManualOpen(false)} initialLang={currentManualLang} />
     </div>
   );
 }

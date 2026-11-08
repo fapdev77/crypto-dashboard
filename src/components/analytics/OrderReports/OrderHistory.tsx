@@ -15,6 +15,7 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { Pagination } from '../../ui/Pagination';
 import { usePagination } from '../../../hooks/usePagination';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
+import { resolvePeriodDateRange } from '../../../utils/dateTimeHelper';
 
 export function OrderHistory() {
   const [filters, setFilters] = useState<OrderFilters>({
@@ -62,8 +63,13 @@ export function OrderHistory() {
     const fetchFunding = async () => {
       let total = 0;
       const now = Date.now();
-      const start = now - filters.timePeriod;
-      const end = now;
+      const { startTime, endTime } = resolvePeriodDateRange(
+        filters.timePeriod,
+        filters.customStartDate,
+        filters.customEndDate
+      );
+      const start = startTime ?? (now - 7 * 24 * 60 * 60 * 1000);
+      const end = endTime ?? now;
 
       // Helper to lazily fetch prices for non-USD currencies if needed
       const priceCache: Record<string, number> = {};

@@ -1,7 +1,47 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import {
+  SupportedFiatCurrency,
+  SupportedLocale,
+  DEFAULT_FIAT_RATES,
+  DEFAULT_USDT_RATE,
+  CurrencyApiDiagnostics,
+} from '../services/currency/currencyTypes';
+import i18n from '../i18n/config';
+
+export type { SupportedLocale, SupportedFiatCurrency };
 
 interface SettingsState {
+  /** Selected display language/locale (e.g. 'pt-BR', 'en-US'). Default 'pt-BR'. */
+  locale: SupportedLocale;
+  setLocale: (locale: SupportedLocale) => void;
+  /** Selected display fiat currency (e.g. 'USD', 'BRL', 'EUR', 'GBP'). Default 'USD'. */
+  fiatCurrency: SupportedFiatCurrency;
+  setFiatCurrency: (currency: SupportedFiatCurrency) => void;
+  /** Cached exchange rates for USD against supported fiat currencies */
+  fiatRates: Record<SupportedFiatCurrency, number>;
+  fiatRatesLastUpdated: number;
+  setFiatRates: (rates: Record<SupportedFiatCurrency, number>) => void;
+  /** TTL for fiat currency exchange rates cache in minutes (5 to 60, default 30). */
+  fiatRatesTtlMinutes: number;
+  setFiatRatesTtlMinutes: (minutes: number) => void;
+  /** Name of the active exchange rate source (e.g. 'api.frankfurter.dev', 'cache', 'fallback'). */
+  fiatRatesSource: string;
+  /** Status of current exchange rates ('live', 'cached', 'fallback'). */
+  fiatRatesStatus: 'live' | 'cached' | 'fallback';
+  setFiatRatesMetadata: (data: {
+    rates: Record<SupportedFiatCurrency, number>;
+    source: string;
+    status: 'live' | 'cached' | 'fallback';
+  }) => void;
+  /** USDT price in USD and rate metrics */
+  usdtRate: number;
+  usdtRateLastUpdated: number;
+  usdtRateStatus: 'live' | 'cached' | 'fallback';
+  setUsdtRate: (rate: number, status?: 'live' | 'cached' | 'fallback') => void;
+  /** API connectivity diagnostics for Frankfurter and CoinGecko */
+  apiDiagnostics: CurrencyApiDiagnostics;
+  setApiDiagnostics: (diagnostics: CurrencyApiDiagnostics) => void;
   /** Whether to use mock/Simulation data instead of live API calls. */
   useMockData: boolean;
   setUseMockData: (useMockData: boolean) => void;
@@ -62,6 +102,47 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
+      locale: 'en-US',
+      setLocale: (locale: SupportedLocale) => {
+        i18n.changeLanguage(locale);
+        set({ locale });
+      },
+      fiatCurrency: 'USD',
+      setFiatCurrency: (fiatCurrency: SupportedFiatCurrency) => set({ fiatCurrency }),
+      fiatRates: { ...DEFAULT_FIAT_RATES },
+      fiatRatesLastUpdated: Date.now(),
+      setFiatRates: (fiatRates: Record<SupportedFiatCurrency, number>) =>
+        set({ fiatRates, fiatRatesLastUpdated: Date.now() }),
+      fiatRatesTtlMinutes: 30,
+      setFiatRatesTtlMinutes: (minutes: number) =>
+        set({ fiatRatesTtlMinutes: Math.max(5, Math.min(60, Math.round(minutes))) }),
+      fiatRatesSource: 'api.frankfurter.dev',
+      fiatRatesStatus: 'live',
+      setFiatRatesMetadata: ({ rates, source, status }) =>
+        set({
+          fiatRates: rates,
+          fiatRatesSource: source,
+          fiatRatesStatus: status,
+          fiatRatesLastUpdated: Date.now(),
+        }),
+      usdtRate: DEFAULT_USDT_RATE,
+      usdtRateLastUpdated: Date.now(),
+      usdtRateStatus: 'live',
+      setUsdtRate: (rate: number, status: 'live' | 'cached' | 'fallback' = 'live') =>
+        set({ usdtRate: rate, usdtRateStatus: status, usdtRateLastUpdated: Date.now() }),
+      apiDiagnostics: {
+        frankfurter: {
+          status: 'connected',
+          lastUpdated: Date.now(),
+          endpoint: 'https://api.frankfurter.dev/v2/rates',
+        },
+        coingecko: {
+          status: 'connected',
+          lastUpdated: Date.now(),
+          endpoint: 'https://api.coingecko.com/api/v3/simple/price',
+        },
+      },
+      setApiDiagnostics: (apiDiagnostics: CurrencyApiDiagnostics) => set({ apiDiagnostics }),
       useMockData: false,
       setUseMockData: (useMockData: boolean) => set({ useMockData }),
       pollingInterval: 5,
