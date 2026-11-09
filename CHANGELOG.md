@@ -1,3 +1,10 @@
+# [2.28.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.27.0...v2.28.0) (2026-11-09)
+
+
+### Features
+
+* **i18n:** localize UI components and labels ([6ee9f4f](https://github.com/fapdev77/crypto-dashboard/commit/6ee9f4f39305e2bb1789e489b6e76c18106076bc))
+
 # [2.27.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.26.0...v2.27.0) (2026-11-09)
 
 
