@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ConsolidatedTxFilters } from '../../../hooks/useConsolidatedTransactions';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { useSettingsStore } from '../../../store/settingsStore';
@@ -29,7 +30,23 @@ interface Props {
 }
 
 export function ConsolidatedTransactionFilters({ filters, setFilters, availableCurrencies }: Props) {
+  const { t } = useTranslation();
   const { keys } = useApiKeysStore();
+
+  const localizedCategories = useMemo(() => [
+    { value: 'All', label: t('transactions.filters.allCategories', 'All Categories'), tooltip: 'Show all categories across all exchanges.' },
+    { value: 'spot', label: t('transactions.categories.spot', 'Spot'), tooltip: 'Spot market cash trading.' },
+    { value: 'linear', label: t('transactions.categories.linear', 'Linear'), tooltip: 'USDT / USDC perpetual & linear futures contracts.' },
+    { value: 'inverse', label: t('transactions.categories.inverse', 'Inverse'), tooltip: 'Coin-margined inverse perpetual & futures contracts.' },
+    { value: 'option', label: t('transactions.categories.option', 'Options'), tooltip: 'European & American style option contracts.' },
+    { value: 'margin', label: t('transactions.categories.margin', 'Margin'), tooltip: 'Isolated & cross-margin leveraged orders.' },
+  ], [t]);
+
+  const localizedTxTypes = useMemo(() => UNIVERSAL_TX_FILTER_OPTIONS.map(opt => ({
+    value: opt.value,
+    label: t(`transactions.types.${opt.value}`, opt.label),
+    tooltip: opt.description,
+  })), [t]);
   const useMockData = useSettingsStore(state => state.useMockData);
 
   // Available exchanges for filter
@@ -74,41 +91,41 @@ export function ConsolidatedTransactionFilters({ filters, setFilters, availableC
       search={{
         value: filters.search,
         onChange: (val) => setFilters(p => ({ ...p, search: val })),
-        placeholder: 'Search symbol or asset...',
+        placeholder: t('transactions.filters.searchPlaceholder', 'Search symbol or asset...'),
       }}
       exchange={{
         value: filters.exchange,
         onChange: (val) => setFilters(p => ({ ...p, exchange: val, accountId: 'All' })),
         options: exchangeOptions,
-        labelAll: 'All Exchanges',
+        labelAll: t('transactions.filters.allExchanges', 'All Exchanges'),
         tooltip: 'Filter transactions by exchange venue',
       }}
       account={{
         value: filters.accountId,
         onChange: (val) => setFilters(p => ({ ...p, accountId: val })),
         options: accountOptions,
-        labelAll: 'All Accounts',
+        labelAll: t('transactions.filters.allAccounts', 'All Accounts'),
         tooltip: 'Filter transactions by connected API key account',
       }}
       instrument={{
         value: filters.category,
         onChange: (val) => setFilters(p => ({ ...p, category: val })),
-        options: CATEGORIES,
-        labelAll: 'All Categories',
+        options: localizedCategories,
+        labelAll: t('transactions.filters.allCategories', 'All Categories'),
         tooltip: 'Filter by instrument contract market',
       }}
       type={{
         value: filters.type,
         onChange: (val) => setFilters(p => ({ ...p, type: val })),
-        options: TX_TYPES,
-        labelAll: 'All Types',
+        options: localizedTxTypes,
+        labelAll: t('transactions.filters.allTypes', 'All Types'),
         tooltip: 'Filter by universal transaction activity type',
       }}
       side={{
         value: filters.currency,
         onChange: (val) => setFilters(p => ({ ...p, currency: val })),
         options: currencyOptions,
-        labelAll: 'All Currencies',
+        labelAll: t('transactions.filters.allCurrencies', 'All Currencies'),
         tooltip: 'Filter by currency asset',
       }}
       period={{

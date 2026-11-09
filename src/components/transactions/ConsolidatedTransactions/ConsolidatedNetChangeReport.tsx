@@ -6,6 +6,7 @@ import { ExchangeStatsBlock } from '../../../hooks/useConsolidatedTransactions';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../../../utils/transactionTypeMapper';
+import { useTranslation } from 'react-i18next';
 
 interface ConsolidatedNetChangeReportProps {
   filteredByExchange: {
@@ -64,6 +65,7 @@ export function ConsolidatedNetChangeReport({
   tokenRates,
   isPrivateMode = false,
 }: ConsolidatedNetChangeReportProps) {
+  const { t } = useTranslation();
   // State for expanded exchange sections (default all open)
   const [expandedExchanges, setExpandedExchanges] = useState<Record<string, boolean>>({
     bybit: true,
@@ -254,7 +256,7 @@ export function ConsolidatedNetChangeReport({
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl text-center">
         <Layers className="w-12 h-12 text-[#8E9299] mb-3 opacity-60" />
-        <h3 className="text-base font-semibold text-white mb-1">No Consolidated Transaction Data</h3>
+        <h3 className="text-base font-semibold text-white mb-1">{t('transactions.consolidated.noData', 'No Consolidated Transaction Data')}</h3>
         <p className="text-xs text-[#8E9299] max-w-md">
           No records found matching the active exchange, currency, or timeframe filters. Adjust your filters or wait for synchronization to complete.
         </p>
@@ -267,9 +269,9 @@ export function ConsolidatedNetChangeReport({
       {/* Controls: Description and Expand/Collapse All */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-[#2a2b30]/40">
         <div>
-          <h3 className="text-sm font-semibold text-white">Exchange & Asset Performance Breakdown</h3>
+          <h3 className="text-sm font-semibold text-white">{t('transactions.consolidated.sectionTitle', 'Exchange & Asset Performance Breakdown')}</h3>
           <p className="text-xs text-[#8E9299] mt-0.5">
-            Grouped by exchange, calculating realized returns, trade distribution, funding fee contributions, and trading costs.
+            {t('transactions.report.description', 'Grouped by exchange, calculating realized returns, trade distribution, funding fee contributions, and trading costs.')}
           </p>
         </div>
         <div className="flex items-center gap-2 self-end sm:self-auto text-xs shrink-0">
@@ -380,7 +382,7 @@ export function ConsolidatedNetChangeReport({
                                 )}
                               </div>
                               <span className="text-[#8E9299] text-xs">
-                                {report.days} active {report.days === 1 ? 'day' : 'days'}
+                                {t('transactions.report.activeDays', { count: report.days, defaultValue: `${report.days} active ${report.days === 1 ? 'day' : 'days'}` })}
                               </span>
                             </div>
                           </div>
@@ -409,50 +411,50 @@ export function ConsolidatedNetChangeReport({
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2b30]">
                                   <h4 className="text-xs font-semibold text-white uppercase tracking-wider">
-                                    Primary Result
+                                    {t('transactions.report.primaryResult', 'Primary Result')}
                                   </h4>
-                                  <span className="text-[10px] text-[#8E9299]">Asset Summary</span>
+                                  <span className="text-[10px] text-[#8E9299]">{t('transactions.report.assetSummary', 'Asset Summary')}</span>
                                 </div>
 
                                 <div className="flex flex-col gap-1.5 text-xs font-mono">
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Initial Balance</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.initialBalance', 'Initial Balance')}</span>
                                     <span className="text-gray-300 font-medium">
                                       {isPrivateMode ? '****' : `${Number(report.initialBalance).toFixed(6)} ${report.currency}`}
                                     </span>
                                   </div>
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Total Inflow</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.totalInflow', 'Total Inflow')}</span>
                                     <span className="text-[#00C853] font-medium">
                                       {isPrivateMode ? '****' : `+${Number(report.totalInflow).toFixed(6)} ${report.currency}`}
                                     </span>
                                   </div>
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Total Outflow</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.totalOutflow', 'Total Outflow')}</span>
                                     <span className="text-[#FF4444] font-medium">
                                       {isPrivateMode ? '****' : `-${Number(report.totalOutflow).toFixed(6)} ${report.currency}`}
                                     </span>
                                   </div>
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Final Balance</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.finalBalance', 'Final Balance')}</span>
                                     <span className="text-white font-bold">
                                       {isPrivateMode ? '****' : `${Number(report.finalBalance).toFixed(6)} ${report.currency}`}
                                     </span>
                                   </div>
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Percentage Gain</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.percentageGain', 'Percentage Gain')}</span>
                                     <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                                       {isPositive ? '+' : ''}{report.ganhoPercentual.toFixed(2)}%
                                     </span>
                                   </div>
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Absolute Gain</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.absoluteGain', 'Absolute Gain')}</span>
                                     <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                                       {isPrivateMode ? '****' : `${isPositive ? '+' : ''}${Number(report.ganhoAbsoluto).toFixed(6)} ${report.currency}`}
                                     </span>
                                   </div>
                                   <div className="flex justify-between py-1.5">
-                                    <span className="text-[#8E9299]">Absolute Gain (USD)</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.absoluteGainUsd', 'Absolute Gain (USD)')}</span>
                                     <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                                       {isPrivateMode ? '****' : `${isPositive ? '+$' : '-$'}${Math.abs(Number(report.ganhoAbsolutoUSD)).toFixed(2)}`}
                                     </span>
@@ -464,27 +466,27 @@ export function ConsolidatedNetChangeReport({
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between pb-1.5 border-b border-[#2a2b30]">
                                   <h4 className="text-xs font-semibold text-white uppercase tracking-wider">
-                                    Operational Metrics
+                                    {t('transactions.report.operationalMetrics', 'Operational Metrics')}
                                   </h4>
-                                  <span className="text-[10px] text-[#8E9299]">Activity Stats</span>
+                                  <span className="text-[10px] text-[#8E9299]">{t('transactions.report.operationalStats', 'Activity Stats')}</span>
                                 </div>
 
                                 <div className="flex flex-col gap-1.5 text-xs font-mono">
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Total Trades Executed</span>
-                                    <span className="text-gray-300 font-medium">{report.totalTrades} trades</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.totalTradesExecuted', 'Total Trades Executed')}</span>
+                                    <span className="text-gray-300 font-medium">{t('transactions.report.tradesCount', { count: report.totalTrades, defaultValue: `${report.totalTrades} trades` })}</span>
                                   </div>
 
                                   {hasTrades && (
                                     <>
                                       <div className="flex justify-between py-1 border-b border-[#2a2b30]/20 pl-2">
-                                        <span className="text-[#8E9299]/80">─ Buys (BUY)</span>
+                                        <span className="text-[#8E9299]/80">{t('transactions.report.buys', '─ Buys (BUY)')}</span>
                                         <span className="text-[#00C853]">
                                           {report.buysCount} ({report.buysPct.toFixed(1)}%)
                                         </span>
                                       </div>
                                       <div className="flex justify-between py-1 border-b border-[#2a2b30]/20 pl-2">
-                                        <span className="text-[#8E9299]/80">─ Sells (SELL)</span>
+                                        <span className="text-[#8E9299]/80">{t('transactions.report.sells', '─ Sells (SELL)')}</span>
                                         <span className="text-[#FF4444]">
                                           {report.sellsCount} ({report.sellsPct.toFixed(1)}%)
                                         </span>
@@ -493,33 +495,33 @@ export function ConsolidatedNetChangeReport({
                                   )}
 
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Average Trades / Day</span>
-                                    <span className="text-gray-300 font-medium">{report.tradesPerDay.toFixed(1)} trades/day</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.dailyAverage', 'Average Trades / Day')}</span>
+                                    <span className="text-gray-300 font-medium">{t('transactions.report.tradesPerDay', { count: Number(report.tradesPerDay.toFixed(1)), defaultValue: `${report.tradesPerDay.toFixed(1)} trades/day` })}</span>
                                   </div>
 
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Net Trading Flow</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.netTrades', 'Net Trading Flow')}</span>
                                     <span className={`font-medium ${new Big(report.tradesLiquido).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                                       {isPrivateMode ? '****' : `${new Big(report.tradesLiquido).gte(0) ? '+' : ''}${Number(report.tradesLiquido).toFixed(6)} ${report.currency}`}
                                     </span>
                                   </div>
 
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Total Funding Fee</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.fundingSettled', 'Total Funding Fee')}</span>
                                     <span className={`font-medium ${new Big(report.fundingRate).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                                       {isPrivateMode ? '****' : `${new Big(report.fundingRate).gte(0) ? '+' : ''}${Number(report.fundingRate).toFixed(6)} ${report.currency}`}
                                     </span>
                                   </div>
 
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
-                                    <span className="text-[#8E9299]">Trading Fees Paid</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.feesPaid', 'Trading Fees Paid')}</span>
                                     <span className={`font-medium ${feesBig.gt(0) ? 'text-[#FF4444]' : 'text-gray-300'}`}>
                                       {isPrivateMode ? '****' : `${feesBig.gt(0) ? '-' : ''}${feesBig.abs().toFixed(6)} ${report.currency}`}
                                     </span>
                                   </div>
 
                                   <div className="flex justify-between py-1.5">
-                                    <span className="text-[#8E9299]">Average Daily ROI</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.dailyAvgRoi', 'Average Daily ROI')}</span>
                                     <span className={`font-bold ${report.roiMedioDiario >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                                       {report.roiMedioDiario >= 0 ? '+' : ''}{report.roiMedioDiario.toFixed(3)}%/day
                                     </span>

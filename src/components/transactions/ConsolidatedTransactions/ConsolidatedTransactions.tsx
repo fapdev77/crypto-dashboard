@@ -15,8 +15,10 @@ import { LogManager } from '../../../services/LogManager';
 import { TabLoadingSkeleton } from '../../ui/TabLoadingSkeleton';
 import { UNIVERSAL_BADGE_STYLE, UNIVERSAL_HEX_COLOR_MAP, UniversalTxType } from '../../../utils/transactionTypeMapper';
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../../../utils/transactionTypeMapper';
+import { useTranslation } from 'react-i18next';
 
 export function ConsolidatedTransactions() {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<ConsolidatedTxFilters>(defaultConsolidatedFilters);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [detailsModalType, setDetailsModalType] = useState<DetailsModalType>(null);
@@ -181,7 +183,7 @@ export function ConsolidatedTransactions() {
     );
 
     const config: ExportConfig = {
-      title: 'Consolidated Net Change Summary Report',
+      title: t('transactions.consolidated.reportTitle', 'Consolidated Transactions Report'),
       filename: `Consolidated_Net_Change_${Date.now()}`,
       headers,
       rows,
@@ -207,12 +209,12 @@ export function ConsolidatedTransactions() {
         <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <Layers className="w-5 h-5 text-[#2F6BFF]" />
-            Consolidated Net Change
+            {t('transactions.consolidated.title', 'Consolidated Net Change')}
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
             <StatusAndSyncBadge
               isSyncing={isSyncing}
-              syncMessage={isSyncing ? 'Syncing exchange transactions...' : null}
+              syncMessage={isSyncing ? t('transactions.consolidated.syncingMessage', 'Syncing transactions across all exchanges...') : null}
               syncError={error}
             />
             <span className="text-[11px] text-[#8E9299]">
@@ -228,7 +230,7 @@ export function ConsolidatedTransactions() {
             className="px-3.5 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export Report</span>
+            <span className="hidden sm:inline">{t('transactions.common.export', 'Export Report')}</span>
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
           {exportMenuOpen && (
@@ -271,12 +273,12 @@ export function ConsolidatedTransactions() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#2F6BFF] shrink-0" />
-                <AppTooltip description="Total number of transactions across all selected exchanges. Click for breakdown.">
+                <AppTooltip description={t('transactions.common.totalTransactionsTooltip', 'Total number of transactions across all selected exchanges. Click for breakdown.')}>
                   <span
                     onClick={() => setDetailsModalType('tx')}
                     className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
                   >
-                    Total Transactions
+                    {t('transactions.common.totalTransactions', 'Total Transactions')}
                   </span>
                 </AppTooltip>
               </div>
@@ -343,12 +345,12 @@ export function ConsolidatedTransactions() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-[#00C853] shrink-0" />
-              <AppTooltip description="Sum of contract funding fees across all selected exchanges in USD. Click for details.">
+              <AppTooltip description={t('transactions.common.totalFundingTooltip', 'Sum of contract funding fees across all selected exchanges in USD. Click for details.')}>
                 <span
                   onClick={() => setDetailsModalType('funding')}
                   className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
                 >
-                  Total Funding (USD)
+                  {t('transactions.common.totalFunding', 'Total Funding (USD)')}
                 </span>
               </AppTooltip>
             </div>
@@ -362,13 +364,13 @@ export function ConsolidatedTransactions() {
 
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[10px] text-[#8E9299]">
-                Funding {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'received' : 'paid'}
+                {t('transactions.common.fundingReceived', 'Funding')} {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? t('transactions.common.fundingReceived', 'received') : t('transactions.common.fundingPaid', 'paid')}
               </span>
               {isCalculatingUsd && (
-                <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
+                <AppTooltip description={t('transactions.common.calculatingUsdTooltip', 'Fetching real-time USD prices for non-stable assets...')}>
                   <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    Calculating USD...
+                    {t('transactions.common.calculatingUsd', 'Calculating USD...')}
                   </span>
                 </AppTooltip>
               )}
@@ -379,12 +381,12 @@ export function ConsolidatedTransactions() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="w-4 h-4 text-[#FF4444] shrink-0" />
-              <AppTooltip description="Sum of trading fees across all selected exchanges in USD. Click for details.">
+              <AppTooltip description={t('transactions.common.totalFeesTooltip', 'Sum of trading fees across all selected exchanges in USD. Click for details.')}>
                 <span
                   onClick={() => setDetailsModalType('fees')}
                   className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
                 >
-                  Total Fees (USD)
+                  {t('transactions.common.totalFees', 'Total Fees (USD)')}
                 </span>
               </AppTooltip>
             </div>
@@ -402,12 +404,12 @@ export function ConsolidatedTransactions() {
             </span>
 
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] text-[#8E9299]">Trading fees paid</span>
+              <span className="text-[10px] text-[#8E9299]">{t('transactions.common.feesPaid', 'Trading fees paid')}</span>
               {isCalculatingUsd && (
-                <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
+                <AppTooltip description={t('transactions.common.calculatingUsdTooltip', 'Fetching real-time USD prices for non-stable assets...')}>
                   <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    Calculating USD...
+                    {t('transactions.common.calculatingUsd', 'Calculating USD...')}
                   </span>
                 </AppTooltip>
               )}
@@ -418,12 +420,12 @@ export function ConsolidatedTransactions() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-2">
             <div className="flex items-center gap-2">
               <Wallet className="w-4 h-4 text-[#8E9299] shrink-0" />
-              <AppTooltip description="Combined Net Change in USD across all selected exchanges. Click for details.">
+              <AppTooltip description={t('transactions.common.netChangeTooltip', 'Combined Net Change in USD across all selected exchanges. Click for details.')}>
                 <span
                   onClick={() => setDetailsModalType('netchange')}
                   className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
                 >
-                  Net Change (USD)
+                  {t('transactions.common.netChange', 'Net Change (USD)')}
                 </span>
               </AppTooltip>
             </div>
@@ -437,12 +439,12 @@ export function ConsolidatedTransactions() {
 
             <div className="border-t border-[#2a2b30] pt-2 flex flex-col">
               <div className="flex items-center gap-2">
-                <AppTooltip description="Aggregated final wallet balance across all exchanges. Click for details.">
+                <AppTooltip description={t('transactions.common.walletBalanceTooltip', 'Aggregated final wallet balance across all exchanges. Click for details.')}>
                   <span
                     onClick={() => setDetailsModalType('balance')}
                     className="text-[9px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
                   >
-                    Wallet Balance (USD)
+                    {t('transactions.common.walletBalance', 'Wallet Balance (USD)')}
                   </span>
                 </AppTooltip>
               </div>

@@ -6,6 +6,7 @@ import { OkxTransactionLogEntry } from '../../../types';
 import { OkxTransactionNetChangeReport } from './OkxTransactionNetChangeReport';
 import { OKX_TX_TYPES, okxTypeColorMap } from './OkxTransactionFilters';
 import { getOkxUniversalType, UNIVERSAL_BADGE_STYLE } from '../../../utils/transactionTypeMapper';
+import { useTranslation } from 'react-i18next';
 
 export type OkxDetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -28,6 +29,7 @@ export function OkxTransactionDetailsModal({
   maskVal,
   isPrivateMode,
 }: OkxTransactionDetailsModalProps) {
+  const { t } = useTranslation();
   if (!detailsModalType) return null;
 
   return (
@@ -35,11 +37,11 @@ export function OkxTransactionDetailsModal({
       <div className={`bg-[#161b22] border border-[#2a2b30] rounded-xl w-full shadow-2xl flex flex-col max-h-[85vh] transition-all duration-200 ${detailsModalType === 'netchange' ? 'max-w-4xl' : 'max-w-md'}`}>
         <div className="flex items-center justify-between p-4 border-b border-[#2a2b30]">
           <h3 className="text-white font-medium">
-            {detailsModalType === 'funding' && 'Funding Breakdown'}
-            {detailsModalType === 'fees' && 'Fees Breakdown'}
-            {detailsModalType === 'balance' && 'Wallet Balance Breakdown'}
-            {detailsModalType === 'netchange' && 'Net Change Report (USD)'}
-            {detailsModalType === 'tx' && 'Total Transactions Breakdown'}
+            {detailsModalType === 'funding' && t('transactions.details.fundingBreakdown', 'Funding Breakdown')}
+            {detailsModalType === 'fees' && t('transactions.details.feesBreakdown', 'Fees Breakdown')}
+            {detailsModalType === 'balance' && t('transactions.details.balanceBreakdown', 'Wallet Balance Breakdown')}
+            {detailsModalType === 'netchange' && t('transactions.details.netChangeReport', 'Net Change Report (USD)')}
+            {detailsModalType === 'tx' && t('transactions.details.txBreakdown', 'Total Transactions Breakdown')}
           </h3>
           <button 
             onClick={() => setDetailsModalType(null)}
@@ -159,7 +161,7 @@ export function OkxTransactionDetailsModal({
 
         <div className="p-4 border-t border-[#2a2b30] flex items-center justify-between">
           <span className="text-[#8E9299] text-sm uppercase tracking-wider">
-            {detailsModalType === 'tx' ? 'Total Transactions' : 'Total (USD Eq.)'}
+            {detailsModalType === 'tx' ? t('transactions.common.totalTransactions', 'Total Transactions') : t('transactions.details.totalUsdEq', 'Total (USD Eq.)')}
           </span>
           <span className="text-white font-bold font-mono text-lg">
             {(() => {

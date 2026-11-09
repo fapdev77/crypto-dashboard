@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TxFilters } from '../../../hooks/useBybitTransactions';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { FilterBar } from '../../ui/FilterBar';
@@ -81,7 +82,22 @@ interface Props {
 }
 
 export function BybitTransactionFilters({ filters, setFilters, availableCurrencies }: Props) {
+  const { t } = useTranslation();
   const { keys } = useApiKeysStore();
+
+  const localizedCategories = useMemo(() => [
+    { value: 'All', label: t('transactions.filters.allCategories', 'All Categories'), tooltip: 'Show all categories.' },
+    { value: 'spot', label: t('transactions.categories.spot', 'Spot'), tooltip: 'Mercado a vista Spot.' },
+    { value: 'linear', label: t('transactions.categories.linear', 'Linear'), tooltip: 'USDT perpetual, USDT Futures and USDC contract, including USDC perp, USDC futures.' },
+    { value: 'inverse', label: t('transactions.categories.inverse', 'Inverse'), tooltip: 'Inverse contracts including Inverse perpetual and Inverse futures.' },
+    { value: 'option', label: t('transactions.categories.option', 'Options'), tooltip: 'Options contracts.' }
+  ], [t]);
+
+  const localizedTxTypes = useMemo(() => UNIVERSAL_TX_FILTER_OPTIONS.map(opt => ({
+    value: opt.value,
+    label: t(`transactions.types.${opt.value}`, opt.label),
+    tooltip: opt.description
+  })), [t]);
   const bybitKeys = keys.filter(k => k.exchange === 'bybit' && k.isActive);
 
   return (
@@ -89,35 +105,35 @@ export function BybitTransactionFilters({ filters, setFilters, availableCurrenci
       search={{
         value: filters.search,
         onChange: (val) => setFilters(p => ({ ...p, search: val })),
-        placeholder: 'Search symbol...',
+        placeholder: t('transactions.filters.searchPlaceholder', 'Search symbol...'),
       }}
       // Category filter uses the `instrument` prop (accepts options: string[])
       instrument={{
         value: filters.category,
         onChange: (val) => setFilters(p => ({ ...p, category: val })),
-        options: CATEGORIES,
-        labelAll: 'All Categories',
+        options: localizedCategories,
+        labelAll: t('transactions.filters.allCategories', 'All Categories'),
       }}
       // Type filter
       type={{
         value: filters.type,
         onChange: (val) => setFilters(p => ({ ...p, type: val })),
-        options: TX_TYPES,
-        labelAll: 'All Types',
+        options: localizedTxTypes,
+        labelAll: t('transactions.filters.allTypes', 'All Types'),
       }}
       // Currency filter uses the `side` prop (accepts options: {value, label}[])
       side={{
         value: filters.currency,
         onChange: (val) => setFilters(p => ({ ...p, currency: val })),
         options: availableCurrencies,
-        labelAll: 'All Currencies',
+        labelAll: t('transactions.filters.allCurrencies', 'All Currencies'),
       }}
       // Account filter
       account={{
         value: filters.accountId,
         onChange: (val) => setFilters(p => ({ ...p, accountId: val })),
         options: bybitKeys.map(k => ({ id: k.id, label: k.label || k.exchange, exchange: 'bybit' })),
-        labelAll: 'All Accounts',
+        labelAll: t('transactions.filters.allAccounts', 'All Accounts'),
       }}
       // Period filter
       period={{

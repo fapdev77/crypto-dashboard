@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { OkxTxFilters } from '../../../hooks/useOkxTransactions';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { FilterBar } from '../../ui/FilterBar';
@@ -73,7 +74,24 @@ interface Props {
 }
 
 export function OkxTransactionFilters({ filters, setFilters, availableCurrencies }: Props) {
+  const { t } = useTranslation();
   const { keys } = useApiKeysStore();
+
+  const localizedCategories = useMemo(() => [
+    { value: 'All', label: t('transactions.filters.allCategories', 'All Categories'), tooltip: 'Show all categories.' },
+    { value: 'spot', label: t('transactions.categories.spot', 'Spot'), tooltip: 'Spot market trades and bills.' },
+    { value: 'swap', label: t('transactions.categories.swap', 'Perpetual Swap'), tooltip: 'Perpetual swap contracts.' },
+    { value: 'futures', label: t('transactions.categories.futures', 'Futures'), tooltip: 'Expiring futures contracts.' },
+    { value: 'option', label: t('transactions.categories.option', 'Options'), tooltip: 'Options contracts.' },
+    { value: 'margin', label: t('transactions.categories.margin', 'Margin'), tooltip: 'Margin trading activities.' },
+    { value: 'other', label: t('transactions.categories.others', 'Other'), tooltip: 'Other account bills.' }
+  ], [t]);
+
+  const localizedTxTypes = useMemo(() => OKX_TX_TYPES.map(opt => ({
+    value: opt.value,
+    label: t(`transactions.types.${opt.value}`, opt.label),
+    tooltip: opt.tooltip
+  })), [t]);
   const okxKeys = keys.filter(k => k.exchange === 'okx' && k.isActive);
 
   return (
@@ -81,31 +99,31 @@ export function OkxTransactionFilters({ filters, setFilters, availableCurrencies
       search={{
         value: filters.search,
         onChange: (v) => setFilters(prev => ({ ...prev, search: v })),
-        placeholder: 'Search symbol (e.g. BTC, ETH)...'
+        placeholder: t('transactions.filters.searchPlaceholder', 'Search symbol (e.g. BTC, ETH)...')
       }}
       instrument={{
         value: filters.category,
         onChange: (v) => setFilters(prev => ({ ...prev, category: v })),
-        options: CATEGORIES,
-        labelAll: 'All Categories',
+        options: localizedCategories,
+        labelAll: t('transactions.filters.allCategories', 'All Categories'),
       }}
       type={{
         value: filters.type,
         onChange: (v) => setFilters(prev => ({ ...prev, type: v })),
-        options: OKX_TX_TYPES,
-        labelAll: 'All Types',
+        options: localizedTxTypes,
+        labelAll: t('transactions.filters.allTypes', 'All Types'),
       }}
       side={{
         value: filters.currency,
         onChange: (v) => setFilters(prev => ({ ...prev, currency: v })),
         options: availableCurrencies,
-        labelAll: 'All Currencies',
+        labelAll: t('transactions.filters.allCurrencies', 'All Currencies'),
       }}
       account={{
         value: filters.accountId,
         onChange: (v) => setFilters(prev => ({ ...prev, accountId: v })),
         options: okxKeys.map(k => ({ id: k.id, label: k.label || k.exchange, exchange: 'okx' })),
-        labelAll: 'All OKX Accounts',
+        labelAll: t('transactions.filters.allAccounts', 'All OKX Accounts'),
       }}
       period={{
         value: String(filters.timePeriod),

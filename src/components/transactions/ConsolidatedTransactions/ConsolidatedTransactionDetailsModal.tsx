@@ -5,6 +5,7 @@ import { ConsolidatedStats } from '../../../hooks/useConsolidatedTransactions';
 import { UNIVERSAL_BADGE_STYLE, UniversalTxType } from '../../../utils/transactionTypeMapper';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { CoinIcon } from '../../ui/CoinIcon';
+import { useTranslation } from 'react-i18next';
 
 export type DetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -25,6 +26,7 @@ export function ConsolidatedTransactionDetailsModal({
   maskVal,
   isPrivateMode,
 }: ConsolidatedTransactionDetailsModalProps) {
+  const { t } = useTranslation();
   if (!detailsModalType) return null;
 
   const exchanges: Array<{ id: 'bybit' | 'bitget' | 'okx'; name: string }> = [

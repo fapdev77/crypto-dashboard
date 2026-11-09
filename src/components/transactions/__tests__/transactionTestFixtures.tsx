@@ -2,6 +2,7 @@ import React, { ReactElement } from 'react';
 import { render, RenderResult } from '@testing-library/react';
 import { PrivacyProvider } from '../../../context/PrivacyContext';
 import { TooltipProvider } from '../../ui/Tooltip';
+import '../../../i18n/config';
 
 /**
  * Fixtures shared by the transaction component render tests. The three exchange groups expose

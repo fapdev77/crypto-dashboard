@@ -11,6 +11,7 @@ import { ChevronDown, ChevronUp, Hash, FileText, Percent, Gift } from 'lucide-re
 import { BITGET_TX_TYPES, bitgetTypeColorMap } from './BitgetTransactionFilters';
 import { formatDateTime } from '../../../utils/formatters';
 import { getUniversalBadge, formatBitgetType } from '../../../utils/transactionTypeMapper';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   entry: BitgetTransactionLogEntry;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
+  const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
   const usdPrice = useTokenUsdPrice(entry.currency);
   const { keys } = useApiKeysStore();
@@ -107,7 +109,7 @@ export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
       <div className="p-4 grid grid-cols-2 lg:grid-cols-8 gap-4 items-start">
         {/* Col 1: Time */}
         <div className="flex flex-col gap-1 col-span-2 lg:col-span-1">
-          <AppTooltip description="Transaction timestamp (UTC)">
+          <AppTooltip description={t('transactions.table.timeTooltip', 'Transaction timestamp (UTC)')}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
               Time
             </span>
@@ -152,7 +154,7 @@ export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
         {/* Col 4: Direction (side) + Quantity (qty) */}
         <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
-          <AppTooltip description={`Trade direction and quantity ${isInverse ? '(in USD)' : `(in ${entry.currency || 'coin'})`}`}>
+          <AppTooltip description={t('transactions.table.sideQtyTooltip', { unit: isInverse ? 'USD' : (entry.currency || 'coin'), defaultValue: `Trade direction and quantity ${isInverse ? '(in USD)' : `(in ${entry.currency || 'coin'})`}` })}>
             <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
               Side & Qty
             </span>
@@ -250,7 +252,7 @@ export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1">
                 <Hash className="w-3 h-3 text-[#8E9299]" />
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Trade ID</span>
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">{t('transactions.details.tradeId', 'Trade ID')}</span>
               </div>
               <span className="text-white font-mono text-xs truncate max-w-[180px]" title={entry.tradeId}>
                 {entry.tradeId || '--'}
@@ -260,7 +262,7 @@ export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1">
                 <FileText className="w-3 h-3 text-[#8E9299]" />
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Order ID</span>
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">{t('transactions.details.orderId', 'Order ID')}</span>
               </div>
               <span className="text-white font-mono text-xs truncate max-w-[180px]" title={entry.orderId}>
                 {entry.orderId || '--'}
@@ -301,13 +303,13 @@ export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Account</span>
+              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">{t('transactions.details.account', 'Account')}</span>
               <span className="text-white font-mono text-xs">{connectionLabel}</span>
             </div>
 
             <div className="flex flex-col gap-1">
               <AppTooltip description="Transaction sub-type or group category">
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">Sub Type</span>
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">{t('transactions.details.subType', 'Sub Type')}</span>
               </AppTooltip>
               <span className="text-white font-mono text-xs">{entry.transSubType || entry.groupType || '--'}</span>
             </div>
