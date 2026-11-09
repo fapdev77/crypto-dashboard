@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
   Database,
@@ -40,6 +41,7 @@ import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 
 export function IndexedDBCacheCard() {
+  const { t } = useTranslation();
   const keys = useApiKeysStore((state) => state.keys);
   const {
     historyCacheInterval,
@@ -313,10 +315,10 @@ export function IndexedDBCacheCard() {
           </div>
           <div>
             <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              IndexedDB Storage & Cache
+              {t('settings.indexedDB.title', 'IndexedDB Storage Engine')}
             </h3>
             <p className="text-[#8E9299] text-xs">
-              Consolidated local database manager for Positions, Orders, Transactions, Funding & Metadata
+              {t('settings.indexedDB.desc', 'Consolidated local database manager for Positions, Orders, Transactions, Funding & Metadata')}
             </p>
           </div>
         </div>
@@ -361,10 +363,10 @@ export function IndexedDBCacheCard() {
               }`}
             />
             {indexedDBStatus === 'healthy'
-              ? 'Operational'
+              ? t('common.operational', 'Operational')
               : indexedDBStatus === 'recovering'
-              ? 'Recovering...'
-              : 'Error / Conflict'}
+              ? t('common.recovering', 'Recovering...')
+              : t('common.errorConflict', 'Error / Conflict')}
           </span>
 
           {/* Total records count */}
@@ -397,7 +399,7 @@ export function IndexedDBCacheCard() {
             className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-50 text-white rounded-md text-xs font-semibold shrink-0 transition-colors flex items-center gap-1.5 shadow-sm shadow-red-900/30 cursor-pointer"
           >
             {isRecovering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-            <span>{isRecovering ? 'Resetting...' : 'Clear Cache & Rebuild'}</span>
+            <span>{isRecovering ? t('common.resetting', 'Resetting...') : t('settings.indexedDB.clearRebuild', 'Clear Cache & Rebuild')}</span>
           </button>
         </div>
       )}

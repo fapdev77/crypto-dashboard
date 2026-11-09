@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Check, AlertCircle, Loader2, Sparkles, Server, Key, Sliders, ShieldCheck, RefreshCw, AlertTriangle, Cloud, Save, BookmarkCheck } from 'lucide-react';
 import { AiModelConfig, AiProviderType } from '../../types/aiTypes';
 import { aiConnectionTester, ConnectionTestResult, DiscoveredModel } from '../../services/ai/aiConnectionTester';
@@ -27,6 +28,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
   onSave,
   modelToEdit,
 }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [provider, setProvider] = useState<AiProviderType>('gemini');
   const [modelId, setModelId] = useState('gemini-3.8-flash');
@@ -317,7 +319,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-white tracking-tight">
-                {modelToEdit ? 'Edit AI Model' : 'Configure New AI Model'}
+                {modelToEdit ? t('ai.settings.modal.editTitle', 'Edit AI Model') : t('ai.settings.modal.addTitle', 'Configure New AI Model')}
               </h2>
               <p className="text-xs text-[#8E9299]">
                 Configure provider endpoint, credentials, api key and inference metrics
@@ -915,7 +917,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
               className="px-3.5 py-2 bg-[#151619] hover:bg-[#1e1f24] text-white border border-[#2a2b30] rounded-lg text-xs font-medium transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               {isTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-[#2F6BFF]" />}
-              {isTesting ? 'Testing...' : 'Test Connection'}
+              {isTesting ? t('common.testing', 'Testing...') : t('ai.settings.models.testBtn', 'Test Connection')}
             </button>
 
             <div className="flex items-center gap-2">
@@ -925,7 +927,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                 disabled={isValidatingSave}
                 className="px-4 py-2 text-xs font-medium text-[#8E9299] hover:text-white rounded-lg transition cursor-pointer"
               >
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </button>
               <button
                 type="submit"
@@ -941,7 +943,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                 ) : (
                   <Check className="w-3.5 h-3.5" />
                 )}
-                {isValidatingSave ? 'Validating Ping...' : saveValidationWarning ? 'Proceed Anyway & Save' : 'Save Model'}
+                {isValidatingSave ? t('common.validating', 'Validating Ping...') : saveValidationWarning ? t('ai.settings.modal.proceedAnyway', 'Proceed Anyway & Save') : t('ai.settings.modal.saveBtn', 'Save Model')}
               </button>
             </div>
           </div>

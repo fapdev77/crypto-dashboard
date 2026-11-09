@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Play,
@@ -47,6 +48,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
   onCloneModel,
   onReorderModel,
 }) => {
+  const { t } = useTranslation();
   const [testingModelId, setTestingModelId] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, ConnectionTestResult>>({});
 
@@ -114,17 +116,17 @@ export const AiModelList: React.FC<AiModelListProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-bold tracking-wider uppercase text-white font-mono flex items-center gap-2">
-              PROVIDERS & CONTINGENCY MODELS LIST
+              {t('ai.settings.models.title', 'PROVIDERS & CONTINGENCY MODELS LIST')}
             </h3>
             <p className="text-xs text-[#8E9299]">
-              Manage primary models, automatic contingencies, and execution parameters
+              {t('ai.settings.models.subtitle', 'Manage primary models, automatic contingencies, and execution parameters')}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           <span className="text-xs font-mono text-[#8E9299]">
-            Total Models: <strong className="text-white font-bold">{models.length}</strong>
+            {t('ai.settings.models.totalModels', 'Total Models:')} <strong className="text-white font-bold">{models.length}</strong>
           </span>
 
           <AppTooltip description="Configure a new local (Ollama) or cloud AI model" side="left">
@@ -133,7 +135,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2F6BFF] hover:bg-[#2F6BFF]/80 text-white rounded-lg text-xs font-semibold shadow-md transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Model
+              {t('ai.settings.models.addBtn', 'Add Model')}
             </button>
           </AppTooltip>
         </div>
@@ -143,7 +145,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
       <div className="p-4 space-y-3 bg-[#0b0c10]">
         {models.length === 0 ? (
           <div className="py-12 text-center text-[#8E9299] text-xs">
-            No models configured. Click "Add Model" to configure.
+            {t('ai.settings.models.noModels', 'No models configured. Click "Add Model" to configure.')}
           </div>
         ) : (
           models.map((model, index) => {
@@ -155,9 +157,8 @@ export const AiModelList: React.FC<AiModelListProps> = ({
             return (
               <div
                 key={model.id}
-                className={`bg-[#151619] border rounded-xl p-4 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
-                  model.isActive ? 'border-[#2a2b30] hover:border-[#383b42]' : 'border-[#2a2b30]/60 opacity-60'
-                }`}
+                className={`bg-[#151619] border rounded-xl p-4 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${model.isActive ? 'border-[#2a2b30] hover:border-[#383b42]' : 'border-[#2a2b30]/60 opacity-60'
+                  }`}
               >
                 {/* Left Side: Rank Order & Details */}
                 <div className="flex items-start gap-4 flex-1 min-w-0">
@@ -200,13 +201,13 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                       {model.isFallback && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/40">
                           <ShieldAlert className="w-3 h-3 text-amber-400" />
-                          FALLBACK CONTINGENCY
+                          {t('ai.settings.models.fallbackBadge', 'FALLBACK CONTINGENCY')}
                         </span>
                       )}
 
                       {model.isPrimary && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                          PRIMARY
+                          {t('ai.settings.models.primaryBadge', 'PRIMARY')}
                         </span>
                       )}
 
@@ -224,11 +225,11 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                       )}
 
                       {model.supportsTools === false ||
-                      (model.supportsTools === undefined &&
-                        (model.modelId.toLowerCase().includes('deepseek-r1') ||
-                         model.modelId.toLowerCase().includes('deepseek_r1') ||
-                         model.modelId.toLowerCase().includes('qwen2.5-coder') ||
-                         model.modelId.toLowerCase().includes('deepseek-coder'))) ? (
+                        (model.supportsTools === undefined &&
+                          (model.modelId.toLowerCase().includes('deepseek-r1') ||
+                            model.modelId.toLowerCase().includes('deepseek_r1') ||
+                            model.modelId.toLowerCase().includes('qwen2.5-coder') ||
+                            model.modelId.toLowerCase().includes('deepseek-coder'))) ? (
                         <span
                           className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-300 border border-amber-500/40"
                           title="Models without tool support will have live portfolio queries blocked to prevent hallucinations."
@@ -275,7 +276,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                         <Gauge className="w-3.5 h-3.5 text-emerald-500" />
                         <span>Limits:</span>
                         <span className="text-emerald-400 font-semibold">
-                          {model.maxRpm > 0 ? `${model.maxRpm} RPM` : 'Unlimited'}
+                          {model.maxRpm > 0 ? `${model.maxRpm} RPM` : t('common.unlimited', 'Unlimited')}
                         </span>
                       </div>
                     </div>
@@ -311,11 +312,10 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   >
                     <button
                       onClick={() => onToggleActive(model.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                        model.isActive
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20'
-                      }`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${model.isActive
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20'
+                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20'
+                        }`}
                     >
                       {model.isActive ? (
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -337,11 +337,10 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   >
                     <button
                       onClick={() => onToggleFallback(model.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                        model.isFallback
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/40 hover:bg-amber-500/20'
-                          : 'bg-[#1e1f24] text-[#8E9299] hover:text-white border border-[#2a2b30] hover:border-[#383b42]'
-                      }`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${model.isFallback
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/40 hover:bg-amber-500/20'
+                        : 'bg-[#1e1f24] text-[#8E9299] hover:text-white border border-[#2a2b30] hover:border-[#383b42]'
+                        }`}
                     >
                       <Shield className={`w-3.5 h-3.5 ${model.isFallback ? 'text-amber-400' : 'text-[#8E9299]'}`} />
                       <span>Fallback</span>

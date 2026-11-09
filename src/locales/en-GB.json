@@ -133,15 +133,57 @@
     "languageDesc": "Configure your display language and preferred currency for portfolio calculations.",
     "languageLabel": "Language",
     "currencyLabel": "Display Currency",
-    "ratesUpdated": "Exchange rates last refreshed: {{time}}",
+    "ratesUpdated": "Rates updated {{time}}",
     "ttlLabel": "Exchange Rates Cache TTL",
-    "ttlMinutes": "{{minutes}} minutes",
-    "sourceTitle": "Exchange Rates Source Status",
-    "sourceLive": "Connected via {{source}} (Live)",
-    "sourceCached": "Using local browser cache ({{source}})",
-    "sourceFallback": "Safety Mode Active (Static default rates)",
-    "fallbackExplanation": "If external rate providers (api.frankfurter.dev and api.coingecko.com) become unreachable, the terminal uses your most recent cached rates. In complete offline situations, fixed safety rates ensure the portfolio display remains uninterrupted.",
-    "refreshNow": "Refresh Rates Now"
+    "ttlMinutes": "{{minutes}} min",
+    "sourceTitle": "FX Rates Provider",
+    "sourceLive": "Frankfurter API (Live)",
+    "sourceCached": "Cached Exchange Rates",
+    "sourceFallback": "CoinGecko Fallback Rates",
+    "fallbackExplanation": "Fallback rates were activated due to a transient rate-limit or network failure.",
+    "refreshNow": "Refresh Now",
+    "subtitle": "Manage application preferences, cache and data",
+    "simulationMode": {
+      "title": "Simulation Mode (Mock Data)",
+      "desc": "Simulate exchange balances, positions and transactions without API keys.",
+      "activeBadge": "Simulation Active",
+      "warning": "Live trades and synchronisation are paused while simulation mode is active."
+    },
+    "polling": {
+      "title": "Polling & Background Intervals",
+      "desc": "Adjust refresh frequencies for balances, positions and historical logs.",
+      "dashboardLabel": "Dashboard Auto-Refresh",
+      "fundingIntervalLabel": "Funding Sync Frequency",
+      "symbolCatalogLabel": "Symbol Catalog Sync"
+    },
+    "catalog": {
+      "title": "Exchange Symbol Registry",
+      "desc": "Multi-exchange catalogue of active tickers, contract multipliers and instrument types.",
+      "refreshBtn": "Refresh Catalog",
+      "clearBtn": "Clear & Re-sync",
+      "lastUpdated": "Last updated: {{time}}",
+      "staleWarning": "Stale catalogues detected for: {{exchanges}}"
+    },
+    "cache": {
+      "title": "Cache & Database Management",
+      "clearFundingBtn": "Clear Funding Cache",
+      "clearFundingSuccess": "Funding cache cleared. Background sync will restart.",
+      "factoryResetBtn": "Factory Reset & Wipe All",
+      "factoryResetConfirmTitle": "Factory Reset Confirmation",
+      "factoryResetConfirmDesc": "This will permanently wipe all local cache, IndexedDB records, and application settings."
+    },
+    "security": {
+      "title": "Security & Credential Vault",
+      "desc": "Encrypted local key backup, export/import and automated vault locking."
+    },
+    "indexedDB": {
+      "title": "IndexedDB Storage Engine",
+      "desc": "Persistent offline cache for orders, trades, funding and positions."
+    },
+    "version": {
+      "title": "Version & Changelog",
+      "desc": "System release details, changelog history and repository links."
+    }
   },
   "dashboardExtra": {
     "simulationBanner": "Simulation Mode Active - Displaying Mock Data",
@@ -952,6 +994,121 @@
         "bestOpportunity": "Best Yield Opportunity",
         "selectSymbols": "Select symbols...",
         "noSymbolsFound": "No symbols found."
+      }
+    }
+  },
+  "apiKeys": {
+    "title": "API Connections and status:",
+    "subtitle": "Manage your read-only API credentials and security vault.",
+    "newKeyBtn": "New API Key",
+    "importExportBtn": "API Key Import/Export",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All",
+    "activeKeys": "Active Keys",
+    "noKeys": "No keys configured for this exchange",
+    "status": {
+      "connected": "Connected",
+      "connecting": "Connecting...",
+      "error": "Error",
+      "disabled": "Disabled"
+    },
+    "card": {
+      "accountType": "Account Type",
+      "environment": "Environment",
+      "region": "Region",
+      "subAccount": "Sub-Account",
+      "includeFunding": "Funding Balance Included",
+      "testConnection": "Test Connection",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "modal": {
+      "createTitle": "Connect New Exchange API Key",
+      "editTitle": "Edit API Key Credentials",
+      "exchangeLabel": "Exchange",
+      "accountTypeLabel": "Account Type",
+      "environmentLabel": "Environment",
+      "regionLabel": "Bybit Region",
+      "labelPlaceholder": "Account label (e.g. Main Trading)",
+      "apiKeyLabel": "API Key",
+      "apiSecretLabel": "API Secret",
+      "passphraseLabel": "Passphrase",
+      "masterPassphraseLabel": "Vault Master Passphrase",
+      "includeFundingLabel": "Include Funding / Asset Balance",
+      "subAccountLabel": "Mark as Sub-Account",
+      "saveBtn": "Save API Key",
+      "cancelBtn": "Cancel",
+      "deleteConfirmTitle": "Delete API Key?",
+      "deleteConfirmMsg": "Are you sure you want to remove this API key? Active tracking for this exchange will be disconnected."
+    },
+    "vault": {
+      "setupTitle": "Set Up Security Vault",
+      "setupSubtitle": "Enter a master passphrase to encrypt your credentials locally in the browser with zero-trust AES-256.",
+      "passphrasePlaceholder": "Enter master passphrase (min. 8 characters)",
+      "confirmPlaceholder": "Confirm master passphrase",
+      "activateBtn": "Activate Security Vault",
+      "passphraseMismatch": "Passphrases do not match. Please verify both fields.",
+      "passphraseTooShort": "Master Passphrase must be at least 8 characters long."
+    }
+  },
+  "ai": {
+    "settings": {
+      "title": "AI Assistant & Intelligence Settings",
+      "subtitle": "Manage LLM providers, model failover priorities, telemetry quotas and audit logging.",
+      "enableToggle": "Enable AI Assistant",
+      "resetDefaults": "Reset to Defaults",
+      "openChat": "Open AI Chat",
+      "models": {
+        "title": "Configured AI Models",
+        "subtitle": "Drag or use arrows to prioritise model sequence for execution and automatic failover.",
+        "addBtn": "Add Model",
+        "primaryBadge": "Primary",
+        "fallbackBadge": "Fallback",
+        "testBtn": "Test Connection",
+        "cloneBtn": "Clone",
+        "editBtn": "Edit",
+        "deleteBtn": "Delete",
+        "noModels": "No AI models registered. Add a model to start."
+      },
+      "modal": {
+        "addTitle": "Add AI Model",
+        "editTitle": "Edit AI Model",
+        "provider": "Provider",
+        "modelId": "Model ID",
+        "name": "Display Name",
+        "apiKey": "API Key",
+        "baseUrl": "Base URL (Optional)",
+        "temperature": "Temperature",
+        "maxTokens": "Max Output Tokens",
+        "systemPrompt": "Custom System Instructions",
+        "isPrimary": "Set as Primary Model",
+        "isFallback": "Enable as Contingency / Fallback",
+        "isActive": "Active",
+        "saveBtn": "Save Model",
+        "cancelBtn": "Cancel"
+      },
+      "telemetry": {
+        "title": "AI Engine Telemetry & Consumption",
+        "totalCalls": "Total Invocations",
+        "totalTokens": "Total Tokens Used",
+        "avgLatency": "Average Latency",
+        "lastActivity": "Last Activity",
+        "promptTokens": "Prompt Tokens",
+        "completionTokens": "Completion Tokens",
+        "estimatedCost": "Estimated Cost"
+      },
+      "audit": {
+        "title": "AI Audit & Execution Log",
+        "subtitle": "Immutable historical trace of all model queries, tool calls and response statuses.",
+        "timestamp": "Timestamp",
+        "action": "Action / Query",
+        "model": "Model",
+        "tokens": "Tokens",
+        "status": "Status",
+        "latency": "Latency",
+        "detailsBtn": "Inspect Details",
+        "clearBtn": "Clear Audit History",
+        "noLogs": "No AI activity logged yet."
       }
     }
   }

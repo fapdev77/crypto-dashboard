@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tag, Github, ExternalLink, Calendar, GitCommit, Sparkles, FileText, ChevronDown, ChevronUp, CheckCircle2, RefreshCw, Database, AlertCircle } from 'lucide-react';
 import { usePwaUpdateStore } from '../store/pwaUpdateStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { checkIndexedDBHealth, recoverAndResetIndexedDB, DB_VERSION } from '../services/historyCache';
 
 export function VersionInfoCard() {
+  const { t } = useTranslation();
   const [showFullChangelog, setShowFullChangelog] = useState(false);
   const { needRefresh, isUpdating, triggerUpdate } = usePwaUpdateStore();
   const { indexedDBStatus, indexedDBError, indexedDBVersion } = useSettingsStore();
@@ -54,14 +56,14 @@ export function VersionInfoCard() {
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-base font-semibold text-white flex items-center gap-2">
           <Tag className="w-4 h-4 text-[#2F6BFF]" />
-          Version & Changelog
+          {t('settings.version.title', 'Version & Changelog')}
         </h3>
         <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#2F6BFF]/10 text-[#2F6BFF] border border-[#2F6BFF]/20">
           v{version}
         </span>
       </div>
       <p className="text-[#8E9299] text-xs mb-4">
-        Application metadata, GitHub repository source, and latest release notes
+        {t('settings.version.desc', 'Application metadata, GitHub repository source, and latest release notes')}
       </p>
 
       {/* New Version Ready Banner */}
@@ -72,8 +74,8 @@ export function VersionInfoCard() {
               <Sparkles className="w-3.5 h-3.5 animate-pulse" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-semibold text-white block truncate">New Version Available</span>
-              <span className="text-[10px] text-gray-400 block truncate">Ready to install</span>
+              <span className="text-xs font-semibold text-white block truncate">{t('settings.version.newAvailable', 'New Version Available')}</span>
+              <span className="text-[10px] text-gray-400 block truncate">{t('settings.version.readyInstall', 'Ready to install')}</span>
             </div>
           </div>
           <button
@@ -82,7 +84,7 @@ export function VersionInfoCard() {
             className="px-3 py-1.5 bg-[#2F6BFF] hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 text-white text-xs font-medium rounded-md cursor-pointer transition-colors shrink-0 flex items-center gap-1.5 shadow-sm shadow-blue-500/20"
           >
             <RefreshCw className={`w-3 h-3 ${isUpdating ? 'animate-spin' : ''}`} />
-            <span>{isUpdating ? 'Updating...' : 'Update Now'}</span>
+            <span>{isUpdating ? t('common.updating', 'Updating...') : t('settings.version.updateBtn', 'Update Now')}</span>
           </button>
         </div>
 
@@ -96,7 +98,7 @@ export function VersionInfoCard() {
               <GitCommit className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">Current Version</span>
+              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">{t('settings.version.currentVersion', 'Current Version')}</span>
               <span className="text-xs font-mono font-semibold text-white">v{version}</span>
             </div>
           </div>
@@ -106,7 +108,7 @@ export function VersionInfoCard() {
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">Release Date</span>
+              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">{t('settings.version.releaseDate', 'Release Date')}</span>
               <span className="text-xs font-mono font-semibold text-white">{releaseDate}</span>
             </div>
           </div>
@@ -116,14 +118,14 @@ export function VersionInfoCard() {
               <Github className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">Repository Source</span>
+              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">{t('settings.version.repoSource', 'Repository Source')}</span>
               <a
                 href={githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-[#2F6BFF] hover:text-blue-400 font-medium inline-flex items-center gap-1 group w-fit cursor-pointer"
               >
-                <span>Click here</span>
+                <span>{t('settings.version.clickHere', 'Click here')}</span>
                 <ExternalLink className="w-3 h-3 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
               </a>
             </div>
@@ -141,7 +143,7 @@ export function VersionInfoCard() {
               </div>
               <div>
                 <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">
-                  IndexedDB Cache Database
+                  {t('settings.version.indexedDbLabel', 'IndexedDB Cache Database')}
                 </span>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs font-mono font-semibold text-white">v{indexedDBVersion || DB_VERSION}</span>
@@ -154,7 +156,7 @@ export function VersionInfoCard() {
                     <span className={`w-1.5 h-1.5 rounded-full ${
                       indexedDBStatus === 'healthy' ? 'bg-emerald-400' : 'bg-red-500'
                     }`} />
-                    {indexedDBStatus === 'healthy' ? 'Healthy' : indexedDBStatus === 'recovering' ? 'Recovering...' : 'Error / Conflict'}
+                    {indexedDBStatus === 'healthy' ? t('common.healthy', 'Healthy') : indexedDBStatus === 'recovering' ? t('common.recovering', 'Recovering...') : t('common.errorConflict', 'Error / Conflict')}
                   </span>
                 </div>
               </div>
@@ -168,7 +170,7 @@ export function VersionInfoCard() {
                 title="Clear Cache & Rebuild Database"
               >
                 {isRecoveringDb && <RefreshCw className="w-3 h-3 animate-spin" />}
-                Clear Cache
+                {t('settings.version.clearCache', 'Clear Cache')}
               </button>
             )}
           </div>
@@ -187,7 +189,7 @@ export function VersionInfoCard() {
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-xs font-semibold text-white tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                Latest Release Highlights (v{version})
+                {t('settings.version.highlights', 'Latest Release Highlights (v{{version}})', { version })}
               </h4>
               <span className="text-[10px] text-[#8E9299] font-mono">{releaseDate}</span>
             </div>
@@ -246,12 +248,12 @@ export function VersionInfoCard() {
               {showFullChangelog ? (
                 <>
                   <ChevronUp className="w-3.5 h-3.5" />
-                  Show Less
+                  {t('common.showLess', 'Show Less')}
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-3.5 h-3.5" />
-                  View Previous Releases
+                  {t('settings.version.viewPrevious', 'View Previous Releases')}
                 </>
               )}
             </button>
@@ -263,7 +265,7 @@ export function VersionInfoCard() {
               className="text-xs text-[#2F6BFF] hover:text-blue-400 flex items-center gap-1 font-medium transition-colors"
             >
               <FileText className="w-3.5 h-3.5" />
-              Full CHANGELOG.md
+              {t('settings.version.fullChangelog', 'Full CHANGELOG.md')}
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>

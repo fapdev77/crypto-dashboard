@@ -130,18 +130,60 @@
   "settings": {
     "title": "Configurações",
     "languageAndCurrency": "Idioma e Moeda",
-    "languageDesc": "Configure seu idioma de exibição e moeda de preferência para cálculos do portfólio.",
+    "languageDesc": "Configure seu idioma de exibição e a moeda preferida para os cálculos do portfólio.",
     "languageLabel": "Idioma",
     "currencyLabel": "Moeda de Exibição",
-    "ratesUpdated": "Taxas de câmbio atualizadas em: {{time}}",
-    "ttlLabel": "Intervalo de Atualização Cambial (TTL)",
-    "ttlMinutes": "{{minutes}} minutos",
-    "sourceTitle": "Status da Fonte de Cotações",
-    "sourceLive": "Conectado via {{source}} (Ao vivo)",
-    "sourceCached": "Utilizando dados em cache local ({{source}})",
-    "sourceFallback": "Modo de Segurança Ativo (Taxas padrão estáticas)",
-    "fallbackExplanation": "Se as APIs públicas (api.frankfurter.dev e api.coingecko.com) ficarem indisponíveis, o sistema utiliza o cache mais recente do navegador. Na ausência total de conexão, taxas de segurança fixas são aplicadas automaticamente para evitar interrupções no portfólio.",
-    "refreshNow": "Atualizar Cotações Agora"
+    "ratesUpdated": "Taxas atualizadas {{time}}",
+    "ttlLabel": "TTL do Cache de Cotações",
+    "ttlMinutes": "{{minutes}} min",
+    "sourceTitle": "Provedor de Taxas FX",
+    "sourceLive": "Frankfurter API (Ao Vivo)",
+    "sourceCached": "Taxas em Cache Local",
+    "sourceFallback": "Taxas de Contingência CoinGecko",
+    "fallbackExplanation": "Taxas de contingência foram ativadas devido a limite de requisições ou instabilidade na rede.",
+    "refreshNow": "Atualizar Agora",
+    "subtitle": "Gerenciar preferências do aplicativo, cache e dados",
+    "simulationMode": {
+      "title": "Modo Simulação (Dados Mockados)",
+      "desc": "Simule saldos, posições e transações das exchanges sem utilizar chaves de API reais.",
+      "activeBadge": "Simulação Ativa",
+      "warning": "Operações ao vivo e sincronização real estão pausadas enquanto o modo simulação estiver ativo."
+    },
+    "polling": {
+      "title": "Intervalos de Atualização em Segundo Plano",
+      "desc": "Ajuste a frequência de atualização de saldos, posições e logs históricos.",
+      "dashboardLabel": "Atualização Automática do Dashboard",
+      "fundingIntervalLabel": "Frequência de Sincronização de Funding",
+      "symbolCatalogLabel": "Sincronização do Catálogo de Símbolos"
+    },
+    "catalog": {
+      "title": "Catálogo de Símbolos das Exchanges",
+      "desc": "Registro multi-exchange de ativos negociados, multiplicadores de contratos e tipos de instrumentos.",
+      "refreshBtn": "Atualizar Catálogo",
+      "clearBtn": "Limpar e Ressincronizar",
+      "lastUpdated": "Última atualização: {{time}}",
+      "staleWarning": "Catálogos desatualizados detectados para: {{exchanges}}"
+    },
+    "cache": {
+      "title": "Gerenciamento de Cache e Banco de Dados",
+      "clearFundingBtn": "Limpar Cache de Funding",
+      "clearFundingSuccess": "Cache de funding limpo. A sincronização em segundo plano será reiniciada.",
+      "factoryResetBtn": "Redefinição de Fábrica (Limpar Tudo)",
+      "factoryResetConfirmTitle": "Confirmação de Redefinição Total",
+      "factoryResetConfirmDesc": "Isso apagará permanentemente todo o cache local, registros do IndexedDB e configurações salvas."
+    },
+    "security": {
+      "title": "Segurança e Cofre de Credenciais",
+      "desc": "Backup local criptografado, exportação/importação e bloqueio automático do cofre."
+    },
+    "indexedDB": {
+      "title": "Mecanismo de Armazenamento IndexedDB",
+      "desc": "Cache offline persistente para ordens, trades, funding e posições."
+    },
+    "version": {
+      "title": "Versão e Changelog",
+      "desc": "Detalhes do lançamento do sistema, histórico de versões e links do repositório."
+    }
   },
   "dashboardExtra": {
     "simulationBanner": "Modo Simulação Ativo - Exibindo Dados Simulados",
@@ -952,6 +994,121 @@
         "bestOpportunity": "Melhor Oportunidade de Yield",
         "selectSymbols": "Selecionar símbolos...",
         "noSymbolsFound": "Nenhum símbolo encontrado."
+      }
+    }
+  },
+  "apiKeys": {
+    "title": "Conexões de API e Status:",
+    "subtitle": "Gerencie suas credenciais de API somente leitura e cofre de segurança.",
+    "newKeyBtn": "Nova Chave de API",
+    "importExportBtn": "Importar / Exportar Chaves",
+    "expandAll": "Expandir Tudo",
+    "collapseAll": "Recolher Tudo",
+    "activeKeys": "Chaves Ativas",
+    "noKeys": "Nenhuma chave configurada para esta exchange",
+    "status": {
+      "connected": "Conectado",
+      "connecting": "Conectando...",
+      "error": "Erro",
+      "disabled": "Desativado"
+    },
+    "card": {
+      "accountType": "Tipo de Conta",
+      "environment": "Ambiente",
+      "region": "Região",
+      "subAccount": "Subconta",
+      "includeFunding": "Saldo de Funding Incluso",
+      "testConnection": "Testar Conexão",
+      "edit": "Editar",
+      "delete": "Excluir"
+    },
+    "modal": {
+      "createTitle": "Conectar Nova Chave de API",
+      "editTitle": "Editar Credenciais de API",
+      "exchangeLabel": "Corretora",
+      "accountTypeLabel": "Tipo de Conta",
+      "environmentLabel": "Ambiente",
+      "regionLabel": "Região Bybit",
+      "labelPlaceholder": "Rótulo da conta (ex: Trading Principal)",
+      "apiKeyLabel": "API Key",
+      "apiSecretLabel": "API Secret",
+      "passphraseLabel": "Passphrase",
+      "masterPassphraseLabel": "Senha Mestre do Cofre",
+      "includeFundingLabel": "Incluir Saldo de Funding / Ativos",
+      "subAccountLabel": "Marcar como Subconta",
+      "saveBtn": "Salvar Chave de API",
+      "cancelBtn": "Cancelar",
+      "deleteConfirmTitle": "Excluir Chave de API?",
+      "deleteConfirmMsg": "Tem certeza de que deseja remover esta chave de API? O rastreamento ativo para esta exchange será desconectado."
+    },
+    "vault": {
+      "setupTitle": "Configurar Cofre de Segurança",
+      "setupSubtitle": "Defina uma senha mestre para criptografar suas credenciais localmente no navegador com AES-256.",
+      "passphrasePlaceholder": "Digite a senha mestre (mín. 8 caracteres)",
+      "confirmPlaceholder": "Confirme a senha mestre",
+      "activateBtn": "Ativar Cofre de Segurança",
+      "passphraseMismatch": "As senhas não coincidem. Verifique ambos os campos.",
+      "passphraseTooShort": "A Senha Mestre deve conter pelo menos 8 caracteres."
+    }
+  },
+  "ai": {
+    "settings": {
+      "title": "Assistente IA e Configurações de Inteligência",
+      "subtitle": "Gerencie provedores LLM, contingência automática de modelos, cotas de telemetria e auditoria.",
+      "enableToggle": "Ativar Assistente de IA",
+      "resetDefaults": "Restaurar Padrões",
+      "openChat": "Abrir Chat de IA",
+      "models": {
+        "title": "Modelos de IA Configurados",
+        "subtitle": "Arraste ou use setas para definir a prioridade de execução e contingência automática.",
+        "addBtn": "Adicionar Modelo",
+        "primaryBadge": "Principal",
+        "fallbackBadge": "Contingência",
+        "testBtn": "Testar Conexão",
+        "cloneBtn": "Clonar",
+        "editBtn": "Editar",
+        "deleteBtn": "Excluir",
+        "noModels": "Nenhum modelo de IA registrado. Adicione um modelo para iniciar."
+      },
+      "modal": {
+        "addTitle": "Adicionar Modelo de IA",
+        "editTitle": "Editar Modelo de IA",
+        "provider": "Provedor",
+        "modelId": "ID do Modelo",
+        "name": "Nome de Exibição",
+        "apiKey": "Chave de API",
+        "baseUrl": "Base URL (Opcional)",
+        "temperature": "Temperatura",
+        "maxTokens": "Máximo de Tokens de Saída",
+        "systemPrompt": "Instruções Personalizadas do Sistema",
+        "isPrimary": "Definir como Modelo Principal",
+        "isFallback": "Ativar como Contingência (Fallback)",
+        "isActive": "Ativo",
+        "saveBtn": "Salvar Modelo",
+        "cancelBtn": "Cancelar"
+      },
+      "telemetry": {
+        "title": "Telemetria e Consumo do Motor de IA",
+        "totalCalls": "Total de Invocações",
+        "totalTokens": "Total de Tokens Usados",
+        "avgLatency": "Latência Média",
+        "lastActivity": "Última Atividade",
+        "promptTokens": "Tokens de Prompt",
+        "completionTokens": "Tokens de Conclusão",
+        "estimatedCost": "Custo Estimado"
+      },
+      "audit": {
+        "title": "Registro de Auditoria e Execução de IA",
+        "subtitle": "Rastreio histórico imutável de todas as consultas, ferramentas executadas e status das respostas.",
+        "timestamp": "Timestamp",
+        "action": "Ação / Consulta",
+        "model": "Modelo",
+        "tokens": "Tokens",
+        "status": "Status",
+        "latency": "Latência",
+        "detailsBtn": "Inspecionar Detalhes",
+        "clearBtn": "Limpar Histórico de Auditoria",
+        "noLogs": "Nenhuma atividade de IA registrada até o momento."
       }
     }
   }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Calendar } from 'lucide-react';
 import { DailyTokenUsage } from '../../store/aiTelemetryStore';
 
@@ -7,6 +8,7 @@ interface AiDailyTokenChartProps {
 }
 
 export const AiDailyTokenChart: React.FC<AiDailyTokenChartProps> = ({ dailyUsage }) => {
+  const { t } = useTranslation();
   const days = Object.values(dailyUsage).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
 
   const maxTokens = Math.max(...days.map((d) => d.totalTokens), 100);
@@ -19,17 +21,17 @@ export const AiDailyTokenChart: React.FC<AiDailyTokenChartProps> = ({ dailyUsage
         <div>
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
             <Calendar className="w-4 h-4 text-[#2F6BFF]" />
-            Daily Token Consumption (Last 7 Days)
+            {t('ai.settings.dailyTokens.title', 'Daily Token Consumption (Last 7 Days)')}
           </h3>
           <p className="text-xs text-[#8E9299]">
-            Daily monitoring of prompt and completion token volumes
+            {t('ai.settings.dailyTokens.subtitle', 'Daily monitoring of prompt and completion token volumes')}
           </p>
         </div>
       </div>
 
       {days.length === 0 ? (
         <div className="py-8 text-center text-[#8E9299] text-xs">
-          No daily token consumption recorded yet.
+          {t('ai.settings.dailyTokens.noData', 'No daily token consumption recorded yet.')}
         </div>
       ) : (
         <div className="space-y-3">

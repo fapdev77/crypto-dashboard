@@ -131,8 +131,8 @@ export function Settings() {
           <SettingsIcon className="w-5 h-5 text-[#2F6BFF]" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-white">Settings</h2>
-          <p className="text-xs text-[#8E9299] mt-0.5">Manage application preferences, cache and data</p>
+          <h2 className="text-xl font-semibold text-white">{t('settings.title', 'Settings')}</h2>
+          <p className="text-xs text-[#8E9299] mt-0.5">{t('settings.subtitle', 'Manage application preferences, cache and data')}</p>
         </div>
       </div>
 
@@ -303,19 +303,18 @@ export function Settings() {
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
             <FlaskConical className="w-4 h-4 text-[#00C853]" />
-            Preferences & Testing
+            {t('settings.preferencesTesting', 'Preferences & Testing')}
           </h3>
-          <p className="text-[#8E9299] text-xs mb-5">User preferences and testing tools</p>
+          <p className="text-[#8E9299] text-xs mb-5">{t('settings.preferencesDesc', 'User preferences and testing tools')}</p>
 
           <div className="space-y-5 flex-1 flex flex-col">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <AppTooltip description="Enables testing mode with offline, mock data across all exchanges. API limits won't be hit while this is active. Real balances and positions will be hidden.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Use Mock Data</h4>
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.simulationMode.title', 'Simulation Mode (Mock Data)')}</h4>
                 </AppTooltip>
                 <p className="text-[#8E9299] text-xs mt-1.5 leading-relaxed">
-                  Enable to test the interface with dummy data instead of real API connections.
-                  Real balances and positions will be hidden while active.
+                  {t('settings.simulationMode.desc', 'Simulate exchange balances, positions and transactions without API keys.')}
                 </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
@@ -337,10 +336,10 @@ export function Settings() {
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <AppTooltip description="If enabled, the Welcome Guide modal (containing tutorials and usage tips) will automatically open every time you start the app.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Show Onboarding Guide</h4>
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.showOnboarding', 'Show Onboarding Guide')}</h4>
                 </AppTooltip>
                 <p className="text-[#8E9299] text-xs mt-1.5 leading-relaxed">
-                  Show the welcome and help guide modal automatically when the application is launched.
+                  {t('settings.onboardingDesc', 'Show the welcome and help guide modal automatically when the application is launched.')}
                 </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
@@ -372,20 +371,19 @@ export function Settings() {
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
             <Gauge className="w-4 h-4 text-[#00C853]" />
-            Exchange Specifications
+            {t('settings.exchangeSpecs', 'Exchange Specifications')}
           </h3>
-          <p className="text-[#8E9299] text-xs mb-5">Live data refresh rate configuration</p>
+          <p className="text-[#8E9299] text-xs mb-5">{t('settings.exchangeSpecsDesc', 'Live data refresh rate configuration')}</p>
 
           <div className="flex flex-col flex-1">
             <div className="flex justify-between items-center mb-1">
               <AppTooltip description="Mainly used in Dashboard, Open Positions and Open Orders. Controls how often the application fetches live data like mark prices, open positions, and account balances. Faster updates consume more API limits.">
-                <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Background Refresh Interval</h4>
+                <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.polling.dashboardLabel', 'Background Refresh Interval')}</h4>
               </AppTooltip>
               <span className="text-[#00C853] font-mono text-xs bg-[#00C853]/10 px-2 py-0.5 rounded-md">{pollingInterval}s</span>
             </div>
             <p className="text-[#8E9299] text-xs mt-1 mb-4 leading-relaxed">
-              Periodically polls Mark Price, PnL, and Total Balance across all exchanges (Bybit, Bitget, OKX).
-              Lower values provide faster updates but increase network consumption.
+              {t('settings.polling.dashboardDesc', 'Periodically polls Mark Price, PnL, and Total Balance across all exchanges (Bybit, Bitget, OKX). Lower values provide faster updates but increase network consumption.')}
             </p>
             <input
               type="range"
@@ -407,21 +405,21 @@ export function Settings() {
         <div id="symbol-catalog-settings-card" className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyan-400" />
-            Symbol Catalog Cache
+            {t('settings.catalog.title', 'Symbol Catalog Cache')}
           </h3>
-          <p className="text-[#8E9299] text-xs mb-5">Market Analytics instrument lists (Spot / Perp / Inverse)</p>
+          <p className="text-[#8E9299] text-xs mb-5">{t('settings.catalog.desc', 'Market Analytics instrument lists (Spot / Perp / Inverse)')}</p>
 
           <div className="flex flex-col gap-5 flex-1">
             {/* Refresh Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
                 <AppTooltip description="How often the app re-downloads the full instrument listing (Spot, USDT Perp and Coin-M Inverse) from Bybit, OKX and Bitget. These lists rarely change, so a longer interval saves network and API calls.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Refresh Interval</h4>
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.catalog.refreshInterval', 'Refresh Interval')}</h4>
                 </AppTooltip>
                 <span className="text-cyan-400 font-mono text-xs bg-cyan-400/10 px-2 py-0.5 rounded-md">{symbolCatalogRefreshHours}h</span>
               </div>
               <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Controls the Market Analytics symbol catalog refresh cadence (1 to 24 hours).
+                {t('settings.catalog.intervalDesc', 'Controls the Market Analytics symbol catalog refresh cadence (1 to 24 hours).')}
               </p>
               <input
                 type="range"
@@ -445,15 +443,15 @@ export function Settings() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <AppTooltip description="Timestamp of the last successful catalog download across the three exchanges.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Last Fetch</h4>
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.catalog.lastFetch', 'Last Fetch')}</h4>
                 </AppTooltip>
                 <span className="text-cyan-400 font-mono text-xs">
-                  {lastCatalogFetch ? new Date(lastCatalogFetch).toLocaleString() : 'Never'}
+                  {lastCatalogFetch ? new Date(lastCatalogFetch).toLocaleString() : t('common.never', 'Never')}
                 </span>
               </div>
               {staleExchanges.length > 0 && (
                 <p className="text-[11px] text-amber-400 leading-relaxed">
-                  Partial data — kept the previous lists for: {staleExchanges.join(', ')}
+                  {t('settings.catalog.partialData', 'Partial data — kept the previous lists for:')} {staleExchanges.join(', ')}
                 </p>
               )}
 
@@ -467,7 +465,7 @@ export function Settings() {
                     ? <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
                     : <RefreshCw className="w-4 h-4 text-cyan-400" />
                   }
-                  {isRefreshingCatalog ? 'Refreshing...' : 'Refresh Now'}
+                  {isRefreshingCatalog ? t('common.refreshing', 'Refreshing...') : t('settings.catalog.refreshBtn', 'Refresh Now')}
                 </button>
 
                 <button
@@ -479,7 +477,7 @@ export function Settings() {
                     ? <Loader2 className="w-4 h-4 text-red-400 animate-spin" />
                     : <Trash2 className="w-4 h-4 text-red-400" />
                   }
-                  {isClearingCatalog ? 'Clearing & Syncing...' : 'Clear Cache & Sync'}
+                  {isClearingCatalog ? t('common.clearingSyncing', 'Clearing & Syncing...') : t('settings.catalog.clearBtn', 'Clear Cache & Sync')}
                 </button>
               </div>
             </div>
@@ -490,21 +488,21 @@ export function Settings() {
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
             <Gauge className="w-4 h-4 text-orange-400" />
-            Funding Fees Sync
+            {t('settings.fundingSync', 'Funding Fees Sync')}
           </h3>
-          <p className="text-[#8E9299] text-xs mb-5">Manage background syncing of funding rates</p>
+          <p className="text-[#8E9299] text-xs mb-5">{t('settings.fundingSyncDesc', 'Manage background syncing of funding rates')}</p>
 
           <div className="flex flex-col gap-5 flex-1">
             {/* Polling Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
                 <AppTooltip description="Sets the interval for fetching the 'next' funding rate in the background.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Live Polling Interval</h4>
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.polling.fundingIntervalLabel', 'Live Polling Interval')}</h4>
                 </AppTooltip>
                 <span className="text-orange-400 font-mono text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">{fundingPollingInterval}m</span>
               </div>
               <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Periodically fetch the upcoming funding rates (1 to 60 minutes).
+                {t('settings.polling.fundingDesc', 'Periodically fetch the upcoming funding rates (1 to 60 minutes).')}
               </p>
               <input
                 type="range"
@@ -528,12 +526,12 @@ export function Settings() {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <AppTooltip description="Controls how often a full history sync is allowed after page load. Auto-sync is triggered 1 minute after each funding settlement (every 8h). This interval acts as a minimum cooldown for additional syncs when the page is reloaded mid-cycle.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">History Fetch Interval</h4>
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.fundingHistoryInterval', 'History Fetch Interval')}</h4>
                 </AppTooltip>
                 <span className="text-orange-400 font-mono text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">{fundingHistoryInterval}h</span>
               </div>
               <p className="text-[#8E9299] text-xs mb-3 leading-relaxed">
-                Minimum cooldown between full history syncs (4 to 8 hours). Auto-sync runs each funding cycle regardless of this setting.
+                {t('settings.polling.fundingHistoryDesc', 'Minimum cooldown between full history syncs (4 to 8 hours). Auto-sync runs each funding cycle regardless of this setting.')}
               </p>
               <input
                 type="range"
@@ -557,7 +555,7 @@ export function Settings() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <AppTooltip description="Deletes the local funding fee cache causing it to start from scratch.">
-                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Clear Funding Cache</h4>
+                  <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.cache.clearFundingBtn', 'Clear Funding Cache')}</h4>
                 </AppTooltip>
               </div>
               <button
@@ -569,7 +567,7 @@ export function Settings() {
                   ? <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />
                   : <Trash2 className="w-4 h-4 text-red-400" />
                 }
-                {isClearingFunding ? 'Clearing...' : 'Clear Cache Now'}
+                {isClearingFunding ? t('common.clearing', 'Clearing...') : t('settings.cache.clearFundingBtn', 'Clear Cache Now')}
               </button>
             </div>
 
@@ -582,34 +580,33 @@ export function Settings() {
         <div className="bg-[#151619] border border-[#2a2b30] border-t-2 border-t-red-500/40 rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-red-500 mb-1 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
-            Danger Zone
+            {t('settings.dangerZone', 'Danger Zone')}
           </h3>
-          <p className="text-[#8E9299] text-xs mb-5">Irreversible local data actions</p>
+          <p className="text-[#8E9299] text-xs mb-5">{t('settings.dangerZoneDesc', 'Irreversible local data actions')}</p>
 
           <div className="flex flex-col flex-1">
             <AppTooltip description="WARNING: This action is permanent. It wipes all IndexedDB, LocalStorage data, settings, API Keys, and caches. The app will immediately reload as if newly installed.">
-              <h4 className="text-red-400 font-medium text-sm mb-1.5 w-fit cursor-help border-b border-dashed border-red-400/50">Factory Reset</h4>
+              <h4 className="text-red-400 font-medium text-sm mb-1.5 w-fit cursor-help border-b border-dashed border-red-400/50">{t('settings.cache.factoryResetBtn', 'Factory Reset')}</h4>
             </AppTooltip>
             <p className="text-[#8E9299] text-xs mb-4 leading-relaxed">
-              Permanently erase all local data from this browser — API keys, settings, historical cache,
-              metadata, and mock preferences. Use this on shared computers or to restore factory defaults.
+              {t('settings.cache.factoryResetConfirmDesc', 'Permanently erase all local data from this browser — API keys, settings, historical cache, metadata, and mock preferences. Use this on shared computers or to restore factory defaults.')}
             </p>
 
             {showWipeConfirm ? (
               <div className="flex flex-col gap-3 bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
-                <span className="text-sm font-medium text-red-400">Are you sure? This cannot be undone.</span>
+                <span className="text-sm font-medium text-red-400">{t('settings.areYouSure', 'Are you sure? This cannot be undone.')}</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleFactoryReset}
                     className="px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
                   >
-                    Yes, Wipe Everything
+                    {t('settings.wipeEverything', 'Yes, Wipe Everything')}
                   </button>
                   <button
                     onClick={() => setShowWipeConfirm(false)}
                     className="px-4 py-1.5 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] hover:text-white rounded-lg text-sm font-medium transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel', 'Cancel')}
                   </button>
                 </div>
               </div>
@@ -619,7 +616,7 @@ export function Settings() {
                 className="self-start flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
-                Wipe All Local Client Data
+                {t('settings.wipeBtn', 'Wipe All Local Client Data')}
               </button>
             )}
           </div>

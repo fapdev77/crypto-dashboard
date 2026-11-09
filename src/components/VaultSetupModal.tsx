@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Lock, Eye, EyeOff, X, ArrowRight, ShieldAlert, KeyRound, CheckCircle2 } from 'lucide-react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import toast from 'react-hot-toast';
@@ -11,6 +12,7 @@ interface VaultSetupModalProps {
 }
 
 export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSetupModalProps) {
+  const { t } = useTranslation();
   const { initializeVault } = useApiKeysStore();
   const [passphrase, setPassphrase] = useState('');
   const [confirmPassphrase, setConfirmPassphrase] = useState('');
@@ -36,12 +38,12 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
     setError('');
 
     if (!passphrase || passphrase.length < 8) {
-      setError('Master Passphrase must be at least 8 characters long.');
+      setError(t('apiKeys.vault.passphraseTooShort', 'Master Passphrase must be at least 8 characters long.'));
       return;
     }
 
     if (passphrase !== confirmPassphrase) {
-      setError('Passphrases do not match. Please verify both fields.');
+      setError(t('apiKeys.vault.passphraseMismatch', 'Passphrases do not match. Please verify both fields.'));
       return;
     }
 
@@ -78,7 +80,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white">Activate Security Vault</h3>
+                <h3 className="text-base font-bold text-white">{t('apiKeys.vault.activateBtn', 'Activate Security Vault')}</h3>
                 <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
                   Zero-Trust
                 </span>
@@ -101,7 +103,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
           <div className="p-3 bg-[#2F6BFF]/10 border border-[#2F6BFF]/25 rounded-xl text-xs text-[#93C5FD] flex items-start gap-2">
             <ShieldAlert className="w-4 h-4 text-[#60A5FA] shrink-0 mt-0.5" />
             <div className="leading-relaxed">
-              <span className="font-semibold block text-white mb-0.5">Setup Required</span>
+              <span className="font-semibold block text-white mb-0.5">{t('apiKeys.vault.setupRequired', 'Setup Required')}</span>
               {reason}
             </div>
           </div>
@@ -109,14 +111,14 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
 
         {/* Informative text */}
         <p className="text-xs text-[#8E9299] leading-relaxed">
-          To ensure maximum safety, real API keys and the PIKA AI auditor require an active vault. Your master passphrase encrypts all sensitive data strictly within your local browser memory and storage.
+          {t('apiKeys.vault.setupDesc', 'To ensure maximum safety, real API keys and the PIKA AI auditor require an active vault. Your master passphrase encrypts all sensitive data strictly within your local browser memory and storage.')}
         </p>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
             <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-1.5">
-              Create Master Passphrase <span className="text-rose-400">*</span>
+              {t('apiKeys.vault.createPassphraseLabel', 'Create Master Passphrase')} <span className="text-rose-400">*</span>
             </label>
             <div className="relative">
               <input
@@ -126,7 +128,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
                 minLength={8}
                 value={passphrase}
                 onChange={(e) => setPassphrase(e.target.value)}
-                placeholder="Enter passphrase (min. 8 characters)"
+                placeholder={t('apiKeys.vault.passphrasePlaceholder', 'Enter passphrase (min. 8 characters)')}
                 className="w-full bg-[#111216] border border-[#2a2b30] rounded-xl px-3.5 py-2.5 pr-10 text-xs text-white focus:outline-none focus:border-[#2F6BFF] transition-colors font-mono"
               />
               <button
@@ -142,7 +144,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
 
           <div>
             <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-1.5">
-              Confirm Master Passphrase <span className="text-rose-400">*</span>
+              {t('apiKeys.vault.confirmPassphraseLabel', 'Confirm Master Passphrase')} <span className="text-rose-400">*</span>
             </label>
             <div className="relative">
               <input
@@ -151,7 +153,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
                 minLength={8}
                 value={confirmPassphrase}
                 onChange={(e) => setConfirmPassphrase(e.target.value)}
-                placeholder="Confirm your passphrase"
+                placeholder={t('apiKeys.vault.confirmPlaceholder', 'Confirm your passphrase')}
                 className="w-full bg-[#111216] border border-[#2a2b30] rounded-xl px-3.5 py-2.5 pr-10 text-xs text-white focus:outline-none focus:border-[#2F6BFF] transition-colors font-mono"
               />
               <button
@@ -178,7 +180,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
               onClick={onClose}
               className="py-2.5 px-4 border border-[#2a2b30] hover:bg-[#202125] text-[#8E9299] hover:text-white rounded-xl text-xs font-medium transition-colors"
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </button>
             <button
               type="submit"
@@ -186,7 +188,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
               className="flex-1 py-2.5 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#2F6BFF]/20 cursor-pointer"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>{isSubmitting ? 'Encrypting Vault...' : 'Activate Vault & Continue'}</span>
+              <span>{isSubmitting ? t('apiKeys.vault.encrypting', 'Encrypting Vault...') : t('apiKeys.vault.activateBtn', 'Activate Vault & Continue')}</span>
               <ArrowRight className="w-3 h-3 ml-0.5" />
             </button>
           </div>

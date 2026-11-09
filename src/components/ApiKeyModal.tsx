@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Save, Trash2, Globe, Server, ChevronDown, Check, Info, X, Lock } from 'lucide-react';
 import { useApiKeysStore, Exchange, AccountType, ApiEnvironment, BybitRegion, ApiCredentials } from '../store/apiKeysStore';
 import { LogManager } from '../services/LogManager';
@@ -20,6 +21,7 @@ const EXCHANGES: { id: Exchange; name: string; requiresPassphrase?: boolean }[] 
 ];
 
 export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalProps) {
+  const { t } = useTranslation();
   const { addKey, removeKey, isInitialized, initializeVault } = useApiKeysStore();
   
   const [exchange, setExchange] = useState<Exchange>('bitget');
@@ -189,7 +191,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2b30] bg-[#111216]">
           <h3 className="font-semibold text-white text-base">
-            {mode === 'create' ? 'Add API Connection' : `Edit Connection: ${existingKey?.label}`}
+            {mode === 'create' ? t('apiKeys.modal.createTitle', 'Add API Connection') : `${t('apiKeys.modal.editTitle', 'Edit Connection')}: ${existingKey?.label}`}
           </h3>
           <button
             onClick={onClose}
@@ -208,7 +210,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
 
           <div>
             <AppTooltip description="A friendly name to identify this API connection across the dashboard.">
-              <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Connection Label</label>
+              <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('apiKeys.modal.labelLabel', 'Connection Label')}</label>
             </AppTooltip>
             <input
               type="text"
@@ -216,13 +218,13 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors"
-              placeholder="e.g., Main Bybit Account, Scalp Bot, etc."
+              placeholder={t('apiKeys.modal.labelPlaceholder', 'e.g., Main Bybit Account, Scalp Bot, etc.')}
             />
           </div>
 
           <div>
             <AppTooltip description="Select the cryptocurrency exchange platform you are connecting to.">
-              <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Exchange</label>
+              <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('apiKeys.modal.exchangeLabel', 'Exchange')}</label>
             </AppTooltip>
             {mode === 'edit' ? (
               <div className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 flex items-center justify-between opacity-80 select-none">
@@ -278,7 +280,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
               <div className="flex items-center justify-between">
                 <AppTooltip description="Select whether this API Key is for a Bitget Classic account (v2) or Unified Trading Account (UTA / v3).">
                   <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                    Account Type / Mode
+                    {t('apiKeys.modal.accountTypeLabel', 'Account Type / Mode')}
                   </label>
                 </AppTooltip>
                 <span className="text-[11px] text-[#8E9299] font-mono">Bitget Architecture</span>
@@ -328,7 +330,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                 <div className="flex items-center justify-between mb-1.5">
                   <AppTooltip description="Select Mainnet for live trading or Testnet for simulated environment.">
                     <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                      Network / Environment
+                      {t('apiKeys.modal.environmentLabel', 'Network / Environment')}
                     </label>
                   </AppTooltip>
                   <span className="text-[11px] text-[#8E9299] font-mono">Bybit v5 REST</span>
@@ -379,7 +381,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                 <div className="flex items-center justify-between mb-1.5">
                   <AppTooltip description="Select the origin or region for your Bybit account. For international accounts from Brazil or Argentina, the appropriate X-Site-Id header is automatically applied. For regions with dedicated regulatory domains (NL, TR, KZ, etc.), the official local endpoint is used.">
                     <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                      Account Region / Origin
+                      {t('apiKeys.modal.regionLabel', 'Account Region / Origin')}
                     </label>
                   </AppTooltip>
                   {currentRegionOpt.badge && (
@@ -503,7 +505,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                      value={apiSecret}
                      onChange={(e) => setApiSecret(e.target.value)}
                      className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors font-mono pr-10"
-                     placeholder="Enter API Secret"
+                     placeholder={t('apiKeys.modal.apiSecretPlaceholder', 'Enter API Secret')}
                    />
                    <button
                      type="button"
@@ -518,7 +520,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                {activeEx.requiresPassphrase && (
                  <div>
                    <AppTooltip description="Required by some exchanges (like Bitget and OKX) as an extra security password for your API key.">
-                     <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Passphrase</label>
+                     <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('apiKeys.modal.passphraseLabel', 'Passphrase')}</label>
                    </AppTooltip>
                    <input
                      type="password"
@@ -526,7 +528,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                      value={passphrase}
                      onChange={(e) => setPassphrase(e.target.value)}
                      className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors font-mono"
-                     placeholder="Enter Passphrase"
+                     placeholder={t('apiKeys.modal.passphrasePlaceholder', 'Enter Passphrase')}
                    />
                  </div>
                )}
@@ -538,7 +540,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
             <div className="p-3 bg-[#2F6BFF]/10 border border-[#2F6BFF]/30 rounded-lg space-y-2">
               <div className="flex items-center gap-1.5 text-white font-medium text-xs">
                 <Lock className="w-3.5 h-3.5 text-[#2F6BFF]" />
-                <span>Zero-Trust Vault Setup (Master Passphrase)</span>
+                <span>{t('apiKeys.vault.setupTitle', 'Zero-Trust Vault Setup (Master Passphrase)')}</span>
               </div>
               <p className="text-[11px] text-[#8E9299] leading-relaxed">
                 This is your first API connection. Set a master passphrase (minimum 8 characters) to encrypt all credentials safely in your browser.
@@ -550,7 +552,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                   value={masterPassphrase}
                   onChange={(e) => setMasterPassphrase(e.target.value)}
                   className="w-full bg-[#151619] border border-[#2a2b30] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#2F6BFF] pr-9 font-mono"
-                  placeholder="Enter Master Passphrase (min. 8 chars)"
+                  placeholder={t('apiKeys.vault.passphrasePlaceholder', 'Enter Master Passphrase (min. 8 chars)')}
                 />
                 <button
                   type="button"
@@ -568,7 +570,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
             <div className="flex items-center justify-between">
               <div>
                 <label className="text-xs font-medium text-white flex items-center gap-1.5 cursor-pointer">
-                  <span>Include Funding Account</span>
+                  <span>{t('apiKeys.modal.includeFundingLabel', 'Include Funding Account')}</span>
                 </label>
                 <p className="text-[10px] text-[#8E9299]">
                   Fetch and display assets held in the Funding/Spot wallet for this account.
@@ -585,7 +587,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
             <div className="flex items-center justify-between pt-2 border-t border-[#202125]">
               <div>
                 <label className="text-xs font-medium text-white flex items-center gap-1.5 cursor-pointer">
-                  <span>Sub-account</span>
+                  <span>{t('apiKeys.modal.subAccountLabel', 'Sub-account')}</span>
                 </label>
                 <p className="text-[10px] text-[#8E9299]">
                   Mark this connection as a sub-account under a main master account.
@@ -604,9 +606,9 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
              {mode === 'edit' && (
                 showDeleteConfirm ? (
                   <div className="flex flex-1 gap-2 border border-[#FF4444] bg-[#FF4444]/10 rounded-lg p-1.5 items-center">
-                    <span className="text-xs text-[#FF4444] font-medium px-2">Are you sure?</span>
-                    <button type="button" onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-1 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded text-xs transition-colors">Cancel</button>
-                    <button type="button" onClick={handleDelete} className="flex-1 py-1 bg-[#FF4444] hover:bg-[#CC0000] text-white rounded text-xs transition-colors">Confirm</button>
+                    <span className="text-xs text-[#FF4444] font-medium px-2">{t('apiKeys.modal.deleteConfirmTitle', 'Are you sure?')}</span>
+                    <button type="button" onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-1 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded text-xs transition-colors">{t('apiKeys.modal.cancelBtn', 'Cancel')}</button>
+                    <button type="button" onClick={handleDelete} className="flex-1 py-1 bg-[#FF4444] hover:bg-[#CC0000] text-white rounded text-xs transition-colors">{t('common.confirm', 'Confirm')}</button>
                   </div>
                 ) : (
                   <button 
@@ -615,7 +617,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                      className="flex-1 py-2.5 border border-[#FF4444]/50 text-[#FF4444] hover:bg-[#FF4444]/10 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                      <Trash2 className="w-4 h-4" />
-                     Remove
+                     {t('apiKeys.card.delete', 'Remove')}
                   </button>
                 )
              )}
@@ -624,7 +626,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
               className={`py-2.5 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 flex-1 ${mode === 'edit' && showDeleteConfirm ? 'hidden' : ''}`}
             >
               <Save className="w-4 h-4" />
-              {mode === 'create' ? 'Save Configuration' : 'Save Changes'}
+              {mode === 'create' ? t('apiKeys.modal.saveBtn', 'Save Configuration') : t('apiKeys.modal.saveChangesBtn', 'Save Changes')}
             </button>
           </div>
         </form>

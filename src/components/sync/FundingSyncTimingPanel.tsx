@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback, useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useLogStore } from '../../store/logStore';
 import { useFundingStore } from '../../store/fundingStore';
@@ -95,6 +96,7 @@ function useCountdown(target: number): string {
 // ── Component ─────────────────────────────────────────────────────
 
 export function FundingSyncTimingPanel() {
+  const { t } = useTranslation();
   const entries = useLogStore(s => s.entries);
   const {
     isSyncing,
@@ -233,7 +235,7 @@ export function FundingSyncTimingPanel() {
         <div className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-orange-400" />
           <AppTooltip description="Displays real-time and historical performance data for the background synchronization of funding rates.">
-            <h4 className="text-white font-medium text-sm cursor-help border-b border-dashed border-[#8E9299]/50">Sync Performance</h4>
+            <h4 className="text-white font-medium text-sm cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.fundingTiming.title', 'Sync Performance')}</h4>
           </AppTooltip>
         </div>
       </div>
@@ -251,7 +253,7 @@ export function FundingSyncTimingPanel() {
               ) : (
                 <Trash2 className="w-3 h-3" />
               )}
-              {isClearing ? 'Clearing...' : 'Clear + Sync'}
+              {isClearing ? t('common.clearing', 'Clearing...') : t('settings.fundingTiming.clearSync', 'Clear + Sync')}
             </button>
           </AppTooltip>
           {/* Run Sync Now button */}
@@ -266,13 +268,13 @@ export function FundingSyncTimingPanel() {
               ) : (
                 <Play className="w-3 h-3" />
               )}
-              {isSyncing ? 'Syncing...' : 'Run Sync'}
+              {isSyncing ? t('common.syncing', 'Syncing...') : t('settings.fundingTiming.runSync', 'Run Sync')}
             </button>
           </AppTooltip>
           {/* Last sync timestamp */}
           {lastSyncTime > 0 && (
             <span className="text-[10px] font-mono text-[#8E9299] flex items-center gap-1">
-              Last Sync:
+              {t('settings.fundingTiming.lastSync', 'Last Sync:')}
               <Clock className="w-3 h-3" />
               {formatTime(lastSyncTime)} ({timeAgo(lastSyncTime)})
             </span>
@@ -332,7 +334,7 @@ export function FundingSyncTimingPanel() {
               ? 'text-amber-300 bg-amber-400/15'
               : 'text-orange-400 bg-orange-400/10'
               }`}>
-              {isSyncing ? 'Syncing now' : isFundingImminent5min ? `Funding in ${countdown}` : `in ${countdown}`}
+              {isSyncing ? t('common.syncingNow', 'Syncing now') : isFundingImminent5min ? `${t('settings.fundingTiming.fundingIn', 'Funding in')} ${countdown}` : `${t('common.inTime', 'in')} ${countdown}`}
             </span>
           </div>
         )
@@ -343,7 +345,7 @@ export function FundingSyncTimingPanel() {
           <div className="flex items-center gap-2 bg-[#1a1b1e] rounded-lg px-3 py-2.5 border border-[#2a2b30]/50">
             <RefreshCw className="w-3.5 h-3.5 text-[#8E9299]" />
             <span className="text-xs text-[#8E9299]">
-              No sync data yet. Run a Funding sync to see performance metrics.
+              {t('settings.fundingTiming.noData', 'No sync data yet. Run a Funding sync to see performance metrics.')}
             </span>
           </div>
         ) : (
@@ -357,7 +359,7 @@ export function FundingSyncTimingPanel() {
                       <div className="text-lg font-bold text-white font-mono">
                         {overallTiming.totalSec.toFixed(1)}s
                       </div>
-                      <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">Total Time</div>
+                      <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.totalTime', 'Total Time')}</div>
                     </div>
                   </AppTooltip>
 
@@ -366,7 +368,7 @@ export function FundingSyncTimingPanel() {
                       <div className="text-lg font-bold text-orange-400 font-mono">
                         {overallTiming.fetchSec.toFixed(1)}s
                       </div>
-                      <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">API Fetch</div>
+                      <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.apiFetch', 'API Fetch')}</div>
                     </div>
                   </AppTooltip>
 
@@ -375,14 +377,14 @@ export function FundingSyncTimingPanel() {
                       <div className="text-lg font-bold text-blue-400 font-mono">
                         {overallTiming.writeSec.toFixed(1)}s
                       </div>
-                      <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">DB Write</div>
+                      <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.dbWrite', 'DB Write')}</div>
                     </div>
                   </AppTooltip>
                 </div>
                 <div className="flex justify-center mt-2">
                   <AppTooltip description="Total number of trading pairs successfully synced across all connected exchanges.">
                     <span className="text-[10px] font-mono text-[#8E9299] bg-[#2a2b30]/50 px-2 py-0.5 rounded cursor-help">
-                      {overallTiming.symbols} symbols synced
+                      {overallTiming.symbols} {t('settings.fundingTiming.symbolsSynced', 'symbols synced')}
                     </span>
                   </AppTooltip>
                 </div>

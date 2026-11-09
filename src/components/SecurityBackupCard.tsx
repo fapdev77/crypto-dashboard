@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, Download, AlertTriangle, Shield, Check, FileDown, FileUp, Lock, Unlock, Eye, EyeOff, KeyRound, Clock, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useApiKeysStore, ApiCredentials, Exchange } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -10,6 +11,7 @@ import toast from 'react-hot-toast';
 type Tab = 'local_security' | 'export' | 'import';
 
 export function SecurityBackupCard() {
+  const { t } = useTranslation();
   const { keys, isEncrypted, isInitialized, isUnlocked, encryptedData, initializeVault, changePassphrase, lock, importKeys } = useApiKeysStore();
   const {
     vaultAutoLockEnabled,
@@ -25,7 +27,7 @@ export function SecurityBackupCard() {
   const [exportPassphrase, setExportPassphrase] = useState('');
   const [showExportPassphrase, setShowExportPassphrase] = useState(false);
   const [selectedForExport, setSelectedForExport] = useState<Set<string>>(new Set(keys.map(k => k.id)));
-  
+
   // Import State
   const [importPassphrase, setImportPassphrase] = useState('');
   const [showImportPassphrase, setShowImportPassphrase] = useState(false);
@@ -76,7 +78,7 @@ export function SecurityBackupCard() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       setExportPassphrase('');
       toast.success('API keys exported successfully!');
     } catch (err) {
@@ -108,7 +110,7 @@ export function SecurityBackupCard() {
       const parsed = JSON.parse(decrypted) as ApiCredentials[];
       setImportedData(parsed);
       setSelectedForImport(new Set(parsed.map(k => k.id)));
-      
+
       // Check for conflicts
       const resolutions: Record<string, 'overwrite' | 'rename'> = {};
       const names: Record<string, string> = {};
@@ -132,14 +134,14 @@ export function SecurityBackupCard() {
 
   const executeImport = () => {
     if (!importedData) return;
-    
+
     // Validate unique names and length
     for (const ik of importedData) {
       if (!selectedForImport.has(ik.id)) continue;
-      
+
       const res = conflictResolutions[ik.id];
       const finalName = res === 'rename' ? (customNames[ik.id] || `${ik.label} (Imported)`) : (res === 'overwrite' ? ik.label : (customNames[ik.id] || ik.label));
-      
+
       if (finalName.trim().length < 3) {
         setImportError(`The name "${finalName}" must have at least 3 characters.`);
         return;
@@ -158,14 +160,14 @@ export function SecurityBackupCard() {
     const finalKeys: ApiCredentials[] = [];
     importedData.forEach(ik => {
       if (!selectedForImport.has(ik.id)) return;
-      
+
       const res = conflictResolutions[ik.id];
       const newKey: ApiCredentials = {
         ...ik,
         id: crypto.randomUUID(),
         accountType: ik.exchange === 'bitget' ? (ik.accountType || 'classic') : undefined,
       }; // Always generate new local ID to avoid collision
-      
+
       if (res === 'rename') {
         newKey.label = customNames[ik.id] || `${newKey.label} (Imported)`;
       } else if (res === 'overwrite') {
@@ -179,9 +181,9 @@ export function SecurityBackupCard() {
       }
       finalKeys.push(newKey);
     });
-    
+
     importKeys(finalKeys);
-    
+
     // Clear states
     setImportedData(null);
     setImportPassphrase('');
@@ -254,9 +256,9 @@ export function SecurityBackupCard() {
     <div id="security-settings-card" className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full scroll-mt-20">
       <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
         <Shield className="w-4 h-4 text-[#2F6BFF]" />
-        Security & Backup
+        {t('settings.security.title', 'Security & Backup')}
       </h3>
-      <p className="text-[#8E9299] text-xs mb-4">Export/import credentials and manage local storage encryption</p>
+      <p className="text-[#8E9299] text-xs mb-4">{t('settings.security.desc', 'Export/import credentials and manage local storage encryption')}</p>
 
       {/* Mini Tab Selectors */}
       <div className="flex border-b border-[#2a2b30] mb-4 text-xs">
@@ -264,19 +266,19 @@ export function SecurityBackupCard() {
           onClick={() => { setActiveTab('local_security'); setImportError(''); setImportPassphrase(''); setExportPassphrase(''); setLocalPassphrase(''); setChangeError(''); }}
           className={`flex-1 pb-2 font-medium transition-colors ${activeTab === 'local_security' ? 'text-[#2F6BFF] border-b border-[#2F6BFF]' : 'text-[#8E9299] hover:text-white'}`}
         >
-          Vault & Auto-Lock
+          {t('settings.security.tabVault', 'Vault & Auto-Lock')}
         </button>
         <button
           onClick={() => { setActiveTab('export'); setImportError(''); setImportPassphrase(''); setExportPassphrase(''); setLocalPassphrase(''); setChangeError(''); }}
           className={`flex-1 pb-2 font-medium transition-colors ${activeTab === 'export' ? 'text-[#2F6BFF] border-b border-[#2F6BFF]' : 'text-[#8E9299] hover:text-white'}`}
         >
-          Export Backup
+          {t('settings.security.tabExport', 'Export Backup')}
         </button>
         <button
           onClick={() => { setActiveTab('import'); setImportError(''); setImportPassphrase(''); setExportPassphrase(''); setLocalPassphrase(''); setChangeError(''); }}
           className={`flex-1 pb-2 font-medium transition-colors ${activeTab === 'import' ? 'text-[#2F6BFF] border-b border-[#2F6BFF]' : 'text-[#8E9299] hover:text-white'}`}
         >
-          Import Backup
+          {t('settings.security.tabImport', 'Import Backup')}
         </button>
       </div>
 
@@ -288,10 +290,10 @@ export function SecurityBackupCard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 font-semibold text-[#00C853]">
                   <ShieldCheck className="w-4 h-4 text-[#00C853]" />
-                  <span>Zero-Trust Encrypted Vault</span>
+                  <span>{t('settings.security.vaultTitle', 'Zero-Trust Encrypted Vault')}</span>
                 </div>
                 <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-medium ${isUnlocked ? 'bg-[#00C853]/10 text-[#00C853] border border-[#00C853]/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
-                  {isUnlocked ? 'Unlocked' : 'Locked'}
+                  {isUnlocked ? t('settings.security.unlocked', 'Unlocked') : t('settings.security.locked', 'Locked')}
                 </span>
               </div>
               <p className="text-[#8E9299] leading-relaxed text-[11px]">
@@ -304,7 +306,7 @@ export function SecurityBackupCard() {
                     className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition-colors"
                   >
                     <Lock className="w-3.5 h-3.5" />
-                    Lock Vault Now
+                    {t('settings.security.lockNow', 'Lock Vault Now')}
                   </button>
                 </div>
               )}
@@ -316,8 +318,8 @@ export function SecurityBackupCard() {
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#2F6BFF]" />
                   <div>
-                    <h4 className="text-white font-medium text-xs">Auto-Lock on Inactivity</h4>
-                    <p className="text-[#8E9299] text-[10px]">Locks vault when idle</p>
+                    <h4 className="text-white font-medium text-xs">{t('settings.security.autoLockTitle', 'Auto-Lock on Inactivity')}</h4>
+                    <p className="text-[#8E9299] text-[10px]">{t('settings.security.autoLockDesc', 'Locks vault when idle')}</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
@@ -602,7 +604,7 @@ export function SecurityBackupCard() {
                     className="w-full text-xs text-[#8E9299] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-[#1a1b1e] file:text-white hover:file:bg-[#202125] file:transition-colors file:cursor-pointer"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-[11px] text-[#8E9299] mb-1">Passphrase</label>
                   <div className="relative">
@@ -647,7 +649,7 @@ export function SecurityBackupCard() {
                     Select another file
                   </button>
                 </div>
-                
+
                 <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
                   {importedData.map(ik => {
                     const resolution = conflictResolutions[ik.id];
@@ -674,7 +676,7 @@ export function SecurityBackupCard() {
                             bybitRegion={ik.bybitRegion}
                           />
                         </label>
-                        
+
                         {resolution && (
                           <div className="ml-5 p-1.5 bg-[#F2C94C]/10 border border-[#F2C94C]/20 rounded text-[11px]">
                             <p className="text-[#F2C94C] mb-1 flex items-center gap-1">

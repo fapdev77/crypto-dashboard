@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Activity, Clock, Cpu, Coins } from 'lucide-react';
 import { AiTelemetryStats } from '../../types/aiTypes';
 import { AppTooltip } from '../ui/Tooltip';
@@ -8,6 +9,7 @@ interface AiTelemetryCardsProps {
 }
 
 export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => {
+  const { t } = useTranslation();
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
   };
@@ -37,7 +39,7 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-[#383b42] transition">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E9299] block mb-1">
-              Total Invocations
+              {t('ai.settings.telemetry.totalCalls', 'Total Invocations')}
             </span>
             <div className="text-2xl font-bold text-white font-mono">
               {formatNumber(stats.totalCalls)}
@@ -60,7 +62,7 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-[#383b42] transition">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E9299] block mb-1">
-              Token Consumption
+              {t('ai.settings.telemetry.totalTokens', 'Total Tokens Used')}
             </span>
             <div className="text-2xl font-bold text-white font-mono">
               {formatNumber(stats.totalTokens)}
@@ -75,7 +77,7 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
         </div>
       </AppTooltip>
 
-      {/* Average Latency */}
+      {/* {t('ai.settings.telemetry.avgLatency', 'Average Latency')} */}
       <AppTooltip
         description="Average round-trip response time from query submission to completion generation across models."
         side="top"
@@ -83,7 +85,7 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-[#383b42] transition">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E9299] block mb-1">
-              Average Latency
+              {t('ai.settings.telemetry.avgLatency', 'Average Latency')}
             </span>
             <div className="text-2xl font-bold text-white font-mono">
               {formatLatency(stats.averageLatencyMs)}
@@ -106,7 +108,7 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-[#383b42] transition">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E9299] block mb-1">
-              Estimated Cost
+              {t('ai.settings.telemetry.estimatedCost', 'Estimated Cost')}
             </span>
             <div className="text-2xl font-bold text-white font-mono">
               ${stats.estimatedCostUsd.toFixed(4)}

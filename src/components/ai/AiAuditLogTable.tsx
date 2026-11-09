@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Eye, Download, Trash2, RefreshCw, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { AiAuditLogEntry } from '../../types/aiTypes';
 import { aiAuditLogger } from '../../services/ai/aiAuditLogger';
@@ -7,6 +8,7 @@ import { AppTooltip } from '../ui/Tooltip';
 import toast from 'react-hot-toast';
 
 export const AiAuditLogTable: React.FC = () => {
+  const { t } = useTranslation();
   const [logs, setLogs] = useState<AiAuditLogEntry[]>([]);
   const [selectedLog, setSelectedLog] = useState<AiAuditLogEntry | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,9 +83,9 @@ export const AiAuditLogTable: React.FC = () => {
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Clear Audit Logs?</h3>
+              <h3 className="text-sm font-bold text-white">{t('ai.settings.audit.clearConfirmTitle', 'Clear Audit Logs?')}</h3>
               <p className="text-xs text-[#8E9299] mt-1">
-                Are you sure you want to delete all local execution logs? This cannot be undone.
+                {t('ai.settings.audit.clearConfirmDesc', 'Are you sure you want to delete all local execution logs? This cannot be undone.')}
               </p>
             </div>
             <div className="flex gap-2">
@@ -91,13 +93,13 @@ export const AiAuditLogTable: React.FC = () => {
                 onClick={() => setShowClearConfirm(false)}
                 className="flex-1 py-2 bg-[#1e1f24] hover:bg-[#2a2b30] text-gray-300 rounded-lg text-xs font-semibold transition cursor-pointer border border-[#2a2b30]"
               >
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleClear}
                 className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition cursor-pointer"
               >
-                Clear
+                {t('common.clear', 'Clear')}
               </button>
             </div>
           </div>
@@ -108,10 +110,10 @@ export const AiAuditLogTable: React.FC = () => {
         <div>
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#2F6BFF]" />
-            Call History & Audit Trail
+            {t('ai.settings.audit.title', 'Call History & Audit Trail')}
           </h3>
           <p className="text-xs text-[#8E9299]">
-            Transparent register of all local inferences, triggered tools, and token consumption
+            {t('ai.settings.audit.subtitle', 'Transparent register of all local inferences, triggered tools, and token consumption')}
           </p>
         </div>
 
@@ -179,7 +181,7 @@ export const AiAuditLogTable: React.FC = () => {
             {logs.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-8 text-center text-[#8E9299]">
-                  No audit log entries recorded yet.
+                  {t('ai.settings.audit.noLogs', 'No audit log entries recorded yet.')}
                 </td>
               </tr>
             ) : (
@@ -211,11 +213,11 @@ export const AiAuditLogTable: React.FC = () => {
                   <td className="py-3 px-4 text-center">
                     {log.status === 'success' ? (
                       <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                        <CheckCircle2 className="w-3 h-3" /> Success
+                        <CheckCircle2 className="w-3 h-3" /> {t('common.success', 'Success')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
-                        <AlertCircle className="w-3 h-3" /> Error
+                        <AlertCircle className="w-3 h-3" /> {t('common.error', 'Error')}
                       </span>
                     )}
                   </td>
