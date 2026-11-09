@@ -1,3 +1,11 @@
+# [2.26.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.25.0...v2.26.0) (2026-11-09)
+
+
+### Features
+
+* add analytics modules and localized data for portfolio and funding metrics ([fd3d917](https://github.com/fapdev77/crypto-dashboard/commit/fd3d917706b484636c049cb980abce2604488c64))
+* add transaction history components, navigation sidebar, and multi-language support ([ea691bc](https://github.com/fapdev77/crypto-dashboard/commit/ea691bc9a35fe5822a2e8d7a3a9eec4ecd8ae03e))
+
 # [2.25.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.24.0...v2.25.0) (2026-11-08)
 
 
