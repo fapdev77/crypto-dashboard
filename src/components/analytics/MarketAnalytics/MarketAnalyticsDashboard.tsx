@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart3,
   TrendingUp,
@@ -32,6 +33,7 @@ import {
 } from './MarketAnalyticsTooltips';
 
 export const MarketAnalyticsDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'multi-market' | 'inverse-coinm'>('multi-market');
   const {
     snapshot,
@@ -67,12 +69,12 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-[#2F6BFF]" />
-              Market Analytics
+              {t('analytics.market.title', 'Market Analytics')}
             </h1>
             <SimulationModeBadge />
           </div>
           <p className="text-xs text-[#8E9299] mt-0.5">
-            Quantitative cross-exchange derivatives intelligence, open interest regimes, taker order flow & funding arbitrage across Bybit, OKX & Bitget.
+            {t('analytics.market.subtitle', 'Quantitative cross-exchange derivatives intelligence, open interest regimes, taker order flow & funding arbitrage across Bybit, OKX & Bitget.')}
           </p>
         </div>
       </div>
@@ -88,7 +90,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           }`}
         >
           <BarChart3 className={`w-4 h-4 ${activeTab === 'multi-market' ? 'text-[#2F6BFF]' : ''}`} />
-          <span>Multi-Market Intelligence</span>
+          <span>{t('analytics.market.tabs.multiMarket', 'Multi-Market Intelligence')}</span>
         </button>
 
         <button
@@ -100,7 +102,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           }`}
         >
           <Coins className={`w-4 h-4 ${activeTab === 'inverse-coinm' ? 'text-cyan-400' : ''}`} />
-          <span>Inverse / Coin-M Market</span>
+          <span>{t('analytics.market.tabs.inverseCoinM', 'Inverse / Coin-M Market')}</span>
           <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
             Coin-M
           </span>

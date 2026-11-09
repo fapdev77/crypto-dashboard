@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { MarketFilterModal } from './MarketFilterModal';
 import { TimeframeSelectDropdown } from './TimeframeSelectDropdown';
@@ -31,6 +32,7 @@ const getKindBadge = (kind: AssetKind | undefined) => {
 };
 
 export const MarketAnalyticsHeader: React.FC = () => {
+  const { t } = useTranslation();
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const { selectedSymbol, selectedMarkets, selectedExchanges } = useMarketAnalyticsStore();
@@ -49,7 +51,7 @@ export const MarketAnalyticsHeader: React.FC = () => {
   };
 
   const getExchangesLabel = (): string => {
-    if (selectedExchanges.length === ALL_EXCHANGES.length) return 'All Exchanges';
+    if (selectedExchanges.length === ALL_EXCHANGES.length) return t('analytics.common.allExchanges', 'All Exchanges');
     return `${selectedExchanges.length} Exch.`;
   };
 

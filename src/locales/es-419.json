@@ -749,5 +749,210 @@
       "okxBadge": "OKX",
       "sectionTitle": "Desglose de Rendimiento por Exchange y Activo"
     }
+  },
+  "analytics": {
+    "common": {
+      "exportReport": "Exportar Informe",
+      "exportCsv": "Exportar CSV",
+      "exportExcel": "Exportar Excel",
+      "exportPdf": "Exportar PDF",
+      "calculatingUsd": "Calculando valoración de activos en USD...",
+      "syncingTransactions": "Sincronizando transacciones...",
+      "allExchanges": "Todos los Exchanges",
+      "allAccounts": "Todas las Cuentas",
+      "selectDenomination": "Seleccionar Denominación",
+      "selectAsset": "Seleccionar Activo",
+      "searchSymbol": "Buscar símbolo...",
+      "searchCoinOrContract": "Buscar moneda o contrato...",
+      "noData": "No hay datos analíticos disponibles para los parámetros seleccionados."
+    },
+    "portfolio": {
+      "title": "Rendimiento del Portafolio",
+      "subtitle": "Evolución institucional, flujo de caja, funding y análisis de volatilidad",
+      "consolidatedUsd": "Consolidado (USD)",
+      "consolidatedUsdTooltip": "Convierte todas las métricas de rendimiento en equivalente USD",
+      "nativeAsset": "{{asset}} Nativo",
+      "nativeAssetTooltip": "Mide los rendimientos en unidades puras de {{asset}} (como en Hedge Pro BTC)",
+      "primary": {
+        "title": "Resultado Principal",
+        "roi": "Ganancia Porcentual (ROI)",
+        "absoluteGain": "Ganancia Absoluta",
+        "initialBalance": "Balance Inicial",
+        "finalBalance": "Balance Final",
+        "dailyAvgRoi": "ROI Promedio Diario",
+        "perOperatingDay": "por día operativo",
+        "depositsInPeriod": "Depósitos en el Período",
+        "externalCapital": "Capital externo inyectado"
+      },
+      "operations": {
+        "title": "Resultado Operativo y Eficiencia de Tarifas",
+        "grossCashFlow": "Flujo de Caja Bruto",
+        "netTradingPnl": "PnL Neto de Trading",
+        "tradingFeesPaid": "Comisiones de Trading Pagadas",
+        "fundingReceived": "Funding Recibido",
+        "fundingPaid": "Funding Pagado",
+        "netFunding": "Funding Neto",
+        "fundingRatio": "Ratio de Eficiencia de Funding",
+        "tradeBreakdown": "Desglose de Operaciones",
+        "feeAnalysis": "Análisis de Tarifas",
+        "feeCostRatio": "Ratio de Costo de Comisiones",
+        "buysSells": "Compras / Ventas",
+        "avgTradesPerDay": "Promedio Operaciones / Día",
+        "totalTrades": "Total de Operaciones",
+        "executions": "Ejecuciones",
+        "cardTitle": "Resultado Operativo"
+      },
+      "advanced": {
+        "title": "Métricas Avanzadas de Rendimiento",
+        "winRate": "Tasa de Acierto (Diaria)",
+        "positiveDays": "{{positive}} positivos",
+        "profitFactor": "Factor de Beneficio",
+        "totalGains": "Ganancias Totales",
+        "totalLosses": "Pérdidas Totales",
+        "consistencyIndex": "Índice de Consistencia (CV)",
+        "ratings": {
+          "outstanding": "Sobresaliente",
+          "good": "Bueno",
+          "marginal": "Marginal",
+          "suboptimal": "Subóptimo",
+          "highlyConsistent": "Muy Consistente",
+          "moderateVariance": "Varianza Moderada",
+          "highVolatility": "Alta Volatilidad"
+        }
+      },
+      "temporal": {
+        "title": "Análisis de Rendimiento Temporal",
+        "dayOfWeekTab": "Día de la Semana",
+        "timeOfDayTab": "Hora del Día (UTC)",
+        "bestDay": "Mejor Día",
+        "lowestDay": "Día Más Bajo",
+        "bestTime": "Mejor Ventana Horaria",
+        "lowestTime": "Ventana Horaria Más Baja"
+      },
+      "milestones": {
+        "title": "Análisis de Hitos de Precio y Pasajes de Rango",
+        "intervalStep": "Paso de Intervalo del Hito",
+        "passages": "pasajes",
+        "return": "Retorno"
+      },
+      "evolution": {
+        "title": "Evolución del Balance y Trayectoria de Capital",
+        "description": "Trayectoria histórica del balance a lo largo del período operativo"
+      }
+    },
+    "market": {
+      "title": "Análisis de Mercado",
+      "subtitle": "Inteligencia cuantitativa de derivados entre exchanges, regímenes de open interest, flujo de órdenes taker y arbitraje de funding en Bybit, OKX y Bitget.",
+      "tabs": {
+        "multiMarket": "Inteligencia Multi-Mercado",
+        "inverseCoinM": "Contratos Inversos (Coin-M)"
+      },
+      "indicators": {
+        "price": "Precio Agregado",
+        "volume24h": "Volumen 24h",
+        "openInterest": "Open Interest Total",
+        "avgFunding": "Tasa Promedio de Funding (APR)",
+        "maxSpread": "Spread Máximo de Funding",
+        "takerFlow": "Ratio Compra/Venta Taker",
+        "fearGreed": "Índice Fear & Greed"
+      },
+      "widgets": {
+        "arbitrageTitle": "Arbitraje de Tasa de Funding Entre Exchanges",
+        "openInterestTitle": "Régimen de Open Interest y Liquidaciones",
+        "smartMoneyTitle": "Posicionamiento Smart Money vs Retail",
+        "takerFlowTitle": "Flujo Taker y Cumulative Volume Delta (CVD)"
+      },
+      "tooltips": {
+        "price": "Precio spot/perpetuo global ponderado entre las principales fuentes de liquidez.",
+        "volume": "Volumen nocional agregado negociado en las últimas 24 horas en todos los exchanges monitoreados.",
+        "openInterest": "Valor nominal total de todos los contratos de derivados abiertos que no se han liquidado.",
+        "fundingRate": "Tasa promedio ponderada de funding entre exchanges, indicando el costo de mantener posiciones long vs short.",
+        "spread": "La diferencia anualizada máxima entre las tasas de funding más alta y más baja entre los exchanges seguidos."
+      },
+      "filterModal": {
+        "title": "Filtros de Mercado y Selección de Exchanges",
+        "exchanges": "Exchanges",
+        "contractTypes": "Tipos de Contratos",
+        "apply": "Aplicar Filtros",
+        "reset": "Restablecer Valores"
+      }
+    },
+    "inverseMarket": {
+      "title": "Análisis de Derivados Inversos (Coin-M)",
+      "subtitle": "Preservación de capital, cobertura sintética en USD y dinámica de contratos con margen en la moneda.",
+      "activeContracts": "Contratos Coin-M Activos",
+      "notionalOi": "Open Interest Nocional Total en USD",
+      "volume24h": "Volumen Coin-M 24h",
+      "cards": {
+        "shareOfOi": "Cuota del OI Total",
+        "fundingInterval": "Intervalo de Funding",
+        "contractUnit": "Valor Unitario del Contrato"
+      }
+    },
+    "pnlSymbol": {
+      "title": "PnL por Símbolo",
+      "subtitle": "Beneficio y pérdida realizados desglosados por símbolo de activo, lado de negociación (Long vs Short) y exchange.",
+      "table": {
+        "exchange": "Exchange",
+        "symbol": "Símbolo",
+        "instrument": "Instrumento",
+        "longPnl": "PnL Realizado Long",
+        "shortPnl": "PnL Realizado Short",
+        "totalPnl": "PnL Realizado Total",
+        "intensity": "Intensidad"
+      },
+      "summary": {
+        "totalPnl": "PnL Realizado Total",
+        "longShare": "PnL Long",
+        "shortShare": "PnL Short",
+        "profitableSymbols": "Símbolos Rentables",
+        "losingSymbols": "Símbolos en Pérdida"
+      },
+      "noRecords": "No se encontraron registros de PnL para los filtros seleccionados."
+    },
+    "funding": {
+      "title": "Tasas de Funding y Flujo de Caja Histórico",
+      "subtitle": "Monitorea tasas de funding previstas y liquidadas, flujos de caja acumulados y rendimiento carry entre exchanges.",
+      "columns": {
+        "coin": "Moneda / Contrato",
+        "next": "Próxima Tasa",
+        "last": "Última Liquidada",
+        "today": "Hoy",
+        "currentMonth": "Mes Actual",
+        "lastMonth": "Mes Anterior",
+        "last3Months": "Últimos 3 Meses",
+        "last6Months": "Últimos 6 Meses",
+        "oneYear": "1 Año"
+      },
+      "tooltips": {
+        "next": "La próxima tasa de funding y su tiempo estimado de liquidación. Una tasa positiva (verde) significa que posiciones Long pagan a Short. Una tasa negativa (rojo) significa que Short pagan a Long.",
+        "last": "La tasa de funding más reciente ya liquidada. Positiva = Longs pagaron a Shorts. Negativa = Shorts pagaron a Longs.",
+        "today": "Suma acumulada de tasa de funding de hoy (UTC). Refleja todos los intervalos de funding liquidados hasta el momento.",
+        "currentMonth": "Suma acumulada de tasa de funding para el mes calendario actual. Incluye hoy.",
+        "lastMonth": "Suma acumulada de tasa de funding para el mes calendario anterior.",
+        "last3Months": "Suma acumulada de tasa de funding en los últimos 3 meses calendario.",
+        "last6Months": "Suma acumulada de tasa de funding en los últimos 6 meses calendario.",
+        "oneYear": "Soma acumulada de taxa de funding nos últimos 12 meses calendário.",
+        "historicalNote": "⚠ NO incluye el mes actual — solo se cuentan los meses completados.",
+        "incompleteNote": "Las APIs de OKX y Bitget limitan los datos históricos a ~3 meses. Los valores más allá de 3 meses provienen de nuestro caché local y pueden ser parciales."
+      },
+      "cards": {
+        "predictedNext": "Próximo Funding Previsto (8h)",
+        "settledToday": "Liquidado Hoy",
+        "cumulative30d": "Acumulado 30 Días",
+        "annualizedYield": "Rendimiento Carry Anualizado",
+        "longsPayShorts": "Longs pagan a Shorts",
+        "shortsPayLongs": "Shorts pagan a Longs"
+      },
+      "comparison": {
+        "title": "Comparativo de Tasas Entre Exchanges",
+        "linearTab": "Linear (USDT-M)",
+        "inverseTab": "Inverso (Coin-M)",
+        "spread": "Spread (Máx - Mín)",
+        "bestOpportunity": "Mejor Oportunidad de Rendimiento",
+        "selectSymbols": "Seleccionar símbolos...",
+        "noSymbolsFound": "No se encontraron símbolos."
+      }
+    }
   }
 }

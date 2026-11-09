@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Compass,
   Users,
@@ -19,6 +20,7 @@ import {
 } from './MarketAnalyticsTooltips';
 
 export const SmartMoneySentimentWidget: React.FC = () => {
+  const { t } = useTranslation();
   const { snapshot } = useMarketAnalyticsStore();
 
   if (!snapshot) return null;

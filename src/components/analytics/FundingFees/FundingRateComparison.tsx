@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFundingData } from '../../../hooks/useFundingData';
 import { useFundingStore } from '../../../store/fundingStore';
 import { useOpenPositionKeys, getBaseCoin } from '../../../hooks/useOpenPositionKeys';
@@ -10,6 +11,7 @@ import clsx from 'clsx';
 import { isInverseSymbol } from '../../../utils/inverseUtils';
 
 export const FundingRateComparison = () => {
+  const { t } = useTranslation();
   const { aggregatedData, isLoading } = useFundingData();
   const { comparisonFavorites } = useFundingStore();
   const [selectedSymbols, setSelectedSymbols] = useState<string[]>([]);

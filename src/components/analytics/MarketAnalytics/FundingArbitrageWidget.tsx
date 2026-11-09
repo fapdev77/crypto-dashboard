@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeftRight,
   TrendingUp,
@@ -13,6 +14,7 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { MaxFundingSpreadTooltip } from './MarketAnalyticsTooltips';
 
 export const FundingArbitrageWidget: React.FC = () => {
+  const { t } = useTranslation();
   const { snapshot, selectedMarkets, selectAllMarkets, setSelectedSymbol } = useMarketAnalyticsStore();
 
   if (!snapshot) return null;

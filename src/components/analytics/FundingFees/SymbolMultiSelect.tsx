@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, ChevronDown, Search, X } from 'lucide-react';
 import clsx from 'clsx';
 import { CoinIcon } from '../../ui/CoinIcon';
@@ -26,6 +27,7 @@ export const SymbolMultiSelect: React.FC<Props> = ({
   onChange, 
   maxSelections = 30 
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,7 +70,9 @@ export const SymbolMultiSelect: React.FC<Props> = ({
         onClick={() => setIsOpen(true)}
       >
         {selectedSymbols.length === 0 && !isOpen && (
-          <span className="text-[#8E9299] text-sm pl-2">Select symbols...</span>
+          <span className="text-[#8E9299] text-sm pl-2">
+            {t('analytics.funding.comparison.selectSymbols', 'Select symbols...')}
+          </span>
         )}
         
         {selectedSymbols.map(id => {
@@ -106,7 +110,7 @@ export const SymbolMultiSelect: React.FC<Props> = ({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-transparent border-none focus:outline-none text-sm text-white pl-2 pr-7 py-1"
-                placeholder="Search..."
+                placeholder={t('common.search', 'Search...')}
                 autoFocus
               />
               {searchTerm && (
@@ -117,7 +121,7 @@ export const SymbolMultiSelect: React.FC<Props> = ({
                     setSearchTerm('');
                   }}
                   className="absolute right-1.5 text-[#8E9299] hover:text-white bg-[#2a2b30] rounded-full p-0.5 focus:outline-none transition-colors"
-                  title="Clear search"
+                  title={t('common.clearSearch', 'Clear search')}
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -140,7 +144,9 @@ export const SymbolMultiSelect: React.FC<Props> = ({
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-[#151619] border border-[#2a2b30] rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
           {filteredSymbols.length === 0 ? (
-            <div className="p-4 text-center text-sm text-[#8E9299]">No symbols found.</div>
+            <div className="p-4 text-center text-sm text-[#8E9299]">
+              {t('analytics.funding.comparison.noSymbolsFound', 'No symbols found.')}
+            </div>
           ) : (
             <div className="p-1">
               {filteredSymbols.map(sym => {

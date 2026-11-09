@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -42,6 +43,7 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => {
+  const { t } = useTranslation();
   const { comparisonFavorites, toggleComparisonFavorite } = useFundingStore();
 
   if (active && payload && payload.length) {
@@ -94,7 +96,7 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
         </div>
         
         <div className="mt-2 text-xs text-[#8E9299]">
-          {isPositive ? 'Longs pay Shorts' : data.value < 0 ? 'Shorts pay Longs' : 'Neutral'}
+          {isPositive ? t('analytics.funding.cards.longsPayShorts', 'Longs pay Shorts') : data.value < 0 ? t('analytics.funding.cards.shortsPayLongs', 'Shorts pay Longs') : t('common.neutral', 'Neutral')}
         </div>
       </div>
     );
@@ -127,6 +129,7 @@ const CustomizedLabel = (props: any) => {
 };
 
 export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) => {
+  const { t } = useTranslation();
   const { comparisonFavorites, toggleComparisonFavorite } = useFundingStore();
 
   // Ensure enough height to avoid squished bars in horizontal layout

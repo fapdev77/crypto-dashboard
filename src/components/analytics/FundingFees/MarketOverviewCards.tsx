@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart3, TrendingUp, TrendingDown, Activity,
   Flame, Snowflake, Layers, ChevronDown, ChevronRight, Loader2
@@ -20,11 +21,13 @@ const formatPercentShort = (val: number): string => val.toFixed(1) + '%';
 const STORAGE_KEY = 'fundingDashboard_marketOverviewExpanded';
 
 export const MarketOverviewCards = ({
+  
   marketMetrics,
   rankings,
   className = '',
   isSyncing = false,
 }: MarketOverviewCardsProps) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(() => {
     return localStorage.getItem(STORAGE_KEY) !== 'false';
   });
@@ -53,7 +56,7 @@ export const MarketOverviewCards = ({
           ) : (
             <ChevronRight className="w-4 h-4 text-[#8E9299]" />
           )}
-          <h3 className="text-sm font-semibold text-white">Market Overview</h3>
+          <h3 className="text-sm font-semibold text-white">{t('analytics.funding.cards.marketOverview', 'Market Overview')}</h3>
           <span className="text-xs text-[#8E9299] font-normal">
             ({marketMetrics.totalSymbols} symbols · {rankings.topPayers.length} top / {rankings.bottomPayers.length} bottom)
           </span>

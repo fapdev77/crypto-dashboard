@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AdvancedPerformanceMetrics } from '../../../hooks/usePortfolioPerformance';
 import { AppTooltip } from '../../ui/Tooltip';
 import { Award, TrendingUp, ShieldCheck, Activity } from 'lucide-react';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanceSection({ metrics, denomination, isPrivateMode }: Props) {
+  const { t } = useTranslation();
   const maskVal = (val: string | number) => {
     if (isPrivateMode) return '****';
     return String(val);
@@ -47,7 +49,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
       <div className="flex items-center justify-between pb-2 border-b border-[#2a2b30]/60">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
           <Award className="w-4 h-4 text-[#2F6BFF]" />
-          Advanced Performance Metrics
+          {t('analytics.portfolio.advanced.title', 'Advanced Performance Metrics')}
         </h3>
         <span className="text-xs text-[#8E9299]">Risk, Return & Consistency</span>
       </div>
@@ -60,7 +62,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
             <div className="flex items-center justify-between mb-3">
               <AppTooltip description="Percentage of operating days with positive net result over the total days with activity.">
                 <span className="text-[11px] font-semibold text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                  Win Rate (Daily)
+                  {t('analytics.portfolio.advanced.winRate', 'Win Rate (Daily)')}
                 </span>
               </AppTooltip>
               <TrendingUp className="w-4 h-4 text-emerald-400" />
@@ -101,7 +103,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
             <div className="flex items-center justify-between mb-3">
               <AppTooltip description="Ratio of gross gains to gross losses: Total Gains / Total Losses. Values > 2.0 indicate institutional excellence.">
                 <span className="text-[11px] font-semibold text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                  Profit Factor
+                  {t('analytics.portfolio.advanced.profitFactor', 'Profit Factor')}
                 </span>
               </AppTooltip>
               <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border ${getProfitFactorBadge(metrics.profitFactorRating)}`}>
@@ -142,7 +144,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
             <div className="flex items-center justify-between mb-3">
               <AppTooltip description="Coefficient of Variation (Standard Deviation / Daily Mean * 100). Lower CV reflects higher regularity and consistency across operational days.">
                 <span className="text-[11px] font-semibold text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                  Consistency Index (CV)
+                  {t('analytics.portfolio.advanced.consistencyIndex', 'Consistency Index (CV)')}
                 </span>
               </AppTooltip>
               <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border ${getConsistencyBadge(metrics.consistencyRating)}`}>

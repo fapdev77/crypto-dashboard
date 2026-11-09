@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFundingData } from '../../../hooks/useFundingData';
 import { useFundingSync } from '../../../hooks/useFundingSync';
 import { useFundingStore } from '../../../store/fundingStore';
@@ -131,6 +132,7 @@ const FundingTable = ({
   defaultExpanded?: boolean,
   isSyncing?: boolean
 }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [expandedCoins, setExpandedCoins] = useState<Record<string, boolean>>({});
   const { favorites, toggleFavorite } = useFundingStore();
@@ -202,30 +204,30 @@ const FundingTable = ({
             <thead className="text-[#8E9299] bg-[#1A1C20]/50 border-y border-[#2a2b30]">
               <tr>
                 <th className="px-6 py-3 font-medium w-10"></th>
-                <th className="px-6 py-3 font-medium">Asset / Exchange</th>
+                <th className="px-6 py-3 font-medium">{t('analytics.funding.columns.coin', 'Coin / Contract')}</th>
                 <th className="px-6 py-3 font-medium text-right">
-                  <ThTooltip columnKey="next">Next (Rate / Time)</ThTooltip>
-                </th>
-                <th className="px-6 py-3 font-medium text-right">
-                  <ThTooltip columnKey="last">Last</ThTooltip>
+                  <ThTooltip columnKey="next">{t('analytics.funding.columns.next', 'Next Rate')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right">
-                  <ThTooltip columnKey="today">Today</ThTooltip>
+                  <ThTooltip columnKey="last">{t('analytics.funding.columns.last', 'Last Settled')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right">
-                  <ThTooltip columnKey="currentMonth">Current Month</ThTooltip>
+                  <ThTooltip columnKey="today">{t('analytics.funding.columns.today', 'Today')}</ThTooltip>
+                </th>
+                <th className="px-6 py-3 font-medium text-right">
+                  <ThTooltip columnKey="currentMonth">{t('analytics.funding.columns.currentMonth', 'Current Month')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
-                  <ThTooltip columnKey="lastMonth">Last Month</ThTooltip>
+                  <ThTooltip columnKey="lastMonth">{t('analytics.funding.columns.lastMonth', 'Last Month')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
-                  <ThTooltip columnKey="last3Months">Last 3 Months</ThTooltip>
+                  <ThTooltip columnKey="last3Months">{t('analytics.funding.columns.last3Months', 'Last 3 Months')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
-                  <ThTooltip columnKey="last6Months">Last 6 Months</ThTooltip>
+                  <ThTooltip columnKey="last6Months">{t('analytics.funding.columns.last6Months', 'Last 6 Months')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
-                  <ThTooltip columnKey="oneYear">1 Year</ThTooltip>
+                  <ThTooltip columnKey="oneYear">{t('analytics.funding.columns.oneYear', '1 Year')}</ThTooltip>
                 </th>
               </tr>
             </thead>
@@ -463,6 +465,7 @@ const FundingTable = ({
 };
 
 export const FundingDashboard = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'overview' | 'comparison'>('overview');
   const { forceSync } = useFundingSync();
   const { aggregatedData, isLoading } = useFundingData();
@@ -541,9 +544,9 @@ export const FundingDashboard = () => {
     <div className="w-full h-full flex flex-col space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-white">Funding Fees Dashboard</h2>
+          <h2 className="text-xl font-semibold text-white">{t('analytics.funding.title', 'Funding Fees Dashboard')}</h2>
           <p className="text-xs text-[#8E9299] mt-1">
-            Real-time and historical funding rates aggregated across exchanges.
+            {t('analytics.funding.subtitle', 'Real-time and historical funding rates aggregated across exchanges.')}
           </p>
           <StatusAndSyncBadge
             isSyncing={isSyncing}
@@ -564,7 +567,7 @@ export const FundingDashboard = () => {
             activeTab === 'overview' ? "border-[#2F6BFF] text-white" : "border-transparent text-[#8E9299] hover:text-white"
           )}
         >
-          Historical Overview
+          {t('analytics.funding.tabs.overview', 'Historical Overview')}
         </button>
         <button
           onClick={() => setActiveTab('comparison')}
@@ -573,7 +576,7 @@ export const FundingDashboard = () => {
             activeTab === 'comparison' ? "border-[#2F6BFF] text-white" : "border-transparent text-[#8E9299] hover:text-white"
           )}
         >
-          Funding Rate Comparison
+          {t('analytics.funding.tabs.comparison', 'Funding Rate Comparison')}
         </button>
       </div>
 
@@ -625,7 +628,7 @@ export const FundingDashboard = () => {
           exchange={{
             value: exchangeFilter,
             onChange: setExchangeFilter,
-            labelAll: 'All Exchanges',
+            labelAll: t('analytics.common.allExchanges', 'All Exchanges'),
             options: ['bybit', 'bitget', 'okx']
           }}
           instrument={{

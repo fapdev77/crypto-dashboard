@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { AppTooltip } from '../../ui/Tooltip';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
@@ -30,6 +31,7 @@ export const KpiRankingList = ({
   color,
   tooltip,
 }: KpiRankingListProps) => {
+  const { t } = useTranslation();
   const borderColor = color === 'green' ? 'border-green-500/20' : 'border-red-500/20';
   const textColor = color === 'green' ? 'text-green-400' : 'text-red-400';
   const bgColor = color === 'green' ? 'bg-green-500/5' : 'bg-red-500/5';
@@ -43,7 +45,7 @@ export const KpiRankingList = ({
       </div>
 
       {items.length === 0 ? (
-        <span className="text-xs text-[#8E9299] italic">No data</span>
+        <span className="text-xs text-[#8E9299] italic">{t('common.noData', 'No data')}</span>
       ) : (
         <div className="flex flex-col gap-1">
           {items.map((item, idx) => {

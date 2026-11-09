@@ -288,7 +288,7 @@ describe('ConsolidatedTransactionComponents', () => {
     renderTransactionUi(<FiltersHarness />);
 
     // Search input
-    expect(screen.getByPlaceholderText('Search symbol or asset...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search symbol...')).toBeInTheDocument();
 
     // Dropdowns
     expect(screen.getByRole('button', { name: /all exchanges/i })).toBeInTheDocument();

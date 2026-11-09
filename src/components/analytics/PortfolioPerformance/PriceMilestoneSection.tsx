@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PriceMilestoneItem } from '../../../hooks/usePortfolioPerformance';
 import { AppTooltip } from '../../ui/Tooltip';
 import { Milestone, ArrowUpDown, TrendingUp, TrendingDown, Layers } from 'lucide-react';
@@ -21,12 +22,14 @@ interface Props {
 }
 
 export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
+  
   milestones,
   denomination,
   milestoneStep,
   onStepChange,
   isPrivateMode,
 }: Props) {
+  const { t } = useTranslation();
   const maskVal = (val: string | number) => {
     if (isPrivateMode) return '****';
     return String(val);
@@ -55,7 +58,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
         <div>
           <h3 className="text-base font-bold text-white flex items-center gap-2">
             <Milestone className="w-4 h-4 text-[#2F6BFF]" />
-            Price Milestone & Range Passage Analysis
+            {t('analytics.portfolio.milestones.title', 'Price Milestone & Range Passage Analysis')}
           </h3>
           <p className="text-xs text-[#8E9299] mt-0.5">
             Evaluates equity accumulation each time price revisits the same valuation level
@@ -64,7 +67,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
 
         {/* Step configuration */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#8E9299] whitespace-nowrap">Step Interval:</span>
+          <span className="text-xs text-[#8E9299] whitespace-nowrap">{t('analytics.portfolio.milestones.intervalStep', 'Step Interval')}:</span>
           <div className="flex items-center gap-1 bg-[#1a1b1e] p-1 rounded-lg border border-[#2a2b30]">
             {presetSteps.map((step) => (
               <button

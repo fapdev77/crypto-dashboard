@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { EvolutionPoint } from '../../../hooks/usePortfolioPerformance';
 import { TrendingUp, Activity } from 'lucide-react';
@@ -11,11 +12,13 @@ interface Props {
 }
 
 export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSection({
+  
   series: propSeries,
   evolutionSeries,
   denomination,
   isPrivateMode,
 }: Props) {
+  const { t } = useTranslation();
   const series = propSeries || evolutionSeries || [];
   // Sample series to avoid rendering excessive SVG nodes (max 80 points)
   const sampledSeries = React.useMemo(() => {
@@ -62,7 +65,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
       <div className="flex items-center justify-between pb-2 border-b border-[#2a2b30]/60">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-[#2F6BFF]" />
-          Balance Evolution
+          {t('analytics.portfolio.evolution.title', 'Balance Evolution')}
         </h3>
         <span className="text-xs text-[#8E9299]">Cumulative Progression</span>
       </div>

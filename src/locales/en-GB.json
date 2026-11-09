@@ -749,5 +749,210 @@
       "okxBadge": "OKX",
       "sectionTitle": "Exchange & Asset Performance Breakdown"
     }
+  },
+  "analytics": {
+    "common": {
+      "exportReport": "Export Report",
+      "exportCsv": "Export CSV",
+      "exportExcel": "Export Excel",
+      "exportPdf": "Export PDF",
+      "calculatingUsd": "Calculating USD asset valuations...",
+      "syncingTransactions": "Syncing transactions...",
+      "allExchanges": "All Exchanges",
+      "allAccounts": "All Accounts",
+      "selectDenomination": "Select Denomination",
+      "selectAsset": "Select Asset",
+      "searchSymbol": "Search symbol...",
+      "searchCoinOrContract": "Search coin or contract...",
+      "noData": "No analytics data available for the selected parameters."
+    },
+    "portfolio": {
+      "title": "Portfolio Performance",
+      "subtitle": "Institutional evolution, cash flow, funding & volatility analytics",
+      "consolidatedUsd": "Consolidated (USD)",
+      "consolidatedUsdTooltip": "Convert all performance metrics into USD equivalent",
+      "nativeAsset": "{{asset}} Native",
+      "nativeAssetTooltip": "Measure returns in pure {{asset}} units (as in Hedge Pro BTC)",
+      "primary": {
+        "title": "Primary Result",
+        "roi": "Percentage Gain (ROI)",
+        "absoluteGain": "Absolute Gain",
+        "initialBalance": "Initial Balance",
+        "finalBalance": "Final Balance",
+        "dailyAvgRoi": "Daily Avg ROI",
+        "perOperatingDay": "per operating day",
+        "depositsInPeriod": "Deposits in Period",
+        "externalCapital": "External capital injected"
+      },
+      "operations": {
+        "title": "Operations Result & Fee Efficiency",
+        "grossCashFlow": "Gross Cash Flow",
+        "netTradingPnl": "Net Trading PnL",
+        "tradingFeesPaid": "Trading Fees Paid",
+        "fundingReceived": "Funding Received",
+        "fundingPaid": "Funding Paid",
+        "netFunding": "Net Funding",
+        "fundingRatio": "Funding Efficiency Ratio",
+        "tradeBreakdown": "Trade Breakdown",
+        "feeAnalysis": "Fee Analysis",
+        "feeCostRatio": "Fee Cost Ratio",
+        "buysSells": "Buys / Sells",
+        "avgTradesPerDay": "Avg Trades / Day",
+        "totalTrades": "Total Trades",
+        "executions": "Executions",
+        "cardTitle": "Operations Result"
+      },
+      "advanced": {
+        "title": "Advanced Performance Metrics",
+        "winRate": "Win Rate (Daily)",
+        "positiveDays": "{{positive}} positive",
+        "profitFactor": "Profit Factor",
+        "totalGains": "Total Gains",
+        "totalLosses": "Total Losses",
+        "consistencyIndex": "Consistency Index (CV)",
+        "ratings": {
+          "outstanding": "Outstanding",
+          "good": "Good",
+          "marginal": "Marginal",
+          "suboptimal": "Sub-optimal",
+          "highlyConsistent": "Highly Consistent",
+          "moderateVariance": "Moderate Variance",
+          "highVolatility": "High Volatility"
+        }
+      },
+      "temporal": {
+        "title": "Temporal Performance Analysis",
+        "dayOfWeekTab": "Day of Week",
+        "timeOfDayTab": "Time of Day (UTC)",
+        "bestDay": "Best Day",
+        "lowestDay": "Lowest Day",
+        "bestTime": "Best Time Window",
+        "lowestTime": "Lowest Time Window"
+      },
+      "milestones": {
+        "title": "Price Milestone & Range Passage Analysis",
+        "intervalStep": "Milestone Interval Step",
+        "passages": "passages",
+        "return": "Return"
+      },
+      "evolution": {
+        "title": "Balance Evolution & Capital Trajectory",
+        "description": "Historical balance trajectory across operating period"
+      }
+    },
+    "market": {
+      "title": "Market Analytics",
+      "subtitle": "Quantitative cross-exchange derivatives intelligence, open interest regimes, taker order flow & funding arbitrage across Bybit, OKX & Bitget.",
+      "tabs": {
+        "multiMarket": "Multi-Market Intelligence",
+        "inverseCoinM": "Inverse (Coin-M) Contracts"
+      },
+      "indicators": {
+        "price": "Aggregated Price",
+        "volume24h": "24h Volume",
+        "openInterest": "Total Open Interest",
+        "avgFunding": "Avg Funding Rate (APR)",
+        "maxSpread": "Max Funding Spread",
+        "takerFlow": "Taker Buy/Sell Ratio",
+        "fearGreed": "Fear & Greed Index"
+      },
+      "widgets": {
+        "arbitrageTitle": "Cross-Exchange Funding Rate Arbitrage",
+        "openInterestTitle": "Open Interest & Liquidations Regime",
+        "smartMoneyTitle": "Smart Money vs Retail Positioning",
+        "takerFlowTitle": "Taker Flow & Cumulative Volume Delta (CVD)"
+      },
+      "tooltips": {
+        "price": "Current global spot/perpetual price blended across top liquidity venues.",
+        "volume": "Aggregated notional volume traded over the last 24 hours across all monitored exchanges.",
+        "openInterest": "Total nominal value of all outstanding derivative contracts (futures and options) that have not been settled.",
+        "fundingRate": "Weighted average funding rate across exchanges, indicating the cost of holding long vs short positions.",
+        "spread": "The maximum annualised difference between the highest and lowest funding rates across tracked exchanges."
+      },
+      "filterModal": {
+        "title": "Market Filters & Venue Selection",
+        "exchanges": "Exchanges",
+        "contractTypes": "Contract Types",
+        "apply": "Apply Filters",
+        "reset": "Reset Defaults"
+      }
+    },
+    "inverseMarket": {
+      "title": "Inverse (Coin-M) Derivative Analytics",
+      "subtitle": "Capital preservation, synthetic USD hedging and Coin-margined contract dynamics.",
+      "activeContracts": "Active Coin-M Contracts",
+      "notionalOi": "Total Notional USD Open Interest",
+      "volume24h": "24h Coin-M Volume",
+      "cards": {
+        "shareOfOi": "Share of Total OI",
+        "fundingInterval": "Funding Interval",
+        "contractUnit": "Contract Unit Value"
+      }
+    },
+    "pnlSymbol": {
+      "title": "PnL by Symbol",
+      "subtitle": "Realised profit and loss broken down by asset symbol, trading side (Long vs Short) and exchange venue.",
+      "table": {
+        "exchange": "Exchange",
+        "symbol": "Symbol",
+        "instrument": "Instrument",
+        "longPnl": "Long Realised PnL",
+        "shortPnl": "Short Realised PnL",
+        "totalPnl": "Total Realised PnL",
+        "intensity": "Intensity"
+      },
+      "summary": {
+        "totalPnl": "Total Realised PnL",
+        "longShare": "Long PnL",
+        "shortShare": "Short PnL",
+        "profitableSymbols": "Profitable Symbols",
+        "losingSymbols": "Losing Symbols"
+      },
+      "noRecords": "No PnL records found for the selected filters."
+    },
+    "funding": {
+      "title": "Funding Fees & Historical Cash Flow",
+      "subtitle": "Track upcoming and settled funding rates, cumulative cash flows and cross-exchange carry yield.",
+      "columns": {
+        "coin": "Coin / Contract",
+        "next": "Next Rate",
+        "last": "Last Settled",
+        "today": "Today",
+        "currentMonth": "Current Month",
+        "lastMonth": "Last Month",
+        "last3Months": "Last 3 Months",
+        "last6Months": "Last 6 Months",
+        "oneYear": "1 Year"
+      },
+      "tooltips": {
+        "next": "The upcoming funding rate and its estimated settlement time. A positive rate (green) means Long positions pay Short positions. A negative rate (red) means Short positions pay Long positions.",
+        "last": "The most recent funding rate that was already settled. Positive = Longs paid Shorts. Negative = Shorts paid Longs.",
+        "today": "Cumulative funding rate sum for today (UTC). Reflects all settled funding intervals so far today.",
+        "currentMonth": "Cumulative funding rate sum for the current calendar month. Includes today.",
+        "lastMonth": "Cumulative funding rate sum for the previous calendar month.",
+        "last3Months": "Cumulative funding rate sum over the last 3 calendar months.",
+        "last6Months": "Cumulative funding rate sum over the last 6 calendar months.",
+        "oneYear": "Cumulative funding rate sum over the last 12 calendar months.",
+        "historicalNote": "⚠ Does NOT include the current month — only completed months are counted.",
+        "incompleteNote": "OKX and Bitget APIs limit historical data to ~3 months. Values beyond 3 months are from our local cache and may be partial until sufficient data accumulates."
+      },
+      "cards": {
+        "predictedNext": "Predicted Next Funding (8h)",
+        "settledToday": "Settled Today",
+        "cumulative30d": "Cumulative 30 Days",
+        "annualizedYield": "Annualised Carry Yield",
+        "longsPayShorts": "Longs pay Shorts",
+        "shortsPayLongs": "Shorts pay Longs"
+      },
+      "comparison": {
+        "title": "Cross-Exchange Rate Comparison",
+        "linearTab": "Linear (USDT-M)",
+        "inverseTab": "Inverse (Coin-M)",
+        "spread": "Spread (Max - Min)",
+        "bestOpportunity": "Best Yield Opportunity",
+        "selectSymbols": "Select symbols...",
+        "noSymbolsFound": "No symbols found."
+      }
+    }
   }
 }

@@ -149,17 +149,17 @@ describe('OKX transaction components (components/transactions/OkxTransactions)',
     it('renders every filter control', () => {
       renderTransactionUi(<OkxFiltersHarness />);
 
-      expect(screen.getByPlaceholderText('Search symbol (e.g. BTC, ETH)...')).toBeDefined();
+      expect(screen.getByPlaceholderText('Search symbol...')).toBeDefined();
       expect(screen.getByText('All Categories')).toBeDefined();
       expect(screen.getByText('All Types')).toBeDefined();
       expect(screen.getByText('All Currencies')).toBeDefined();
-      expect(screen.getByText('All OKX Accounts')).toBeDefined();
+      expect(screen.getByText('All Accounts')).toBeDefined();
     });
 
     it('propagates the typed search term through setFilters', () => {
       renderTransactionUi(<OkxFiltersHarness />);
 
-      fireEvent.change(screen.getByPlaceholderText('Search symbol (e.g. BTC, ETH)...'), { target: { value: 'BTC' } });
+      fireEvent.change(screen.getByPlaceholderText('Search symbol...'), { target: { value: 'BTC' } });
 
       expect(screen.getByTestId('filters-search').textContent).toBe('BTC');
     });

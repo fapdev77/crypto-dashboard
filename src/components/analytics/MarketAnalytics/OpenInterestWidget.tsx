@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -24,6 +25,7 @@ import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { OpenInterestMetricTooltip, MarketRegimeTooltip } from './MarketAnalyticsTooltips';
 
 export const OpenInterestWidget: React.FC = () => {
+  const { t } = useTranslation();
   const { snapshot, selectedMarkets, selectAllMarkets } = useMarketAnalyticsStore();
 
   if (!snapshot) return null;
