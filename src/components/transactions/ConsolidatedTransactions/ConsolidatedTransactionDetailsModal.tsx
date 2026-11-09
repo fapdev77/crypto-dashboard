@@ -4,8 +4,8 @@ import { X } from 'lucide-react';
 import { ConsolidatedStats } from '../../../hooks/useConsolidatedTransactions';
 import { UNIVERSAL_BADGE_STYLE, UniversalTxType } from '../../../utils/transactionTypeMapper';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
-import { CoinIcon } from '../../ui/CoinIcon';
 import { useTranslation } from 'react-i18next';
+import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 
 export type DetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -27,6 +27,7 @@ export function ConsolidatedTransactionDetailsModal({
   isPrivateMode,
 }: ConsolidatedTransactionDetailsModalProps) {
   const { t } = useTranslation();
+  const formatCurrency = useFormatCurrency();
   if (!detailsModalType) return null;
 
   const exchanges: Array<{ id: 'bybit' | 'bitget' | 'okx'; name: string }> = [
@@ -41,15 +42,16 @@ export function ConsolidatedTransactionDetailsModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[#2a2b30]">
           <h3 className="text-white font-medium text-base">
-            {detailsModalType === 'funding' && 'Consolidated Funding Breakdown (USD)'}
-            {detailsModalType === 'fees' && 'Consolidated Trading Fees Breakdown (USD)'}
-            {detailsModalType === 'balance' && 'Consolidated Wallet Balance (USD)'}
-            {detailsModalType === 'tx' && 'Total Transactions by Type'}
-            {detailsModalType === 'netchange' && 'Consolidated Net Change (USD)'}
+            {detailsModalType === 'funding' && t('transactions.details.consolidatedFunding', 'Consolidated Funding Breakdown')}
+            {detailsModalType === 'fees' && t('transactions.details.consolidatedFees', 'Consolidated Trading Fees Breakdown')}
+            {detailsModalType === 'balance' && t('transactions.details.consolidatedBalance', 'Consolidated Wallet Balance')}
+            {detailsModalType === 'tx' && t('transactions.details.totalTxByType', 'Total Transactions by Type')}
+            {detailsModalType === 'netchange' && t('transactions.details.consolidatedNetChange', 'Consolidated Net Change')}
           </h3>
           <button
             onClick={() => setDetailsModalType(null)}
             className="text-[#8E9299] hover:text-white transition-colors p-1 rounded-md hover:bg-[#2a2b30]/50"
+            aria-label={t('common.close', 'Close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -60,7 +62,9 @@ export function ConsolidatedTransactionDetailsModal({
           {detailsModalType === 'tx' ? (
             <div className="space-y-2">
               {Object.entries(stats.typeBreakdown).length === 0 ? (
-                <div className="text-[#8E9299] text-sm text-center py-4">No transactions available</div>
+                <div className="text-[#8E9299] text-sm text-center py-4">
+                  {t('transactions.details.noTxAvailable', 'No transactions available')}
+                </div>
               ) : (
                 Object.entries(stats.typeBreakdown)
                   .sort((a, b) => b[1] - a[1])
@@ -83,14 +87,17 @@ export function ConsolidatedTransactionDetailsModal({
             <div className="space-y-4">
               {/* Grand Total Bar */}
               <div className="bg-[#1e232b] p-3.5 rounded-lg border border-[#2a2b30] flex items-center justify-between">
-                <span className="text-sm font-semibold text-white">Grand Total (USD)</span>
+                <span className="text-sm font-semibold text-white">
+                  {t('transactions.details.grandTotal', 'Grand Total')}
+                </span>
                 <span className="font-mono font-bold text-sm text-[#2F6BFF]">
                   {(() => {
-                    if (detailsModalType === 'funding') return `${maskVal(stats.aggregatedUsd.totalFunding)} USD`;
-                    if (detailsModalType === 'fees') return `-${maskVal(stats.aggregatedUsd.totalFees)} USD`;
-                    if (detailsModalType === 'balance') return `${maskVal(stats.aggregatedUsd.finalBalance)} USD`;
-                    if (detailsModalType === 'netchange') return `${maskVal(stats.aggregatedUsd.totalChange)} USD`;
-                    return '0.00 USD';
+                    let val = 0;
+                    if (detailsModalType === 'funding') val = Number(stats.aggregatedUsd.totalFunding || 0);
+                    if (detailsModalType === 'fees') val = -Math.abs(Number(stats.aggregatedUsd.totalFees || 0));
+                    if (detailsModalType === 'balance') val = Number(stats.aggregatedUsd.finalBalance || 0);
+                    if (detailsModalType === 'netchange') val = Number(stats.aggregatedUsd.totalChange || 0);
+                    return formatCurrency(val, 'fiat');
                   })()}
                 </span>
               </div>
@@ -98,21 +105,20 @@ export function ConsolidatedTransactionDetailsModal({
               {/* By Exchange Breakdown */}
               <div className="space-y-3">
                 <h4 className="text-xs font-semibold text-[#8E9299] uppercase tracking-wider">
-                  Breakdown by Exchange Venue
+                  {t('transactions.details.byExchange', 'Breakdown by Exchange Venue')}
                 </h4>
 
                 {exchanges.map(({ id, name }) => {
                   const exchStats = stats.byExchange[id];
                   if (!exchStats || exchStats.totalCount === 0) return null;
 
-                  let usdValue = '0';
-                  if (detailsModalType === 'funding') usdValue = exchStats.aggregatedUsd.totalFunding;
-                  if (detailsModalType === 'fees') usdValue = exchStats.aggregatedUsd.totalFees;
-                  if (detailsModalType === 'balance') usdValue = exchStats.aggregatedUsd.finalBalance;
-                  if (detailsModalType === 'netchange') usdValue = exchStats.aggregatedUsd.totalChange;
+                  let rawVal = 0;
+                  if (detailsModalType === 'funding') rawVal = Number(exchStats.aggregatedUsd.totalFunding || 0);
+                  if (detailsModalType === 'fees') rawVal = -Math.abs(Number(exchStats.aggregatedUsd.totalFees || 0));
+                  if (detailsModalType === 'balance') rawVal = Number(exchStats.aggregatedUsd.finalBalance || 0);
+                  if (detailsModalType === 'netchange') rawVal = Number(exchStats.aggregatedUsd.totalChange || 0);
 
-                  const usdBig = new Big(usdValue || '0');
-                  const isPositive = usdBig.gte(0);
+                  const isPositive = rawVal >= 0;
 
                   return (
                     <div key={id} className="bg-[#1a1b1e] p-3 rounded-lg border border-[#2a2b30]/60 flex items-center justify-between">
@@ -120,7 +126,7 @@ export function ConsolidatedTransactionDetailsModal({
                         <ExchangeIcon exchange={id} className="w-4 h-4" />
                         <span className="text-sm font-medium text-white">{name}</span>
                         <span className="text-[10px] text-[#8E9299] bg-[#2a2b30]/50 px-1.5 py-0.5 rounded font-mono">
-                          {exchStats.totalCount} txs
+                          {exchStats.totalCount} {t('transactions.details.txs', 'txs')}
                         </span>
                       </div>
 
@@ -129,8 +135,8 @@ export function ConsolidatedTransactionDetailsModal({
                           {isPrivateMode
                             ? '****'
                             : (detailsModalType === 'fees'
-                                ? `-${maskVal(usdBig.abs().toString())} USD`
-                                : `${isPositive ? '+' : ''}${maskVal(usdBig.toString())} USD`)}
+                                ? `-${formatCurrency(Math.abs(rawVal), 'fiat')}`
+                                : `${isPositive ? '+' : ''}${formatCurrency(rawVal, 'fiat')}`)}
                         </span>
                       </div>
                     </div>

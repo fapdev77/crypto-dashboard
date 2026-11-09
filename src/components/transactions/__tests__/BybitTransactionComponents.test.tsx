@@ -170,7 +170,7 @@ describe('Bybit transaction components (components/transactions/BybitTransaction
       const setDetailsModalType = renderDetailsModal('funding');
 
       expect(screen.getByText('Funding Breakdown')).toBeDefined();
-      expect(screen.getByText('Total (USD Eq.)')).toBeDefined();
+      expect(screen.getByText('Total Equivalent')).toBeDefined();
 
       fireEvent.click(screen.getByRole('button'));
 

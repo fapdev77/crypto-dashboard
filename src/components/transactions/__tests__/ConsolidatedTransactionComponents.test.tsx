@@ -329,8 +329,8 @@ describe('ConsolidatedTransactionComponents', () => {
       />
     );
 
-    expect(screen.getByText('Consolidated Funding Breakdown (USD)')).toBeInTheDocument();
+    expect(screen.getByText('Consolidated Funding Breakdown')).toBeInTheDocument();
     expect(screen.getByText('Breakdown by Exchange Venue')).toBeInTheDocument();
-    expect(screen.getByText('Grand Total (USD)')).toBeInTheDocument();
+    expect(screen.getByText('Grand Total')).toBeInTheDocument();
   });
 });

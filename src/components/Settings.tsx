@@ -310,7 +310,7 @@ export function Settings() {
           <div className="space-y-5 flex-1 flex flex-col">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <AppTooltip description="Enables testing mode with offline, mock data across all exchanges. API limits won't be hit while this is active. Real balances and positions will be hidden.">
+                <AppTooltip description={t('settings.simulationMode.tooltip', "Enables testing mode with offline, mock data across all exchanges. API limits won't be hit while this is active. Real balances and positions will be hidden.")}>
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.simulationMode.title', 'Simulation Mode (Mock Data)')}</h4>
                 </AppTooltip>
                 <p className="text-[#8E9299] text-xs mt-1.5 leading-relaxed">
@@ -324,7 +324,12 @@ export function Settings() {
                   checked={useMockData}
                   onChange={(e) => {
                     setUseMockData(e.target.checked);
-                    toast.success(`Mock Data ${e.target.checked ? 'Enabled' : 'Disabled'}`, { id: 'mock-toggle' });
+                    toast.success(
+                      e.target.checked
+                        ? t('settings.simulationMode.enabledToast', 'Mock Data Enabled')
+                        : t('settings.simulationMode.disabledToast', 'Mock Data Disabled'),
+                      { id: 'mock-toggle' }
+                    );
                   }}
                 />
                 <div className="w-11 h-6 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00C853]"></div>
@@ -335,7 +340,7 @@ export function Settings() {
 
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <AppTooltip description="If enabled, the Welcome Guide modal (containing tutorials and usage tips) will automatically open every time you start the app.">
+                <AppTooltip description={t('settings.onboardingTooltip', 'If enabled, the Welcome Guide modal (containing tutorials and usage tips) will automatically open every time you start the app.')}>
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.showOnboarding', 'Show Onboarding Guide')}</h4>
                 </AppTooltip>
                 <p className="text-[#8E9299] text-xs mt-1.5 leading-relaxed">
@@ -349,7 +354,12 @@ export function Settings() {
                   checked={showWelcomeOnStartup}
                   onChange={(e) => {
                     setShowWelcomeOnStartup(e.target.checked);
-                    toast.success(`Onboarding Guide ${e.target.checked ? 'Enabled' : 'Disabled'} on Startup`, { id: 'welcome-toggle' });
+                    toast.success(
+                      e.target.checked
+                        ? t('settings.onboardingEnabledToast', 'Onboarding Guide Enabled on Startup')
+                        : t('settings.onboardingDisabledToast', 'Onboarding Guide Disabled on Startup'),
+                      { id: 'welcome-toggle' }
+                    );
                   }}
                 />
                 <div className="w-11 h-6 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00C853]"></div>
@@ -377,7 +387,7 @@ export function Settings() {
 
           <div className="flex flex-col flex-1">
             <div className="flex justify-between items-center mb-1">
-              <AppTooltip description="Mainly used in Dashboard, Open Positions and Open Orders. Controls how often the application fetches live data like mark prices, open positions, and account balances. Faster updates consume more API limits.">
+              <AppTooltip description={t('settings.polling.dashboardTooltip', 'Mainly used in Dashboard, Open Positions and Open Orders. Controls how often the application fetches live data like mark prices, open positions, and account balances. Faster updates consume more API limits.')}>
                 <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.polling.dashboardLabel', 'Background Refresh Interval')}</h4>
               </AppTooltip>
               <span className="text-[#00C853] font-mono text-xs bg-[#00C853]/10 px-2 py-0.5 rounded-md">{pollingInterval}s</span>
@@ -391,7 +401,7 @@ export function Settings() {
               max="60"
               value={pollingInterval}
               onChange={(e) => setPollingInterval(Number(e.target.value))}
-              onPointerUp={() => toast.success(`Background Tracking Interval set to ${pollingInterval}s`, { id: 'rest-interval' })}
+              onPointerUp={() => toast.success(t('settings.polling.dashboardToast', 'Background Tracking Interval set to {{seconds}}s', { seconds: pollingInterval }), { id: 'rest-interval' })}
               className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-[#00C853]"
             />
             <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
@@ -413,7 +423,7 @@ export function Settings() {
             {/* Refresh Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <AppTooltip description="How often the app re-downloads the full instrument listing (Spot, USDT Perp and Coin-M Inverse) from Bybit, OKX and Bitget. These lists rarely change, so a longer interval saves network and API calls.">
+                <AppTooltip description={t('settings.catalog.intervalTooltip', 'How often the app re-downloads the full instrument listing (Spot, USDT Perp and Coin-M Inverse) from Bybit, OKX and Bitget. These lists rarely change, so a longer interval saves network and API calls.')}>
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.catalog.refreshInterval', 'Refresh Interval')}</h4>
                 </AppTooltip>
                 <span className="text-cyan-400 font-mono text-xs bg-cyan-400/10 px-2 py-0.5 rounded-md">{symbolCatalogRefreshHours}h</span>
@@ -428,7 +438,7 @@ export function Settings() {
                 step="1"
                 value={symbolCatalogRefreshHours}
                 onChange={(e) => setSymbolCatalogRefreshHours(Number(e.target.value))}
-                onPointerUp={() => toast.success(`Symbol catalog refresh set to ${symbolCatalogRefreshHours}h`, { id: 'symbol-catalog-interval' })}
+                onPointerUp={() => toast.success(t('settings.catalog.refreshIntervalToast', 'Symbol catalog refresh set to {{hours}}h', { hours: symbolCatalogRefreshHours }), { id: 'symbol-catalog-interval' })}
                 className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-cyan-400"
               />
               <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
@@ -442,7 +452,7 @@ export function Settings() {
             {/* Last fetch, stale warning and actions */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <AppTooltip description="Timestamp of the last successful catalog download across the three exchanges.">
+                <AppTooltip description={t('settings.catalog.lastFetchTooltip', 'Timestamp of the last successful catalog download across the three exchanges.')}>
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.catalog.lastFetch', 'Last Fetch')}</h4>
                 </AppTooltip>
                 <span className="text-cyan-400 font-mono text-xs">
@@ -496,7 +506,7 @@ export function Settings() {
             {/* Polling Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <AppTooltip description="Sets the interval for fetching the 'next' funding rate in the background.">
+                <AppTooltip description={t('settings.polling.fundingIntervalTooltip', "Sets the interval for fetching the 'next' funding rate in the background.")}>
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.polling.fundingIntervalLabel', 'Live Polling Interval')}</h4>
                 </AppTooltip>
                 <span className="text-orange-400 font-mono text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">{fundingPollingInterval}m</span>
@@ -511,7 +521,7 @@ export function Settings() {
                 step="1"
                 value={fundingPollingInterval}
                 onChange={(e) => setFundingPollingInterval(Number(e.target.value))}
-                onPointerUp={() => toast.success(`Funding Polling set to ${fundingPollingInterval}m`, { id: 'funding-polling' })}
+                onPointerUp={() => toast.success(t('settings.polling.fundingPollingToast', 'Funding Polling set to {{minutes}}m', { minutes: fundingPollingInterval }), { id: 'funding-polling' })}
                 className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-orange-400"
               />
               <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
@@ -525,7 +535,7 @@ export function Settings() {
             {/* History Interval */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <AppTooltip description="Controls how often a full history sync is allowed after page load. Auto-sync is triggered 1 minute after each funding settlement (every 8h). This interval acts as a minimum cooldown for additional syncs when the page is reloaded mid-cycle.">
+                <AppTooltip description={t('settings.polling.fundingHistoryTooltip', 'Controls how often a full history sync is allowed after page load. Auto-sync is triggered 1 minute after each funding settlement (every 8h). This interval acts as a minimum cooldown for additional syncs when the page is reloaded mid-cycle.')}>
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.fundingHistoryInterval', 'History Fetch Interval')}</h4>
                 </AppTooltip>
                 <span className="text-orange-400 font-mono text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">{fundingHistoryInterval}h</span>
@@ -540,7 +550,7 @@ export function Settings() {
                 step="1"
                 value={fundingHistoryInterval}
                 onChange={(e) => setFundingHistoryInterval(Number(e.target.value))}
-                onPointerUp={() => toast.success(`History fetch cooldown set to ${fundingHistoryInterval}h`, { id: 'funding-history' })}
+                onPointerUp={() => toast.success(t('settings.polling.fundingHistoryToast', 'History fetch cooldown set to {{hours}}h', { hours: fundingHistoryInterval }), { id: 'funding-history' })}
                 className="w-full h-2 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-orange-400"
               />
               <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
@@ -554,7 +564,7 @@ export function Settings() {
             {/* Clear Funding Cache */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <AppTooltip description="Deletes the local funding fee cache causing it to start from scratch.">
+                <AppTooltip description={t('settings.cache.clearFundingTooltip', 'Deletes the local funding fee cache causing it to start from scratch.')}>
                   <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.cache.clearFundingBtn', 'Clear Funding Cache')}</h4>
                 </AppTooltip>
               </div>
@@ -585,7 +595,7 @@ export function Settings() {
           <p className="text-[#8E9299] text-xs mb-5">{t('settings.dangerZoneDesc', 'Irreversible local data actions')}</p>
 
           <div className="flex flex-col flex-1">
-            <AppTooltip description="WARNING: This action is permanent. It wipes all IndexedDB, LocalStorage data, settings, API Keys, and caches. The app will immediately reload as if newly installed.">
+            <AppTooltip description={t('settings.dangerZoneTooltip', 'WARNING: This action is permanent. It wipes all IndexedDB, LocalStorage data, settings, API Keys, and caches. The app will immediately reload as if newly installed.')}>
               <h4 className="text-red-400 font-medium text-sm mb-1.5 w-fit cursor-help border-b border-dashed border-red-400/50">{t('settings.cache.factoryResetBtn', 'Factory Reset')}</h4>
             </AppTooltip>
             <p className="text-[#8E9299] text-xs mb-4 leading-relaxed">

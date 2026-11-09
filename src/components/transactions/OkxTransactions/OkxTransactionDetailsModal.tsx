@@ -7,6 +7,7 @@ import { OkxTransactionNetChangeReport } from './OkxTransactionNetChangeReport';
 import { OKX_TX_TYPES, okxTypeColorMap } from './OkxTransactionFilters';
 import { getOkxUniversalType, UNIVERSAL_BADGE_STYLE } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
+import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 
 export type OkxDetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -30,6 +31,7 @@ export function OkxTransactionDetailsModal({
   isPrivateMode,
 }: OkxTransactionDetailsModalProps) {
   const { t } = useTranslation();
+  const formatCurrency = useFormatCurrency();
   if (!detailsModalType) return null;
 
   return (
@@ -40,7 +42,7 @@ export function OkxTransactionDetailsModal({
             {detailsModalType === 'funding' && t('transactions.details.fundingBreakdown', 'Funding Breakdown')}
             {detailsModalType === 'fees' && t('transactions.details.feesBreakdown', 'Fees Breakdown')}
             {detailsModalType === 'balance' && t('transactions.details.balanceBreakdown', 'Wallet Balance Breakdown')}
-            {detailsModalType === 'netchange' && t('transactions.details.netChangeReport', 'Net Change Report (USD)')}
+            {detailsModalType === 'netchange' && t('transactions.details.netChangeReport', 'Net Change Report')}
             {detailsModalType === 'tx' && t('transactions.details.txBreakdown', 'Total Transactions Breakdown')}
           </h3>
           <button 
@@ -161,32 +163,24 @@ export function OkxTransactionDetailsModal({
 
         <div className="p-4 border-t border-[#2a2b30] flex items-center justify-between">
           <span className="text-[#8E9299] text-sm uppercase tracking-wider">
-            {detailsModalType === 'tx' ? t('transactions.common.totalTransactions', 'Total Transactions') : t('transactions.details.totalUsdEq', 'Total (USD Eq.)')}
+            {detailsModalType === 'tx' ? t('transactions.common.totalTransactions', 'Total Transactions') : t('transactions.details.totalEq', 'Total Equivalent')}
           </span>
           <span className="text-white font-bold font-mono text-lg">
             {(() => {
               if (detailsModalType === 'tx') return stats.totalCount.toLocaleString();
 
-              let val = '0';
-              if (detailsModalType === 'funding') val = stats.aggregatedUsd.totalFunding;
-              if (detailsModalType === 'fees') val = stats.aggregatedUsd.totalFees;
-              if (detailsModalType === 'balance') val = stats.aggregatedUsd.finalBalance;
-              if (detailsModalType === 'netchange') val = stats.aggregatedUsd.totalChange;
-              
-              const valBig = new Big(val);
+              let val = 0;
+              if (detailsModalType === 'funding') val = Number(stats.aggregatedUsd.totalFunding || 0);
+              if (detailsModalType === 'fees') val = -Math.abs(Number(stats.aggregatedUsd.totalFees || 0));
+              if (detailsModalType === 'balance') val = Number(stats.aggregatedUsd.finalBalance || 0);
+              if (detailsModalType === 'netchange') val = Number(stats.aggregatedUsd.totalChange || 0);
               
               if (detailsModalType === 'fees') {
-                if (valBig.eq(0)) return `${maskVal(0)} USD`;
-                if (valBig.lt(0)) return `${maskVal(valBig.toString())} USD`;
-                return `+${maskVal(valBig.toString())} USD`;
-              }
-              
-              if (detailsModalType === 'netchange' || detailsModalType === 'funding') {
-                const prefix = valBig.gt(0) ? '+' : '';
-                return `${prefix}${maskVal(valBig.toString())} USD`;
+                if (val === 0) return formatCurrency(0, 'fiat');
+                return `-${formatCurrency(Math.abs(val), 'fiat')}`;
               }
 
-              return `${maskVal(valBig.toString())} USD`;
+              return formatCurrency(val, 'fiat');
             })()}
           </span>
         </div>

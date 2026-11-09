@@ -53,7 +53,8 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
 };
 
 const ThTooltip = ({ columnKey, children }: { columnKey: string; children: React.ReactNode }) => {
-  const description = COLUMN_TOOLTIPS[columnKey];
+  const { t } = useTranslation();
+  const description = t(`analytics.fundingTooltips.${columnKey}`, COLUMN_TOOLTIPS[columnKey] || '');
   if (!description) return <>{children}</>;
   return (
     <AppTooltip description={description}>

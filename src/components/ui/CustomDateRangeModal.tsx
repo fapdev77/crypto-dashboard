@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar as CalendarIcon, AlertCircle, Clock, Check } from 'lucide-react';
 import { formatIsoDateTime } from '../../utils/dateTimeHelper';
+import { useTranslation } from 'react-i18next';
 
 export interface CustomDateRangeModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function CustomDateRangeModal({
   initialStartDate = '',
   initialEndDate = '',
 }: CustomDateRangeModalProps) {
+  const { t } = useTranslation();
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -37,12 +39,12 @@ export function CustomDateRangeModal({
   useEffect(() => {
     if (startDate && endDate) {
       if (startDate > endDate) {
-        setValidationError('Start date must be before or equal to End date');
+        setValidationError(t('common.customDateModal.invalidRange', 'Start date must be before or equal to End date'));
         return;
       }
     }
     setValidationError(null);
-  }, [startDate, endDate]);
+  }, [startDate, endDate, t]);
 
   // Handle ESC key to dismiss modal
   useEffect(() => {
@@ -61,9 +63,10 @@ export function CustomDateRangeModal({
   const handleApply = () => {
     if (validationError) return;
     if (!startDate && !endDate) {
-      setValidationError('Please select at least a start or end date');
+      setValidationError(t('common.customDateModal.selectAtLeastOne', 'Please select at least a start or end date'));
       return;
     }
+    // Preserves exact ISO date string (YYYY-MM-DD) for backend & hook queries
     onApply(startDate, endDate);
     onClose();
   };
@@ -119,16 +122,18 @@ export function CustomDateRangeModal({
             </div>
             <div>
               <h3 id="custom-date-range-title" className="text-base font-semibold text-white">
-                Select Custom Date Range
+                {t('common.customDateModal.title', 'Select Custom Date Range')}
               </h3>
-              <p className="text-xs text-[#8E9299]">Filter activity by precise calendar day boundaries</p>
+              <p className="text-xs text-[#8E9299]">
+                {t('common.customDateModal.subtitle', 'Filter activity by precise calendar day boundaries')}
+              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="text-[#8E9299] hover:text-white p-1 rounded-md transition-colors"
-            aria-label="Close modal"
+            aria-label={t('common.close', 'Close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -136,9 +141,9 @@ export function CustomDateRangeModal({
 
         {/* Quick presets pills */}
         <div>
-          <label className="text-xs font-medium text-[#8E9299] block mb-2 flex items-center gap-1.5">
+          <label className="text-xs font-medium text-[#8E9299] mb-2 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-blue-400" />
-            Quick Presets
+            {t('common.customDateModal.quickPresets', 'Quick Presets')}
           </label>
           <div className="flex flex-wrap gap-1.5">
             <button
@@ -146,35 +151,35 @@ export function CustomDateRangeModal({
               onClick={() => applyPreset(7)}
               className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
             >
-              Last 7 Days
+              {t('common.customDateModal.last7Days', 'Last 7 Days')}
             </button>
             <button
               type="button"
               onClick={() => applyPreset(30)}
               className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
             >
-              Last 30 Days
+              {t('common.customDateModal.last30Days', 'Last 30 Days')}
             </button>
             <button
               type="button"
               onClick={applyThisMonth}
               className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
             >
-              This Month (MTD)
+              {t('common.customDateModal.thisMonth', 'This Month (MTD)')}
             </button>
             <button
               type="button"
               onClick={applyLastMonth}
               className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
             >
-              Last Month
+              {t('common.customDateModal.lastMonth', 'Last Month')}
             </button>
             <button
               type="button"
               onClick={applyThisYear}
               className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
             >
-              This Year (YTD)
+              {t('common.customDateModal.thisYear', 'This Year (YTD)')}
             </button>
           </div>
         </div>
@@ -183,7 +188,7 @@ export function CustomDateRangeModal({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
           <div>
             <label htmlFor="custom-start-date" className="block text-xs font-medium text-gray-300 mb-1.5">
-              Start Date (From)
+              {t('common.customDateModal.startDate', 'Start Date (From)')}
             </label>
             <input
               id="custom-start-date"
@@ -196,7 +201,7 @@ export function CustomDateRangeModal({
 
           <div>
             <label htmlFor="custom-end-date" className="block text-xs font-medium text-gray-300 mb-1.5">
-              End Date (To)
+              {t('common.customDateModal.endDate', 'End Date (To)')}
             </label>
             <input
               id="custom-end-date"
@@ -219,9 +224,9 @@ export function CustomDateRangeModal({
         {/* Active Range Preview */}
         {!validationError && startDate && endDate && (
           <div className="flex items-center justify-between text-xs text-[#8E9299] bg-[#1a1b1e]/60 px-3 py-2 rounded-lg border border-[#2a2b30]/60">
-            <span>Selected Range:</span>
+            <span>{t('common.customDateModal.selectedRange', 'Selected Range:')}</span>
             <span className="font-mono text-gray-200">
-              {startDate} <span className="text-[#8E9299]">to</span> {endDate}
+              {startDate} <span className="text-[#8E9299]">{t('common.customDateModal.to', 'to')}</span> {endDate}
             </span>
           </div>
         )}
@@ -233,7 +238,7 @@ export function CustomDateRangeModal({
             onClick={onClose}
             className="px-4 py-2 text-sm text-[#8E9299] hover:text-white rounded-lg transition-colors cursor-pointer"
           >
-            Cancel
+            {t('common.customDateModal.cancel', 'Cancel')}
           </button>
           <button
             type="button"
@@ -242,7 +247,7 @@ export function CustomDateRangeModal({
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-[#2F6BFF] hover:bg-[#285ce0] text-white rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <Check className="w-4 h-4" />
-            Apply Range
+            {t('common.customDateModal.applyRange', 'Apply Range')}
           </button>
         </div>
       </div>

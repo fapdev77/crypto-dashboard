@@ -122,7 +122,7 @@ export function FundingSyncTimingPanel() {
       if (imminent1min) {
         fundingToastShownRef.current = nextFundingTime;
         toast(
-          `🔔 Funding settlement in less than 1 minute! Auto-sync will trigger shortly at ${formatTime(nextScheduledSyncTime)}.`,
+          t('settings.fundingTiming.imminentWarningToast', '🔔 Funding settlement in less than 1 minute! Auto-sync will trigger shortly at {{time}}.', { time: formatTime(nextScheduledSyncTime) }),
           {
             id: 'funding-imminent',
             duration: 8000,
@@ -136,23 +136,23 @@ export function FundingSyncTimingPanel() {
         );
       }
     }
-  }, [nextFundingTime, imminent1min, nextScheduledSyncTime]);
+  }, [nextFundingTime, imminent1min, nextScheduledSyncTime, t]);
 
   // ── Local loading state ─────────────────────────────────────────
   const [isClearing, setIsClearing] = useState(false);
 
   // ── Run sync handler ────────────────────────────────────────────
   const handleRunSync = useCallback(() => {
-    toast.success('Starting funding rate sync...', { id: 'funding-sync-start' });
+    toast.success(t('settings.fundingTiming.syncStartToast', 'Starting funding rate sync...'), { id: 'funding-sync-start' });
     // Reset the sync guard so forceSync bypasses the interval check.
     useFundingStore.getState().setLastHistoryFetch(0);
     // The useFundingSync hook listens for this event and calls forceSync().
     window.dispatchEvent(new CustomEvent('funding-cache-cleared'));
-  }, []);
+  }, [t]);
 
   // ── Clear cache + sync handler ──────────────────────────────────
   const handleClearAndSync = useCallback(async () => {
-    toast.success('Clearing funding cache and starting fresh sync...', { id: 'funding-clear-sync' });
+    toast.success(t('settings.fundingTiming.clearSyncToast', 'Clearing funding cache and starting fresh sync...'), { id: 'funding-clear-sync' });
     setIsClearing(true);
     try {
       await clearFundingSummariesCache();
@@ -234,7 +234,7 @@ export function FundingSyncTimingPanel() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-orange-400" />
-          <AppTooltip description="Displays real-time and historical performance data for the background synchronization of funding rates.">
+          <AppTooltip description={t('settings.fundingTiming.tooltip', 'Displays real-time and historical performance data for the background synchronization of funding rates.')}>
             <h4 className="text-white font-medium text-sm cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.fundingTiming.title', 'Sync Performance')}</h4>
           </AppTooltip>
         </div>
@@ -242,7 +242,7 @@ export function FundingSyncTimingPanel() {
       <div>
         <div className="flex items-center gap-2">
           {/* Clear Cache + Sync button */}
-          <AppTooltip description="Clears the local database of historical funding rates and immediately triggers a fresh synchronization.">
+          <AppTooltip description={t('settings.fundingTiming.clearSyncTooltip', 'Clears the local database of historical funding rates and immediately triggers a fresh synchronization.')}>
             <button
               onClick={handleClearAndSync}
               disabled={isClearing || isSyncing}
@@ -257,7 +257,7 @@ export function FundingSyncTimingPanel() {
             </button>
           </AppTooltip>
           {/* Run Sync Now button */}
-          <AppTooltip description="Manually trigger a background sync of funding rates across all connected exchanges without clearing existing data.">
+          <AppTooltip description={t('settings.fundingTiming.runSyncTooltip', 'Manually trigger a background sync of funding rates across all connected exchanges without clearing existing data.')}>
             <button
               onClick={handleRunSync}
               disabled={isSyncing}
@@ -297,19 +297,19 @@ export function FundingSyncTimingPanel() {
                   <Clock className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                 )}
                 <span className="text-xs text-[#8E9299] truncate">
-                  📅 Next funding{' '}
+                  📅 {t('settings.fundingTiming.nextFunding', 'Next funding')}{' '}
                   <span className={`font-mono ${isFundingImminent5min ? 'text-amber-300' : 'text-white'}`}>
                     {formatTime(nextFundingTime)}
                   </span>
-                  {' '}→ Sync{' '}
+                  {' '}→ {t('settings.fundingTiming.syncTo', 'Sync')}{' '}
                   <span className={`font-mono ${isFundingImminent5min ? 'text-amber-300' : 'text-orange-400'}`}>
                     {formatTime(nextScheduledSyncTime)}
                   </span>
                 </span>
                 <AppTooltip
                   description={isFundingImminent5min
-                    ? 'Funding settlement is imminent! The auto-sync will trigger approximately 1 minute after the settlement completes.'
-                    : 'Auto-syncs 1 minute after each funding settlement (every 8h) so all exchanges have updated data before fetching.'
+                    ? t('settings.fundingTiming.imminentSettlement', 'Funding settlement is imminent! The auto-sync will trigger approximately 1 minute after the settlement completes.')
+                    : t('settings.fundingTiming.autoSyncExplanation', 'Auto-syncs 1 minute after each funding settlement (every 8h) so all exchanges have updated data before fetching.')
                   }
                   rows={[
                     { label: 'Local (BR)', value: `${formatTime(nextFundingTime)} → ${formatTime(nextScheduledSyncTime)}` },
@@ -354,7 +354,7 @@ export function FundingSyncTimingPanel() {
             {overallTiming && (
               <div className="bg-[#1a1b1e] rounded-lg p-3 border border-[#2a2b30]/50">
                 <div className="grid grid-cols-3 gap-3">
-                  <AppTooltip description="Total time taken for the complete synchronization process, including fetching from all exchanges and saving to the local database.">
+                  <AppTooltip description={t('settings.fundingTiming.totalTimeTooltip', 'Total time taken for the complete synchronization process, including fetching from all exchanges and saving to the local database.')}>
                     <div className="text-center cursor-help">
                       <div className="text-lg font-bold text-white font-mono">
                         {overallTiming.totalSec.toFixed(1)}s
@@ -363,7 +363,7 @@ export function FundingSyncTimingPanel() {
                     </div>
                   </AppTooltip>
 
-                  <AppTooltip description="Time spent actively fetching data from exchange APIs.">
+                  <AppTooltip description={t('settings.fundingTiming.apiFetchTooltip', 'Time spent actively fetching data from exchange APIs.')}>
                     <div className="text-center cursor-help">
                       <div className="text-lg font-bold text-orange-400 font-mono">
                         {overallTiming.fetchSec.toFixed(1)}s
@@ -372,7 +372,7 @@ export function FundingSyncTimingPanel() {
                     </div>
                   </AppTooltip>
 
-                  <AppTooltip description="Time spent writing the processed data into the local IndexedDB storage.">
+                  <AppTooltip description={t('settings.fundingTiming.dbWriteTooltip', 'Time spent writing the processed data into the local IndexedDB storage.')}>
                     <div className="text-center cursor-help">
                       <div className="text-lg font-bold text-blue-400 font-mono">
                         {overallTiming.writeSec.toFixed(1)}s
@@ -382,7 +382,7 @@ export function FundingSyncTimingPanel() {
                   </AppTooltip>
                 </div>
                 <div className="flex justify-center mt-2">
-                  <AppTooltip description="Total number of trading pairs successfully synced across all connected exchanges.">
+                  <AppTooltip description={t('settings.fundingTiming.symbolsSyncedTooltip', 'Total number of trading pairs successfully synced across all connected exchanges.')}>
                     <span className="text-[10px] font-mono text-[#8E9299] bg-[#2a2b30]/50 px-2 py-0.5 rounded cursor-help">
                       {overallTiming.symbols} {t('settings.fundingTiming.symbolsSynced', 'symbols synced')}
                     </span>
