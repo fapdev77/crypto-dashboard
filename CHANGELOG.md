@@ -1,3 +1,10 @@
+# [2.27.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.26.0...v2.27.0) (2026-11-09)
+
+
+### Features
+
+* add components, i18n locales, and unit tests for exchange API keys, vaults, settings, and AI telemetry ([c10d1e5](https://github.com/fapdev77/crypto-dashboard/commit/c10d1e563c9602c4ea5745a8d868ffcabe53a371))
+
 # [2.26.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.25.0...v2.26.0) (2026-11-09)
 
 
