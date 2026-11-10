@@ -1,3 +1,10 @@
+# [2.30.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.29.0...v2.30.0) (2026-11-10)
+
+
+### Features
+
+* **i18n:** internationalize consolidated transaction components ([a96d624](https://github.com/fapdev77/crypto-dashboard/commit/a96d6243514a9a85cfb3b6fbf786f20a66f9c5ba))
+
 # [2.29.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.28.0...v2.29.0) (2026-11-10)
 
 
