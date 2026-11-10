@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import i18n from '../i18n/config';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { LogManager } from '../services/LogManager';
@@ -32,9 +33,9 @@ export function useVaultAutoLock() {
 
     const timeoutMs = minutes * 60 * 1000;
     timerRef.current = setTimeout(() => {
-      LogManager.system('Security.Vault', `Auto-lock triggered after ${minutes} minute(s) of inactivity.`);
+      LogManager.system('Security.Vault', i18n.t('logs.messages.vaultAutoLockTriggered', 'Auto-lock triggered after {{minutes}} minute(s) of inactivity.', { minutes }));
       lock();
-      toast('Vault auto-locked due to inactivity.', {
+      toast(i18n.t('toasts.vaultAutoLockedInactivity', 'Vault auto-locked due to inactivity.'), {
         icon: '🔒',
         id: 'vault-auto-lock',
         duration: 4000,

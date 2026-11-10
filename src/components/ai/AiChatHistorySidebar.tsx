@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Search,
@@ -24,6 +25,7 @@ interface AiChatHistorySidebarProps {
 }
 
 export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const {
     sessions,
     currentSessionId,
@@ -101,7 +103,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
     e.stopPropagation();
     if (editingTitle.trim()) {
       renameSession(sessionId, editingTitle.trim());
-      toast.success('Conversation renamed', { id: 'rename-session' });
+      toast.success(t('toasts.conversationRenamed', 'Conversation renamed'), { id: 'rename-session' });
     }
     setEditingSessionId(null);
   };
@@ -114,7 +116,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
   const handleExportSession = (session: AiChatSession, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!session.messages.length) {
-      toast.error('Session has no messages to export');
+      toast.error(t('toasts.sessionNoMessages', 'Session has no messages to export'));
       return;
     }
 
@@ -144,13 +146,13 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    toast.success('Conversation exported to Markdown');
+    toast.success(t('toasts.conversationExported', 'Conversation exported to Markdown'));
   };
 
   const handleNewChat = () => {
     createSession('New Conversation');
     onClose();
-    toast.success('New conversation started', { icon: '✨' });
+    toast.success(t('toasts.newConversationStarted', 'New conversation started'), { icon: '✨' });
   };
 
   const renderSessionItem = (session: AiChatSession) => {
@@ -216,7 +218,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                       e.stopPropagation();
                       deleteSession(session.id);
                       setConfirmDeleteId(null);
-                      toast.success('Conversation deleted');
+                      toast.success(t('toasts.conversationDeleted', 'Conversation deleted'));
                     }}
                     className="px-1.5 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold"
                   >
@@ -404,7 +406,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                 onClick={() => {
                   clearAllSessions();
                   setConfirmClearAll(false);
-                  toast.success('All conversation history cleared', { icon: '🧹' });
+                  toast.success(t('toasts.allChatHistoryCleared', 'All conversation history cleared'), { icon: '🧹' });
                 }}
                 className="flex-1 py-1 text-xs bg-rose-600 hover:bg-rose-500 text-white rounded font-bold"
               >

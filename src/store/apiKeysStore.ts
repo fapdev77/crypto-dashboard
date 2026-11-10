@@ -11,6 +11,7 @@ import {
 } from '../utils/cryptoLib';
 import { ApiEnvironment, BybitRegion } from '../utils/bybitEndpoints';
 import { LogManager } from '../services/LogManager';
+import i18n from '../i18n/config';
 
 export type Exchange = ExchangeName;
 export type AccountType = 'classic' | 'uta';
@@ -104,7 +105,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
         if (currentPassphrase) {
           await state.syncEncryption(currentPassphrase);
         }
-        LogManager.system('Security.Keys', `Added API connection [${credentials.label}] (${credentials.exchange}).`);
+        LogManager.system('Security.Keys', i18n.t('logs.messages.keyAdded', 'Added API connection [{{label}}] ({{exchange}}).', { label: credentials.label, exchange: credentials.exchange }));
       },
 
       toggleKey: async (id) => {
@@ -126,7 +127,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
         if (currentPassphrase) {
           await state.syncEncryption(currentPassphrase);
         }
-        LogManager.system('Security.Keys', `Removed API connection ${target ? `[${target.label}]` : id}.`);
+        LogManager.system('Security.Keys', i18n.t('logs.messages.keyRemoved', 'Removed API connection {{target}}.', { target: target ? `[${target.label}]` : id }));
       },
 
       updateKey: async (id, updates) => {
@@ -190,7 +191,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
           encryptedData: encrypted,
           isUnlocked: true,
         });
-        LogManager.system('Security.Keys', 'Vault initialized and encrypted successfully.');
+        LogManager.system('Security.Keys', i18n.t('logs.messages.vaultInitialized', 'Vault initialized and encrypted successfully.'));
       },
 
       changePassphrase: async (oldPassphrase: string, newPassphrase: string) => {
@@ -218,7 +219,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
           isInitialized: true,
           isUnlocked: true,
         });
-        LogManager.system('Security.Keys', 'Vault master passphrase updated successfully.');
+        LogManager.system('Security.Keys', i18n.t('logs.messages.vaultPassphraseUpdated', 'Vault master passphrase updated successfully.'));
         return true;
       },
 
@@ -259,10 +260,10 @@ export const useApiKeysStore = create<ApiKeysState>()(
           currentSalt = salt;
 
           set({ keys, isUnlocked: true, isInitialized: true });
-          LogManager.system('Security.Keys', `Vault unlocked successfully (${keys.length} credentials loaded).`);
+          LogManager.system('Security.Keys', i18n.t('logs.messages.vaultUnlocked', 'Vault unlocked successfully ({{count}} credentials loaded).', { count: keys.length }));
           return true;
         } catch (err) {
-          LogManager.warn('Security.Keys', 'Vault unlock attempt failed: invalid passphrase or corrupted payload.');
+          LogManager.warn('Security.Keys', i18n.t('logs.messages.vaultUnlockFailed', 'Vault unlock attempt failed: invalid passphrase or corrupted payload.'));
           return false;
         }
       },
@@ -272,7 +273,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
         currentCryptoKey = null;
         currentSalt = null;
         set({ keys: [], isUnlocked: false });
-        LogManager.system('Security.Keys', 'Vault locked.');
+        LogManager.system('Security.Keys', i18n.t('logs.messages.vaultLocked', 'Vault locked.'));
       },
 
       migrateUnencryptedKeys: async (passphrase: string, legacyKeys: ApiCredentials[]) => {
@@ -294,7 +295,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
           encryptedData: encrypted,
           isUnlocked: true,
         });
-        LogManager.system('Security.Keys', `Migrated ${legacyKeys.length} legacy keys into encrypted vault.`);
+        LogManager.system('Security.Keys', i18n.t('logs.messages.vaultMigrated', 'Migrated {{count}} legacy keys into encrypted vault.', { count: legacyKeys.length }));
       },
     }),
     {

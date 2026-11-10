@@ -50,7 +50,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
     setIsSubmitting(true);
     try {
       await initializeVault(passphrase);
-      toast.success('Security Vault activated and unlocked!', {
+      toast.success(t('toasts.vaultActivatedUnlocked', 'Security Vault activated and unlocked!'), {
         icon: '🛡️',
         duration: 3500,
       });
@@ -60,7 +60,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to initialize security vault.');
-      toast.error('Vault setup failed.');
+      toast.error(t('toasts.vaultSetupFailed', 'Vault setup failed.'));
     } finally {
       setIsSubmitting(false);
     }

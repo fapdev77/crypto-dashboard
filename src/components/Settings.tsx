@@ -59,10 +59,10 @@ export function Settings() {
     try {
       await exchangeCoinCatalog.refresh();
       syncCatalogInfo();
-      toast.success('Symbol catalog refreshed', { id: 'symbol-catalog-refresh' });
+      toast.success(t('toasts.symbolCatalogRefreshed', 'Symbol catalog refreshed'), { id: 'symbol-catalog-refresh' });
     } catch (e: any) {
       LogManager.error('Settings', 'Failed to refresh symbol catalog:', e);
-      toast.error(`Failed to refresh symbol catalog: ${e.message || 'Unknown error'}`, { id: 'err-symbol-catalog-refresh' });
+      toast.error(t('toasts.symbolCatalogRefreshFailed', 'Failed to refresh symbol catalog: {{error}}', { error: e.message || 'Unknown error' }), { id: 'err-symbol-catalog-refresh' });
     } finally {
       setIsRefreshingCatalog(false);
     }
@@ -73,10 +73,10 @@ export function Settings() {
     try {
       await exchangeCoinCatalog.clearAndSync();
       syncCatalogInfo();
-      toast.success('Symbol catalog cleared and re-synced', { id: 'symbol-catalog-clear' });
+      toast.success(t('toasts.symbolCatalogCleared', 'Symbol catalog cleared and re-synced'), { id: 'symbol-catalog-clear' });
     } catch (e: any) {
       LogManager.error('Settings', 'Failed to clear symbol catalog:', e);
-      toast.error(`Failed to clear symbol catalog: ${e.message || 'Unknown error'}`, { id: 'err-symbol-catalog-clear' });
+      toast.error(t('toasts.symbolCatalogClearFailed', 'Failed to clear symbol catalog: {{error}}', { error: e.message || 'Unknown error' }), { id: 'err-symbol-catalog-clear' });
     } finally {
       setIsClearingCatalog(false);
     }
@@ -94,10 +94,10 @@ export function Settings() {
       useFundingStore.getState().setLastHistoryFetch(0);
       // Notify any mounted funding sync hook to start syncing immediately.
       window.dispatchEvent(new CustomEvent('funding-cache-cleared'));
-      toast.success('Funding cache cleared — historical sync will start in background.', { id: 'funding-cache-clear' });
+      toast.success(t('toasts.fundingCacheCleared', 'Funding cache cleared — historical sync will start in background.'), { id: 'funding-cache-clear' });
     } catch (e: any) {
       LogManager.error('Settings', 'Failed to clear funding cache:', e);
-      toast.error(`Failed to clear funding cache: ${e.message || 'Unknown error'}`, { id: 'err-funding-cache-clear' });
+      toast.error(t('toasts.fundingCacheClearFailed', 'Failed to clear funding cache: {{error}}', { error: e.message || 'Unknown error' }), { id: 'err-funding-cache-clear' });
     } finally {
       setIsClearingFunding(false);
     }
@@ -160,7 +160,7 @@ export function Settings() {
                 onChange={(e) => {
                   const newLocale = e.target.value as SupportedLocale;
                   setLocale(newLocale);
-                  toast.success(`Language set to ${SUPPORTED_LOCALES[newLocale]?.name || newLocale}`, { id: 'lang-change' });
+                  toast.success(t('toasts.languageSet', 'Language set to {{language}}', { language: SUPPORTED_LOCALES[newLocale]?.name || newLocale }), { id: 'lang-change' });
                 }}
                 className="w-full bg-[#1e2024] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-[#2F6BFF] transition-colors"
               >
@@ -182,7 +182,7 @@ export function Settings() {
                 onChange={(e) => {
                   const newCurr = e.target.value as SupportedFiatCurrency;
                   setFiatCurrency(newCurr);
-                  toast.success(`Display currency set to ${newCurr}`, { id: 'curr-change' });
+                  toast.success(t('toasts.currencySet', 'Display currency set to {{currency}}', { currency: newCurr }), { id: 'curr-change' });
                 }}
                 className="w-full bg-[#1e2024] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-[#2F6BFF] transition-colors"
               >

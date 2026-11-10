@@ -48,14 +48,14 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
     try {
       await migrateUnencryptedKeys(passphrase, legacyKeys);
       clearLegacyUnencryptedStorage();
-      toast.success(`Successfully secured ${legacyKeys.length} API connections in your local vault!`, {
+      toast.success(t('toasts.vaultMigrationSuccess', 'Successfully secured {{count}} API connections in your local vault!', { count: legacyKeys.length }), {
         icon: '🛡️',
         duration: 4000,
       });
       onMigrated();
     } catch (err: any) {
       setError(err?.message || 'Failed to encrypt legacy credentials.');
-      toast.error('Encryption migration failed. Please try again.');
+      toast.error(t('toasts.vaultMigrationFailed', 'Encryption migration failed. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -65,7 +65,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
     clearLegacyUnencryptedStorage();
     // Also clear keys from state if present
     useApiKeysStore.setState({ keys: [] });
-    toast.success('Legacy unencrypted credentials discarded.', { icon: '🗑️' });
+    toast.success(t('toasts.vaultLegacyDiscarded', 'Legacy unencrypted credentials discarded.'), { icon: '🗑️' });
     setShowDiscardConfirm(false);
     onMigrated();
   };

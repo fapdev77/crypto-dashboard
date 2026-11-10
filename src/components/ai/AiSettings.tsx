@@ -67,17 +67,17 @@ export const AiSettings: React.FC = () => {
 
   const handleDeleteModel = (id: string) => {
     if (models.length <= 1) {
-      toast.error('You must keep at least one AI model registered.');
+      toast.error(t('toasts.mustKeepOneModel', 'You must keep at least one AI model registered.'));
       return;
     }
     deleteModel(id);
-    toast.success('Model deleted.');
+    toast.success(t('toasts.modelDeleted', 'Model deleted.'));
   };
 
   const handleCloneModel = (id: string) => {
     const newId = cloneModel(id);
     if (newId) {
-      toast.success('Model cloned successfully!');
+      toast.success(t('toasts.modelCloned', 'Model cloned successfully!'));
     }
   };
 
@@ -85,11 +85,11 @@ export const AiSettings: React.FC = () => {
     const target = models.find((m) => m.id === id);
     if (!target) return;
     if (target.isPrimary) {
-      toast.error('The primary model cannot be set as contingency (fallback) simultaneously.');
+      toast.error(t('toasts.primaryCannotBeFallback', 'The primary model cannot be set as contingency (fallback) simultaneously.'));
       return;
     }
     setFallbackModel(id, !target.isFallback);
-    toast.success(!target.isFallback ? 'Model added to fallback list' : 'Model removed from fallback list');
+    toast.success(!target.isFallback ? t('toasts.modelAddedFallback', 'Model added to fallback list') : t('toasts.modelRemovedFallback', 'Model removed from fallback list'));
   };
 
   return (
@@ -146,7 +146,7 @@ export const AiSettings: React.FC = () => {
                 onClick={() => {
                   const newState = !globalSettings.isEnabled;
                   setIsEnabled(newState);
-                  toast.success(newState ? 'PIKA Assistant activated!' : 'PIKA Assistant deactivated!');
+                  toast.success(newState ? t('toasts.pikaActivated', 'PIKA Assistant activated!') : t('toasts.pikaDeactivated', 'PIKA Assistant deactivated!'));
                 }}
                 className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer ${globalSettings.isEnabled ? 'bg-[#2F6BFF]' : 'bg-[#1e1f24]'
                   }`}
@@ -202,7 +202,7 @@ export const AiSettings: React.FC = () => {
             <button
               onClick={() => {
                 resetToDefaults();
-                toast.success('Inference parameters restored to defaults');
+                toast.success(t('toasts.inferenceRestored', 'Inference parameters restored to defaults'));
               }}
               className="flex items-center gap-1 text-xs text-[#8E9299] hover:text-white transition cursor-pointer"
             >
@@ -344,7 +344,7 @@ export const AiSettings: React.FC = () => {
               <button
                 onClick={() => {
                   useAiTelemetryStore.getState().resetTelemetry();
-                  toast.success('Telemetry metrics reset successfully');
+                  toast.success(t('toasts.telemetryReset', 'Telemetry metrics reset successfully'));
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e1f24] hover:bg-[#2a2b30] text-[#8E9299] hover:text-white border border-[#2a2b30] rounded-lg text-xs font-semibold transition cursor-pointer"
               >

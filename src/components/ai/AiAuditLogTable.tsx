@@ -40,9 +40,9 @@ export const AiAuditLogTable: React.FC = () => {
       a.download = `pika-ai-audit-logs-${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Logs exported in JSON format');
+      toast.success(t('toasts.logsExportedJson', 'Logs exported in JSON format'));
     } catch {
-      toast.error('Error exporting logs');
+      toast.error(t('toasts.logsExportError', 'Error exporting logs'));
     }
   };
 
@@ -56,9 +56,9 @@ export const AiAuditLogTable: React.FC = () => {
       a.download = `pika-ai-audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Logs exported in CSV format');
+      toast.success(t('toasts.logsExportedCsv', 'Logs exported in CSV format'));
     } catch {
-      toast.error('Error exporting logs');
+      toast.error(t('toasts.logsExportError', 'Error exporting logs'));
     }
   };
 
@@ -66,7 +66,7 @@ export const AiAuditLogTable: React.FC = () => {
     await aiAuditLogger.clearLogs();
     setLogs([]);
     setShowClearConfirm(false);
-    toast.success('Audit history cleared', { icon: '🧹' });
+    toast.success(t('toasts.auditHistoryCleared', 'Audit history cleared'), { icon: '🧹' });
   };
 
   const formatTime = (ts: number) => {

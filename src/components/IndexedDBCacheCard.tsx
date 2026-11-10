@@ -159,15 +159,15 @@ export function IndexedDBCacheCard() {
     try {
       const res = await checkIndexedDBHealth();
       if (res.status === 'healthy') {
-        toast.success(`IndexedDB is healthy (Version ${res.version}, 14 stores active)`, { id: 'idb-health' });
+        toast.success(t('toasts.idbHealth', 'IndexedDB is healthy (Version {{version}}, 14 stores active)', { version: res.version }), { id: 'idb-health' });
         setHealthChecked(true);
         setTimeout(() => setHealthChecked(false), 2500);
       } else {
-        toast.error(`IndexedDB Error: ${res.error || 'Connection failed'}`, { id: 'idb-health-err' });
+        toast.error(t('toasts.idbError', 'IndexedDB Error: {{error}}', { error: res.error || 'Connection failed' }), { id: 'idb-health-err' });
       }
       await loadAllStats();
     } catch (e: any) {
-      toast.error(`Health check failed: ${e?.message || 'Unknown error'}`, { id: 'idb-health-err' });
+      toast.error(t('toasts.idbHealthFailed', 'Health check failed: {{error}}', { error: e?.message || 'Unknown error' }), { id: 'idb-health-err' });
     } finally {
       setIsCheckingHealth(false);
     }
@@ -175,7 +175,7 @@ export function IndexedDBCacheCard() {
 
   const handleForceSyncAll = async () => {
     if (keys.length === 0) {
-      toast.error('No API keys configured to sync history', { id: 'sync-all' });
+      toast.error(t('toasts.noApiKeysToSync', 'No API keys configured to sync history'), { id: 'sync-all' });
       return;
     }
     setIsSyncingAll(true);
@@ -184,11 +184,11 @@ export function IndexedDBCacheCard() {
       await UnifiedSyncManager.syncFullApplication(keys);
       await loadAllStats();
       setSyncedAll(true);
-      toast.success('IndexedDB cache fully synchronized across all exchanges!', { id: 'sync-all' });
+      toast.success(t('toasts.idbSyncAllSuccess', 'IndexedDB cache fully synchronized across all exchanges!'), { id: 'sync-all' });
       setTimeout(() => setSyncedAll(false), 3000);
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Force sync all failed:', err);
-      toast.error(`Sync failed: ${err.message || 'Unknown error'}`, { id: 'sync-all-err' });
+      toast.error(t('toasts.syncFailed', 'Sync failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'sync-all-err' });
     } finally {
       setIsSyncingAll(false);
     }
@@ -201,11 +201,11 @@ export function IndexedDBCacheCard() {
       await UnifiedSyncManager.clearAndResyncAll(keys);
       await loadAllStats();
       setClearedAll(true);
-      toast.success('IndexedDB cache cleared and re-sync scheduled!', { id: 'clear-all' });
+      toast.success(t('toasts.idbClearAllSuccess', 'IndexedDB cache cleared and re-sync scheduled!'), { id: 'clear-all' });
       setTimeout(() => setClearedAll(false), 3000);
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Clear all cache failed:', err);
-      toast.error(`Clear cache failed: ${err.message || 'Unknown error'}`, { id: 'clear-all-err' });
+      toast.error(t('toasts.idbClearFailed', 'Clear cache failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'clear-all-err' });
     } finally {
       setIsClearingAll(false);
     }
@@ -216,10 +216,10 @@ export function IndexedDBCacheCard() {
     try {
       await recoverAndResetIndexedDB();
       await loadAllStats();
-      toast.success('Database reset and restored to healthy state!', { id: 'recover-db' });
+      toast.success(t('toasts.idbResetSuccess', 'Database reset and restored to healthy state!'), { id: 'recover-db' });
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Recovery failed:', err);
-      toast.error(`Database recovery failed: ${err.message || 'Unknown error'}`, { id: 'recover-db-err' });
+      toast.error(t('toasts.idbRecoveryFailed', 'Database recovery failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'recover-db-err' });
     } finally {
       setIsRecovering(false);
     }
@@ -227,7 +227,7 @@ export function IndexedDBCacheCard() {
 
   const handleSyncTransactions = async () => {
     if (!hasTxKeys) {
-      toast.error('No active Bybit, Bitget, or OKX API keys found', { id: 'tx-sync' });
+      toast.error(t('toasts.noActiveExchangeKeys', 'No active Bybit, Bitget, or OKX API keys found'), { id: 'tx-sync' });
       return;
     }
     setIsSyncingTx(true);
@@ -237,13 +237,20 @@ export function IndexedDBCacheCard() {
       await loadAllStats();
       setSyncedTx(true);
       toast.success(
-        `Transactions synced (${result.total} records in ${result.elapsedSeconds}s)\nBybit: ${result.bybit} | Bitget: ${result.bitget} | OKX: ${result.okx}`,
+        t('transactions.cache.syncSuccessToast', {
+          total: result.total,
+          seconds: result.elapsedSeconds,
+          bybit: result.bybit,
+          bitget: result.bitget,
+          okx: result.okx,
+          defaultValue: `Transactions synced (${result.total} records in ${result.elapsedSeconds}s)\nBybit: ${result.bybit} | Bitget: ${result.bitget} | OKX: ${result.okx}`,
+        }),
         { id: 'tx-sync', duration: 4000 }
       );
       setTimeout(() => setSyncedTx(false), 3000);
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Sync transactions failed:', err);
-      toast.error(`Transaction sync failed: ${err.message || 'Unknown error'}`, { id: 'tx-sync-err' });
+      toast.error(t('transactions.cache.syncErrorToast', 'Transaction sync failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'tx-sync-err' });
     } finally {
       setIsSyncingTx(false);
     }
@@ -256,11 +263,11 @@ export function IndexedDBCacheCard() {
       await UnifiedSyncManager.clearAndResyncTransactions(keys);
       await loadAllStats();
       setClearedTx(true);
-      toast.success('Transaction logs cache cleared and re-synced', { id: 'tx-clear', duration: 4000 });
+      toast.success(t('toasts.txLogsCleared', 'Transaction logs cache cleared and re-synced'), { id: 'tx-clear', duration: 4000 });
       setTimeout(() => setClearedTx(false), 3000);
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Clear transactions failed:', err);
-      toast.error(`Failed to clear tx cache: ${err.message || 'Unknown error'}`, { id: 'tx-clear-err' });
+      toast.error(t('toasts.txLogsClearFailed', 'Failed to clear tx cache: {{error}}', { error: err.message || 'Unknown error' }), { id: 'tx-clear-err' });
     } finally {
       setIsClearingTx(false);
     }
@@ -271,10 +278,10 @@ export function IndexedDBCacheCard() {
     try {
       await clearAssetMetadataCache();
       setMetaCacheSize(0);
-      toast.success('Asset metadata cache cleared', { id: 'meta-clear' });
+      toast.success(t('toasts.metaCacheCleared', 'Asset metadata cache cleared'), { id: 'meta-clear' });
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Clear meta failed:', err);
-      toast.error(`Failed to clear metadata cache: ${err.message || 'Unknown error'}`, { id: 'meta-clear-err' });
+      toast.error(t('toasts.metaCacheClearFailed', 'Failed to clear metadata cache: {{error}}', { error: err.message || 'Unknown error' }), { id: 'meta-clear-err' });
     } finally {
       setIsClearingMeta(false);
     }
@@ -288,13 +295,13 @@ export function IndexedDBCacheCard() {
     try {
       const result = await pruneHistoricalData(pruneDays);
       toast.success(
-        `Pruned ${result.totalPruned.toLocaleString()} records older than ${pruneDays} days`,
+        t('settings.indexedDB.prunedToast', 'Pruned {{count}} records older than {{days}} days', { count: result.totalPruned, days: pruneDays }),
         { id: 'prune-toast' }
       );
       await loadAllStats();
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Failed to prune historical data:', err);
-      toast.error(`Pruning failed: ${err.message || 'Unknown error'}`, { id: 'prune-err' });
+      toast.error(t('toasts.pruningFailed', 'Pruning failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'prune-err' });
     } finally {
       setIsPruning(false);
     }

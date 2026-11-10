@@ -59,9 +59,9 @@ export const AiModelList: React.FC<AiModelListProps> = ({
     setTestingModelId(null);
 
     if (result.success) {
-      toast.success(`${model.name}: Connection active (${result.latencyMs}ms)`);
+      toast.success(t('toasts.modelConnectionActive', '{{name}}: Connection active ({{latency}}ms)', { name: model.name, latency: result.latencyMs }));
     } else {
-      toast.error(`${model.name}: ${result.error || 'Connection failed'}`);
+      toast.error(t('toasts.modelConnectionFailed', '{{name}}: {{error}}', { name: model.name, error: result.error || 'Connection failed' }));
     }
   };
 

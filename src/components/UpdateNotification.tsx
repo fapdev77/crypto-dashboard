@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LogManager } from '../services/LogManager';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X, Sparkles, ArrowRight, Pause } from 'lucide-react';
@@ -9,6 +10,7 @@ const AUTO_UPDATE_DELAY_MS = 5000;
 const TICK_INTERVAL_MS = 50;
 
 export function UpdateNotification() {
+  const { t } = useTranslation();
   const {
     needRefresh: [needRefresh],
     offlineReady: [offlineReady, setOfflineReady],
@@ -73,7 +75,7 @@ export function UpdateNotification() {
   // Toast confirmation after successful update
   useEffect(() => {
     if (localStorage.getItem('app-updated') === 'true') {
-      toast.success('App updated to the latest version!', {
+      toast.success(t('toasts.appUpdated', 'App updated to the latest version!'), {
         duration: 5000,
         position: 'bottom-center',
         style: {

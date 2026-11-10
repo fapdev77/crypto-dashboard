@@ -1,4 +1,5 @@
 import toast from 'react-hot-toast';
+import i18n from '../i18n/config';
 import { LogManager } from './LogManager';
 
 export interface StorageEstimateResult {
@@ -77,12 +78,20 @@ export async function checkAndWarnStorageQuota(context = 'StorageCheck'): Promis
   if (estimate.isSupported) {
     if (estimate.isCritical) {
       toast.error(
-        `Critical browser storage: ${estimate.usageMB}MB of ${estimate.quotaMB}MB used (${estimate.percentageUsed}%). Writes may fail. Please prune history in Settings.`,
+        i18n.t(
+          'toasts.storageQuotaCritical',
+          'Critical browser storage: {{usage}}MB of {{quota}}MB used ({{percent}}%). Writes may fail. Please prune history in Settings.',
+          { usage: estimate.usageMB, quota: estimate.quotaMB, percent: estimate.percentageUsed }
+        ),
         { id: 'storage-quota-warning', duration: 10000 }
       );
     } else if (estimate.isWarning) {
       toast(
-        `High browser storage usage: ${estimate.usageMB}MB of ${estimate.quotaMB}MB used (${estimate.percentageUsed}%). Consider pruning historical data in Settings.`,
+        i18n.t(
+          'toasts.storageQuotaHigh',
+          'High browser storage usage: {{usage}}MB of {{quota}}MB used ({{percent}}%). Consider pruning historical data in Settings.',
+          { usage: estimate.usageMB, quota: estimate.quotaMB, percent: estimate.percentageUsed }
+        ),
         { id: 'storage-quota-warning', duration: 8000, icon: '⚠️' }
       );
     }

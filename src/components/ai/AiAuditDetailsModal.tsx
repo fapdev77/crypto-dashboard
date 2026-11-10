@@ -76,7 +76,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
     };
     navigator.clipboard.writeText(JSON.stringify(fullBundle, null, 2));
     setCopiedAll(true);
-    toast.success('Debug bundle copied to clipboard!', { icon: '📋' });
+    toast.success(t('toasts.debugBundleCopied', 'Debug bundle copied to clipboard!'), { icon: '📋' });
     setTimeout(() => setCopiedAll(false), 2000);
   };
 
@@ -93,7 +93,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
     a.download = `pika-debug-audit-${log?.id || Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Log file downloaded');
+    toast.success(t('toasts.logFileDownloaded', 'Log file downloaded'));
   };
 
   return (
@@ -272,7 +272,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(userMessage);
-                      toast.success('User prompt copied!');
+                      toast.success(t('toasts.userPromptCopied', 'User prompt copied!'));
                     }}
                     className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
                   >
@@ -325,7 +325,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(errorMessage || assistantResponse);
-                      toast.success('Response copied!');
+                      toast.success(t('toasts.responseCopied', 'Response copied!'));
                     }}
                     className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
                   >
@@ -365,7 +365,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                     onClick={() => {
                       const sys = debugData?.request?.systemInstruction || log?.fullPayloadSnapshot?.sentPrompt || '';
                       navigator.clipboard.writeText(sys);
-                      toast.success('System prompt copied!');
+                      toast.success(t('toasts.systemPromptCopied', 'System prompt copied!'));
                     }}
                     className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
                   >

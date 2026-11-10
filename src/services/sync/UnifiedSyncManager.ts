@@ -20,6 +20,7 @@ import {
   ComprehensiveCacheStats,
 } from '../historyCache';
 import { LogManager } from '../LogManager';
+import i18n from '../../i18n/config';
 import { checkAndWarnStorageQuota } from '../storageQuota';
 
 export interface FullSyncResult {
@@ -384,7 +385,7 @@ export class UnifiedSyncManager {
         const startTime = performance.now();
         const activeKeys = keys.filter(k => k.isActive);
 
-        LogManager.info('UnifiedSyncManager', 'Starting full application synchronization...');
+        LogManager.info('UnifiedSyncManager', i18n.t('logs.messages.syncStarting', 'Starting full application synchronization...'));
         await checkAndWarnStorageQuota('FullAppSync');
         onProgress?.('Syncing Positions, Orders, Transactions & Funding in parallel...');
 
@@ -609,7 +610,7 @@ export class UnifiedSyncManager {
     keys: ApiCredentials[],
     onProgress?: (step: string) => void
   ): Promise<FullSyncResult> {
-    LogManager.info('UnifiedSyncManager', 'Clearing all application cache...');
+    LogManager.info('UnifiedSyncManager', i18n.t('logs.messages.clearCache', 'Clearing all application cache...'));
     onProgress?.('Clearing local database cache...');
 
     await clearAllCache();
@@ -648,7 +649,7 @@ export class UnifiedSyncManager {
     keys: ApiCredentials[],
     onProgress?: (step: string) => void
   ): Promise<{ bybit: number; bitget: number; okx: number; total: number; elapsedSeconds: number }> {
-    LogManager.info('UnifiedSyncManager', 'Clearing transaction logs cache...');
+    LogManager.info('UnifiedSyncManager', i18n.t('logs.messages.clearTxCache', 'Clearing transaction logs cache...'));
     onProgress?.('Clearing transaction log tables...');
 
     await clearAllTransactionLogsCache();

@@ -159,11 +159,11 @@ export function FundingSyncTimingPanel() {
       useFundingStore.getState().setLastHistoryFetch(0);
       window.dispatchEvent(new CustomEvent('funding-cache-cleared'));
     } catch (err: any) {
-      toast.error(`Failed to clear funding cache: ${err?.message || 'Unknown error'}`, { id: 'err-funding-clear-sync' });
+      toast.error(t('toasts.fundingCacheClearFailed', 'Failed to clear funding cache: {{error}}', { error: err?.message || 'Unknown error' }), { id: 'err-funding-clear-sync' });
     } finally {
       setIsClearing(false);
     }
-  }, []);
+  }, [t]);
 
   // ── Merge persisted data (primary) + live log entries (fallback) ──
   const { exchangeTimings, overallTiming, lastSyncTime } = useMemo(() => {

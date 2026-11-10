@@ -145,7 +145,7 @@ export function CurrencyRatesWidget() {
               onClick={() => {
                 if (!isSelected) {
                   setFiatCurrency(curr.id as SupportedFiatCurrency);
-                  toast.success(`Active currency set to ${curr.code}`, { id: 'quick-curr-change' });
+                  toast.success(t('toasts.quickCurrencySet', 'Active currency set to {{currency}}', { currency: curr.code }), { id: 'quick-curr-change' });
                 }
               }}
               className={`p-3.5 rounded-xl border select-none relative group transition-all duration-500 ease-out cursor-pointer ${

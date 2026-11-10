@@ -80,10 +80,10 @@ export function SecurityBackupCard() {
       URL.revokeObjectURL(url);
 
       setExportPassphrase('');
-      toast.success('API keys exported successfully!');
+      toast.success(t('toasts.apiKeysExported', 'API keys exported successfully!'));
     } catch (err) {
       console.error(err);
-      toast.error('Failed to export API keys');
+      toast.error(t('toasts.apiKeysExportFailed', 'Failed to export API keys'));
     }
   };
 
@@ -96,7 +96,7 @@ export function SecurityBackupCard() {
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
       setImportError('Please select a backup file first.');
-      toast.error('No backup file selected');
+      toast.error(t('toasts.noBackupFileSelected', 'No backup file selected'));
       return;
     }
     if (!importPassphrase) {
@@ -125,10 +125,10 @@ export function SecurityBackupCard() {
       setConflictResolutions(resolutions);
       setCustomNames(names);
       setImportError('');
-      toast.success('Backup file decrypted successfully!');
+      toast.success(t('toasts.backupFileDecrypted', 'Backup file decrypted successfully!'));
     } catch (err) {
       setImportError('Invalid passphrase or corrupted file.');
-      toast.error('Failed to decrypt backup file');
+      toast.error(t('toasts.backupFileDecryptFailed', 'Failed to decrypt backup file'));
     }
   };
 
@@ -190,12 +190,12 @@ export function SecurityBackupCard() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    toast.success('API keys imported successfully!');
+    toast.success(t('toasts.apiKeysImported', 'API keys imported successfully!'));
   };
 
   const handleLockNow = () => {
     lock();
-    toast.success('Vault locked. Credentials purged from memory.');
+    toast.success(t('toasts.vaultLockedPurged', 'Vault locked. Credentials purged from memory.'));
   };
 
   const handleInitializeVault = async () => {
@@ -207,10 +207,10 @@ export function SecurityBackupCard() {
       await initializeVault(localPassphrase);
       setLocalPassphrase('');
       setLocalSecurityError('');
-      toast.success('Zero-Trust Vault initialized successfully!');
+      toast.success(t('toasts.vaultInitSuccess', 'Zero-Trust Vault initialized successfully!'));
     } catch (err: any) {
       setLocalSecurityError(err.message || 'Failed to initialize vault');
-      toast.error('Failed to initialize vault');
+      toast.error(t('toasts.vaultInitFailed', 'Failed to initialize vault'));
     }
   };
 
@@ -236,17 +236,17 @@ export function SecurityBackupCard() {
       const success = await changePassphrase(oldPassphrase, newPassphrase);
       if (!success) {
         setChangeError('Current passphrase incorrect or vault corrupted.');
-        toast.error('Failed to update passphrase.');
+        toast.error(t('toasts.passphraseUpdateFailed', 'Failed to update passphrase.'));
       } else {
         setOldPassphrase('');
         setNewPassphrase('');
         setConfirmNewPassphrase('');
         setIsChangingPassphrase(false);
-        toast.success('Master passphrase updated successfully!');
+        toast.success(t('toasts.passphraseUpdatedSuccess', 'Master passphrase updated successfully!'));
       }
     } catch (err: any) {
       setChangeError(err.message || 'Error updating passphrase.');
-      toast.error('Error updating passphrase.');
+      toast.error(t('toasts.passphraseUpdateError', 'Error updating passphrase.'));
     } finally {
       setIsUpdatingPassword(false);
     }
@@ -329,7 +329,7 @@ export function SecurityBackupCard() {
                     checked={vaultAutoLockEnabled}
                     onChange={(e) => {
                       setVaultAutoLockEnabled(e.target.checked);
-                      toast.success(`Vault Auto-Lock ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+                      toast.success(e.target.checked ? t('toasts.vaultAutoLockEnabled', 'Vault Auto-Lock Enabled') : t('toasts.vaultAutoLockDisabled', 'Vault Auto-Lock Disabled'));
                     }}
                   />
                   <div className="w-9 h-5 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2F6BFF]"></div>
@@ -352,7 +352,7 @@ export function SecurityBackupCard() {
                   value={vaultAutoLockMinutes}
                   disabled={!vaultAutoLockEnabled}
                   onChange={(e) => setVaultAutoLockMinutes(Number(e.target.value))}
-                  onPointerUp={() => toast.success(`Auto-lock interval set to ${vaultAutoLockMinutes} minute(s)`)}
+                  onPointerUp={() => toast.success(t('toasts.vaultAutoLockIntervalSet', 'Auto-lock interval set to {{minutes}} minute(s)', { minutes: vaultAutoLockMinutes }))}
                   className="w-full h-1.5 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-[#2F6BFF]"
                 />
                 <div className="flex justify-between text-[10px] text-[#8E9299] font-mono">
@@ -381,7 +381,7 @@ export function SecurityBackupCard() {
                     checked={showVaultSetupNoticeOnStartup}
                     onChange={(e) => {
                       setShowVaultSetupNoticeOnStartup(e.target.checked);
-                      toast.success(`Startup Vault Notice ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+                      toast.success(e.target.checked ? t('toasts.startupVaultNoticeEnabled', 'Startup Vault Notice Enabled') : t('toasts.startupVaultNoticeDisabled', 'Startup Vault Notice Disabled'));
                     }}
                   />
                   <div className="w-9 h-5 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2F6BFF]"></div>
