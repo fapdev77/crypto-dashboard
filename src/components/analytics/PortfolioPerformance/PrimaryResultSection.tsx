@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PrimaryResultMetrics } from '../../../hooks/usePortfolioPerformance';
 import { AppTooltip } from '../../ui/Tooltip';
 import { Target, Calendar, Info } from 'lucide-react';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const PrimaryResultSection = React.memo(function PrimaryResultSection({ metrics, denomination, isPrivateMode }: Props) {
+  const { t } = useTranslation();
   const isPositive = metrics.percentageGain >= 0;
 
   const maskVal = (val: string | number) => {
@@ -23,7 +25,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#2a2b30]/60">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
           <Target className="w-4 h-4 text-[#2F6BFF]" />
-          Primary Result
+          {t('analytics.portfolio.primary.title', 'Primary Result')}
         </h3>
         <div className="flex items-center gap-2 text-xs text-[#8E9299]">
           <Calendar className="w-3.5 h-3.5" />
@@ -38,13 +40,13 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
         {/* Top Hero Banner */}
         <div className="flex flex-col items-center justify-center py-4 bg-[#1a1b1e]/60 rounded-xl border border-[#2a2b30]/50 text-center relative overflow-hidden">
           <span className="text-[11px] font-semibold tracking-wider text-[#8E9299] uppercase mb-1">
-            Percentage Gain in Period (ROI)
+            {t('analytics.portfolio.primary.roi', 'Percentage Gain in Period (ROI)')}
           </span>
           <div className={`text-4xl sm:text-5xl font-extrabold font-mono tracking-tight ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
             {isPositive ? '+' : ''}{metrics.percentageGain.toFixed(2)}%
           </div>
           <div className="flex items-center gap-2 mt-2 text-sm text-[#8E9299] font-mono">
-            <span>Absolute Gain:</span>
+            <span>{t('analytics.portfolio.primary.absoluteGain', 'Absolute Gain')}:</span>
             <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
               {maskVal(`${isPositive ? '+' : ''}${metrics.absoluteGain} ${denomination}`)}
             </span>
@@ -63,7 +65,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
             <div className="flex items-center gap-1.5 mb-2">
               <AppTooltip description="Portfolio wallet balance at the time of the first trading operation (excluding subsequent deposits).">
                 <span className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                  Initial Balance
+                  {t('analytics.portfolio.primary.initialBalance', 'Initial Balance')}
                 </span>
               </AppTooltip>
             </div>
@@ -80,7 +82,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
             <div className="flex items-center gap-1.5 mb-2">
               <AppTooltip description="Total portfolio wallet balance at the end of the analyzed timeframe.">
                 <span className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                  Final Balance
+                  {t('analytics.portfolio.primary.finalBalance', 'Final Balance')}
                 </span>
               </AppTooltip>
             </div>
@@ -97,7 +99,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
             <div className="flex items-center gap-1.5 mb-2">
               <AppTooltip description="Average daily return rate: Total Percentage Gain / Operating Days.">
                 <span className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-                  Daily Average ROI
+                  {t('analytics.portfolio.primary.dailyAvgRoi', 'Daily Average ROI')}
                 </span>
               </AppTooltip>
             </div>
@@ -105,7 +107,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
               <div className={`text-xl font-bold font-mono ${metrics.dailyAverageRoi >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
                 {metrics.dailyAverageRoi >= 0 ? '+' : ''}{metrics.dailyAverageRoi.toFixed(4)}%
               </div>
-              <span className="text-xs text-[#8E9299]">per operating day</span>
+              <span className="text-xs text-[#8E9299]">{t('analytics.portfolio.primary.perOperatingDay', 'per operating day')}</span>
             </div>
           </div>
 
@@ -114,7 +116,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
             <div className="flex items-center gap-1.5 mb-2">
               <AppTooltip description="Total deposits during the period. Excluded from ROI calculations to measure genuine strategy alpha.">
                 <span className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50 flex items-center gap-1">
-                  Deposits in Period <Info className="w-3 h-3 text-[#2F6BFF]" />
+                  {t('analytics.portfolio.primary.depositsInPeriod', 'Deposits in Period')} <Info className="w-3 h-3 text-[#2F6BFF]" />
                 </span>
               </AppTooltip>
             </div>

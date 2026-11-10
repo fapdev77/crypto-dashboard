@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RefreshCw, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PaginationProps {
   id?: string;
@@ -25,6 +26,7 @@ export function Pagination({
   refreshLabel,
   refreshDataReady,
 }: PaginationProps) {
+  const { t } = useTranslation();
   // ── Refresh animation indicator ──
   const [refreshAnim, setRefreshAnim] = useState<'idle' | 'loading' | 'done' | 'fading'>('idle');
   const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,36 +57,28 @@ export function Pagination({
   }, [refreshKey]);
 
   // ─── Effect 2: loading → done (data-driven or timer fallback) ───
-  // Uses a deferred check: on first render with 'loading', let hooks settle.
-  // On subsequent renders with 'loading' still active, check refreshDataReady.
   useEffect(() => {
     if (refreshAnim !== 'loading') {
       loadingDeferredRef.current = false;
       return;
     }
 
-    // Deferred: skip the first render where 'loading' was just committed.
-    // This gives descendant hooks (usePositionHistory etc.) time to set isLoading=true.
     if (!loadingDeferredRef.current) {
       loadingDeferredRef.current = true;
-      setDeferredTick(t => t + 1); // force re-render so effect fires again
+      setDeferredTick(t => t + 1);
       return;
     }
 
-    // Second+ render with 'loading': hooks have had time to process.
     if (typeof refreshDataReady === 'boolean' && !refreshDataReady) {
-      // Data still loading asynchronously — wait for refreshDataReady to become true
       return;
     }
 
-    // Data is ready (or timer fallback when no refreshDataReady prop)
     const delay = typeof refreshDataReady === 'boolean' ? 200 : 400;
     clearAllTimers();
     loadingTimerRef.current = setTimeout(() => {
       setRefreshAnim('done');
     }, delay);
 
-    // Only clean up THIS effect's timer — not doneTimer/fadeTimer from Effect 3
     return () => {
       if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current);
     };
@@ -126,9 +120,7 @@ export function Pagination({
         pages.push(i);
       }
     } else {
-      // Always show first page
       pages.push(1);
-
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
 
@@ -144,7 +136,6 @@ export function Pagination({
         pages.push('...');
       }
 
-      // Always show last page
       pages.push(totalPages);
     }
     return pages;
@@ -172,23 +163,31 @@ export function Pagination({
       {/* Items Count Summary */}
       <div className="flex items-center gap-2">
         <div id={`${id}-summary`} className="text-gray-400 font-medium">
-          Showing <span className="text-white font-mono">{startItem}</span> to{' '}
-          <span className="text-white font-mono">{endItem}</span> of{' '}
-          <span className="text-white font-mono">{totalItems}</span> records
+          {t('common.pagination.showing', 'Showing')}{' '}
+          <span className="text-white font-mono">{startItem}</span>{' '}
+          {t('common.pagination.to', 'to')}{' '}
+          <span className="text-white font-mono">{endItem}</span>{' '}
+          {t('common.pagination.of', 'of')}{' '}
+          <span className="text-white font-mono">{totalItems}</span>{' '}
+          {t('common.pagination.records', 'records')}
         </div>
         {refreshAnim === 'loading' && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] leading-tight font-medium bg-blue-500/10 text-blue-400 select-none">
             <RefreshCw className="w-2.5 h-2.5 animate-spin shrink-0" />
-            {refreshLabel || 'Updating'}
+            {refreshLabel || t('common.pagination.updating', 'Updating')}
           </span>
         )}
         {(refreshAnim === 'done' || refreshAnim === 'fading') && (
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] leading-tight font-medium bg-emerald-500/10 text-emerald-400 select-none transition-all duration-[400ms] ease-out ${
-            refreshAnim === 'fading' ? 'opacity-0 scale-50' : ''
-          }`}
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] leading-tight font-medium bg-emerald-500/10 text-emerald-400 select-none transition-all duration-[400ms] ease-out ${
+              refreshAnim === 'fading' ? 'opacity-0 scale-50' : ''
+            }`}
             style={refreshAnim === 'done' ? { animation: 'refresh-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)' } : undefined}
           >
-            <Check className="w-3 h-3 shrink-0" style={refreshAnim === 'done' ? { animation: 'refresh-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)' } : undefined} />
+            <Check
+              className="w-3 h-3 shrink-0"
+              style={refreshAnim === 'done' ? { animation: 'refresh-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)' } : undefined}
+            />
           </span>
         )}
       </div>
@@ -201,7 +200,7 @@ export function Pagination({
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
           className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
-          title="First Page"
+          title={t('common.pagination.firstPage', 'First Page')}
         >
           <ChevronsLeft className="w-4 h-4" />
         </button>
@@ -212,7 +211,7 @@ export function Pagination({
           onClick={handlePrev}
           disabled={currentPage === 1}
           className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
-          title="Previous Page"
+          title={t('common.pagination.prevPage', 'Previous Page')}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -255,7 +254,7 @@ export function Pagination({
           onClick={handleNext}
           disabled={currentPage === totalPages}
           className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
-          title="Next Page"
+          title={t('common.pagination.nextPage', 'Next Page')}
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -266,7 +265,7 @@ export function Pagination({
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
           className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
-          title="Last Page"
+          title={t('common.pagination.lastPage', 'Last Page')}
         >
           <ChevronsRight className="w-4 h-4" />
         </button>

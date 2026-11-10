@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Layers, Activity } from 'lucide-react';
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { SpecificMarketType, ExchangeId } from '../../../types/marketAnalytics';
 
 export const MarketBreakdownStrip: React.FC = () => {
+  const { t } = useTranslation();
   const { snapshot } = useMarketAnalyticsStore();
 
   if (!snapshot || !snapshot.breakdown || snapshot.breakdown.length === 0) {

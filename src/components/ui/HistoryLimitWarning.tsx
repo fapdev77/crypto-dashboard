@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { useApiKeysStore } from '../../store/apiKeysStore';
 import { AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-const LIMITS: Record<string, { days: number, label: string }> = {
-  okx: { days: 90, label: '3 months (90 days)' },
-  bitget: { days: 90, label: '3 months (90 days)' },
-  bybit: { days: 730, label: '2 years' }
+const LIMITS: Record<string, { days: number; labelKey: string; defaultLabel: string }> = {
+  okx: { days: 90, labelKey: 'common.historyLimit.limits.okx', defaultLabel: '3 months (90 days)' },
+  bitget: { days: 90, labelKey: 'common.historyLimit.limits.bitget', defaultLabel: '3 months (90 days)' },
+  bybit: { days: 730, labelKey: 'common.historyLimit.limits.bybit', defaultLabel: '2 years' }
 };
 
 interface HistoryLimitWarningProps {
@@ -14,6 +15,7 @@ interface HistoryLimitWarningProps {
 }
 
 export function HistoryLimitWarning({ period, className = '' }: HistoryLimitWarningProps) {
+  const { t } = useTranslation();
   const keys = useApiKeysStore(state => state.keys);
 
   const warnings = useMemo(() => {
@@ -43,7 +45,11 @@ export function HistoryLimitWarning({ period, className = '' }: HistoryLimitWarn
       }
     });
 
-    return warnedExchanges.map(ex => ({ exchange: ex, max: LIMITS[ex].label }));
+    return warnedExchanges.map(ex => ({
+      exchange: ex,
+      labelKey: LIMITS[ex].labelKey,
+      defaultLabel: LIMITS[ex].defaultLabel
+    }));
   }, [keys, period]);
 
   if (warnings.length === 0) return null;
@@ -52,11 +58,12 @@ export function HistoryLimitWarning({ period, className = '' }: HistoryLimitWarn
     <div className={`bg-[#2A1D0B] border border-[#FFAB00]/30 rounded-xl p-3 flex items-start gap-3 ${className}`}>
       <AlertCircle className="w-5 h-5 text-[#FFAB00] mt-0.5 flex-shrink-0" />
       <div className="text-sm text-[#FFAB00]/90">
-        <strong>Historical Data Limits:</strong> Some of your active exchanges have API restrictions for retrieving historical data. Records older than these limits cannot be retrieved:
+        <strong>{t('common.historyLimit.title', 'Historical Data Limits:')}</strong>{' '}
+        {t('common.historyLimit.desc', 'Some of your active exchanges have API restrictions for retrieving historical data. Records older than these limits cannot be retrieved:')}
         <ul className="list-disc pl-5 mt-2 opacity-80 space-y-1">
           {warnings.map(w => (
             <li key={w.exchange} className="capitalize">
-              {w.exchange}: Maximum of {w.max}
+              {w.exchange}: {t('common.historyLimit.max', { limit: t(w.labelKey, w.defaultLabel), defaultValue: `Maximum of ${w.defaultLabel}` })}
             </li>
           ))}
         </ul>

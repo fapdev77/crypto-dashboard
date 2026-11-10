@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronDown, AlertTriangle, ShieldCheck, Activity, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { HedgeCoinSummary, getExchangeDisplayName } from '../../utils/hedgeUtils';
 import { CoinIcon } from '../ui/CoinIcon';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
@@ -36,6 +37,7 @@ export function HedgeProCoinRow({
   formatCurrency,
   pnlConceptMode = 'hedge',
 }: HedgeProCoinRowProps) {
+  const { t } = useTranslation();
   const { barMetrics } = coin;
   const keys = useApiKeysStore(state => state.keys);
   const matchedKey = keys.find(k => k.id === coin.connectionId);
@@ -65,7 +67,7 @@ export function HedgeProCoinRow({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-bold text-white text-base tracking-tight">{coin.baseCoin}</span>
               <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-[#202226] border border-[#34373c] text-[#a0a5ad] uppercase">
-                INVERSE
+                {t('hedgePro.coinRows.inverseBadge', 'INVERSE')}
               </span>
               <span className="text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] capitalize">
                 {getExchangeDisplayName(coin.exchange)}
@@ -85,7 +87,7 @@ export function HedgeProCoinRow({
 
               {/* Position counter & Risk Alert Icon (integrated together without text) */}
               <div className="flex items-center gap-1.5 ml-1">
-                <AppTooltip description={`Positions: ${coin.longCount} Long(s) and ${coin.shortCount} Short(s)`}>
+                <AppTooltip description={t('hedgePro.coinRows.positionsTooltip', { longs: coin.longCount, shorts: coin.shortCount })}>
                   <span className="text-[10px] font-mono bg-[#1a1b1e] border border-[#2a2b30] px-1.5 py-0.5 rounded flex items-center gap-1 cursor-help">
                     <span className="text-[#00C853] font-medium">{coin.longCount}L</span>
                     <span className="text-[#8E9299]">/</span>
@@ -94,7 +96,7 @@ export function HedgeProCoinRow({
                 </AppTooltip>
 
                 {coin.overexposedCount > 0 && (
-                  <AppTooltip description={`${coin.overexposedCount} position(s) with uncovered risk or overexposure`}>
+                  <AppTooltip description={t('hedgePro.coinRows.overexposedTooltip', { count: coin.overexposedCount })}>
                     <span className="inline-flex items-center justify-center p-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 cursor-help">
                       <AlertTriangle className="w-3.5 h-3.5" />
                     </span>
@@ -107,7 +109,9 @@ export function HedgeProCoinRow({
           {/* Right: Positions count badge & Expand Chevron */}
           <div className="flex items-center gap-2 shrink-0 text-[#8E9299]">
             <span className="text-[11px] font-mono bg-[#1a1b1e] border border-[#2a2b30] px-2 py-0.5 rounded text-[#a0a5ad]">
-              {coin.positions.length} {coin.positions.length === 1 ? 'position' : 'positions'}
+              {coin.positions.length === 1
+                ? t('hedgePro.coinRows.positionsCount_one', { count: 1 })
+                : t('hedgePro.coinRows.positionsCount_other', { count: coin.positions.length })}
             </span>
             <div
               className={`p-1 rounded hover:bg-[#202226] text-[#8E9299] hover:text-white transition-transform duration-200 ${isExpanded ? 'rotate-180 text-white' : ''
@@ -122,27 +126,27 @@ export function HedgeProCoinRow({
         <div className="bg-[#121317] border border-[#23252a] rounded-lg p-3 space-y-2">
           {/* Sub-line 1: Icons & Labels */}
           <div className="flex items-center justify-between gap-2 text-xs font-medium text-[#8E9299] uppercase tracking-wider">
-            <AppTooltip description="Protected capital locked in USD by inverse shorts at entry price">
+            <AppTooltip description={t('hedgePro.coinRows.protectedTooltip')}>
               <span className="flex items-center gap-1.5 cursor-help">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Protected
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> {t('hedgePro.dashboard.protected')}
               </span>
             </AppTooltip>
 
-            <AppTooltip description="Unhedged spot balance exposed to market price movements">
+            <AppTooltip description={t('hedgePro.coinRows.exposedTooltip')}>
               <span className="flex items-center gap-1.5 cursor-help">
-                <Activity className="w-3.5 h-3.5 text-white" /> Exposed
+                <Activity className="w-3.5 h-3.5 text-white" /> {t('hedgePro.dashboard.exposed')}
               </span>
             </AppTooltip>
 
             {coin.leveragedUsd > 0 ? (
-              <AppTooltip description="Directional long positions adding leveraged market exposure">
+              <AppTooltip description={t('hedgePro.coinRows.leveragedTooltip')}>
                 <span className="flex items-center gap-1.5 cursor-help">
-                  <TrendingUp className="w-3.5 h-3.5 text-amber-400" /> Leveraged
+                  <TrendingUp className="w-3.5 h-3.5 text-amber-400" /> {t('hedgePro.dashboard.leveraged')}
                 </span>
               </AppTooltip>
             ) : (
               <span className="hidden sm:flex items-center gap-1.5 text-[#555861]">
-                <TrendingUp className="w-3.5 h-3.5 text-[#555861]" /> No Leverage
+                <TrendingUp className="w-3.5 h-3.5 text-[#555861]" /> {t('hedgePro.coinRows.noLeverage')}
               </span>
             )}
           </div>
@@ -204,10 +208,10 @@ export function HedgeProCoinRow({
           <div className="border border-[#26282d] rounded-lg bg-[#151619] overflow-hidden divide-y divide-[#222429]">
             <div className="px-3.5 py-2 bg-[#1a1b1e] border-b border-[#26282d] flex items-center justify-between">
               <span className="text-xs font-semibold text-white">
-                Open Positions for {coin.baseCoin} ({coin.positions.length})
+                {t('hedgePro.coinRows.openPositionsHeader', { coin: coin.baseCoin, count: coin.positions.length })}
               </span>
               <span className="text-[11px] text-[#8E9299]">
-                Click symbol to navigate and highlight in Open Positions
+                {t('hedgePro.coinRows.openPositionsHint')}
               </span>
             </div>
             {coin.positions.map(pos => (
@@ -227,3 +231,4 @@ export function HedgeProCoinRow({
 }
 
 export default HedgeProCoinRow;
+

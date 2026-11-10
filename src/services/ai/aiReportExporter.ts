@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
+import i18n from '../../i18n/config';
 import { LogManager } from '../LogManager';
 
 export interface ExportReportOptions {
@@ -206,7 +207,7 @@ export async function exportAiAnalysisToPdf(options: ExportReportOptions): Promi
     const fileName = `PIKA_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
     doc.save(fileName);
 
-    toast.success('Executive PDF report downloaded (.pdf)', {
+    toast.success(i18n.t('toasts.pdfDownloaded', 'Executive PDF report downloaded (.pdf)'), {
       id: 'pdf-export-success',
       duration: 3000,
       style: {
@@ -218,6 +219,6 @@ export async function exportAiAnalysisToPdf(options: ExportReportOptions): Promi
     });
   } catch (err) {
     LogManager.error('AI.Reports', 'Failed to export PDF report:', err);
-    toast.error('Failed to generate PDF document');
+    toast.error(i18n.t('toasts.pdfExportFailed', 'Failed to generate PDF document'));
   }
 }

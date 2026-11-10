@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
   Database,
@@ -40,6 +41,7 @@ import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 
 export function IndexedDBCacheCard() {
+  const { t } = useTranslation();
   const keys = useApiKeysStore((state) => state.keys);
   const {
     historyCacheInterval,
@@ -157,15 +159,15 @@ export function IndexedDBCacheCard() {
     try {
       const res = await checkIndexedDBHealth();
       if (res.status === 'healthy') {
-        toast.success(`IndexedDB is healthy (Version ${res.version}, 14 stores active)`, { id: 'idb-health' });
+        toast.success(t('toasts.idbHealth', 'IndexedDB is healthy (Version {{version}}, 14 stores active)', { version: res.version }), { id: 'idb-health' });
         setHealthChecked(true);
         setTimeout(() => setHealthChecked(false), 2500);
       } else {
-        toast.error(`IndexedDB Error: ${res.error || 'Connection failed'}`, { id: 'idb-health-err' });
+        toast.error(t('toasts.idbError', 'IndexedDB Error: {{error}}', { error: res.error || 'Connection failed' }), { id: 'idb-health-err' });
       }
       await loadAllStats();
     } catch (e: any) {
-      toast.error(`Health check failed: ${e?.message || 'Unknown error'}`, { id: 'idb-health-err' });
+      toast.error(t('toasts.idbHealthFailed', 'Health check failed: {{error}}', { error: e?.message || 'Unknown error' }), { id: 'idb-health-err' });
     } finally {
       setIsCheckingHealth(false);
     }
@@ -173,7 +175,7 @@ export function IndexedDBCacheCard() {
 
   const handleForceSyncAll = async () => {
     if (keys.length === 0) {
-      toast.error('No API keys configured to sync history', { id: 'sync-all' });
+      toast.error(t('toasts.noApiKeysToSync', 'No API keys configured to sync history'), { id: 'sync-all' });
       return;
     }
     setIsSyncingAll(true);
@@ -182,11 +184,11 @@ export function IndexedDBCacheCard() {
       await UnifiedSyncManager.syncFullApplication(keys);
       await loadAllStats();
       setSyncedAll(true);
-      toast.success('IndexedDB cache fully synchronized across all exchanges!', { id: 'sync-all' });
+      toast.success(t('toasts.idbSyncAllSuccess', 'IndexedDB cache fully synchronized across all exchanges!'), { id: 'sync-all' });
       setTimeout(() => setSyncedAll(false), 3000);
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Force sync all failed:', err);
-      toast.error(`Sync failed: ${err.message || 'Unknown error'}`, { id: 'sync-all-err' });
+      toast.error(t('toasts.syncFailed', 'Sync failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'sync-all-err' });
     } finally {
       setIsSyncingAll(false);
     }
@@ -199,11 +201,11 @@ export function IndexedDBCacheCard() {
       await UnifiedSyncManager.clearAndResyncAll(keys);
       await loadAllStats();
       setClearedAll(true);
-      toast.success('IndexedDB cache cleared and re-sync scheduled!', { id: 'clear-all' });
+      toast.success(t('toasts.idbClearAllSuccess', 'IndexedDB cache cleared and re-sync scheduled!'), { id: 'clear-all' });
       setTimeout(() => setClearedAll(false), 3000);
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Clear all cache failed:', err);
-      toast.error(`Clear cache failed: ${err.message || 'Unknown error'}`, { id: 'clear-all-err' });
+      toast.error(t('toasts.idbClearFailed', 'Clear cache failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'clear-all-err' });
     } finally {
       setIsClearingAll(false);
     }
@@ -214,10 +216,10 @@ export function IndexedDBCacheCard() {
     try {
       await recoverAndResetIndexedDB();
       await loadAllStats();
-      toast.success('Database reset and restored to healthy state!', { id: 'recover-db' });
+      toast.success(t('toasts.idbResetSuccess', 'Database reset and restored to healthy state!'), { id: 'recover-db' });
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Recovery failed:', err);
-      toast.error(`Database recovery failed: ${err.message || 'Unknown error'}`, { id: 'recover-db-err' });
+      toast.error(t('toasts.idbRecoveryFailed', 'Database recovery failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'recover-db-err' });
     } finally {
       setIsRecovering(false);
     }
@@ -225,7 +227,7 @@ export function IndexedDBCacheCard() {
 
   const handleSyncTransactions = async () => {
     if (!hasTxKeys) {
-      toast.error('No active Bybit, Bitget, or OKX API keys found', { id: 'tx-sync' });
+      toast.error(t('toasts.noActiveExchangeKeys', 'No active Bybit, Bitget, or OKX API keys found'), { id: 'tx-sync' });
       return;
     }
     setIsSyncingTx(true);
@@ -235,13 +237,20 @@ export function IndexedDBCacheCard() {
       await loadAllStats();
       setSyncedTx(true);
       toast.success(
-        `Transactions synced (${result.total} records in ${result.elapsedSeconds}s)\nBybit: ${result.bybit} | Bitget: ${result.bitget} | OKX: ${result.okx}`,
+        t('transactions.cache.syncSuccessToast', {
+          total: result.total,
+          seconds: result.elapsedSeconds,
+          bybit: result.bybit,
+          bitget: result.bitget,
+          okx: result.okx,
+          defaultValue: `Transactions synced (${result.total} records in ${result.elapsedSeconds}s)\nBybit: ${result.bybit} | Bitget: ${result.bitget} | OKX: ${result.okx}`,
+        }),
         { id: 'tx-sync', duration: 4000 }
       );
       setTimeout(() => setSyncedTx(false), 3000);
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Sync transactions failed:', err);
-      toast.error(`Transaction sync failed: ${err.message || 'Unknown error'}`, { id: 'tx-sync-err' });
+      toast.error(t('transactions.cache.syncErrorToast', 'Transaction sync failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'tx-sync-err' });
     } finally {
       setIsSyncingTx(false);
     }
@@ -254,11 +263,11 @@ export function IndexedDBCacheCard() {
       await UnifiedSyncManager.clearAndResyncTransactions(keys);
       await loadAllStats();
       setClearedTx(true);
-      toast.success('Transaction logs cache cleared and re-synced', { id: 'tx-clear', duration: 4000 });
+      toast.success(t('toasts.txLogsCleared', 'Transaction logs cache cleared and re-synced'), { id: 'tx-clear', duration: 4000 });
       setTimeout(() => setClearedTx(false), 3000);
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Clear transactions failed:', err);
-      toast.error(`Failed to clear tx cache: ${err.message || 'Unknown error'}`, { id: 'tx-clear-err' });
+      toast.error(t('toasts.txLogsClearFailed', 'Failed to clear tx cache: {{error}}', { error: err.message || 'Unknown error' }), { id: 'tx-clear-err' });
     } finally {
       setIsClearingTx(false);
     }
@@ -269,10 +278,10 @@ export function IndexedDBCacheCard() {
     try {
       await clearAssetMetadataCache();
       setMetaCacheSize(0);
-      toast.success('Asset metadata cache cleared', { id: 'meta-clear' });
+      toast.success(t('toasts.metaCacheCleared', 'Asset metadata cache cleared'), { id: 'meta-clear' });
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Clear meta failed:', err);
-      toast.error(`Failed to clear metadata cache: ${err.message || 'Unknown error'}`, { id: 'meta-clear-err' });
+      toast.error(t('toasts.metaCacheClearFailed', 'Failed to clear metadata cache: {{error}}', { error: err.message || 'Unknown error' }), { id: 'meta-clear-err' });
     } finally {
       setIsClearingMeta(false);
     }
@@ -286,13 +295,13 @@ export function IndexedDBCacheCard() {
     try {
       const result = await pruneHistoricalData(pruneDays);
       toast.success(
-        `Pruned ${result.totalPruned.toLocaleString()} records older than ${pruneDays} days`,
+        t('settings.indexedDB.prunedToast', 'Pruned {{count}} records older than {{days}} days', { count: result.totalPruned, days: pruneDays }),
         { id: 'prune-toast' }
       );
       await loadAllStats();
     } catch (err: any) {
       LogManager.error('IndexedDBCacheCard', 'Failed to prune historical data:', err);
-      toast.error(`Pruning failed: ${err.message || 'Unknown error'}`, { id: 'prune-err' });
+      toast.error(t('toasts.pruningFailed', 'Pruning failed: {{error}}', { error: err.message || 'Unknown error' }), { id: 'prune-err' });
     } finally {
       setIsPruning(false);
     }
@@ -313,10 +322,10 @@ export function IndexedDBCacheCard() {
           </div>
           <div>
             <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              IndexedDB Storage & Cache
+              {t('settings.indexedDB.title', 'IndexedDB Storage Engine')}
             </h3>
             <p className="text-[#8E9299] text-xs">
-              Consolidated local database manager for Positions, Orders, Transactions, Funding & Metadata
+              {t('settings.indexedDB.desc', 'Consolidated local database manager for Positions, Orders, Transactions, Funding & Metadata')}
             </p>
           </div>
         </div>
@@ -340,7 +349,7 @@ export function IndexedDBCacheCard() {
               }`}
               title={`Browser Storage Quota: ${storageQuota.usageMB} MB of ${storageQuota.quotaMB} MB used (${storageQuota.percentageUsed}%)`}
             >
-              <span className="text-[#8E9299] text-[10px]">Disk:</span>
+              <span className="text-[#8E9299] text-[10px]">{t('settings.indexedDB.disk', 'Disk:')}</span>
               <span className="font-semibold">
                 {storageQuota.usageMB} MB ({storageQuota.percentageUsed}%)
               </span>
@@ -361,15 +370,15 @@ export function IndexedDBCacheCard() {
               }`}
             />
             {indexedDBStatus === 'healthy'
-              ? 'Operational'
+              ? t('common.operational', 'Operational')
               : indexedDBStatus === 'recovering'
-              ? 'Recovering...'
-              : 'Error / Conflict'}
+              ? t('common.recovering', 'Recovering...')
+              : t('common.errorConflict', 'Error / Conflict')}
           </span>
 
           {/* Total records count */}
           <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2.5 py-1 rounded-md border border-[#2a2b30]">
-            <span className="text-[#8E9299] text-[10px]">Total Records:</span>
+            <span className="text-[#8E9299] text-[10px]">{t('settings.indexedDB.totalRecords', 'Total Records:')}</span>
             <span className="text-blue-400 font-mono text-xs font-semibold">
               {totalRecordsCount.toLocaleString()}
             </span>
@@ -384,10 +393,10 @@ export function IndexedDBCacheCard() {
             <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
             <div>
               <span className="text-xs font-semibold text-red-200 block">
-                IndexedDB Version or Permission Conflict Detected
+                {t('settings.indexedDB.conflictTitle', 'IndexedDB Version or Permission Conflict Detected')}
               </span>
               <p className="text-[11px] text-red-300/90 mt-0.5 leading-relaxed">
-                {indexedDBError || 'Cache database access failed. Local caching operations are temporarily impaired.'}
+                {indexedDBError || t('settings.indexedDB.conflictFallback', 'Cache database access failed. Local caching operations are temporarily impaired.')}
               </p>
             </div>
           </div>
@@ -397,7 +406,7 @@ export function IndexedDBCacheCard() {
             className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-50 text-white rounded-md text-xs font-semibold shrink-0 transition-colors flex items-center gap-1.5 shadow-sm shadow-red-900/30 cursor-pointer"
           >
             {isRecovering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-            <span>{isRecovering ? 'Resetting...' : 'Clear Cache & Rebuild'}</span>
+            <span>{isRecovering ? t('common.resetting', 'Resetting...') : t('settings.indexedDB.clearRebuild', 'Clear Cache & Rebuild')}</span>
           </button>
         </div>
       )}
@@ -410,13 +419,13 @@ export function IndexedDBCacheCard() {
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-white/90 font-medium flex items-center gap-1.5">
                 <Database className="w-4 h-4 text-blue-400" />
-                Database Engine & Schema
+                {t('settings.indexedDB.engineTitle', 'Database Engine & Schema')}
               </span>
               <button
                 onClick={handleCheckHealth}
                 disabled={isCheckingHealth}
                 className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors cursor-pointer px-2 py-0.5 rounded bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20"
-                title="Verify IndexedDB connection and schema"
+                title={t('settings.indexedDB.verifyHealthTooltip', 'Verify IndexedDB connection and schema')}
               >
                 {isCheckingHealth ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -425,30 +434,30 @@ export function IndexedDBCacheCard() {
                 ) : (
                   <RefreshCw className="w-3 h-3" />
                 )}
-                <span>{isCheckingHealth ? 'Checking...' : healthChecked ? 'Verified' : 'Verify Health'}</span>
+                <span>{isCheckingHealth ? t('settings.indexedDB.verifying', 'Checking...') : healthChecked ? t('settings.indexedDB.verified', 'Verified') : t('settings.indexedDB.verifyHealthBtn', 'Verify Health')}</span>
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-[#2a2b30]/40 text-xs">
               <div className="flex flex-col">
-                <span className="text-[#8E9299] text-[10px] uppercase font-semibold">Database Name</span>
+                <span className="text-[#8E9299] text-[10px] uppercase font-semibold">{t('settings.indexedDB.dbName', 'Database Name')}</span>
                 <span className="font-mono text-white/90 font-medium text-xs truncate" title={DB_NAME}>
                   {DB_NAME}
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[#8E9299] text-[10px] uppercase font-semibold">Engine</span>
+                <span className="text-[#8E9299] text-[10px] uppercase font-semibold">{t('settings.indexedDB.engineName', 'Engine')}</span>
                 <span className="font-mono text-white/90 font-medium text-xs">IndexedDB W3C</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[#8E9299] text-[10px] uppercase font-semibold">Schema Version</span>
+                <span className="text-[#8E9299] text-[10px] uppercase font-semibold">{t('settings.indexedDB.schemaVersion', 'Schema Version')}</span>
                 <span className="font-mono text-blue-400 font-medium text-xs">
-                  Version {indexedDBVersion || DB_VERSION}
+                  {t('settings.indexedDB.schemaVersion', 'Version')} {indexedDBVersion || DB_VERSION}
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[#8E9299] text-[10px] uppercase font-semibold">Active Stores</span>
-                <span className="font-mono text-emerald-400 font-medium text-xs">14 Dedicated Stores</span>
+                <span className="text-[#8E9299] text-[10px] uppercase font-semibold">{t('settings.indexedDB.activeStores', 'Active Stores')}</span>
+                <span className="font-mono text-emerald-400 font-medium text-xs">{t('settings.indexedDB.storesCount', '14 Dedicated Stores')}</span>
               </div>
             </div>
           </div>
@@ -461,7 +470,7 @@ export function IndexedDBCacheCard() {
             >
               <span className="text-xs text-white/90 font-medium flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-blue-400" />
-                Object Store Records Breakdown
+                {t('settings.indexedDB.breakdownTitle', 'Object Store Records Breakdown')}
               </span>
               {showBreakdown ? (
                 <ChevronUp className="w-3.5 h-3.5 text-[#8E9299]" />
@@ -473,39 +482,39 @@ export function IndexedDBCacheCard() {
             {showBreakdown && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 text-[11px]">
                 <div className="bg-[#151619] p-2 rounded border border-[#2a2b30]/40">
-                  <span className="text-[#8E9299] block text-[10px]">Positions</span>
+                  <span className="text-[#8E9299] block text-[10px]">{t('settings.indexedDB.positions', 'Positions')}</span>
                   <span className="font-mono text-white font-medium">
                     {stats ? stats.positionHistoryCount.toLocaleString() : '-'}
                   </span>
                 </div>
                 <div className="bg-[#151619] p-2 rounded border border-[#2a2b30]/40">
-                  <span className="text-[#8E9299] block text-[10px]">Orders</span>
+                  <span className="text-[#8E9299] block text-[10px]">{t('settings.indexedDB.orders', 'Orders')}</span>
                   <span className="font-mono text-white font-medium">
                     {stats ? stats.orderHistoryCount.toLocaleString() : '-'}
                   </span>
                 </div>
                 <div className="bg-[#151619] p-2 rounded border border-[#2a2b30]/40">
-                  <span className="text-[#8E9299] block text-[10px]">Transactions</span>
+                  <span className="text-[#8E9299] block text-[10px]">{t('settings.indexedDB.transactions', 'Transactions')}</span>
                   <span className="font-mono text-emerald-400 font-medium">
                     {txCounts.total.toLocaleString()}
                   </span>
                 </div>
                 <div className="bg-[#151619] p-2 rounded border border-[#2a2b30]/40">
-                  <span className="text-[#8E9299] block text-[10px]">Funding Rates</span>
+                  <span className="text-[#8E9299] block text-[10px]">{t('settings.indexedDB.fundingRates', 'Funding Rates')}</span>
                   <span className="font-mono text-orange-400 font-medium">
                     {stats ? stats.fundingCount.toLocaleString() : '-'}
                   </span>
                 </div>
                 <div className="bg-[#151619] p-2 rounded border border-[#2a2b30]/40">
-                  <span className="text-[#8E9299] block text-[10px]">Asset Metadata</span>
+                  <span className="text-[#8E9299] block text-[10px]">{t('settings.indexedDB.assetMetadata', 'Asset Metadata')}</span>
                   <span className="font-mono text-purple-400 font-medium">
                     {metaCacheSize !== null ? metaCacheSize.toLocaleString() : '-'}
                   </span>
                 </div>
                 <div className="bg-[#151619] p-2 rounded border border-[#2a2b30]/40">
-                  <span className="text-[#8E9299] block text-[10px]">Realized PnL</span>
+                  <span className="text-[#8E9299] block text-[10px]">{t('settings.indexedDB.realizedPnl', 'Realized PnL')}</span>
                   <span className="font-mono text-cyan-400 font-medium">
-                    {stats ? (stats.bybitTxCount > 0 ? 'Active' : 'Standby') : '-'}
+                    {stats ? (stats.bybitTxCount > 0 ? t('settings.indexedDB.activeStatus', 'Active') : t('settings.indexedDB.standbyStatus', 'Standby')) : '-'}
                   </span>
                 </div>
               </div>
@@ -519,10 +528,10 @@ export function IndexedDBCacheCard() {
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-white/90 font-medium flex items-center gap-1.5">
                 <ArrowLeftRight className="w-4 h-4 text-emerald-400" />
-                Exchange Transaction Logs (Ledger Cache)
+                {t('settings.indexedDB.txLogsTitle', 'Exchange Transaction Logs (Ledger Cache)')}
               </span>
               <span className="text-[10px] text-[#8E9299] font-mono">
-                Last Sync: {formatLastSync(lastTxSync)}
+                {t('settings.indexedDB.lastSync', 'Last Sync:')} {formatLastSync(lastTxSync)}
               </span>
             </div>
 
@@ -549,7 +558,7 @@ export function IndexedDBCacheCard() {
             </div>
 
             <p className="text-[#8E9299] text-[11px] leading-relaxed">
-              Stores raw ledger transactions from all 3 exchanges into dedicated IndexedDB stores for deep historical analytics and PnL reporting.
+              {t('settings.indexedDB.txLogsDesc', 'Stores raw ledger transactions from all 3 exchanges into dedicated IndexedDB stores for deep historical analytics and PnL reporting.')}
             </p>
           </div>
 
@@ -566,7 +575,7 @@ export function IndexedDBCacheCard() {
               ) : (
                 <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
               )}
-              <span>{isGlobalTxSyncing ? 'Syncing...' : syncedTx ? 'Synced!' : 'Sync Tx Logs'}</span>
+              <span>{isGlobalTxSyncing ? t('common.syncing', 'Syncing...') : syncedTx ? t('common.synced', 'Synced!') : t('settings.indexedDB.syncTxBtn', 'Sync Tx Logs')}</span>
             </button>
 
             <button
@@ -581,7 +590,7 @@ export function IndexedDBCacheCard() {
               ) : (
                 <Trash2 className="w-3.5 h-3.5 text-red-400" />
               )}
-              <span>{isClearingTx ? 'Clearing...' : clearedTx ? 'Cleared!' : 'Clear Tx Logs'}</span>
+              <span>{isClearingTx ? t('common.clearing', 'Clearing...') : clearedTx ? t('common.cleared', 'Cleared!') : t('settings.indexedDB.clearTxBtn', 'Clear Tx Logs')}</span>
             </button>
           </div>
         </div>
@@ -592,10 +601,10 @@ export function IndexedDBCacheCard() {
         {/* Background Update Interval */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <AppTooltip description="Sets the interval for the background worker that refreshes cached position history, orders, and ledger updates from exchange APIs.">
+            <AppTooltip description={t('settings.indexedDB.historyRefreshTooltip', 'Sets the interval for the background worker that refreshes cached position history, orders, and ledger updates from exchange APIs.')}>
               <h4 className="text-white font-medium text-xs w-fit cursor-help border-b border-dashed border-[#8E9299]/50 flex items-center gap-1.5">
                 <Sliders className="w-3 h-3 text-[#00C853]" />
-                History Background Refresh
+                {t('settings.indexedDB.historyRefreshTitle', 'History Background Refresh')}
               </h4>
             </AppTooltip>
             <span className="text-[#00C853] font-mono text-xs bg-[#00C853]/10 px-2 py-0.5 rounded-md font-semibold">
@@ -603,7 +612,7 @@ export function IndexedDBCacheCard() {
             </span>
           </div>
           <p className="text-[#8E9299] text-[11px] mb-2 leading-relaxed">
-            Periodically checks connected exchanges for new closed positions and orders (1 to 60 min).
+            {t('settings.indexedDB.historyRefreshDesc', 'Periodically checks connected exchanges for new closed positions and orders (1 to 60 min).')}
           </p>
           <input
             type="range"
@@ -613,23 +622,23 @@ export function IndexedDBCacheCard() {
             value={historyCacheInterval}
             onChange={(e) => setHistoryCacheInterval(Number(e.target.value))}
             onPointerUp={() =>
-              toast.success(`Background interval set to ${historyCacheInterval}m`, { id: 'cache-interval' })
+              toast.success(t('settings.indexedDB.historyRefreshToast', 'Background interval set to {{minutes}}m', { minutes: historyCacheInterval }), { id: 'cache-interval' })
             }
             className="w-full h-1.5 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-[#00C853]"
           />
           <div className="flex justify-between text-[10px] text-[#8E9299] font-mono mt-1">
-            <span>1m (Real-time)</span>
-            <span>60m (Low API usage)</span>
+            <span>{t('settings.indexedDB.historyRefreshMin', '1m (Real-time)')}</span>
+            <span>{t('settings.indexedDB.historyRefreshMax', '60m (Low API usage)')}</span>
           </div>
         </div>
 
         {/* Metadata TTL Hours */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <AppTooltip description="Sets how long asset classifications (e.g. CRYPTO vs STOCK) remain valid in IndexedDB before re-fetching from exchange metadata APIs.">
+            <AppTooltip description={t('settings.indexedDB.metadataTtlTooltip', 'Sets how long asset classifications (e.g. CRYPTO vs STOCK) remain valid in IndexedDB before re-fetching from exchange metadata APIs.')}>
               <h4 className="text-white font-medium text-xs w-fit cursor-help border-b border-dashed border-[#8E9299]/50 flex items-center gap-1.5">
                 <Briefcase className="w-3 h-3 text-purple-400" />
-                Asset Metadata TTL
+                {t('settings.indexedDB.metadataTtlTitle', 'Asset Metadata TTL')}
               </h4>
             </AppTooltip>
             <span className="text-purple-400 font-mono text-xs bg-purple-400/10 px-2 py-0.5 rounded-md font-semibold">
@@ -637,7 +646,7 @@ export function IndexedDBCacheCard() {
             </span>
           </div>
           <p className="text-[#8E9299] text-[11px] mb-2 leading-relaxed">
-            Validity duration of cached symbol definitions in IndexedDB (1 to 24 hours).
+            {t('settings.indexedDB.metadataTtlDesc', 'Validity duration of cached symbol definitions in IndexedDB (1 to 24 hours).')}
           </p>
           <input
             type="range"
@@ -647,7 +656,7 @@ export function IndexedDBCacheCard() {
             value={metadataCacheTtlHours}
             onChange={(e) => setMetadataCacheTtlHours(Number(e.target.value))}
             onPointerUp={() =>
-              toast.success(`Metadata TTL set to ${metadataCacheTtlHours}h`, { id: 'cache-ttl' })
+              toast.success(t('settings.indexedDB.metadataTtlToast', 'Metadata TTL set to {{hours}}h', { hours: metadataCacheTtlHours }), { id: 'cache-ttl' })
             }
             className="w-full h-1.5 bg-[#2a2b30] rounded-lg appearance-none cursor-pointer accent-purple-400"
           />
@@ -665,14 +674,14 @@ export function IndexedDBCacheCard() {
             <div className="flex items-center gap-2">
               <Trash2 className="w-4 h-4 text-amber-400" />
               <h4 className="text-white font-medium text-xs">
-                Data Retention & History Pruning
+                {t('settings.indexedDB.pruneTitle', 'Data Retention & History Pruning')}
               </h4>
               <span className="text-amber-400 font-mono text-xs bg-amber-400/10 px-2 py-0.5 rounded-md font-semibold">
                 {pruneDays}d
               </span>
             </div>
             <p className="text-[#8E9299] text-[11px] leading-relaxed">
-              Purge historical records (closed positions, orders, and transaction ledgers) older than the selected threshold to free IndexedDB browser storage.
+              {t('settings.indexedDB.pruneDesc', 'Purge historical records (closed positions, orders, and transaction ledgers) older than the selected threshold to free IndexedDB browser storage.')}
             </p>
           </div>
 
@@ -682,21 +691,21 @@ export function IndexedDBCacheCard() {
               onChange={(e) => setPruneDays(Number(e.target.value))}
               className="bg-[#1a1b1e] border border-[#2a2b30] text-xs text-white rounded-md px-2.5 py-1.5 focus:outline-none focus:border-amber-400 cursor-pointer"
             >
-              <option value={30}>Older than 30 days (1 mo)</option>
-              <option value={60}>Older than 60 days (2 mo)</option>
-              <option value={90}>Older than 90 days (3 mo)</option>
-              <option value={180}>Older than 180 days (6 mo)</option>
-              <option value={365}>Older than 1 year (Default)</option>
-              <option value={730}>Older than 2 years</option>
+              <option value={30}>{t('settings.indexedDB.pruneOption30', 'Older than 30 days (1 mo)')}</option>
+              <option value={60}>{t('settings.indexedDB.pruneOption60', 'Older than 60 days (2 mo)')}</option>
+              <option value={90}>{t('settings.indexedDB.pruneOption90', 'Older than 90 days (3 mo)')}</option>
+              <option value={180}>{t('settings.indexedDB.pruneOption180', 'Older than 180 days (6 mo)')}</option>
+              <option value={365}>{t('settings.indexedDB.pruneOption365', 'Older than 1 year (Default)')}</option>
+              <option value={730}>{t('settings.indexedDB.pruneOption730', 'Older than 2 years')}</option>
             </select>
             <button
               onClick={handlePruneData}
               disabled={isPruning}
               className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              title="Prune out-of-scope historical records from IndexedDB"
+              title={t('settings.indexedDB.pruneButtonTooltip', 'Prune out-of-scope historical records from IndexedDB')}
             >
               {isPruning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-              <span>{isPruning ? 'Pruning...' : 'Prune History'}</span>
+              <span>{isPruning ? t('settings.indexedDB.pruning', 'Pruning...') : t('settings.indexedDB.pruneHistoryBtn', 'Prune History')}</span>
             </button>
           </div>
         </div>
@@ -710,7 +719,7 @@ export function IndexedDBCacheCard() {
             onClick={handleForceSyncAll}
             disabled={isSyncingAll || syncedAll || isClearingAll || keys.length === 0}
             className="flex items-center gap-1.5 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-            title="Download latest positions, orders, transactions, and funding data"
+            title={t('settings.indexedDB.forceSyncAllTooltip', 'Download latest positions, orders, transactions, and funding data')}
           >
             {isSyncingAll ? (
               <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
@@ -719,7 +728,7 @@ export function IndexedDBCacheCard() {
             ) : (
               <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
             )}
-            <span>{isSyncingAll ? 'Syncing All Stores...' : syncedAll ? 'All Stores Synced!' : 'Force Sync All'}</span>
+            <span>{isSyncingAll ? t('settings.indexedDB.syncingAll', 'Syncing All Stores...') : syncedAll ? t('settings.indexedDB.syncedAll', 'All Stores Synced!') : t('settings.indexedDB.forceSyncAllBtn', 'Force Sync All')}</span>
           </button>
 
           {/* Clear Metadata Cache */}
@@ -727,14 +736,14 @@ export function IndexedDBCacheCard() {
             onClick={handleClearMetaCache}
             disabled={isClearingMeta}
             className="flex items-center gap-1.5 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-            title="Wipe cached asset classifications only"
+            title={t('settings.indexedDB.clearMetaTooltip', 'Wipe cached asset classifications only')}
           >
             {isClearingMeta ? (
               <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
             ) : (
               <Trash2 className="w-3.5 h-3.5 text-purple-400" />
             )}
-            <span>{isClearingMeta ? 'Clearing...' : 'Clear Asset Metadata'}</span>
+            <span>{isClearingMeta ? t('common.clearing', 'Clearing...') : t('settings.indexedDB.clearMetaBtn', 'Clear Asset Metadata')}</span>
           </button>
 
           {/* Clear All Cache */}
@@ -742,7 +751,7 @@ export function IndexedDBCacheCard() {
             onClick={handleClearAllCache}
             disabled={isClearingAll || clearedAll || isSyncingAll}
             className="flex items-center gap-1.5 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-            title="Wipe positions, orders, transactions, and funding stores, then re-sync"
+            title={t('settings.indexedDB.clearAllTooltip', 'Wipe positions, orders, transactions, and funding stores, then re-sync')}
           >
             {isClearingAll ? (
               <Loader2 className="w-3.5 h-3.5 text-red-400 animate-spin" />
@@ -751,7 +760,7 @@ export function IndexedDBCacheCard() {
             ) : (
               <Trash2 className="w-3.5 h-3.5 text-red-400" />
             )}
-            <span>{isClearingAll ? 'Clearing & Re-syncing...' : clearedAll ? 'Cleared All!' : 'Clear All Cache'}</span>
+            <span>{isClearingAll ? t('settings.indexedDB.clearingAll', 'Clearing & Re-syncing...') : clearedAll ? t('settings.indexedDB.clearedAll', 'Cleared All!') : t('settings.indexedDB.clearAllBtn', 'Clear All Cache')}</span>
           </button>
         </div>
 
@@ -760,14 +769,14 @@ export function IndexedDBCacheCard() {
           onClick={handleRecoverDatabase}
           disabled={isRecovering}
           className="flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ml-auto"
-          title="Completely delete and rebuild IndexedDB schema v12 to resolve version/permission errors"
+          title={t('settings.indexedDB.recoverDbTooltip', 'Completely delete and rebuild IndexedDB schema v12 to resolve version/permission errors')}
         >
           {isRecovering ? (
             <Loader2 className="w-3.5 h-3.5 text-red-400 animate-spin" />
           ) : (
             <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
           )}
-          <span>{isRecovering ? 'Rebuilding DB...' : 'Rebuild Database'}</span>
+          <span>{isRecovering ? t('settings.indexedDB.rebuildingDb', 'Rebuilding DB...') : t('settings.indexedDB.rebuildDbBtn', 'Rebuild Database')}</span>
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { openDB, deleteDB, DBSchema, IDBPDatabase } from 'idb';
 import toast from 'react-hot-toast';
+import i18n from '../i18n/config';
 import { useSettingsStore } from '../store/settingsStore';
 import {
   UnifiedHistoryPosition,
@@ -306,14 +307,14 @@ export function handleIndexedDBError(err: any, context = 'IndexedDB'): void {
   let formattedDesc = `Cache operation failed (${context}): ${errMsg}`;
 
   if (isQuota) {
-    formattedTitle = '⚠️ Storage Quota Exceeded';
-    formattedDesc = 'Browser storage quota is full. Use "Clear Cache" in Settings to free space.';
+    formattedTitle = i18n.t('toasts.idbQuotaTitle', '⚠️ Storage Quota Exceeded');
+    formattedDesc = i18n.t('toasts.idbQuotaDesc', 'Browser storage quota is full. Use "Clear Cache" in Settings to free space.');
   } else if (isSecurityOrPrivate) {
-    formattedTitle = '⚠️ Browser Storage Restricted';
-    formattedDesc = 'Private browsing or strict security rules prevent IndexedDB writes.';
+    formattedTitle = i18n.t('toasts.idbRestrictedTitle', '⚠️ Browser Storage Restricted');
+    formattedDesc = i18n.t('toasts.idbRestrictedDesc', 'Private browsing or strict security rules prevent IndexedDB writes.');
   } else if (isVersion) {
-    formattedTitle = '⚠️ Database Version Mismatch';
-    formattedDesc = 'IndexedDB schema conflict detected. Use "Clear Cache" to rebuild.';
+    formattedTitle = i18n.t('toasts.idbVersionMismatchTitle', '⚠️ Database Version Mismatch');
+    formattedDesc = i18n.t('toasts.idbVersionMismatchDesc', 'IndexedDB schema conflict detected. Use "Clear Cache" to rebuild.');
   }
 
   useSettingsStore.getState().setIndexedDBStatus('error', formattedDesc);
@@ -350,7 +351,7 @@ export function handleIndexedDBError(err: any, context = 'IndexedDB'): void {
               },
               className: 'px-2.5 py-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded text-[11px] font-semibold transition-colors cursor-pointer',
             },
-            'Clear Cache'
+            i18n.t('toasts.idbClearCacheBtn', 'Clear Cache')
           ),
           React.createElement(
             'button',
@@ -358,7 +359,7 @@ export function handleIndexedDBError(err: any, context = 'IndexedDB'): void {
               onClick: () => toast.dismiss(t.id),
               className: 'px-2 py-1 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] hover:text-white rounded text-[11px] transition-colors cursor-pointer',
             },
-            'Dismiss'
+            i18n.t('toasts.idbDismissBtn', 'Dismiss')
           )
         )
       ),
@@ -433,12 +434,12 @@ export async function recoverAndResetIndexedDB(): Promise<void> {
     });
     useSettingsStore.getState().clearIndexedDBError();
     useSettingsStore.getState().bumpHistoryCacheVersion();
-    toast.success('IndexedDB cache wiped and reset successfully!', { id: 'idb-reset-success' });
+    toast.success(i18n.t('toasts.idbResetSuccess', 'Database reset and restored to healthy state!'), { id: 'idb-reset-success' });
   } catch (err: any) {
     const errMsg = err?.message || String(err);
     useSettingsStore.getState().setIndexedDBStatus('error', errMsg);
     LogManager.error('HistoryCache', 'Failed to recover IndexedDB:', err);
-    toast.error(`Failed to reset IndexedDB: ${errMsg}`, { id: 'idb-reset-fail' });
+    toast.error(i18n.t('toasts.idbRecoveryFailed', 'Database recovery failed: {{error}}', { error: errMsg }), { id: 'idb-reset-fail' });
     throw err;
   }
 }

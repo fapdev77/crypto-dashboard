@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BrainCircuit,
   Sliders,
@@ -21,6 +22,7 @@ import { AppTooltip } from '../ui/Tooltip';
 import toast from 'react-hot-toast';
 
 export const AiSettings: React.FC = () => {
+  const { t } = useTranslation();
   const {
     globalSettings,
     models,
@@ -65,17 +67,17 @@ export const AiSettings: React.FC = () => {
 
   const handleDeleteModel = (id: string) => {
     if (models.length <= 1) {
-      toast.error('You must keep at least one AI model registered.');
+      toast.error(t('toasts.mustKeepOneModel', 'You must keep at least one AI model registered.'));
       return;
     }
     deleteModel(id);
-    toast.success('Model deleted.');
+    toast.success(t('toasts.modelDeleted', 'Model deleted.'));
   };
 
   const handleCloneModel = (id: string) => {
     const newId = cloneModel(id);
     if (newId) {
-      toast.success('Model cloned successfully!');
+      toast.success(t('toasts.modelCloned', 'Model cloned successfully!'));
     }
   };
 
@@ -83,11 +85,11 @@ export const AiSettings: React.FC = () => {
     const target = models.find((m) => m.id === id);
     if (!target) return;
     if (target.isPrimary) {
-      toast.error('The primary model cannot be set as contingency (fallback) simultaneously.');
+      toast.error(t('toasts.primaryCannotBeFallback', 'The primary model cannot be set as contingency (fallback) simultaneously.'));
       return;
     }
     setFallbackModel(id, !target.isFallback);
-    toast.success(!target.isFallback ? 'Model added to fallback list' : 'Model removed from fallback list');
+    toast.success(!target.isFallback ? t('toasts.modelAddedFallback', 'Model added to fallback list') : t('toasts.modelRemovedFallback', 'Model removed from fallback list'));
   };
 
   return (
@@ -102,7 +104,7 @@ export const AiSettings: React.FC = () => {
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-bold text-white tracking-tight">
-                  PIKA Assistant Settings
+                  {t('ai.settings.title', 'PIKA Assistant Settings')}
                 </h1>
                 <AppTooltip
                   description={
@@ -113,18 +115,17 @@ export const AiSettings: React.FC = () => {
                   side="bottom"
                 >
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase cursor-default ${
-                      globalSettings.isEnabled
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        : 'bg-[#1e1f24] text-[#8E9299] border border-[#2a2b30]'
-                    }`}
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase cursor-default ${globalSettings.isEnabled
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : 'bg-[#1e1f24] text-[#8E9299] border border-[#2a2b30]'
+                      }`}
                   >
-                    {globalSettings.isEnabled ? '🟢 Active in App' : '⚪ Disabled (Default)'}
+                    {globalSettings.isEnabled ? `🟢 ${t('ai.settings.activeBadge', 'Active in App')}` : `⚪ ${t('ai.settings.disabledBadge', 'Disabled (Default)')}`}
                   </span>
                 </AppTooltip>
               </div>
               <p className="text-xs text-[#8E9299] mt-1 max-w-2xl">
-                Portfolio Information & Knowledge Assistant — Quantitative auditing, hedge analysis, and commission diagnostics with support for local models (Ollama) or secure cloud endpoints with automated failover.
+                {t('ai.settings.description', 'Portfolio Information & Knowledge Assistant — Quantitative auditing, hedge analysis, and commission diagnostics with support for local models (Ollama) or secure cloud endpoints with automated failover.')}
               </p>
             </div>
           </div>
@@ -132,9 +133,9 @@ export const AiSettings: React.FC = () => {
           {/* Master activation switch */}
           <div className="flex items-center gap-4 bg-[#0b0c10] border border-[#2a2b30] p-3 rounded-xl shrink-0">
             <div className="text-right">
-              <div className="text-xs font-semibold text-white">Enable PIKA Assistant</div>
+              <div className="text-xs font-semibold text-white">{t('ai.settings.enableToggle', 'Enable PIKA Assistant')}</div>
               <div className="text-[10px] text-[#8E9299]">
-                {globalSettings.isEnabled ? 'Active globally' : 'Disabled by default'}
+                {globalSettings.isEnabled ? t('ai.settings.activeGlobally', 'Active globally') : t('ai.settings.disabledByDefault', 'Disabled by default')}
               </div>
             </div>
             <AppTooltip
@@ -145,17 +146,15 @@ export const AiSettings: React.FC = () => {
                 onClick={() => {
                   const newState = !globalSettings.isEnabled;
                   setIsEnabled(newState);
-                  toast.success(newState ? 'PIKA Assistant activated!' : 'PIKA Assistant deactivated!');
+                  toast.success(newState ? t('toasts.pikaActivated', 'PIKA Assistant activated!') : t('toasts.pikaDeactivated', 'PIKA Assistant deactivated!'));
                 }}
-                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer ${
-                  globalSettings.isEnabled ? 'bg-[#2F6BFF]' : 'bg-[#1e1f24]'
-                }`}
+                className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer ${globalSettings.isEnabled ? 'bg-[#2F6BFF]' : 'bg-[#1e1f24]'
+                  }`}
                 aria-label="Toggle PIKA"
               >
                 <div
-                  className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 ${
-                    globalSettings.isEnabled ? 'translate-x-6' : 'translate-x-0'
-                  }`}
+                  className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 ${globalSettings.isEnabled ? 'translate-x-6' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </AppTooltip>
@@ -170,7 +169,7 @@ export const AiSettings: React.FC = () => {
             >
               <div className="flex items-center gap-2 text-emerald-400 cursor-default">
                 <Shield className="w-4 h-4" />
-                <span>Zero-Trust Active: Exchange API keys are never included in AI prompts.</span>
+                <span>{t('ai.settings.zeroTrustActive', 'Zero-Trust Active: Exchange API keys are never included in AI prompts.')}</span>
               </div>
             </AppTooltip>
 
@@ -180,7 +179,7 @@ export const AiSettings: React.FC = () => {
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2F6BFF]/10 hover:bg-[#2F6BFF]/20 text-[#2F6BFF] border border-[#2F6BFF]/30 rounded-lg text-xs font-semibold transition cursor-pointer"
               >
                 <Bot className="w-3.5 h-3.5" />
-                Open PIKA Assistant
+                {t('ai.settings.openChat', 'Open PIKA Assistant')}
               </button>
             </AppTooltip>
           </div>
@@ -193,21 +192,21 @@ export const AiSettings: React.FC = () => {
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Sliders className="w-4 h-4 text-[#2F6BFF]" />
-              Global Inference & Safety Parameters
+              {t('ai.settings.globalInferenceTitle', 'Global Inference & Safety Parameters')}
             </h3>
             <p className="text-xs text-[#8E9299]">
-              Adjust fallback contingency logic, temperature parameters, and assistant system guidelines
+              {t('ai.settings.globalInferenceSubtitle', 'Adjust fallback contingency logic, temperature parameters, and assistant system guidelines')}
             </p>
           </div>
           <AppTooltip description="Restore system prompt and inference parameters to default values" side="left">
             <button
               onClick={() => {
                 resetToDefaults();
-                toast.success('Inference parameters restored to defaults');
+                toast.success(t('toasts.inferenceRestored', 'Inference parameters restored to defaults'));
               }}
               className="flex items-center gap-1 text-xs text-[#8E9299] hover:text-white transition cursor-pointer"
             >
-              <RotateCcw className="w-3 h-3" /> Restore Defaults
+              <RotateCcw className="w-3 h-3" /> {t('ai.settings.resetDefaults', 'Restore Defaults')}
             </button>
           </AppTooltip>
         </div>
@@ -223,11 +222,11 @@ export const AiSettings: React.FC = () => {
                 <label className="flex items-center justify-between cursor-pointer">
                   <div>
                     <div className="text-xs font-semibold text-white flex items-center gap-1.5">
-                      Automatic Failover (Fallback)
+                      {t('ai.settings.autoFailover', 'Automatic Failover (Fallback)')}
                       <HelpCircle className="w-3 h-3 text-[#8E9299]" />
                     </div>
                     <div className="text-[11px] text-[#8E9299]">
-                      Switch to backup models automatically when primary is unavailable
+                      {t('ai.settings.autoFailoverDesc', 'Switch to backup models automatically when primary is unavailable')}
                     </div>
                   </div>
                   <input
@@ -246,11 +245,11 @@ export const AiSettings: React.FC = () => {
                 <label className="flex items-center justify-between cursor-pointer pt-3 border-t border-[#2a2b30]">
                   <div>
                     <div className="text-xs font-semibold text-white flex items-center gap-1.5">
-                      Financial Value Obfuscation
+                      {t('ai.settings.obfuscation', 'Financial Value Obfuscation')}
                       <HelpCircle className="w-3 h-3 text-[#8E9299]" />
                     </div>
                     <div className="text-[11px] text-[#8E9299]">
-                      Normalize raw balances into percentage weightings before querying cloud models
+                      {t('ai.settings.obfuscationDesc', 'Normalize raw balances into percentage weightings before querying cloud models')}
                     </div>
                   </div>
                   <input
@@ -270,7 +269,7 @@ export const AiSettings: React.FC = () => {
               >
                 <div className="flex justify-between text-xs text-gray-300 mb-1 cursor-default">
                   <span className="flex items-center gap-1">
-                    Default Temperature
+                    {t('ai.settings.defaultTemp', 'Default Temperature')}
                     <HelpCircle className="w-3 h-3 text-[#8E9299]" />
                   </span>
                   <span className="font-mono text-[#2F6BFF] font-bold">{globalSettings.defaultTemperature.toFixed(2)}</span>
@@ -286,7 +285,7 @@ export const AiSettings: React.FC = () => {
                 className="w-full accent-[#2F6BFF] cursor-pointer"
               />
               <span className="text-[10px] text-[#8E9299]">
-                Low values (0.10) eliminate creative hallucinations and guarantee analytical consistency.
+                {t('ai.settings.tempDesc', 'Low values (0.10) eliminate creative hallucinations and guarantee analytical consistency.')}
               </span>
             </div>
           </div>
@@ -298,7 +297,7 @@ export const AiSettings: React.FC = () => {
               side="top"
             >
               <label className="block text-xs font-semibold text-gray-300 mb-1.5 cursor-default flex items-center gap-1.5">
-                Base System Instructions (System Prompt)
+                {t('ai.settings.systemPromptLabel', 'Base System Instructions (System Prompt)')}
                 <HelpCircle className="w-3 h-3 text-[#8E9299]" />
               </label>
             </AppTooltip>
@@ -309,7 +308,7 @@ export const AiSettings: React.FC = () => {
               className="w-full bg-[#0b0c10] border border-[#2a2b30] rounded-xl p-3 text-xs text-gray-200 font-mono focus:outline-none focus:border-[#2F6BFF] resize-none"
             />
             <span className="text-[10px] text-[#8E9299]">
-              Hardcoded directives enforce read-only safety, closed analytical scope, and accurate calculations.
+              {t('ai.settings.systemPromptDesc', 'Hardcoded directives enforce read-only safety, closed analytical scope, and accurate calculations.')}
             </span>
           </div>
         </div>
@@ -333,10 +332,10 @@ export const AiSettings: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-bold text-white tracking-tight">
-              AI Consumption & Real-Time Telemetry
+              {t('ai.settings.telemetry.title', 'AI Consumption & Real-Time Telemetry')}
             </h2>
             <p className="text-xs text-[#8E9299]">
-              Consolidated performance metrics, average latency, and token consumption statistics
+              {t('ai.settings.telemetrySubtitle', 'Consolidated performance metrics, average latency, and token consumption statistics')}
             </p>
           </div>
 
@@ -345,12 +344,12 @@ export const AiSettings: React.FC = () => {
               <button
                 onClick={() => {
                   useAiTelemetryStore.getState().resetTelemetry();
-                  toast.success('Telemetry metrics reset successfully');
+                  toast.success(t('toasts.telemetryReset', 'Telemetry metrics reset successfully'));
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e1f24] hover:bg-[#2a2b30] text-[#8E9299] hover:text-white border border-[#2a2b30] rounded-lg text-xs font-semibold transition cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-[#2F6BFF]" />
-                Reset Metrics
+                {t('ai.settings.resetMetrics', 'Reset Metrics')}
               </button>
             </AppTooltip>
           </div>

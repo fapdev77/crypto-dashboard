@@ -12,6 +12,7 @@ import { extractBaseCoin } from '../../../utils/unifiers';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
 import { usePositionsStore } from '../../../store/positionsStore';
 import { formatDateTime, formatFullDateTime } from '../../../utils/formatters';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   key?: React.Key;
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function OrderRow({ order, isExpanded, onToggle }: Props) {
+  const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
   const { keys } = useApiKeysStore();
   const connectionLabel = order.label || keys.find(k => k.id === order.connectionId)?.label || order.connectionId;
@@ -29,13 +31,13 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const matchingPos = activePositions.find(p => p.connectionId === order.connectionId && p.symbol === order.symbol);
   const orderLeverage = order.leverage || matchingPos?.leverage || 1;
   const orderMarginMode = order.marginMode || matchingPos?.marginMode || 'cross';
-  const capitalizedMarginMode = orderMarginMode === 'cross' ? 'Cross' : orderMarginMode === 'isolated' ? 'Isolated' : 'Cross';
+  const capitalizedMarginMode = orderMarginMode === 'isolated' ? t('positions.isolated', 'Isolated') : t('positions.cross', 'Cross');
 
   const isBuy = order.side === 'buy';
   const sideColor = isBuy ? 'text-[#00C853]' : 'text-[#FF4444]';
   const rawSideText = isBuy
-    ? (order.positionSide === 'long' ? 'Open Long' : order.positionSide === 'short' ? 'Close Short' : 'Buy')
-    : (order.positionSide === 'short' ? 'Open Short' : order.positionSide === 'long' ? 'Close Long' : 'Sell');
+    ? (order.positionSide === 'long' ? t('orders.openLong', 'Open Long') : order.positionSide === 'short' ? t('orders.closeShort', 'Close Short') : t('orders.buy', 'Buy'))
+    : (order.positionSide === 'short' ? t('orders.openShort', 'Open Short') : order.positionSide === 'long' ? t('orders.closeLong', 'Close Long') : t('orders.sell', 'Sell'));
 
   const isDerivative = order.category && order.category.toUpperCase() !== 'SPOT';
   const sideText = isDerivative ? `${rawSideText} · ${orderLeverage}x · ${capitalizedMarginMode}` : rawSideText;
@@ -166,7 +168,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
         {/* Col 2: Side & Type */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           <AppTooltip description="Indicates if the order is to buy or sell, and its type (e.g., limit, market, conditional).">
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Side & Type</span>
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('orders.side', 'Side')} & {t('orders.type', 'Type')}</span>
           </AppTooltip>
           <span className={`font-mono text-xs ${sideColor}`}>{sideText}</span>
           <div className="flex flex-wrap items-center gap-1 mt-0.5 max-w-[140px]">
@@ -217,7 +219,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
         {/* Col 3: Quantity */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           <AppTooltip description="The original quantity and estimated total value of the order.">
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Order Qty / Value</span>
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('orders.amount', 'Order Qty')} / {t('orders.orderValue', 'Value')}</span>
           </AppTooltip>
           <span className="font-mono text-white text-sm">{formatCurrency(actualCoinSize, 'crypto')} {symbolSuffix}</span>
           <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(valUsd, 'crypto', 2)} USD</span>
@@ -226,7 +228,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
         {/* Col 4: Price & Trigger */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           <AppTooltip description="The limit price of the order, and the trigger price (if conditional).">
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Order Price / Trig</span>
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('orders.price', 'Order Price')} / {t('orders.triggerPrice', 'Trig')}</span>
           </AppTooltip>
           <span className="font-mono text-white text-sm">
             {order.price > 0 ? (
@@ -234,10 +236,10 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
             ) : order.avgPrice > 0 ? (
               <div className="flex flex-col">
                 <span>{formatCurrency(order.avgPrice, 'crypto', 8)}</span>
-                <span className="text-[10px] text-[#8E9299]">Market</span>
+                <span className="text-[10px] text-[#8E9299]">{t('orders.types.market', 'Market')}</span>
               </div>
             ) : (
-              'Market'
+              t('orders.types.market', 'Market')
             )}
           </span>
           {order.tpTriggerPrice || order.slTriggerPrice ? (
@@ -261,7 +263,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
         {/* Col 5: Filled Progress */}
         <div className="flex flex-col justify-center gap-1.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           <AppTooltip description="Shows how much of the order has been executed by the exchange so far.">
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Filled Progress</span>
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('orders.filled', 'Filled')} / {t('orders.progress', 'Progress')}</span>
           </AppTooltip>
           <div className="flex flex-col gap-1 w-full max-w-[120px]">
             <div className="flex justify-between items-center text-[10px] font-mono text-[#8E9299]">
@@ -276,18 +278,45 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
         {/* Col 6: Status */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <AppTooltip description="Current execution status of the order.">
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Status</span>
-          </AppTooltip>
-          <span className={`w-max px-2 py-0.5 text-[10px] rounded font-semibold border ${statusClass}`}>
-            {order.status}
-          </span>
+          {(() => {
+            const statusKey = order.status?.toLowerCase();
+            const localizedStatus =
+              statusKey === 'filled' ? t('orders.statuses.filled', 'Filled') :
+              statusKey === 'cancelled' ? t('orders.statuses.cancelled', 'Cancelled') :
+              statusKey === 'partially_filled' ? t('orders.statuses.partiallyFilled', 'Partially Filled') :
+              statusKey === 'rejected' ? t('orders.statuses.rejected', 'Rejected') :
+              statusKey === 'triggered' ? t('orders.statuses.triggered', 'Triggered') :
+              statusKey === 'untriggered' ? t('orders.statuses.untriggered', 'Untriggered') :
+              statusKey === 'new' ? t('orders.statuses.new', 'New') :
+              order.status;
+
+            const tooltipDesc =
+              statusKey === 'filled' ? t('orders.statuses.filledTooltip', 'Order filled completely.') :
+              statusKey === 'cancelled' ? t('orders.statuses.cancelledTooltip', 'Order cancelled prior to full execution.') :
+              statusKey === 'partially_filled' ? t('orders.statuses.partiallyFilledTooltip', 'Part of order filled; remainder awaiting fills.') :
+              statusKey === 'rejected' ? t('orders.statuses.rejectedTooltip', 'Order rejected by exchange or risk engine.') :
+              statusKey === 'triggered' ? t('orders.statuses.triggeredTooltip', 'Trigger price reached; order submitted to book.') :
+              statusKey === 'untriggered' ? t('orders.statuses.untriggeredTooltip', 'Awaiting trigger condition before book placement.') :
+              statusKey === 'new' ? t('orders.statuses.newTooltip', 'Order placed and acknowledged by exchange.') :
+              'Current execution status of the order.';
+
+            return (
+              <>
+                <AppTooltip description={tooltipDesc}>
+                  <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('orders.status', 'Status')}</span>
+                </AppTooltip>
+                <span className={`w-max px-2 py-0.5 text-[10px] rounded font-semibold border ${statusClass}`}>
+                  {localizedStatus}
+                </span>
+              </>
+            );
+          })()}
         </div>
 
         {/* Col 7: Time */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
           <AppTooltip description="When the order was created on the exchange.">
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Created Time</span>
+            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('orders.dateTime', 'Created Time')}</span>
           </AppTooltip>
           <span className="font-sans text-white text-sm">{dateStr}</span>
           <span className="font-mono text-[#8E9299] text-xs">{timeStr}</span>
@@ -310,27 +339,27 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Connection</span>
+              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">{t('orders.account', 'Connection')}</span>
               <span className="text-white font-mono text-sm truncate w-max max-w-[200px]">{connectionLabel}</span>
             </div>
 
             <div className="flex flex-col gap-1">
               <AppTooltip description="The actual average price at which the order was executed.">
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">Avg Fill Price</span>
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">{t('trade.filledPrice', 'Avg Fill Price')}</span>
               </AppTooltip>
               <span className="text-white font-mono text-sm">{order.avgPrice > 0 ? formatCurrency(order.avgPrice, 'crypto', 8) : '--'}</span>
             </div>
 
             <div className="flex flex-col gap-1">
               <AppTooltip description="The total executed value of the order in USD.">
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">Total Value</span>
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">{t('orders.orderValue', 'Total Value')}</span>
               </AppTooltip>
               <span className="text-white font-mono text-sm">{valUsd > 0 ? formatCurrency(valUsd, 'usd') + ' USD' : '--'}</span>
             </div>
 
             <div className="flex flex-col gap-1">
               <AppTooltip description="Trading fees charged by the exchange for this order execution.">
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">Trading Fees</span>
+                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">{t('positions.tradingFee', 'Trading Fees')}</span>
               </AppTooltip>
               {(() => {
                 const hasFees = order.fees !== undefined && order.fees !== null && order.fees !== 0;
@@ -371,7 +400,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Updated Time</span>
+              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">{t('positionsHistory.closeTime', 'Updated Time')}</span>
               <span className="text-white font-mono text-sm">{formatFullDateTime(order.updatedTime)}</span>
             </div>
 

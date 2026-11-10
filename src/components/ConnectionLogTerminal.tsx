@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLogStore, LogLevel } from '../store/logStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -6,6 +7,7 @@ import { Search, ChevronDown, ArrowDownToLine } from 'lucide-react';
 import { formatIsoDateTime } from '../utils/formatters';
 
 export function ConnectionLogTerminal() {
+  const { t } = useTranslation();
   const { entries, maxEntries, clearLogs } = useLogStore();
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
@@ -130,7 +132,7 @@ export function ConnectionLogTerminal() {
       {/* Toolbar */}
       <div className="min-h-10 py-2 bg-[#111216] border-b border-[#2a2b30] flex flex-wrap items-center px-4 justify-between shrink-0 gap-y-3 z-20">
         <div className="flex flex-wrap items-center gap-2">
-           <span className="text-xs font-mono text-[#8E9299]">Live Connection Log</span>
+           <span className="text-xs font-mono text-[#8E9299]">{t('logs.title', 'Live Connection Log')}</span>
            
            {/* Auto-scroll indicator */}
            <button
@@ -145,10 +147,10 @@ export function ConnectionLogTerminal() {
                  ? 'bg-[#00C853]/10 text-[#00C853] border-[#00C853]/30 hover:bg-[#00C853]/20'
                  : 'bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/30 hover:bg-[#F2C94C]/20'
              }`}
-             title={autoScrollEnabled ? 'Auto-scroll is ON — follows new entries' : 'Auto-scroll is paused — click to resume'}
+             title={autoScrollEnabled ? t('logs.autoScrollOn', 'Auto-scroll is ON — follows new entries') : t('logs.autoScrollPaused', 'Auto-scroll is paused — click to resume')}
            >
              <ArrowDownToLine className={`w-3 h-3 transition-transform ${autoScrollEnabled ? '' : 'animate-bounce'}`} />
-             <span>{autoScrollEnabled ? 'Auto' : 'Paused'}</span>
+             <span>{autoScrollEnabled ? t('logs.auto', 'Auto') : t('logs.paused', 'Paused')}</span>
            </button>
            
            <div className="hidden sm:block h-4 w-px bg-[#2a2b30] mx-2" />
@@ -156,9 +158,9 @@ export function ConnectionLogTerminal() {
            {/* Quick filter presets */}
            <div className="flex items-center gap-1">
              {[
-               { label: 'All', levels: ['INFO', 'WARN', 'ERROR', 'DATA', 'SYSTEM'] as LogLevel[] },
-               { label: 'Important', levels: ['ERROR', 'WARN', 'SYSTEM'] as LogLevel[] },
-               { label: 'Errors', levels: ['ERROR'] as LogLevel[] },
+               { label: t('logs.presets.all', 'All'), levels: ['INFO', 'WARN', 'ERROR', 'DATA', 'SYSTEM'] as LogLevel[] },
+               { label: t('logs.presets.important', 'Important'), levels: ['ERROR', 'WARN', 'SYSTEM'] as LogLevel[] },
+               { label: t('logs.presets.errors', 'Errors'), levels: ['ERROR'] as LogLevel[] },
              ].map(preset => {
                const isActive = selectedLevels.length === preset.levels.length &&
                  preset.levels.every(l => selectedLevels.includes(l));
@@ -193,8 +195,8 @@ export function ConnectionLogTerminal() {
              >
                <span>
                  {selectedLevels.length > 0 
-                   ? `${selectedLevels.length} Level${selectedLevels.length > 1 ? 's' : ''}`
-                   : 'None selected'}
+                   ? t('logs.levelsCount', '{{count}} Levels', { count: selectedLevels.length })
+                   : t('logs.noneSelected', 'None selected')}
                </span>
                <ChevronDown className={`w-3 h-3 ml-2 transition-transform duration-200 ${isLevelDropdownOpen ? 'rotate-180' : ''}`} />
              </button>
@@ -231,7 +233,7 @@ export function ConnectionLogTerminal() {
              onChange={(e) => setSelectedConnection(e.target.value)}
              className="bg-[#1a1b1e] text-xs font-mono text-[#8E9299] border border-[#2a2b30] rounded px-2 py-0.5"
            >
-             <option value="ALL">ALL CONNECTIONS</option>
+             <option value="ALL">{t('logs.allConnections', 'ALL CONNECTIONS')}</option>
              {activeKeys.map(k => (
                <option key={k.id} value={k.label}>{k.label} ({k.exchange.toUpperCase()})</option>
              ))}
@@ -241,7 +243,7 @@ export function ConnectionLogTerminal() {
              <Search className="w-3 h-3 absolute left-2 top-1.5 text-[#8E9299]" />
              <input 
                type="text" 
-               placeholder="Search logs..." 
+               placeholder={t('logs.searchPlaceholder', 'Search logs...')} 
                value={searchText}
                onChange={(e) => setSearchText(e.target.value)}
                className="bg-[#1a1b1e] text-xs font-mono text-white border border-[#2a2b30] rounded pl-6 pr-2 py-0.5 w-40 focus:border-[#2F6BFF] outline-none"
@@ -253,7 +255,7 @@ export function ConnectionLogTerminal() {
           onClick={clearLogs}
           className="text-xs font-mono text-[#8E9299] hover:text-[#FF4444] transition-colors ml-4 min-w-max"
         >
-          [Clear]
+          [{t('logs.clear', 'Clear')}]
         </button>
       </div>
 
@@ -286,7 +288,7 @@ export function ConnectionLogTerminal() {
               className="pointer-events-auto relative flex items-center gap-1.5 bg-[#2F6BFF] hover:bg-[#1a5ae6] text-white text-[11px] font-mono px-3 py-1.5 rounded-full shadow-lg shadow-black/40 transition-all duration-200 hover:scale-105 active:scale-95"
             >
               <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
-              <span>Go to end</span>
+              <span>{t('logs.goToEnd', 'Go to end')}</span>
               {newEntriesCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-[#FF4444] text-white text-[10px] font-bold rounded-full px-1 shadow-lg animate-in zoom-in duration-200">
                   {newEntriesCount > 99 ? '99+' : newEntriesCount}
@@ -299,7 +301,7 @@ export function ConnectionLogTerminal() {
 
       <div className="h-6 bg-[#000000] border-t border-[#1a1b1e] flex items-center px-4 justify-between shrink-0">
          <span className="text-[10px] font-mono text-[#8E9299]">
-            History: <span className="text-[#FFFFFF]">{entries.length} / {maxEntries} lines</span>
+            {t('logs.history', 'History:')} <span className="text-[#FFFFFF]">{t('logs.historyCount', '{{current}} / {{max}} lines', { current: entries.length, max: maxEntries })}</span>
          </span>
       </div>
     </div>

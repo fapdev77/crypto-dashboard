@@ -109,7 +109,7 @@ export function OpenPositions() {
           <div className="flex items-center gap-2.5 flex-wrap">
             <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
               <Activity className="w-5 h-5 text-[#2F6BFF]" />
-              Open Positions
+              {t('positions.title', 'Open Positions')}
             </h2>
             <SimulationModeBadge />
           </div>
@@ -120,7 +120,7 @@ export function OpenPositions() {
       <FilterBar
         prepend={
           <div className="flex items-center gap-2 mr-auto sm:mr-0">
-            <span className="text-xs text-[#8E9299] whitespace-nowrap">For Hedge Pro positions, show exposed balance by:</span>
+            <span className="text-xs text-[#8E9299] whitespace-nowrap">{t('positions.hedgeExposedModeLabel', 'For Hedge Pro positions, show exposed balance by:')}</span>
             <div className="flex bg-[#0e0f11] p-1 rounded-lg border border-[#2a2b30] w-max">
               <button
                 type="button"
@@ -130,9 +130,9 @@ export function OpenPositions() {
                     ? 'bg-[#2a2b30] text-white shadow-sm font-semibold'
                     : 'text-[#8E9299] hover:text-white'
                 }`}
-                title="Gross: Uses fixed Wallet Balance (without unrealized PnL)"
+                title={t('positions.grossModeTooltip', 'Gross: Uses fixed Wallet Balance (without unrealized PnL)')}
               >
-                Gross
+                {t('positions.grossMode', 'Gross')}
               </button>
               <button
                 type="button"
@@ -142,9 +142,9 @@ export function OpenPositions() {
                     ? 'bg-[#2a2b30] text-white shadow-sm font-semibold'
                     : 'text-[#8E9299] hover:text-white'
                 }`}
-                title="Net: Uses Net Balance / Account Equity (including unrealized PnL)"
+                title={t('positions.netModeTooltip', 'Net: Uses Net Balance / Account Equity (including unrealized PnL)')}
               >
-                Net
+                {t('positions.netMode', 'Net')}
               </button>
             </div>
           </div>
@@ -184,9 +184,9 @@ export function OpenPositions() {
                       <span className="text-xl font-medium text-white"></span>
                       {activePositions.length > 0 && (
                         <div className="flex text-xl gap-2 font-mono">
-                          <span className="text-[#00C853]">{longs} Longs ({((longs / activePositions.length) * 100).toFixed(0)}%)</span>
+                          <span className="text-[#00C853]">{t('positions.longCount', { count: longs, defaultValue: `${longs} Longs` })} ({((longs / activePositions.length) * 100).toFixed(0)}%)</span>
                           <span className="text-[#00C853]"> | </span>
-                          <span className="text-[#FF4444]">{shorts} Shorts ({((shorts / activePositions.length) * 100).toFixed(0)}%)</span>
+                          <span className="text-[#FF4444]">{t('positions.shortCount', { count: shorts, defaultValue: `${shorts} Shorts` })} ({((shorts / activePositions.length) * 100).toFixed(0)}%)</span>
                         </div>
                       )}
                     </div>

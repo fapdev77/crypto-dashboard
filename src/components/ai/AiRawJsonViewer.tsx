@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Copy, Check, Search, ChevronDown, ChevronRight, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -15,6 +16,7 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
   defaultExpanded = true,
   maxHeight = 'max-h-96',
 }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(!defaultExpanded);
@@ -37,7 +39,7 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
   const handleCopy = () => {
     navigator.clipboard.writeText(formattedJson);
     setCopied(true);
-    toast.success('JSON copiado com sucesso!', { icon: '📋' });
+    toast.success(t('toasts.jsonCopied', 'JSON copied successfully!'), { icon: '📋' });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -50,9 +52,9 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
       a.download = `debug-payload-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Arquivo baixado!');
+      toast.success(t('toasts.fileDownloaded', 'File downloaded!'));
     } catch {
-      toast.error('Erro ao baixar arquivo');
+      toast.error(t('toasts.fileDownloadError', 'Error downloading file'));
     }
   };
 

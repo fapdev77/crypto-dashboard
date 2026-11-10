@@ -17,8 +17,10 @@ import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../
 import { LogManager } from '../../../services/LogManager';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { UNIVERSAL_BADGE_STYLE, UNIVERSAL_HEX_COLOR_MAP, UniversalTxType } from '../../../utils/transactionTypeMapper';
+import { useTranslation } from 'react-i18next';
 
 export function BitgetTransactions() {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<BitgetTxFilters>({
     search: '',
     category: 'All',
@@ -82,7 +84,7 @@ export function BitgetTransactions() {
     ]);
 
     const config: ExportConfig = {
-      title: 'Bitget Transactions Report',
+      title: t('transactions.bitget.reportTitle', 'Bitget Transactions Report'),
       filename: `Bitget_Transactions_${Date.now()}`,
       headers,
       rows,
@@ -101,10 +103,10 @@ export function BitgetTransactions() {
         <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <Activity className="w-5 h-5 text-[#2F6BFF]" />
-            Bitget Transactions
+            {t('transactions.bitget.title', 'Bitget Transactions')}
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing Bitget transactions...' : null} syncError={error} />
+            <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? t('transactions.bitget.syncingMessage', 'Syncing Bitget transactions...') : null} syncError={error} />
             <BitgetTransactionProgress isSyncing={isSyncing} progress={progress} />
           </div>
         </div>
@@ -114,13 +116,13 @@ export function BitgetTransactions() {
             className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span> <ChevronDown className="w-3 h-3" />
+            <span className="hidden sm:inline">{t('transactions.common.export', 'Export')}</span> <ChevronDown className="w-3 h-3" />
           </button>
           {exportMenuOpen && (
             <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
-              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export CSV</button>
-              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export Excel</button>
-              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export PDF</button>
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('transactions.common.exportCsv', 'Export CSV')}</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('transactions.common.exportExcel', 'Export Excel')}</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('transactions.common.exportPdf', 'Export PDF')}</button>
             </div>
           )}
         </div>
@@ -137,9 +139,9 @@ export function BitgetTransactions() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#2F6BFF] shrink-0" />
-                <AppTooltip description="Total number of transactions matching the current filters. Click here for details.">
+                <AppTooltip description={t('transactions.common.totalTransactionsTooltip', 'Total number of transactions matching the current filters. Click here for details.')}>
                   <span onClick={() => setDetailsModalType('tx')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
-                    Total Transactions
+                    {t('transactions.common.totalTransactions', 'Total Transactions')}
                   </span>
                 </AppTooltip>
               </div>
@@ -193,9 +195,9 @@ export function BitgetTransactions() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-[#00C853] shrink-0" />
-              <AppTooltip description="Sum of funding fees in USD. Click here for details.">
+              <AppTooltip description={t('transactions.common.totalFundingTooltip', 'Sum of funding fees in USD. Click here for details.')}>
                 <span onClick={() => setDetailsModalType('funding')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
-                  Total Funding (USD)
+                  {t('transactions.common.totalFunding', 'Total Funding (USD)')}
                 </span>
               </AppTooltip>
             </div>
@@ -205,13 +207,13 @@ export function BitgetTransactions() {
             
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[10px] text-[#8E9299]">
-                Funding {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'received' : 'paid'}
+                {t('transactions.common.fundingReceived', 'Funding')} {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? t('transactions.common.fundingReceived', 'received') : t('transactions.common.fundingPaid', 'paid')}
               </span>
               {isCalculatingUsd && (
-                <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
+                <AppTooltip description={t('transactions.common.calculatingUsdTooltip', 'Fetching real-time USD prices for non-stable assets...')}>
                   <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    Calculating USD...
+                    {t('transactions.common.calculatingUsd', 'Calculating USD...')}
                   </span>
                 </AppTooltip>
               )}
@@ -222,9 +224,9 @@ export function BitgetTransactions() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="w-4 h-4 text-[#FF4444] shrink-0" />
-              <AppTooltip description="Sum of trading fees in USD. Click here for details.">
+              <AppTooltip description={t('transactions.common.totalFeesTooltip', 'Sum of trading fees in USD. Click here for details.')}>
                 <span onClick={() => setDetailsModalType('fees')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
-                  Total Fees (USD)
+                  {t('transactions.common.totalFees', 'Total Fees (USD)')}
                 </span>
               </AppTooltip>
             </div>
@@ -249,7 +251,7 @@ export function BitgetTransactions() {
             
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[10px] text-[#8E9299]">
-                {new Big(stats.aggregatedUsd.totalFees).gt(0) ? 'Trading fee rebates' : 'Trading fees paid'}
+                {new Big(stats.aggregatedUsd.totalFees).gt(0) ? 'Trading fee rebates' : t('transactions.common.feesPaid', 'Trading fees paid')}
               </span>
               {isCalculatingUsd && (
                 <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
@@ -266,9 +268,9 @@ export function BitgetTransactions() {
           <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-2">
             <div className="flex items-center gap-2">
               <Wallet className="w-4 h-4 text-[#8E9299] shrink-0" />
-              <AppTooltip description="Net change in USD (stablecoins + non-stables value). Click here for details.">
+              <AppTooltip description={t('transactions.common.netChangeTooltip', 'Net change in USD (stablecoins + non-stables value). Click here for details.')}>
                 <span onClick={() => setDetailsModalType('netchange')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
-                  Net Change (USD)
+                  {t('transactions.common.netChange', 'Net Change (USD)')}
                 </span>
               </AppTooltip>
             </div>
@@ -277,9 +279,9 @@ export function BitgetTransactions() {
             </span>
             <div className="border-t border-[#2a2b30] pt-2 flex flex-col">
               <div className="flex items-center gap-2">
-                <AppTooltip description="Aggregated final wallet balance across currencies. Click here for details.">
+                <AppTooltip description={t('transactions.common.walletBalanceTooltip', 'Aggregated final wallet balance across currencies. Click here for details.')}>
                   <span onClick={() => setDetailsModalType('balance')} className="text-[9px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
-                    Wallet Balance (USD)
+                    {t('transactions.common.walletBalance', 'Wallet Balance (USD)')}
                   </span>
                 </AppTooltip>
               </div>
@@ -308,7 +310,7 @@ export function BitgetTransactions() {
         <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
           <FileText className="w-12 h-12 text-[#8E9299] mb-3" />
           <p className="text-[#8E9299] text-center">
-            {entriesTotal > 0 ? 'No transactions match the current filters.' : 'No Bitget transactions found. Add Bitget API keys to start syncing.'}
+            {entriesTotal > 0 ? t('transactions.common.noMatchingFilter', 'No transactions match the current filters.') : t('transactions.bitget.noData', 'No Bitget transactions found. Add Bitget API keys to start syncing.')}
           </p>
         </div>
       )}
@@ -325,7 +327,7 @@ export function BitgetTransactions() {
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
                 refreshKey={filterMonitorKey}
-                refreshLabel="Filtering"
+                refreshLabel={t('transactions.common.filtering', 'Filtering')}
                 refreshDataReady={!isLoading}
               />
             </div>
@@ -351,7 +353,7 @@ export function BitgetTransactions() {
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
                 refreshKey={filterMonitorKey}
-                refreshLabel="Filtering"
+                refreshLabel={t('transactions.common.filtering', 'Filtering')}
               />
             </div>
           )}

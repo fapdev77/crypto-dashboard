@@ -1,5 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 
 export type PeriodOption = 'last' | 'day' | 'current_month' | 'last_month' | '3_months';
 
@@ -8,15 +9,17 @@ interface Props {
   onChange: (value: PeriodOption) => void;
 }
 
-const PERIODS: { id: PeriodOption; label: string }[] = [
-  { id: 'last', label: 'Last' },
-  { id: 'day', label: 'Day' },
-  { id: 'current_month', label: 'Current Month' },
-  { id: 'last_month', label: 'Last Month' },
-  { id: '3_months', label: 'Last 3 Months' },
+const PERIODS: { id: PeriodOption; key: string; defaultLabel: string }[] = [
+  { id: 'last', key: 'analytics.funding.columns.last', defaultLabel: 'Last' },
+  { id: 'day', key: 'analytics.funding.columns.today', defaultLabel: 'Day' },
+  { id: 'current_month', key: 'analytics.funding.columns.currentMonth', defaultLabel: 'Current Month' },
+  { id: 'last_month', key: 'analytics.funding.columns.lastMonth', defaultLabel: 'Last Month' },
+  { id: '3_months', key: 'analytics.funding.columns.last3Months', defaultLabel: 'Last 3 Months' },
 ];
 
 export const PeriodSegmentedControl: React.FC<Props> = ({ value, onChange }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="flex bg-[#0e0f11] p-1 rounded-lg border border-[#2a2b30] w-max overflow-x-auto">
       {PERIODS.map((period) => (
@@ -30,7 +33,7 @@ export const PeriodSegmentedControl: React.FC<Props> = ({ value, onChange }) => 
               : "text-[#8E9299] hover:text-white"
           )}
         >
-          {period.label}
+          {t(period.key, period.defaultLabel)}
         </button>
       ))}
     </div>

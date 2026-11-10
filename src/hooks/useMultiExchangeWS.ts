@@ -11,6 +11,7 @@
  */
 import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import i18n from '../i18n/config';
 import { useApiKeysStore, ApiCredentials } from '../store/apiKeysStore';
 import { useConnectionStore } from '../store/connectionStore';
 import { useBalancesStore } from '../store/balancesStore';
@@ -145,7 +146,7 @@ export async function bootload(
     delete retryAttempts[id];
 
     setStatus(id, 'connected', null);
-    toast.success(`${exchange.toUpperCase()} - ${label} connected!`, { id: `success-${id}` });
+    toast.success(i18n.t('toasts.connectionSuccess', '{{exchange}} - {{label}} connected!', { exchange: exchange.toUpperCase(), label }), { id: `success-${id}` });
 
     // Clear the dummy timeout and start real polling
     const existing = intervals[id + '-poll'];
@@ -164,7 +165,7 @@ export async function bootload(
       setStatus(id, 'error', errMsg);
       setError(id, errMsg);
       toast.error(
-        `${exchange.toUpperCase()} (${label}) authentication failed: Check your API key and permissions.`,
+        i18n.t('toasts.authFailed', '{{exchange}} ({{label}}) authentication failed: Check your API key and permissions.', { exchange: exchange.toUpperCase(), label }),
         { id: `rest-err-${id}`, duration: 8000 }
       );
       delete retryAttempts[id];
@@ -184,7 +185,7 @@ export async function bootload(
       setStatus(id, 'error', errMsg);
       setError(id, errMsg);
       toast.error(
-        `${exchange.toUpperCase()} connection failed repeatedly. Automatic retries paused.`,
+        i18n.t('toasts.connectionFailedRepeatedly', '{{exchange}} connection failed repeatedly. Automatic retries paused.', { exchange: exchange.toUpperCase() }),
         { id: `rest-err-${id}`, duration: 6000 }
       );
       return;
@@ -196,7 +197,7 @@ export async function bootload(
       `REST Bootload Error: ${error.message} (Retrying ${currentAttempt}/${BOOTLOAD_MAX_RETRIES})`
     );
     setError(id, `REST Bootload Error: ${error.message}`);
-    toast.error(`${exchange.toUpperCase()} initial sync failed: ${error.message}`, { id: `rest-err-${id}` });
+    toast.error(i18n.t('toasts.initialSyncFailed', '{{exchange}} initial sync failed: {{message}}', { exchange: exchange.toUpperCase(), message: error.message }), { id: `rest-err-${id}` });
 
     // Exponential backoff: base * 2^(attempt - 1) + jitter, capped at BOOTLOAD_MAX_DELAY_MS
     const exponential = BOOTLOAD_INITIAL_DELAY_MS * Math.pow(2, currentAttempt - 1);

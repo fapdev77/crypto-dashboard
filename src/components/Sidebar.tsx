@@ -87,9 +87,9 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   // an active API key, or the Simulation Mode mock logs (which cover every exchange).
   const transactionHistoryItems = useMemo<SubItem[]>(() => {
     const exchanges = [
-      { id: 'transactions-history-bybit', label: 'Bybit Transactions', exchange: 'bybit' },
-      { id: 'transactions-history-bitget', label: 'Bitget Transactions', exchange: 'bitget' },
-      { id: 'transactions-history-okx', label: 'OKX Transactions', exchange: 'okx' },
+      { id: 'transactions-history-bybit', label: t('nav.bybitTransactions', 'Bybit Transactions'), exchange: 'bybit' },
+      { id: 'transactions-history-bitget', label: t('nav.bitgetTransactions', 'Bitget Transactions'), exchange: 'bitget' },
+      { id: 'transactions-history-okx', label: t('nav.okxTransactions', 'OKX Transactions'), exchange: 'okx' },
     ];
     const available = exchanges.filter(({ exchange }) => useMockData || activeExchanges.has(exchange));
     if (available.length === 0) return [];

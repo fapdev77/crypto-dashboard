@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { InverseAssetAggregated } from '../../../../types/marketAnalytics';
 import { InverseMarketService } from '../../../../services/marketAnalytics/InverseMarketService';
@@ -35,6 +36,7 @@ const loadStoredFavorites = (): string[] => {
 };
 
 export const InverseMarketDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState<InverseAssetAggregated[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -132,7 +134,7 @@ export const InverseMarketDashboard: React.FC = () => {
           <div className="flex items-center gap-2.5 flex-wrap">
             <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
               <Coins className="w-5 h-5 text-cyan-400" />
-              Inverse / Coin-M Derivatives Market
+              {t('analytics.inverseMarket.title', 'Inverse (Coin-M) Derivative Analytics')}
             </h2>
             <SimulationModeBadge />
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
@@ -140,7 +142,7 @@ export const InverseMarketDashboard: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-[#8E9299] mt-0.5">
-            Cross-exchange quantitative scanner for all Coin-M (Inverse) contracts across Bybit, OKX & Bitget. Margined and settled directly in the underlying asset.
+            {t('analytics.inverseMarket.subtitle', 'Capital preservation, synthetic USD hedging and Coin-margined contract dynamics.')}
           </p>
         </div>
 
@@ -154,7 +156,7 @@ export const InverseMarketDashboard: React.FC = () => {
         {/* Total Assets */}
         <div className="bg-[#121318] border border-[#23252d] rounded-xl p-3.5 space-y-1">
           <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
-            Coin-M Pairs Listed
+            {t('analytics.inverseMarket.activeContracts', 'Active Coin-M Contracts')}
           </span>
           <div className="text-lg font-bold font-mono text-white flex items-baseline gap-1.5">
             {kpis.totalAssets}
@@ -166,7 +168,7 @@ export const InverseMarketDashboard: React.FC = () => {
         {/* 24h USD Notional Volume */}
         <div className="bg-[#121318] border border-[#23252d] rounded-xl p-3.5 space-y-1">
           <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
-            24h Notional Volume
+            {t('analytics.inverseMarket.volume24h', '24h Coin-M Volume')}
           </span>
           <div className="text-lg font-bold font-mono text-white">
             {formatUsd(kpis.totalUsdVolume)}
@@ -177,7 +179,7 @@ export const InverseMarketDashboard: React.FC = () => {
         {/* Total Open Interest */}
         <div className="bg-[#121318] border border-[#23252d] rounded-xl p-3.5 space-y-1">
           <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
-            Total Open Interest
+            {t('analytics.inverseMarket.notionalOi', 'Total Notional USD Open Interest')}
           </span>
           <div className="text-lg font-bold font-mono text-amber-400">
             {formatUsd(kpis.totalOiUsd)}

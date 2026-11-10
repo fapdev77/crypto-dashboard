@@ -288,7 +288,7 @@ describe('ConsolidatedTransactionComponents', () => {
     renderTransactionUi(<FiltersHarness />);
 
     // Search input
-    expect(screen.getByPlaceholderText('Search symbol or asset...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search symbol...')).toBeInTheDocument();
 
     // Dropdowns
     expect(screen.getByRole('button', { name: /all exchanges/i })).toBeInTheDocument();
@@ -329,8 +329,8 @@ describe('ConsolidatedTransactionComponents', () => {
       />
     );
 
-    expect(screen.getByText('Consolidated Funding Breakdown (USD)')).toBeInTheDocument();
+    expect(screen.getByText('Consolidated Funding Breakdown')).toBeInTheDocument();
     expect(screen.getByText('Breakdown by Exchange Venue')).toBeInTheDocument();
-    expect(screen.getByText('Grand Total (USD)')).toBeInTheDocument();
+    expect(screen.getByText('Grand Total')).toBeInTheDocument();
   });
 });

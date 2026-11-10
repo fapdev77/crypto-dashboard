@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Big from 'big.js';
 import { usePnLBySymbol } from '../../hooks/usePnLBySymbol';
 import { PositionHistoryPeriod } from '../../hooks/usePositionHistory';
@@ -21,6 +22,7 @@ type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' |
 type SortDir = 'asc' | 'desc';
 
 export function PnLBySymbol() {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<PositionHistoryPeriod>('7d');
   const [exchange, setExchange] = useState<string>('All');
   const [instrument, setInstrument] = useState<string>('All');
@@ -172,7 +174,7 @@ export function PnLBySymbol() {
         <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <BarChart2 className="w-5 h-5 text-[#2F6BFF]" />
-            PnL by Symbol
+            {t('analytics.pnlSymbol.title', 'PnL by Symbol')}
           </h2>
           <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} syncError={syncError} />
           <span className="text-xs text-[#8E9299] mt-1">To represent the actual PnL, it is calculated based on the real time USD value of the trades, not on the positions value. <br/>
@@ -192,13 +194,13 @@ export function PnLBySymbol() {
             className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span> <ChevronDown className="w-3 h-3" />
+            <span className="hidden sm:inline">{t('analytics.common.exportReport', 'Export Report')}</span> <ChevronDown className="w-3 h-3" />
           </button>
           {exportMenuOpen && (
             <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
-              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export CSV</button>
-              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export Excel</button>
-              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export PDF</button>
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('analytics.common.exportCsv', 'Export CSV')}</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('analytics.common.exportExcel', 'Export Excel')}</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('analytics.common.exportPdf', 'Export PDF')}</button>
             </div>
           )}
         </div>
@@ -209,14 +211,14 @@ export function PnLBySymbol() {
           exchange={{
             value: exchange,
             onChange: setExchange,
-            labelAll: 'All Exchanges',
+            labelAll: t('analytics.common.allExchanges', 'All Exchanges'),
           }}
           instrument={{
             value: instrument,
             onChange: setInstrument,
             options: instrumentsAvailable,
             disabled: exchange === 'All',
-            labelAll: 'All Instruments',
+            labelAll: t('analytics.common.allInstruments', 'All Instruments'),
           }}
           period={{
             value: period,
@@ -226,7 +228,7 @@ export function PnLBySymbol() {
           search={{
             value: searchTerm,
             onChange: setSearchTerm,
-            placeholder: 'Search symbol...',
+            placeholder: t('analytics.common.searchSymbol', 'Search symbol...'),
           }}
         />
       </div>
@@ -235,7 +237,7 @@ export function PnLBySymbol() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-[#8E9299]">
             <RefreshCw className="w-8 h-8 animate-spin mb-4 text-[#8E9299]/70" />
-            <div className="text-sm font-medium">{syncMessage || 'Carregando dados...'}</div>
+            <div className="text-sm font-medium">{syncMessage || t('common.loading', 'Loading...')}</div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -257,22 +259,22 @@ export function PnLBySymbol() {
                   <thead className="text-xs text-[#8E9299] border-b border-[#2a2b30] sticky top-0 bg-[#151619] z-10">
                     <tr>
                       <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('exchange')}>
-                        <div className="flex items-center gap-1">Exchange <ArrowUpDown className="w-3 h-3" /></div>
+                        <div className="flex items-center gap-1">{t('analytics.pnlSymbol.table.exchange', 'Exchange')} <ArrowUpDown className="w-3 h-3" /></div>
                       </th>
                       <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('symbol')}>
-                        <div className="flex items-center gap-1">Name <ArrowUpDown className="w-3 h-3" /></div>
+                        <div className="flex items-center gap-1">{t('analytics.pnlSymbol.table.symbol', 'Symbol')} <ArrowUpDown className="w-3 h-3" /></div>
                       </th>
                       <th className="px-4 py-3 font-normal cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('instrument')}>
-                        <div className="flex items-center gap-1">Instrument <ArrowUpDown className="w-3 h-3" /></div>
+                        <div className="flex items-center gap-1">{t('analytics.pnlSymbol.table.instrument', 'Instrument')} <ArrowUpDown className="w-3 h-3" /></div>
                       </th>
                       <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('totalPnL')}>
-                        <div className="flex items-center justify-end gap-1">Total PnL <ArrowUpDown className="w-3 h-3" /></div>
+                        <div className="flex items-center justify-end gap-1">{t('analytics.pnlSymbol.table.totalPnl', 'Total PnL')} <ArrowUpDown className="w-3 h-3" /></div>
                       </th>
                       <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('longPnL')}>
-                        <div className="flex items-center justify-end gap-1">Long PnL <ArrowUpDown className="w-3 h-3" /></div>
+                        <div className="flex items-center justify-end gap-1">{t('analytics.pnlSymbol.table.longPnl', 'Long PnL')} <ArrowUpDown className="w-3 h-3" /></div>
                       </th>
                       <th className="px-4 py-3 font-normal text-right cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('shortPnL')}>
-                        <div className="flex items-center justify-end gap-1">Short PnL <ArrowUpDown className="w-3 h-3" /></div>
+                        <div className="flex items-center justify-end gap-1">{t('analytics.pnlSymbol.table.shortPnl', 'Short PnL')} <ArrowUpDown className="w-3 h-3" /></div>
                       </th>
                     </tr>
                   </thead>
@@ -310,7 +312,7 @@ export function PnLBySymbol() {
                     ))}
                     {paginatedData.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-10 text-center text-[#8E9299]">No data or nothing found for selected filters.</td>
+                        <td colSpan={6} className="px-4 py-10 text-center text-[#8E9299]">{t('analytics.pnlSymbol.noRecords', 'No data or nothing found for selected filters.')}</td>
                       </tr>
                     )}
                   </tbody>

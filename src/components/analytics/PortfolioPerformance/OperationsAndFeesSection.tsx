@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { OperationsResultMetrics } from '../../../hooks/usePortfolioPerformance';
 import { AppTooltip } from '../../ui/Tooltip';
 import { Scale, ArrowUpDown, Percent } from 'lucide-react';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSection({ operations, denomination, isPrivateMode }: Props) {
+  const { t } = useTranslation();
   const maskVal = (val: string | number) => {
     if (isPrivateMode) return '****';
     return String(val);
@@ -35,7 +37,7 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
       <div className="flex items-center justify-between pb-2 border-b border-[#2a2b30]/60">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
           <Scale className="w-4 h-4 text-[#2F6BFF]" />
-          Operations Result & Fee Efficiency
+          {t('analytics.portfolio.operations.title', 'Operations Result & Fee Efficiency')}
         </h3>
         <span className="text-xs text-[#8E9299]">Execution Accounting</span>
       </div>
@@ -44,7 +46,7 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
         {/* Card 1: Operations Result (Split Trades vs. Funding) */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col justify-between">
           <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-3 pb-1 border-b border-[#2a2b30]/50 flex items-center justify-between">
-            <span>Operations Result</span>
+            <span>{t('analytics.portfolio.operations.cardTitle', 'Operations Result')}</span>
             <span className="text-[10px] text-[#8E9299] font-normal">Gross vs. Net</span>
           </h4>
 
@@ -55,15 +57,15 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
                 Trades
               </span>
               <div>
-                <span className="text-[#8E9299] text-[10px] block">Gross Cash Flow</span>
+                <span className="text-[#8E9299] text-[10px] block">{t('analytics.portfolio.operations.grossCashFlow', 'Gross Cash Flow')}</span>
                 <span className="text-white font-medium">{maskVal(operations.grossCashFlow)} {denomination}</span>
               </div>
               <div>
-                <span className="text-[#8E9299] text-[10px] block">Fees Paid</span>
+                <span className="text-[#8E9299] text-[10px] block">{t('analytics.portfolio.operations.tradingFeesPaid', 'Fees Paid')}</span>
                 <span className="text-[#FF4444] font-medium">{operations.feesPaid.startsWith('-') ? '' : '-'}{maskVal(operations.feesPaid)} {denomination}</span>
               </div>
               <div className="pt-1 border-t border-[#2a2b30]/50">
-                <span className="text-[#8E9299] text-[10px] block">Net Trading P&L</span>
+                <span className="text-[#8E9299] text-[10px] block">{t('analytics.portfolio.operations.netTradingPnl', 'Net Trading P&L')}</span>
                 <span className="text-emerald-400 font-bold">{maskVal(operations.netTradingPnl)} {denomination}</span>
               </div>
             </div>
@@ -74,15 +76,15 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
                 Funding Rate
               </span>
               <div>
-                <span className="text-[#8E9299] text-[10px] block">Received</span>
+                <span className="text-[#8E9299] text-[10px] block">{t('analytics.portfolio.operations.fundingReceived', 'Received')}</span>
                 <span className="text-emerald-400 font-medium">+{maskVal(operations.fundingReceived)} {denomination}</span>
               </div>
               <div>
-                <span className="text-[#8E9299] text-[10px] block">Paid</span>
+                <span className="text-[#8E9299] text-[10px] block">{t('analytics.portfolio.operations.fundingPaid', 'Paid')}</span>
                 <span className="text-[#FF4444] font-medium">{operations.fundingPaid.startsWith('-') ? '' : '-'}{maskVal(operations.fundingPaid)} {denomination}</span>
               </div>
               <div className="pt-1 border-t border-[#2a2b30]/50">
-                <span className="text-[#8E9299] text-[10px] block">Net Funding</span>
+                <span className="text-[#8E9299] text-[10px] block">{t('analytics.portfolio.operations.netFunding', 'Net Funding')}</span>
                 <span className="text-emerald-400 font-bold">{maskVal(operations.netFunding)} {denomination}</span>
               </div>
               <div>
@@ -96,7 +98,7 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
         {/* Card 2: Trade Breakdown */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col justify-between">
           <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-3 pb-1 border-b border-[#2a2b30]/50 flex items-center justify-between">
-            <span>Trade Breakdown</span>
+            <span>{t('analytics.portfolio.operations.tradeBreakdown', 'Trade Breakdown')}</span>
             <span className="text-[10px] text-[#8E9299] font-normal">Side Distribution</span>
           </h4>
 
@@ -129,7 +131,7 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
         {/* Card 3: Fee Analysis & Cost Diagnostics */}
         <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col justify-between">
           <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-2 pb-1 border-b border-[#2a2b30]/50 flex items-center justify-between">
-            <span>Fee Analysis</span>
+            <span>{t('analytics.portfolio.operations.feeAnalysis', 'Fee Analysis')}</span>
             <span className="text-[10px] text-[#8E9299] font-normal">Cost Drag</span>
           </h4>
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   X,
   ShieldCheck,
@@ -32,6 +33,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
   initialTab = 'overview',
   onClose,
 }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'overview' | 'request' | 'tools' | 'response' | 'bundle'>(initialTab);
   const [copiedAll, setCopiedAll] = useState(false);
 
@@ -74,7 +76,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
     };
     navigator.clipboard.writeText(JSON.stringify(fullBundle, null, 2));
     setCopiedAll(true);
-    toast.success('Debug bundle copied to clipboard!', { icon: '📋' });
+    toast.success(t('toasts.debugBundleCopied', 'Debug bundle copied to clipboard!'), { icon: '📋' });
     setTimeout(() => setCopiedAll(false), 2000);
   };
 
@@ -91,7 +93,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
     a.download = `pika-debug-audit-${log?.id || Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Log file downloaded');
+    toast.success(t('toasts.logFileDownloaded', 'Log file downloaded'));
   };
 
   return (
@@ -105,7 +107,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-white tracking-tight">PIKA AI Auditor & Debugger</h2>
+                <h2 className="text-sm font-bold text-white tracking-tight">{t('ai.settings.audit.modalTitle', 'PIKA AI Auditor & Debugger')}</h2>
                 <span
                   className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                     status === 'success'
@@ -133,7 +135,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#1f2026] hover:bg-[#282931] text-gray-200 hover:text-white rounded-lg text-xs font-medium border border-[#2e3038] transition cursor-pointer"
             >
               {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#2F6BFF]" />}
-              <span>{copiedAll ? 'Copied!' : 'Copy All (JSON)'}</span>
+              <span>{copiedAll ? t('common.copied', 'Copied!') : t('common.copyJson', 'Copy All (JSON)')}</span>
             </button>
             <button
               onClick={handleDownloadFullBundle}
@@ -162,7 +164,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Overview</span>
+            <span>{t('common.overview', 'Overview')}</span>
           </button>
 
           <button
@@ -174,7 +176,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             }`}
           >
             <FileCode className="w-3.5 h-3.5" />
-            <span>Prompt & Request (Raw)</span>
+            <span>{t('ai.settings.audit.promptRequest', 'Prompt & Request (Raw)')}</span>
           </button>
 
           <button
@@ -186,7 +188,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             }`}
           >
             <Database className="w-3.5 h-3.5" />
-            <span>Tools & Local Context ({toolsExecution.length || toolsInvoked.length})</span>
+            <span>{t('ai.settings.audit.toolsContext', 'Tools & Local Context')} ({toolsExecution.length || toolsInvoked.length})</span>
           </button>
 
           <button
@@ -270,7 +272,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(userMessage);
-                      toast.success('User prompt copied!');
+                      toast.success(t('toasts.userPromptCopied', 'User prompt copied!'));
                     }}
                     className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
                   >
@@ -323,7 +325,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(errorMessage || assistantResponse);
-                      toast.success('Response copied!');
+                      toast.success(t('toasts.responseCopied', 'Response copied!'));
                     }}
                     className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
                   >
@@ -363,7 +365,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                     onClick={() => {
                       const sys = debugData?.request?.systemInstruction || log?.fullPayloadSnapshot?.sentPrompt || '';
                       navigator.clipboard.writeText(sys);
-                      toast.success('System prompt copied!');
+                      toast.success(t('toasts.systemPromptCopied', 'System prompt copied!'));
                     }}
                     className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
                   >

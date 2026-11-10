@@ -1,3 +1,39 @@
+# [2.28.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.27.0...v2.28.0) (2026-11-09)
+
+
+### Features
+
+* **i18n:** localize UI components and labels ([6ee9f4f](https://github.com/fapdev77/crypto-dashboard/commit/6ee9f4f39305e2bb1789e489b6e76c18106076bc))
+
+# [2.27.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.26.0...v2.27.0) (2026-11-09)
+
+
+### Features
+
+* add components, i18n locales, and unit tests for exchange API keys, vaults, settings, and AI telemetry ([c10d1e5](https://github.com/fapdev77/crypto-dashboard/commit/c10d1e563c9602c4ea5745a8d868ffcabe53a371))
+
+# [2.26.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.25.0...v2.26.0) (2026-11-09)
+
+
+### Features
+
+* add analytics modules and localized data for portfolio and funding metrics ([fd3d917](https://github.com/fapdev77/crypto-dashboard/commit/fd3d917706b484636c049cb980abce2604488c64))
+* add transaction history components, navigation sidebar, and multi-language support ([ea691bc](https://github.com/fapdev77/crypto-dashboard/commit/ea691bc9a35fe5822a2e8d7a3a9eec4ecd8ae03e))
+
+# [2.25.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.24.0...v2.25.0) (2026-11-08)
+
+
+### Features
+
+* **i18n:** localize position and order components ([fa49a14](https://github.com/fapdev77/crypto-dashboard/commit/fa49a140a7d103fcc7dfa6b3321772d9d46ae841))
+
+# [2.24.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.23.0...v2.24.0) (2026-11-08)
+
+
+### Features
+
+* **i18n:** internationalize HedgePro components ([a667f93](https://github.com/fapdev77/crypto-dashboard/commit/a667f93da49a4f39396da370b69d8cf59769ea5e))
+
 # [2.23.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.22.0...v2.23.0) (2026-11-08)
 
 

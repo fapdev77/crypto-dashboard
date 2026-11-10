@@ -1,6 +1,7 @@
 import React from 'react';
 import { HelpCircle } from 'lucide-react';
 import { AppTooltip } from './ui/Tooltip';
+import { useTranslation } from 'react-i18next';
 
 interface HelpToggleButtonProps {
   isOpen: boolean;
@@ -8,9 +9,11 @@ interface HelpToggleButtonProps {
 }
 
 export function HelpToggleButton({ isOpen, onClick }: HelpToggleButtonProps) {
+  const { t } = useTranslation();
+
   return (
     <AppTooltip
-      description={isOpen ? 'Close welcome & help guide' : 'Open welcome & help guide'}
+      description={isOpen ? t('common.buttons.helpClose', 'Close welcome & help guide') : t('common.buttons.helpOpen', 'Open welcome & help guide')}
       side="bottom"
       align="end"
     >
@@ -21,7 +24,7 @@ export function HelpToggleButton({ isOpen, onClick }: HelpToggleButtonProps) {
             ? 'text-[#2F6BFF] border-[#2F6BFF]/30 bg-[#2F6BFF]/10 hover:bg-[#2F6BFF]/20'
             : 'text-gray-400 hover:text-white bg-gray-100 dark:bg-[#151619] border-gray-200 dark:border-[#2a2b30] hover:bg-gray-200 dark:hover:bg-[#2a2b30]'
         }`}
-        aria-label={isOpen ? 'Close help guide' : 'Open help guide'}
+        aria-label={isOpen ? t('common.buttons.helpClose', 'Close help guide') : t('common.buttons.helpOpen', 'Open help guide')}
       >
         <HelpCircle className="w-5 h-5 transition-transform hover:scale-105" />
       </button>

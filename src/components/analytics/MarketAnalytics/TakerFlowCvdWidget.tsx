@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React from 'react';
 import {
   ResponsiveContainer,
@@ -27,6 +28,7 @@ import {
 } from './MarketAnalyticsTooltips';
 
 export const TakerFlowCvdWidget: React.FC = () => {
+  const { t } = useTranslation();
   const { snapshot } = useMarketAnalyticsStore();
 
   if (!snapshot) return null;

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FilterBar } from '../../ui/FilterBar';
 import type { PortfolioPerformanceFilters as FilterConfig } from '../../../hooks/usePortfolioPerformance';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function PortfolioPerformanceFilters({ filters, setFilters, onFilterChange, availableCurrencies }: Props) {
+  const { t } = useTranslation();
   const updateFilters = onFilterChange || setFilters || (() => {});
   const { keys } = useApiKeysStore();
   const useMockData = useSettingsStore(state => state.useMockData);
@@ -50,18 +52,18 @@ export function PortfolioPerformanceFilters({ filters, setFilters, onFilterChang
     const list = [
       {
         value: 'USD',
-        label: 'Consolidated (USD)',
+        label: t('analytics.portfolio.consolidatedUsd', 'Consolidated (USD)'),
         icon: <DollarSign className="w-4 h-4 text-[#00C853]" />,
-        tooltip: 'Convert all performance metrics into USD equivalent',
+        tooltip: t('analytics.portfolio.consolidatedUsdTooltip', 'Convert all performance metrics into USD equivalent'),
       },
     ];
 
     availableCurrencies.forEach(c => {
       list.push({
         value: c,
-        label: `${c} Native`,
+        label: t('analytics.portfolio.nativeAsset', '{{asset}} Native', { asset: c }),
         icon: <CoinIcon symbol={c} size={16} />,
-        tooltip: `Measure returns in pure ${c} units (as in Hedge Pro BTC)`,
+        tooltip: t('analytics.portfolio.nativeAssetTooltip', 'Measure returns in pure {{asset}} units (as in Hedge Pro BTC)', { asset: c }),
       });
     });
 
@@ -75,14 +77,14 @@ export function PortfolioPerformanceFilters({ filters, setFilters, onFilterChang
           value: filters.exchange,
           onChange: (val) => updateFilters(p => ({ ...p, exchange: val, accountId: 'All' })),
           options: exchangeOptions,
-          labelAll: 'All Exchanges',
+          labelAll: t('analytics.common.allExchanges', 'All Exchanges'),
           tooltip: 'Filter performance metrics by exchange venue',
         }}
         account={{
           value: filters.accountId,
           onChange: (val) => updateFilters(p => ({ ...p, accountId: val })),
           options: accountOptions,
-          labelAll: 'All Accounts',
+          labelAll: t('analytics.common.allAccounts', 'All Accounts'),
           tooltip: 'Filter by specific trading account',
         }}
         side={{
@@ -96,7 +98,7 @@ export function PortfolioPerformanceFilters({ filters, setFilters, onFilterChang
             updateFilters(p => ({ ...p, denomination: val, milestoneStep: defaultStep }));
           },
           options: denominationOptions,
-          labelAll: 'Select Denomination',
+          labelAll: t('analytics.common.selectDenomination', 'Select Denomination'),
           tooltip: 'Select measurement currency: Consolidated USD or specific asset',
         }}
         period={{

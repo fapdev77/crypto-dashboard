@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BitgetTxFilters } from '../../../hooks/useBitgetTransactions';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { FilterBar } from '../../ui/FilterBar';
@@ -107,7 +108,24 @@ interface Props {
 }
 
 export function BitgetTransactionFilters({ filters, setFilters, availableCurrencies }: Props) {
+  const { t } = useTranslation();
   const { keys } = useApiKeysStore();
+
+  const localizedCategories = useMemo(() => [
+    { value: 'All', label: t('transactions.filters.allCategories', 'All Categories'), tooltip: 'Show all categories.' },
+    { value: 'spot', label: t('transactions.categories.spot', 'Spot'), tooltip: 'Spot market trades and records.' },
+    { value: 'usdt-futures', label: t('transactions.categories.mix', 'USDT-Futures'), tooltip: 'USDT-margined perpetual and delivery contracts.' },
+    { value: 'coin-futures', label: t('transactions.categories.dmcbl', 'Coin-Futures'), tooltip: 'Coin-margined inverse contracts.' },
+    { value: 'usdc-futures', label: t('transactions.categories.umcbl', 'USDC-Futures'), tooltip: 'USDC-margined contracts.' },
+    { value: 'margin', label: t('transactions.categories.margin', 'Margin'), tooltip: 'Margin trading account.' },
+    { value: 'other', label: t('transactions.categories.others', 'Other'), tooltip: 'Other account activities.' }
+  ], [t]);
+
+  const localizedTxTypes = useMemo(() => UNIVERSAL_TX_FILTER_OPTIONS.map(opt => ({
+    value: opt.value,
+    label: t(`transactions.types.${opt.value}`, opt.label),
+    tooltip: opt.description
+  })), [t]);
   const bitgetKeys = keys.filter(k => k.exchange === 'bitget' && k.isActive);
 
   return (
@@ -120,8 +138,8 @@ export function BitgetTransactionFilters({ filters, setFilters, availableCurrenc
       instrument={{
         value: filters.category,
         onChange: (v) => setFilters(prev => ({ ...prev, category: v })),
-        options: CATEGORIES,
-        labelAll: 'All Categories',
+        options: localizedCategories,
+        labelAll: t('transactions.filters.allCategories', 'All Categories'),
       }}
       type={{
         value: filters.type,
@@ -133,7 +151,7 @@ export function BitgetTransactionFilters({ filters, setFilters, availableCurrenc
         value: filters.currency,
         onChange: (v) => setFilters(prev => ({ ...prev, currency: v })),
         options: availableCurrencies,
-        labelAll: 'All Currencies',
+        labelAll: t('transactions.filters.allCurrencies', 'All Currencies'),
       }}
       account={{
         value: filters.accountId,

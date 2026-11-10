@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DayOfWeekItem,
   TimeOfDayItem,
@@ -31,11 +32,13 @@ interface Props {
 }
 
 export const TemporalPerformanceSection = React.memo(function TemporalPerformanceSection({
+  
   dayOfWeek,
   timeOfDay,
   denomination,
   isPrivateMode,
 }: Props) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'dayOfWeek' | 'timeOfDay'>('dayOfWeek');
 
   const maskVal = (val: string | number) => {
@@ -56,7 +59,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#2a2b30]/60">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
           <Clock className="w-4 h-4 text-[#2F6BFF]" />
-          Temporal Performance Analysis
+          {t('analytics.portfolio.temporal.title', 'Temporal Performance Analysis')}
         </h3>
 
         <div className="flex items-center gap-1 bg-[#1a1b1e] p-1 rounded-lg border border-[#2a2b30]">
@@ -69,7 +72,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             }`}
           >
             <CalendarDays className="w-3.5 h-3.5" />
-            <span>Day of Week</span>
+            <span>{t('analytics.portfolio.temporal.dayOfWeekTab', 'Day of Week')}</span>
           </button>
           <button
             onClick={() => setActiveTab('timeOfDay')}
@@ -80,7 +83,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>Time of Day</span>
+            <span>{t('analytics.portfolio.temporal.timeOfDayTab', 'Time of Day')}</span>
           </button>
         </div>
       </div>
@@ -94,7 +97,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
               <div className="bg-[#161b22] border border-emerald-500/20 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">
-                    Best Day of Week
+                    {t('analytics.portfolio.temporal.bestDay', 'Best Day of Week')}
                   </span>
                   <div className="text-lg font-bold text-white">
                     {dayOfWeek.bestDay.name}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useTransition } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   X,
@@ -73,6 +74,7 @@ const getAssetKindBadge = (kind: AssetKind | undefined) => {
 };
 
 export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const {
     selectedSymbol,
     selectedMarkets,

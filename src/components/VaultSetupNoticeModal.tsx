@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ShieldAlert, X, ArrowRight, Lock } from 'lucide-react';
 import { useSettingsStore } from '../store/settingsStore';
+import { useTranslation } from 'react-i18next';
 
 interface VaultSetupNoticeModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface VaultSetupNoticeModalProps {
 }
 
 export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: VaultSetupNoticeModalProps) {
+  const { t } = useTranslation();
   const { showVaultSetupNoticeOnStartup, setShowVaultSetupNoticeOnStartup } = useSettingsStore();
   const [timeLeft, setTimeLeft] = useState(5);
   const isPausedRef = useRef(false);
@@ -63,18 +65,22 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold text-white">Local Vault Not Initialized</h3>
+                <h3 className="text-base font-semibold text-white">
+                  {t('common.vaultNotice.title', 'Local Vault Not Initialized')}
+                </h3>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   {timeLeft}s
                 </span>
               </div>
-              <p className="text-xs text-[#8E9299] mt-0.5">Recommended Zero-Trust Security</p>
+              <p className="text-xs text-[#8E9299] mt-0.5">
+                {t('common.vaultNotice.subtitle', 'Recommended Zero-Trust Security')}
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 text-[#8E9299] hover:text-white hover:bg-[#202125] rounded-lg transition-colors"
-            aria-label="Close notice"
+            aria-label={t('common.close', 'Close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -82,7 +88,7 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
 
         {/* Body */}
         <p className="text-xs text-[#8E9299] leading-relaxed">
-          Your key vault does not have a master passphrase configured yet. Enable local encryption (PBKDF2 600k iterations + AES-GCM-256) to protect your credentials against unauthorized local access.
+          {t('common.vaultNotice.desc', 'Your key vault does not have a master passphrase configured yet. Enable local encryption (PBKDF2 600k iterations + AES-GCM-256) to protect your credentials against unauthorized local access.')}
         </p>
 
         {/* Action Buttons */}
@@ -95,14 +101,14 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
             className="flex-1 py-2 px-3.5 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-[#2F6BFF]/20"
           >
             <Lock className="w-3.5 h-3.5" />
-            Configure Vault Now
+            {t('common.vaultNotice.configureNow', 'Configure Vault Now')}
             <ArrowRight className="w-3 h-3 ml-0.5" />
           </button>
           <button
             onClick={onClose}
             className="py-2 px-3 border border-[#2a2b30] hover:bg-[#202125] text-[#8E9299] hover:text-white rounded-lg text-xs font-medium transition-colors"
           >
-            Dismiss
+            {t('common.vaultNotice.dismiss', 'Dismiss')}
           </button>
         </div>
 
@@ -118,9 +124,13 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
               />
               <div className="w-8 h-4 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#2F6BFF]" />
             </label>
-            <span className="text-[11px] text-[#8E9299]">Show notice on startup</span>
+            <span className="text-[11px] text-[#8E9299]">
+              {t('common.vaultNotice.showOnStartup', 'Show notice on startup')}
+            </span>
           </div>
-          <span className="text-[10px] text-[#8E9299]/70">Can be re-enabled in Settings</span>
+          <span className="text-[10px] text-[#8E9299]/70">
+            {t('common.vaultNotice.canReenable', 'Can be re-enabled in Settings')}
+          </span>
         </div>
       </div>
     </div>

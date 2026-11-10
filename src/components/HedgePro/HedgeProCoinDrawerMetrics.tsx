@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HedgeCoinSummary } from '../../utils/hedgeUtils';
 import { AppTooltip } from '../ui/Tooltip';
 import { HedgePnlConceptMode } from './HedgeProDashboard';
@@ -31,28 +32,29 @@ export function HedgeProCoinDrawerMetrics({
   formatCurrency,
   pnlConceptMode = 'hedge',
 }: HedgeProCoinDrawerMetricsProps) {
+  const { t } = useTranslation();
   const isNetProtectedPositive = coin.netProtectedUsd >= 0;
   const isUplPositive = coin.unrealizedPnlUsd > 0;
   const isUplNegative = coin.unrealizedPnlUsd < 0;
 
   // Colors and labels depending on mode
-  let uplLabel = 'Unrealized PnL';
-  let uplTooltip = 'Aggregated unrealized profit/loss across all short and long positions for this coin, plus total ROI relative to wallet balance.';
+  let uplLabel = t('hedgePro.drawer.unrealizedPnl');
+  let uplTooltip = t('hedgePro.drawer.unrealizedPnlTooltip');
   let uplColor = isUplPositive ? 'text-[#00C853]' : isUplNegative ? 'text-[#FF4444]' : 'text-[#8E9299]';
 
   if (pnlConceptMode === 'hedge') {
     if (isUplNegative) {
-      uplLabel = 'Opportunity Cost';
+      uplLabel = t('hedgePro.drawer.opportunityCost');
       uplColor = 'text-amber-400';
-      uplTooltip = 'In inverse hedges, short PnL drops as market rises above entry. This is not capital loss, but uncaptured upside on the USD-locked leg, while your exposed balance captured full market appreciation.';
+      uplTooltip = t('hedgePro.drawer.opportunityCostTooltip');
     } else if (isUplPositive) {
-      uplLabel = 'Accumulated Asset';
+      uplLabel = t('hedgePro.drawer.accumulatedAsset');
       uplColor = 'text-[#00C853]';
-      uplTooltip = 'In inverse hedges, short PnL increases as spot price falls below entry. The position accumulates extra coin units to maintain the exact USD protection target while the exposed balance depreciated in USD.';
+      uplTooltip = t('hedgePro.drawer.accumulatedAssetTooltip');
     } else {
-      uplLabel = 'Hedge Balanced';
+      uplLabel = t('hedgePro.drawer.hedgeBalanced');
       uplColor = 'text-[#8E9299]';
-      uplTooltip = 'Short position is currently at entry price with zero delta divergence.';
+      uplTooltip = t('hedgePro.drawer.hedgeBalancedTooltip');
     }
   }
 
@@ -65,11 +67,11 @@ export function HedgeProCoinDrawerMetrics({
       {/* Card 1: Wallet Balance */}
       <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
         <AppTooltip
-          description="Fixed gross wallet balance in futures account without unrealized PnL (initial deposit + accumulated realized PnL)."
+          description={t('hedgePro.drawer.walletBalanceTooltip')}
           side="top"
         >
           <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
-            Wallet Balance
+            {t('hedgePro.drawer.walletBalance')}
           </span>
         </AppTooltip>
         <div className="mt-1">
@@ -85,11 +87,11 @@ export function HedgeProCoinDrawerMetrics({
       {/* Card 2: Net Balance */}
       <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
         <AppTooltip
-          description="Liquid equity value of this coin if all positions were closed right now (Wallet Balance + Unrealized PnL)."
+          description={t('hedgePro.drawer.netBalanceTooltip')}
           side="top"
         >
           <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
-            Net Balance
+            {t('hedgePro.drawer.netBalance')}
           </span>
         </AppTooltip>
         <div className="mt-1">
@@ -111,7 +113,7 @@ export function HedgeProCoinDrawerMetrics({
       >
         <div className="flex items-center justify-between">
           <AppTooltip
-            description="Real net protection of this coin = (Protected USD − Total Leveraged USD) ÷ Net Balance USD. Negative values indicate long leverage exceeds short protection."
+            description={t('hedgePro.drawer.realHedgeTooltip')}
             side="top"
           >
             <span
@@ -120,7 +122,7 @@ export function HedgeProCoinDrawerMetrics({
                   : 'text-red-400 border-red-500/40'
                 }`}
             >
-              Real Hedge
+              {t('hedgePro.drawer.realHedge')}
             </span>
           </AppTooltip>
           <span
@@ -147,11 +149,11 @@ export function HedgeProCoinDrawerMetrics({
       <div className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip
-            description="Portion of this coin's equity locked in USD by short hedge positions at entry price (Protected USD ÷ Net Balance USD). This USD value is immunised from market dips."
+            description={t('hedgePro.drawer.protOfEqTooltip')}
             side="top"
           >
             <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider cursor-help border-b border-dashed border-emerald-500/40">
-              Prot. of Eq.
+              {t('hedgePro.drawer.protOfEq')}
             </span>
           </AppTooltip>
           <span className="text-[10px] font-mono font-semibold text-emerald-400">
@@ -177,14 +179,14 @@ export function HedgeProCoinDrawerMetrics({
       >
         <div className="flex items-center justify-between">
           <AppTooltip
-            description="Total notional value of inverse long positions for this coin. Longs represent directional leverage and add market risk."
+            description={t('hedgePro.drawer.leveragedTooltip')}
             side="top"
           >
             <span
               className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${coin.leveragedUsd > 0 ? 'text-amber-400 border-amber-500/40' : 'text-[#8E9299] border-[#8E9299]/50'
                 }`}
             >
-              Leveraged
+              {t('hedgePro.drawer.leveraged')}
             </span>
           </AppTooltip>
           <span
@@ -208,14 +210,14 @@ export function HedgeProCoinDrawerMetrics({
       </div>
 
       {/* Card 6: Exposed */}
-      <div className="p-2.5 rounded-lg bg-[#151619] border border-[#2a2b30] flex flex-col justify-between">
+      <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip
-            description="Uncovered coin balance not hedged by shorts (Exposed USD ÷ Net Balance USD). Fully exposed to spot market appreciation and depreciation."
+            description={t('hedgePro.drawer.exposedTooltip')}
             side="top"
           >
             <span className="text-[10px] uppercase font-bold text-white tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
-              Exposed
+              {t('hedgePro.drawer.exposed')}
             </span>
           </AppTooltip>
           <span className="text-[10px] font-mono font-semibold text-white">
@@ -258,11 +260,11 @@ export function HedgeProCoinDrawerMetrics({
       <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip
-            description="Aggregated realized profit/loss across all positions for this coin (funding fees collected/paid, trade commissions, closed legs), plus ROI relative to wallet balance."
+            description={t('hedgePro.drawer.realizedPnlTooltip')}
             side="top"
           >
             <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50">
-              Realized PnL
+              {t('hedgePro.drawer.realizedPnl')}
             </span>
           </AppTooltip>
           <span className={`text-[10px] font-mono font-semibold ${rplColor}`}>

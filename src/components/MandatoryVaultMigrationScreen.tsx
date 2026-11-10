@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ShieldAlert, Lock, Eye, EyeOff, KeyRound, AlertTriangle, Trash2, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useApiKeysStore, ApiCredentials } from '../store/apiKeysStore';
 import { clearLegacyUnencryptedStorage } from '../utils/vaultHelpers';
@@ -11,6 +12,7 @@ interface MandatoryVaultMigrationScreenProps {
 }
 
 export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: MandatoryVaultMigrationScreenProps) {
+  const { t } = useTranslation();
   const { migrateUnencryptedKeys } = useApiKeysStore();
   const [passphrase, setPassphrase] = useState('');
   const [confirmPassphrase, setConfirmPassphrase] = useState('');
@@ -46,14 +48,14 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
     try {
       await migrateUnencryptedKeys(passphrase, legacyKeys);
       clearLegacyUnencryptedStorage();
-      toast.success(`Successfully secured ${legacyKeys.length} API connections in your local vault!`, {
+      toast.success(t('toasts.vaultMigrationSuccess', 'Successfully secured {{count}} API connections in your local vault!', { count: legacyKeys.length }), {
         icon: '🛡️',
         duration: 4000,
       });
       onMigrated();
     } catch (err: any) {
       setError(err?.message || 'Failed to encrypt legacy credentials.');
-      toast.error('Encryption migration failed. Please try again.');
+      toast.error(t('toasts.vaultMigrationFailed', 'Encryption migration failed. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -63,7 +65,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
     clearLegacyUnencryptedStorage();
     // Also clear keys from state if present
     useApiKeysStore.setState({ keys: [] });
-    toast.success('Legacy unencrypted credentials discarded.', { icon: '🗑️' });
+    toast.success(t('toasts.vaultLegacyDiscarded', 'Legacy unencrypted credentials discarded.'), { icon: '🗑️' });
     setShowDiscardConfirm(false);
     onMigrated();
   };
@@ -85,7 +87,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
                 Action Required • Security Upgrade
               </span>
               <h2 className="text-lg sm:text-xl font-bold text-white mt-1">
-                Mandatory Vault Encryption
+                {t('apiKeys.vault.mandatoryTitle', 'Mandatory Vault Encryption')}
               </h2>
             </div>
           </div>
@@ -130,7 +132,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
         <form onSubmit={handleMigrate} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-1.5">
-              Create Master Passphrase <span className="text-rose-400">*</span>
+              {t('apiKeys.vault.createPassphraseLabel', 'Create Master Passphrase')} <span className="text-rose-400">*</span>
             </label>
             <div className="relative">
               <input
@@ -140,7 +142,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
                 minLength={8}
                 value={passphrase}
                 onChange={(e) => setPassphrase(e.target.value)}
-                placeholder="Enter master passphrase (min. 8 characters)"
+                placeholder={t('apiKeys.vault.passphrasePlaceholder', 'Enter master passphrase (min. 8 characters)')}
                 className="w-full bg-[#111216] border border-[#2a2b30] rounded-xl px-3.5 py-2.5 pr-10 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors font-mono"
               />
               <button
@@ -156,7 +158,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
 
           <div>
             <label className="block text-xs font-medium text-[#8E9299] uppercase tracking-wider mb-1.5">
-              Confirm Master Passphrase <span className="text-rose-400">*</span>
+              {t('apiKeys.vault.confirmPassphraseLabel', 'Confirm Master Passphrase')} <span className="text-rose-400">*</span>
             </label>
             <div className="relative">
               <input
@@ -165,7 +167,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
                 minLength={8}
                 value={confirmPassphrase}
                 onChange={(e) => setConfirmPassphrase(e.target.value)}
-                placeholder="Repeat master passphrase"
+                placeholder={t('apiKeys.vault.confirmPlaceholder', 'Repeat master passphrase')}
                 className="w-full bg-[#111216] border border-[#2a2b30] rounded-xl px-3.5 py-2.5 pr-10 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors font-mono"
               />
               <button
@@ -192,7 +194,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
               className="w-full flex-1 py-3 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-[#2F6BFF]/25 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Lock className="w-4 h-4" />
-              <span>{isSubmitting ? 'Encrypting Credentials...' : 'Encrypt Keys & Unlock Terminal'}</span>
+              <span>{isSubmitting ? t('apiKeys.vault.encrypting', 'Encrypting Credentials...') : t('apiKeys.vault.encryptUnlockBtn', 'Encrypt Keys & Unlock Terminal')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -230,14 +232,14 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
                   onClick={() => setShowDiscardConfirm(false)}
                   className="flex-1 py-2 bg-[#1e1f24] hover:bg-[#2a2b30] text-gray-300 rounded-lg text-xs font-semibold border border-[#2a2b30] transition"
                 >
-                  Cancel
+                  {t('common.cancel', 'Cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={handleDiscardLegacyKeys}
                   className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition"
                 >
-                  Yes, Discard
+                  {t('apiKeys.vault.discardConfirmBtn', 'Yes, Discard')}
                 </button>
               </div>
             </div>

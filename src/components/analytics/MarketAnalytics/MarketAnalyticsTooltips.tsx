@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AppTooltip } from '../../ui/Tooltip';
 
 export const TooltipWrapper = ({ children, description, rows, align = 'center', side = 'top' }: any) => {
@@ -11,31 +12,39 @@ export const TooltipWrapper = ({ children, description, rows, align = 'center', 
   );
 };
 
-export const PriceMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const PriceMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="Current global spot/perpetual price blended across top liquidity venues."
+    description={t("analytics.market.tooltips.price", "Current global spot/perpetual price blended across top liquidity venues.")}
     rows={[
       { label: "Formula (Δ%)", value: "((Current Price - 24h Price) / 24h Price) * 100", valueClassName: "font-mono text-[10px] text-gray-400" }
     ]}
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const Volume24hTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const Volume24hTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="Aggregated notional volume traded over the last 24 hours across all monitored exchanges."
+    description={t("analytics.market.tooltips.volume", "Aggregated notional volume traded over the last 24 hours across all monitored exchanges.")}
     rows={[
       { label: "Formula", value: "Σ Volume(ex)", valueClassName: "font-mono text-[10px] text-gray-400" }
     ]}
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const OpenInterestMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const OpenInterestMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="Total nominal value of all outstanding derivative contracts (futures and options) that have not been settled."
+    description={t("analytics.market.tooltips.openInterest", "Total nominal value of all outstanding derivative contracts (futures and options) that have not been settled.")}
     rows={[
       { label: "Formula", value: "Σ (Contracts * Price)", valueClassName: "font-mono text-[10px] text-gray-400" },
       { label: "Significance", value: "Rising OI indicates new money entering the market, confirming trends." }
@@ -43,11 +52,14 @@ export const OpenInterestMetricTooltip: React.FC<{ children: React.ReactNode }> 
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const FundingRateMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const FundingRateMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="Weighted average funding rate across exchanges, indicating the cost of holding long vs short positions."
+    description={t("analytics.market.tooltips.fundingRate", "Weighted average funding rate across exchanges, indicating the cost of holding long vs short positions.")}
     rows={[
       { label: "Formula (APR)", value: "Funding Rate * 3 * 365 * 100", valueClassName: "font-mono text-[10px] text-gray-400" },
       { label: "Positive", value: "Longs pay Shorts (Bullish consensus)" },
@@ -56,11 +68,14 @@ export const FundingRateMetricTooltip: React.FC<{ children: React.ReactNode }> =
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const MaxFundingSpreadTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const MaxFundingSpreadTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="The maximum annualized difference between the highest and lowest funding rates across tracked exchanges."
+    description={t("analytics.market.tooltips.spread", "The maximum annualized difference between the highest and lowest funding rates across tracked exchanges.")}
     rows={[
       { label: "Strategy", value: "Cash & Carry / Delta Neutral" },
       { label: "Formula", value: "Rate(Short) - Rate(Long)", valueClassName: "font-mono text-[10px] text-gray-400" }
@@ -68,7 +83,8 @@ export const MaxFundingSpreadTooltip: React.FC<{ children: React.ReactNode }> = 
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
 export const TakerFlowMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <TooltipWrapper

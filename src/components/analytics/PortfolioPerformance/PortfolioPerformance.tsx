@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   TrendingUp,
   Download,
@@ -25,6 +26,7 @@ import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../
 import { LogManager } from '../../../services/LogManager';
 
 export function PortfolioPerformance() {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<FilterType>(defaultPerformanceFilters);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const { isPrivateMode } = usePrivacy();
@@ -120,22 +122,22 @@ export function PortfolioPerformance() {
         <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
             <TrendingUp className="w-5 h-5 text-[#2F6BFF]" />
-            Portfolio Performance
+            {t('analytics.portfolio.title', 'Portfolio Performance')}
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
             <StatusAndSyncBadge
               isSyncing={isSyncing}
-              syncMessage={isSyncing ? 'Syncing transactions...' : null}
+              syncMessage={isSyncing ? t('analytics.common.syncingTransactions', 'Syncing transactions...') : null}
               syncError={error}
             />
             {isCalculatingUsd && (
               <span className="flex items-center gap-1 text-[11px] text-[#2F6BFF] bg-[#2F6BFF]/10 px-2 py-0.5 rounded-full border border-[#2F6BFF]/20">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Calculating USD asset valuations...
+                {t('analytics.common.calculatingUsd', 'Calculating USD asset valuations...')}
               </span>
             )}
             <span className="text-[11px] text-[#8E9299]">
-              Institutional evolution, cash flow, funding & volatility analytics
+              {t('analytics.portfolio.subtitle', 'Institutional evolution, cash flow, funding & volatility analytics')}
             </span>
           </div>
         </div>
@@ -147,7 +149,7 @@ export function PortfolioPerformance() {
             className="px-3.5 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export Report</span>
+            <span className="hidden sm:inline">{t('analytics.common.exportReport', 'Export Report')}</span>
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
           {exportMenuOpen && (
@@ -156,19 +158,19 @@ export function PortfolioPerformance() {
                 onClick={() => handleExport('csv')}
                 className="w-full text-left px-4 py-2.5 hover:bg-[#2a2b30]/50 transition-colors cursor-pointer"
               >
-                Export CSV
+                {t('analytics.common.exportCsv', 'Export CSV')}
               </button>
               <button
                 onClick={() => handleExport('excel')}
                 className="w-full text-left px-4 py-2.5 hover:bg-[#2a2b30]/50 transition-colors cursor-pointer"
               >
-                Export Excel
+                {t('analytics.common.exportExcel', 'Export Excel')}
               </button>
               <button
                 onClick={() => handleExport('pdf')}
                 className="w-full text-left px-4 py-2.5 hover:bg-[#2a2b30]/50 transition-colors cursor-pointer"
               >
-                Export PDF
+                {t('analytics.common.exportPdf', 'Export PDF')}
               </button>
             </div>
           )}

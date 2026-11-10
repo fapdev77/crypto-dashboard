@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   X,
   Send,
@@ -53,6 +54,7 @@ interface AiChatDrawerProps {
 }
 
 export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings }) => {
+  const { t } = useTranslation();
   const {
     isDrawerOpen,
     closeDrawer,
@@ -104,7 +106,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
     } catch {
       // ignore localStorage quota/privacy errors
     }
-    toast.success(`Chat docked to ${nextSide === 'left' ? 'Left' : 'Right'}`, { icon: '⚓' });
+    toast.success(t('toasts.chatDocked', 'Chat docked to {{side}}', { side: nextSide === 'left' ? 'Left' : 'Right' }), { icon: '⚓' });
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -241,7 +243,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
     if (!prompt || isThinking) return;
 
     if (!isEnabled) {
-      toast.error('PIKA Assistant is disabled. Enable it in "AI Settings".');
+      toast.error(t('toasts.pikaDisabledNotice', 'PIKA Assistant is disabled. Enable it in "AI Settings".'));
       return;
     }
 
@@ -299,7 +301,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
           auditLogId: err?.auditLogId,
           rawDebug: err?.rawDebug,
         });
-        toast('Análise interrompida', { icon: '⏹️' });
+        toast(t('toasts.analysisStopped', 'Analysis stopped'), { icon: '⏹️' });
       } else {
         const parsed = formatUserFriendlyAiError(err);
         console.error('[PIKA AI Assistant Error]', parsed.technicalDetails);
@@ -332,14 +334,14 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
   const handleNewConversation = () => {
     createSession('New Conversation');
     setIsMenuOpen(false);
-    toast.success('New conversation started', { icon: '✨' });
+    toast.success(t('toasts.newConversationStarted', 'New conversation started'), { icon: '✨' });
   };
 
   const confirmClearChat = () => {
     clearMessages();
     setShowClearConfirm(false);
     setIsMenuOpen(false);
-    toast.success('Chat history cleared', { icon: '🧹' });
+    toast.success(t('toasts.chatHistoryCleared', 'Chat history cleared'), { icon: '🧹' });
   };
 
   if (!isDrawerOpen) return null;

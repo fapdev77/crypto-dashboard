@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Copy, Check, ExternalLink, Maximize2, X, Download } from 'lucide-react';
@@ -12,6 +13,7 @@ interface CodeBlockProps {
 }
 
 const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   // Check if code block is a chart declaration (e.g., chart:bar, chart:line, chart:pie, chart:area or json with chart structure)
@@ -75,7 +77,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
-      toast.success('Code copied to clipboard', {
+      toast.success(t('toasts.codeCopied', 'Code copied to clipboard'), {
         id: 'code-copy',
         duration: 1500,
         style: {

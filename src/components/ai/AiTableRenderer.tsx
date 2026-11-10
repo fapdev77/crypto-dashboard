@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as XLSX from 'xlsx';
 import { Download, Copy, Check, ArrowUpDown, FileSpreadsheet } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -8,6 +9,7 @@ interface AiTableRendererProps {
 }
 
 export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [sortColIndex, setSortColIndex] = useState<number | null>(null);
   const [sortAsc, setSortAsc] = useState<boolean>(true);
@@ -79,7 +81,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
     try {
       const { headers, rows } = extractTableData();
       if (headers.length === 0 && rows.length === 0) {
-        toast.error('No table data to export');
+        toast.error(t('toasts.noTableDataExport', 'No table data to export'));
         return;
       }
 
@@ -94,7 +96,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
       const fileName = `PIKA_Financial_Data_${new Date().toISOString().slice(0, 10)}.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
-      toast.success('Excel spreadsheet downloaded (.xlsx)', {
+      toast.success(t('toasts.excelDownloaded', 'Excel spreadsheet downloaded (.xlsx)'), {
         id: 'table-excel-export',
         duration: 2500,
         style: {
@@ -106,7 +108,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
       });
     } catch (err) {
       console.error('Failed to export Excel', err);
-      toast.error('Failed to generate Excel file');
+      toast.error(t('toasts.excelExportFailed', 'Failed to generate Excel file'));
     }
   };
 
@@ -114,7 +116,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
     try {
       const { headers, rows } = extractTableData();
       if (headers.length === 0 && rows.length === 0) {
-        toast.error('No table data to copy');
+        toast.error(t('toasts.noTableDataCopy', 'No table data to copy'));
         return;
       }
 
@@ -126,7 +128,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
 
       await navigator.clipboard.writeText(tsvContent);
       setCopied(true);
-      toast.success('Copied for Google Sheets & Excel (paste directly with Ctrl+V)', {
+      toast.success(t('toasts.copiedForSheets', 'Copied for Google Sheets & Excel (paste directly with Ctrl+V)'), {
         id: 'table-copy-sheets',
         duration: 3000,
         style: {
@@ -138,7 +140,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
       });
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      toast.error('Failed to copy table data');
+      toast.error(t('toasts.copyTableFailed', 'Failed to copy table data'));
     }
   };
 

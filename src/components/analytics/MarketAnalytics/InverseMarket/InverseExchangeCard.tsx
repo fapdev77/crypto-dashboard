@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ExchangeId, InverseAssetExchangeMetric } from '../../../../types/marketAnalytics';
 import { ExchangeIcon } from '../../../ui/ExchangeIcon';
 import { TrendingUp, TrendingDown, Clock, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -17,6 +18,7 @@ const EXCHANGE_NAMES: Record<ExchangeId, string> = {
 };
 
 export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
+  
   exchange,
   metric,
   benchmarkPrice,

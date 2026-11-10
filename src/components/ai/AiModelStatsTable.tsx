@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { BarChart3 } from 'lucide-react';
 import { AiModelTelemetrySummary } from '../../types/aiTypes';
 
@@ -7,6 +8,7 @@ interface AiModelStatsTableProps {
 }
 
 export const AiModelStatsTable: React.FC<AiModelStatsTableProps> = ({ summaries }) => {
+  const { t } = useTranslation();
   const summaryList = Object.values(summaries);
 
   const formatNumber = (num: number) => new Intl.NumberFormat('en-US').format(num);
@@ -21,10 +23,10 @@ export const AiModelStatsTable: React.FC<AiModelStatsTableProps> = ({ summaries 
       <div className="px-6 py-4 border-b border-[#2a2b30] bg-[#151619]">
         <h3 className="text-sm font-bold text-white flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-emerald-400" />
-          Statistics by AI Model
+          {t('ai.settings.modelStats.title', 'Statistics by AI Model')}
         </h3>
         <p className="text-xs text-[#8E9299]">
-          Detailed breakdown of inference volume, average latency, and token efficiency per model
+          {t('ai.settings.modelStats.subtitle', 'Detailed breakdown of inference volume, average latency, and token efficiency per model')}
         </p>
       </div>
 
@@ -32,21 +34,21 @@ export const AiModelStatsTable: React.FC<AiModelStatsTableProps> = ({ summaries 
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="border-b border-[#2a2b30] bg-[#151619] text-[#8E9299] uppercase tracking-wider text-[10px]">
-              <th className="py-3 px-4">Model & Provider</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4 text-right">Invocations</th>
-              <th className="py-3 px-4 text-right">Tokens (Prompt/Compl)</th>
-              <th className="py-3 px-4 text-right">Avg/Call</th>
-              <th className="py-3 px-4 text-right">Avg Latency</th>
-              <th className="py-3 px-4 text-right">Est. Cost</th>
-              <th className="py-3 px-4 text-right">Last Used</th>
+              <th className="py-3 px-4">{t('ai.settings.modelStats.modelProvider', 'Model & Provider')}</th>
+              <th className="py-3 px-4">{t('common.status', 'Status')}</th>
+              <th className="py-3 px-4 text-right">{t('ai.settings.telemetry.totalCalls', 'Invocations')}</th>
+              <th className="py-3 px-4 text-right">{t('ai.settings.modelStats.tokensPromptCompl', 'Tokens (Prompt/Compl)')}</th>
+              <th className="py-3 px-4 text-right">{t('ai.settings.modelStats.avgCall', 'Avg/Call')}</th>
+              <th className="py-3 px-4 text-right">{t('ai.settings.telemetry.avgLatency', 'Avg Latency')}</th>
+              <th className="py-3 px-4 text-right">{t('ai.settings.telemetry.estimatedCost', 'Est. Cost')}</th>
+              <th className="py-3 px-4 text-right">{t('ai.settings.modelStats.lastUsed', 'Last Used')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#2a2b30] text-gray-300">
             {summaryList.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-8 text-center text-[#8E9299]">
-                  No inference data recorded yet. Statistics will populate as the assistant is used.
+                  {t('ai.settings.modelStats.noData', 'No inference data recorded yet. Statistics will populate as the assistant is used.')}
                 </td>
               </tr>
             ) : (
@@ -60,7 +62,7 @@ export const AiModelStatsTable: React.FC<AiModelStatsTableProps> = ({ summaries 
                     </td>
                     <td className="py-3 px-4 font-sans">
                       <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-                        Active
+                        {t('common.active', 'Active')}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right font-medium text-white">{formatNumber(item.callsCount)}</td>

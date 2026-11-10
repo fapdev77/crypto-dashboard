@@ -6,6 +6,8 @@ import { BybitTransactionLogEntry } from '../../../types';
 import { BybitTransactionNetChangeReport } from './BybitTransactionNetChangeReport';
 import { TX_TYPES, typeColorMap } from './BybitTransactionFilters';
 import { getBybitUniversalType, UNIVERSAL_BADGE_STYLE } from '../../../utils/transactionTypeMapper';
+import { useTranslation } from 'react-i18next';
+import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 
 export type DetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -28,6 +30,8 @@ export function BybitTransactionDetailsModal({
   maskVal,
   isPrivateMode,
 }: BybitTransactionDetailsModalProps) {
+  const { t } = useTranslation();
+  const formatCurrency = useFormatCurrency();
   if (!detailsModalType) return null;
 
   return (
@@ -35,11 +39,11 @@ export function BybitTransactionDetailsModal({
       <div className={`bg-[#161b22] border border-[#2a2b30] rounded-xl w-full shadow-2xl flex flex-col max-h-[85vh] transition-all duration-200 ${detailsModalType === 'netchange' ? 'max-w-4xl' : 'max-w-md'}`}>
         <div className="flex items-center justify-between p-4 border-b border-[#2a2b30]">
           <h3 className="text-white font-medium">
-            {detailsModalType === 'funding' && 'Funding Breakdown'}
-            {detailsModalType === 'fees' && 'Fees Breakdown'}
-            {detailsModalType === 'balance' && 'Wallet Balance Breakdown'}
-            {detailsModalType === 'netchange' && 'Net Change Report (USD)'}
-            {detailsModalType === 'tx' && 'Total Transactions Breakdown'}
+            {detailsModalType === 'funding' && t('transactions.details.fundingBreakdown', 'Funding Breakdown')}
+            {detailsModalType === 'fees' && t('transactions.details.feesBreakdown', 'Fees Breakdown')}
+            {detailsModalType === 'balance' && t('transactions.details.balanceBreakdown', 'Wallet Balance Breakdown')}
+            {detailsModalType === 'netchange' && t('transactions.details.netChangeReport', 'Net Change Report')}
+            {detailsModalType === 'tx' && t('transactions.details.txBreakdown', 'Total Transactions Breakdown')}
           </h3>
           <button 
             onClick={() => setDetailsModalType(null)}
@@ -60,7 +64,7 @@ export function BybitTransactionDetailsModal({
           ) : detailsModalType === 'tx' ? (
             <>
               {Object.entries(stats.typeBreakdown).length === 0 && (
-                <div className="text-[#8E9299] text-sm text-center py-4">No data available</div>
+                <div className="text-[#8E9299] text-sm text-center py-4">{t('transactions.common.noDataAvailable', 'No data available')}</div>
               )}
               {Object.entries(stats.typeBreakdown)
                 .sort((a, b) => b[1] - a[1]) // Sort by count descending
@@ -99,7 +103,7 @@ export function BybitTransactionDetailsModal({
                   
                 return (
                   <div className="flex items-center justify-between bg-[#1e232b] p-3 rounded-lg border border-[#2a2b30]/50">
-                    <span className="text-[#8E9299] text-sm">Stablecoins (USDT, USDC, etc.)</span>
+                    <span className="text-[#8E9299] text-sm">{t('transactions.details.stablecoins', 'Stablecoins (USDT, USDC, etc.)')}</span>
                     <span className={`font-mono font-medium ${colorClass}`}>
                       {isPrivateMode ? '****' : (detailsModalType === 'fees' ? (valBig.eq(0) ? '0.00' : (valBig.gte(0) ? `-${valBig.toFixed(4)}` : `+${valBig.abs().toFixed(4)}`)) : (isPositive ? `+${valBig.toFixed(4)}` : valBig.toFixed(4)))}
                     </span>
@@ -109,7 +113,7 @@ export function BybitTransactionDetailsModal({
 
               {/* Per-currency segment */}
               {Object.entries(stats.perCurrency).length === 0 && new Big(stats.stable[detailsModalType === 'funding' ? 'totalFunding' : detailsModalType === 'fees' ? 'totalFees' : 'finalBalance' as any]).eq(0) && (
-                <div className="text-[#8E9299] text-sm text-center py-4">No data available</div>
+                <div className="text-[#8E9299] text-sm text-center py-4">{t('transactions.common.noDataAvailable', 'No data available')}</div>
               )}
               
               {Object.entries(stats.perCurrency).map(([cur, vals]) => {
@@ -141,26 +145,24 @@ export function BybitTransactionDetailsModal({
         
         <div className="p-4 border-t border-[#2a2b30] flex items-center justify-between">
           <span className="text-[#8E9299] text-sm uppercase tracking-wider">
-            {detailsModalType === 'tx' ? 'Total Transactions' : 'Total (USD Eq.)'}
+            {detailsModalType === 'tx' ? t('transactions.common.totalTransactions', 'Total Transactions') : t('transactions.details.totalEq', 'Total Equivalent')}
           </span>
           <span className="text-white font-bold font-mono text-lg">
             {(() => {
               if (detailsModalType === 'tx') return stats.totalCount;
 
-              let val = '0';
-              if (detailsModalType === 'funding') val = stats.aggregatedUsd.totalFunding;
-              if (detailsModalType === 'fees') val = stats.aggregatedUsd.totalFees;
-              if (detailsModalType === 'balance') val = stats.aggregatedUsd.finalBalance;
-              if (detailsModalType === 'netchange') val = stats.aggregatedUsd.totalChange;
-              
-              const valBig = new Big(val);
-              
+              let val = 0;
+              if (detailsModalType === 'funding') val = Number(stats.aggregatedUsd.totalFunding || 0);
+              if (detailsModalType === 'fees') val = -Math.abs(Number(stats.aggregatedUsd.totalFees || 0));
+              if (detailsModalType === 'balance') val = Number(stats.aggregatedUsd.finalBalance || 0);
+              if (detailsModalType === 'netchange') val = Number(stats.aggregatedUsd.totalChange || 0);
+
               if (detailsModalType === 'fees') {
-                if (valBig.eq(0)) return '0.00 USD';
-                return valBig.gte(0) ? `-${maskVal(valBig.toString())} USD` : `+${maskVal(valBig.abs().toString())} USD`;
+                if (val === 0) return formatCurrency(0, 'fiat');
+                return `-${formatCurrency(Math.abs(val), 'fiat')}`;
               }
-              
-              return `${maskVal(valBig.toString())} USD`;
+
+              return formatCurrency(val, 'fiat');
             })()}
           </span>
         </div>

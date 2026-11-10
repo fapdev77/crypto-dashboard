@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowLeftRight, RefreshCw, Trash2, CheckCircle2, Loader2, Database } from 'lucide-react';
+import { ArrowLeftRight, RefreshCw, Trash2, CheckCircle2, Loader2 } from 'lucide-react';
 import { useApiKeysStore } from '../../store/apiKeysStore';
 import { useSyncCoordinatorStore } from '../../store/syncCoordinatorStore';
 import { UnifiedSyncManager } from '../../services/sync/UnifiedSyncManager';
@@ -12,8 +12,10 @@ import {
 } from '../../services/historyCache';
 import { AppTooltip } from '../ui/Tooltip';
 import { LogManager } from '../../services/LogManager';
+import { useTranslation } from 'react-i18next';
 
 export function TransactionLogsCacheCard() {
+  const { t } = useTranslation();
   const keys = useApiKeysStore(state => state.keys);
   const {
     isBybitTxSyncing,
@@ -77,7 +79,7 @@ export function TransactionLogsCacheCard() {
 
   const handleForceSync = async () => {
     if (!hasTxKeys) {
-      toast.error('No active Bybit, Bitget, or OKX API keys found', { id: 'tx-sync' });
+      toast.error(t('transactions.cache.noKeysToast', 'No active Bybit, Bitget, or OKX API keys found'), { id: 'tx-sync' });
       return;
     }
 
@@ -89,13 +91,20 @@ export function TransactionLogsCacheCard() {
       await loadCounts();
       setSynced(true);
       toast.success(
-        `Transactions synced (${result.total} records in ${result.elapsedSeconds}s)\nBybit: ${result.bybit} | Bitget: ${result.bitget} | OKX: ${result.okx}`,
+        t('transactions.cache.syncSuccessToast', {
+          total: result.total,
+          seconds: result.elapsedSeconds,
+          bybit: result.bybit,
+          bitget: result.bitget,
+          okx: result.okx,
+          defaultValue: `Transactions synced (${result.total} records in ${result.elapsedSeconds}s)\nBybit: ${result.bybit} | Bitget: ${result.bitget} | OKX: ${result.okx}`
+        }),
         { id: 'tx-sync', duration: 4000 }
       );
       setTimeout(() => setSynced(false), 3000);
     } catch (err: any) {
       LogManager.error('TransactionLogsCacheCard', 'Force sync failed:', err);
-      toast.error(`Transaction sync failed: ${err.message || 'Unknown error'}`, { id: 'tx-sync-err' });
+      toast.error(t('transactions.cache.syncErrorToast', { error: err.message || 'Unknown error', defaultValue: `Transaction sync failed: ${err.message || 'Unknown error'}` }), { id: 'tx-sync-err' });
     } finally {
       setIsSyncing(false);
     }
@@ -109,24 +118,24 @@ export function TransactionLogsCacheCard() {
       await UnifiedSyncManager.clearAndResyncTransactions(keys);
       await loadCounts();
       setCleared(true);
-      toast.success('Transaction logs cleared and re-synced from exchanges', { id: 'tx-clear', duration: 4000 });
+      toast.success(t('transactions.cache.clearSuccessToast', 'Transaction logs cleared and re-synced from exchanges'), { id: 'tx-clear', duration: 4000 });
       setTimeout(() => setCleared(false), 3000);
     } catch (err: any) {
       LogManager.error('TransactionLogsCacheCard', 'Clear cache failed:', err);
-      toast.error(`Failed to clear transaction cache: ${err.message || 'Unknown error'}`, { id: 'tx-clear-err' });
+      toast.error(t('transactions.cache.clearErrorToast', { error: err.message || 'Unknown error', defaultValue: `Failed to clear transaction cache: ${err.message || 'Unknown error'}` }), { id: 'tx-clear-err' });
     } finally {
       setIsClearing(false);
     }
   };
 
   const formatLastSync = (timestamp: number) => {
-    if (!timestamp || timestamp === 0) return 'Never';
+    if (!timestamp || timestamp === 0) return t('transactions.cache.never', 'Never');
     const diffSec = Math.floor((Date.now() - timestamp) / 1000);
-    if (diffSec < 60) return `${diffSec}s ago`;
+    if (diffSec < 60) return t('transactions.cache.agoSeconds', { count: diffSec, defaultValue: `${diffSec}s ago` });
     const diffMin = Math.floor(diffSec / 60);
-    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffMin < 60) return t('transactions.cache.agoMinutes', { count: diffMin, defaultValue: `${diffMin}m ago` });
     const diffHours = Math.floor(diffMin / 60);
-    return `${diffHours}h ago`;
+    return t('transactions.cache.agoHours', { count: diffHours, defaultValue: `${diffHours}h ago` });
   };
 
   return (
@@ -135,7 +144,7 @@ export function TransactionLogsCacheCard() {
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-base font-semibold text-white flex items-center gap-2">
           <ArrowLeftRight className="w-4 h-4 text-emerald-400" />
-          Transaction Logs Cache
+          {t('transactions.cache.title', 'Transaction Logs Cache')}
         </h3>
         <div className="flex items-center gap-2">
           <span 
@@ -145,7 +154,7 @@ export function TransactionLogsCacheCard() {
             DB v{DB_VERSION}
           </span>
           <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
-            <span className="text-[#8E9299] text-[10px]">Total Tx:</span>
+            <span className="text-[#8E9299] text-[10px]">{t('transactions.cache.totalTx', 'Total Tx:')}</span>
             <span className="text-emerald-400 font-mono text-xs font-medium">
               {dbCounts.total.toLocaleString()}
             </span>
@@ -153,26 +162,32 @@ export function TransactionLogsCacheCard() {
         </div>
       </div>
       <p className="text-[#8E9299] text-xs mb-4">
-        Granular cache & sync controls for Bybit, Bitget and OKX transaction logs
+        {t('transactions.cache.subtitle', 'Granular cache & sync controls for Bybit, Bitget and OKX transaction logs')}
       </p>
 
       <div className="flex flex-col gap-4 flex-1">
         {/* Exchange breakdown badges */}
         <div className="grid grid-cols-3 gap-2 bg-[#0c0d0e] border border-[#2a2b30]/60 p-3 rounded-lg">
           <div className="flex flex-col">
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold">Bybit Tx</span>
+            <span className="text-[10px] text-[#8E9299] uppercase font-semibold">
+              {t('transactions.cache.bybitTx', 'Bybit Tx')}
+            </span>
             <span className="text-sm font-mono font-medium text-white">
               {dbCounts.bybit.toLocaleString()}
             </span>
           </div>
           <div className="flex flex-col border-l border-[#2a2b30] pl-2.5">
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold">Bitget Tx</span>
+            <span className="text-[10px] text-[#8E9299] uppercase font-semibold">
+              {t('transactions.cache.bitgetTx', 'Bitget Tx')}
+            </span>
             <span className="text-sm font-mono font-medium text-white">
               {dbCounts.bitget.toLocaleString()}
             </span>
           </div>
           <div className="flex flex-col border-l border-[#2a2b30] pl-2.5">
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold">OKX Tx</span>
+            <span className="text-[10px] text-[#8E9299] uppercase font-semibold">
+              {t('transactions.cache.okxTx', 'OKX Tx')}
+            </span>
             <span className="text-sm font-mono font-medium text-white">
               {dbCounts.okx.toLocaleString()}
             </span>
@@ -181,7 +196,7 @@ export function TransactionLogsCacheCard() {
 
         {/* Sync Status info */}
         <div className="flex justify-between items-center text-xs text-[#8E9299]">
-          <span>Last Synchronized:</span>
+          <span>{t('transactions.cache.lastSync', 'Last Synchronized:')}</span>
           <span className="font-mono text-white/90">{formatLastSync(lastSyncTime)}</span>
         </div>
 
@@ -190,20 +205,20 @@ export function TransactionLogsCacheCard() {
         {/* Force Sync Transactions */}
         <div>
           <div className="mb-2">
-            <AppTooltip description="Performs parallel transaction log synchronization for all active Bybit, Bitget, and OKX connections without waiting for background interval.">
+            <AppTooltip description={t('transactions.cache.forceSyncTooltip', 'Performs parallel transaction log synchronization for all active Bybit, Bitget, and OKX connections without waiting for background interval.')}>
               <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">
-                Force Sync Transactions
+                {t('transactions.cache.forceSyncTitle', 'Force Sync Transactions')}
               </h4>
             </AppTooltip>
             <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-              Downloads the latest transaction histories across all 3 exchanges simultaneously.
+              {t('transactions.cache.forceSyncDesc', 'Downloads the latest transaction histories across all 3 exchanges simultaneously.')}
             </p>
           </div>
 
           <button
             onClick={handleForceSync}
             disabled={isGlobalSyncing || synced || isClearing || !hasTxKeys}
-            className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
           >
             {isGlobalSyncing ? (
               <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
@@ -212,7 +227,11 @@ export function TransactionLogsCacheCard() {
             ) : (
               <RefreshCw className="w-4 h-4 text-emerald-400" />
             )}
-            {isGlobalSyncing ? 'Syncing Transactions...' : synced ? 'Transactions Synced!' : 'Sync Transactions Now'}
+            {isGlobalSyncing
+              ? t('transactions.cache.forceSyncing', 'Syncing Transactions...')
+              : synced
+              ? t('transactions.cache.forceSynced', 'Transactions Synced!')
+              : t('transactions.cache.forceSyncBtn', 'Sync Transactions Now')}
           </button>
         </div>
 
@@ -221,20 +240,20 @@ export function TransactionLogsCacheCard() {
         {/* Clear Transactions Cache */}
         <div>
           <div className="mb-2">
-            <AppTooltip description="Wipes cached Bybit, Bitget, and OKX transaction logs and triggers a clean multi-month backfill download from exchange APIs.">
+            <AppTooltip description={t('transactions.cache.clearCacheTooltip', 'Wipes cached Bybit, Bitget, and OKX transaction logs and triggers a clean multi-month backfill download from exchange APIs.')}>
               <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">
-                Clear Transactions Cache
+                {t('transactions.cache.clearCacheTitle', 'Clear Transactions Cache')}
               </h4>
             </AppTooltip>
             <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-              Forces a full deep re-fetch of all transaction ledger entries from scratch.
+              {t('transactions.cache.clearCacheDesc', 'Forces a full deep re-fetch of all transaction ledger entries from scratch.')}
             </p>
           </div>
 
           <button
             onClick={handleClearCache}
             disabled={isClearing || cleared || isGlobalSyncing || !hasTxKeys}
-            className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
           >
             {isClearing ? (
               <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
@@ -243,7 +262,11 @@ export function TransactionLogsCacheCard() {
             ) : (
               <Trash2 className="w-4 h-4 text-red-400" />
             )}
-            {isClearing ? 'Clearing & Re-syncing...' : cleared ? 'Transactions Cleared!' : 'Clear Tx Cache Now'}
+            {isClearing
+              ? t('transactions.cache.clearing', 'Clearing & Re-syncing...')
+              : cleared
+              ? t('transactions.cache.cleared', 'Transactions Cleared!')
+              : t('transactions.cache.clearCacheBtn', 'Clear Tx Cache Now')}
           </button>
         </div>
       </div>

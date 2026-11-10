@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle, ChevronDown, ChevronUp, Copy, Check, RotateCcw, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
   onOpenSettings,
   onOpenRawDebug,
 }) => {
+  const { t } = useTranslation();
   const [showDetails, setShowDetails] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -24,7 +26,7 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
     if (!technicalDetails) return;
     navigator.clipboard.writeText(technicalDetails);
     setCopied(true);
-    toast.success('Error details copied to clipboard', { icon: '📋' });
+    toast.success(t('toasts.errorDetailsCopied', 'Error details copied to clipboard'), { icon: '📋' });
     setTimeout(() => setCopied(false), 2000);
   };
 
