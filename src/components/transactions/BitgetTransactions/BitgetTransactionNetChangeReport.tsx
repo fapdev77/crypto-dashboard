@@ -1,9 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { isStablecoin } from '../../../utils/formatters';
+import { resolveUsdRate } from '../../../utils/usdAggregation';
+import { useSettingsStore } from '../../../store/settingsStore';
 import Big from 'big.js';
 import { BitgetTransactionLogEntry } from '../../../types';
 import { BitgetTxStats } from '../../../hooks/useBitgetTransactions';
 import { getBitgetUniversalType } from '../../../utils/transactionTypeMapper';
+import { classifyTradeSide } from '../../../utils/tradeSide';
 
 interface BitgetTransactionNetChangeReportProps {
   filteredEntries: BitgetTransactionLogEntry[];
@@ -19,6 +23,7 @@ export function BitgetTransactionNetChangeReport({
   isPrivateMode = false,
 }: BitgetTransactionNetChangeReportProps) {
   const { t } = useTranslation();
+  const fiatRates = useSettingsStore(state => state.fiatRates);
   const [expandedReportCurrencies, setExpandedReportCurrencies] = useState<Record<string, boolean>>({});
 
   const currencyReports = useMemo(() => {
@@ -32,8 +37,6 @@ export function BitgetTransactionNetChangeReport({
       }
     });
     
-    const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD', 'BUSD'].includes(currency.toUpperCase());
-    
     return Object.entries(grouped).map(([cur, curEntries]) => {
       const sorted = [...curEntries].sort((a, b) => a.transactionTime - b.transactionTime);
       const earliestTx = sorted[0];
@@ -43,8 +46,9 @@ export function BitgetTransactionNetChangeReport({
       const latestTime = latestTx?.transactionTime || Date.now();
       const days = Math.max(1, Math.ceil((latestTime - earliestTime) / (1000 * 60 * 60 * 24)));
       
-      const stableMatch = isStable(cur);
-      const curStats = stableMatch ? stats.stable : (stats.perCurrency[cur] || {
+      // Every currency (stablecoins included) has its own bucket.
+      const stableMatch = isStablecoin(cur);
+      const curStats = stats.perCurrency[cur] || {
         totalFunding: '0',
         totalFees: '0',
         totalCashFlow: '0',
@@ -54,7 +58,7 @@ export function BitgetTransactionNetChangeReport({
         totalOutflow: '0',
         initialBalance: '0',
         percentageChange: 0
-      });
+      };
       
       const totalChange = curStats.totalChange;
       const finalBalance = curStats.finalBalance;
@@ -64,21 +68,17 @@ export function BitgetTransactionNetChangeReport({
       const ganhoPercentual = curStats.percentageChange;
       
       const changeBig = new Big(totalChange);
-      const rate = stableMatch ? 1 : (tokenRates[cur] || 0);
+      const rate = resolveUsdRate(cur, tokenRates, fiatRates) ?? 0;
       const ganhoAbsolutoUSD = changeBig.times(rate).toString();
       
       const tradeEntries = curEntries.filter(e => getBitgetUniversalType(e.type) === 'TRADE');
       const totalTrades = tradeEntries.length;
-      const buysCount = tradeEntries.filter(e => {
-        const side = (e.side || '').toLowerCase();
-        return side.includes('buy') || side.includes('long');
-      }).length;
-      const sellsCount = tradeEntries.filter(e => {
-        const side = (e.side || '').toLowerCase();
-        return side.includes('sell') || side.includes('short');
-      }).length;
-      const buysPct = totalTrades > 0 ? (buysCount / totalTrades) * 100 : 0;
-      const sellsPct = totalTrades > 0 ? (sellsCount / totalTrades) * 100 : 0;
+      // "Close Long" is a sale and "Close Short" is a purchase.
+      const buysCount = tradeEntries.filter(e => classifyTradeSide(e.side) === 'buy').length;
+      const sellsCount = tradeEntries.filter(e => classifyTradeSide(e.side) === 'sell').length;
+      const classifiedTrades = buysCount + sellsCount;
+      const buysPct = classifiedTrades > 0 ? (buysCount / classifiedTrades) * 100 : 0;
+      const sellsPct = classifiedTrades > 0 ? (sellsCount / classifiedTrades) * 100 : 0;
       const tradesPerDay = totalTrades / days;
       
       const tradesLiquido = tradeEntries

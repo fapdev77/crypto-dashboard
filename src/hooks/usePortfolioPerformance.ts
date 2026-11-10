@@ -11,6 +11,7 @@ import { getBybitTxLogCache, getBitgetTxLogCache, getOkxTxLogCache } from '../se
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../utils/transactionTypeMapper';
 import { fetchTokenUsdPrice } from './useTokenUsdPrice';
 import { getStrictCalendarStartTime, resolvePeriodDateRange } from '../utils/dateTimeHelper';
+import { classifyTradeSide } from '../utils/tradeSide';
 
 export interface PortfolioPerformanceFilters {
   exchange: string;       // 'All' | 'bybit' | 'bitget' | 'okx'
@@ -539,9 +540,10 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
         totalOutflow = totalOutflow.plus(new Big(Math.abs(valDenom)));
       } else if (e.universalType === 'TRADE') {
         totalTrades++;
-        const s = e.side.toLowerCase();
-        if (s.includes('buy') || s.includes('long')) buysCount++;
-        if (s.includes('sell') || s.includes('short')) sellsCount++;
+        // "Close Long" is a sale and "Close Short" is a purchase.
+        const direction = classifyTradeSide(e.side);
+        if (direction === 'buy') buysCount++;
+        if (direction === 'sell') sellsCount++;
 
         if (cashFlowDenom > 0) grossCashFlow = grossCashFlow.plus(new Big(cashFlowDenom));
         feesPaid = feesPaid.plus(new Big(feeDenom));

@@ -8,6 +8,10 @@ import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
+import { isStablecoin } from '../../../utils/formatters';
+import { resolveUsdRate } from '../../../utils/usdAggregation';
+import { classifyTradeSide } from '../../../utils/tradeSide';
+import { useSettingsStore } from '../../../store/settingsStore';
 
 interface ConsolidatedNetChangeReportProps {
   filteredByExchange: {
@@ -68,6 +72,7 @@ export function ConsolidatedNetChangeReport({
 }: ConsolidatedNetChangeReportProps) {
   const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
+  const fiatRates = useSettingsStore(state => state.fiatRates);
   // State for expanded exchange sections (default all open)
   const [expandedExchanges, setExpandedExchanges] = useState<Record<string, boolean>>({
     bybit: true,
@@ -77,8 +82,6 @@ export function ConsolidatedNetChangeReport({
 
   // State for expanded currency accordions inside each exchange: key is `${exchange}-${currency}`
   const [expandedCurrencies, setExpandedCurrencies] = useState<Record<string, boolean>>({});
-
-  const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD', 'BUSD'].includes(currency.toUpperCase());
 
   // Build report items for each exchange
   const exchangeGroups = useMemo<ExchangeGroupData[]>(() => {
@@ -112,8 +115,10 @@ export function ConsolidatedNetChangeReport({
         const latestTime = latestTx?.transactionTime || Date.now();
         const days = Math.max(1, Math.ceil((latestTime - earliestTime) / (1000 * 60 * 60 * 24)));
 
-        const stableMatch = isStable(cur);
-        const curStats = stableMatch ? stats.stable : (stats.perCurrency[cur] || {
+        // Every currency (stablecoins included) has its own bucket, so a USDT
+        // row shows USDT numbers and a USDC row shows USDC numbers.
+        const stableMatch = isStablecoin(cur);
+        const curStats = stats.perCurrency[cur] || {
           totalFunding: '0',
           totalFees: '0',
           totalCashFlow: '0',
@@ -123,7 +128,7 @@ export function ConsolidatedNetChangeReport({
           totalOutflow: '0',
           initialBalance: '0',
           percentageChange: 0,
-        });
+        };
 
         const totalChange = curStats.totalChange;
         const finalBalance = curStats.finalBalance;
@@ -133,24 +138,20 @@ export function ConsolidatedNetChangeReport({
         const ganhoPercentual = curStats.percentageChange;
 
         const changeBig = new Big(totalChange);
-        const rate = stableMatch ? 1 : (tokenRates[cur.toUpperCase()] || 0);
+        const rate = resolveUsdRate(cur, tokenRates, fiatRates) ?? 0;
         const ganhoAbsolutoUSD = changeBig.times(rate).toString();
 
         const tradeEntries = curEntries.filter(e => getUniversalTypeFn(e) === 'TRADE');
         const totalTrades = tradeEntries.length;
 
-        const buysCount = tradeEntries.filter(e => {
-          const side = getSideFn(e).toLowerCase();
-          return side.includes('buy') || side.includes('long');
-        }).length;
+        // Closing a long is a sale and closing a short is a purchase, so the
+        // classification depends on the position action, not on the word "long".
+        const buysCount = tradeEntries.filter(e => classifyTradeSide(getSideFn(e)) === 'buy').length;
+        const sellsCount = tradeEntries.filter(e => classifyTradeSide(getSideFn(e)) === 'sell').length;
 
-        const sellsCount = tradeEntries.filter(e => {
-          const side = getSideFn(e).toLowerCase();
-          return side.includes('sell') || side.includes('short');
-        }).length;
-
-        const buysPct = totalTrades > 0 ? (buysCount / totalTrades) * 100 : 0;
-        const sellsPct = totalTrades > 0 ? (sellsCount / totalTrades) * 100 : 0;
+        const classifiedTrades = buysCount + sellsCount;
+        const buysPct = classifiedTrades > 0 ? (buysCount / classifiedTrades) * 100 : 0;
+        const sellsPct = classifiedTrades > 0 ? (sellsCount / classifiedTrades) * 100 : 0;
         const tradesPerDay = totalTrades / days;
 
         const tradesLiquido = tradeEntries
@@ -235,7 +236,7 @@ export function ConsolidatedNetChangeReport({
     if (okxGroup) list.push(okxGroup);
 
     return list;
-  }, [filteredByExchange, exchangeStats, tokenRates]);
+  }, [filteredByExchange, exchangeStats, tokenRates, fiatRates]);
 
   const handleExpandAll = () => {
     const allExchs: Record<string, boolean> = {};
@@ -523,8 +524,8 @@ export function ConsolidatedNetChangeReport({
 
                                   <div className="flex justify-between py-1.5 border-b border-[#2a2b30]/30">
                                     <span className="text-[#8E9299]">{t('transactions.report.feesPaid', 'Trading Fees Paid')}</span>
-                                    <span className={`font-medium ${feesBig.gt(0) ? 'text-[#FF4444]' : 'text-gray-300'}`}>
-                                      {isPrivateMode ? '****' : `${feesBig.gt(0) ? '-' : ''}${feesBig.abs().toFixed(6)} ${report.currency}`}
+                                    <span className={`font-medium ${feesBig.gt(0) ? 'text-[#FF4444]' : feesBig.lt(0) ? 'text-[#00C853]' : 'text-gray-300'}`}>
+                                      {isPrivateMode ? '****' : `${feesBig.gt(0) ? '-' : feesBig.lt(0) ? '+' : ''}${feesBig.abs().toFixed(6)} ${report.currency}`}
                                     </span>
                                   </div>
 

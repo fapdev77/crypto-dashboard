@@ -8,6 +8,7 @@ import { OKX_TX_TYPES, okxTypeColorMap } from './OkxTransactionFilters';
 import { getOkxUniversalType, UNIVERSAL_BADGE_STYLE } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
+import { isUsdPeggedStablecoin } from '../../../utils/usdAggregation';
 
 export type OkxDetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -32,6 +33,14 @@ export function OkxTransactionDetailsModal({
 }: OkxTransactionDetailsModalProps) {
   const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
+  // USD-pegged stablecoins are already summarized in the stablecoin segment.
+  const otherCurrencies = Object.entries(stats.perCurrency).filter(([ccy]) => !isUsdPeggedStablecoin(ccy));
+  // Fees follow the canonical convention: positive = paid, negative = rebate.
+  const formatFee = (value: string | number) => {
+    const big = new Big(value || '0');
+    if (big.eq(0)) return maskVal(0);
+    return `${big.gt(0) ? '-' : '+'}${maskVal(big.abs().toString())}`;
+  };
   if (!detailsModalType) return null;
 
   return (
@@ -90,11 +99,11 @@ export function OkxTransactionDetailsModal({
                   detailsModalType === 'funding'
                     ? (new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]')
                     : detailsModalType === 'fees'
-                    ? (new Big(stats.aggregatedUsd.totalFees).lt(0) ? 'text-[#FF4444]' : new Big(stats.aggregatedUsd.totalFees).gt(0) ? 'text-[#00C853]' : 'text-white')
+                    ? (new Big(stats.aggregatedUsd.totalFees).gt(0) ? 'text-[#FF4444]' : new Big(stats.aggregatedUsd.totalFees).lt(0) ? 'text-[#00C853]' : 'text-white')
                     : 'text-white'
                 }`}>
                   {detailsModalType === 'funding' && maskVal(stats.aggregatedUsd.totalFunding)}
-                  {detailsModalType === 'fees' && maskVal(stats.aggregatedUsd.totalFees)}
+                  {detailsModalType === 'fees' && formatFee(stats.aggregatedUsd.totalFees)}
                   {detailsModalType === 'balance' && maskVal(stats.aggregatedUsd.finalBalance)}
                 </span>
               </div>
@@ -108,22 +117,22 @@ export function OkxTransactionDetailsModal({
                     detailsModalType === 'funding'
                       ? (new Big(stats.stable.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]')
                       : detailsModalType === 'fees'
-                      ? (new Big(stats.stable.totalFees).lt(0) ? 'text-[#FF4444]' : new Big(stats.stable.totalFees).gt(0) ? 'text-[#00C853]' : 'text-white')
+                      ? (new Big(stats.stable.totalFees).gt(0) ? 'text-[#FF4444]' : new Big(stats.stable.totalFees).lt(0) ? 'text-[#00C853]' : 'text-white')
                       : 'text-white'
                   }`}>
                     {detailsModalType === 'funding' && maskVal(stats.stable.totalFunding)}
-                    {detailsModalType === 'fees' && maskVal(stats.stable.totalFees)}
+                    {detailsModalType === 'fees' && formatFee(stats.stable.totalFees)}
                     {detailsModalType === 'balance' && maskVal(stats.stable.finalBalance)}
                   </span>
                 </div>
               </div>
 
               {/* Non-stable per-currency breakdown */}
-              {Object.keys(stats.perCurrency).length > 0 && (
+              {otherCurrencies.length > 0 && (
                 <div className="flex flex-col gap-1 text-xs">
                   <span className="text-[#8E9299] uppercase tracking-wider font-semibold text-[10px]">Crypto Currencies</span>
                   <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                    {Object.entries(stats.perCurrency).map(([ccy, vals]) => {
+                    {otherCurrencies.map(([ccy, vals]) => {
                       const rate = tokenRates[ccy] || 0;
                       let coinVal = '0';
                       if (detailsModalType === 'funding') coinVal = vals.totalFunding;
@@ -135,7 +144,7 @@ export function OkxTransactionDetailsModal({
                       const valColor = detailsModalType === 'funding'
                         ? (coinBig.gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]')
                         : detailsModalType === 'fees'
-                        ? (coinBig.lt(0) ? 'text-[#FF4444]' : coinBig.gt(0) ? 'text-[#00C853]' : 'text-white')
+                        ? (coinBig.gt(0) ? 'text-[#FF4444]' : coinBig.lt(0) ? 'text-[#00C853]' : 'text-white')
                         : 'text-white';
 
                       return (
@@ -143,7 +152,7 @@ export function OkxTransactionDetailsModal({
                           <span className="text-white font-medium">{ccy}</span>
                           <div className="text-right">
                             <span className={`font-mono block ${valColor}`}>
-                              {isPrivateMode ? '****' : `${Number(coinVal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} ${ccy}`}
+                              {isPrivateMode ? '****' : `${detailsModalType === 'fees' && coinBig.gt(0) ? '-' : detailsModalType === 'fees' && coinBig.lt(0) ? '+' : ''}${Number(coinBig.abs()).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} ${ccy}`}
                             </span>
                             {rate > 0 && (
                               <span className={`text-[10px] font-mono block ${valColor} opacity-80`}>
@@ -171,13 +180,13 @@ export function OkxTransactionDetailsModal({
 
               let val = 0;
               if (detailsModalType === 'funding') val = Number(stats.aggregatedUsd.totalFunding || 0);
-              if (detailsModalType === 'fees') val = -Math.abs(Number(stats.aggregatedUsd.totalFees || 0));
               if (detailsModalType === 'balance') val = Number(stats.aggregatedUsd.finalBalance || 0);
               if (detailsModalType === 'netchange') val = Number(stats.aggregatedUsd.totalChange || 0);
               
               if (detailsModalType === 'fees') {
-                if (val === 0) return formatCurrency(0, 'fiat');
-                return `-${formatCurrency(Math.abs(val), 'fiat')}`;
+                const fees = Number(stats.aggregatedUsd.totalFees || 0);
+                if (fees === 0) return formatCurrency(0, 'fiat');
+                return `${fees > 0 ? '-' : '+'}${formatCurrency(Math.abs(fees), 'fiat')}`;
               }
 
               return formatCurrency(val, 'fiat');

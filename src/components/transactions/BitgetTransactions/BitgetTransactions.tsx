@@ -18,6 +18,7 @@ import { LogManager } from '../../../services/LogManager';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { UNIVERSAL_BADGE_STYLE, UNIVERSAL_HEX_COLOR_MAP, UniversalTxType } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
+import { MissingRatesNotice, missingRatesNote } from '../MissingRatesNotice';
 
 export function BitgetTransactions() {
   const { t } = useTranslation();
@@ -83,9 +84,11 @@ export function BitgetTransactions() {
       e.orderId || '',
     ]);
 
+    const note = missingRatesNote(t, stats.missingRates);
     const config: ExportConfig = {
       title: t('transactions.bitget.reportTitle', 'Bitget Transactions Report'),
       filename: `Bitget_Transactions_${Date.now()}`,
+      notes: note ? [note] : undefined,
       headers,
       rows,
     };
@@ -231,27 +234,23 @@ export function BitgetTransactions() {
               </AppTooltip>
             </div>
             <span className={`text-xl font-bold ${
-              new Big(stats.aggregatedUsd.totalFees).lt(0) 
-                ? 'text-[#FF4444]' 
-                : new Big(stats.aggregatedUsd.totalFees).gt(0) 
-                ? 'text-[#00C853]' 
+              new Big(stats.aggregatedUsd.totalFees).gt(0)
+                ? 'text-[#FF4444]'
+                : new Big(stats.aggregatedUsd.totalFees).lt(0)
+                ? 'text-[#00C853]'
                 : 'text-white'
             }`}>
               {(() => {
                 const feeBig = new Big(stats.aggregatedUsd.totalFees);
                 if (feeBig.eq(0)) return `${maskVal(0)} USD`;
-                if (feeBig.lt(0)) {
-                  // Negative value (fee paid) - maskVal outputs -$X.XX
-                  return `${maskVal(feeBig.toString())} USD`;
-                }
-                // Positive value (fee rebate received)
-                return `+${maskVal(feeBig.toString())} USD`;
+                // Canonical convention: positive = fee paid, negative = rebate received
+                return `${feeBig.gt(0) ? '-' : '+'}${maskVal(feeBig.abs().toString())} USD`;
               })()}
             </span>
             
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[10px] text-[#8E9299]">
-                {new Big(stats.aggregatedUsd.totalFees).gt(0) ? 'Trading fee rebates' : t('transactions.common.feesPaid', 'Trading fees paid')}
+                {new Big(stats.aggregatedUsd.totalFees).lt(0) ? 'Trading fee rebates' : t('transactions.common.feesPaid', 'Trading fees paid')}
               </span>
               {isCalculatingUsd && (
                 <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
@@ -289,6 +288,11 @@ export function BitgetTransactions() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Currencies without a USD price are excluded from the totals above */}
+      {stats.missingRates.length > 0 && (
+        <MissingRatesNotice currencies={stats.missingRates} />
       )}
 
       {/* Error */}

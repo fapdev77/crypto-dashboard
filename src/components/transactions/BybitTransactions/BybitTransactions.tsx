@@ -18,6 +18,7 @@ import { LogManager } from '../../../services/LogManager';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { UNIVERSAL_BADGE_STYLE, UNIVERSAL_HEX_COLOR_MAP, UniversalTxType } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
+import { MissingRatesNotice, missingRatesNote } from '../MissingRatesNotice';
 
 
 export function BybitTransactions() {
@@ -92,9 +93,11 @@ export function BybitTransactions() {
       e.bonusChange,
     ]);
 
+    const note = missingRatesNote(t, stats.missingRates);
     const config: ExportConfig = {
       title: t('transactions.bybit.reportTitle', 'Bybit Transactions Report'),
       filename: `Bybit_Transactions_${Date.now()}`,
+      notes: note ? [note] : undefined,
       headers,
       rows,
     };
@@ -289,6 +292,11 @@ export function BybitTransactions() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Currencies without a USD price are excluded from the totals above */}
+      {stats.missingRates.length > 0 && (
+        <MissingRatesNotice currencies={stats.missingRates} />
       )}
 
       {/* Error */}

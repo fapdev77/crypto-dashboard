@@ -862,6 +862,8 @@
       "fundingPaid": "pagado",
       "calculatingUsd": "Calculando USD...",
       "calculatingUsdTooltip": "Obteniendo precios en tiempo real en USD para activos no estables...",
+      "missingRatesTitle": "Totales en USD incompletos",
+      "missingRatesText": "Sin cotización en USD para {{currencies}}: estos activos quedan fuera de los totales.",
       "totalFees": "Comisiones Totales",
       "totalFeesTooltip": "Suma de comisiones de trading. Haga clic aquí para ver detalles.",
       "feesPaid": "Comisiones de trading pagadas",

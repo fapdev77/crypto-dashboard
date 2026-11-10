@@ -10,12 +10,17 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { ConsolidatedTransactionFilters } from './ConsolidatedTransactionFilters';
 import { ConsolidatedNetChangeReport } from './ConsolidatedNetChangeReport';
 import { ConsolidatedTransactionDetailsModal, DetailsModalType } from './ConsolidatedTransactionDetailsModal';
+import { MissingRatesNotice, missingRatesNote } from '../MissingRatesNotice';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { LogManager } from '../../../services/LogManager';
 import { TabLoadingSkeleton } from '../../ui/TabLoadingSkeleton';
 import { UNIVERSAL_BADGE_STYLE, UNIVERSAL_HEX_COLOR_MAP, UniversalTxType } from '../../../utils/transactionTypeMapper';
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../../../store/settingsStore';
+import { getConsolidatedMetric, feeDisplaySign } from '../../../utils/consolidatedTotals';
+import { resolveUsdRate } from '../../../utils/usdAggregation';
+import { classifyTradeSide } from '../../../utils/tradeSide';
 
 export function ConsolidatedTransactions() {
   const { t } = useTranslation();
@@ -39,6 +44,7 @@ export function ConsolidatedTransactions() {
 
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
+  const fiatRates = useSettingsStore(state => state.fiatRates);
 
   // Collect all unique currencies across all loaded transactions
   const availableCurrencies = useMemo(() => {
@@ -81,8 +87,6 @@ export function ConsolidatedTransactions() {
 
     const rows: Array<Array<string | number>> = [];
 
-    const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD', 'BUSD'].includes(currency.toUpperCase());
-
     const appendExchangeRows = (
       exchangeName: string,
       entries: any[],
@@ -104,8 +108,7 @@ export function ConsolidatedTransactions() {
         const latestTime = sorted[sorted.length - 1]?.transactionTime || Date.now();
         const days = Math.max(1, Math.ceil((latestTime - earliestTime) / (1000 * 60 * 60 * 24)));
 
-        const stableMatch = isStable(cur);
-        const curStats = stableMatch ? statsBlock.stable : (statsBlock.perCurrency[cur] || {
+        const curStats = statsBlock.perCurrency[cur] || {
           totalFunding: '0',
           totalFees: '0',
           totalCashFlow: '0',
@@ -115,21 +118,17 @@ export function ConsolidatedTransactions() {
           totalOutflow: '0',
           initialBalance: '0',
           percentageChange: 0,
-        });
+        };
 
-        const rate = stableMatch ? 1 : (tokenRates[cur.toUpperCase()] || 0);
+        // Stablecoins are converted with the same rate resolution as the UI:
+        // USD-pegged = 1, fiat codes via the fiat table, the rest via token prices.
+        const rate = resolveUsdRate(cur, tokenRates, fiatRates) ?? 0;
         const ganhoAbsolutoUSD = new Big(curStats.totalChange).times(rate).toFixed(2);
 
         const tradeEntries = curEntries.filter(e => getUniversalTypeFn(e) === 'TRADE');
         const totalTrades = tradeEntries.length;
-        const buysCount = tradeEntries.filter(e => {
-          const side = getSideFn(e).toLowerCase();
-          return side.includes('buy') || side.includes('long');
-        }).length;
-        const sellsCount = tradeEntries.filter(e => {
-          const side = getSideFn(e).toLowerCase();
-          return side.includes('sell') || side.includes('short');
-        }).length;
+        const buysCount = tradeEntries.filter(e => classifyTradeSide(getSideFn(e)) === 'buy').length;
+        const sellsCount = tradeEntries.filter(e => classifyTradeSide(getSideFn(e)) === 'sell').length;
 
         const tradesLiquido = tradeEntries
           .reduce((sum, e) => sum.plus(new Big(e.change || e.cashFlow || '0')), new Big(0))
@@ -182,9 +181,11 @@ export function ConsolidatedTransactions() {
       (e) => `${e.side || ''} ${e.transSubType || e.subType || ''}`
     );
 
+    const note = missingRatesNote(t, stats.missingRates);
     const config: ExportConfig = {
       title: t('transactions.consolidated.reportTitle', 'Consolidated Transactions Report'),
       filename: `Consolidated_Net_Change_${Date.now()}`,
+      notes: note ? [note] : undefined,
       headers,
       rows,
     };
@@ -396,12 +397,12 @@ export function ConsolidatedTransactions() {
                 </span>
               </AppTooltip>
             </div>
-            <span className="text-xl font-bold font-mono text-[#FF4444]">
+            <span className={`text-xl font-bold font-mono ${new Big(getConsolidatedMetric(stats, 'fees').grandTotal).lt(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
               {(() => {
                 if (isPrivateMode) return '****';
-                const feeBig = new Big(stats.aggregatedUsd.totalFees);
-                if (feeBig.abs().eq(0)) return maskVal(feeBig.toFixed(2));
-                return `-${maskVal(feeBig.abs().toString())}`;
+                const feeBig = new Big(getConsolidatedMetric(stats, 'fees').grandTotal);
+                if (feeBig.eq(0)) return maskVal(0);
+                return `${feeDisplaySign(feeBig)}${maskVal(feeBig.abs().toString())}`;
               })()}
             </span>
 
@@ -458,6 +459,11 @@ export function ConsolidatedTransactions() {
         </div>
       )}
 
+      {/* Currencies without a USD price are excluded from the totals above */}
+      {stats.missingRates.length > 0 && (
+        <MissingRatesNotice currencies={stats.missingRates} />
+      )}
+
       {/* Error Notice */}
       {error && (
         <div className="p-4 bg-red-900/30 border border-red-800 text-red-200 rounded-lg text-sm">
@@ -478,8 +484,6 @@ export function ConsolidatedTransactions() {
         detailsModalType={detailsModalType}
         setDetailsModalType={setDetailsModalType}
         stats={stats}
-        tokenRates={tokenRates}
-        maskVal={maskVal}
         isPrivateMode={isPrivateMode}
       />
     </div>

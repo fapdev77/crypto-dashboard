@@ -8,6 +8,7 @@ import { TX_TYPES, typeColorMap } from './BybitTransactionFilters';
 import { getBybitUniversalType, UNIVERSAL_BADGE_STYLE } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
+import { isUsdPeggedStablecoin } from '../../../utils/usdAggregation';
 
 export type DetailsModalType = 'funding' | 'fees' | 'balance' | 'tx' | 'netchange' | null;
 
@@ -32,6 +33,8 @@ export function BybitTransactionDetailsModal({
 }: BybitTransactionDetailsModalProps) {
   const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
+  // USD-pegged stablecoins are already summarized in the stablecoin segment.
+  const otherCurrencies = Object.entries(stats.perCurrency).filter(([ccy]) => !isUsdPeggedStablecoin(ccy));
   if (!detailsModalType) return null;
 
   return (
@@ -112,11 +115,11 @@ export function BybitTransactionDetailsModal({
               })()}
 
               {/* Per-currency segment */}
-              {Object.entries(stats.perCurrency).length === 0 && new Big(stats.stable[detailsModalType === 'funding' ? 'totalFunding' : detailsModalType === 'fees' ? 'totalFees' : 'finalBalance' as any]).eq(0) && (
+              {otherCurrencies.length === 0 && new Big(stats.stable[detailsModalType === 'funding' ? 'totalFunding' : detailsModalType === 'fees' ? 'totalFees' : 'finalBalance' as any]).eq(0) && (
                 <div className="text-[#8E9299] text-sm text-center py-4">{t('transactions.common.noDataAvailable', 'No data available')}</div>
               )}
               
-              {Object.entries(stats.perCurrency).map(([cur, vals]) => {
+              {otherCurrencies.map(([cur, vals]) => {
                 let val = '0';
                 if (detailsModalType === 'funding') val = vals.totalFunding;
                 if (detailsModalType === 'fees') val = vals.totalFees;
@@ -153,13 +156,13 @@ export function BybitTransactionDetailsModal({
 
               let val = 0;
               if (detailsModalType === 'funding') val = Number(stats.aggregatedUsd.totalFunding || 0);
-              if (detailsModalType === 'fees') val = -Math.abs(Number(stats.aggregatedUsd.totalFees || 0));
               if (detailsModalType === 'balance') val = Number(stats.aggregatedUsd.finalBalance || 0);
               if (detailsModalType === 'netchange') val = Number(stats.aggregatedUsd.totalChange || 0);
 
               if (detailsModalType === 'fees') {
-                if (val === 0) return formatCurrency(0, 'fiat');
-                return `-${formatCurrency(Math.abs(val), 'fiat')}`;
+                const fees = Number(stats.aggregatedUsd.totalFees || 0);
+                if (fees === 0) return formatCurrency(0, 'fiat');
+                return `${fees > 0 ? '-' : '+'}${formatCurrency(Math.abs(fees), 'fiat')}`;
               }
 
               return formatCurrency(val, 'fiat');

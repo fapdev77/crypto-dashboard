@@ -14,6 +14,7 @@ import { getUniversalBadge, getOkxUniversalType } from '../../../utils/transacti
 import { useTranslation } from 'react-i18next';
 import { extractBaseCoin } from '../../../utils/unifiers';
 import { calculateOkxTradeDetails } from '../../../utils/okxUtils';
+import { classifyTradeSide } from '../../../utils/tradeSide';
 
 interface Props {
   entry: OkxTransactionLogEntry;
@@ -36,10 +37,14 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
   const { dateStr, timeStr } = formatDateTime(entry.transactionTime);
 
-  const sideLower = (entry.side || '').toLowerCase();
-  const isBuy = sideLower.includes('buy') || sideLower.includes('long') || sideLower.includes('in');
-  const isSell = sideLower.includes('sell') || sideLower.includes('short') || sideLower.includes('out');
-  const sideColor = isBuy ? 'text-[#00C853]' : isSell ? 'text-[#FF4444]' : 'text-[#8E9299]';
+  // "Close Long" is a sale and "Close Short" a purchase, so colour follows the cash flow.
+  const sideDirection = classifyTradeSide(entry.side);
+  const sideColor =
+    sideDirection === 'buy'
+      ? 'text-[#00C853]'
+      : sideDirection === 'sell'
+        ? 'text-[#FF4444]'
+        : 'text-[#8E9299]';
 
   const fundingNum = new Big(entry.funding || '0');
   const feeNum = new Big(entry.fee || '0');

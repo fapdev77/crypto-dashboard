@@ -3,6 +3,10 @@ import Big from 'big.js';
 import { BybitTransactionLogEntry } from '../../../types';
 import { TxStats } from '../../../hooks/useBybitTransactions';
 import { useTranslation } from 'react-i18next';
+import { isStablecoin } from '../../../utils/formatters';
+import { resolveUsdRate } from '../../../utils/usdAggregation';
+import { classifyTradeSide } from '../../../utils/tradeSide';
+import { useSettingsStore } from '../../../store/settingsStore';
 
 interface BybitTransactionNetChangeReportProps {
   filteredEntries: BybitTransactionLogEntry[];
@@ -18,6 +22,7 @@ export function BybitTransactionNetChangeReport({
   isPrivateMode = false,
 }: BybitTransactionNetChangeReportProps) {
   const { t } = useTranslation();
+  const fiatRates = useSettingsStore(state => state.fiatRates);
   const [expandedReportCurrencies, setExpandedReportCurrencies] = useState<Record<string, boolean>>({});
 
   const currencyReports = useMemo(() => {
@@ -31,8 +36,6 @@ export function BybitTransactionNetChangeReport({
       }
     });
     
-    const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD'].includes(currency.toUpperCase());
-    
     return Object.entries(grouped).map(([cur, curEntries]) => {
       const sorted = [...curEntries].sort((a, b) => a.transactionTime - b.transactionTime);
       const earliestTx = sorted[0];
@@ -42,8 +45,9 @@ export function BybitTransactionNetChangeReport({
       const latestTime = latestTx?.transactionTime || Date.now();
       const days = Math.max(1, Math.ceil((latestTime - earliestTime) / (1000 * 60 * 60 * 24)));
       
-      const stableMatch = isStable(cur);
-      const curStats = stableMatch ? stats.stable : (stats.perCurrency[cur] || {
+      // Every currency (stablecoins included) has its own bucket.
+      const stableMatch = isStablecoin(cur);
+      const curStats = stats.perCurrency[cur] || {
         totalFunding: '0',
         totalFees: '0',
         totalCashFlow: '0',
@@ -53,7 +57,7 @@ export function BybitTransactionNetChangeReport({
         totalOutflow: '0',
         initialBalance: '0',
         percentageChange: 0
-      });
+      };
       
       const totalChange = curStats.totalChange;
       const finalBalance = curStats.finalBalance;
@@ -64,14 +68,18 @@ export function BybitTransactionNetChangeReport({
       
       const changeBig = new Big(totalChange);
       
-      const rate = stableMatch ? 1 : (tokenRates[cur] || 0);
+      const rate = resolveUsdRate(cur, tokenRates, fiatRates) ?? 0;
       const ganhoAbsolutoUSD = changeBig.times(rate).toString();
       
-      const totalTrades = curEntries.filter(e => e.type === 'TRADE').length;
-      const buysCount = curEntries.filter(e => e.type === 'TRADE' && e.side === 'Buy').length;
-      const sellsCount = curEntries.filter(e => e.type === 'TRADE' && e.side === 'Sell').length;
-      const buysPct = totalTrades > 0 ? (buysCount / totalTrades) * 100 : 0;
-      const sellsPct = totalTrades > 0 ? (sellsCount / totalTrades) * 100 : 0;
+      const tradeEntries = curEntries.filter(e => e.type === 'TRADE');
+      const totalTrades = tradeEntries.length;
+      // Bybit labels executions Buy/Sell; classifyTradeSide keeps this aligned with
+      // the other venues (Close Long = sell, Open Short = sell).
+      const buysCount = tradeEntries.filter(e => classifyTradeSide(e.side) === 'buy').length;
+      const sellsCount = tradeEntries.filter(e => classifyTradeSide(e.side) === 'sell').length;
+      const classifiedTrades = buysCount + sellsCount;
+      const buysPct = classifiedTrades > 0 ? (buysCount / classifiedTrades) * 100 : 0;
+      const sellsPct = classifiedTrades > 0 ? (sellsCount / classifiedTrades) * 100 : 0;
       const tradesPerDay = totalTrades / days;
       
       const tradesLiquido = curEntries

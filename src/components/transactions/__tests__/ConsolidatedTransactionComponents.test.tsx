@@ -29,7 +29,8 @@ const sampleBybitEntry: BybitTransactionLogEntry = {
   currency: 'USDT',
   tradePrice: '42000',
   funding: '1.5',
-  fee: '-5.2',
+  // Bybit reports fees as positive costs
+  fee: '5.2',
   cashFlow: '100',
   change: '96.3',
   cashBalance: '5000',
@@ -53,7 +54,8 @@ const sampleBitgetEntry: BitgetTransactionLogEntry = {
   transactionTime: Date.UTC(2024, 0, 16, 12, 0, 0),
   type: 'ORDER_DEALT_IN',
   currency: 'USDT',
-  fee: '2.1',
+  // Bitget reports fees as negative costs
+  fee: '-2.1',
   cashFlow: '50',
   change: '47.9',
   cashBalance: '3500',
@@ -95,6 +97,7 @@ const sampleExchangeStats = {
       percentageChange: 1.96,
     },
     perCurrency: {},
+    missingRates: [],
     aggregatedUsd: {
       totalFunding: '1.5',
       totalFees: '5.2',
@@ -122,6 +125,7 @@ const sampleExchangeStats = {
       percentageChange: 1.38,
     },
     perCurrency: {},
+    missingRates: [],
     aggregatedUsd: {
       totalFunding: '0',
       totalFees: '2.1',
@@ -149,6 +153,7 @@ const sampleExchangeStats = {
       percentageChange: 1.89,
     },
     perCurrency: {},
+    missingRates: [],
     aggregatedUsd: {
       totalFunding: '0',
       totalFees: '1.8',
@@ -178,6 +183,7 @@ const consolidatedStats: ConsolidatedStats = {
     percentageChange: 1.78,
   },
   perCurrency: {},
+  missingRates: [],
   aggregatedUsd: {
     totalFunding: '1.5',
     totalFees: '9.1',
@@ -309,8 +315,6 @@ describe('ConsolidatedTransactionComponents', () => {
         detailsModalType="tx"
         setDetailsModalType={setModalMock}
         stats={consolidatedStats}
-        tokenRates={{ USDT: 1 }}
-        maskVal={(v) => `$${v}`}
         isPrivateMode={false}
       />
     );
@@ -325,8 +329,6 @@ describe('ConsolidatedTransactionComponents', () => {
         detailsModalType="funding"
         setDetailsModalType={setModalMock}
         stats={consolidatedStats}
-        tokenRates={{ USDT: 1 }}
-        maskVal={(v) => `$${v}`}
         isPrivateMode={false}
       />
     );

@@ -12,6 +12,7 @@ import { BITGET_TX_TYPES, bitgetTypeColorMap } from './BitgetTransactionFilters'
 import { formatDateTime } from '../../../utils/formatters';
 import { getUniversalBadge, formatBitgetType } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
+import { classifyTradeSide } from '../../../utils/tradeSide';
 
 interface Props {
   entry: BitgetTransactionLogEntry;
@@ -32,30 +33,31 @@ export function BitgetTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
   const { dateStr, timeStr } = formatDateTime(entry.transactionTime);
 
-  const getSideBadgeInfo = () => {
+  const getSideLabel = () => {
     const s = (entry.side || '').toLowerCase().trim();
-    if (s === 'open long' || s === 'open_long') {
-      return { label: 'Open Long', color: 'text-[#00C853]' };
-    }
+    if (s === 'open long' || s === 'open_long') return 'Open Long';
     if (s === 'close long' || s === 'close_long' || s === 'reduce long' || s.includes('close long') || s.includes('reduce long')) {
-      return { label: 'Close Long', color: 'text-[#FFB74D]' };
+      return 'Close Long';
     }
-    if (s === 'open short' || s === 'open_short') {
-      return { label: 'Open Short', color: 'text-[#FF4444]' };
-    }
+    if (s === 'open short' || s === 'open_short') return 'Open Short';
     if (s === 'close short' || s === 'close_short' || s === 'reduce short' || s.includes('close short') || s.includes('reduce short')) {
-      return { label: 'Close Short', color: 'text-[#26C6DA]' };
+      return 'Close Short';
     }
-    if (s === 'buy' || s.includes('buy') || s.includes('in')) {
-      return { label: entry.side || 'Buy', color: 'text-[#00C853]' };
-    }
-    if (s === 'sell' || s.includes('sell') || s.includes('out')) {
-      return { label: entry.side || 'Sell', color: 'text-[#FF4444]' };
-    }
-    return { label: entry.side === 'None' || !entry.side ? '-' : entry.side, color: 'text-[#8E9299]' };
+    if (s === 'none' || !entry.side) return '-';
+    return entry.side;
   };
 
-  const sideInfo = getSideBadgeInfo();
+  // Colour follows the cash-flow direction, not the position action: "Close Long" is a sale.
+  const sideDirection = classifyTradeSide(entry.side);
+  const sideInfo = {
+    label: getSideLabel(),
+    color:
+      sideDirection === 'buy'
+        ? 'text-[#00C853]'
+        : sideDirection === 'sell'
+          ? 'text-[#FF4444]'
+          : 'text-[#8E9299]',
+  };
 
   const fundingNum = new Big(entry.funding || '0');
   const feeNum = new Big(entry.fee || '0');

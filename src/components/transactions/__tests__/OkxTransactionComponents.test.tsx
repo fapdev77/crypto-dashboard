@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { OkxTransactionRow } from '../OkxTransactions/OkxTransactionRow';
@@ -117,6 +118,19 @@ describe('OKX transaction components (components/transactions/OkxTransactions)',
       expect(screen.getByText('Currency & Symbol')).toBeDefined();
       expect(screen.getByText('Type & Category')).toBeDefined();
       expect(screen.getAllByText('USDT').length).toBeGreaterThan(0);
+    });
+
+    it('colours the side by cash flow: Close Long is a sale, Close Short a purchase', () => {
+      const { unmount } = renderTransactionUi(
+        <OkxTransactionRow entry={{ ...entry, side: 'Close Long' }} isExpanded={false} onToggle={() => {}} />
+      );
+      expect(screen.getByText('Close Long')).toHaveClass('text-[#FF4444]');
+      unmount();
+
+      renderTransactionUi(
+        <OkxTransactionRow entry={{ ...entry, side: 'Close Short' }} isExpanded={false} onToggle={() => {}} />
+      );
+      expect(screen.getByText('Close Short')).toHaveClass('text-[#00C853]');
     });
 
     it('calls onToggle when the row is clicked', () => {

@@ -862,6 +862,8 @@
       "fundingPaid": "paid",
       "calculatingUsd": "Calculating USD...",
       "calculatingUsdTooltip": "Fetching real-time USD prices for non-stable assets...",
+      "missingRatesTitle": "Incomplete USD totals",
+      "missingRatesText": "No USD price found for {{currencies}} — these assets are excluded from the totals.",
       "totalFees": "Total Fees",
       "totalFeesTooltip": "Sum of trading fees. Click here for details.",
       "feesPaid": "Trading fees paid",

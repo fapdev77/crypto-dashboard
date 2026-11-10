@@ -3,6 +3,7 @@ import Big from 'big.js';
 import { X } from 'lucide-react';
 import { ConsolidatedStats } from '../../../hooks/useConsolidatedTransactions';
 import { UNIVERSAL_BADGE_STYLE, UniversalTxType } from '../../../utils/transactionTypeMapper';
+import { getConsolidatedMetric, feeDisplaySign, ConsolidatedMetric } from '../../../utils/consolidatedTotals';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { useTranslation } from 'react-i18next';
 import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
@@ -13,28 +14,36 @@ interface ConsolidatedTransactionDetailsModalProps {
   detailsModalType: DetailsModalType;
   setDetailsModalType: (type: DetailsModalType) => void;
   stats: ConsolidatedStats;
-  tokenRates: Record<string, number>;
-  maskVal: (val: string | number) => string;
   isPrivateMode: boolean;
 }
+
+const EXCHANGE_NAMES: Record<'bybit' | 'bitget' | 'okx', string> = {
+  bybit: 'Bybit',
+  bitget: 'Bitget',
+  okx: 'OKX',
+};
 
 export function ConsolidatedTransactionDetailsModal({
   detailsModalType,
   setDetailsModalType,
   stats,
-  tokenRates,
-  maskVal,
   isPrivateMode,
 }: ConsolidatedTransactionDetailsModalProps) {
   const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
   if (!detailsModalType) return null;
 
-  const exchanges: Array<{ id: 'bybit' | 'bitget' | 'okx'; name: string }> = [
-    { id: 'bybit', name: 'Bybit' },
-    { id: 'bitget', name: 'Bitget' },
-    { id: 'okx', name: 'OKX' },
-  ];
+  const isFees = detailsModalType === 'fees';
+  const metric = isFees ? 'fees' : (detailsModalType as Exclude<ConsolidatedMetric, 'fees'>);
+  const breakdown = detailsModalType === 'tx' ? null : getConsolidatedMetric(stats, metric);
+
+  const renderValue = (value: string) => {
+    const big = new Big(value || '0');
+    if (isFees) {
+      return `${feeDisplaySign(big)}${formatCurrency(big.abs(), 'fiat')}`;
+    }
+    return `${big.gt(0) ? '+' : ''}${formatCurrency(big, 'fiat')}`;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
@@ -91,25 +100,7 @@ export function ConsolidatedTransactionDetailsModal({
                   {t('transactions.details.grandTotal', 'Grand Total')}
                 </span>
                 <span className="font-mono font-bold text-sm text-[#2F6BFF]">
-                  {(() => {
-                    let sumVal = new Big(0);
-                    exchanges.forEach(({ id }) => {
-                      const exchStats = stats.byExchange[id];
-                      if (!exchStats || exchStats.totalCount === 0) return;
-                      let rawVal = new Big(0);
-                      if (detailsModalType === 'funding') rawVal = new Big(exchStats.aggregatedUsd.totalFunding || '0');
-                      if (detailsModalType === 'fees') rawVal = new Big(exchStats.aggregatedUsd.totalFees || '0').abs();
-                      if (detailsModalType === 'balance') rawVal = new Big(exchStats.aggregatedUsd.finalBalance || '0');
-                      if (detailsModalType === 'netchange') rawVal = new Big(exchStats.aggregatedUsd.totalChange || '0');
-                      sumVal = sumVal.plus(rawVal);
-                    });
-
-                    if (detailsModalType === 'fees') {
-                      return `-${formatCurrency(sumVal, 'fiat')}`;
-                    }
-                    const isPositive = sumVal.gte(0);
-                    return `${isPositive && sumVal.gt(0) ? '+' : ''}${formatCurrency(sumVal, 'fiat')}`;
-                  })()}
+                  {isPrivateMode ? '****' : renderValue(breakdown?.grandTotal || '0')}
                 </span>
               </div>
 
@@ -119,35 +110,26 @@ export function ConsolidatedTransactionDetailsModal({
                   {t('transactions.details.byExchange', 'Breakdown by Exchange Venue')}
                 </h4>
 
-                {exchanges.map(({ id, name }) => {
-                  const exchStats = stats.byExchange[id];
-                  if (!exchStats || exchStats.totalCount === 0) return null;
-
-                  let rawVal = 0;
-                  if (detailsModalType === 'funding') rawVal = Number(exchStats.aggregatedUsd.totalFunding || 0);
-                  if (detailsModalType === 'fees') rawVal = -Math.abs(Number(exchStats.aggregatedUsd.totalFees || 0));
-                  if (detailsModalType === 'balance') rawVal = Number(exchStats.aggregatedUsd.finalBalance || 0);
-                  if (detailsModalType === 'netchange') rawVal = Number(exchStats.aggregatedUsd.totalChange || 0);
-
-                  const isPositive = rawVal >= 0;
+                {breakdown?.rows.map(({ exchange, value, totalCount }) => {
+                  const rowBig = new Big(value || '0');
+                  const isCost = isFees && rowBig.gt(0);
+                  const valueColor = isFees
+                    ? (isCost ? 'text-[#FF4444]' : 'text-[#00C853]')
+                    : (rowBig.gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]');
 
                   return (
-                    <div key={id} className="bg-[#1a1b1e] p-3 rounded-lg border border-[#2a2b30]/60 flex items-center justify-between">
+                    <div key={exchange} className="bg-[#1a1b1e] p-3 rounded-lg border border-[#2a2b30]/60 flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <ExchangeIcon exchange={id} className="w-4 h-4" />
-                        <span className="text-sm font-medium text-white">{name}</span>
+                        <ExchangeIcon exchange={exchange} className="w-4 h-4" />
+                        <span className="text-sm font-medium text-white">{EXCHANGE_NAMES[exchange]}</span>
                         <span className="text-[10px] text-[#8E9299] bg-[#2a2b30]/50 px-1.5 py-0.5 rounded font-mono">
-                          {exchStats.totalCount} {t('transactions.details.txs', 'txs')}
+                          {totalCount} {t('transactions.details.txs', 'txs')}
                         </span>
                       </div>
 
                       <div className="flex flex-col items-end">
-                        <span className={`font-mono font-medium text-sm ${detailsModalType === 'fees' ? 'text-[#FF4444]' : (isPositive ? 'text-[#00C853]' : 'text-[#FF4444]')}`}>
-                          {isPrivateMode
-                            ? '****'
-                            : (detailsModalType === 'fees'
-                                ? `-${formatCurrency(Math.abs(rawVal), 'fiat')}`
-                                : `${isPositive ? '+' : ''}${formatCurrency(rawVal, 'fiat')}`)}
+                        <span className={`font-mono font-medium text-sm ${valueColor}`}>
+                          {isPrivateMode ? '****' : renderValue(value)}
                         </span>
                       </div>
                     </div>
