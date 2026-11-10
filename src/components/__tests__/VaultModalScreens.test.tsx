@@ -6,6 +6,8 @@ import { MandatoryVaultMigrationScreen } from '../MandatoryVaultMigrationScreen'
 import { VaultSetupModal } from '../VaultSetupModal';
 import { useApiKeysStore, ApiCredentials } from '../../store/apiKeysStore';
 
+import i18n from '../../i18n/config';
+
 describe('MandatoryVaultMigrationScreen', () => {
   const onMigrated = vi.fn();
   const mockLegacyKeys: ApiCredentials[] = [
@@ -27,8 +29,9 @@ describe('MandatoryVaultMigrationScreen', () => {
     },
   ];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await i18n.changeLanguage('en-US');
     useApiKeysStore.setState({
       keys: [],
       isEncrypted: true,
@@ -55,7 +58,7 @@ describe('MandatoryVaultMigrationScreen', () => {
 
     const inputs = screen.getAllByPlaceholderText(/master passphrase/i);
     const passInput = inputs[0];
-    const confirmInput = screen.getByPlaceholderText(/Repeat master passphrase/i);
+    const confirmInput = screen.getByPlaceholderText(/Confirm master passphrase|Repeat master passphrase/i);
 
     // Mismatched or too short
     fireEvent.change(passInput, { target: { value: 'short' } });
@@ -99,8 +102,9 @@ describe('VaultSetupModal', () => {
   const onClose = vi.fn();
   const onSuccess = vi.fn();
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await i18n.changeLanguage('en-US');
     useApiKeysStore.setState({
       keys: [],
       isEncrypted: true,
@@ -125,16 +129,16 @@ describe('VaultSetupModal', () => {
       />
     );
 
-    expect(screen.getByText(/Activate Security Vault/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Activate Security Vault/i })).toBeInTheDocument();
     expect(screen.getByText(/Required to add exchange API keys/i)).toBeInTheDocument();
   });
 
   it('initializes vault and triggers onSuccess when valid passphrase is provided', async () => {
     render(<VaultSetupModal isOpen={true} onClose={onClose} onSuccess={onSuccess} />);
 
-    const passInput = screen.getByPlaceholderText(/Enter passphrase \(min\. 8 characters\)/i);
-    const confirmInput = screen.getByPlaceholderText(/Confirm your passphrase/i);
-    const submitBtn = screen.getByRole('button', { name: /Activate Vault & Continue/i });
+    const passInput = screen.getByPlaceholderText(/Enter master passphrase/i);
+    const confirmInput = screen.getByPlaceholderText(/Confirm master passphrase/i);
+    const submitBtn = screen.getByRole('button', { name: /Activate Security Vault/i });
 
     fireEvent.change(passInput, { target: { value: 'MasterPassphrase2026!' } });
     fireEvent.change(confirmInput, { target: { value: 'MasterPassphrase2026!' } });
