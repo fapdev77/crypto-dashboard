@@ -189,7 +189,7 @@ describe('Bitget transaction components (components/transactions/BitgetTransacti
     it('renders the net change report', () => {
       renderDetailsModal('netchange');
 
-      expect(screen.getByText('Net Change Report (USD)')).toBeDefined();
+      expect(screen.getByText(/Net Change Report/)).toBeDefined();
     });
   });
 });

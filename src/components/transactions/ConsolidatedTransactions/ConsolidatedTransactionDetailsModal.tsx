@@ -92,12 +92,23 @@ export function ConsolidatedTransactionDetailsModal({
                 </span>
                 <span className="font-mono font-bold text-sm text-[#2F6BFF]">
                   {(() => {
-                    let val = 0;
-                    if (detailsModalType === 'funding') val = Number(stats.aggregatedUsd.totalFunding || 0);
-                    if (detailsModalType === 'fees') val = -Math.abs(Number(stats.aggregatedUsd.totalFees || 0));
-                    if (detailsModalType === 'balance') val = Number(stats.aggregatedUsd.finalBalance || 0);
-                    if (detailsModalType === 'netchange') val = Number(stats.aggregatedUsd.totalChange || 0);
-                    return formatCurrency(val, 'fiat');
+                    let sumVal = new Big(0);
+                    exchanges.forEach(({ id }) => {
+                      const exchStats = stats.byExchange[id];
+                      if (!exchStats || exchStats.totalCount === 0) return;
+                      let rawVal = new Big(0);
+                      if (detailsModalType === 'funding') rawVal = new Big(exchStats.aggregatedUsd.totalFunding || '0');
+                      if (detailsModalType === 'fees') rawVal = new Big(exchStats.aggregatedUsd.totalFees || '0').abs();
+                      if (detailsModalType === 'balance') rawVal = new Big(exchStats.aggregatedUsd.finalBalance || '0');
+                      if (detailsModalType === 'netchange') rawVal = new Big(exchStats.aggregatedUsd.totalChange || '0');
+                      sumVal = sumVal.plus(rawVal);
+                    });
+
+                    if (detailsModalType === 'fees') {
+                      return `-${formatCurrency(sumVal, 'fiat')}`;
+                    }
+                    const isPositive = sumVal.gte(0);
+                    return `${isPositive && sumVal.gt(0) ? '+' : ''}${formatCurrency(sumVal, 'fiat')}`;
                   })()}
                 </span>
               </div>

@@ -3,6 +3,7 @@
 
 ### Features
 
+* **i18n:** internationalize Consolidated Net Change components, fiat currency formatting, and translations across 6 locales
 * add comprehensive connection log terminal and portfolio components internatiomalization ([3ed1651](https://github.com/fapdev77/crypto-dashboard/commit/3ed1651fceaaafe2bb0396cd26e292f2e7d22ae2))
 
 # [2.28.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.27.0...v2.28.0) (2026-11-09)

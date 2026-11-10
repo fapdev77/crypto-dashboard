@@ -194,7 +194,7 @@ describe('OKX transaction components (components/transactions/OkxTransactions)',
     it('renders the net change report', () => {
       renderDetailsModal('netchange');
 
-      expect(screen.getByText('Net Change Report (USD)')).toBeDefined();
+      expect(screen.getByText(/Net Change Report/)).toBeDefined();
     });
   });
 });

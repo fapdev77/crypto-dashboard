@@ -7,6 +7,7 @@ import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
+import { useFormatCurrency } from '../../../hooks/useFormatCurrency';
 
 interface ConsolidatedNetChangeReportProps {
   filteredByExchange: {
@@ -66,6 +67,7 @@ export function ConsolidatedNetChangeReport({
   isPrivateMode = false,
 }: ConsolidatedNetChangeReportProps) {
   const { t } = useTranslation();
+  const formatCurrency = useFormatCurrency();
   // State for expanded exchange sections (default all open)
   const [expandedExchanges, setExpandedExchanges] = useState<Record<string, boolean>>({
     bybit: true,
@@ -258,7 +260,7 @@ export function ConsolidatedNetChangeReport({
         <Layers className="w-12 h-12 text-[#8E9299] mb-3 opacity-60" />
         <h3 className="text-base font-semibold text-white mb-1">{t('transactions.consolidated.noData', 'No Consolidated Transaction Data')}</h3>
         <p className="text-xs text-[#8E9299] max-w-md">
-          No records found matching the active exchange, currency, or timeframe filters. Adjust your filters or wait for synchronization to complete.
+          {t('transactions.consolidated.noDataDesc', 'No records found matching the active exchange, currency, or timeframe filters. Adjust your filters or wait for synchronization to complete.')}
         </p>
       </div>
     );
@@ -280,14 +282,14 @@ export function ConsolidatedNetChangeReport({
             onClick={handleExpandAll}
             className="text-[#2F6BFF] hover:text-[#5287ff] transition-colors font-medium px-3 py-1.5 rounded-lg bg-[#2a2b30]/40 hover:bg-[#2a2b30]/70 cursor-pointer"
           >
-            Expand All
+            {t('transactions.report.expandAll', 'Expand All')}
           </button>
           <button
             type="button"
             onClick={handleCollapseAll}
             className="text-[#8E9299] hover:text-white transition-colors font-medium px-3 py-1.5 rounded-lg bg-[#2a2b30]/40 hover:bg-[#2a2b30]/70 cursor-pointer"
           >
-            Collapse All
+            {t('transactions.report.collapseAll', 'Collapse All')}
           </button>
         </div>
       </div>
@@ -322,20 +324,22 @@ export function ConsolidatedNetChangeReport({
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-base text-white">{group.displayName}</span>
                       <span className="text-[11px] text-[#8E9299] px-2 py-0.5 bg-[#2a2b30]/60 rounded-md font-mono">
-                        {group.totalTransactions} transactions
+                        {t('transactions.report.txsCount', { count: group.totalTransactions, defaultValue: `${group.totalTransactions} transactions` })}
                       </span>
                     </div>
                     <span className="text-[11px] text-[#8E9299]">
-                      {group.reports.length} {group.reports.length === 1 ? 'tracked asset' : 'tracked assets'}
+                      {t('transactions.report.trackedAssets', { count: group.reports.length, defaultValue: `${group.reports.length} ${group.reports.length === 1 ? 'tracked asset' : 'tracked assets'}` })}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4 ml-auto">
                   <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-[#8E9299] uppercase tracking-wider">Exchange Net Change</span>
+                    <span className="text-[10px] text-[#8E9299] uppercase tracking-wider">{t('transactions.report.exchangeNetChange', 'Exchange Net Change')}</span>
                     <span className={`font-bold font-mono text-sm sm:text-base ${isExchPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                      {isPrivateMode ? '****' : `${isExchPositive ? '+$' : '-$'}${Math.abs(Number(group.netChangeUsd)).toFixed(2)} USD`}
+                      {isPrivateMode
+                        ? '****'
+                        : `${isExchPositive && Number(group.netChangeUsd) > 0 ? '+' : ''}${formatCurrency(Number(group.netChangeUsd), 'fiat')}`}
                     </span>
                   </div>
 
@@ -393,7 +397,9 @@ export function ConsolidatedNetChangeReport({
                                 {isPositive ? '+' : ''}{report.ganhoPercentual.toFixed(2)}%
                               </span>
                               <span className="text-xs text-[#8E9299] font-mono">
-                                {isPrivateMode ? '****' : `${isPositive ? '+' : ''}${Number(report.ganhoAbsolutoUSD).toFixed(2)} USD`}
+                                {isPrivateMode
+                                  ? '****'
+                                  : `${isPositive && Number(report.ganhoAbsolutoUSD) > 0 ? '+' : ''}${formatCurrency(Number(report.ganhoAbsolutoUSD), 'fiat')}`}
                               </span>
                             </div>
 
@@ -454,9 +460,11 @@ export function ConsolidatedNetChangeReport({
                                     </span>
                                   </div>
                                   <div className="flex justify-between py-1.5">
-                                    <span className="text-[#8E9299]">{t('transactions.report.absoluteGainUsd', 'Absolute Gain (USD)')}</span>
+                                    <span className="text-[#8E9299]">{t('transactions.report.absoluteGainFiat', t('transactions.report.absoluteGainUsd', 'Absolute Gain'))}</span>
                                     <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                                      {isPrivateMode ? '****' : `${isPositive ? '+$' : '-$'}${Math.abs(Number(report.ganhoAbsolutoUSD)).toFixed(2)}`}
+                                      {isPrivateMode
+                                        ? '****'
+                                        : `${isPositive && Number(report.ganhoAbsolutoUSD) > 0 ? '+' : ''}${formatCurrency(Number(report.ganhoAbsolutoUSD), 'fiat')}`}
                                     </span>
                                   </div>
                                 </div>
@@ -523,7 +531,10 @@ export function ConsolidatedNetChangeReport({
                                   <div className="flex justify-between py-1.5">
                                     <span className="text-[#8E9299]">{t('transactions.report.dailyAvgRoi', 'Average Daily ROI')}</span>
                                     <span className={`font-bold ${report.roiMedioDiario >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                                      {report.roiMedioDiario >= 0 ? '+' : ''}{report.roiMedioDiario.toFixed(3)}%/day
+                                      {t('transactions.report.pctPerDay', {
+                                        value: `${report.roiMedioDiario >= 0 ? '+' : ''}${report.roiMedioDiario.toFixed(3)}`,
+                                        defaultValue: `${report.roiMedioDiario >= 0 ? '+' : ''}${report.roiMedioDiario.toFixed(3)}%/day`,
+                                      })}
                                     </span>
                                   </div>
                                 </div>

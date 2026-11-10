@@ -230,12 +230,12 @@ Promovido a um **módulo de navegação de primeiro nível** no menu lateral, pr
 Posicionado estrategicamente como o **primeiro item do submenu Transactions History**, este painel resolve o desafio de auditar o fluxo de caixa agregado entre múltiplas contas e corretoras:
 - **4 Cards Macro no Topo (Cross-Exchange KPIs)**:
   - **Total Transactions**: Contagem global de transações registradas no período.
-  - **Total Funding**: Soma líquida de todas as taxas de financiamento recebidas (crédito) e pagas (débito).
+  - **Total Funding**: Soma líquida de todas as taxas de financiamento recebidas (crédito) e pagas (débito), convertida na moeda fiduciária selecionada (BRL, USD, EUR, GBP).
   - **Total Fees**: Custo acumulado total com taxas de corretagem (trading fees) e transferências.
-  - **Consolidated Net Change**: Variação líquida consolidada de capital em USD (`Net Change = Cashflow + Funding - Fees`), destacando com clareza a rentabilidade do período.
-- **Agrupamento Hierárquico em Cascata**:
-  - **1º Nível (Corretora)**: Consolida Bybit, Bitget e OKX com seus respectivos totais de transações, taxas, funding e Net Change em USD. Permite expandir e recolher cada exchange individualmente.
-  - **2º Nível (Ativo/Moeda)**: Dentro de cada corretora, os ativos (BTC, ETH, SOL, USDT, etc.) são desdobrados com métricas completas: contagem de operações, volume de trades, depósitos, saques, taxas pagas, funding e a variação líquida tanto na **moeda nativa** quanto convertida em **USD**.
+  - **Consolidated Net Change**: Variação líquida consolidada de capital convertida na moeda fiduciária ativa (`Net Change = Cashflow + Funding - Fees`), destacando com clareza a rentabilidade do período.
+- **Agrupamento Hierárquico em Cascata 100% Internacionalizado**:
+  - **1º Nível (Corretora)**: Consolida Bybit, Bitget e OKX com seus respectivos totais de transações, taxas, funding e Net Change na moeda selecionada pelo usuário. Permite expandir e recolher cada exchange individualmente com os botões "Expand All" / "Collapse All" totalmente traduzidos.
+  - **2º Nível (Ativo/Moeda)**: Dentro de cada corretora, os ativos (BTC, ETH, SOL, USDT, etc.) são desdobrados com métricas completas: contagem de operações, volume de trades, depósitos, saques, taxas pagas, funding e a variação líquida tanto na **moeda nativa** quanto convertida e formatada na **moeda fiduciária ativa (BRL, USD, EUR, GBP)** sem sobreposições ou sufixos monetários conflitantes.
 - **Controles de Sincronismo e Privacidade**:
   - Botão de sincronização manual com feedback de progresso e respeito aos dados cacheados via SWR.
   - Compatibilidade nativa com o **Modo Privacidade**, ofuscando montantes nominais sem prejudicar a usabilidade.
