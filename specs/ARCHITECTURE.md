@@ -1,8 +1,8 @@
 # Technical Specifications & Architecture Design
 
-> **Document Version:** 2.16.0  
+> **Document Version:** 2.29.0  
 > **Status:** Production-Ready & Verified  
-> **Test Coverage:** 65 test files, 660 passing tests (Vitest v8)
+> **Test Coverage:** 88 test files, 763 passing tests (Vitest v8)
 
 ---
 
@@ -22,8 +22,10 @@ O CPM adota uma arquitetura em duas camadas (2-Tier Local Hybrid-Proxy) projetad
 │                                                                        │
 │  [UI Components & Views] ◄──► [Zustand 5 Micro-Stores]                 │
 │             │                           │                              │
+│             ├─► [i18n & Currency] ──────┼─► (6 Locales & Frankfurter)  │
+│             │                           │                              │
 │             ├─► [Web Crypto API] ───────┼─► (Local Key Encryption)     │
-│             │   (PBKDF2 + AES-GCM)      │                              │
+│             │   (PBKDF2 600k + AES-GCM) │                              │
 │             ├─► [IndexedDB SWR Cache] ──┴─► (14 Object Stores)         │
 │             │   (crypto-dashboard-cache)                               │
 │             ├─► [PIKA AI Subsystem] ────► (Ollama / Gemini / 9 Tools)  │
@@ -55,7 +57,7 @@ O CPM adota uma arquitetura em duas camadas (2-Tier Local Hybrid-Proxy) projetad
 
 - **Tier 1: Client-Side (React 19 / Vite / TypeScript):**
   - Gerencia toda a UI, renderizações reativas, micro-stores (Zustand 5.0), polling REST, e criptografia nativa no navegador (`window.crypto.subtle`).
-  - Credenciais de API residem exclusivamente em `localStorage`, protegidas por senha mestra com PBKDF2 (100.000 iterações) e AES-GCM 256-bit.
+  - Credenciais de API residem exclusivamente em `localStorage`, protegidas por senha mestra com PBKDF2 (600.000 iterações) e AES-GCM 256-bit, com bloqueio global de sessão e tela mandatória de migração.
   - Conexões WebSockets de dados sensíveis são excluídas do painel operacional, operando apenas de forma pontual e isolada na ferramenta de diagnóstico **API Tester**.
 - **Tier 2: Backend "Dumb" Relay (`server.ts` & Vercel Serverless `/api/proxy.ts`):**
   - Servidor mínimo e estático em Node.js/Express cuja única função é atuar como relé para contornar o bloqueio de CORS dos navegadores.
@@ -68,12 +70,14 @@ O CPM adota uma arquitetura em duas camadas (2-Tier Local Hybrid-Proxy) projetad
 
 - **Core Framework & Runtime:** React 19, TypeScript ~5.8, Vite 6, Node.js LTS (engines `>=24`).
 - **Styling & UI Engine:** Tailwind CSS v4, Lucide React (ícones), Radix UI (Tooltips acessíveis).
+- **Internationalization (i18n):** `i18next` e `react-i18next` com 6 idiomas suportados (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`).
+- **Multi-Currency System:** `currencyService.ts` integrado à Frankfurter API com cache offline para USD, BRL, EUR, GBP.
 - **State Management:** Zustand 5.0 (arquitetura desacoplada de micro-stores com persistência local).
 - **Data Caching & Persistence:** IndexedDB nativo via biblioteca `idb` 8.0, com SWR (Stale-While-Revalidate) e versionamento de banco (`DB_VERSION 12`).
 - **Precision Math:** Big.js para cálculos financeiros de alta sensibilidade (evita perdas de precisão por ponto flutuante em taxas de funding e ratios de hedge).
 - **AI Subsystem:** `@google/genai` (v1.29.0) para integração direta com Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm` para formatação rica de respostas.
 - **Reporting & Charts:** Recharts 3.8 (gráficos interativos de Open Interest, CVD, Hedge Pro e Telemetria de IA), jsPDF + jsPDF-AutoTable (exportação visual de PDFs), SheetJS `xlsx` (exportação de planilhas).
-- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **56 arquivos de teste e 604 testes unitários automatizados**.
+- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **88 arquivos de teste e 763 testes unitários e de integração automatizados** 100% verdes.
 
 ---
 
@@ -263,7 +267,7 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 10. **`useAiSettingsStore`:** Configurações de provedores de IA (Ollama, Gemini, custom), modelos ativos e de fallback, e instruções de sistema.
 11. **`useAiTelemetryStore`:** Telemetria de requisições de IA, contagem diária de tokens, latências e taxas de sucesso.
 12. **`useAiChatStore`:** Histórico de conversas com o PIKA, sessões, drawer e status de execução de ferramentas.
-13. **`useSettingsStore`:** Configurações globais do terminal (Modo Simulação, intervalos de polling, retenção de cache).
+13. **`useSettingsStore`:** Configurações globais do terminal: idioma ativo (6 idiomas), moeda fiat base (USD, BRL, EUR, GBP), Modo Simulação, TTL de metadados de símbolos (1-24h), intervalo de refresh em background (1-60m) e retenção de cache (30d a 2 anos).
 14. **`usePwaUpdateStore`:** Ciclo de vida do Service Worker do PWA e notificações de nova versão.
 
 ---
@@ -284,7 +288,8 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
   - **PnL by Symbol (`PnLBySymbol.tsx`):** Distribuição de lucros e prejuízos por ativo com segregação Long vs Short.
   - **Funding Fees (`FundingDashboard.tsx`):** Monitoramento e comparação de taxas de financiamento multi-período.
 - **Reports (`ReportsDashboard.tsx`):** Central de exportação de relatórios em PDF, Excel e CSV.
-- **System Tools & Security (`ApiKeys.tsx`, `MandatoryVaultMigrationScreen.tsx`, `ConnectionLogTerminal.tsx`, `Settings.tsx`, `ApiTester.tsx`, `AiSettings.tsx`):** Gerenciamento seguro de credenciais, fluxo obrigatório de migração de vault, logs em tempo real, diagnósticos e parâmetros de IA.
+- **Settings & Preferences (`Settings.tsx`):** Painel modular com 6 cards de governança (Preferências & Testes, Moeda Base & Câmbio Fiat, Idioma & Internacionalização, Catálogo de Símbolos & TTL, Cache & IndexedDB com medição de quota e expurgo, e Chaves de API & Segurança de Vault).
+- **System Tools & Security (`ApiKeys.tsx`, `MandatoryVaultMigrationScreen.tsx`, `VaultSetupNoticeModal.tsx`, `ConnectionLogTerminal.tsx`, `ApiTester.tsx`, `AiSettings.tsx`):** Gerenciamento seguro de credenciais, fluxo obrigatório de migração de vault com 600k iterações, logs em tempo real, diagnósticos e parâmetros de IA.
 
 ---
 
@@ -293,9 +298,9 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 Qualquer alteração em interfaces unificadas (`src/types.ts`) ou schemas de banco de dados deve obedecer ao protocolo rigoroso de sincronização:
 1. **Mock Generators:** Atualizar `src/mock/generateMocks.js` e regenerar os arquivos mock em `src/mock/`.
 2. **IndexedDB Versioning:** Incrementar `DB_VERSION` em `historyCache.ts` e registrar funções de migração para novos índices.
-3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde.
+3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (88 arquivos de teste, 763 testes passando).
 4. **Validação em Modo Simulação:** Ativar temporariamente `useMockData = true` para verificar visualmente todos os painéis e gráficos antes do deploy.
 
 ---
 
-*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.16.0).*
+*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.29.0).*

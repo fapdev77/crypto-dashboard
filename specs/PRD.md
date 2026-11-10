@@ -1,9 +1,9 @@
 # Crypto Portfolio Manager — Product Requirements Document (PRD)
 
-> **Versão do Documento:** 2.16.0  
+> **Versão do Documento:** 2.29.0  
 > **Status:** Aprovado & Em Produção  
 > **Produto:** Crypto Portfolio Manager (CPM) — Multi-Exchange Terminal  
-> **Testes Automatizados:** 65 arquivos de teste, 660 testes passando (Vitest v8)
+> **Testes Automatizados:** 88 arquivos de teste, 763 testes passando (Vitest v8)
 
 ---
 
@@ -11,7 +11,7 @@
 
 O **Crypto Portfolio Manager (CPM)** é um terminal de inteligência analítica, consolidação patrimonial e auditoria contábil para operadores de derivativos de criptomoedas. Ele unifica, em tempo real, dados de três grandes corretoras globais (**Bitget**, **Bybit** e **OKX**) sob uma interface única, ágil e customizável ("Single Pane of Glass").
 
-O produto combina alta performance analítica (gráficos de Open Interest, Cumulative Volume Delta, regimes de mercado, funding arbitrage, gestão delta-neutral em contratos inversos no **Hedge Pro** e o assistente quantitativo **PIKA**) com uma postura intransigente de segurança **Zero-Trust**: todas as credenciais de API permanecem exclusivamente no navegador do usuário (`localStorage`), protegidas por criptografia nativa **Web Crypto API (PBKDF2 com 100.000 iterações + AES-GCM 256-bit)**. O backend em Node/Express atua puramente como um relé inerte para contornar restrições de CORS sem conhecer, registrar ou adulterar segredos.
+O produto combina alta performance analítica (gráficos de Open Interest, Cumulative Volume Delta, regimes de mercado, funding arbitrage, gestão delta-neutral em contratos inversos no **Hedge Pro** e o assistente quantitativo **PIKA**) com uma postura intransigente de segurança **Zero-Trust**: todas as credenciais de API permanecem exclusivamente no navegador do usuário (`localStorage`), protegidas por criptografia nativa **Web Crypto API (PBKDF2 com 600.000 iterações + AES-GCM 256-bit)**. O backend em Node/Express atua puramente como um relé inerte para contornar restrições de CORS sem conhecer, registrar ou adulterar segredos.
 
 ---
 
@@ -70,7 +70,10 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
   - Funding Fees Dashboard com somatórios pré-calculados no serviço e comparador horizontal.
   - PIKA Assistant com 9 ferramentas de leitura, auditoria de compatibilidade de modelos, telemetria de tokens e exportação de logs.
   - Progressive Web App (PWA) instalável com Service Worker e cache offline.
-  - Migração Obrigatória de Vault para formatos de criptografia PBKDF2/AES-GCM.
+  - Migração Obrigatória de Vault para formatos de criptografia PBKDF2/AES-GCM (600.000 iterações).
+  - Internacionalização Completa (i18n) em 6 idiomas (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`) com preservação de termos de mercado.
+  - Conversão e exibição multi-moedas fiat (USD, BRL, EUR, GBP) via Frankfurter API com cache offline resiliente.
+  - Governança de Configurações e Cache com TTL de símbolos (1-24h), refresh em background (1-60m) e expurgo de histórico.
 
 ### 5.2. Não Suportado (Out of Scope)
 - Envio de ordens de negociação ativas (compra/venda) a partir do CPM — o terminal opera em **estrito modo de leitura e auditoria (Read-Only)**.
@@ -83,7 +86,7 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
 
 ### 6.1. Segurança Zero-Trust e Proteção de Credenciais
 1. **Custódia Local Estrita:** Credenciais de API são persistidas apenas no `localStorage` do navegador do usuário.
-2. **Criptografia Opcional com Desbloqueio Global:** Ao habilitar Master Password, as chaves são cifradas com PBKDF2 (100.000 iterações) e AES-GCM 256-bit. A tela `GlobalUnlockScreen` bloqueia todo o acesso sem a senha correta.
+2. **Criptografia com Desbloqueio Global:** Ao habilitar Master Password, as chaves são cifradas com PBKDF2 (600.000 iterações) e AES-GCM 256-bit. A tela `GlobalUnlockScreen` bloqueia todo o acesso sem a senha correta e a tela `MandatoryVaultMigrationScreen` força a migração caso chaves não criptografadas sejam encontradas.
 3. **Backup Criptografado:** Exportação e importação em arquivo `.cpmbackup` protegido por senha mestra.
 4. **Proxy Inerte:** O relé `/api/proxy` recebe cabeçalhos criptografados e parâmetros já assinados na ponta do cliente, repassando-os sem registrar logs nem armazenar chaves.
 5. **Fail-Fast de Autenticação:** Detecção algorítmica de erros 401/403 e códigos de rejeição das exchanges (Bybit `10003/10004/10005/33004`, OKX `50100/50105/50111/50113`, Bitget `40001/40005/40006/40014`). Ao identificar falha de credenciais, o sistema cancela imediatamente retries automáticos para proteger o IP do usuário contra banimentos de rate limit.
@@ -152,17 +155,20 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 | **FR-28** | Portfolio Performance Dashboard com curvas de saldo/resultado, análise temporal (mês/dia), marcos de preço, resultados primários e métricas avançadas (Profit Factor, Win Rate, Consistency Index) | Portfolio Performance |
 | **FR-29** | Tela e fluxo de migração mandatória de vault para credenciais legadas em texto plano | Security & Vault |
 | **FR-30** | Otimização de renderização com downsampling a 80 pontos, animations desativadas e seletores atômicos no Zustand | Performance Optimization |
+| **FR-31** | Internacionalização completa em 6 idiomas (pt-BR, pt-PT, en-US, en-GB, es-419, it-IT) com seleção dinâmica, tooltips contextuais e mensagens toast | Internationalization (i18n) |
+| **FR-32** | Conversão cambial multi-moedas fiat (USD, BRL, EUR, GBP) via Frankfurter API com cache offline e formatação monetária limpa | Multi-Currency Engine |
+| **FR-33** | Painel de governança de configurações e cache com TTL de símbolos (1-24h), refresh de histórico em background (1-60m) e expurgo seletivo | Settings & Storage |
 
 ---
 
 ## 8. Requisitos Não-Funcionais
 
-- **Segurança:** Postura Zero-Trust; chaves nunca saem do navegador; Web Crypto nativo; proxy inerte com allowlist anti-SSRF.
-- **Confiabilidade:** Suíte abrangente de testes unitários e de integração verdes; tolerância a clock skew das exchanges.
+- **Segurança:** Postura Zero-Trust; chaves nunca saem do navegador; Web Crypto nativo (PBKDF2 600.000 iterações + AES-GCM-256); proxy inerte com allowlist anti-SSRF.
+- **Confiabilidade:** Suíte abrangente de 88 arquivos de teste e 763 testes unitários e de integração 100% verdes; tolerância a clock skew das exchanges.
 - **Performance:** Latência zero no carregamento inicial de telas analíticas via IndexedDB; período padrão inicial de 7 dias, downsampling de séries e memoização rigorosa para prevenir renderizações desnecessárias.
 - **Precisão Matemática:** Uso universal de Big.js para aritmética de funding, hedge e saldos.
 - **Compatibilidade:** Suporte nativo a navegadores Desktop e Mobile (PWA); compatibilidade com ambientes serverless (Vercel) e instâncias Node.js (engines `>=24`).
 
 ---
 
-*Crypto Portfolio Manager — Product Requirements Document (PRD v2.16.0).*
+*Crypto Portfolio Manager — Product Requirements Document (PRD v2.29.0).*

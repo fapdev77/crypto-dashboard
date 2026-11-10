@@ -1,6 +1,6 @@
 # 📘 Manual do Utilizador - Crypto Portfolio Manager (CPM)
 
-> **Versão da Aplicação:** 2.16.0  
+> **Versão da Aplicação:** 2.28.0  
 > **Plataformas Suportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitetura de Segurança:** Zero-Trust Client-Side (Criptografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -56,7 +56,7 @@ A nossa prioridade absoluta é a **segurança de nível zero-trust** e a **prese
 
 O CPM foi concebido sob um paradigma rigoroso de segurança descentralizada:
 - **Sem Base de Dados Externa para Credenciais**: Não operamos nenhum servidor na nuvem que armazene as suas chaves de API ou histórico patrimonial. Toda a comunicação ocorre diretamente do seu navegador para os servidores oficiais das corretoras.
-- **Armazenamento Seguro no Cliente (`localStorage`)**: As suas credenciais são guardadas estritamente no armazenamento local do navegador, podendo ser adicionalmente cifradas por palavra-passe mestra com algoritmos industriais (**PBKDF2 com 100.000 iterações e AES-GCM 256-bit**).
+- **Armazenamento Seguro no Cliente (`localStorage`)**: As suas credenciais são guardadas estritamente no armazenamento local do navegador, podendo ser adicionalmente cifradas por palavra-passe mestra com algoritmos industriais (**PBKDF2 com 600.000 iterações e AES-GCM 256-bit**).
 - **Proxy Inerte Local / Serverless (`server.ts` / `/api/proxy`)**: Para contornar restrições de CORS impostas por navegadores web, o CPM utiliza um proxy local de elevado desempenho. O cliente gera todas as assinaturas criptográficas (HMAC-SHA256, carimbos de data/hora) na ponta antes do envio. O proxy apenas reencaminha o payload para os endpoints oficiais sem alterar assinaturas, sem reter dados e sem conhecer as suas chaves secretas.
 - **NUNCA utilize Chaves com Permissões de Levantamento ou Negociação**: A monitorização exige **estritamente permissões de LEITURA (Read-Only)**. Nunca crie nem utilize chaves com permissões para transferir fundos ou executar novas ordens.
 

@@ -1,6 +1,6 @@
 # 📘 User Manual - Crypto Portfolio Manager (CPM)
 
-> **Application Version:** 2.16.0  
+> **Application Version:** 2.29.0  
 > **Supported Exchanges:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Security Architecture:** Zero-Trust Client-Side (Web Crypto PBKDF2 + AES-GCM 256-bit Encryption)
 
@@ -61,7 +61,7 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
 
 CPM was designed from the ground up under a strict decentralized privacy model:
 - **No External Database for Credentials**: We do not operate cloud databases or servers to store your private keys or trade logs. All network requests communicate directly from your browser client to the official exchange servers.
-- **Client-Side Encrypted Storage (`localStorage`)**: Your API credentials reside solely inside your browser's local sandbox, protected with optional military-grade encryption (**PBKDF2 with 100,000 iterations and AES-GCM 256-bit**).
+- **Client-Side Encrypted Storage (`localStorage`)**: Your API credentials reside solely inside your browser's local sandbox, protected with optional military-grade encryption (**PBKDF2 with 600,000 iterations and AES-GCM 256-bit**).
 - **Dumb Local / Serverless Proxy (`server.ts` / `/api/proxy`)**: To bypass native browser Cross-Origin Resource Sharing (CORS) blocks, CPM routes API traffic through a lightweight, zero-knowledge proxy. The client computes all cryptographic signatures (HMAC-SHA256, timestamps) locally before dispatch. The proxy acts purely as an in-flight relay, unable to decrypt or tamper with signed headers and never storing secret credentials.
 - **NEVER Supply Keys with Trading or Withdrawal Permissions**: CPM requires **READ-ONLY permissions** exclusively. Never create or upload API keys authorized to transfer funds, execute orders, or withdraw capital.
 

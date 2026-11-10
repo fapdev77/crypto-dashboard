@@ -1,7 +1,7 @@
 # Crypto Portfolio Manager: Multi-Exchange
 
-[![Version](https://img.shields.io/badge/version-2.16.0-blue.svg)](package.json)
-[![Tests](https://img.shields.io/badge/tests-660%20passed-success.svg)](specs/PRD.md)
+[![Version](https://img.shields.io/badge/version-2.29.0-blue.svg)](package.json)
+[![Tests](https://img.shields.io/badge/tests-763%20passed-success.svg)](specs/PRD.md)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/security-Zero--Trust%20Client-orange.svg)](user_manual/cpm_user_manual_pt-br.md)
 
@@ -13,7 +13,7 @@ Um gerenciador de portfólio, terminal analítico institucional e auditor contá
 
 O **Crypto Portfolio Manager (CPM)** foi construído com a premissa fundamental de **Zero-Trust Security**:
 - **Nenhuma Credencial em Servidores Terceiros**: Não existem bancos de dados na nuvem armazenando suas chaves de API, senhas ou histórico patrimonial. Todas as credenciais residem exclusivamente no armazenamento local do seu navegador (`localStorage`).
-- **Criptografia Militar no Cliente**: As chaves podem ser protegidas por Senha Mestra utilizando algoritmos nativos da **Web Crypto API (PBKDF2 com 100.000 iterações + AES-GCM 256-bit)**, com bloqueio global de sessão (`GlobalUnlockScreen`) e suporte a exportação/importação de backups cifrados (`.cpmbackup`).
+- **Criptografia Militar no Cliente**: As chaves são protegidas por Senha Mestra utilizando algoritmos nativos da **Web Crypto API (PBKDF2 com 600.000 iterações + AES-GCM 256-bit)**, com bloqueio global de sessão (`GlobalUnlockScreen`), tela de migração mandatória de credenciais legadas (`MandatoryVaultMigrationScreen`) e suporte a exportação/importação de backups cifrados (`.cpmbackup`).
 - **Proxy Inerte Local e Serverless (`server.ts` & `/api/proxy.ts`)**: Para contornar restrições de CORS impostas pelos navegadores, o sistema utiliza um relé de alta performance em Node.js/Express. O frontend assina todas as requisições na ponta do cliente gerando os cabeçalhos criptográficos correspondentes. O proxy repassa os dados aos endpoints oficiais das corretoras de forma transparente, sem reter dados, sem manter logs sensíveis e com validação rígida de allowlist para prevenir SSRF.
 - **Auditor Quantitativo PIKA com Modo Privacidade**: Assistente analítico integrado que opera exclusivamente via chamadas de ferramentas de leitura local (Local Tool-Calling), convertendo automaticamente valores nominais em proporções percentuais quando o Modo Privacidade estiver ativo.
 
@@ -22,6 +22,8 @@ O **Crypto Portfolio Manager (CPM)** foi construído com a premissa fundamental 
 ## ⚙️ Tecnologias Utilizadas (A Stack)
 
 - **Frontend & Interface**: React 19, TypeScript ~5.8, **Vite 6**, **Tailwind CSS v4**, **Lucide React** para ícones otimizados e Radix UI para tooltips conceituais.
+- **Internacionalização (i18n)**: **i18next** e **react-i18next** com suporte dinâmico a 6 idiomas completos (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`), mantendo terminologias técnicas de mercado padronizadas.
+- **Multi-Moedas & Câmbio Fiat**: Conversão cambial em tempo real integrada à **Frankfurter API** com fallback em cache offline local para exibição fluida em USD, BRL, EUR e GBP sem duplicações de sufixo monetário.
 - **Gerenciamento de Estado**: **Zustand 5.0** com arquitetura desacoplada de micro-stores de alta coesão:
   - `useBalancesStore` (saldos consolidados e fatias de carteira)
   - `usePositionsStore` (posições ativas e margens)
@@ -31,13 +33,14 @@ O **Crypto Portfolio Manager (CPM)** foi construído com a premissa fundamental 
   - `useFundingStore` (taxas de funding e auto-sync)
   - `useMarketAnalyticsStore` (indicadores quantitativos e regimes de mercado)
   - `useAiChatStore`, `useAiSettingsStore` e `useAiTelemetryStore` (subsistema do PIKA AI)
+  - `useSettingsStore` (preferências globais, moeda base, idioma, TTL de símbolos e intervalos)
   - `useLogStore` (terminal de logs do sistema)
   - `usePwaUpdateStore` (ciclo de vida e atualização do Service Worker)
-- **Persistência e Cache**: **IndexedDB** (`idb` 8.0) estruturado em 14 object stores sob o padrão **SWR (Stale-While-Revalidate)**, garantindo renderização com latência zero.
+- **Persistência e Cache**: **IndexedDB** (`idb` 8.0) estruturado em 14 object stores sob o padrão **SWR (Stale-While-Revalidate)**, com ferramentas de auto-reparo de integridade, medição de quota e expurgo seletivo (pruning de 30d a 2 anos).
 - **Aritmética Financeira**: **Big.js** para cálculos de alta precisão em taxas de funding, ratios de hedge e fluxo de caixa contábil.
 - **Subsistema de IA**: `@google/genai` (SDK 1.29.0) para Google Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm`.
 - **Relatórios & Gráficos**: **Recharts 3.8** (curvas de Open Interest, CVD, Hedge Pro e gráficos de tokens), **jsPDF** com **jsPDF-AutoTable** e **SheetJS (xlsx)**.
-- **Testes Automatizados**: **Vitest 4.1** com jsdom e `@testing-library/react`. Suíte abrangente com **65 arquivos de teste e 660 testes unitários e de integração automatizados** 100% verdes.
+- **Testes Automatizados**: **Vitest 4.1** com jsdom e `@testing-library/react`. Suíte abrangente com **88 arquivos de teste e 763 testes unitários e de integração automatizados** 100% verdes.
 
 ---
 
@@ -74,7 +77,7 @@ npm start
 # Validação estrita de tipagem TypeScript (zero erros)
 npm run lint
 
-# Execução completa da suíte de 660 testes automatizados
+# Execução completa da suíte de 763 testes automatizados
 npm test
 ```
 
@@ -160,27 +163,59 @@ npm test
 - Auto-sync inteligente agendado para `próximo acerto de funding + 60s`.
 
 ### 8. Segurança Reforçada, Migração Obrigatória de Vault e Resiliência
-- **Migração Obrigatória de Vault (`MandatoryVaultMigrationScreen`)**: Força a migração segura para o formato encriptado com PBKDF2/AES-GCM caso chaves em texto plano sejam detectadas.
+- **Criptografia Militar Local (PBKDF2 600.000 iterações + AES-GCM-256)**: Proteção completa de chaves e dados sensíveis via Web Crypto nativa, sem envio de credenciais a servidores.
+- **Migração Obrigatória de Vault (`MandatoryVaultMigrationScreen`)**: Força a migração segura para o formato encriptado de 600k iterações caso chaves em texto plano sejam detectadas.
+- **Aviso de Configuração de Cofre (`VaultSetupNoticeModal`)**: Alerta não intrusivo para guiar o usuário na ativação da senha mestra com lembrete configurável.
 - **Consolidação de Allowlist Anti-SSRF**: Validação centralizada e estrita de domínios permitidos em `server.ts` e `/api/proxy.ts`.
 - **Fail-Fast de Autenticação**: Cancela retries automáticos imediatamente em caso de credenciais inválidas para blindar o IP do cliente contra bloqueios Cloudflare/Akamai.
 - **Backoff Exponencial com Jitter e Circuit Breaker**: Recuperação suave para quedas de internet e erros 5xx.
-- **Monitoramento de Quota e Pruning Histórico**: Medição de disco do navegador (`navigator.storage.estimate()`) e botão "Prune History" com janelas de retenção (30d a 2 anos).
 - **Global Error Boundary**: Tela de recuperação graciosa (**Safe Recovery**) com ações em 1 clique ("Reload Dashboard" e "Clear Cache & Reload").
 - **Auto-Reset de Scroll**: Reposiciona a rolagem para o topo instantaneamente ao alternar abas (`useLayoutEffect`).
 
 ### 9. PWA, Modo Simulação e Modo Privacidade
 - **Progressive Web App (PWA)**: Instalação nativa Desktop/Mobile com Service Worker, cache offline e avisos discretos de atualização (`UpdateNotification`).
 - **Modo Simulação (Mock Data)**: Injeta dados simulados completos e pausa conexões de rede para testes seguros de interface.
-- **Modo Privacidade (Privacy Mode)**: Mascaramento instantâneo de valores financeiros com um clique no botão de olho.
+- **Modo Privacidade (Privacy Mode)**: Mascaramento instantâneo de valores financeiros com um clique no botão de olho e proteção automática no auditor PIKA AI.
 - **Positions Ticker**: Marquee deslizante contínuo no topo espelhando posições em aberto e cotações ao vivo.
+
+### 10. Internacionalização Completa (6 Idiomas Nativos) & Multi-Moedas Fiat
+- **Suporte Nativo a 6 Idiomas**:
+  - `pt-BR` (Português do Brasil)
+  - `pt-PT` (Português de Portugal)
+  - `en-US` (English - US)
+  - `en-GB` (English - UK)
+  - `es-419` (Español Latinoamericano)
+  - `it-IT` (Italiano)
+- **Localização Contextual Abrangente**: 100% de cobertura nos 6 cards de Settings, modais de confirmação, badges analíticos, tooltips conceituais (Radix UI) e toasts de notificação (`react-hot-toast`).
+- **Seletor de Datas Internacionalizado e Seguro**: Modais com formatação localizada de calendário e atalhos rápidos (`Hoje`, `Ontem`, `Últimos 7d`, `Últimos 30d`, etc.) sem alterar o padrão ISO/UTC das consultas de APIs (`yyyy-MM-dd`).
+- **Preservação de Terminologias Técnicas**: Termos consolidados de mercado mantidos padronizados em todos os idiomas (`Long`, `Short`, `Inverse`, `Coin-M`, `Spot`, `Perp`, `USDT-M`, `Maker/Taker`).
+- **Sistema Multi-Moedas com Câmbio em Tempo Real**:
+  - Exibição de valores na moeda de preferência do usuário (**USD**, **BRL**, **EUR**, **GBP**).
+  - Cotações atualizadas via **Frankfurter API** com fallback automático em cache offline local.
+  - Indicador de status cambial transparente (`live`, `cached`, `fallback`).
+  - Formatação monetária limpa e padronizada (ex: `R$ 1.250,00`), eliminando sufixos hardcoded concorrentes (`(USD)` ou `USD`).
+
+### 11. Governança de Cache, Armazenamento e Configurações Avançadas
+- **IndexedDB Engine v12**: 14 object stores otimizadas sob padrão Stale-While-Revalidate (SWR).
+- **Monitoramento de Quota e Saúde de Armazenamento**: Medição periódica via `navigator.storage.estimate()` exibindo disco consumido, percentual e limites do navegador.
+- **Expurgo Seletivo sob Demanda (Prune History)**: Janelas de retenção configuráveis (30d a 2 anos) para limpar transações e ordens antigas preservando conexões e configurações.
+- **Ferramentas de Manutenção e Auto-Reparo**: Botões dedicados para diagnóstico, auto-reparo e redefinição de integridade do cache local.
+- **Governança Granular de Polling e Catálogo**:
+  - *Asset Metadata TTL*: Duração do cache de símbolos e especificações de contrato em IndexedDB (1h a 24h).
+  - *History Background Refresh*: Intervalo de checagem periódica em segundo plano de novas ordens e posições (1m a 60m).
+  - *Onboarding Guide Toggle*: Controle para exibir ou ocultar o guia introdutório ao iniciar a aplicação.
 
 ---
 
 ## 📚 Documentação Técnica e Manuais
 
 Todos os manuais e especificações técnicas estão disponíveis no repositório:
-- 📖 [Manual do Usuário em Português](./user_manual/cpm_user_manual_pt-br.md): Guia operacional completo com telas, segurança e troubleshooting.
-- 📖 [User Manual in English](./user_manual/cpm_user_manual_en-us.md): Comprehensive operational guide in English.
+- 📖 [Manual do Usuário (Português do Brasil)](./user_manual/cpm_user_manual_pt-br.md)
+- 📖 [Manual do Utilizador (Português de Portugal)](./user_manual/cpm_user_manual_pt-pt.md)
+- 📖 [User Manual (English - US)](./user_manual/cpm_user_manual_en-us.md)
+- 📖 [User Manual (English - UK)](./user_manual/cpm_user_manual_en-gb.md)
+- 📖 [Manual de Usuario (Español Latinoamericano)](./user_manual/cpm_user_manual_es-419.md)
+- 📖 [Manuale Utente (Italiano)](./user_manual/cpm_user_manual_it-it.md)
 - 📐 [Product Requirements Document (PRD)](./specs/PRD.md): Especificação de produto, regras de negócio e matriz de requisitos funcionais.
 - 🏛 [Technical Specifications & Architecture](./specs/ARCHITECTURE.md): Detalhamento do Hybrid-Proxy, micro-stores, engines de sincronização e subsistema de IA.
 - 📑 [Unified Interfaces Specification](./specs/unified-interfaces.md): Definição de tipos TypeScript e mapeamento de payloads de API.
