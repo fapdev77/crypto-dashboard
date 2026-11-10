@@ -1,3 +1,10 @@
+# [2.31.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.30.0...v2.31.0) (2026-11-10)
+
+
+### Features
+
+* add transaction services, UI components, and multi-language support for Bitget, Bybit, and OKX exchanges ([f14440e](https://github.com/fapdev77/crypto-dashboard/commit/f14440e967eb042f5b70efef3e22731d5b9c04b3))
+
 # [2.30.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.29.0...v2.30.0) (2026-11-10)
 
 
