@@ -12,6 +12,7 @@ import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extr
 import { ApiRateLimitError } from '../../utils/retryHelper';
 
 import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
+import { resolveUsdRate } from '../../utils/usdAggregation';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -23,7 +24,9 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
   public async getCoinPrice(coin: string): Promise<number> {
     const c = (coin || '').toUpperCase();
     if (!c) return 0;
-    if (['USDT', 'USDC', 'USD', 'DAI', 'USDE', 'FDUSD', 'PYUSD', 'EURT', 'USDD'].includes(c)) return 1.0;
+    // USD-pegged stablecoins are 1:1; fiat balances (BRL, EUR) use the fiat rate table.
+    const peggedRate = resolveUsdRate(c, undefined);
+    if (peggedRate !== null) return peggedRate;
 
     const now = Date.now();
     const cached = BitgetClassicAdapter.tickerPriceCache[c];

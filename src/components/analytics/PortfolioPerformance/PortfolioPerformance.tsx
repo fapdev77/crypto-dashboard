@@ -24,6 +24,7 @@ import { TemporalPerformanceSection } from './TemporalPerformanceSection';
 import { PriceMilestoneSection } from './PriceMilestoneSection';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { LogManager } from '../../../services/LogManager';
+import { MissingRatesNotice } from '../../transactions/MissingRatesNotice';
 
 export function PortfolioPerformance() {
   const { t } = useTranslation();
@@ -39,6 +40,7 @@ export function PortfolioPerformance() {
     isCalculatingUsd,
     error,
     availableCurrencies,
+    missingRates,
   } = usePortfolioPerformance(filters);
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
@@ -183,6 +185,8 @@ export function PortfolioPerformance() {
         onFilterChange={setFilters}
         availableCurrencies={availableCurrencies}
       />
+
+      {missingRates.length > 0 && <MissingRatesNotice currencies={missingRates} />}
 
       {/* 1. Primary Result */}
       <PrimaryResultSection

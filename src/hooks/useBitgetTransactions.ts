@@ -7,7 +7,7 @@ import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { BitgetTransactionService } from '../services/bitget/BitgetTransactionService';
 import { getBitgetTxLogCache } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
-import { fetchTokenUsdPrice } from './useTokenUsdPrice';
+import { getUsdPrices } from '../services/pricing/usdPrice';
 import { getStartOfTodayInMs, resolvePeriodDateRange } from '../utils/dateTimeHelper';
 import { aggregateStatsToUsd, needsTokenRate } from '../utils/usdAggregation';
 
@@ -172,24 +172,12 @@ export function useBitgetTransactions(filters: BitgetTxFilters = defaultFilters)
 
       if (isMounted) setIsCalculatingUsd(true);
 
-      const promises = missingCurrencies.map(ccy => fetchTokenUsdPrice(ccy));
-      const results = await Promise.all(promises);
+      const { rates } = await getUsdPrices(missingCurrencies, { exchange: 'bitget', fiatRates });
 
       if (!isMounted) return;
 
-      const newRates = { ...tokenRates };
-      let updated = false;
-
-      missingCurrencies.forEach((ccy, index) => {
-        const price = results[index];
-        if (price !== null) {
-          newRates[ccy] = price;
-          updated = true;
-        }
-      });
-
-      if (updated) {
-        setTokenRates(newRates);
+      if (Object.keys(rates).length > 0) {
+        setTokenRates({ ...tokenRates, ...rates });
       }
       setIsCalculatingUsd(false);
     };

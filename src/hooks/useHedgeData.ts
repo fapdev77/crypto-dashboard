@@ -10,7 +10,7 @@ import {
   HedgeCoinSummary,
   HedgeTotals,
 } from '../utils/hedgeUtils';
-import { isStablecoin } from '../utils/formatters';
+import { isUsdPeggedStablecoin } from '../utils/usdAggregation';
 
 export interface UseHedgeDataReturn {
   search: string;
@@ -158,7 +158,7 @@ export function useHedgeData(): UseHedgeDataReturn {
   const stablecoinsEquityUsd = useMemo(() => {
     return Number(
       netActiveBalances
-        .filter(b => isStablecoin(b.ccy))
+        .filter(b => isUsdPeggedStablecoin(b.ccy))
         .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
     );
   }, [netActiveBalances]);
@@ -216,7 +216,7 @@ export function useHedgeData(): UseHedgeDataReturn {
       : netActiveBalances.filter(b => (b.exchange || '').toLowerCase() === exchange.toLowerCase());
     return Number(
       list
-        .filter(b => isStablecoin(b.ccy))
+        .filter(b => isUsdPeggedStablecoin(b.ccy))
         .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
     );
   }, [netActiveBalances, exchange]);

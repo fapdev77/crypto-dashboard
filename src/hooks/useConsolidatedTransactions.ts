@@ -11,7 +11,7 @@ import { BitgetTransactionService } from '../services/bitget/BitgetTransactionSe
 import { OkxTransactionService } from '../services/okx/OkxTransactionService';
 import { getBybitTxLogCache, getBitgetTxLogCache, getOkxTxLogCache } from '../services/historyCache';
 import { matchUniversalTxType, UniversalTxType } from '../utils/transactionTypeMapper';
-import { fetchTokenUsdPrice } from './useTokenUsdPrice';
+import { getUsdPricesForVenues } from '../services/pricing/usdPrice';
 import { getStrictCalendarStartTime, resolvePeriodDateRange } from '../utils/dateTimeHelper';
 import { aggregateStatsToUsd, needsTokenRate } from '../utils/usdAggregation';
 import Big from 'big.js';
@@ -306,28 +306,32 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
     };
   }, [filteredByExchange]);
 
-  // Collect currencies that still need a network price to be converted to USD.
-  // USD-pegged stablecoins and fiat codes (BRL, EUR, EURT) resolve without a fetch.
-  const nonStableCurrencies = useMemo(() => {
-    const set = new Set<string>();
-    [rawStatsByExchange.bybit, rawStatsByExchange.bitget, rawStatsByExchange.okx].forEach(stats => {
-      Object.keys(stats.perCurrency).forEach(c => {
-        if (needsTokenRate(c, fiatRates)) set.add(c.toUpperCase());
-      });
+  // Currencies still missing a price, grouped by the exchange they trade on.
+  // The venue matters: OKX does not list every exchange token (BGB, MNT), so a
+  // venue-less lookup could never price them while the balances page can.
+  const nonStableCurrenciesByExchange = useMemo(() => {
+    const groups: Partial<Record<'bybit' | 'bitget' | 'okx', string[]>> = {};
+
+    (['bybit', 'bitget', 'okx'] as const).forEach(exchange => {
+      const currencies = Object.keys(rawStatsByExchange[exchange].perCurrency)
+        .map(c => c.toUpperCase())
+        .filter(c => needsTokenRate(c, fiatRates) && tokenRates[c] === undefined);
+      if (currencies.length > 0) {
+        groups[exchange] = Array.from(new Set(currencies));
+      }
     });
-    return Array.from(set);
-  }, [rawStatsByExchange, fiatRates]);
+
+    return groups;
+  }, [rawStatsByExchange, fiatRates, tokenRates]);
+
+  const nonStableSignature = Object.entries(nonStableCurrenciesByExchange)
+    .map(([exchange, currencies]) => `${exchange}:${(currencies || []).join(',')}`)
+    .join('|');
 
   // Fetch prices for any missing non-stable currencies
   useEffect(() => {
     let isMounted = true;
-    if (nonStableCurrencies.length === 0) {
-      if (isCalculatingUsd) setIsCalculatingUsd(false);
-      return;
-    }
-
-    const missing = nonStableCurrencies.filter(c => tokenRates[c] === undefined);
-    if (missing.length === 0) {
+    if (!nonStableSignature) {
       if (isCalculatingUsd) setIsCalculatingUsd(false);
       return;
     }
@@ -335,30 +339,18 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
     setIsCalculatingUsd(true);
 
     const fetchRates = async () => {
-      const promises = missing.map(c => fetchTokenUsdPrice(c));
-      const results = await Promise.all(promises);
+      const { rates } = await getUsdPricesForVenues(nonStableCurrenciesByExchange, fiatRates);
 
       if (!isMounted) return;
 
-      const updatedRates = { ...tokenRates };
-      let changed = false;
-
-      missing.forEach((c, idx) => {
-        const rate = results[idx];
-        if (rate !== null) {
-          updatedRates[c] = rate;
-          changed = true;
-        }
-      });
-
-      if (changed) {
-        setTokenRates(updatedRates);
+      if (Object.keys(rates).length > 0) {
+        setTokenRates(prev => ({ ...prev, ...rates }));
       }
       setIsCalculatingUsd(false);
     };
 
     fetchRates();
-  }, [nonStableCurrencies.sort().join(',')]);
+  }, [nonStableSignature]);
 
   // Combine raw stats with dynamic USD equivalents into final ConsolidatedStats
   const stats = useMemo<ConsolidatedStats>(() => {

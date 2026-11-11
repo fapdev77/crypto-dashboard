@@ -15,7 +15,7 @@ import { ExchangeHierarchyTable } from './ExchangeHierarchyTable';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
-import { isStablecoin } from '../utils/formatters';
+import { isUsdPeggedStablecoin } from '../utils/usdAggregation';
 import { AppTooltip } from './ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 
@@ -172,7 +172,7 @@ export function Dashboard() {
   const stablecoinsProtectedUsd = useMemo(() => {
     return Number(
       activeBalances
-        .filter(b => isStablecoin(b.ccy))
+        .filter(b => isUsdPeggedStablecoin(b.ccy))
         .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
     );
   }, [activeBalances]);

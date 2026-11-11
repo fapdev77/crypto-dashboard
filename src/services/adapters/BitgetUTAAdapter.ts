@@ -11,7 +11,7 @@ import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extr
 import { ApiRateLimitError } from '../../utils/retryHelper';
 import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
 
-import { isStablecoin } from '../../utils/formatters';
+import { resolveUsdRate } from '../../utils/usdAggregation';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -24,7 +24,9 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
     const c = (coin || '').toUpperCase();
     if (!c) return 0;
     if (knownPrices[c] !== undefined && knownPrices[c] > 0) return knownPrices[c];
-    if (isStablecoin(c)) return 1.0;
+    // USD-pegged stablecoins are 1:1; fiat balances (BRL, EUR) use the fiat rate table.
+    const peggedRate = resolveUsdRate(c, undefined);
+    if (peggedRate !== null) return peggedRate;
 
     const now = Date.now();
     const cached = BitgetUTAAdapter.tickerPriceCache[c];
@@ -189,7 +191,8 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
             if (balance > 0) {
               const coin = (item.coin || '').toUpperCase();
               const price = await this.getCoinPrice(coin, knownPrices);
-              const usdVal = price > 0 ? balance * price : (isStablecoin(coin) ? balance : 0);
+              const fallbackRate = resolveUsdRate(coin, undefined);
+              const usdVal = price > 0 ? balance * price : balance * (fallbackRate ?? 0);
 
               balances.push({
                 id: `${key.id}-uta-funding-${coin}`,

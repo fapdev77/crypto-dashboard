@@ -17,6 +17,8 @@ import { usePagination } from '../../../hooks/usePagination';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
 import { resolvePeriodDateRange } from '../../../utils/dateTimeHelper';
 import { useTranslation } from 'react-i18next';
+import { getUsdPrice, PriceExchange } from '../../../services/pricing/usdPrice';
+import { MissingRatesNotice, missingRatesNote } from '../../transactions/MissingRatesNotice';
 
 export function OrderHistory() {
   const { t } = useTranslation();
@@ -57,6 +59,7 @@ export function OrderHistory() {
   }, [historyCacheInterval, fetchOrders]);
 
   const [totalFundingFee, setTotalFundingFee] = useState<number>(0);
+  const [missingFundingRates, setMissingFundingRates] = useState<string[]>([]);
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
 
@@ -73,22 +76,13 @@ export function OrderHistory() {
       const start = startTime ?? (now - 7 * 24 * 60 * 60 * 1000);
       const end = endTime ?? now;
 
-      // Helper to lazily fetch prices for non-USD currencies if needed
-      const priceCache: Record<string, number> = {};
-      const getPrice = async (ccy: string) => {
-        if (ccy.includes('USD') || ccy === 'EUR') return 1;
-        if (priceCache[ccy]) return priceCache[ccy];
-        try {
-          const res = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${ccy}-USDT`);
-          if (res.ok) {
-            const json = await res.json();
-            if (json.code === '0' && json.data && json.data.length > 0) {
-              priceCache[ccy] = parseFloat(json.data[0].last);
-              return priceCache[ccy];
-            }
-          }
-        } catch { /* ignore fallback to 0 */ }
-        return 0;
+      // Shared price cascade (exchange ticker -> OKX). Unpriced currencies are
+      // reported instead of being converted with an invented 1:1 rate.
+      const unresolved = new Set<string>();
+      const getPrice = async (ccy: string, exchange?: PriceExchange) => {
+        const price = await getUsdPrice(ccy, { exchange });
+        if (price === null) unresolved.add(ccy);
+        return price ?? 0;
       };
 
       if (useMockData) {
@@ -98,11 +92,14 @@ export function OrderHistory() {
              if (b.type === 'funding' && b.timestamp >= start && b.timestamp <= end) {
                 if (filters.exchange !== 'All' && b.exchange !== filters.exchange.toLowerCase()) continue;
                 const ccyStr = b.ccy ? b.ccy.toUpperCase() : 'USDT';
-                const p = await getPrice(ccyStr);
+                const p = await getPrice(ccyStr, b.exchange as PriceExchange | undefined);
                 total += (b.amount * p);
              }
           }
-          if (isMounted) setTotalFundingFee(total);
+          if (isMounted) {
+            setTotalFundingFee(total);
+            setMissingFundingRates(Array.from(unresolved));
+          }
         }).catch(err => {
           LogManager.warn('OrderHistory', 'Could not load mock bills', err);
         });
@@ -111,7 +108,10 @@ export function OrderHistory() {
 
       const activeKeys = keys.filter(k => k.isActive);
       if (activeKeys.length === 0) {
-        if (isMounted) setTotalFundingFee(0);
+        if (isMounted) {
+          setTotalFundingFee(0);
+          setMissingFundingRates([]);
+        }
         return;
       }
 
@@ -126,7 +126,9 @@ export function OrderHistory() {
              for (const b of bills) {
                if (b.type === 'funding') {
                  const ccyStr = b.ccy ? b.ccy.toUpperCase() : 'USDT';
-                 const p = await getPrice(ccyStr);
+                 // Bills come per API key, so the venue is known even when the
+                 // record itself does not carry it.
+                 const p = await getPrice(ccyStr, key.exchange as PriceExchange);
                  total += Number(b.amount) * p;
                }
              }
@@ -134,7 +136,10 @@ export function OrderHistory() {
              LogManager.error('OrderHistory', 'Failed to fetch bills for funding fee', e);
            }
         }
-        if (isMounted) setTotalFundingFee(total);
+        if (isMounted) {
+          setTotalFundingFee(total);
+          setMissingFundingRates(Array.from(unresolved));
+        }
       });
     };
     fetchFunding();
@@ -226,11 +231,13 @@ export function OrderHistory() {
       return [o.symbol, o.exchange, o.connectionId, o.category, o.type, sideText, o.price, o.qty, o.filledQty, o.status, timeStr];
     });
 
+    const note = missingRatesNote(t, missingFundingRates);
     const config: ExportConfig = {
       title: 'Order History Report',
       filename: `Order_History_${Date.now()}`,
       headers,
-      rows
+      rows,
+      notes: note ? [note] : undefined,
     };
 
     if (format === 'csv') exportToCSV(config);
@@ -269,6 +276,10 @@ export function OrderHistory() {
       <div className="px-0">
         <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} showStatusFilter={true} />
       </div>
+
+      {missingFundingRates.length > 0 && (
+        <MissingRatesNotice currencies={missingFundingRates} />
+      )}
 
       {orders.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">

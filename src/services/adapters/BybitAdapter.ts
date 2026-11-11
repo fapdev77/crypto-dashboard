@@ -11,7 +11,7 @@ import { mapInstrumentType } from '../../utils/instrumentTypeMapper';
 import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extractCcy } from '../../utils/unifiers';
 import { getBybitBaseUrl, getBybitCustomHeaders } from '../../utils/bybitEndpoints';
 import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
-import { isStablecoin } from '../../utils/formatters';
+import { resolveUsdRate } from '../../utils/usdAggregation';
 import { ApiRateLimitError } from '../../utils/retryHelper';
 
 const MAX_DEEP_PAGES = 30;
@@ -65,7 +65,9 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
   private async getCoinPrice(coin: string, baseUrl: string, knownPrices: Record<string, number>): Promise<number> {
     const c = coin.toUpperCase();
     if (knownPrices[c] !== undefined && knownPrices[c] > 0) return knownPrices[c];
-    if (isStablecoin(c)) return 1.0;
+    // USD-pegged stablecoins are 1:1; fiat balances (BRL, EUR) use the fiat rate table.
+    const peggedRate = resolveUsdRate(c, undefined);
+    if (peggedRate !== null) return peggedRate;
 
     try {
       const tickerUrl = `${baseUrl}/v5/market/tickers?category=spot&symbol=${c}USDT`;

@@ -5,6 +5,7 @@ import {
   needsTokenRate,
   aggregateStatsToUsd,
 } from '../usdAggregation';
+import { isStablecoin } from '../formatters';
 
 const values = (overrides: Record<string, string> = {}) => ({
   totalFunding: '0',
@@ -107,5 +108,14 @@ describe('aggregateStatsToUsd', () => {
 
     expect(stats.initialBalance).toBe('100');
     expect(stats.percentageChange).toBeCloseTo(20);
+  });
+});
+
+describe('isStablecoin (display formatting)', () => {
+  it('keeps covering BRL/EURT for 2-decimal rendering while valuation uses the USD predicates', () => {
+    expect(isStablecoin('BRL')).toBe(true);
+    expect(isStablecoin('EURT')).toBe(true);
+    expect(isStablecoin('BTC')).toBe(false);
+    expect(isUsdPeggedStablecoin('EURT')).toBe(false);
   });
 });
