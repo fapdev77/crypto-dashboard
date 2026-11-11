@@ -1,3 +1,10 @@
+# [2.32.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.31.0...v2.32.0) (2026-11-11)
+
+
+### Features
+
+* improve stable coin value fetch and add dashboard, order reports, exchange adapters, and transaction hooks ([f96aacc](https://github.com/fapdev77/crypto-dashboard/commit/f96aacc15e6a36a662348cbaa5b7f2869d03aab5))
+
 # [2.31.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.30.0...v2.31.0) (2026-11-10)
 
 
