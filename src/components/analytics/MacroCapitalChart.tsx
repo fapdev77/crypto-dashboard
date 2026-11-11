@@ -51,8 +51,8 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
   };
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] p-5 rounded-xl flex flex-col h-[300px]">
-      <h3 className="text-sm font-semibold text-white mb-4">
+    <div className="bg-surface border border-line p-5 rounded-xl flex flex-col h-[300px]">
+      <h3 className="text-sm font-semibold text-fg mb-4">
         {t('dashboardExtra.macroCapitalDistribution', 'Macro Capital Distribution')}
       </h3>
       <div className="flex-1 min-h-0 w-full relative">

@@ -157,33 +157,33 @@ export function UpdateNotification() {
 
   return (
     <div
-      className="fixed bottom-12 left-4 right-4 md:left-auto md:w-96 bg-[#1a1b1e] border border-[#2a2b30] rounded-xl shadow-2xl z-[9999] overflow-hidden shadow-black/80 transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-default"
+      className="fixed bottom-12 left-4 right-4 md:left-auto md:w-96 bg-elevated border border-line rounded-xl shadow-2xl z-[9999] overflow-hidden shadow-black/80 transition-all animate-in fade-in slide-in-from-bottom-4 duration-300 cursor-default"
       onMouseEnter={cancelCountdown}
       onClick={cancelCountdown}
       role="alertdialog"
       aria-labelledby="pwa-update-title"
     >
       <div className="p-4 flex items-start gap-3.5">
-        <div className="bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 p-2.5 rounded-lg text-[#2F6BFF] shrink-0">
+        <div className="bg-accent/10 border border-accent/20 p-2.5 rounded-lg text-accent shrink-0">
           <Sparkles className="w-5 h-5 animate-pulse" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
-            <h3 id="pwa-update-title" className="text-[14px] font-semibold text-white tracking-wide">
+            <h3 id="pwa-update-title" className="text-[14px] font-semibold text-fg tracking-wide">
               Update Available
             </h3>
             {!isCountdownCancelled && (
-              <span className="text-[10px] font-mono text-gray-400">
+              <span className="text-[10px] font-mono text-fg-muted">
                 in {secondsRemaining}s
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-300 leading-relaxed mb-2">
+          <p className="text-xs text-fg leading-relaxed mb-2">
             A new version with performance improvements and updates is ready.
           </p>
           <button
             onClick={handleViewChangelog}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-[#2F6BFF] hover:text-blue-300 transition-colors cursor-pointer group"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:text-blue-300 transition-colors cursor-pointer group"
           >
             <span>View Version & Changelog</span>
             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -191,7 +191,7 @@ export function UpdateNotification() {
         </div>
         <button
           onClick={handleDismiss}
-          className="text-gray-400 hover:text-white transition-colors shrink-0 p-1.5 hover:bg-[#2a2b30] rounded-md cursor-pointer"
+          className="text-fg-muted hover:text-fg transition-colors shrink-0 p-1.5 hover:bg-line rounded-md cursor-pointer"
           aria-label="Dismiss notification"
           title="Dismiss (Do not update now)"
         >
@@ -201,19 +201,19 @@ export function UpdateNotification() {
 
       {/* Progress Bar for Auto-Update (hidden when countdown is cancelled) */}
       {!isCountdownCancelled && (
-        <div className="h-1 w-full bg-[#2a2b30]/60 relative overflow-hidden">
+        <div className="h-1 w-full bg-line/60 relative overflow-hidden">
           <div
-            className="h-full bg-[#2F6BFF] transition-[width] duration-75 ease-linear"
+            className="h-full bg-accent transition-[width] duration-75 ease-linear"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
       )}
 
       {/* Action Buttons */}
-      <div className="flex border-t border-[#2a2b30] divide-x divide-[#2a2b30] bg-[#16171a]">
+      <div className="flex border-t border-line divide-x divide-line bg-surface">
         <button
           onClick={handleDismiss}
-          className="flex-1 py-2.5 text-xs font-medium text-gray-400 hover:text-gray-200 hover:bg-[#2a2b30]/50 transition-colors cursor-pointer"
+          className="flex-1 py-2.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-line/50 transition-colors cursor-pointer"
         >
           Not Now
         </button>
@@ -223,7 +223,7 @@ export function UpdateNotification() {
             triggerUpdate();
           }}
           disabled={isUpdating}
-          className="flex-1 py-2.5 text-xs font-medium text-[#2F6BFF] hover:text-blue-300 hover:bg-[#2a2b30]/50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+          className="flex-1 py-2.5 text-xs font-medium text-accent hover:text-blue-300 hover:bg-line/50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
           <span>{isUpdating ? 'Updating...' : 'Update Now'}</span>

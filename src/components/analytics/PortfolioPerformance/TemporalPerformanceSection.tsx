@@ -56,19 +56,19 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
   return (
     <div className="space-y-4">
       {/* Header and Tab switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#2a2b30]/60">
-        <h3 className="text-base font-bold text-white flex items-center gap-2">
-          <Clock className="w-4 h-4 text-[#2F6BFF]" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-line/60">
+        <h3 className="text-base font-bold text-fg flex items-center gap-2">
+          <Clock className="w-4 h-4 text-accent" />
           {t('analytics.portfolio.temporal.title', 'Temporal Performance Analysis')}
         </h3>
 
-        <div className="flex items-center gap-1 bg-[#1a1b1e] p-1 rounded-lg border border-[#2a2b30]">
+        <div className="flex items-center gap-1 bg-elevated p-1 rounded-lg border border-line">
           <button
             onClick={() => setActiveTab('dayOfWeek')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
               activeTab === 'dayOfWeek'
-                ? 'bg-[#2F6BFF] text-white shadow-sm'
-                : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/40'
+                ? 'bg-accent text-white shadow-sm'
+                : 'text-fg-muted hover:text-fg hover:bg-line/40'
             }`}
           >
             <CalendarDays className="w-3.5 h-3.5" />
@@ -78,8 +78,8 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             onClick={() => setActiveTab('timeOfDay')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
               activeTab === 'timeOfDay'
-                ? 'bg-[#2F6BFF] text-white shadow-sm'
-                : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/40'
+                ? 'bg-accent text-white shadow-sm'
+                : 'text-fg-muted hover:text-fg hover:bg-line/40'
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
@@ -89,17 +89,17 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
       </div>
 
       {/* Main Container */}
-      <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 space-y-6 shadow-sm">
+      <div className="bg-surface border border-line rounded-xl p-5 space-y-6 shadow-sm">
         {activeTab === 'dayOfWeek' ? (
           <div className="space-y-6">
             {/* Highlights: Best vs Worst Day */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-[#161b22] border border-emerald-500/20 rounded-lg p-4 flex items-center justify-between">
+              <div className="bg-elevated border border-emerald-500/20 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">
                     {t('analytics.portfolio.temporal.bestDay', 'Best Day of Week')}
                   </span>
-                  <div className="text-lg font-bold text-white">
+                  <div className="text-lg font-bold text-fg">
                     {dayOfWeek.bestDay.name}
                   </div>
                   <div className="text-xs font-mono font-bold text-emerald-400 mt-1">
@@ -111,12 +111,12 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                 </div>
               </div>
 
-              <div className="bg-[#161b22] border border-rose-500/20 rounded-lg p-4 flex items-center justify-between">
+              <div className="bg-elevated border border-rose-500/20 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider block mb-1">
                     Lowest / Worst Day
                   </span>
-                  <div className="text-lg font-bold text-white">
+                  <div className="text-lg font-bold text-fg">
                     {dayOfWeek.worstDay.name}
                   </div>
                   <div className="text-xs font-mono font-bold text-rose-400 mt-1">
@@ -130,9 +130,9 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             </div>
 
             {/* Bar Chart: Monday - Sunday Total Gain */}
-            <div className="bg-[#1a1b1e]/50 border border-[#2a2b30]/60 rounded-xl p-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#8E9299] mb-3 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-[#2F6BFF]" />
+            <div className="bg-elevated/50 border border-line/60 rounded-xl p-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted mb-3 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-accent" />
                 Total Return by Day (Trading + Funding)
               </h4>
               <div className="h-56 w-full">
@@ -157,28 +157,28 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                         if (active && payload && payload.length) {
                           const data = payload[0].payload as DayOfWeekItem;
                           return (
-                            <div className="bg-[#1b1c20] border border-[#2a2b30] p-3 rounded-lg shadow-xl text-xs space-y-1">
-                              <p className="font-bold text-white border-b border-[#2a2b30] pb-1">
+                            <div className="bg-[#1b1c20] border border-line p-3 rounded-lg shadow-xl text-xs space-y-1">
+                              <p className="font-bold text-fg border-b border-line pb-1">
                                 {data.dayName}
                               </p>
-                              <div className="flex justify-between gap-4 text-[#8E9299]">
+                              <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Operations:</span>
-                                <span className="font-mono text-white">{maskVal(data.trades)}</span>
+                                <span className="font-mono text-fg">{maskVal(data.trades)}</span>
                               </div>
-                              <div className="flex justify-between gap-4 text-[#8E9299]">
+                              <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Trading Result:</span>
                                 <span className={`font-mono ${data.tradingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                   {formatGain(data.tradingGain)}
                                 </span>
                               </div>
-                              <div className="flex justify-between gap-4 text-[#8E9299]">
+                              <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Funding Result:</span>
                                 <span className={`font-mono ${data.fundingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                   {formatGain(data.fundingGain)}
                                 </span>
                               </div>
-                              <div className="flex justify-between gap-4 text-[#8E9299] pt-1 border-t border-[#2a2b30]">
-                                <span className="font-bold text-white">Total Result:</span>
+                              <div className="flex justify-between gap-4 text-fg-muted pt-1 border-t border-line">
+                                <span className="font-bold text-fg">Total Result:</span>
                                 <span className={`font-mono font-bold ${data.totalGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                   {formatGain(data.totalGain)}
                                 </span>
@@ -204,8 +204,8 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
 
             {/* Detailed Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border border-[#2a2b30] rounded-lg overflow-hidden">
-                <thead className="bg-[#1b1c20] text-[#8E9299] uppercase text-[10px] tracking-wider border-b border-[#2a2b30]">
+              <table className="w-full text-left text-xs border border-line rounded-lg overflow-hidden">
+                <thead className="bg-[#1b1c20] text-fg-muted uppercase text-[10px] tracking-wider border-b border-line">
                   <tr>
                     <th className="py-2.5 px-4 font-semibold">Day of Week</th>
                     <th className="py-2.5 px-4 font-semibold text-right">Trades / Ops</th>
@@ -214,10 +214,10 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                     <th className="py-2.5 px-4 font-semibold text-right">Total Result</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#2a2b30]/60 font-mono">
+                <tbody className="divide-y divide-line/60 font-mono">
                   {dayOfWeek.list.map((d) => (
-                    <tr key={d.dayName} className="hover:bg-[#1a1b1e] transition-colors">
-                      <td className="py-2.5 px-4 font-sans font-medium text-white flex items-center gap-2">
+                    <tr key={d.dayName} className="hover:bg-elevated transition-colors">
+                      <td className="py-2.5 px-4 font-sans font-medium text-fg flex items-center gap-2">
                         <span>{d.dayName}</span>
                         {d.dayName === dayOfWeek.bestDay.name && (
                           <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-sans uppercase font-bold">
@@ -230,7 +230,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-4 text-right text-[#8E9299]">{maskVal(d.trades)}</td>
+                      <td className="py-2.5 px-4 text-right text-fg-muted">{maskVal(d.trades)}</td>
                       <td className={`py-2.5 px-4 text-right ${d.tradingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {formatGain(d.tradingGain)}
                       </td>
@@ -251,12 +251,12 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
           <div className="space-y-6">
             {/* Highlights: Best vs Worst Period */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-[#161b22] border border-emerald-500/20 rounded-lg p-4 flex items-center justify-between">
+              <div className="bg-elevated border border-emerald-500/20 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider block mb-1">
                     Best Time Window
                   </span>
-                  <div className="text-lg font-bold text-white">
+                  <div className="text-lg font-bold text-fg">
                     {timeOfDay.bestTime.period}
                   </div>
                   <div className="text-xs font-mono font-bold text-emerald-400 mt-1">
@@ -268,12 +268,12 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                 </div>
               </div>
 
-              <div className="bg-[#161b22] border border-rose-500/20 rounded-lg p-4 flex items-center justify-between">
+              <div className="bg-elevated border border-rose-500/20 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider block mb-1">
                     Lowest Time Window
                   </span>
-                  <div className="text-lg font-bold text-white">
+                  <div className="text-lg font-bold text-fg">
                     {timeOfDay.worstTime.period}
                   </div>
                   <div className="text-xs font-mono font-bold text-rose-400 mt-1">
@@ -287,9 +287,9 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             </div>
 
             {/* Bar Chart: 4h Intervals Total Gain */}
-            <div className="bg-[#1a1b1e]/50 border border-[#2a2b30]/60 rounded-xl p-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#8E9299] mb-3 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#2F6BFF]" />
+            <div className="bg-elevated/50 border border-line/60 rounded-xl p-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted mb-3 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-accent" />
                 Total Return by 4-Hour Time Bucket (UTC)
               </h4>
               <div className="h-56 w-full">
@@ -314,28 +314,28 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                         if (active && payload && payload.length) {
                           const data = payload[0].payload as TimeOfDayItem;
                           return (
-                            <div className="bg-[#1b1c20] border border-[#2a2b30] p-3 rounded-lg shadow-xl text-xs space-y-1">
-                              <p className="font-bold text-white border-b border-[#2a2b30] pb-1">
+                            <div className="bg-[#1b1c20] border border-line p-3 rounded-lg shadow-xl text-xs space-y-1">
+                              <p className="font-bold text-fg border-b border-line pb-1">
                                 {data.periodLabel}
                               </p>
-                              <div className="flex justify-between gap-4 text-[#8E9299]">
+                              <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Operations:</span>
-                                <span className="font-mono text-white">{maskVal(data.trades)}</span>
+                                <span className="font-mono text-fg">{maskVal(data.trades)}</span>
                               </div>
-                              <div className="flex justify-between gap-4 text-[#8E9299]">
+                              <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Trading Result:</span>
                                 <span className={`font-mono ${data.tradingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                   {formatGain(data.tradingGain)}
                                 </span>
                               </div>
-                              <div className="flex justify-between gap-4 text-[#8E9299]">
+                              <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Funding Result:</span>
                                 <span className={`font-mono ${data.fundingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                   {formatGain(data.fundingGain)}
                                 </span>
                               </div>
-                              <div className="flex justify-between gap-4 text-[#8E9299] pt-1 border-t border-[#2a2b30]">
-                                <span className="font-bold text-white">Total Result:</span>
+                              <div className="flex justify-between gap-4 text-fg-muted pt-1 border-t border-line">
+                                <span className="font-bold text-fg">Total Result:</span>
                                 <span className={`font-mono font-bold ${data.totalGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                   {formatGain(data.totalGain)}
                                 </span>
@@ -361,8 +361,8 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
 
             {/* Time Breakdown Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border border-[#2a2b30] rounded-lg overflow-hidden">
-                <thead className="bg-[#1b1c20] text-[#8E9299] uppercase text-[10px] tracking-wider border-b border-[#2a2b30]">
+              <table className="w-full text-left text-xs border border-line rounded-lg overflow-hidden">
+                <thead className="bg-[#1b1c20] text-fg-muted uppercase text-[10px] tracking-wider border-b border-line">
                   <tr>
                     <th className="py-2.5 px-4 font-semibold">Time Window (UTC)</th>
                     <th className="py-2.5 px-4 font-semibold text-right">Trades / Ops</th>
@@ -371,10 +371,10 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                     <th className="py-2.5 px-4 font-semibold text-right">Total Result</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#2a2b30]/60 font-mono">
+                <tbody className="divide-y divide-line/60 font-mono">
                   {timeOfDay.list.map((t) => (
-                    <tr key={t.periodLabel} className="hover:bg-[#1a1b1e] transition-colors">
-                      <td className="py-2.5 px-4 font-sans font-medium text-white flex items-center gap-2">
+                    <tr key={t.periodLabel} className="hover:bg-elevated transition-colors">
+                      <td className="py-2.5 px-4 font-sans font-medium text-fg flex items-center gap-2">
                         <span>{t.periodLabel}</span>
                         {t.periodLabel === timeOfDay.bestTime.period && (
                           <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-sans uppercase font-bold">
@@ -387,7 +387,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-4 text-right text-[#8E9299]">{maskVal(t.trades)}</td>
+                      <td className="py-2.5 px-4 text-right text-fg-muted">{maskVal(t.trades)}</td>
                       <td className={`py-2.5 px-4 text-right ${t.tradingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {formatGain(t.tradingGain)}
                       </td>

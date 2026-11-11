@@ -49,14 +49,14 @@ const CustomTooltip = ({ active, payload, formatCurrency, totals, t }: CustomToo
   if (!data) return null;
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-3.5 shadow-2xl z-50 min-w-[240px] text-xs space-y-2.5">
-      <div className="flex items-center justify-between gap-3 border-b border-[#2a2b30] pb-2">
+    <div className="bg-surface border border-line rounded-xl p-3.5 shadow-2xl z-50 min-w-[240px] text-xs space-y-2.5">
+      <div className="flex items-center justify-between gap-3 border-b border-line pb-2">
         <div className="flex items-center gap-2">
           <span
             className="w-2.5 h-2.5 rounded-sm inline-block shrink-0"
             style={{ backgroundColor: data.color }}
           />
-          <span className="font-semibold text-white">{data.name}</span>
+          <span className="font-semibold text-fg">{data.name}</span>
         </div>
         <span
           className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${data.id === 'hedge' || data.id === 'stablecoins'
@@ -71,27 +71,27 @@ const CustomTooltip = ({ active, payload, formatCurrency, totals, t }: CustomToo
       </div>
 
       <div className="space-y-1.5 font-mono text-[11px]">
-        <div className="flex justify-between items-center text-white">
-          <span className="text-[#8E9299]">{t('hedgePro.exposureChart.capitalValue')}</span>
+        <div className="flex justify-between items-center text-fg">
+          <span className="text-fg-muted">{t('hedgePro.exposureChart.capitalValue')}</span>
           <span className="font-bold">{formatCurrency(data.usd, 'usd', 2)}</span>
         </div>
-        <div className="flex justify-between items-center text-white">
-          <span className="text-[#8E9299]">{t('hedgePro.exposureChart.shareOfEquity')}</span>
+        <div className="flex justify-between items-center text-fg">
+          <span className="text-fg-muted">{t('hedgePro.exposureChart.shareOfEquity')}</span>
           <span className="font-semibold">{data.equityPct.toFixed(2)}%</span>
         </div>
         {data.subPct !== undefined && (
-          <div className="flex justify-between items-center text-emerald-400 border-t border-[#2a2b30]/60 pt-1">
-            <span className="text-[#8E9299]">{t('hedgePro.exposureChart.shareOfProtected')}</span>
+          <div className="flex justify-between items-center text-emerald-400 border-t border-line/60 pt-1">
+            <span className="text-fg-muted">{t('hedgePro.exposureChart.shareOfProtected')}</span>
             <span className="font-semibold">{data.subPct.toFixed(2)}%</span>
           </div>
         )}
       </div>
 
-      <p className="text-[10px] text-[#8E9299] border-t border-[#2a2b30] pt-2 leading-relaxed">
+      <p className="text-[10px] text-fg-muted border-t border-line pt-2 leading-relaxed">
         {data.description}
       </p>
 
-      <div className="text-[10px] text-[#8E9299]/70 pt-0.5 flex justify-between font-mono">
+      <div className="text-[10px] text-fg-muted/70 pt-0.5 flex justify-between font-mono">
         <span>{t('hedgePro.exposureChart.portfolioEquity')}</span>
         <span>{formatCurrency(totals.totalEquity, 'usd', 2)}</span>
       </div>
@@ -112,7 +112,7 @@ const CustomYAxisTick = (props: any) => {
             className="w-2 h-2 rounded-full shrink-0"
             style={{ backgroundColor: data.color }}
           />
-          <span className="text-xs font-semibold text-white truncate text-right">
+          <span className="text-xs font-semibold text-fg truncate text-right">
             {data.shortName || data.name}
           </span>
         </div>
@@ -203,14 +203,14 @@ export function HedgeProCapitalExposureChart({
   const totalBase = totals.syntheticHedgeUsd + totals.stablecoinsProtectedUsd + totals.summaryExposed;
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col gap-3.5">
+    <div className="bg-surface border border-line rounded-xl p-4 flex flex-col gap-3.5">
       {/* Header with Title and Legend */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-fg flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
           {t('hedgePro.exposureChart.title')}
         </h3>
-        <div className="flex items-center gap-3.5 text-[10px] text-[#8E9299] uppercase tracking-wider flex-wrap">
+        <div className="flex items-center gap-3.5 text-[10px] text-fg-muted uppercase tracking-wider flex-wrap">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-emerald-500/90 inline-block" /> {t('hedgePro.exposureChart.hedgeShorts')}
           </span>
@@ -218,7 +218,7 @@ export function HedgeProCapitalExposureChart({
             <span className="w-3 h-3 rounded-sm bg-blue-500/90 inline-block" /> {t('hedgePro.exposureChart.stablecoins')}
           </span>
           <span className="flex items-center gap-1.5">
-            <Activity className="w-3 h-3 text-white" /> {t('hedgePro.exposureChart.exposedShort')}
+            <Activity className="w-3 h-3 text-fg" /> {t('hedgePro.exposureChart.exposedShort')}
           </span>
           {hasLeveraged && (
             <span className="flex items-center gap-1.5">
@@ -228,27 +228,27 @@ export function HedgeProCapitalExposureChart({
         </div>
       </div>
 
-      <p className="text-[10px] text-[#8E9299] -mt-1.5">
+      <p className="text-[10px] text-fg-muted -mt-1.5">
         {t('hedgePro.exposureChart.subtitle')}
       </p>
 
       {/* Portfolio Composition Overview Stacked Bar (Recharts) */}
       <div className="space-y-1">
-        <div className="flex justify-between text-[11px] font-mono text-[#8E9299]">
+        <div className="flex justify-between text-[11px] font-mono text-fg-muted">
           <span className="flex items-center gap-1.5">
             <Shield className="w-3 h-3 text-emerald-400" />
             <span className="text-emerald-400 font-semibold">
               {t('hedgePro.breakdownChart.protected')}: {totals.protectedPct.toFixed(2)}%
             </span>
-            <span className="text-[10px] text-[#8E9299]">
+            <span className="text-[10px] text-fg-muted">
               ({formatCurrency(totals.totalProtected, 'usd', 2)})
             </span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="text-white font-semibold">
+            <span className="text-fg font-semibold">
               {t('hedgePro.breakdownChart.exposed')}: {totals.exposedPct.toFixed(2)}%
             </span>
-            <span className="text-[10px] text-[#8E9299]">
+            <span className="text-[10px] text-fg-muted">
               ({formatCurrency(totals.summaryExposed, 'usd', 2)})
             </span>
           </span>
@@ -260,7 +260,7 @@ export function HedgeProCapitalExposureChart({
           align="center"
           description={
             <div className="text-xs space-y-1.5 p-1 min-w-[240px]">
-              <div className="font-semibold text-white border-b border-[#2a2b30] pb-1">
+              <div className="font-semibold text-fg border-b border-line pb-1">
                 {t('hedgePro.exposureChart.allocationBreakdown')}
               </div>
               <div className="space-y-1.5 font-mono text-[11px]">
@@ -282,7 +282,7 @@ export function HedgeProCapitalExposureChart({
                     {formatCurrency(totals.stablecoinsProtectedUsd, 'usd', 2)} ({totals.stablesOfEquityPct.toFixed(2)}%)
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-white">
+                <div className="flex justify-between items-center text-fg">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-white inline-block" />
                     {t('hedgePro.dashboard.capitalExposureTooltip.exposed')}
@@ -292,7 +292,7 @@ export function HedgeProCapitalExposureChart({
                   </span>
                 </div>
                 {hasLeveraged && (
-                  <div className="flex justify-between items-center text-amber-400 border-t border-[#2a2b30]/60 pt-1">
+                  <div className="flex justify-between items-center text-amber-400 border-t border-line/60 pt-1">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
                       {t('hedgePro.dashboard.capitalExposureTooltip.leveragedLongs')}
@@ -302,15 +302,15 @@ export function HedgeProCapitalExposureChart({
                     </span>
                   </div>
                 )}
-                <div className="flex justify-between items-center text-white border-t border-[#2a2b30] pt-1 font-semibold">
-                  <span className="text-[#8E9299]">{t('hedgePro.exposureChart.portfolioEquity')}</span>
+                <div className="flex justify-between items-center text-fg border-t border-line pt-1 font-semibold">
+                  <span className="text-fg-muted">{t('hedgePro.exposureChart.portfolioEquity')}</span>
                   <span>{formatCurrency(totals.totalEquity, 'usd', 2)}</span>
                 </div>
               </div>
             </div>
           }
         >
-          <div className="w-full h-5 relative rounded-md overflow-hidden bg-[#1a1b1e] border border-[#2a2b30]/80 cursor-help hover:border-[#3a3b42] transition-colors">
+          <div className="w-full h-5 relative rounded-md overflow-hidden bg-elevated border border-line/80 cursor-help hover:border-line-strong transition-colors">
             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <BarChart
                 layout="vertical"
@@ -378,7 +378,7 @@ export function HedgeProCapitalExposureChart({
               key={item.id}
               className="flex items-center justify-end gap-2 text-xs font-mono pr-1 h-[36px]"
             >
-              <span className="text-white font-semibold whitespace-nowrap">
+              <span className="text-fg font-semibold whitespace-nowrap">
                 {formatCurrency(item.usd, 'usd', 2)}
               </span>
               <span

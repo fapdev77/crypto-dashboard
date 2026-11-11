@@ -13,7 +13,7 @@ export const ThHeaderTooltip: React.FC<{
   children: React.ReactNode;
 }> = ({ description, rows, children }) => (
   <AppTooltip description={description} rows={rows} side="top" align="center">
-    <span className="cursor-help border-b border-dashed border-[#8E9299]/40 hover:border-[#8E9299]/80 transition-colors inline-block">
+    <span className="cursor-help border-b border-dashed border-fg-muted/40 hover:border-fg-muted/80 transition-colors inline-block">
       {children}
     </span>
   </AppTooltip>

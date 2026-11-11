@@ -37,19 +37,19 @@ export const KpiRankingList = ({
   const bgColor = color === 'green' ? 'bg-green-500/5' : 'bg-red-500/5';
 
   const list = (
-    <div className={`bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col gap-2 hover:border-[#3a3b40] transition-colors ${borderColor}`}>
+    <div className={`bg-surface border border-line rounded-xl p-4 flex flex-col gap-2 hover:border-line-strong transition-colors ${borderColor}`}>
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-[#8E9299]">{icon}</span>
-        <span className="text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">{title}</span>
-        <span className="text-[10px] text-[#8E9299] ml-auto">({items.length})</span>
+        <span className="text-fg-muted">{icon}</span>
+        <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">{title}</span>
+        <span className="text-[10px] text-fg-muted ml-auto">({items.length})</span>
       </div>
 
       {items.length === 0 ? (
-        <span className="text-xs text-[#8E9299] italic">{t('common.noData', 'No data')}</span>
+        <span className="text-xs text-fg-muted italic">{t('common.noData', 'No data')}</span>
       ) : (
         <div className="flex flex-col gap-1">
           {items.map((item, idx) => {
-            const rankColor = idx === 0 ? textColor : 'text-[#8E9299]';
+            const rankColor = idx === 0 ? textColor : 'text-fg-muted';
             return (
               <div
                 key={`${item.symbol}-${item.exchange || 'unknown'}`}
@@ -59,21 +59,21 @@ export const KpiRankingList = ({
                   <span className={`text-[10px] font-mono font-bold ${rankColor} w-4 shrink-0`}>
                     {idx + 1}.
                   </span>
-                  <span className="text-xs text-white font-medium truncate">{item.symbol}</span>
+                  <span className="text-xs text-fg font-medium truncate">{item.symbol}</span>
                   {item.exchange && (
                     <span className={clsx(
                       "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-medium capitalize shrink-0",
                       item.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
                       item.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
                       item.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
-                      "bg-[#2a2b30] text-[#8E9299] border-[#2a2b30]"
+                      "bg-line text-fg-muted border-line"
                     )}>
                       <ExchangeIcon exchange={item.exchange} className="w-2.5 h-2.5" />
                       {item.exchange}
                     </span>
                   )}
                 </div>
-                <span className={`text-xs font-mono font-medium shrink-0 ml-2 ${item.rate > 0 ? 'text-green-400' : item.rate < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                <span className={`text-xs font-mono font-medium shrink-0 ml-2 ${item.rate > 0 ? 'text-green-400' : item.rate < 0 ? 'text-red-400' : 'text-fg-muted'}`}>
                   {formatRate(item.rate)}
                 </span>
               </div>

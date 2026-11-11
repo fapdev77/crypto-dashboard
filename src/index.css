@@ -4,16 +4,86 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
+
   /* Definir as propriedades para o Tailwind v4 criar as classes text-brand-*, bg-brand-* */
   --color-brand-normal: var(--brand-normal);
   --color-brand-hover: var(--brand-hover);
   --color-brand-pressed: var(--brand-pressed);
   --color-brand-focus: var(--brand-focus);
-  
+
   --color-bitget: #03aac7;
   --color-okx: #fafafa;
   --color-bybit: #ff9c2e;
+
+  /* Superfícies e tipografia: resolvidas em runtime pelo tema (dark/light) */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-elevated-hover: var(--elevated-hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+
+  /* Cores de ação e semânticas */
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+}
+
+/* ------------------------------------------------------------------
+   Terminal Dark (padrão) - valores idênticos aos usados até aqui
+   ------------------------------------------------------------------ */
+:root {
+  --canvas: #0b0c10;
+  --surface: #151619;
+  --elevated: #1a1b1e;
+  --elevated-hover: #22242a;
+  --line: #2a2b30;
+  --line-strong: #3a3b40;
+  --fg: #f8f9fa;
+  --fg-muted: #8e9299;
+  --accent: #2f6bff;
+  --accent-hover: #1e56df;
+  --success: #00c853;
+  --danger: #ff4444;
+  --warning: #f59e0b;
+
+  /* Aliases históricos consumidos pelo CSS global */
+  --bg-color: var(--canvas);
+  --panel-bg: var(--surface);
+  --text-primary: var(--fg);
+  --text-secondary: var(--fg-muted);
+  --accent-color: var(--accent);
+  --border-color: var(--line);
+  --danger-color: var(--danger);
+  --success-color: var(--success);
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------
+   Terminal Light - fundo claro mantendo a leitura densa de dados.
+   Pares texto/fundo medidos: todos >= 4.5:1 (WCAG AA).
+   ------------------------------------------------------------------ */
+[data-mode="light"] {
+  --canvas: #f3f4f7;
+  --surface: #ffffff;
+  --elevated: #f8f9fc;
+  --elevated-hover: #eef1f6;
+  --line: #d9dce3;
+  --line-strong: #c2c7d1;
+  --fg: #101420; /* 18.37:1 sobre surface */
+  --fg-muted: #5a6270; /* 6.15:1 sobre surface */
+  --accent: #1e56df; /* 6.08:1 sobre surface */
+  --accent-hover: #1642b8;
+  --success: #0a7f45; /* 5.08:1 */
+  --danger: #cc2b2b; /* 5.32:1 */
+  --warning: #b45309; /* 5.02:1 */
+
+  color-scheme: light;
 }
 
 /* Tema Padrão / Bitget */
@@ -22,7 +92,7 @@
   --brand-hover: #35ccfa;
   --brand-pressed: #0293ad;
   --brand-focus: #02869e;
-  
+
   --color-brand-normal: #03aac7;
   --color-brand-hover: #35ccfa;
   --color-brand-pressed: #0293ad;
@@ -35,7 +105,7 @@
   --brand-hover: #ffffff;
   --brand-pressed: #e5e5e5;
   --brand-focus: #dbdbdb;
-  
+
   --color-brand-normal: #fafafa;
   --color-brand-hover: #ffffff;
   --color-brand-pressed: #e5e5e5;
@@ -48,11 +118,57 @@
   --brand-hover: #ffc35c;
   --brand-pressed: #f0960e;
   --brand-focus: #eb8d13;
-  
+
   --color-brand-normal: #ff9c2e;
   --color-brand-hover: #ffc35c;
   --color-brand-pressed: #f0960e;
   --color-brand-focus: #eb8d13;
+}
+
+/* Temas de corretora no modo claro: as cores de marca originais foram
+   desenhadas para fundo escuro e perdem contraste sobre superfície clara.
+   A identidade de cada corretora é preservada, só o tom é ajustado. */
+[data-mode="light"] [data-theme="bitget"] {
+  --brand-normal: #007e94;
+  --brand-hover: #009cb8;
+  --brand-pressed: #006b7f;
+  --brand-focus: #005e70;
+
+  --color-brand-normal: #007e94;
+  --color-brand-hover: #009cb8;
+  --color-brand-pressed: #006b7f;
+  --color-brand-focus: #005e70;
+}
+
+[data-mode="light"] [data-theme="okx"] {
+  --brand-normal: #0f1115;
+  --brand-hover: #272b34;
+  --brand-pressed: #000000;
+  --brand-focus: #3a3f4b;
+
+  --color-brand-normal: #0f1115;
+  --color-brand-hover: #272b34;
+  --color-brand-pressed: #000000;
+  --color-brand-focus: #3a3f4b;
+}
+
+[data-mode="light"] [data-theme="bybit"] {
+  --brand-normal: #b25e00;
+  --brand-hover: #d17000;
+  --brand-pressed: #965000;
+  --brand-focus: #824600;
+
+  --color-brand-normal: #b25e00;
+  --color-brand-hover: #d17000;
+  --color-brand-pressed: #965000;
+  --color-brand-focus: #824600;
+}
+
+/* Rede de segurança do modo claro: texto que ainda use text-fg em cima de
+   superfícies saturadas (acento, sucesso, erro, marca) precisa seguir branco. */
+[data-mode="light"] :is(.bg-accent, .bg-accent-hover, .bg-success, .bg-danger, .bg-warning, .bg-brand-normal, .bg-brand-hover, .bg-brand-pressed) .text-fg,
+[data-mode="light"] :is(.bg-accent, .bg-accent-hover, .bg-success, .bg-danger, .bg-warning, .bg-brand-normal, .bg-brand-hover, .bg-brand-pressed).text-fg {
+  color: #ffffff;
 }
 
 @keyframes refresh-pop {
@@ -98,48 +214,37 @@
   animation-play-state: paused;
 }
 
-:root {
-  --bg-color: #0b0c10;
-  --panel-bg: #151619;
-  --text-primary: #f8f9fa;
-  --text-secondary: #8E9299;
-  --accent-color: #2F6BFF;
-  --border-color: #2a2b30;
-  --danger-color: #FF4444;
-  --success-color: #00C853;
-}
-
 body {
-  background-color: var(--bg-color);
-  color: var(--text-primary);
+  background-color: var(--canvas);
+  color: var(--fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbar Global - Estilos Dark Mode */
+/* Custom Scrollbar Global */
 ::-webkit-scrollbar {
   width: 8px; /* Largura da barra vertical, se houver noutros componentes */
   height: 8px; /* Altura da barra horizontal */
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--panel-bg); 
+  background: var(--surface);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--border-color);
+  background-color: var(--line);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-secondary);
+  background-color: var(--fg-muted);
 }
 
 /* Estilo global para Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--border-color) var(--panel-bg);
+  scrollbar-color: var(--line) var(--surface);
 }
 
 /* Remove a barra vertical visualmente mantendo o funcionamento do scroll */
@@ -149,7 +254,7 @@ body {
 }
 
 .hide-scrollbar {
-  /* Firefox e Edge/IE - Nota: isso oculta ambas as barras nestes browsers. 
+  /* Firefox e Edge/IE - Nota: isso oculta ambas as barras nestes browsers.
      Para Firefox exibir apenas a horizontal não é possível via CSS puro com scrollbar-width, então priorizamos a beleza. */
   scrollbar-width: none;
   -ms-overflow-style: none;

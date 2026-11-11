@@ -245,8 +245,8 @@ export function TradeHistory() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
         <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-            <ArrowLeftRight className="w-5 h-5 text-[#2F6BFF]" />
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-fg">
+            <ArrowLeftRight className="w-5 h-5 text-accent" />
             {t('trade.title', 'Trade History')}
           </h2>
           <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? t('trade.syncing', 'Syncing trade history...') : null} syncError={error} />
@@ -254,16 +254,16 @@ export function TradeHistory() {
         <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}
-            className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
+            className="px-3 py-2 bg-elevated border border-line text-fg flex items-center gap-2 rounded-lg hover:bg-line/50 transition-colors text-sm focus:outline-none"
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">{t('trade.export', 'Export')}</span> <ChevronDown className="w-3 h-3" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
-              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('trade.exportCsv', 'Export CSV')}</button>
-              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('trade.exportExcel', 'Export Excel')}</button>
-              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('trade.exportPdf', 'Export PDF')}</button>
+            <div className="absolute top-11 right-0 w-32 bg-elevated border border-line rounded-lg shadow-xl z-50 overflow-hidden text-sm text-fg">
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">{t('trade.exportCsv', 'Export CSV')}</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">{t('trade.exportExcel', 'Export Excel')}</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">{t('trade.exportPdf', 'Export PDF')}</button>
             </div>
           )}
         </div>
@@ -276,11 +276,11 @@ export function TradeHistory() {
       {trades.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           {/* Total Trades Stats */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-[13px] text-[#8E9299] uppercase tracking-wider">{t('trade.totalTrades', 'Total Trades')}</span>
-              <span className="text-2xl font-medium text-white mt-1">{trades.length}</span>
-              <span className="text-xs text-[#8E9299] mt-1 font-mono">
+              <span className="text-[13px] text-fg-muted uppercase tracking-wider">{t('trade.totalTrades', 'Total Trades')}</span>
+              <span className="text-2xl font-medium text-fg mt-1">{trades.length}</span>
+              <span className="text-xs text-fg-muted mt-1 font-mono">
                 {stats.buyCount} {t('orders.buy', 'Buy')} | {stats.sellCount} {t('orders.sell', 'Sell')}
               </span>
             </div>
@@ -300,25 +300,25 @@ export function TradeHistory() {
           </div>
 
           {/* Trade Volume */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
             <AppTooltip description={t('trade.tradedVolumeTooltip', 'The estimated USD value of all trades executed within the selected period.')}>
-              <span className="text-[13px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">{t('trade.tradedVolume', 'Traded Volume')}</span>
+              <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.tradedVolume', 'Traded Volume')}</span>
             </AppTooltip>
-            <span className="text-2xl font-medium text-[#00C853] mt-1">
+            <span className="text-2xl font-medium text-success mt-1">
               {formatCurrency(stats.totalTradedVolume, 'usd')}
             </span>
-            <span className="text-xs text-[#8E9299] mt-1">{t('trade.totalTradedAcross', 'Total traded across active accounts')}</span>
+            <span className="text-xs text-fg-muted mt-1">{t('trade.totalTradedAcross', 'Total traded across active accounts')}</span>
           </div>
 
           {/* Est. Trading Fees */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
             <AppTooltip description={t('trade.estTradingFeesTooltip', 'The total estimated USD value of trading fees paid for these trades.')}>
-              <span className="text-[13px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">{t('trade.estTradingFees', 'Est. Trading Fees')}</span>
+              <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.estTradingFees', 'Est. Trading Fees')}</span>
             </AppTooltip>
-            <span className="text-2xl font-medium text-[#FF4444] mt-1">
+            <span className="text-2xl font-medium text-danger mt-1">
               {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
             </span>
-            <span className="text-xs text-[#8E9299] mt-1">
+            <span className="text-xs text-fg-muted mt-1">
               {t('trade.paidFeesConverted', 'Paid fees converted to USD')}
               {stats.totalTradedVolume > 0 && ` (${((stats.totalFees / stats.totalTradedVolume) * 100).toFixed(3)}% of volume)`}
             </span>
@@ -334,11 +334,11 @@ export function TradeHistory() {
 
       {loading && trades.length === 0 ? (
         <div className="flex justify-center items-center p-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2F6BFF]"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
         </div>
       ) : trades.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-          <p className="text-[#8E9299]">{t('trade.noTrades', 'No trades found for selected filters in this period.')}</p>
+        <div className="flex flex-col items-center justify-center p-12 bg-surface border border-line rounded-xl">
+          <p className="text-fg-muted">{t('trade.noTrades', 'No trades found for selected filters in this period.')}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3 pb-4">
@@ -375,17 +375,17 @@ export function TradeHistory() {
 
             // Direction Label and style
             let directionLabel = isBuy ? t('orders.buy', 'Buy') : t('orders.sell', 'Sell');
-            let directionColorClass = isBuy ? 'text-[#00C853] bg-[#00C853]/10 border-[#00C853]/20' : 'text-[#FF4444] bg-[#FF4444]/10 border-[#FF4444]/20';
+            let directionColorClass = isBuy ? 'text-success bg-success/10 border-success/20' : 'text-danger bg-danger/10 border-danger/20';
 
             if (trade.category !== 'SPOT') {
               if (isBuy) {
                 const isClose = trade.positionSide === 'short';
                 directionLabel = isClose ? t('orders.closeShort', 'Close Short') : t('orders.openLong', 'Open Long');
-                directionColorClass = isClose ? 'text-teal-400 bg-teal-400/10 border-teal-400/20' : 'text-[#00C853] bg-[#00C853]/10 border-[#00C853]/20';
+                directionColorClass = isClose ? 'text-teal-400 bg-teal-400/10 border-teal-400/20' : 'text-success bg-success/10 border-success/20';
               } else {
                 const isClose = trade.positionSide === 'long';
                 directionLabel = isClose ? t('orders.closeLong', 'Close Long') : t('orders.openShort', 'Open Short');
-                directionColorClass = isClose ? 'text-orange-400 bg-orange-400/10 border-orange-400/20' : 'text-[#FF4444] bg-[#FF4444]/10 border-[#FF4444]/20';
+                directionColorClass = isClose ? 'text-orange-400 bg-orange-400/10 border-orange-400/20' : 'text-danger bg-danger/10 border-danger/20';
               }
             }
 
@@ -435,37 +435,37 @@ export function TradeHistory() {
             return (
               <div
                 key={trade.id}
-                className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col overflow-hidden"
+                className="bg-surface border border-line rounded-xl flex flex-col overflow-hidden"
               >
                 {/* Compact Row */}
                 <div className="p-4 grid grid-cols-2 lg:grid-cols-7 gap-4">
                   {/* Col 1: Asset Info & Badges */}
-                  <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] lg:border-none pb-3 lg:pb-0 col-span-2 lg:col-span-1">
+                  <div className="flex items-center gap-3 w-full border-b border-line lg:border-none pb-3 lg:pb-0 col-span-2 lg:col-span-1">
                     <div className="flex flex-col items-center gap-1.5 shrink-0">
                       <div className="flex items-center relative">
                         <CoinIcon symbol={trade.symbol} size={28} className="w-7 h-7" category={globalCategory} />
-                        <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
+                        <div className="bg-surface rounded-full p-0.5 absolute -bottom-1 -right-1">
                           <ExchangeIcon exchange={trade.exchange} className="w-3.5 h-3.5" />
                         </div>
                       </div>
-                      <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                      <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-line border border-line-strong text-fg-muted uppercase">
                         {instrumentLabel}
                       </span>
-                      <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+                      <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-line border border-line-strong text-fg-muted uppercase">
                         {globalCategory}
                       </span>
                     </div>
                     <div className="flex flex-col">
                       <div className="flex items-center gap-1">
-                        <span className="font-bold text-white text-sm">{trade.symbol}</span>
+                        <span className="font-bold text-fg text-sm">{trade.symbol}</span>
                       </div>
                       <div className="flex items-center gap-1 mt-2 flex-wrap">
-                        <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] capitalize">
+                        <span className="w-max text-[10px] font-semibold text-fg bg-elevated border border-line-strong py-0.5 px-1.5 rounded-[4px] capitalize">
                           {trade.exchange}
                         </span>
                       </div>
                       <div className="flex items-center gap-1 mt-1 flex-wrap">
-                        <span className="w-max text-[10px] font-medium text-[#c0c5cc] bg-[#1a1c20] border border-[#2d3036] py-0.5 px-1.5 rounded-[4px] truncate max-w-[130px]" title={connectionLabel}>
+                        <span className="w-max text-[10px] font-medium text-[#c0c5cc] bg-elevated border border-[#2d3036] py-0.5 px-1.5 rounded-[4px] truncate max-w-[130px]" title={connectionLabel}>
                           {connectionLabel}
                         </span>
                         <AccountTypeBadge
@@ -477,39 +477,39 @@ export function TradeHistory() {
                   </div>
 
                   {/* Col 2: Direction & Type */}
-                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
                     <AppTooltip description="Indicates trade direction, margin mode and order type.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('trade.direction', 'Direction')} / {t('orders.type', 'Type')}</span>
+                      <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.direction', 'Direction')} / {t('orders.type', 'Type')}</span>
                     </AppTooltip>
-                    <span className={`font-mono text-sm ${isBuy ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                    <span className={`font-mono text-sm ${isBuy ? 'text-success' : 'text-danger'}`}>
                       {directionLabel}·{trade.positionSide !== 'net' ? `${trade.raw?.leverage || trade.raw?.lever || '1'}x` : '1x'}
                     </span>
-                    <span className="text-xs text-[#8E9299] font-mono mt-0.5">{trade.type}</span>
+                    <span className="text-xs text-fg-muted font-mono mt-0.5">{trade.type}</span>
                   </div>
 
                   {/* Col 3: Filled Qty / Value */}
-                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
                     <AppTooltip description="Quantity filled and total USD value of this trade.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('trade.filledQty', 'Filled Qty')} / {t('trade.filledValue', 'Value')}</span>
+                      <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.filledQty', 'Filled Qty')} / {t('trade.filledValue', 'Value')}</span>
                     </AppTooltip>
-                    <span className="font-mono text-white text-sm">{filledQtyStr}</span>
-                    <span className="text-xs text-[#8E9299] font-mono">≈ {filledValueStr}</span>
+                    <span className="font-mono text-fg text-sm">{filledQtyStr}</span>
+                    <span className="text-xs text-fg-muted font-mono">≈ {filledValueStr}</span>
                   </div>
 
                   {/* Col 4: Filled Price */}
-                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
                     <AppTooltip description="The price at which the trade was executed.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('trade.filledPrice', 'Filled Price')}</span>
+                      <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.filledPrice', 'Filled Price')}</span>
                     </AppTooltip>
-                    <span className="font-mono text-white text-sm">
+                    <span className="font-mono text-fg text-sm">
                       {filledPrice > 0 ? formatCurrency(filledPrice, 'crypto', 8) : '--'}
                     </span>
                   </div>
 
                   {/* Col 5: Trading Fees */}
-                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
                     <AppTooltip description="Trading fees charged for this trade.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('trade.fee', 'Trading Fees')}</span>
+                      <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.fee', 'Trading Fees')}</span>
                     </AppTooltip>
                     {(() => {
                       const hasFees = trade.fees !== undefined && trade.fees !== null && trade.fees !== 0;
@@ -535,11 +535,11 @@ export function TradeHistory() {
 
                       return (
                         <div className="flex flex-col">
-                          <span className={`font-mono text-sm ${isFeeNegative ? 'text-[#FF4444]' : hasFees ? 'text-[#00C853]' : 'text-white'}`}>
+                          <span className={`font-mono text-sm ${isFeeNegative ? 'text-danger' : hasFees ? 'text-success' : 'text-fg'}`}>
                             {mainFeeStr}
                           </span>
                           {subFeeStr && (
-                            <span className={`font-mono text-xs ${isFeeNegative ? 'text-[#FF4444]/80' : 'text-[#00C853]/80'} mt-0.5`}>
+                            <span className={`font-mono text-xs ${isFeeNegative ? 'text-danger/80' : 'text-success/80'} mt-0.5`}>
                               {subFeeStr}
                             </span>
                           )}
@@ -549,15 +549,15 @@ export function TradeHistory() {
                   </div>
 
                   {/* Col 6: Transaction Time & ID */}
-                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-2">
+                  <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-2">
                     <AppTooltip description="The timestamp when this transaction took place and its unique transaction ID.">
-                      <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">{t('trade.time', 'Transaction Time')} & {t('trade.tradeId', 'ID')}</span>
+                      <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.time', 'Transaction Time')} & {t('trade.tradeId', 'ID')}</span>
                     </AppTooltip>
                     <div className="flex items-baseline gap-1.5 mt-0.5">
-                      <span className="text-white text-sm font-sans">{dateStr}</span>
-                      <span className="text-xs text-[#8E9299] font-mono">{timeStr}</span>
+                      <span className="text-fg text-sm font-sans">{dateStr}</span>
+                      <span className="text-xs text-fg-muted font-mono">{timeStr}</span>
                     </div>
-                    <span className="text-[10px] text-[#8E9299] font-mono select-all mt-1 truncate max-w-xs" title={trade.exchangeOrderId || trade.id}>
+                    <span className="text-[10px] text-fg-muted font-mono select-all mt-1 truncate max-w-xs" title={trade.exchangeOrderId || trade.id}>
                       ID: {trade.exchangeOrderId || trade.id}
                     </span>
                   </div>

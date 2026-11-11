@@ -51,7 +51,7 @@ export function PositionsTicker() {
     const priceVariation = pos.entryPrice ? ((pos.markPrice - pos.entryPrice) / pos.entryPrice) * 100 : 0;
     const isPriceUp = priceVariation > 0;
     const isPriceDown = priceVariation < 0;
-    const priceColor = isPriceUp ? 'text-[#00C853]' : isPriceDown ? 'text-[#FF4444]' : 'text-gray-400';
+    const priceColor = isPriceUp ? 'text-success' : isPriceDown ? 'text-danger' : 'text-fg-muted';
 
     const isPositive = variation > 0;
     const isNegative = variation < 0;
@@ -64,25 +64,25 @@ export function PositionsTicker() {
         key={pos.id}
         description={
           <div className="flex flex-col gap-1 w-full min-w-[160px]">
-            <span className="text-[14px] font-bold text-white leading-none">
+            <span className="text-[14px] font-bold text-fg leading-none">
               {pos.symbol}
             </span>
-            <span className="text-[12px] font-medium text-[#8E9299]">{t('orders.exchange', 'Exchange')}: {pos.exchange.toUpperCase()}</span>
+            <span className="text-[12px] font-medium text-fg-muted">{t('orders.exchange', 'Exchange')}: {pos.exchange.toUpperCase()}</span>
           </div>
         }
         side="bottom"
         rows={[
-          { label: t('positions.markPrice', 'Current Price'), value: `$${formatPrice(pos.markPrice, isFiatPair)}`, labelClassName: 'text-[13px] text-[#8E9299]', valueClassName: 'text-[13px] text-white font-mono' },
-          { label: t('positions.entryPrice', 'Entry Price'), value: pos.entryPrice ? `$${formatPrice(pos.entryPrice, isFiatPair)}` : 'N/A', labelClassName: 'text-[13px] text-[#8E9299]', valueClassName: 'text-[13px] text-white font-mono' },
-          { label: t('dashboard.variation', 'Price Variation'), value: `${priceVariation > 0 ? '+' : ''}${formatValue(priceVariation, 2)}%`, labelClassName: 'text-[13px] text-[#8E9299]', valueClassName: `text-[13px] font-mono font-bold ${priceVariation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` },
-          { label: t('positions.roe', 'ROE'), value: `${variation > 0 ? '+' : ''}${formatValue(variation, 2)}%`, labelClassName: 'text-[13px] text-[#8E9299]', valueClassName: `text-[13px] font-mono font-bold ${variation >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}` }
+          { label: t('positions.markPrice', 'Current Price'), value: `$${formatPrice(pos.markPrice, isFiatPair)}`, labelClassName: 'text-[13px] text-fg-muted', valueClassName: 'text-[13px] text-fg font-mono' },
+          { label: t('positions.entryPrice', 'Entry Price'), value: pos.entryPrice ? `$${formatPrice(pos.entryPrice, isFiatPair)}` : 'N/A', labelClassName: 'text-[13px] text-fg-muted', valueClassName: 'text-[13px] text-fg font-mono' },
+          { label: t('dashboard.variation', 'Price Variation'), value: `${priceVariation > 0 ? '+' : ''}${formatValue(priceVariation, 2)}%`, labelClassName: 'text-[13px] text-fg-muted', valueClassName: `text-[13px] font-mono font-bold ${priceVariation >= 0 ? 'text-success' : 'text-danger'}` },
+          { label: t('positions.roe', 'ROE'), value: `${variation > 0 ? '+' : ''}${formatValue(variation, 2)}%`, labelClassName: 'text-[13px] text-fg-muted', valueClassName: `text-[13px] font-mono font-bold ${variation >= 0 ? 'text-success' : 'text-danger'}` }
         ]}
       >
         <div
-          className="flex items-center gap-4 px-6 py-2 border-r border-[#2a2b30]/50 shrink-0 cursor-default focus:outline-none"
+          className="flex items-center gap-4 px-6 py-2 border-r border-line/50 shrink-0 cursor-default focus:outline-none"
         >
           <div className="flex items-center gap-2">
-            <span className="font-bold text-white text-sm tracking-wide">
+            <span className="font-bold text-fg text-sm tracking-wide">
               | {pos.symbol}
             </span>
 
@@ -97,12 +97,12 @@ export function PositionsTicker() {
               ${formatPrice(pos.markPrice, isFiatPair)}
             </span>
 
-            <span className="text-xs ml-2 px-1.5 py-0.5 rounded uppercase font-medium bg-[#1a1b1e] text-[#8E9299]">
+            <span className="text-xs ml-2 px-1.5 py-0.5 rounded uppercase font-medium bg-elevated text-fg-muted">
               Pos: {pos.side} {pos.leverage}x
             </span>
           </div>
 
-          <div className={`flex items-center gap-1 text-sm font-medium ml-1 ${isPositive ? 'text-[#00C853]' : isNegative ? 'text-[#FF4444]' : 'text-gray-400'}`}>
+          <div className={`flex items-center gap-1 text-sm font-medium ml-1 ${isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-fg-muted'}`}>
             {isPositive && <TrendingUp className="w-4 h-4" />}
             {isNegative && <TrendingDown className="w-4 h-4" />}
             {isNeutral && <Minus className="w-4 h-4" />}
@@ -120,7 +120,7 @@ export function PositionsTicker() {
   const duration = Math.max(activePositions.length * 4, 20); // Minimo de 20s
 
   return (
-    <div className="bg-[#151619] border-b border-[#2a2b30] flex items-center overflow-hidden shrink-0 h-10 w-full relative z-10 group">
+    <div className="bg-surface border-b border-line flex items-center overflow-hidden shrink-0 h-10 w-full relative z-10 group">
       <div
         className="flex w-max animate-marquee hover:[animation-play-state:paused] will-change-transform"
         style={{ animationDuration: `${duration}s` }}

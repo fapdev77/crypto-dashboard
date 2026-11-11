@@ -72,7 +72,7 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
               className={`w-4 h-4 transition-colors ${
                 isFavorite
                   ? 'text-amber-400 fill-amber-400'
-                  : 'text-[#4e515d] hover:text-[#8E9299]'
+                  : 'text-[#4e515d] hover:text-fg-muted'
               }`}
             />
           </button>
@@ -84,8 +84,8 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
             <CoinIcon symbol={asset.symbol} className="w-6 h-6 shrink-0" />
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-white text-xs tracking-tight">{asset.symbol}</span>
-                <span className="text-[10px] text-[#8E9299] hidden sm:inline">{asset.name}</span>
+                <span className="font-bold text-fg text-xs tracking-tight">{asset.symbol}</span>
+                <span className="text-[10px] text-fg-muted hidden sm:inline">{asset.name}</span>
               </div>
               <div className="flex items-center gap-1 mt-1">
                 {asset.activeExchanges.map((ex) => (
@@ -104,7 +104,7 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
 
         {/* Benchmark Price */}
         <td className="py-3 px-3 text-right font-mono min-w-[110px]">
-          <div className="font-bold text-white text-xs">
+          <div className="font-bold text-fg text-xs">
             ${asset.price.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: asset.price < 1 ? 4 : 2,
@@ -142,10 +142,10 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
                   <span className="font-mono">{Math.abs(asset.price24hPcnt).toFixed(1)}%</span>
                 </span>
               </div>
-              <div className="text-[10px] text-[#8E9299] mt-0.5">
-                <span className="text-white/70">${asset.low24h.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              <div className="text-[10px] text-fg-muted mt-0.5">
+                <span className="text-fg/70">${asset.low24h.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                 <span className="mx-1 text-[#4e515d]">—</span>
-                <span className="text-white/70">${asset.high24h.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                <span className="text-fg/70">${asset.high24h.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
               </div>
               <span className="text-[9px] text-[#6b6e7a]">
                 Range: {rangeAmplitude}%
@@ -162,7 +162,7 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
             coin={asset.symbol}
           >
             <div>
-              <div className="font-bold text-white text-xs">{formatUsd(asset.totalVolumeUsd)}</div>
+              <div className="font-bold text-fg text-xs">{formatUsd(asset.totalVolumeUsd)}</div>
               <div className="text-[10px] text-cyan-400 font-mono">
                 {formatCoin(asset.totalVolumeCoin)} {asset.symbol}
               </div>
@@ -175,7 +175,7 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
           <OpenInterestTooltip oiUsd={asset.totalOiUsd}>
             <div>
               <span className="font-bold text-amber-400 text-xs">{formatUsd(asset.totalOiUsd)}</span>
-              <span className="text-[10px] text-[#8E9299] block">Total Coin-M</span>
+              <span className="text-[10px] text-fg-muted block">Total Coin-M</span>
             </div>
           </OpenInterestTooltip>
         </td>
@@ -192,7 +192,7 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
                 {asset.estimatedCvdUsd >= 0 ? '+' : ''}
                 {formatUsd(asset.estimatedCvdUsd)}
               </span>
-              <div className="w-16 h-1.5 bg-[#20222a] rounded-full overflow-hidden flex mt-1">
+              <div className="w-16 h-1.5 bg-elevated rounded-full overflow-hidden flex mt-1">
                 <div
                   className="bg-cyan-400 h-full transition-all"
                   style={{ width: `${asset.estimatedBuyerRatio}%` }}
@@ -202,7 +202,7 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
                   style={{ width: `${100 - asset.estimatedBuyerRatio}%` }}
                 />
               </div>
-              <span className="text-[9px] text-[#8E9299] mt-0.5">
+              <span className="text-[9px] text-fg-muted mt-0.5">
                 {asset.estimatedBuyerRatio}% Buy
               </span>
             </div>
@@ -216,7 +216,7 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
               e.stopPropagation();
               setIsExpanded(!isExpanded);
             }}
-            className="p-1 rounded hover:bg-[#20222a] text-[#8E9299] hover:text-white transition-colors"
+            className="p-1 rounded hover:bg-elevated text-fg-muted hover:text-fg transition-colors"
             title={isExpanded ? 'Collapse exchange cards' : 'Expand exchange cards'}
           >
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -226,15 +226,15 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
 
       {/* Expanded Segregated Cards Drawer */}
       {isExpanded && (
-        <tr className="bg-[#0f1015] border-b border-[#20222a]">
+        <tr className="bg-[#0f1015] border-b border-elevated">
           <td colSpan={8} className="p-4 sm:p-5">
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#8E9299]">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-fg-muted">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold uppercase tracking-wider text-cyan-400">
                     Exchanges for {asset.symbol} Coin-M / Inverse
                   </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#1b1c24] text-[#8E9299] border border-[#2a2b34]">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#1b1c24] text-fg-muted border border-[#2a2b34]">
                     {asset.activeExchanges.length} active exchange{asset.activeExchanges.length > 1 ? 's' : ''}
                   </span>
                 </div>
@@ -243,7 +243,7 @@ export const InverseAssetRow: React.FC<InverseAssetRowProps> = ({
                     <Zap className="w-3.5 h-3.5" />
                     <span>Arbitrage Spread APR: +{asset.maxFundingSpreadApr}%</span>
                     {asset.bestLongExchange && asset.bestShortExchange && (
-                      <span className="text-[10px] text-white/80 font-sans font-normal ml-1">
+                      <span className="text-[10px] text-fg/80 font-sans font-normal ml-1">
                         (Long {asset.bestLongExchange.toUpperCase()} ↔ Short {asset.bestShortExchange.toUpperCase()})
                       </span>
                     )}

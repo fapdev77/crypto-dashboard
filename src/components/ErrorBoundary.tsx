@@ -87,7 +87,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div
-        className={`flex flex-col items-center justify-center p-6 text-white ${
+        className={`flex flex-col items-center justify-center p-6 text-fg ${
           isIsolated
             ? 'bg-[#181920]/90 border border-red-500/20 rounded-xl my-4 min-h-[220px]'
             : 'min-h-screen bg-[#0e0f14]'
@@ -99,10 +99,10 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertTriangle className="w-7 h-7 text-red-400" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-lg font-bold text-white tracking-tight">
+              <h2 className="text-lg font-bold text-fg tracking-tight">
                 {this.props.fallbackTitle || 'Component Render Error'}
               </h2>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-fg-muted">
                 {isIsolated
                   ? `An unexpected error occurred inside the "${this.props.isolateScope}" module.`
                   : 'An unhandled render exception occurred. The app encountered an unexpected state.'}
@@ -121,7 +121,7 @@ export class ErrorBoundary extends Component<Props, State> {
             {isIsolated ? (
               <button
                 onClick={this.handleReset}
-                className="px-4 py-2 bg-[#2F6BFF] hover:bg-[#2558d4] text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Retry Module
@@ -129,7 +129,7 @@ export class ErrorBoundary extends Component<Props, State> {
             ) : (
               <button
                 onClick={this.handleReload}
-                className="px-4 py-2 bg-[#2F6BFF] hover:bg-[#2558d4] text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Reload Page
@@ -139,7 +139,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <button
               onClick={this.handleClearCacheAndReload}
               disabled={this.state.clearingCache}
-              className="px-4 py-2 bg-[#20222c] hover:bg-red-500/20 hover:text-red-300 border border-[#2e303d] text-gray-300 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#20222c] hover:bg-red-500/20 hover:text-red-300 border border-[#2e303d] text-fg text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
             >
               <Trash2 className="w-3.5 h-3.5" />
               {this.state.clearingCache ? 'Resetting...' : 'Clear Cache & Reload'}
@@ -147,7 +147,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
             <button
               onClick={this.handleCopyDiagnostics}
-              className="px-3 py-2 bg-[#1b1c24] hover:bg-[#252733] border border-[#2a2c38] text-gray-300 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 ml-auto"
+              className="px-3 py-2 bg-[#1b1c24] hover:bg-[#252733] border border-[#2a2c38] text-fg text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 ml-auto"
               title="Copy error details to clipboard"
             >
               {this.state.copied ? (

@@ -214,7 +214,7 @@ export function FilterBar({
             <button
               type="button"
               onClick={() => toggleDropdown('exchange')}
-              className="w-full sm:w-auto bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between sm:min-w-[160px] cursor-pointer"
+              className="w-full sm:w-auto bg-elevated border border-line rounded-lg pl-3 pr-2 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors flex items-center justify-between sm:min-w-[160px] cursor-pointer"
             >
               <div className="flex items-center gap-2 truncate">
                 {exchange.value !== 'All' && exchange.value !== 'all' && (
@@ -223,7 +223,7 @@ export function FilterBar({
                 <span className="truncate">{getExchangeLabel(exchange.value)}</span>
               </div>
               <ChevronDown
-                className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
+                className={`h-4 w-4 ml-2 text-fg-muted shrink-0 transition-transform duration-200 ${
                   activeDropdown === 'exchange' ? 'rotate-180' : ''
                 }`}
               />
@@ -231,7 +231,7 @@ export function FilterBar({
           </AppTooltip>
 
           {activeDropdown === 'exchange' && (
-            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[160px] mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
+            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[160px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
               <AppTooltip description="View all connected exchanges" side="right">
                 <div>
                   <button
@@ -242,8 +242,8 @@ export function FilterBar({
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                       exchange.value === 'All' || exchange.value === 'all'
-                        ? 'bg-[#2F6BFF] text-white'
-                        : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                        ? 'bg-accent text-white'
+                        : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                     }`}
                   >
                     <span>{exchange.labelAll || t('common.allExchanges', 'All Exchanges')}</span>
@@ -261,8 +261,8 @@ export function FilterBar({
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                         exchange.value.toLowerCase() === ex.toLowerCase()
-                          ? 'bg-[#2F6BFF] text-white'
-                          : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                          ? 'bg-accent text-white'
+                          : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                       }`}
                     >
                       <ExchangeIcon exchange={ex} className="w-4 h-4 shrink-0" />
@@ -295,7 +295,7 @@ export function FilterBar({
                 type="button"
                 onClick={() => !account.disabled && toggleDropdown('account')}
                 disabled={account.disabled}
-                className="w-full sm:w-auto bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between sm:min-w-[160px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto bg-elevated border border-line rounded-lg pl-3 pr-2 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors flex items-center justify-between sm:min-w-[160px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center gap-2 truncate">
                   {(() => {
@@ -312,14 +312,14 @@ export function FilterBar({
                     }
                     return (
                       <>
-                        <Users className="w-4 h-4 shrink-0 text-[#8E9299]" />
+                        <Users className="w-4 h-4 shrink-0 text-fg-muted" />
                         <span className="truncate">{account.labelAll || 'All Accounts'}</span>
                       </>
                     );
                   })()}
                 </div>
                 <ChevronDown
-                  className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
+                  className={`h-4 w-4 ml-2 text-fg-muted shrink-0 transition-transform duration-200 ${
                     activeDropdown === 'account' ? 'rotate-180' : ''
                   }`}
                 />
@@ -328,7 +328,7 @@ export function FilterBar({
           </AppTooltip>
 
           {activeDropdown === 'account' && (
-            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[180px] mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
+            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[180px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
               <AppTooltip description="Show data across all connected accounts" side="right">
                 <div>
                   <button
@@ -339,8 +339,8 @@ export function FilterBar({
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                       account.value === 'All' || !account.value
-                        ? 'bg-[#2F6BFF] text-white'
-                        : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                        ? 'bg-accent text-white'
+                        : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                     }`}
                   >
                     <Users className="w-4 h-4 shrink-0" />
@@ -365,8 +365,8 @@ export function FilterBar({
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                           account.value === k.id
-                            ? 'bg-[#2F6BFF] text-white'
-                            : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                            ? 'bg-accent text-white'
+                            : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                         }`}
                       >
                         <ExchangeIcon exchange={k.exchange} className="w-4 h-4 shrink-0" />
@@ -400,7 +400,7 @@ export function FilterBar({
                 type="button"
                 onClick={() => !instrument.disabled && toggleDropdown('instrument')}
                 disabled={instrument.disabled}
-                className="w-full sm:w-auto bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between sm:min-w-[140px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto bg-elevated border border-line rounded-lg pl-3 pr-2 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors flex items-center justify-between sm:min-w-[140px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="truncate sm:max-w-[120px]">
                   {(() => {
@@ -410,7 +410,7 @@ export function FilterBar({
                   })()}
                 </span>
                 <ChevronDown
-                  className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
+                  className={`h-4 w-4 ml-2 text-fg-muted shrink-0 transition-transform duration-200 ${
                     activeDropdown === 'instrument' ? 'rotate-180' : ''
                   }`}
                 />
@@ -419,7 +419,7 @@ export function FilterBar({
           </AppTooltip>
           
           {activeDropdown === 'instrument' && (
-            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[140px] mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
+            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[140px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
               <AppTooltip description="Show all instruments and markets" side="right">
                 <div>
                   <button
@@ -430,8 +430,8 @@ export function FilterBar({
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                       instrument.value.toUpperCase() === 'ALL' || !instrument.value
-                        ? 'bg-[#2F6BFF] text-white'
-                        : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                        ? 'bg-accent text-white'
+                        : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                     }`}
                   >
                     <span>{instrument.labelAll || 'All Instruments'}</span>
@@ -454,8 +454,8 @@ export function FilterBar({
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                       instrument.value === val
-                        ? 'bg-[#2F6BFF] text-white'
-                        : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                        ? 'bg-accent text-white'
+                        : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                     }`}
                   >
                     <span className="truncate">{label}</span>
@@ -486,7 +486,7 @@ export function FilterBar({
             <button
               type="button"
               onClick={() => toggleDropdown('side')}
-              className="w-full sm:w-auto bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between sm:min-w-[140px] cursor-pointer"
+              className="w-full sm:w-auto bg-elevated border border-line rounded-lg pl-3 pr-2 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors flex items-center justify-between sm:min-w-[140px] cursor-pointer"
             >
               <span className="truncate sm:max-w-[120px] flex items-center gap-2">
                 {(() => {
@@ -501,7 +501,7 @@ export function FilterBar({
                 })()}
               </span>
               <ChevronDown
-                className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
+                className={`h-4 w-4 ml-2 text-fg-muted shrink-0 transition-transform duration-200 ${
                   activeDropdown === 'side' ? 'rotate-180' : ''
                 }`}
               />
@@ -509,7 +509,7 @@ export function FilterBar({
           </AppTooltip>
           
           {activeDropdown === 'side' && (
-            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[140px] mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
+            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[140px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
               <AppTooltip description="Show all trade sides" side="right">
                 <div>
                   <button
@@ -520,8 +520,8 @@ export function FilterBar({
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                       side.value === 'All' || !side.value
-                        ? 'bg-[#2F6BFF] text-white'
-                        : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                        ? 'bg-accent text-white'
+                        : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                     }`}
                   >
                     <span>{side.labelAll || 'All Sides'}</span>
@@ -539,8 +539,8 @@ export function FilterBar({
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                         side.value === opt.value
-                          ? 'bg-[#2F6BFF] text-white'
-                          : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                          ? 'bg-accent text-white'
+                          : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                       }`}
                     >
                       {opt.icon && <span className="shrink-0">{opt.icon}</span>}
@@ -564,7 +564,7 @@ export function FilterBar({
             <button
               type="button"
               onClick={() => toggleDropdown('type')}
-              className="w-full sm:w-auto bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between sm:min-w-[140px] cursor-pointer"
+              className="w-full sm:w-auto bg-elevated border border-line rounded-lg pl-3 pr-2 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors flex items-center justify-between sm:min-w-[140px] cursor-pointer"
             >
               <span className="truncate sm:max-w-[120px]">
                 {(() => {
@@ -574,7 +574,7 @@ export function FilterBar({
                 })()}
               </span>
               <ChevronDown
-                className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
+                className={`h-4 w-4 ml-2 text-fg-muted shrink-0 transition-transform duration-200 ${
                   activeDropdown === 'type' ? 'rotate-180' : ''
                 }`}
               />
@@ -582,7 +582,7 @@ export function FilterBar({
           </AppTooltip>
           
           {activeDropdown === 'type' && (
-            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[140px] mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
+            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[140px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
               <AppTooltip description="Show all order / trade types" side="right">
                 <div>
                   <button
@@ -593,8 +593,8 @@ export function FilterBar({
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                       !type.value || type.value.toUpperCase() === 'ALL'
-                        ? 'bg-[#2F6BFF] text-white'
-                        : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                        ? 'bg-accent text-white'
+                        : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                     }`}
                   >
                     <span>{type.labelAll || 'All Types'}</span>
@@ -618,8 +618,8 @@ export function FilterBar({
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                           type.value === val
-                            ? 'bg-[#2F6BFF] text-white'
-                            : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                            ? 'bg-accent text-white'
+                            : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                         }`}
                       >
                         <span className="truncate">{label}</span>
@@ -643,19 +643,19 @@ export function FilterBar({
             <button
               type="button"
               onClick={() => toggleDropdown('status')}
-              className="w-full sm:w-auto bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between sm:min-w-[140px] cursor-pointer"
+              className="w-full sm:w-auto bg-elevated border border-line rounded-lg pl-3 pr-2 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors flex items-center justify-between sm:min-w-[140px] cursor-pointer"
             >
               <div className="flex items-center gap-2 truncate">
                 <span className={`w-2 h-2 rounded-full shrink-0 ${
                   statusSelect.value === 'All' || !statusSelect.value
-                    ? 'bg-[#8E9299]'
+                    ? 'bg-fg-muted'
                     : statusSelect.value.toUpperCase().includes('FILL') || statusSelect.value.toUpperCase().includes('SUCCESS')
-                    ? 'bg-[#00C853]'
+                    ? 'bg-success'
                     : statusSelect.value.toUpperCase().includes('CANCEL') || statusSelect.value.toUpperCase().includes('FAIL')
-                    ? 'bg-[#FF4444]'
+                    ? 'bg-danger'
                     : statusSelect.value.toUpperCase().includes('PART') || statusSelect.value.toUpperCase().includes('PEND')
                     ? 'bg-[#FFB300]'
-                    : 'bg-[#2F6BFF]'
+                    : 'bg-accent'
                 }`} />
                 <span className="truncate">
                   {statusSelect.value === 'All' || !statusSelect.value
@@ -667,7 +667,7 @@ export function FilterBar({
                 </span>
               </div>
               <ChevronDown
-                className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
+                className={`h-4 w-4 ml-2 text-fg-muted shrink-0 transition-transform duration-200 ${
                   activeDropdown === 'status' ? 'rotate-180' : ''
                 }`}
               />
@@ -675,7 +675,7 @@ export function FilterBar({
           </AppTooltip>
 
           {activeDropdown === 'status' && (
-            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[160px] mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
+            <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[160px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
               <AppTooltip description="Show records across all statuses" side="right">
                 <div>
                   <button
@@ -686,11 +686,11 @@ export function FilterBar({
                     }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                       statusSelect.value === 'All' || !statusSelect.value
-                        ? 'bg-[#2F6BFF] text-white'
-                        : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                        ? 'bg-accent text-white'
+                        : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                     }`}
                   >
-                    <span className="w-2 h-2 rounded-full shrink-0 bg-[#8E9299]" />
+                    <span className="w-2 h-2 rounded-full shrink-0 bg-fg-muted" />
                     <span className="truncate">{statusSelect.labelAll || 'All Statuses'}</span>
                   </button>
                 </div>
@@ -713,18 +713,18 @@ export function FilterBar({
                         }}
                         className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                           statusSelect.value === val
-                            ? 'bg-[#2F6BFF] text-white'
-                            : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                            ? 'bg-accent text-white'
+                            : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                         }`}
                       >
                         <span className={`w-2 h-2 rounded-full shrink-0 ${
                           val.toUpperCase().includes('FILL') || val.toUpperCase().includes('SUCCESS')
-                            ? 'bg-[#00C853]'
+                            ? 'bg-success'
                             : val.toUpperCase().includes('CANCEL') || val.toUpperCase().includes('FAIL')
-                            ? 'bg-[#FF4444]'
+                            ? 'bg-danger'
                             : val.toUpperCase().includes('PART') || val.toUpperCase().includes('PEND')
                             ? 'bg-[#FFB300]'
-                            : 'bg-[#2F6BFF]'
+                            : 'bg-accent'
                         }`} />
                         <span className="truncate">{label}</span>
                       </button>
@@ -748,7 +748,7 @@ export function FilterBar({
               <button
                 type="button"
                 onClick={() => toggleDropdown('period')}
-                className="w-full sm:w-auto bg-[#1a1b1e] border border-[#2a2b30] rounded-lg pl-3 pr-2 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors flex items-center justify-between sm:min-w-[130px] cursor-pointer"
+                className="w-full sm:w-auto bg-elevated border border-line rounded-lg pl-3 pr-2 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors flex items-center justify-between sm:min-w-[130px] cursor-pointer"
               >
                 <div className="flex items-center gap-2 truncate">
                   {(() => {
@@ -766,14 +766,14 @@ export function FilterBar({
                     const selectedOpt = effectivePeriodOptions.find(o => String(o.value) === String(period.value));
                     return (
                       <>
-                        {selectedOpt?.icon || <Calendar className="w-4 h-4 shrink-0 text-[#8E9299]" />}
+                        {selectedOpt?.icon || <Calendar className="w-4 h-4 shrink-0 text-fg-muted" />}
                         <span className="truncate">{selectedOpt?.label || (isCustom ? 'Custom Range' : period.value)}</span>
                       </>
                     );
                   })()}
                 </div>
                 <ChevronDown
-                  className={`h-4 w-4 ml-2 text-gray-400 shrink-0 transition-transform duration-200 ${
+                  className={`h-4 w-4 ml-2 text-fg-muted shrink-0 transition-transform duration-200 ${
                     activeDropdown === 'period' ? 'rotate-180' : ''
                   }`}
                 />
@@ -781,7 +781,7 @@ export function FilterBar({
             </AppTooltip>
 
             {activeDropdown === 'period' && (
-              <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[170px] mt-1 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl overflow-hidden max-h-[340px] overflow-y-auto custom-scrollbar">
+              <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[170px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[340px] overflow-y-auto custom-scrollbar">
                 {effectivePeriodOptions.map((opt, i) => {
                   const tooltipDesc = opt.tooltip || getPeriodTooltip(opt.label, opt.value);
                   const isSelected = String(period.value) === String(opt.value);
@@ -803,8 +803,8 @@ export function FilterBar({
                           }}
                           className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-left cursor-pointer ${
                             isSelected
-                              ? 'bg-[#2F6BFF] text-white'
-                              : 'text-[#8E9299] hover:bg-[#2a2b30]/50 hover:text-white'
+                              ? 'bg-accent text-white'
+                              : 'text-fg-muted hover:bg-line/50 hover:text-fg'
                           }`}
                         >
                           {opt.icon ? (
@@ -845,12 +845,12 @@ export function FilterBar({
       {search && (
         <div className="relative w-full sm:w-auto">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-[#8E9299]" />
+            <Search className="h-4 w-4 text-fg-muted" />
           </div>
           <input
             type="text"
             placeholder={search.placeholder || 'Search...'}
-            className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full sm:w-50"
+            className="pl-9 pr-10 py-2 bg-elevated border border-line rounded-lg text-sm text-fg focus:outline-none focus:border-accent transition-colors w-full sm:w-50"
             value={search.value}
             onChange={(e) => search.onChange(e.target.value)}
             onFocus={() => setActiveDropdown(null)}
@@ -860,7 +860,7 @@ export function FilterBar({
               <button
                 type="button"
                 onClick={() => search.onChange('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors cursor-pointer"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-fg-muted hover:text-fg transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>

@@ -67,34 +67,34 @@ export function ReportsDashboard() {
       <div className="flex flex-col md:flex-row items-start justify-between gap-4 py-2">
         <div className="flex flex-col space-y-1">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-              <FileText className="w-5 h-5 text-[#2F6BFF]" />
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-fg">
+              <FileText className="w-5 h-5 text-accent" />
               {t('analytics.reports.title', 'Reports & Exports')}
             </h2>
             <SimulationModeBadge />
           </div>
-          <span className="text-xs text-[#8E9299]">
+          <span className="text-xs text-fg-muted">
             {t('analytics.reports.subtitle', 'Values converted based on positions close price in your selected currency.')}
           </span>
         </div>
         <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}
-            className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none disabled:opacity-50"
+            className="px-3 py-2 bg-elevated border border-line text-fg flex items-center gap-2 rounded-lg hover:bg-line/50 transition-colors text-sm focus:outline-none disabled:opacity-50"
             disabled={isLoading || history.length === 0}
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">{t('analytics.reports.exportBtn', 'Export')}</span> <ChevronDown className="w-3 h-3" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute top-11 right-0 w-36 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
-              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">
+            <div className="absolute top-11 right-0 w-36 bg-elevated border border-line rounded-lg shadow-xl z-50 overflow-hidden text-sm text-fg">
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">
                 {t('analytics.reports.exportCsv', 'Export CSV')}
               </button>
-              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">
                 {t('analytics.reports.exportExcel', 'Export Excel')}
               </button>
-              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">
                 {t('analytics.reports.exportPdf', 'Export PDF')}
               </button>
             </div>
@@ -130,10 +130,10 @@ export function ReportsDashboard() {
 
       <HistoryLimitWarning period={period} />
 
-      <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
+      <div className="bg-surface border border-line rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-[#8E9299] bg-[#151619] border-b border-[#2a2b30]">
+            <thead className="text-xs text-fg-muted bg-surface border-b border-line">
               <tr>
                 <th className="px-4 py-3 font-medium">{t('analytics.reports.colDate', 'Date')}</th>
                 <th className="px-4 py-3 font-medium">{t('analytics.reports.colExchange', 'Exchange')}</th>
@@ -145,7 +145,7 @@ export function ReportsDashboard() {
             <tbody>
               {history.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-[#8E9299]">
+                  <td colSpan={5} className="px-4 py-8 text-center text-fg-muted">
                     {isLoading ? t('analytics.reports.emptyLoading', 'Loading history...') : t('analytics.reports.emptyNoData', 'No historical data found for the selected filters.')}
                   </td>
                 </tr>
@@ -154,18 +154,18 @@ export function ReportsDashboard() {
                   const { realizedPnl, fundingFee, tradingFee } = getHistoryInverseUsdValues(pos);
                   const net = realizedPnl + (fundingFee || 0) + (tradingFee || 0);
                   return (
-                    <tr key={pos.id} className="border-b border-[#2a2b30]/50 hover:bg-[#2a2b30]/20 transition-colors">
-                      <td className="px-4 py-3 text-[#8E9299]">
+                    <tr key={pos.id} className="border-b border-line/50 hover:bg-line/20 transition-colors">
+                      <td className="px-4 py-3 text-fg-muted">
                         {formatDateTime(pos.closeUpdateTime).fullStr}
                       </td>
-                      <td data-theme={pos.exchange.toLowerCase()} className="px-4 py-3 capitalize text-white">{pos.exchange}</td>
-                      <td className="px-4 py-3 font-medium text-white">{pos.symbol}</td>
+                      <td data-theme={pos.exchange.toLowerCase()} className="px-4 py-3 capitalize text-fg">{pos.exchange}</td>
+                      <td className="px-4 py-3 font-medium text-fg">{pos.symbol}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-xs ${pos.side === 'long' ? 'bg-[#10B981]/10 text-[#10B981]' : 'bg-[#EF4444]/10 text-[#EF4444]'}`}>
+                        <span className={`px-2 py-0.5 rounded text-xs ${pos.side === 'long' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
                           {pos.side.toUpperCase()}
                         </span>
                       </td>
-                      <td className={`px-4 py-3 text-right font-medium ${net >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+                      <td className={`px-4 py-3 text-right font-medium ${net >= 0 ? 'text-success' : 'text-danger'}`}>
                         {formatCurrency(net, 'fiat')}
                       </td>
                     </tr>

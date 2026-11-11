@@ -119,13 +119,13 @@ describe('Bitget transaction components (components/transactions/BitgetTransacti
       const { unmount } = renderTransactionUi(
         <BitgetTransactionRow entry={{ ...entry, side: 'Close Long' }} isExpanded={false} onToggle={() => {}} />
       );
-      expect(screen.getByText('Close Long')).toHaveClass('text-[#FF4444]');
+      expect(screen.getByText('Close Long')).toHaveClass('text-danger');
       unmount();
 
       renderTransactionUi(
         <BitgetTransactionRow entry={{ ...entry, side: 'Close Short' }} isExpanded={false} onToggle={() => {}} />
       );
-      expect(screen.getByText('Close Short')).toHaveClass('text-[#00C853]');
+      expect(screen.getByText('Close Short')).toHaveClass('text-success');
     });
 
     it('calls onToggle when the row is clicked', () => {

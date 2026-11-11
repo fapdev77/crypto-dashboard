@@ -81,16 +81,16 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
   }, [formattedJson, searchTerm]);
 
   return (
-    <div className="bg-[#0e0f12] border border-[#232429] rounded-xl overflow-hidden font-mono text-[11px] shadow-md">
+    <div className="bg-[#0e0f12] border border-line rounded-xl overflow-hidden font-mono text-[11px] shadow-md">
       {/* Header Bar */}
-      <div className="flex items-center justify-between px-3.5 py-2 bg-[#15161a] border-b border-[#232429] gap-2">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-[#15161a] border-b border-line gap-2">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="flex items-center gap-2 text-gray-300 hover:text-white transition cursor-pointer font-sans font-semibold text-xs text-left truncate"
+          className="flex items-center gap-2 text-fg hover:text-fg transition cursor-pointer font-sans font-semibold text-xs text-left truncate"
         >
-          {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-[#8E9299]" /> : <ChevronDown className="w-3.5 h-3.5 text-[#8E9299]" />}
+          {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-fg-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-fg-muted" />}
           <span className="truncate">{title || 'Payload JSON'}</span>
-          <span className="text-[10px] text-[#8E9299] font-normal font-mono bg-[#1f2026] px-1.5 py-0.5 rounded">
+          <span className="text-[10px] text-fg-muted font-normal font-mono bg-line px-1.5 py-0.5 rounded">
             {lineCount} linhas • {formatSize(byteSize)}
           </span>
         </button>
@@ -103,41 +103,41 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
                 placeholder="Filtrar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-28 focus:w-40 bg-[#0e0f12] border border-[#2a2b30] focus:border-[#2F6BFF] rounded-md px-2 py-0.5 text-[10px] text-gray-200 placeholder-[#8E9299] transition-all outline-none"
+                className="w-28 focus:w-40 bg-[#0e0f12] border border-line focus:border-accent rounded-md px-2 py-0.5 text-[10px] text-fg placeholder-fg-muted transition-all outline-none"
               />
-              <Search className="w-2.5 h-2.5 text-[#8E9299] absolute right-2 top-2 pointer-events-none" />
+              <Search className="w-2.5 h-2.5 text-fg-muted absolute right-2 top-2 pointer-events-none" />
             </div>
           )}
 
           <button
             onClick={handleCopy}
             title="Copiar JSON"
-            className="flex items-center gap-1 px-2 py-1 bg-[#1e1f24] hover:bg-[#2a2b30] text-gray-300 hover:text-white rounded-md text-[10px] font-sans font-medium transition cursor-pointer border border-[#2a2b30]"
+            className="flex items-center gap-1 px-2 py-1 bg-elevated hover:bg-line text-fg hover:text-fg rounded-md text-[10px] font-sans font-medium transition cursor-pointer border border-line"
           >
-            {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-[#2F6BFF]" />}
+            {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-accent" />}
             <span>{copied ? 'Copiado' : 'Copiar'}</span>
           </button>
 
           <button
             onClick={handleDownload}
             title="Baixar arquivo JSON"
-            className="p-1 bg-[#1e1f24] hover:bg-[#2a2b30] text-[#8E9299] hover:text-white rounded-md text-[10px] transition cursor-pointer border border-[#2a2b30]"
+            className="p-1 bg-elevated hover:bg-line text-fg-muted hover:text-fg rounded-md text-[10px] transition cursor-pointer border border-line"
           >
-            <Download className="w-3 h-3 text-[#8E9299]" />
+            <Download className="w-3 h-3 text-fg-muted" />
           </button>
         </div>
       </div>
 
       {/* Code body */}
       {!isCollapsed && (
-        <div className={`${maxHeight} overflow-auto p-3.5 bg-[#090a0d] leading-relaxed text-gray-300 select-text`}>
+        <div className={`${maxHeight} overflow-auto p-3.5 bg-[#090a0d] leading-relaxed text-fg select-text`}>
           <pre className="font-mono text-[11px] whitespace-pre">
             {highlightedLines.map((line, idx) => {
               const isMatch = searchTerm.trim() && line.toLowerCase().includes(searchTerm.toLowerCase());
               return (
                 <div
                   key={idx}
-                  className={`table-row ${isMatch ? 'bg-[#2F6BFF]/20 text-yellow-200 font-bold' : ''}`}
+                  className={`table-row ${isMatch ? 'bg-accent/20 text-yellow-200 font-bold' : ''}`}
                 >
                   <span className="table-cell select-none pr-3 text-[#4b4e57] text-[10px] text-right">
                     {idx + 1}

@@ -124,13 +124,13 @@ describe('OKX transaction components (components/transactions/OkxTransactions)',
       const { unmount } = renderTransactionUi(
         <OkxTransactionRow entry={{ ...entry, side: 'Close Long' }} isExpanded={false} onToggle={() => {}} />
       );
-      expect(screen.getByText('Close Long')).toHaveClass('text-[#FF4444]');
+      expect(screen.getByText('Close Long')).toHaveClass('text-danger');
       unmount();
 
       renderTransactionUi(
         <OkxTransactionRow entry={{ ...entry, side: 'Close Short' }} isExpanded={false} onToggle={() => {}} />
       );
-      expect(screen.getByText('Close Short')).toHaveClass('text-[#00C853]');
+      expect(screen.getByText('Close Short')).toHaveClass('text-success');
     });
 
     it('calls onToggle when the row is clicked', () => {

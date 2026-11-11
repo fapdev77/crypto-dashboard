@@ -36,6 +36,7 @@ import { MandatoryVaultMigrationScreen } from './components/MandatoryVaultMigrat
 import { detectLegacyUnencryptedKeys } from './utils/vaultHelpers';
 import { ApiCredentials } from './store/apiKeysStore';
 import { LanguageCurrencyButton } from './components/ui/LanguageCurrencyButton';
+import { ThemeModeButton } from './components/ui/ThemeModeButton';
 import { CurrencyService } from './services/currency/CurrencyService';
 import { useTranslation } from 'react-i18next';
 
@@ -131,9 +132,9 @@ export default function App() {
           const el = document.getElementById(targetId);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
+            el.classList.add('ring-2', 'ring-accent', 'ring-offset-2', 'ring-offset-canvas', 'animate-pulse');
             setTimeout(() => {
-              el.classList.remove('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
+              el.classList.remove('ring-2', 'ring-accent', 'ring-offset-2', 'ring-offset-canvas', 'animate-pulse');
             }, 2000);
           }
         }, 150);
@@ -243,25 +244,25 @@ export default function App() {
             position="top-right"
             toastOptions={{
               style: {
-                background: '#1a1b1e',
-                color: '#fff',
-                border: '1px solid #2a2b30',
+                background: 'var(--surface)',
+                color: 'var(--fg)',
+                border: '1px solid var(--line)',
               },
               success: {
                 iconTheme: {
-                  primary: '#10B981',
-                  secondary: '#1a1b1e',
+                  primary: 'var(--success)',
+                  secondary: 'var(--surface)',
                 },
               },
               error: {
                 iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#1a1b1e',
+                  primary: 'var(--danger)',
+                  secondary: 'var(--surface)',
                 },
               },
             }}
           />
-          <div className="flex flex-col h-screen bg-[#0b0c10] overflow-hidden">
+          <div className="flex flex-col h-screen bg-canvas overflow-hidden">
             <PositionsTicker />
             <div className="flex flex-1 overflow-hidden relative">
               <Sidebar
@@ -273,22 +274,23 @@ export default function App() {
                 setIsCollapsed={setIsSidebarCollapsed}
               />
 
-              <main className="flex-1 overflow-hidden bg-[#0b0c10] p-4 md:p-6 flex flex-col min-w-0">
+              <main className="flex-1 overflow-hidden bg-canvas p-4 md:p-6 flex flex-col min-w-0">
                 <header className="mb-4 md:mb-6 shrink-0 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setIsMobileMenuOpen(true)}
-                      className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-[#2a2b30] rounded-lg transition-colors"
+                      className="lg:hidden p-2 -ml-2 text-fg-muted hover:text-fg hover:bg-line rounded-lg transition-colors"
                       aria-label="Open menu"
                     >
                       <Menu className="w-5 h-5" />
                     </button>
-                    <h2 className="text-xl lg:text-2xl font-semibold tracking-tight text-white capitalize">
+                    <h2 className="text-xl lg:text-2xl font-semibold tracking-tight text-fg capitalize">
                       {activeTabName}
                     </h2>
                   </div>
                   <div className="flex items-center gap-2">
                     <LanguageCurrencyButton />
+                    <ThemeModeButton />
                     {isAiFeatureEnabled && <AiPikaChatButton onClick={openChatDrawer} isEnabled={isAiEnabled} />}
                     <HelpToggleButton isOpen={isWelcomeOpen} onClick={() => setIsWelcomeOpen(!isWelcomeOpen)} />
                     <PrivacyToggleButton />

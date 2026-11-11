@@ -49,8 +49,8 @@ export const AiToolCallBadge: React.FC<AiToolCallBadgeProps> = ({ toolName }) =>
   const info = getToolInfo(toolName);
 
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#151619] border border-[#2a2b30] rounded-xl text-xs text-gray-300 font-mono shadow-md animate-pulse">
-      <Loader2 className="w-3 h-3 animate-spin text-[#2F6BFF]" />
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-surface border border-line rounded-xl text-xs text-fg font-mono shadow-md animate-pulse">
+      <Loader2 className="w-3 h-3 animate-spin text-accent" />
       {info.icon}
       <span>{info.label}</span>
     </div>

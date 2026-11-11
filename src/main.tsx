@@ -5,6 +5,10 @@ import './index.css';
 import './i18n/config';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LogManager } from './services/LogManager';
+import { applyThemeMode, readStoredThemeMode } from './utils/themeMode';
+
+// Aplica o modo visual salvo antes do primeiro paint, evitando flash de tema
+applyThemeMode(readStoredThemeMode());
 
 // Chunk error reload & global error logging
 window.addEventListener('error', (e) => {

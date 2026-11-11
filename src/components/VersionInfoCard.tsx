@@ -51,37 +51,37 @@ export function VersionInfoCard() {
   return (
     <div
       id="version-info-card"
-      className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full scroll-mt-20"
+      className="bg-surface border border-line rounded-xl p-6 flex flex-col h-full scroll-mt-20"
     >
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-base font-semibold text-white flex items-center gap-2">
-          <Tag className="w-4 h-4 text-[#2F6BFF]" />
+        <h3 className="text-base font-semibold text-fg flex items-center gap-2">
+          <Tag className="w-4 h-4 text-accent" />
           {t('settings.version.title', 'Version & Changelog')}
         </h3>
-        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#2F6BFF]/10 text-[#2F6BFF] border border-[#2F6BFF]/20">
+        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
           v{version}
         </span>
       </div>
-      <p className="text-[#8E9299] text-xs mb-4">
+      <p className="text-fg-muted text-xs mb-4">
         {t('settings.version.desc', 'Application metadata, GitHub repository source, and latest release notes')}
       </p>
 
       {/* New Version Ready Banner */}
       {needRefresh && (
-        <div className="mb-4 px-3.5 py-2.5 rounded-lg bg-[#2F6BFF]/10 border border-[#2F6BFF]/30 flex items-center justify-between gap-3 animate-in fade-in duration-200">
+        <div className="mb-4 px-3.5 py-2.5 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-between gap-3 animate-in fade-in duration-200">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-1.5 rounded-md bg-[#2F6BFF]/20 text-[#2F6BFF] shrink-0 border border-[#2F6BFF]/30">
+            <div className="p-1.5 rounded-md bg-accent/20 text-accent shrink-0 border border-accent/30">
               <Sparkles className="w-3.5 h-3.5 animate-pulse" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs font-semibold text-white block truncate">{t('settings.version.newAvailable', 'New Version Available')}</span>
-              <span className="text-[10px] text-gray-400 block truncate">{t('settings.version.readyInstall', 'Ready to install')}</span>
+              <span className="text-xs font-semibold text-fg block truncate">{t('settings.version.newAvailable', 'New Version Available')}</span>
+              <span className="text-[10px] text-fg-muted block truncate">{t('settings.version.readyInstall', 'Ready to install')}</span>
             </div>
           </div>
           <button
             onClick={() => triggerUpdate()}
             disabled={isUpdating}
-            className="px-3 py-1.5 bg-[#2F6BFF] hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 text-white text-xs font-medium rounded-md cursor-pointer transition-colors shrink-0 flex items-center gap-1.5 shadow-sm shadow-blue-500/20"
+            className="px-3 py-1.5 bg-accent hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 text-white text-xs font-medium rounded-md cursor-pointer transition-colors shrink-0 flex items-center gap-1.5 shadow-sm shadow-blue-500/20"
           >
             <RefreshCw className={`w-3 h-3 ${isUpdating ? 'animate-spin' : ''}`} />
             <span>{isUpdating ? t('common.updating', 'Updating...') : t('settings.version.updateBtn', 'Update Now')}</span>
@@ -92,38 +92,38 @@ export function VersionInfoCard() {
 
       <div className="flex flex-col gap-4 flex-1">
         {/* Info Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#1a1b1e] p-3.5 rounded-lg border border-[#2a2b30]/60">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-elevated p-3.5 rounded-lg border border-line/60">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-[#2a2b30]/50 rounded-md text-[#2F6BFF]">
+            <div className="p-2 bg-line/50 rounded-md text-accent">
               <GitCommit className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">{t('settings.version.currentVersion', 'Current Version')}</span>
-              <span className="text-xs font-mono font-semibold text-white">v{version}</span>
+              <span className="text-[10px] text-fg-muted uppercase tracking-wider font-medium block">{t('settings.version.currentVersion', 'Current Version')}</span>
+              <span className="text-xs font-mono font-semibold text-fg">v{version}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-[#2a2b30]/50 rounded-md text-emerald-400">
+            <div className="p-2 bg-line/50 rounded-md text-emerald-400">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">{t('settings.version.releaseDate', 'Release Date')}</span>
-              <span className="text-xs font-mono font-semibold text-white">{releaseDate}</span>
+              <span className="text-[10px] text-fg-muted uppercase tracking-wider font-medium block">{t('settings.version.releaseDate', 'Release Date')}</span>
+              <span className="text-xs font-mono font-semibold text-fg">{releaseDate}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 sm:col-span-2 border-t border-[#2a2b30]/50 pt-2.5 mt-0.5">
-            <div className="p-2 bg-[#2a2b30]/50 rounded-md text-purple-400">
+          <div className="flex items-center gap-2.5 sm:col-span-2 border-t border-line/50 pt-2.5 mt-0.5">
+            <div className="p-2 bg-line/50 rounded-md text-purple-400">
               <Github className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">{t('settings.version.repoSource', 'Repository Source')}</span>
+              <span className="text-[10px] text-fg-muted uppercase tracking-wider font-medium block">{t('settings.version.repoSource', 'Repository Source')}</span>
               <a
                 href={githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-[#2F6BFF] hover:text-blue-400 font-medium inline-flex items-center gap-1 group w-fit cursor-pointer"
+                className="text-xs text-accent hover:text-blue-400 font-medium inline-flex items-center gap-1 group w-fit cursor-pointer"
               >
                 <span>{t('settings.version.clickHere', 'Click here')}</span>
                 <ExternalLink className="w-3 h-3 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -132,7 +132,7 @@ export function VersionInfoCard() {
           </div>
 
           {/* IndexedDB Cache Database Status Row */}
-          <div className="flex items-center justify-between sm:col-span-2 border-t border-[#2a2b30]/50 pt-2.5 mt-0.5">
+          <div className="flex items-center justify-between sm:col-span-2 border-t border-line/50 pt-2.5 mt-0.5">
             <div className="flex items-center gap-2.5">
               <div className={`p-2 rounded-md ${
                 indexedDBStatus === 'healthy' 
@@ -142,11 +142,11 @@ export function VersionInfoCard() {
                 <Database className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] text-[#8E9299] uppercase tracking-wider font-medium block">
+                <span className="text-[10px] text-fg-muted uppercase tracking-wider font-medium block">
                   {t('settings.version.indexedDbLabel', 'IndexedDB Cache Database')}
                 </span>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs font-mono font-semibold text-white">v{indexedDBVersion || DB_VERSION}</span>
+                  <span className="text-xs font-mono font-semibold text-fg">v{indexedDBVersion || DB_VERSION}</span>
                   {/* Color-coded indicator: green for healthy, red for error */}
                   <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
                     indexedDBStatus === 'healthy'
@@ -184,14 +184,14 @@ export function VersionInfoCard() {
         </div>
 
         {/* Latest Release Summary */}
-        <div className="bg-[#1a1b1e] p-3.5 rounded-lg border border-[#2a2b30]/60 flex-1 flex flex-col justify-between">
+        <div className="bg-elevated p-3.5 rounded-lg border border-line/60 flex-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-semibold text-white tracking-wider flex items-center gap-1.5">
+              <h4 className="text-xs font-semibold text-fg tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 {t('settings.version.highlights', 'Latest Release Highlights (v{{version}})', { version })}
               </h4>
-              <span className="text-[10px] text-[#8E9299] font-mono">{releaseDate}</span>
+              <span className="text-[10px] text-fg-muted font-mono">{releaseDate}</span>
             </div>
 
             <div className="space-y-3">
@@ -200,7 +200,7 @@ export function VersionInfoCard() {
                   <span className="text-[11px] font-medium text-blue-400 block">{section.category}</span>
                   <ul className="space-y-1">
                     {section.items.map((item, itemIdx) => (
-                      <li key={itemIdx} className="text-xs text-gray-300 flex items-start gap-1.5 leading-relaxed">
+                      <li key={itemIdx} className="text-xs text-fg flex items-start gap-1.5 leading-relaxed">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
                         <span>{item}</span>
                       </li>
@@ -211,25 +211,25 @@ export function VersionInfoCard() {
             </div>
 
             {showFullChangelog && (
-              <div className="mt-4 pt-3 border-t border-[#2a2b30] space-y-3">
+              <div className="mt-4 pt-3 border-t border-line space-y-3">
                 <span className="text-[11px] font-medium text-amber-400 block">
                   Previous Release Highlights {previousChanges?.version ? `(v${previousChanges.version})` : ''} {previousChanges?.date ? `- ${previousChanges.date}` : ''}
                 </span>
                 <ul className="space-y-1">
                   {previousChanges?.items?.length ? (
                     previousChanges.items.map((item, itemIdx) => (
-                      <li key={itemIdx} className="text-xs text-gray-400 flex items-start gap-1.5">
+                      <li key={itemIdx} className="text-xs text-fg-muted flex items-start gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
                         <span>{item}</span>
                       </li>
                     ))
                   ) : (
                     <>
-                      <li className="text-xs text-gray-400 flex items-start gap-1.5">
+                      <li className="text-xs text-fg-muted flex items-start gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
                         <span>Added Funding Fees Dashboard & Market Overview.</span>
                       </li>
-                      <li className="text-xs text-gray-400 flex items-start gap-1.5">
+                      <li className="text-xs text-fg-muted flex items-start gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
                         <span>Added Order Reports & Live Connection Telemetry logs.</span>
                       </li>
@@ -240,10 +240,10 @@ export function VersionInfoCard() {
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#2a2b30]/60 flex items-center justify-between gap-2">
+          <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between gap-2">
             <button
               onClick={() => setShowFullChangelog(!showFullChangelog)}
-              className="text-xs text-[#8E9299] hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-xs text-fg-muted hover:text-fg flex items-center gap-1 transition-colors cursor-pointer"
             >
               {showFullChangelog ? (
                 <>
@@ -262,7 +262,7 @@ export function VersionInfoCard() {
               href={`${githubUrl}/blob/main/CHANGELOG.md`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-[#2F6BFF] hover:text-blue-400 flex items-center gap-1 font-medium transition-colors"
+              className="text-xs text-accent hover:text-blue-400 flex items-center gap-1 font-medium transition-colors"
             >
               <FileText className="w-3.5 h-3.5" />
               {t('settings.version.fullChangelog', 'Full CHANGELOG.md')}

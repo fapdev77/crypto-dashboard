@@ -84,7 +84,7 @@ const getOriginBadgeStyle = (origin: string) => {
     case 'MARGIN_ISOLATED':
       return 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
     default:
-      return 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
+      return 'bg-gray-500/10 text-fg-muted border border-gray-500/20';
   }
 };
 
@@ -167,29 +167,29 @@ export function ExchangeHierarchyTable({
     const isExExpanded = expandedExchanges[exchange] ?? false;
 
     return (
-      <div key={exchange} data-theme={exchange.toLowerCase().trim()} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg overflow-hidden flex flex-col w-full">
+      <div key={exchange} data-theme={exchange.toLowerCase().trim()} className="bg-elevated border border-line rounded-lg overflow-hidden flex flex-col w-full">
         {/* Exchange Header */}
         <button
           onClick={() => toggleExchange(exchange)}
-          className="w-full flex items-center justify-between p-4 bg-[#1a1b1e] hover:bg-[#2a2b30]/30 transition-colors border-b border-[#2a2b30] group"
+          className="w-full flex items-center justify-between p-4 bg-elevated hover:bg-line/30 transition-colors border-b border-line group"
         >
           <div className="flex items-center gap-3">
-            <ExchangeIcon exchange={exchange} className="w-8 h-8 rounded-md bg-[#2a2b30] p-1" />
+            <ExchangeIcon exchange={exchange} className="w-8 h-8 rounded-md bg-line p-1" />
             <div className="text-left">
               <h4 className="text-base font-bold text-brand-normal capitalize">{exchange}</h4>
-              <div className="text-xs text-[#8E9299] font-medium tracking-wide">
-                {t('balances.totalBalance', 'Total Balance')}: <span className="font-mono text-white">{formatCurrency(totalExchangeValue, 'usd')}</span>
+              <div className="text-xs text-fg-muted font-medium tracking-wide">
+                {t('balances.totalBalance', 'Total Balance')}: <span className="font-mono text-fg">{formatCurrency(totalExchangeValue, 'usd')}</span>
               </div>
             </div>
           </div>
-          <div className="text-[#8E9299] group-hover:text-white transition-colors">
+          <div className="text-fg-muted group-hover:text-fg transition-colors">
             {isExExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
           </div>
         </button>
 
         {/* Accounts List */}
         {isExExpanded && (
-          <div className="flex-1 overflow-hidden flex flex-col bg-[#111216]">
+          <div className="flex-1 overflow-hidden flex flex-col bg-canvas">
             {Object.entries(exData.accounts).map(([connId, accData]) => {
               const isAccExpanded = expandedAccounts[connId] ?? false;
 
@@ -205,20 +205,20 @@ export function ExchangeHierarchyTable({
               ];
 
               return (
-                <div key={connId} className="border-b border-[#2a2b30] last:border-0">
+                <div key={connId} className="border-b border-line last:border-0">
                   <button
                     onClick={() => toggleAccount(connId)}
-                    className="w-full flex items-center justify-between p-3 pl-4 bg-[#151619] hover:bg-[#2a2b30]/30 transition-colors group"
+                    className="w-full flex items-center justify-between p-3 pl-4 bg-surface hover:bg-line/30 transition-colors group"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="text-[#8E9299] group-hover:text-white transition-colors">
+                      <div className="text-fg-muted group-hover:text-fg transition-colors">
                         {isAccExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </div>
-                      <div className="hidden sm:block ml-4 pl-4 border-l border-[#2a2b30] opacity-70 group-hover:opacity-100 transition-opacity">
+                      <div className="hidden sm:block ml-4 pl-4 border-l border-line opacity-70 group-hover:opacity-100 transition-opacity">
                         <Sparkline data={sparkData} color={isPositive ? 'emerald' : 'red'} width={60} height={20} />
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-300 min-w-[120px] text-left">{cleanAccountLabel(accData.label)}</span>
+                        <span className="text-sm font-medium text-fg min-w-[120px] text-left">{cleanAccountLabel(accData.label)}</span>
                         {(() => {
                           const matchedKey = keys.find(k => k.id === connId);
                           return (
@@ -233,32 +233,32 @@ export function ExchangeHierarchyTable({
                         })()}
                       </div>
                     </div>
-                    <span className="text-sm font-bold text-white font-mono">{formatCurrency(accData.total, 'usd')}</span>
+                    <span className="text-sm font-bold text-fg font-mono">{formatCurrency(accData.total, 'usd')}</span>
                   </button>
 
                   {/* Assets Table */}
                   {isAccExpanded && (
-                    <div className="bg-[#111216]">
+                    <div className="bg-canvas">
                       <table className="w-full text-left border-collapse">
-                        <thead className="sticky top-0 bg-[#111216]">
+                        <thead className="sticky top-0 bg-canvas">
                           <tr>
-                            <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">{t('balances.asset', 'Asset')}</th>
-                            <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">{t('balances.amount', 'Amount')}</th>
-                            <th className="px-4 py-2 text-[10px] font-medium text-[#8E9299] uppercase tracking-wider text-right">{t('balances.valueWithCurrency', 'Value (≈{{currency}})', { currency: currentFiat })}</th>
+                            <th className="px-4 py-2 text-[10px] font-medium text-fg-muted uppercase tracking-wider">{t('balances.asset', 'Asset')}</th>
+                            <th className="px-4 py-2 text-[10px] font-medium text-fg-muted uppercase tracking-wider text-right">{t('balances.amount', 'Amount')}</th>
+                            <th className="px-4 py-2 text-[10px] font-medium text-fg-muted uppercase tracking-wider text-right">{t('balances.valueWithCurrency', 'Value (≈{{currency}})', { currency: currentFiat })}</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#2a2b30]">
+                        <tbody className="divide-y divide-line">
                           {accData.balances.map(b => {
                             const origin = getAssetOrigin(b);
                             const formattedOrigin = origin ? formatOriginLabel(origin) : null;
                             const badgeStyle = origin ? getOriginBadgeStyle(origin) : null;
 
                             return (
-                              <tr key={b.id} className="hover:bg-[#1a1b1e] transition-colors">
+                              <tr key={b.id} className="hover:bg-elevated transition-colors">
                                 <td className="px-4 py-2.5 whitespace-nowrap">
                                   <div className="flex items-center gap-2">
                                     <CoinIcon symbol={b.ccy} size={20} className="w-5 h-5" />
-                                    <span className="text-sm font-bold text-white leading-none mt-0.5 mr-1">{b.ccy}</span>
+                                    <span className="text-sm font-bold text-fg leading-none mt-0.5 mr-1">{b.ccy}</span>
                                     {formattedOrigin && (
                                       <span className={`text-[10px] font-semibold tracking-wider px-1.5 py-0.5 rounded border leading-none ${badgeStyle}`}>
                                         {formattedOrigin}
@@ -266,10 +266,10 @@ export function ExchangeHierarchyTable({
                                     )}
                                   </div>
                                 </td>
-                                <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
+                                <td className="px-4 py-2.5 whitespace-nowrap text-xs text-fg font-mono text-right">
                                   {formatCurrency(b.amount, 'crypto', 6)}
                                 </td>
-                                <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white font-mono text-right">
+                                <td className="px-4 py-2.5 whitespace-nowrap text-xs text-fg font-mono text-right">
                                   {formatCurrency(b.usdValue, 'usd')}
                                 </td>
                               </tr>
@@ -289,26 +289,26 @@ export function ExchangeHierarchyTable({
   });
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-4 md:p-6">
+    <div className="bg-surface border border-line rounded-xl overflow-hidden p-4 md:p-6">
       {/* Header Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-        <h3 className="text-xl font-semibold text-white">{t('balances.title', 'Balances')}</h3>
+        <h3 className="text-xl font-semibold text-fg">{t('balances.title', 'Balances')}</h3>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-[#8E9299]" />
+              <Search className="h-4 w-4 text-fg-muted" />
             </div>
             <input
               type="text"
               placeholder={t('balances.searchPlaceholder', 'Search asset, account or exchange...')}
-              className="pl-9 pr-10 py-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors w-full"
+              className="pl-9 pr-10 py-2 bg-elevated border border-line rounded-lg text-sm text-fg focus:outline-none focus:border-accent transition-colors w-full"
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
             />
             {filterText && (
               <button
                 onClick={() => setFilterText('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8E9299] hover:text-white transition-colors"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-fg-muted hover:text-fg transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -317,22 +317,22 @@ export function ExchangeHierarchyTable({
 
           <button
             onClick={() => setHideSmallBalances(!hideSmallBalances)}
-            className="flex items-center gap-2 px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] hover:bg-[#2a2b30]/50 rounded-lg text-sm text-[#8E9299] hover:text-white transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-elevated border border-line hover:bg-line/50 rounded-lg text-sm text-fg-muted hover:text-fg transition-colors"
           >
             {hideSmallBalances ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             <span className="hidden sm:inline">{t('balances.hideSmall', 'Hide < $1')}</span>
           </button>
 
-          <div className="flex items-center gap-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-1">
+          <div className="flex items-center gap-2 bg-elevated border border-line rounded-lg p-1">
             <button
               onClick={expandAll}
-              className="px-3 py-1.5 text-sm text-[#8E9299] hover:text-white hover:bg-[#2a2b30] rounded-md transition-colors"
+              className="px-3 py-1.5 text-sm text-fg-muted hover:text-fg hover:bg-line rounded-md transition-colors"
             >
               {t('balances.expandAll', 'Expand All')}
             </button>
             <button
               onClick={collapseAll}
-              className="px-3 py-1.5 text-sm text-[#8E9299] hover:text-white hover:bg-[#2a2b30] rounded-md transition-colors"
+              className="px-3 py-1.5 text-sm text-fg-muted hover:text-fg hover:bg-line rounded-md transition-colors"
             >
               {t('balances.collapseAll', 'Collapse All')}
             </button>
@@ -342,10 +342,10 @@ export function ExchangeHierarchyTable({
 
       {/* Empty State */}
       {hierarchyEntries.length === 0 ? (
-        <div className="py-12 flex flex-col items-center justify-center bg-[#1a1b1e] rounded-lg border border-[#2a2b30] border-dashed">
-          <Wallet className="h-10 w-10 text-[#2a2b30] mb-3" />
-          <p className="text-[#8E9299] font-medium">{t('balances.noBalances', 'No balances found')}</p>
-          <p className="text-[#8E9299]/60 text-sm mt-1">{t('balances.connectAccountsPrompt', 'Connect your accounts to view balances.')}</p>
+        <div className="py-12 flex flex-col items-center justify-center bg-elevated rounded-lg border border-line border-dashed">
+          <Wallet className="h-10 w-10 text-line mb-3" />
+          <p className="text-fg-muted font-medium">{t('balances.noBalances', 'No balances found')}</p>
+          <p className="text-fg-muted/60 text-sm mt-1">{t('balances.connectAccountsPrompt', 'Connect your accounts to view balances.')}</p>
         </div>
       ) : (
         <div className="w-full">

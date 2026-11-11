@@ -32,10 +32,10 @@ export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
   };
 
   const getRateColor = (val: number | null | undefined): string => {
-    if (val === null || val === undefined) return 'text-[#8E9299]';
+    if (val === null || val === undefined) return 'text-fg-muted';
     if (val > 0) return 'text-emerald-400';
     if (val < 0) return 'text-rose-400';
-    return 'text-white';
+    return 'text-fg';
   };
 
   const formatUsd = (val: number | null | undefined): string => {
@@ -50,13 +50,13 @@ export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
 
   if (!metric) {
     return (
-      <div className="bg-[#121318]/60 border border-[#202228] rounded-xl p-4 flex flex-col justify-between opacity-60">
+      <div className="bg-canvas/60 border border-[#202228] rounded-xl p-4 flex flex-col justify-between opacity-60">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ExchangeIcon exchange={exchange} className="w-4 h-4 grayscale" />
-            <span className="font-semibold text-xs text-[#8E9299]">{exName}</span>
+            <span className="font-semibold text-xs text-fg-muted">{exName}</span>
           </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#1e2028] text-[#6b6e79] border border-[#2a2b30]">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#1e2028] text-[#6b6e79] border border-line">
             No Coin-M Contract
           </span>
         </div>
@@ -77,8 +77,8 @@ export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ExchangeIcon exchange={exchange} className="w-4 h-4 shrink-0" />
-          <span className="font-bold text-xs text-white">{exName}</span>
-          <span className="text-[10px] font-mono text-[#8E9299] px-1.5 py-0.5 rounded bg-[#1c1d24] border border-[#2a2b30]">
+          <span className="font-bold text-xs text-fg">{exName}</span>
+          <span className="text-[10px] font-mono text-fg-muted px-1.5 py-0.5 rounded bg-[#1c1d24] border border-line">
             {metric.pairSymbol}
           </span>
         </div>
@@ -91,10 +91,10 @@ export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
       {/* Price & Deviation */}
       <div className="flex items-baseline justify-between border-b border-[#1c1e26] pb-2.5">
         <div>
-          <div className="text-sm font-bold font-mono text-white">
+          <div className="text-sm font-bold font-mono text-fg">
             ${metric.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: metric.price < 1 ? 4 : 2 })}
           </div>
-          <div className="text-[10px] text-[#8E9299] font-mono">
+          <div className="text-[10px] text-fg-muted font-mono">
             24h L: ${metric.low24h.toLocaleString(undefined, { minimumFractionDigits: 2 })} — H: ${metric.high24h.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
         </div>
@@ -104,7 +104,7 @@ export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
             {metric.price24hPcnt >= 0 ? '+' : ''}{metric.price24hPcnt.toFixed(2)}%
           </div>
           {Math.abs(deviation) >= 0.01 && (
-            <span className={`text-[10px] font-mono ${isDeviationPositive ? 'text-emerald-400/80' : isDeviationNegative ? 'text-rose-400/80' : 'text-[#8E9299]'}`}>
+            <span className={`text-[10px] font-mono ${isDeviationPositive ? 'text-emerald-400/80' : isDeviationNegative ? 'text-rose-400/80' : 'text-fg-muted'}`}>
               {isDeviationPositive ? '+' : ''}{deviation.toFixed(2)}% vs index
             </span>
           )}
@@ -114,8 +114,8 @@ export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
       {/* Volume & Open Interest Grid */}
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="bg-[#181920] p-2 rounded-lg border border-[#242630]">
-          <span className="text-[10px] text-[#8E9299] uppercase font-semibold block">24h Volume</span>
-          <div className="font-mono font-bold text-white text-xs mt-0.5">
+          <span className="text-[10px] text-fg-muted uppercase font-semibold block">24h Volume</span>
+          <div className="font-mono font-bold text-fg text-xs mt-0.5">
             {formatUsd(metric.volume24hUsd)}
           </div>
           <span className="text-[10px] text-cyan-400/90 font-mono">
@@ -124,11 +124,11 @@ export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
         </div>
 
         <div className="bg-[#181920] p-2 rounded-lg border border-[#242630]">
-          <span className="text-[10px] text-[#8E9299] uppercase font-semibold block">Open Interest</span>
+          <span className="text-[10px] text-fg-muted uppercase font-semibold block">Open Interest</span>
           <div className="font-mono font-bold text-amber-400 text-xs mt-0.5">
             {formatUsd(metric.openInterestUsd)}
           </div>
-          <span className="text-[10px] text-[#8E9299] font-mono">
+          <span className="text-[10px] text-fg-muted font-mono">
             {metric.openInterestCoin ? `${metric.openInterestCoin.toLocaleString(undefined, { maximumFractionDigits: 1 })} coins` : 'Live contract'}
           </span>
         </div>
@@ -137,25 +137,25 @@ export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
       {/* Funding Rates Breakdown */}
       <div className="space-y-1.5 pt-1">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-[11px] text-[#8E9299]">Next Funding Rate:</span>
+          <span className="text-[11px] text-fg-muted">Next Funding Rate:</span>
           <div className="text-right">
             <span className={`font-mono font-bold ${getRateColor(metric.nextFundingRate)}`}>
               {formatRate(metric.nextFundingRate)}
             </span>
             {metric.fundingApr !== null && (
-              <span className="text-[10px] text-[#8E9299] font-mono ml-1.5">
+              <span className="text-[10px] text-fg-muted font-mono ml-1.5">
                 ({metric.fundingApr > 0 ? '+' : ''}{metric.fundingApr}% APR)
               </span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-[10px] text-[#8E9299]">
+        <div className="flex items-center justify-between text-[10px] text-fg-muted">
           <span className="flex items-center gap-1">
-            <Clock className="w-3 h-3 text-[#2F6BFF]" />
+            <Clock className="w-3 h-3 text-accent" />
             Settlement Time:
           </span>
-          <span className="font-mono text-white/80">
+          <span className="font-mono text-fg/80">
             {metric.nextFundingTime
               ? formatDateTime(metric.nextFundingTime, { includeYear: false, includeSeconds: false }).fullStr
               : '—'}
@@ -164,20 +164,20 @@ export const InverseExchangeCard: React.FC<InverseExchangeCardProps> = ({
 
         {/* Historical cumulative row */}
         <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-[#1c1e26] text-center">
-          <div className="bg-[#171820] py-1 px-1.5 rounded border border-[#20222a]">
-            <span className="text-[9px] text-[#8E9299] block font-medium">Today (UTC)</span>
+          <div className="bg-[#171820] py-1 px-1.5 rounded border border-elevated">
+            <span className="text-[9px] text-fg-muted block font-medium">Today (UTC)</span>
             <span className={`font-mono text-[11px] font-bold ${getRateColor(metric.todaySum)}`}>
               {formatRate(metric.todaySum)}
             </span>
           </div>
-          <div className="bg-[#171820] py-1 px-1.5 rounded border border-[#20222a]">
-            <span className="text-[9px] text-[#8E9299] block font-medium">Cur. Month</span>
+          <div className="bg-[#171820] py-1 px-1.5 rounded border border-elevated">
+            <span className="text-[9px] text-fg-muted block font-medium">Cur. Month</span>
             <span className={`font-mono text-[11px] font-bold ${getRateColor(metric.currentMonthSum)}`}>
               {formatRate(metric.currentMonthSum)}
             </span>
           </div>
-          <div className="bg-[#171820] py-1 px-1.5 rounded border border-[#20222a]">
-            <span className="text-[9px] text-[#8E9299] block font-medium">3 Months</span>
+          <div className="bg-[#171820] py-1 px-1.5 rounded border border-elevated">
+            <span className="text-[9px] text-fg-muted block font-medium">3 Months</span>
             <span className={`font-mono text-[11px] font-bold ${getRateColor(metric.last3MonthsSum)}`}>
               {formatRate(metric.last3MonthsSum)}
             </span>

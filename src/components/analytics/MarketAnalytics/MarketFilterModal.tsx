@@ -239,18 +239,18 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
       onClick={onClose}
     >
       <div
-        className="bg-[#131418] border border-[#2a2b30] rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+        className="bg-canvas border border-line rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#22242a] bg-[#17191f]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-elevated-hover bg-[#17191f]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#2F6BFF]/10 border border-[#2F6BFF]/30 flex items-center justify-center text-[#2F6BFF]">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center text-accent">
               <SlidersHorizontal className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-white tracking-wide">Market & Asset Filters</h2>
-              <p className="text-[11px] text-[#8E9299]">Configure active instrument, markets and exchange data feeds</p>
+              <h2 className="text-sm font-semibold text-fg tracking-wide">Market & Asset Filters</h2>
+              <p className="text-[11px] text-fg-muted">Configure active instrument, markets and exchange data feeds</p>
               <div className="mt-1">
                 <AppTooltip
                   description="If you notice data inconsistencies or outdated pairs, open the cache and polling settings to force a refresh or adjust the symbol catalog cache expiration time."
@@ -285,7 +285,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-[#8E9299] hover:text-white rounded-lg hover:bg-[#20222b] transition-colors"
+            className="p-1.5 text-fg-muted hover:text-fg rounded-lg hover:bg-elevated transition-colors"
             title="Close (Esc)"
           >
             <X className="w-4 h-4" />
@@ -293,32 +293,32 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
         </div>
 
         {/* Modal Body: Two-Zone Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-[#22242a] overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-elevated-hover overflow-hidden">
           {/* ── Zone 1: Asset Selection (Left, 7 cols) ── */}
-          <div className="lg:col-span-7 flex flex-col p-4 min-h-0 bg-[#131418]">
+          <div className="lg:col-span-7 flex flex-col p-4 min-h-0 bg-canvas">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-[#C5C8D0] uppercase tracking-wider">1. Select Asset</span>
-              <span className="text-[11px] text-[#8E9299]">
-                Current: <strong className="text-white font-mono">{pendingSymbol}</strong>
+              <span className="text-xs font-semibold text-fg uppercase tracking-wider">1. Select Asset</span>
+              <span className="text-[11px] text-fg-muted">
+                Current: <strong className="text-fg font-mono">{pendingSymbol}</strong>
               </span>
             </div>
 
             {/* Search Bar */}
             <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E9299]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by ticker or name (e.g. BTC, ETH, AAPL)..."
-                className="w-full bg-[#1a1b22] border border-[#2a2b30] focus:border-[#2F6BFF] rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-[#686c75] focus:outline-none focus:ring-1 focus:ring-[#2F6BFF]/30 transition-all font-medium"
+                className="w-full bg-elevated border border-line focus:border-accent rounded-xl pl-9 pr-8 py-2 text-xs text-fg placeholder-[#686c75] focus:outline-none focus:ring-1 focus:ring-accent/30 transition-all font-medium"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9299] hover:text-white p-0.5"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg p-0.5"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -337,12 +337,12 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                     onClick={() => handleChipChange(chip.id)}
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap transition-all ${
                       isActive
-                        ? 'bg-[#2F6BFF] text-white shadow-sm'
-                        : 'bg-[#1a1b22] text-[#8E9299] hover:text-white hover:bg-[#22242e] border border-[#2a2b30]/60'
+                        ? 'bg-accent text-white shadow-sm'
+                        : 'bg-elevated text-fg-muted hover:text-fg hover:bg-[#22242e] border border-line/60'
                     }`}
                   >
                     {isChipLoading && (
-                      <Loader2 className="w-3 h-3 animate-spin text-white/90" />
+                      <Loader2 className="w-3 h-3 animate-spin text-fg/90" />
                     )}
                     <span>{chip.label}</span>
                   </button>
@@ -354,10 +354,10 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
             <div className="relative flex-1 min-h-[160px] max-h-[260px] lg:max-h-none overflow-y-auto pr-1 space-y-1 divide-y divide-[#1e2027]/60">
               {/* Spinning loading overlay during transition */}
               {(isFiltering || isPendingFilter) && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#131418]/70 backdrop-blur-[1.5px] rounded-xl animate-in fade-in duration-100">
-                  <div className="flex items-center gap-2.5 px-3 py-2 bg-[#1a1b22] border border-[#2a2b30] rounded-xl shadow-xl">
-                    <Loader2 className="w-4 h-4 text-[#2F6BFF] animate-spin" />
-                    <span className="text-xs font-medium text-[#C5C8D0]">Filtering assets...</span>
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-canvas/70 backdrop-blur-[1.5px] rounded-xl animate-in fade-in duration-100">
+                  <div className="flex items-center gap-2.5 px-3 py-2 bg-elevated border border-line rounded-xl shadow-xl">
+                    <Loader2 className="w-4 h-4 text-accent animate-spin" />
+                    <span className="text-xs font-medium text-fg">Filtering assets...</span>
                   </div>
                 </div>
               )}
@@ -368,23 +368,23 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                   onClick={() => handleSelectCoin(customOption.symbol)}
                   className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition-all border ${
                     pendingSymbol === customOption.symbol
-                      ? 'bg-[#2F6BFF]/15 border-[#2F6BFF] text-white'
-                      : 'bg-[#181a22] border-dashed border-[#2F6BFF]/40 text-[#C5C8D0] hover:bg-[#1f212c]'
+                      ? 'bg-accent/15 border-accent text-fg'
+                      : 'bg-[#181a22] border-dashed border-accent/40 text-fg hover:bg-[#1f212c]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-full bg-[#2F6BFF]/20 flex items-center justify-center text-[#2F6BFF]">
+                    <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-accent">
                       <Sparkles className="w-3.5 h-3.5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-xs text-white">{customOption.symbol}</span>
-                        <span className="text-[10px] px-1.5 py-0.2 bg-[#2F6BFF]/20 text-cyan-300 rounded font-mono">Custom</span>
+                        <span className="font-bold text-xs text-fg">{customOption.symbol}</span>
+                        <span className="text-[10px] px-1.5 py-0.2 bg-accent/20 text-cyan-300 rounded font-mono">Custom</span>
                       </div>
-                      <p className="text-[10px] text-[#8E9299]">Query uncataloged ticker</p>
+                      <p className="text-[10px] text-fg-muted">Query uncataloged ticker</p>
                     </div>
                   </div>
-                  <span className="text-[11px] text-[#2F6BFF] font-medium">Select</span>
+                  <span className="text-[11px] text-accent font-medium">Select</span>
                 </div>
               )}
 
@@ -400,8 +400,8 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                     onClick={() => handleSelectCoin(coin.symbol)}
                     className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-[#2F6BFF]/15 border border-[#2F6BFF]/60 text-white shadow-sm'
-                        : 'hover:bg-[#1a1b22] text-[#C5C8D0] border border-transparent'
+                        ? 'bg-accent/15 border border-accent/60 text-fg shadow-sm'
+                        : 'hover:bg-elevated text-fg border border-transparent'
                     }`}
                   >
                     {/* Left: Icon, Ticker, Name, Badge */}
@@ -409,14 +409,14 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                       <CoinIcon symbol={coin.symbol} name={coin.name} className="w-6 h-6 shrink-0" />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-xs text-white truncate">{coin.symbol}</span>
+                          <span className="font-bold text-xs text-fg truncate">{coin.symbol}</span>
                           <span
                             className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border ${kindBadge.bg} ${kindBadge.text} ${kindBadge.border}`}
                           >
                             {kindBadge.label}
                           </span>
                         </div>
-                        <p className="text-[10px] text-[#8E9299] truncate max-w-[140px] sm:max-w-[200px]">
+                        <p className="text-[10px] text-fg-muted truncate max-w-[140px] sm:max-w-[200px]">
                           {coin.name}
                         </p>
                       </div>
@@ -429,7 +429,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                         {coin.exchanges.map((ex) => (
                           <div
                             key={ex}
-                            className="w-4 h-4 rounded bg-[#1e2026] flex items-center justify-center text-[9px] text-[#8E9299]"
+                            className="w-4 h-4 rounded bg-[#1e2026] flex items-center justify-center text-[9px] text-fg-muted"
                             title={ex}
                           >
                             <ExchangeIcon exchange={ex} className="w-3 h-3" />
@@ -448,7 +448,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                         className={`p-1 rounded-md transition-colors ${
                           isFav
                             ? 'text-amber-400 hover:text-amber-300'
-                            : 'text-[#50545e] hover:text-[#8E9299]'
+                            : 'text-[#50545e] hover:text-fg-muted'
                         }`}
                         title={isBtc ? 'BTC is fixed favorite' : isFav ? 'Remove from favorites' : 'Add to favorites'}
                       >
@@ -465,7 +465,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                   <button
                     type="button"
                     onClick={() => setVisibleCount((prev) => prev + 60)}
-                    className="px-3 py-1.5 rounded-lg bg-[#1a1b22] hover:bg-[#20222b] text-[#8E9299] hover:text-white border border-[#2a2b30] text-[11px] font-medium transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-elevated hover:bg-elevated text-fg-muted hover:text-fg border border-line text-[11px] font-medium transition-colors"
                   >
                     Show more ({coinResults.length - visibleCount} remaining)
                   </button>
@@ -473,8 +473,8 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
               )}
 
               {coinResults.length === 0 && !customOption && !isFiltering && !isPendingFilter && (
-                <div className="p-8 text-center text-[#8E9299] text-xs">
-                  No assets found matching <strong className="text-white font-mono">"{searchQuery}"</strong>.
+                <div className="p-8 text-center text-fg-muted text-xs">
+                  No assets found matching <strong className="text-fg font-mono">"{searchQuery}"</strong>.
                 </div>
               )}
             </div>
@@ -483,11 +483,11 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
           {/* ── Zone 2: Markets & Exchanges Options for Selected Asset (Right, 5 cols) ── */}
           <div className="lg:col-span-5 flex flex-col p-4 min-h-0 bg-[#15171d] space-y-4">
             {/* Header of Zone 2 */}
-            <div className="flex items-center justify-between pb-2 border-b border-[#22242a]">
+            <div className="flex items-center justify-between pb-2 border-b border-elevated-hover">
               <div>
-                <span className="text-xs font-semibold text-[#C5C8D0] uppercase tracking-wider">2. Configure Feeds</span>
+                <span className="text-xs font-semibold text-fg uppercase tracking-wider">2. Configure Feeds</span>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-xs font-bold text-white font-mono">{pendingSymbol}</span>
+                  <span className="text-xs font-bold text-fg font-mono">{pendingSymbol}</span>
                   <span className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border ${currentBadge.bg} ${currentBadge.text} ${currentBadge.border}`}>
                     {currentBadge.label}
                   </span>
@@ -509,7 +509,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="text-xs font-medium text-white">Markets</span>
+                  <span className="text-xs font-medium text-fg">Markets</span>
                   <span className="text-[10px] text-cyan-400 bg-cyan-400/10 px-1.5 py-0.2 rounded-full font-mono">
                     {pendingMarkets.length}
                   </span>
@@ -517,7 +517,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                 <button
                   type="button"
                   onClick={handleSelectAllMarkets}
-                  className="text-[10px] text-[#2F6BFF] hover:text-[#5287ff] font-medium"
+                  className="text-[10px] text-accent hover:text-[#5287ff] font-medium"
                 >
                   Select All
                 </button>
@@ -534,17 +534,17 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                       onClick={() => isAvailable && handleToggleMarket(m.id)}
                       className={`flex items-center justify-between p-2 rounded-xl border text-xs transition-all ${
                         !isAvailable
-                          ? 'opacity-40 bg-[#121317] border-[#22242a] cursor-not-allowed text-[#686c75]'
+                          ? 'opacity-40 bg-[#121317] border-elevated-hover cursor-not-allowed text-[#686c75]'
                           : isChecked
-                          ? 'bg-[#1e2028] border-[#2F6BFF]/60 text-white cursor-pointer shadow-sm'
-                          : 'bg-[#181920] border-[#2a2b30] text-[#8E9299] hover:text-white cursor-pointer hover:bg-[#1c1e26]'
+                          ? 'bg-[#1e2028] border-accent/60 text-fg cursor-pointer shadow-sm'
+                          : 'bg-[#181920] border-line text-fg-muted hover:text-fg cursor-pointer hover:bg-[#1c1e26]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         <div
                           className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
                             isChecked
-                              ? 'bg-[#2F6BFF] border-[#2F6BFF] text-white'
+                              ? 'bg-accent border-accent text-white'
                               : 'border-[#3a3c45] bg-[#15161b]'
                           }`}
                         >
@@ -552,17 +552,17 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                         </div>
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="font-medium text-xs text-white">{m.label}</span>
+                            <span className="font-medium text-xs text-fg">{m.label}</span>
                             <span className="text-[9px] font-mono px-1 py-0.2 bg-[#2a2c35] text-[#A0A5B0] rounded">
                               {m.badge}
                             </span>
                           </div>
-                          <p className="text-[10px] text-[#8E9299] leading-tight">{m.desc}</p>
+                          <p className="text-[10px] text-fg-muted leading-tight">{m.desc}</p>
                         </div>
                       </div>
 
                       {!isAvailable && (
-                        <span className="text-[9px] text-[#686c75] bg-[#1a1b20] px-1.5 py-0.5 rounded border border-[#22242a]">
+                        <span className="text-[9px] text-[#686c75] bg-elevated px-1.5 py-0.5 rounded border border-elevated-hover">
                           N/A
                         </span>
                       )}
@@ -576,16 +576,16 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
-                  <Globe className="w-3.5 h-3.5 text-[#2F6BFF]" />
-                  <span className="text-xs font-medium text-white">Exchanges</span>
-                  <span className="text-[10px] text-[#2F6BFF] bg-[#2F6BFF]/10 px-1.5 py-0.2 rounded-full font-mono">
+                  <Globe className="w-3.5 h-3.5 text-accent" />
+                  <span className="text-xs font-medium text-fg">Exchanges</span>
+                  <span className="text-[10px] text-accent bg-accent/10 px-1.5 py-0.2 rounded-full font-mono">
                     {pendingExchanges.length}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={handleSelectAllExchanges}
-                  className="text-[10px] text-[#2F6BFF] hover:text-[#5287ff] font-medium"
+                  className="text-[10px] text-accent hover:text-[#5287ff] font-medium"
                 >
                   Select All
                 </button>
@@ -602,17 +602,17 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                       onClick={() => isAvailable && handleToggleExchange(ex.id)}
                       className={`flex items-center justify-between p-2 rounded-xl border text-xs transition-all ${
                         !isAvailable
-                          ? 'opacity-40 bg-[#121317] border-[#22242a] cursor-not-allowed text-[#686c75]'
+                          ? 'opacity-40 bg-[#121317] border-elevated-hover cursor-not-allowed text-[#686c75]'
                           : isChecked
-                          ? 'bg-[#1e2028] border-[#2F6BFF]/60 text-white cursor-pointer shadow-sm'
-                          : 'bg-[#181920] border-[#2a2b30] text-[#8E9299] hover:text-white cursor-pointer hover:bg-[#1c1e26]'
+                          ? 'bg-[#1e2028] border-accent/60 text-fg cursor-pointer shadow-sm'
+                          : 'bg-[#181920] border-line text-fg-muted hover:text-fg cursor-pointer hover:bg-[#1c1e26]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         <div
                           className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
                             isChecked
-                              ? 'bg-[#2F6BFF] border-[#2F6BFF] text-white'
+                              ? 'bg-accent border-accent text-white'
                               : 'border-[#3a3c45] bg-[#15161b]'
                           }`}
                         >
@@ -620,12 +620,12 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
                         </div>
                         <div className="flex items-center gap-2">
                           <ExchangeIcon exchange={ex.id} className="w-4 h-4" />
-                          <span className="font-medium text-xs text-white">{ex.label}</span>
+                          <span className="font-medium text-xs text-fg">{ex.label}</span>
                         </div>
                       </div>
 
                       {!isAvailable && (
-                        <span className="text-[9px] text-[#686c75] bg-[#1a1b20] px-1.5 py-0.5 rounded border border-[#22242a]">
+                        <span className="text-[9px] text-[#686c75] bg-elevated px-1.5 py-0.5 rounded border border-elevated-hover">
                           Not Listed
                         </span>
                       )}
@@ -638,19 +638,19 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
         </div>
 
         {/* Modal Footer (Apply / Cancel) */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-[#22242a] bg-[#17191f]">
-          <div className="text-xs text-[#8E9299]">
+        <div className="flex items-center justify-between px-5 py-3.5 border-t border-elevated-hover bg-[#17191f]">
+          <div className="text-xs text-fg-muted">
             Active selection:{' '}
-            <span className="text-white font-mono font-bold">{pendingSymbol}</span> •{' '}
+            <span className="text-fg font-mono font-bold">{pendingSymbol}</span> •{' '}
             <span className="text-cyan-400 font-medium">{pendingMarkets.length} market{pendingMarkets.length > 1 ? 's' : ''}</span> •{' '}
-            <span className="text-[#2F6BFF] font-medium">{pendingExchanges.length} exchange{pendingExchanges.length > 1 ? 's' : ''}</span>
+            <span className="text-accent font-medium">{pendingExchanges.length} exchange{pendingExchanges.length > 1 ? 's' : ''}</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-[#8E9299] hover:text-white hover:bg-[#20222b] transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-medium text-fg-muted hover:text-fg hover:bg-elevated transition-colors"
             >
               Cancel
             </button>
@@ -658,7 +658,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
               type="button"
               id="apply-market-filter-btn"
               onClick={handleApply}
-              className="flex items-center gap-2 px-5 py-2 bg-[#2F6BFF] hover:bg-[#2458db] text-white rounded-xl text-xs font-semibold shadow-lg shadow-[#2F6BFF]/20 transition-all"
+              className="flex items-center gap-2 px-5 py-2 bg-accent hover:bg-[#2458db] text-white rounded-xl text-xs font-semibold shadow-lg shadow-accent/20 transition-all"
             >
               <Check className="w-3.5 h-3.5" />
               Apply Filters

@@ -41,7 +41,7 @@ export function HedgePositionLevelRow({
   const isLong = !level.isShort;
   const sideLabel = level.isShort ? 'Short' : 'Long';
   const marginModeLabel = level.marginMode === 'isolated' ? t('hedgePro.positions.isolated') : t('hedgePro.positions.cross');
-  const sideColor = isLong ? 'text-[#00C853]' : 'text-[#FF4444]';
+  const sideColor = isLong ? 'text-success' : 'text-danger';
   const isFiatPair = /USD|USDT|USDC|EUR|BRL/i.test(level.symbol);
 
   // Pre-calculated bar and exposure metrics from hedgeUtils
@@ -60,10 +60,10 @@ export function HedgePositionLevelRow({
   let uplTooltip = t('hedgePro.positions.unrealizedPnlTooltip');
   let uplColor =
     level.unrealizedPnlUsd > 0
-      ? 'text-[#00C853]'
+      ? 'text-success'
       : level.unrealizedPnlUsd < 0
-        ? 'text-[#FF4444]'
-        : 'text-[#8E9299]';
+        ? 'text-danger'
+        : 'text-fg-muted';
 
   if (pnlConceptMode === 'hedge') {
     if (level.isShort) {
@@ -73,7 +73,7 @@ export function HedgePositionLevelRow({
         uplTooltip = t('hedgePro.positions.opportunityCostTooltip');
       } else if (level.unrealizedPnlUsd > 0) {
         uplLabel = t('hedgePro.drawer.accumulatedAsset');
-        uplColor = 'text-[#00C853]';
+        uplColor = 'text-success';
         uplTooltip = t('hedgePro.positions.accumulatedAssetTooltip');
       } else {
         uplLabel = t('hedgePro.drawer.hedgeBalanced');
@@ -97,7 +97,7 @@ export function HedgePositionLevelRow({
   return (
     <div
       id={`hedge-pos-${level.positionId}`}
-      className="p-3.5 space-y-2.5 bg-[#121316] hover:bg-[#16181d] transition-colors"
+      className="p-3.5 space-y-2.5 bg-canvas hover:bg-[#16181d] transition-colors"
     >
       {/* Position Header & Direct Link */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -105,11 +105,11 @@ export function HedgePositionLevelRow({
           <button
             type="button"
             onClick={handleNavigateToOpenPositions}
-            className="flex items-center gap-1.5 font-bold text-white text-xs hover:text-[#2F6BFF] transition-colors group cursor-pointer"
+            className="flex items-center gap-1.5 font-bold text-fg text-xs hover:text-accent transition-colors group cursor-pointer"
             title={t('hedgePro.positions.jumpToPosition')}
           >
             <span>{level.symbol}</span>
-            <ExternalLink className="w-3 h-3 text-[#8E9299] group-hover:text-[#2F6BFF] transition-colors" />
+            <ExternalLink className="w-3 h-3 text-fg-muted group-hover:text-accent transition-colors" />
           </button>
           <span className={`text-[11px] font-semibold ${sideColor}`}>
             {sideLabel} {level.leverage}x · {marginModeLabel}
@@ -117,17 +117,17 @@ export function HedgePositionLevelRow({
         </div>
 
         <div className="flex items-center gap-3 text-xs font-mono">
-          <span className="text-[#8E9299]">
+          <span className="text-fg-muted">
             {t('hedgePro.positions.entry')}{' '}
-            <span className="text-white font-medium">{formatPrice(level.entryPrice, isFiatPair)}</span>
+            <span className="text-fg font-medium">{formatPrice(level.entryPrice, isFiatPair)}</span>
           </span>
-          <span className="text-[#8E9299]">
+          <span className="text-fg-muted">
             {t('hedgePro.positions.mark')}{' '}
-            <span className="text-white font-medium">{formatPrice(level.markPrice, isFiatPair)}</span>
+            <span className="text-fg font-medium">{formatPrice(level.markPrice, isFiatPair)}</span>
           </span>
-          <span className="text-[#8E9299]">
+          <span className="text-fg-muted">
             {t('hedgePro.positions.size')}{' '}
-            <span className="text-white font-medium">
+            <span className="text-fg font-medium">
               {formatCoin(level.openPosSize, level.ccy, formatCurrency)} {level.ccy}
             </span>
           </span>
@@ -139,14 +139,14 @@ export function HedgePositionLevelRow({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-[#23252a] text-xs font-mono">
           <div className="flex flex-col">
             <AppTooltip description={t('hedgePro.positions.initialPositionValueTooltip')} side="top">
-              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
+              <span className="text-[10px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50 w-fit">
                 {t('hedgePro.positions.initialPositionValue')}
               </span>
             </AppTooltip>
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-fg">
               {formatCurrency(level.initialValueUsd ?? level.entryUsd ?? level.positionValueUsd, 'usd', 2)}
             </span>
-            <span className="text-[10px] text-[#8E9299]">
+            <span className="text-[10px] text-fg-muted">
               {formatCoin(level.initialSizeInCoin ?? level.openPosSize, level.ccy, formatCurrency)} {level.ccy}
             </span>
           </div>
@@ -161,29 +161,29 @@ export function HedgePositionLevelRow({
               {formatCurrency(level.protectedUsd, 'usd', 2)}{' '}
               <span className="text-[10px] font-normal">({protectedPct.toFixed(1)}%)</span>
             </span>
-            <span className="text-[10px] text-[#8E9299]">
+            <span className="text-[10px] text-fg-muted">
               {formatCoin(protectedAmount, level.ccy, formatCurrency)} {level.ccy}
             </span>
           </div>
 
           <div className="flex flex-col">
             <AppTooltip description={t('hedgePro.positions.exposedTooltip')} side="top">
-              <span className="text-[10px] text-white uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
+              <span className="text-[10px] text-fg uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50 w-fit">
                 {t('hedgePro.positions.exposed')}
               </span>
             </AppTooltip>
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-fg">
               {formatCurrency(level.exposedBaseUsd, 'usd', 2)}{' '}
-              <span className="text-[10px] font-normal text-[#8E9299]">({exposedPct.toFixed(1)}%)</span>
+              <span className="text-[10px] font-normal text-fg-muted">({exposedPct.toFixed(1)}%)</span>
             </span>
-            <span className="text-[10px] text-[#8E9299]">
+            <span className="text-[10px] text-fg-muted">
               {formatCoin(exposedQty, level.ccy, formatCurrency)} {level.ccy}
             </span>
           </div>
 
           <div className="flex flex-col">
             <AppTooltip description={uplTooltip} side="top">
-              <span className="text-[10px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50 w-fit truncate max-w-[130px]">
+              <span className="text-[10px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50 w-fit truncate max-w-[130px]">
                 {uplLabel}
               </span>
             </AppTooltip>
@@ -206,14 +206,14 @@ export function HedgePositionLevelRow({
             leveragedWidthPct={leveragedWidthPct}
           />
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
-            <span className="text-[#8E9299]">
+            <span className="text-fg-muted">
               {t('hedgePro.positions.protected')}: <span className="font-mono text-emerald-400">{formatCurrency(level.protectedUsd, 'usd', 2)}</span>
             </span>
-            <span className="text-[#8E9299]">
-              {t('hedgePro.positions.exposed')}: <span className="font-mono text-white">{formatCurrency(level.exposedBaseUsd, 'usd', 2)}</span>
+            <span className="text-fg-muted">
+              {t('hedgePro.positions.exposed')}: <span className="font-mono text-fg">{formatCurrency(level.exposedBaseUsd, 'usd', 2)}</span>
             </span>
             {!level.isShort && (
-              <span className="text-[#8E9299]">
+              <span className="text-fg-muted">
                 {t('hedgePro.drawer.leveraged')}: <span className="font-mono text-amber-400">{formatCurrency(level.positionValueUsd, 'usd', 2)}</span>
               </span>
             )}

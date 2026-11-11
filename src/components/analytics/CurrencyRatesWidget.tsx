@@ -88,24 +88,24 @@ export function CurrencyRatesWidget() {
   return (
     <div
       data-testid="currency-rates-widget"
-      className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 mb-6 text-white transition-all shadow-sm"
+      className="bg-surface border border-line rounded-xl p-5 mb-6 text-fg transition-all shadow-sm"
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#2a2b30]/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line/60">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-4 h-4 text-[#2F6BFF]" />
+          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+            <TrendingUp className="w-4 h-4 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-white tracking-wide">
+              <h3 className="text-sm font-semibold text-fg tracking-wide">
                 {t('currencyWidget.title', 'Global Currency Rates')}
               </h3>
               <AppTooltip description={t('settings.fallbackExplanation', 'If external rate providers become unreachable, the terminal uses your most recent cached rates, with static safety defaults as ultimate protection.')}>
-                <HelpCircle className="w-3.5 h-3.5 text-[#8E9299] hover:text-white cursor-help transition-colors" />
+                <HelpCircle className="w-3.5 h-3.5 text-fg-muted hover:text-fg cursor-help transition-colors" />
               </AppTooltip>
             </div>
-            <p className="text-[11px] text-[#8E9299] mt-0.5">
+            <p className="text-[11px] text-fg-muted mt-0.5">
               {t('currencyWidget.subtitle', 'Real-time reference exchange rates against USD')} • {t('currencyWidget.base', 'Base: 1 USD')}
             </p>
           </div>
@@ -115,7 +115,7 @@ export function CurrencyRatesWidget() {
         <div className="flex items-center gap-2.5 flex-wrap">
           {statusBadge()}
 
-          <span className="text-[11px] font-mono text-[#8E9299]">
+          <span className="text-[11px] font-mono text-fg-muted">
             {t('currencyWidget.lastUpdated', { time: formattedTime })}
           </span>
 
@@ -123,10 +123,10 @@ export function CurrencyRatesWidget() {
             <button
               onClick={handleManualRefresh}
               disabled={isRefreshing}
-              className="p-1.5 rounded-lg bg-[#1e2024] hover:bg-[#2a2b30] border border-[#2a2b30] text-[#8E9299] hover:text-white transition-colors disabled:opacity-50"
+              className="p-1.5 rounded-lg bg-elevated hover:bg-line border border-line text-fg-muted hover:text-fg transition-colors disabled:opacity-50"
               aria-label="Refresh rates"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#2F6BFF]' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-accent' : ''}`} />
             </button>
           </AppTooltip>
         </div>
@@ -149,11 +149,11 @@ export function CurrencyRatesWidget() {
                 }
               }}
               className={`p-3.5 rounded-xl border select-none relative group transition-all duration-500 ease-out cursor-pointer ${
-                isPulsing ? 'scale-[1.015] ring-1 ring-[#2F6BFF]/40 bg-[#1e222a]' : ''
+                isPulsing ? 'scale-[1.015] ring-1 ring-accent/40 bg-[#1e222a]' : ''
               } ${
                 isSelected
-                  ? 'bg-[#2F6BFF]/10 border-[#2F6BFF]/40 shadow-sm'
-                  : 'bg-[#1a1b1e] border-[#2a2b30]/60 hover:border-[#3d4047] hover:bg-[#1f2025]'
+                  ? 'bg-accent/10 border-accent/40 shadow-sm'
+                  : 'bg-elevated border-line/60 hover:border-[#3d4047] hover:bg-[#1f2025]'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -161,45 +161,45 @@ export function CurrencyRatesWidget() {
                   <FlagIcon code={curr.id} className="w-6 h-4.5 rounded-xs shadow-xs" />
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-xs tracking-wider text-white">
+                      <span className="font-semibold text-xs tracking-wider text-fg">
                         {curr.code}
                       </span>
-                      <span className="text-[10px] text-[#8E9299] font-mono">
+                      <span className="text-[10px] text-fg-muted font-mono">
                         ({curr.symbol})
                       </span>
                     </div>
-                    <span className="text-[10px] text-[#8E9299] block line-clamp-1">
+                    <span className="text-[10px] text-fg-muted block line-clamp-1">
                       {curr.nativeName}
                     </span>
                   </div>
                 </div>
 
                 {isSelected ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#2F6BFF] bg-[#2F6BFF]/10 px-1.5 py-0.5 rounded border border-[#2F6BFF]/20">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20">
                     <CheckCircle2 className="w-3 h-3" />
                     {t('currencyWidget.activeBadge', 'Active')}
                   </span>
                 ) : (
-                  <span className="text-[10px] text-[#555861] group-hover:text-[#8E9299] transition-colors">
+                  <span className="text-[10px] text-fg-muted group-hover:text-fg-muted transition-colors">
                     Click to select
                   </span>
                 )}
               </div>
 
               {/* Rate Metrics */}
-              <div className="pt-2 border-t border-[#2a2b30]/40 flex items-baseline justify-between">
+              <div className="pt-2 border-t border-line/40 flex items-baseline justify-between">
                 <div>
-                  <span className="text-[10px] text-[#8E9299] block">1 USD =</span>
-                  <span className="text-sm font-semibold font-mono text-white">
+                  <span className="text-[10px] text-fg-muted block">1 USD =</span>
+                  <span className="text-sm font-semibold font-mono text-fg">
                     {curr.id === 'USD' ? '1.0000' : rate.toFixed(4)}
                   </span>
-                  <span className="text-[10px] text-[#8E9299] ml-1 font-mono">{curr.code}</span>
+                  <span className="text-[10px] text-fg-muted ml-1 font-mono">{curr.code}</span>
                 </div>
 
                 {curr.id !== 'USD' && (
                   <div className="text-right">
-                    <span className="text-[10px] text-[#8E9299] block">1 {curr.code} =</span>
-                    <span className="text-xs font-medium font-mono text-[#8E9299]">
+                    <span className="text-[10px] text-fg-muted block">1 {curr.code} =</span>
+                    <span className="text-xs font-medium font-mono text-fg-muted">
                       ${inverseRate.toFixed(4)}
                     </span>
                   </div>
@@ -212,7 +212,7 @@ export function CurrencyRatesWidget() {
         {/* USDT Stablecoin Card */}
         <div
           data-testid="currency-card-usdt"
-          className={`p-3.5 rounded-xl border select-none relative group transition-all duration-500 ease-out bg-[#1a1b1e] border-[#2a2b30]/60 hover:border-[#26a69a]/40 hover:bg-[#1a2123] ${
+          className={`p-3.5 rounded-xl border select-none relative group transition-all duration-500 ease-out bg-elevated border-line/60 hover:border-[#26a69a]/40 hover:bg-[#1a2123] ${
             isPulsing ? 'scale-[1.015] ring-1 ring-[#26a69a]/40 bg-[#162224]' : ''
           }`}
         >
@@ -223,14 +223,14 @@ export function CurrencyRatesWidget() {
               </span>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-xs tracking-wider text-white">
+                  <span className="font-semibold text-xs tracking-wider text-fg">
                     USDT
                   </span>
                   <span className="text-[10px] text-[#26a69a] font-mono">
                     (USD/USDT)
                   </span>
                 </div>
-                <span className="text-[10px] text-[#8E9299] block line-clamp-1">
+                <span className="text-[10px] text-fg-muted block line-clamp-1">
                   Tether USD
                 </span>
               </div>
@@ -242,18 +242,18 @@ export function CurrencyRatesWidget() {
           </div>
 
           {/* Rate Metrics */}
-          <div className="pt-2 border-t border-[#2a2b30]/40 flex items-baseline justify-between">
+          <div className="pt-2 border-t border-line/40 flex items-baseline justify-between">
             <div>
-              <span className="text-[10px] text-[#8E9299] block">1 USD =</span>
+              <span className="text-[10px] text-fg-muted block">1 USD =</span>
               <span className="text-sm font-semibold font-mono text-[#26a69a]">
                 {usdToUsdt.toFixed(4)}
               </span>
-              <span className="text-[10px] text-[#8E9299] ml-1 font-mono">USDT</span>
+              <span className="text-[10px] text-fg-muted ml-1 font-mono">USDT</span>
             </div>
 
             <div className="text-right">
-              <span className="text-[10px] text-[#8E9299] block">1 USDT =</span>
-              <span className="text-xs font-medium font-mono text-white">
+              <span className="text-[10px] text-fg-muted block">1 USDT =</span>
+              <span className="text-xs font-medium font-mono text-fg">
                 ${usdtRateSafe.toFixed(4)}
               </span>
             </div>

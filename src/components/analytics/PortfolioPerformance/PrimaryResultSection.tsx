@@ -22,12 +22,12 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
   return (
     <div className="space-y-4">
       {/* Section Header with Date Period */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#2a2b30]/60">
-        <h3 className="text-base font-bold text-white flex items-center gap-2">
-          <Target className="w-4 h-4 text-[#2F6BFF]" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-line/60">
+        <h3 className="text-base font-bold text-fg flex items-center gap-2">
+          <Target className="w-4 h-4 text-accent" />
           {t('analytics.portfolio.primary.title', 'Primary Result')}
         </h3>
-        <div className="flex items-center gap-2 text-xs text-[#8E9299]">
+        <div className="flex items-center gap-2 text-xs text-fg-muted">
           <Calendar className="w-3.5 h-3.5" />
           <span>
             Period: {metrics.earliestDate} to {metrics.latestDate} ({metrics.durationDays} {metrics.durationDays === 1 ? 'day' : 'days'})
@@ -36,22 +36,22 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
       </div>
 
       {/* Main Container */}
-      <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 space-y-6 shadow-sm">
+      <div className="bg-surface border border-line rounded-xl p-5 space-y-6 shadow-sm">
         {/* Top Hero Banner */}
-        <div className="flex flex-col items-center justify-center py-4 bg-[#1a1b1e]/60 rounded-xl border border-[#2a2b30]/50 text-center relative overflow-hidden">
-          <span className="text-[11px] font-semibold tracking-wider text-[#8E9299] uppercase mb-1">
+        <div className="flex flex-col items-center justify-center py-4 bg-elevated/60 rounded-xl border border-line/50 text-center relative overflow-hidden">
+          <span className="text-[11px] font-semibold tracking-wider text-fg-muted uppercase mb-1">
             {t('analytics.portfolio.primary.roi', 'Percentage Gain in Period (ROI)')}
           </span>
-          <div className={`text-4xl sm:text-5xl font-extrabold font-mono tracking-tight ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+          <div className={`text-4xl sm:text-5xl font-extrabold font-mono tracking-tight ${isPositive ? 'text-success' : 'text-danger'}`}>
             {isPositive ? '+' : ''}{metrics.percentageGain.toFixed(2)}%
           </div>
-          <div className="flex items-center gap-2 mt-2 text-sm text-[#8E9299] font-mono">
+          <div className="flex items-center gap-2 mt-2 text-sm text-fg-muted font-mono">
             <span>{t('analytics.portfolio.primary.absoluteGain', 'Absolute Gain')}:</span>
-            <span className={`font-bold ${isPositive ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+            <span className={`font-bold ${isPositive ? 'text-success' : 'text-danger'}`}>
               {maskVal(`${isPositive ? '+' : ''}${metrics.absoluteGain} ${denomination}`)}
             </span>
             {denomination !== 'USD' && (
-              <span className="text-xs text-[#8E9299]">
+              <span className="text-xs text-fg-muted">
                 ({maskVal(`$${metrics.absoluteGainUsd} USD`)})
               </span>
             )}
@@ -61,70 +61,70 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
         {/* 4 Sub-KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 1. Initial Balance */}
-          <div className="bg-[#161b22] border border-[#2a2b30] rounded-lg p-4 flex flex-col justify-between">
+          <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
               <AppTooltip description="Portfolio wallet balance at the time of the first trading operation (excluding subsequent deposits).">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+                <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.primary.initialBalance', 'Initial Balance')}
                 </span>
               </AppTooltip>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-white">
+              <div className="text-xl font-bold font-mono text-fg">
                 {maskVal(metrics.initialBalance)}
               </div>
-              <span className="text-xs text-[#8E9299]">{denomination}</span>
+              <span className="text-xs text-fg-muted">{denomination}</span>
             </div>
           </div>
 
           {/* 2. Final Balance */}
-          <div className="bg-[#161b22] border border-[#2a2b30] rounded-lg p-4 flex flex-col justify-between">
+          <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
               <AppTooltip description="Total portfolio wallet balance at the end of the analyzed timeframe.">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+                <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.primary.finalBalance', 'Final Balance')}
                 </span>
               </AppTooltip>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-white">
+              <div className="text-xl font-bold font-mono text-fg">
                 {maskVal(metrics.finalBalance)}
               </div>
-              <span className="text-xs text-[#8E9299]">{denomination}</span>
+              <span className="text-xs text-fg-muted">{denomination}</span>
             </div>
           </div>
 
           {/* 3. Daily Average ROI */}
-          <div className="bg-[#161b22] border border-[#2a2b30] rounded-lg p-4 flex flex-col justify-between">
+          <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
               <AppTooltip description="Average daily return rate: Total Percentage Gain / Operating Days.">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+                <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.primary.dailyAvgRoi', 'Daily Average ROI')}
                 </span>
               </AppTooltip>
             </div>
             <div>
-              <div className={`text-xl font-bold font-mono ${metrics.dailyAverageRoi >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+              <div className={`text-xl font-bold font-mono ${metrics.dailyAverageRoi >= 0 ? 'text-success' : 'text-danger'}`}>
                 {metrics.dailyAverageRoi >= 0 ? '+' : ''}{metrics.dailyAverageRoi.toFixed(4)}%
               </div>
-              <span className="text-xs text-[#8E9299]">{t('analytics.portfolio.primary.perOperatingDay', 'per operating day')}</span>
+              <span className="text-xs text-fg-muted">{t('analytics.portfolio.primary.perOperatingDay', 'per operating day')}</span>
             </div>
           </div>
 
           {/* 4. Deposits in Period */}
-          <div className="bg-[#161b22] border border-[#2a2b30] rounded-lg p-4 flex flex-col justify-between">
+          <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
               <AppTooltip description="Total deposits during the period. Excluded from ROI calculations to measure genuine strategy alpha.">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50 flex items-center gap-1">
-                  {t('analytics.portfolio.primary.depositsInPeriod', 'Deposits in Period')} <Info className="w-3 h-3 text-[#2F6BFF]" />
+                <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50 flex items-center gap-1">
+                  {t('analytics.portfolio.primary.depositsInPeriod', 'Deposits in Period')} <Info className="w-3 h-3 text-accent" />
                 </span>
               </AppTooltip>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-gray-300">
+              <div className="text-xl font-bold font-mono text-fg">
                 {maskVal(metrics.depositsInPeriod)}
               </div>
-              <span className="text-[10px] text-[#8E9299] block mt-0.5">
+              <span className="text-[10px] text-fg-muted block mt-0.5">
                 {denomination} (does not inflate trading result)
               </span>
             </div>

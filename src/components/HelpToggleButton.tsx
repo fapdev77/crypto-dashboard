@@ -19,10 +19,10 @@ export function HelpToggleButton({ isOpen, onClick }: HelpToggleButtonProps) {
     >
       <button
         onClick={onClick}
-        className={`p-2 border rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#2F6BFF] focus:ring-offset-2 dark:focus:ring-offset-[#0b0c10] ${
+        className={`p-2 border rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 dark:focus:ring-offset-canvas ${
           isOpen
-            ? 'text-[#2F6BFF] border-[#2F6BFF]/30 bg-[#2F6BFF]/10 hover:bg-[#2F6BFF]/20'
-            : 'text-gray-400 hover:text-white bg-gray-100 dark:bg-[#151619] border-gray-200 dark:border-[#2a2b30] hover:bg-gray-200 dark:hover:bg-[#2a2b30]'
+            ? 'text-accent border-accent/30 bg-accent/10 hover:bg-accent/20'
+            : 'text-fg-muted hover:text-fg bg-gray-100 dark:bg-surface border-gray-200 dark:border-line hover:bg-gray-200 dark:hover:bg-line'
         }`}
         aria-label={isOpen ? t('common.buttons.helpClose', 'Close help guide') : t('common.buttons.helpOpen', 'Open help guide')}
       >

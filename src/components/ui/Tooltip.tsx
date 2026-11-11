@@ -14,7 +14,7 @@ export const TooltipContent = React.forwardRef<
     <TooltipPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
-      className={`z-[9999] overflow-hidden rounded-lg bg-[#1e1f24] px-3 py-2.5 text-sm text-gray-300 shadow-xl border border-[#34373c] animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ${className}`}
+      className={`z-[9999] overflow-hidden rounded-lg bg-elevated px-3 py-2.5 text-sm text-fg shadow-xl border border-line-strong animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ${className}`}
       {...props}
     />
   </TooltipPrimitive.Portal>
@@ -47,7 +47,7 @@ export function AppTooltip({ children, description, rows, isLoading, side = 'top
       <TooltipContent side={side} align={align}>
         {isLoading ? (
           <div className="flex items-center justify-center p-2 min-w-[120px]">
-            <Loader2 className="w-5 h-5 animate-spin text-[#8E9299]" />
+            <Loader2 className="w-5 h-5 animate-spin text-fg-muted" />
           </div>
         ) : (
           <div className="flex flex-col min-w-[200px] max-w-[320px]">
@@ -66,14 +66,14 @@ export function AppTooltip({ children, description, rows, isLoading, side = 'top
                 {rows.map((row, i) => (
                   <div key={i} className="flex items-center justify-between gap-6">
                     <span className={row.labelClassName || 'text-[13px] font-medium text-[#c9cbcf]'}>{row.label}</span>
-                    <span className={row.valueClassName || 'text-[13px] font-mono text-white'}>  {row.value}</span>
+                    <span className={row.valueClassName || 'text-[13px] font-mono text-fg'}>  {row.value}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
         )}
-        <TooltipPrimitive.Arrow className="fill-[#34373c]" />
+        <TooltipPrimitive.Arrow className="fill-line-strong" />
       </TooltipContent>
     </TooltipRoot>
   );

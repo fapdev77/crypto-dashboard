@@ -158,9 +158,9 @@ export const FundingRateComparison = () => {
   };
 
   return (
-    <div className="flex flex-col bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden">
+    <div className="flex flex-col bg-surface border border-line rounded-xl overflow-hidden">
       {/* Header Controls */}
-      <div className="p-4 border-b border-[#2a2b30] flex flex-col gap-4 bg-[#1A1C20]/30">
+      <div className="p-4 border-b border-line flex flex-col gap-4 bg-elevated/30">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
           <PeriodSegmentedControl 
             value={period}
@@ -175,7 +175,7 @@ export const FundingRateComparison = () => {
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 showFavoritesOnly 
                   ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
-                  : "bg-[#0e0f11] text-[#8E9299] border-[#2a2b30] hover:text-white"
+                  : "bg-canvas text-fg-muted border-line hover:text-fg"
               )}
             >
               <Star className={clsx("w-3.5 h-3.5", showFavoritesOnly && "fill-yellow-500")} />
@@ -188,8 +188,8 @@ export const FundingRateComparison = () => {
                 className={clsx(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                   showOpenPositionsOnly 
-                    ? "bg-[#2F6BFF]/10 text-[#2F6BFF] border-[#2F6BFF]/20 shadow-[0_0_10px_rgba(47,107,255,0.1)]" 
-                    : "bg-[#0e0f11] text-[#8E9299] border-[#2a2b30] hover:text-white"
+                    ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_10px_rgba(47,107,255,0.1)]" 
+                    : "bg-canvas text-fg-muted border-line hover:text-fg"
                 )}
               >
                 <Briefcase className="w-3.5 h-3.5" />
@@ -204,11 +204,11 @@ export const FundingRateComparison = () => {
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 showCoinMOnly 
                   ? "bg-purple-500/15 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]" 
-                  : "bg-[#0e0f11] text-[#8E9299] border-[#2a2b30] hover:text-purple-300"
+                  : "bg-canvas text-fg-muted border-line hover:text-purple-300"
               )}
               title="Exibir comparativo somente dos ativos com instrumentos COIN-M / Inverse"
             >
-              <Coins className={clsx("w-3.5 h-3.5", showCoinMOnly ? "text-purple-400" : "text-[#8E9299]")} />
+              <Coins className={clsx("w-3.5 h-3.5", showCoinMOnly ? "text-purple-400" : "text-fg-muted")} />
               <span>COIN-M / Inverse</span>
             </button>
             
@@ -216,7 +216,7 @@ export const FundingRateComparison = () => {
               <button 
                 id="funding-comparison-clear-btn"
                 onClick={() => setSelectedSymbols([])} 
-                className="flex items-center gap-1.5 text-sm text-[#8E9299] hover:text-white bg-[#0e0f11] px-3 py-1.5 rounded-lg border border-[#2a2b30] transition-colors ml-2"
+                className="flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg bg-canvas px-3 py-1.5 rounded-lg border border-line transition-colors ml-2"
               >
                 <X className="w-4 h-4" /> Clear Selection
               </button>
@@ -238,27 +238,27 @@ export const FundingRateComparison = () => {
       <div className="w-full p-6 min-h-[400px]">
         {(selectedSymbols.length === 0 && !showFavoritesOnly && !showOpenPositionsOnly && !showCoinMOnly) ? (
           <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
-            <div className="w-16 h-16 bg-[#2a2b30] rounded-full flex items-center justify-center mb-4">
-              <BarChart2 className="w-8 h-8 text-[#8E9299]" />
+            <div className="w-16 h-16 bg-line rounded-full flex items-center justify-center mb-4">
+              <BarChart2 className="w-8 h-8 text-fg-muted" />
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">Select symbols or active filters</h3>
-            <p className="text-[#8E9299] max-w-sm">
+            <h3 className="text-xl font-medium text-fg mb-2">Select symbols or active filters</h3>
+            <p className="text-fg-muted max-w-sm">
               Choose up to 25 symbols from the dropdown above, or click Favorites, Open Positions, or COIN-M / Inverse to compare their funding rates.
             </p>
           </div>
         ) : comparisonData.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
-            <div className="w-16 h-16 bg-[#2a2b30] rounded-full flex items-center justify-center mb-4">
-              <BarChart2 className="w-8 h-8 text-[#8E9299]" />
+            <div className="w-16 h-16 bg-line rounded-full flex items-center justify-center mb-4">
+              <BarChart2 className="w-8 h-8 text-fg-muted" />
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">No matching symbols</h3>
-            <p className="text-[#8E9299] max-w-sm">
+            <h3 className="text-xl font-medium text-fg mb-2">No matching symbols</h3>
+            <p className="text-fg-muted max-w-sm">
               Adjust your filters or manual selection to see data.
             </p>
           </div>
         ) : isLoading && aggregatedData.length === 0 ? (
           <div className="h-full flex items-center justify-center">
-            <div className="w-full h-full bg-[#1A1C20]/50 animate-pulse rounded-lg" />
+            <div className="w-full h-full bg-elevated/50 animate-pulse rounded-lg" />
           </div>
         ) : (
           <FundingComparisonChart 

@@ -54,23 +54,23 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
     const isFav = comparisonFavorites.includes(rowId);
     
     return (
-      <div className="bg-[#151619] border border-[#2a2b30] p-3 rounded-lg shadow-xl min-w-[200px]">
-        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-[#2a2b30]/50">
+      <div className="bg-surface border border-line p-3 rounded-lg shadow-xl min-w-[200px]">
+        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-line/50">
           <div className="flex items-center gap-2">
             <CoinIcon symbol={data.coin} className="w-5 h-5" />
-            <span className="font-bold text-white text-base">{data.symbol}</span>
+            <span className="font-bold text-fg text-base">{data.symbol}</span>
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 toggleComparisonFavorite(rowId);
               }}
-              className="text-[#8E9299] hover:text-yellow-500 transition-colors cursor-pointer"
+              className="text-fg-muted hover:text-yellow-500 transition-colors cursor-pointer"
             >
               <Star className={clsx("w-3.5 h-3.5", isFav && "fill-yellow-500 text-yellow-500")} />
             </button>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#2a2b30] bg-[#2a2b30]/50 text-[#8E9299] uppercase">
+            <span className="text-[10px] px-1.5 py-0.5 rounded border border-line bg-line/50 text-fg-muted uppercase">
               {data.type.replace('-', ' ')}
             </span>
             <span className={clsx(
@@ -78,7 +78,7 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
               data.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
               data.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
               data.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
-              "bg-[#2a2b30] text-[#8E9299] border-[#2a2b30]"
+              "bg-line text-fg-muted border-line"
             )}>
               {data.exchange}
             </span>
@@ -86,7 +86,7 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
         </div>
         
         <div className="flex justify-between items-center gap-4">
-          <span className="text-sm text-[#8E9299]">{periodLabel}</span>
+          <span className="text-sm text-fg-muted">{periodLabel}</span>
           <span className={clsx(
             "font-mono font-bold",
             isPositive ? "text-green-400" : "text-red-400"
@@ -95,7 +95,7 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
           </span>
         </div>
         
-        <div className="mt-2 text-xs text-[#8E9299]">
+        <div className="mt-2 text-xs text-fg-muted">
           {isPositive ? t('analytics.funding.cards.longsPayShorts', 'Longs pay Shorts') : data.value < 0 ? t('analytics.funding.cards.shortsPayLongs', 'Shorts pay Longs') : t('common.neutral', 'Neutral')}
         </div>
       </div>
@@ -176,17 +176,17 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
                             e.stopPropagation();
                             toggleComparisonFavorite(rowId);
                           }}
-                          className="text-[#8E9299] hover:text-yellow-500 transition-colors cursor-pointer shrink-0"
+                          className="text-fg-muted hover:text-yellow-500 transition-colors cursor-pointer shrink-0"
                         >
                           <Star className={clsx("w-3.5 h-3.5", isFav && "fill-yellow-500 text-yellow-500")} />
                         </button>
-                        <span className="text-xs font-medium text-[#8E9299] truncate">{item.symbol}</span>
+                        <span className="text-xs font-medium text-fg-muted truncate">{item.symbol}</span>
                         <span className={clsx(
                           "flex items-center px-1 py-[1px] rounded border text-[8px] font-medium capitalize shrink-0",
                           item.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
                           item.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
                           item.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
-                          "bg-[#2a2b30] text-[#8E9299] border-[#2a2b30]"
+                          "bg-line text-fg-muted border-line"
                         )}>
                           {item.exchange}
                         </span>

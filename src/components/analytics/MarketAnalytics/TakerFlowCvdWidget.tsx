@@ -72,7 +72,7 @@ export const TakerFlowCvdWidget: React.FC = () => {
   }
 
   return (
-    <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-5 shadow-lg space-y-5">
+    <div className="bg-canvas border border-line rounded-xl p-5 shadow-lg space-y-5">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
@@ -82,15 +82,15 @@ export const TakerFlowCvdWidget: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <TakerFlowMetricTooltip>
-                <h3 className="text-base font-bold text-white tracking-tight cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-emerald-400 transition-colors">
+                <h3 className="text-base font-bold text-fg tracking-tight cursor-help border-b border-dotted border-fg-muted/50 hover:text-emerald-400 transition-colors">
                   Order Flow & Cumulative Volume Delta (CVD)
                 </h3>
               </TakerFlowMetricTooltip>
-              <span className="px-2 py-0.5 text-[10px] font-bold bg-[#1a1b22] text-[#d1d5db] border border-[#2a2b30] rounded">
+              <span className="px-2 py-0.5 text-[10px] font-bold bg-elevated text-fg border border-line rounded">
                 Taker Buy vs. Sell
               </span>
             </div>
-            <p className="text-xs text-[#8E9299]">
+            <p className="text-xs text-fg-muted">
               Measures aggressive market orders entering the book vs. passive limit absorption
             </p>
           </div>
@@ -100,7 +100,7 @@ export const TakerFlowCvdWidget: React.FC = () => {
         <div className="flex items-center gap-4 text-xs font-mono">
           <div className="text-right">
             <PeriodTakerDeltaTooltip>
-              <span className="text-[11px] text-[#8E9299] block font-sans">Period Taker Delta</span>
+              <span className="text-[11px] text-fg-muted block font-sans">Period Taker Delta</span>
             </PeriodTakerDeltaTooltip>
             <div
               className={`text-base font-bold mt-0.5 ${
@@ -112,7 +112,7 @@ export const TakerFlowCvdWidget: React.FC = () => {
           </div>
           <div className="text-right">
             <CvdNetBalanceTooltip>
-              <span className="text-[11px] text-[#8E9299] block font-sans">CVD Net Balance</span>
+              <span className="text-[11px] text-fg-muted block font-sans">CVD Net Balance</span>
             </CvdNetBalanceTooltip>
             <div
               className={`text-base font-bold mt-0.5 ${
@@ -138,7 +138,7 @@ export const TakerFlowCvdWidget: React.FC = () => {
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <div>
               <strong className="font-bold">{divergenceAlert.title}: </strong>
-              <span className="text-[#d1d5db]">{divergenceAlert.desc}</span>
+              <span className="text-fg">{divergenceAlert.desc}</span>
             </div>
           </div>
         </CvdDivergenceTooltip>
@@ -156,7 +156,7 @@ export const TakerFlowCvdWidget: React.FC = () => {
             {Math.round((totalSell / (totalBuy + totalSell || 1)) * 100)}%)
           </span>
         </div>
-        <div className="w-full h-2 rounded-full bg-[#1a1b22] overflow-hidden flex">
+        <div className="w-full h-2 rounded-full bg-elevated overflow-hidden flex">
           <div
             style={{ width: `${(totalBuy / (totalBuy + totalSell || 1)) * 100}%` }}
             className="bg-emerald-500 h-full transition-all"
@@ -205,8 +205,8 @@ export const TakerFlowCvdWidget: React.FC = () => {
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
                   return (
-                    <div className="bg-[#1a1b22] border border-[#2a2b30] rounded-lg p-3 shadow-xl text-xs space-y-1.5 font-mono">
-                      <div className="text-[#8E9299] font-sans font-semibold border-b border-[#2a2b30] pb-1">
+                    <div className="bg-elevated border border-line rounded-lg p-3 shadow-xl text-xs space-y-1.5 font-mono">
+                      <div className="text-fg-muted font-sans font-semibold border-b border-line pb-1">
                         Time: {data.timeLabel}
                       </div>
                       <div className="flex items-center justify-between gap-4 text-emerald-400">
@@ -217,14 +217,14 @@ export const TakerFlowCvdWidget: React.FC = () => {
                         <span className="font-sans">Taker Sell:</span>
                         <span>{formatUsd(data.sellVol)}</span>
                       </div>
-                      <div className="flex items-center justify-between gap-4 border-t border-[#2a2b30]/60 pt-1 font-bold">
-                        <span className="text-[#8E9299] font-sans">Net Delta:</span>
+                      <div className="flex items-center justify-between gap-4 border-t border-line/60 pt-1 font-bold">
+                        <span className="text-fg-muted font-sans">Net Delta:</span>
                         <span className={data.netDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
                           {data.netDelta >= 0 ? '+' : ''}{formatUsd(data.netDelta)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-4 text-cyan-400 font-bold">
-                        <span className="text-[#8E9299] font-sans">Cumulative (CVD):</span>
+                        <span className="text-fg-muted font-sans">Cumulative (CVD):</span>
                         <span>{formatUsd(data.cvd)}</span>
                       </div>
                     </div>
@@ -239,12 +239,12 @@ export const TakerFlowCvdWidget: React.FC = () => {
               wrapperStyle={{ paddingBottom: '10px', fontSize: '11px' }}
               content={() => (
                 <div className="flex items-center justify-end gap-5 pb-2.5 text-[11px] font-sans">
-                  <div className="flex items-center gap-1.5 text-[#d1d5db]">
+                  <div className="flex items-center gap-1.5 text-fg">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
                     <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block -ml-2" />
                     <span>Net Delta per Candle (Buy / Sell)</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[#d1d5db]">
+                  <div className="flex items-center gap-1.5 text-fg">
                     <span className="w-4 h-0.5 bg-[#38bdf8] inline-block rounded-full" />
                     <span>Cumulative Volume Delta (CVD)</span>
                   </div>

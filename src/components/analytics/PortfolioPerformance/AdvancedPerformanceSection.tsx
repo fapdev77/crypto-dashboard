@@ -46,22 +46,22 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
   return (
     <div className="space-y-4">
       {/* Section Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#2a2b30]/60">
-        <h3 className="text-base font-bold text-white flex items-center gap-2">
-          <Award className="w-4 h-4 text-[#2F6BFF]" />
+      <div className="flex items-center justify-between pb-2 border-b border-line/60">
+        <h3 className="text-base font-bold text-fg flex items-center gap-2">
+          <Award className="w-4 h-4 text-accent" />
           {t('analytics.portfolio.advanced.title', 'Advanced Performance Metrics')}
         </h3>
-        <span className="text-xs text-[#8E9299]">Risk, Return & Consistency</span>
+        <span className="text-xs text-fg-muted">Risk, Return & Consistency</span>
       </div>
 
       {/* Grid of 3 Main Analytical Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* 1. Win Rate */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between shadow-sm">
+        <div className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between shadow-sm">
           <div>
             <div className="flex items-center justify-between mb-3">
               <AppTooltip description="Percentage of operating days with positive net result over the total days with activity.">
-                <span className="text-[11px] font-semibold text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+                <span className="text-[11px] font-semibold text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.advanced.winRate', 'Win Rate (Daily)')}
                 </span>
               </AppTooltip>
@@ -72,7 +72,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
               {metrics.winRate.toFixed(1)}%
             </div>
 
-            <div className="text-xs text-[#8E9299] flex items-center gap-1.5 mb-4">
+            <div className="text-xs text-fg-muted flex items-center gap-1.5 mb-4">
               <span>{metrics.positiveDaysCount} positive</span>
               <span>/</span>
               <span>{metrics.totalDaysEvaluated} total days</span>
@@ -98,11 +98,11 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
         </div>
 
         {/* 2. Profit Factor */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between shadow-sm">
+        <div className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between shadow-sm">
           <div>
             <div className="flex items-center justify-between mb-3">
               <AppTooltip description="Ratio of gross gains to gross losses: Total Gains / Total Losses. Values > 2.0 indicate institutional excellence.">
-                <span className="text-[11px] font-semibold text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+                <span className="text-[11px] font-semibold text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.advanced.profitFactor', 'Profit Factor')}
                 </span>
               </AppTooltip>
@@ -111,20 +111,20 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
               </span>
             </div>
 
-            <div className="text-3xl font-extrabold font-mono text-white mb-2">
+            <div className="text-3xl font-extrabold font-mono text-fg mb-2">
               {metrics.profitFactor > 99 ? '> 99.0' : metrics.profitFactor.toFixed(2)}
             </div>
 
             {/* Split breakdown */}
-            <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#2a2b30]/50 font-mono">
+            <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-line/50 font-mono">
               <div>
-                <span className="text-[10px] text-[#8E9299] block">Total Gains:</span>
+                <span className="text-[10px] text-fg-muted block">Total Gains:</span>
                 <span className="text-emerald-400 font-semibold">
                   {maskVal(`+${metrics.totalGains} ${denomination}`)}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-[#8E9299] block">Total Losses:</span>
+                <span className="text-[10px] text-fg-muted block">Total Losses:</span>
                 <span className="text-rose-400 font-semibold">
                   {maskVal(`-${metrics.totalLosses} ${denomination}`)}
                 </span>
@@ -132,18 +132,18 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
             </div>
           </div>
 
-          <div className="text-[11px] text-[#8E9299] mt-3 pt-2 border-t border-[#2a2b30]/30 flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#2F6BFF]" />
+          <div className="text-[11px] text-fg-muted mt-3 pt-2 border-t border-line/30 flex items-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-accent" />
             <span>Ratio of gains relative to absorbed drawdowns</span>
           </div>
         </div>
 
         {/* 3. Consistency Index (CV) */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between shadow-sm">
+        <div className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between shadow-sm">
           <div>
             <div className="flex items-center justify-between mb-3">
               <AppTooltip description="Coefficient of Variation (Standard Deviation / Daily Mean * 100). Lower CV reflects higher regularity and consistency across operational days.">
-                <span className="text-[11px] font-semibold text-[#8E9299] uppercase tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+                <span className="text-[11px] font-semibold text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.advanced.consistencyIndex', 'Consistency Index (CV)')}
                 </span>
               </AppTooltip>
@@ -152,11 +152,11 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
               </span>
             </div>
 
-            <div className="text-3xl font-extrabold font-mono text-white mb-2">
+            <div className="text-3xl font-extrabold font-mono text-fg mb-2">
               {metrics.consistencyIndexCv.toFixed(1)}%
             </div>
 
-            <p className="text-xs text-[#8E9299] leading-relaxed">
+            <p className="text-xs text-fg-muted leading-relaxed">
               {metrics.consistencyRating === 'Highly Consistent' &&
                 'Low outcome dispersion indicating consistent, steady performance.'}
               {metrics.consistencyRating === 'Moderate Consistency' &&
@@ -166,7 +166,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
             </p>
           </div>
 
-          <div className="text-[11px] text-[#8E9299] mt-3 pt-2 border-t border-[#2a2b30]/30 flex items-center gap-1">
+          <div className="text-[11px] text-fg-muted mt-3 pt-2 border-t border-line/30 flex items-center gap-1">
             <Activity className="w-3.5 h-3.5 text-blue-400" />
             <span>Normalized standard deviation of daily returns</span>
           </div>

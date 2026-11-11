@@ -100,11 +100,11 @@ export function LanguageCurrencyModal({
       aria-labelledby="language-currency-modal-title"
     >
       <div
-        className="w-full max-w-lg bg-[#141518] border border-[#2a2b30] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-lg bg-surface border border-line rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2b30] bg-[#1a1b1e]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-elevated">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
               <Globe className="w-5 h-5" />
@@ -112,11 +112,11 @@ export function LanguageCurrencyModal({
             <div>
               <h2
                 id="language-currency-modal-title"
-                className="text-lg font-semibold text-white tracking-tight"
+                className="text-lg font-semibold text-fg tracking-tight"
               >
                 {t('selector.title', 'Language & Currency')}
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-fg-muted">
                 {activeTab === 'language'
                   ? t('selector.selectLanguage', 'Select Interface Language')
                   : t('selector.selectCurrency', 'Select Display Currency')}
@@ -125,7 +125,7 @@ export function LanguageCurrencyModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white hover:bg-[#2a2b30] rounded-lg transition-colors"
+            className="p-2 text-fg-muted hover:text-fg hover:bg-line rounded-lg transition-colors"
             aria-label={t('common.close', 'Close')}
           >
             <X className="w-5 h-5" />
@@ -134,13 +134,13 @@ export function LanguageCurrencyModal({
 
         {/* Tab switcher */}
         <div className="px-6 pt-4 pb-2">
-          <div className="flex items-center p-1 bg-[#1e2024] rounded-xl border border-[#2a2b30]">
+          <div className="flex items-center p-1 bg-elevated rounded-xl border border-line">
             <button
               onClick={() => setActiveTab('language')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'language'
-                  ? 'bg-[#2F6BFF] text-white shadow-md'
-                  : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/50'
+                  ? 'bg-accent text-white shadow-md'
+                  : 'text-fg-muted hover:text-fg hover:bg-line/50'
               }`}
             >
               <Globe className="w-4 h-4" />
@@ -153,8 +153,8 @@ export function LanguageCurrencyModal({
               onClick={() => setActiveTab('currency')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                 activeTab === 'currency'
-                  ? 'bg-[#2F6BFF] text-white shadow-md'
-                  : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/50'
+                  ? 'bg-accent text-white shadow-md'
+                  : 'text-fg-muted hover:text-fg hover:bg-line/50'
               }`}
             >
               <DollarSign className="w-4 h-4" />
@@ -169,13 +169,13 @@ export function LanguageCurrencyModal({
         {/* Search Bar */}
         <div className="px-6 py-2">
           <div className="relative">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-fg-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('selector.searchPlaceholder', 'Search language or currency...')}
-              className="w-full bg-[#1e2024] border border-[#2a2b30] rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-[#2F6BFF] transition-colors"
+              className="w-full bg-elevated border border-line rounded-xl pl-10 pr-4 py-2 text-sm text-fg placeholder-fg-muted focus:outline-hidden focus:border-accent transition-colors"
             />
           </div>
         </div>
@@ -194,26 +194,26 @@ export function LanguageCurrencyModal({
                     }}
                     className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left transition-all ${
                       isSelected
-                        ? 'bg-[#2F6BFF]/10 border-[#2F6BFF] text-white shadow-xs'
-                        : 'bg-[#1a1b1e] border-[#2a2b30] text-gray-300 hover:bg-[#22242a] hover:border-gray-600'
+                        ? 'bg-accent/10 border-accent text-fg shadow-xs'
+                        : 'bg-elevated border-line text-fg hover:bg-elevated-hover hover:border-gray-600'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <FlagIcon code={locale.id} className="w-8 h-5.5 rounded-sm shadow-xs shrink-0" />
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-white">{locale.name}</span>
-                          <span className="text-xs px-2 py-0.5 rounded-md bg-[#2a2b30] text-gray-400 font-mono">
+                          <span className="font-medium text-fg">{locale.name}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-md bg-line text-fg-muted font-mono">
                             {locale.code}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-fg-muted mt-0.5">
                           {locale.englishName}
                         </div>
                       </div>
                     </div>
                     {isSelected && (
-                      <div className="w-6 h-6 rounded-full bg-[#2F6BFF] flex items-center justify-center text-white shrink-0 shadow-sm">
+                      <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white shrink-0 shadow-sm">
                         <Check className="w-4 h-4 stroke-[2.5]" />
                       </div>
                     )}
@@ -221,7 +221,7 @@ export function LanguageCurrencyModal({
                 );
               })}
               {filteredLocales.length === 0 && (
-                <div className="py-8 text-center text-gray-500 text-sm">
+                <div className="py-8 text-center text-fg-muted text-sm">
                   {t('common.none', 'No results found.')}
                 </div>
               )}
@@ -239,27 +239,27 @@ export function LanguageCurrencyModal({
                     }}
                     className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left transition-all ${
                       isSelected
-                        ? 'bg-[#2F6BFF]/10 border-[#2F6BFF] text-white shadow-xs'
-                        : 'bg-[#1a1b1e] border-[#2a2b30] text-gray-300 hover:bg-[#22242a] hover:border-gray-600'
+                        ? 'bg-accent/10 border-accent text-fg shadow-xs'
+                        : 'bg-elevated border-line text-fg hover:bg-elevated-hover hover:border-gray-600'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative shrink-0">
                         <FlagIcon code={currency.id} className="w-8 h-5.5 rounded-sm shadow-xs" />
-                        <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-[#111215] border border-[#2a2b30] text-[9px] font-mono font-bold text-blue-400 leading-none shadow-xs">
+                        <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-canvas border border-line text-[9px] font-mono font-bold text-blue-400 leading-none shadow-xs">
                           {currency.symbol}
                         </span>
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-white tracking-wide">
+                          <span className="font-semibold text-fg tracking-wide">
                             {currency.code}
                           </span>
                           <span className="text-sm font-semibold text-blue-400">
                             ({currency.symbol})
                           </span>
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-fg-muted mt-0.5">
                           {currency.nativeName} · {currency.name}
                         </div>
                       </div>
@@ -267,12 +267,12 @@ export function LanguageCurrencyModal({
 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="text-xs font-mono text-gray-400 block">
+                        <span className="text-xs font-mono text-fg-muted block">
                           1 USD ≈ {rate.toFixed(currency.id === 'USD' ? 2 : 3)} {currency.code}
                         </span>
                       </div>
                       {isSelected && (
-                        <div className="w-6 h-6 rounded-full bg-[#2F6BFF] flex items-center justify-center text-white shrink-0 shadow-sm">
+                        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center text-white shrink-0 shadow-sm">
                           <Check className="w-4 h-4 stroke-[2.5]" />
                         </div>
                       )}
@@ -281,7 +281,7 @@ export function LanguageCurrencyModal({
                 );
               })}
               {filteredCurrencies.length === 0 && (
-                <div className="py-8 text-center text-gray-500 text-sm">
+                <div className="py-8 text-center text-fg-muted text-sm">
                   {t('common.none', 'No results found.')}
                 </div>
               )}
@@ -290,7 +290,7 @@ export function LanguageCurrencyModal({
         </div>
 
         {/* Footer info bar */}
-        <div className="px-6 py-3 border-t border-[#2a2b30] bg-[#16171a] flex items-center justify-between text-xs text-gray-400">
+        <div className="px-6 py-3 border-t border-line bg-surface flex items-center justify-between text-xs text-fg-muted">
           <span className="line-clamp-1">
             {t('selector.ratesNote', 'Balances and KPIs are converted in real-time from USD/USDT.')}
           </span>

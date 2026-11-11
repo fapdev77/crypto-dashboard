@@ -45,9 +45,9 @@ export function BitgetTransactionDetailsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className={`bg-[#161b22] border border-[#2a2b30] rounded-xl w-full shadow-2xl flex flex-col max-h-[85vh] transition-all duration-200 ${detailsModalType === 'netchange' ? 'max-w-4xl' : 'max-w-md'}`}>
-        <div className="flex items-center justify-between p-4 border-b border-[#2a2b30]">
-          <h3 className="text-white font-medium">
+      <div className={`bg-elevated border border-line rounded-xl w-full shadow-2xl flex flex-col max-h-[85vh] transition-all duration-200 ${detailsModalType === 'netchange' ? 'max-w-4xl' : 'max-w-md'}`}>
+        <div className="flex items-center justify-between p-4 border-b border-line">
+          <h3 className="text-fg font-medium">
             {detailsModalType === 'funding' && t('transactions.details.fundingBreakdown', 'Funding Breakdown')}
             {detailsModalType === 'fees' && t('transactions.details.feesBreakdown', 'Fees Breakdown')}
             {detailsModalType === 'balance' && t('transactions.details.balanceBreakdown', 'Wallet Balance Breakdown')}
@@ -56,7 +56,7 @@ export function BitgetTransactionDetailsModal({
           </h3>
           <button 
             onClick={() => setDetailsModalType(null)}
-            className="text-[#8E9299] hover:text-white transition-colors"
+            className="text-fg-muted hover:text-fg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -73,15 +73,15 @@ export function BitgetTransactionDetailsModal({
           ) : detailsModalType === 'tx' ? (
             <>
               <div className="flex flex-col gap-2">
-                <span className="text-xs text-[#8E9299]">Count by Type</span>
+                <span className="text-xs text-fg-muted">Count by Type</span>
                 <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
                   {Object.entries(stats.typeBreakdown).map(([t, count]) => {
                     const uniType = getBitgetUniversalType(t);
                     const badge = UNIVERSAL_BADGE_STYLE[uniType] || UNIVERSAL_BADGE_STYLE.OTHERS;
                     return (
-                      <div key={t} className="flex items-center justify-between p-2.5 rounded-lg bg-[#1e232b] border border-[#2a2b30]/50 text-xs">
+                      <div key={t} className="flex items-center justify-between p-2.5 rounded-lg bg-elevated border border-line/50 text-xs">
                         <span className={`px-2 py-0.5 rounded font-semibold border text-[10px] ${badge.textColor} ${badge.bgColor} ${badge.borderColor}`}>{badge.label}</span>
-                        <span className="text-white font-mono font-medium">{count.toLocaleString()}</span>
+                        <span className="text-fg font-mono font-medium">{count.toLocaleString()}</span>
                       </div>
                     );
                   })}
@@ -91,14 +91,14 @@ export function BitgetTransactionDetailsModal({
           ) : (
             <>
               {/* Grand Total in USD */}
-              <div className="flex justify-between items-center bg-[#111215] p-3 rounded-lg border border-[#2a2b30]">
-                <span className="text-xs text-[#8E9299]">Total (Aggregated USD)</span>
+              <div className="flex justify-between items-center bg-canvas p-3 rounded-lg border border-line">
+                <span className="text-xs text-fg-muted">Total (Aggregated USD)</span>
                 <span className={`text-sm font-semibold font-mono ${
                   detailsModalType === 'funding'
-                    ? (new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]')
+                    ? (new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'text-success' : 'text-danger')
                     : detailsModalType === 'fees'
-                    ? (new Big(stats.aggregatedUsd.totalFees).gt(0) ? 'text-[#FF4444]' : new Big(stats.aggregatedUsd.totalFees).lt(0) ? 'text-[#00C853]' : 'text-white')
-                    : 'text-white'
+                    ? (new Big(stats.aggregatedUsd.totalFees).gt(0) ? 'text-danger' : new Big(stats.aggregatedUsd.totalFees).lt(0) ? 'text-success' : 'text-fg')
+                    : 'text-fg'
                 }`}>
                   {detailsModalType === 'funding' && maskVal(stats.aggregatedUsd.totalFunding)}
                   {detailsModalType === 'fees' && formatFee(stats.aggregatedUsd.totalFees)}
@@ -108,15 +108,15 @@ export function BitgetTransactionDetailsModal({
 
               {/* Stablecoin bucket */}
               <div className="flex flex-col gap-1 text-xs">
-                <span className="text-[#8E9299] uppercase tracking-wider font-semibold text-[10px]">Stablecoins (USDT, USDC, USD)</span>
-                <div className="flex justify-between items-center p-2 rounded bg-[#111215] border border-[#2a2b30]">
-                  <span className="text-white font-medium">USD Equivalent</span>
+                <span className="text-fg-muted uppercase tracking-wider font-semibold text-[10px]">Stablecoins (USDT, USDC, USD)</span>
+                <div className="flex justify-between items-center p-2 rounded bg-canvas border border-line">
+                  <span className="text-fg font-medium">USD Equivalent</span>
                   <span className={`font-mono ${
                     detailsModalType === 'funding'
-                      ? (new Big(stats.stable.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]')
+                      ? (new Big(stats.stable.totalFunding).gte(0) ? 'text-success' : 'text-danger')
                       : detailsModalType === 'fees'
-                      ? (new Big(stats.stable.totalFees).gt(0) ? 'text-[#FF4444]' : new Big(stats.stable.totalFees).lt(0) ? 'text-[#00C853]' : 'text-white')
-                      : 'text-white'
+                      ? (new Big(stats.stable.totalFees).gt(0) ? 'text-danger' : new Big(stats.stable.totalFees).lt(0) ? 'text-success' : 'text-fg')
+                      : 'text-fg'
                   }`}>
                     {detailsModalType === 'funding' && maskVal(stats.stable.totalFunding)}
                     {detailsModalType === 'fees' && formatFee(stats.stable.totalFees)}
@@ -128,7 +128,7 @@ export function BitgetTransactionDetailsModal({
               {/* Non-stable per-currency breakdown */}
               {otherCurrencies.length > 0 && (
                 <div className="flex flex-col gap-1 text-xs">
-                  <span className="text-[#8E9299] uppercase tracking-wider font-semibold text-[10px]">Crypto Currencies</span>
+                  <span className="text-fg-muted uppercase tracking-wider font-semibold text-[10px]">Crypto Currencies</span>
                   <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                     {otherCurrencies.map(([ccy, vals]) => {
                       const rate = tokenRates[ccy] || 0;
@@ -140,14 +140,14 @@ export function BitgetTransactionDetailsModal({
                       const coinBig = new Big(coinVal);
                       const usdVal = coinBig.times(rate).toNumber();
                       const valColor = detailsModalType === 'funding'
-                        ? (coinBig.gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]')
+                        ? (coinBig.gte(0) ? 'text-success' : 'text-danger')
                         : detailsModalType === 'fees'
-                        ? (coinBig.gt(0) ? 'text-[#FF4444]' : coinBig.lt(0) ? 'text-[#00C853]' : 'text-white')
-                        : 'text-white';
+                        ? (coinBig.gt(0) ? 'text-danger' : coinBig.lt(0) ? 'text-success' : 'text-fg')
+                        : 'text-fg';
 
                       return (
-                        <div key={ccy} className="flex justify-between items-center p-2 rounded bg-[#111215] border border-[#2a2b30]">
-                          <span className="text-white font-medium">{ccy}</span>
+                        <div key={ccy} className="flex justify-between items-center p-2 rounded bg-canvas border border-line">
+                          <span className="text-fg font-medium">{ccy}</span>
                           <div className="text-right">
                             <span className={`font-mono block ${valColor}`}>
                               {isPrivateMode ? '****' : `${detailsModalType === 'fees' && coinBig.gt(0) ? '-' : detailsModalType === 'fees' && coinBig.lt(0) ? '+' : ''}${Number(coinBig.abs()).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} ${ccy}`}
@@ -168,11 +168,11 @@ export function BitgetTransactionDetailsModal({
           )}
         </div>
 
-        <div className="p-4 border-t border-[#2a2b30] flex items-center justify-between">
-          <span className="text-[#8E9299] text-sm uppercase tracking-wider">
+        <div className="p-4 border-t border-line flex items-center justify-between">
+          <span className="text-fg-muted text-sm uppercase tracking-wider">
             {detailsModalType === 'tx' ? t('transactions.common.totalTransactions', 'Total Transactions') : t('transactions.details.totalEq', 'Total Equivalent')}
           </span>
-          <span className="text-white font-bold font-mono text-lg">
+          <span className="text-fg font-bold font-mono text-lg">
             {(() => {
               if (detailsModalType === 'tx') return stats.totalCount.toLocaleString();
 

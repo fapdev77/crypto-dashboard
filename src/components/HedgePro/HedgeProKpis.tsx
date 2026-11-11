@@ -37,7 +37,7 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
             <p>
               {t('hedgePro.kpis.totalProtectedTooltip.title')}
             </p>
-            <div className="text-xs space-y-1 py-1.5 px-2.5 bg-[#1a1b1e] rounded border border-[#2a2b30] font-mono">
+            <div className="text-xs space-y-1 py-1.5 px-2.5 bg-elevated rounded border border-line font-mono">
               <div className="text-emerald-400">
                 {t('hedgePro.kpis.totalProtectedTooltip.hedge')} {formatCurrency(totals.syntheticHedgeUsd, 'usd', 2)} ({totals.hedgeOfProtectedPct.toFixed(2)}%)
               </div>
@@ -45,10 +45,10 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
                 {t('hedgePro.kpis.totalProtectedTooltip.stablecoins')} {formatCurrency(totals.stablecoinsProtectedUsd, 'usd', 2)} ({totals.stablesOfProtectedPct.toFixed(2)}%)
               </div>
             </div>
-            <p className="text-[11px] text-[#8E9299]">
+            <p className="text-[11px] text-fg-muted">
               {t('hedgePro.kpis.totalProtectedTooltip.hedgeDesc')}
             </p>
-            <p className="text-[11px] text-[#8E9299]">
+            <p className="text-[11px] text-fg-muted">
               {t('hedgePro.kpis.totalProtectedTooltip.stablecoinsDesc')}
             </p>
           </div>
@@ -56,7 +56,7 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
         color="green"
       />
       <KpiMetricCard
-        icon={<Landmark className="w-4 h-4 text-white" />}
+        icon={<Landmark className="w-4 h-4 text-fg" />}
         label={t('hedgePro.kpis.totalEquity', { currency: fiatCurrency })}
         value={formatCurrency(totals.totalEquity, 'usd', 2)}
         tooltip={
@@ -64,10 +64,10 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
             <p>
               {t('hedgePro.kpis.totalEquityTooltip.title')}
             </p>
-            <p className="text-[11px] text-[#8E9299]">
+            <p className="text-[11px] text-fg-muted">
               {t('hedgePro.kpis.totalEquityTooltip.formula')}
             </p>
-            <p className="text-[11px] text-[#8E9299]">
+            <p className="text-[11px] text-fg-muted">
               {t('hedgePro.kpis.totalEquityTooltip.reference')}
             </p>
           </div>
@@ -85,7 +85,7 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
         icon={<Percent className="w-4 h-4 text-emerald-400" />}
         label={t('hedgePro.kpis.realHedgeCoverage')}
         value={
-          <span className={totals.coveragePct < 0 ? 'text-[#FF4444]' : undefined}>
+          <span className={totals.coveragePct < 0 ? 'text-danger' : undefined}>
             {totals.coveragePct.toFixed(2)}%
           </span>
         }
@@ -94,10 +94,10 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
             <p>
               {t('hedgePro.kpis.realHedgeCoverageTooltip.title')}
             </p>
-            <p className="text-[11px] text-[#8E9299]">
+            <p className="text-[11px] text-fg-muted">
               {t('hedgePro.kpis.realHedgeCoverageTooltip.formula')}
             </p>
-            <p className="text-[11px] text-[#8E9299]">
+            <p className="text-[11px] text-fg-muted">
               {t('hedgePro.kpis.realHedgeCoverageTooltip.negativeNote')}
             </p>
           </div>
@@ -105,7 +105,7 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
         color="green"
       />
       <KpiMetricCard
-        icon={<Wallet className="w-4 h-4 text-white" />}
+        icon={<Wallet className="w-4 h-4 text-fg" />}
         label={t('hedgePro.kpis.protectedOfEquity')}
         value={`${totals.protectedOfEquityPct.toFixed(2)}%`}
         tooltip={
@@ -113,10 +113,10 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
             <p>
               {t('hedgePro.kpis.protectedOfEquityTooltip.title')}
             </p>
-            <p className="text-[11px] text-[#8E9299]">
+            <p className="text-[11px] text-fg-muted">
               {t('hedgePro.kpis.protectedOfEquityTooltip.formula')}
             </p>
-            <p className="text-[11px] text-[#8E9299]">
+            <p className="text-[11px] text-fg-muted">
               {t('hedgePro.kpis.protectedOfEquityTooltip.difference')}
             </p>
           </div>
@@ -124,13 +124,13 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
         color="white"
       />
       <KpiMetricCard
-        icon={<Layers className="w-4 h-4 text-white" />}
+        icon={<Layers className="w-4 h-4 text-fg" />}
         label={t('hedgePro.kpis.activePositions')}
         value={
           <span className="font-mono">
-            <span className="text-[#00C853]">{totals.inverseLongCount}L</span>
-            <span className="text-[#8E9299]"> / </span>
-            <span className="text-[#FF4444]">{totals.inverseShortCount}S</span>
+            <span className="text-success">{totals.inverseLongCount}L</span>
+            <span className="text-fg-muted"> / </span>
+            <span className="text-danger">{totals.inverseShortCount}S</span>
           </span>
         }
         tooltip={t('hedgePro.kpis.activePositionsTooltip', {

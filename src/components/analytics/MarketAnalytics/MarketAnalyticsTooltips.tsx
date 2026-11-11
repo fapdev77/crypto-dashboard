@@ -5,7 +5,7 @@ import { AppTooltip } from '../../ui/Tooltip';
 export const TooltipWrapper = ({ children, description, rows, align = 'center', side = 'top' }: any) => {
   return (
     <AppTooltip description={description} rows={rows} align={align} side={side}>
-      <div className="cursor-help inline-block border-b border-dotted border-[#8E9299]/50 hover:text-white transition-colors hover:border-white/50">
+      <div className="cursor-help inline-block border-b border-dotted border-fg-muted/50 hover:text-fg transition-colors hover:border-white/50">
         {children}
       </div>
     </AppTooltip>
@@ -18,7 +18,7 @@ export const PriceMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ ch
   <TooltipWrapper
     description={t("analytics.market.tooltips.price", "Current global spot/perpetual price blended across top liquidity venues.")}
     rows={[
-      { label: "Formula (Δ%)", value: "((Current Price - 24h Price) / 24h Price) * 100", valueClassName: "font-mono text-[10px] text-gray-400" }
+      { label: "Formula (Δ%)", value: "((Current Price - 24h Price) / 24h Price) * 100", valueClassName: "font-mono text-[10px] text-fg-muted" }
     ]}
   >
     {children}
@@ -32,7 +32,7 @@ export const Volume24hTooltip: React.FC<{ children: React.ReactNode }> = ({ chil
   <TooltipWrapper
     description={t("analytics.market.tooltips.volume", "Aggregated notional volume traded over the last 24 hours across all monitored exchanges.")}
     rows={[
-      { label: "Formula", value: "Σ Volume(ex)", valueClassName: "font-mono text-[10px] text-gray-400" }
+      { label: "Formula", value: "Σ Volume(ex)", valueClassName: "font-mono text-[10px] text-fg-muted" }
     ]}
   >
     {children}
@@ -46,7 +46,7 @@ export const OpenInterestMetricTooltip: React.FC<{ children: React.ReactNode }> 
   <TooltipWrapper
     description={t("analytics.market.tooltips.openInterest", "Total nominal value of all outstanding derivative contracts (futures and options) that have not been settled.")}
     rows={[
-      { label: "Formula", value: "Σ (Contracts * Price)", valueClassName: "font-mono text-[10px] text-gray-400" },
+      { label: "Formula", value: "Σ (Contracts * Price)", valueClassName: "font-mono text-[10px] text-fg-muted" },
       { label: "Significance", value: "Rising OI indicates new money entering the market, confirming trends." }
     ]}
   >
@@ -61,7 +61,7 @@ export const FundingRateMetricTooltip: React.FC<{ children: React.ReactNode }> =
   <TooltipWrapper
     description={t("analytics.market.tooltips.fundingRate", "Weighted average funding rate across exchanges, indicating the cost of holding long vs short positions.")}
     rows={[
-      { label: "Formula (APR)", value: "Funding Rate * 3 * 365 * 100", valueClassName: "font-mono text-[10px] text-gray-400" },
+      { label: "Formula (APR)", value: "Funding Rate * 3 * 365 * 100", valueClassName: "font-mono text-[10px] text-fg-muted" },
       { label: "Positive", value: "Longs pay Shorts (Bullish consensus)" },
       { label: "Negative", value: "Shorts pay Longs (Bearish consensus)" }
     ]}
@@ -78,7 +78,7 @@ export const MaxFundingSpreadTooltip: React.FC<{ children: React.ReactNode }> = 
     description={t("analytics.market.tooltips.spread", "The maximum annualized difference between the highest and lowest funding rates across tracked exchanges.")}
     rows={[
       { label: "Strategy", value: "Cash & Carry / Delta Neutral" },
-      { label: "Formula", value: "Rate(Short) - Rate(Long)", valueClassName: "font-mono text-[10px] text-gray-400" }
+      { label: "Formula", value: "Rate(Short) - Rate(Long)", valueClassName: "font-mono text-[10px] text-fg-muted" }
     ]}
   >
     {children}
@@ -90,7 +90,7 @@ export const TakerFlowMetricTooltip: React.FC<{ children: React.ReactNode }> = (
   <TooltipWrapper
     description="Cumulative Volume Delta (CVD) represents the net difference between aggressive (taker) buying and selling volumes."
     rows={[
-      { label: "Net Delta", value: "Taker Buy Vol - Taker Sell Vol", valueClassName: "font-mono text-[10px] text-gray-400" },
+      { label: "Net Delta", value: "Taker Buy Vol - Taker Sell Vol", valueClassName: "font-mono text-[10px] text-fg-muted" },
       { label: "Positive CVD", value: "Aggressive buying pressure" },
       { label: "Negative CVD", value: "Aggressive selling pressure" }
     ]}
@@ -103,7 +103,7 @@ export const PeriodTakerDeltaTooltip: React.FC<{ children: React.ReactNode }> = 
   <TooltipWrapper
     description="Total net delta of aggressive market orders (Taker Buy - Taker Sell) accumulated across all candles in the active chart period."
     rows={[
-      { label: "Formula", value: "Σ (Taker Buy - Taker Sell)", valueClassName: "font-mono text-[10px] text-gray-400" },
+      { label: "Formula", value: "Σ (Taker Buy - Taker Sell)", valueClassName: "font-mono text-[10px] text-fg-muted" },
       { label: "Interpretation", value: "Sum of taker aggression across the selected window" }
     ]}
   >
@@ -115,7 +115,7 @@ export const CvdNetBalanceTooltip: React.FC<{ children: React.ReactNode }> = ({ 
   <TooltipWrapper
     description="Current Cumulative Volume Delta (CVD) value at the most recent candle, tracking cumulative aggressive order balance starting from the beginning of the period."
     rows={[
-      { label: "Formula", value: "Running sum of candle deltas at t(latest)", valueClassName: "font-mono text-[10px] text-gray-400" },
+      { label: "Formula", value: "Running sum of candle deltas at t(latest)", valueClassName: "font-mono text-[10px] text-fg-muted" },
       { label: "Alignment", value: "Matches the final data point of the blue CVD line on the chart" }
     ]}
   >
@@ -198,7 +198,7 @@ export const MarketRegimeTooltip: React.FC<{ regime: string, sentiment: string, 
     <AppTooltip
       description={description}
       rows={[
-        { label: "Regime", value: regime, valueClassName: "font-semibold text-white" },
+        { label: "Regime", value: regime, valueClassName: "font-semibold text-fg" },
         { label: "Sentiment", value: sentiment, valueClassName: "capitalize" },
         { label: "Long Build", value: "Price ↑, OI ↑ (Strong Uptrend)" },
         { label: "Short Build", value: "Price ↓, OI ↑ (Strong Downtrend)" },
@@ -217,7 +217,7 @@ export const CvdDivergenceTooltip: React.FC<{ type: string, desc: string, childr
   <AppTooltip
     description={desc}
     rows={[
-      { label: "Type", value: type, valueClassName: "font-bold text-white" },
+      { label: "Type", value: type, valueClassName: "font-bold text-fg" },
       { label: "Bullish Divergence", value: "Price declining but CVD rising (Passive buying absorption)" },
       { label: "Bearish Divergence", value: "Price rising but CVD declining (Passive selling absorption)" }
     ]}

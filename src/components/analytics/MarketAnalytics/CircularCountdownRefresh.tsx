@@ -95,7 +95,7 @@ export const CircularCountdownRefresh: React.FC = () => {
     <div className="relative flex items-center shrink-0" ref={menuRef}>
       {/* Unified Button: Circular Countdown + Interval Trigger */}
       <div
-        className="flex items-center bg-[#1a1b22] hover:bg-[#20222b] border border-[#2a2b30] hover:border-[#383a45] rounded-xl p-1 transition-all shadow-sm group"
+        className="flex items-center bg-elevated hover:bg-elevated border border-line hover:border-[#383a45] rounded-xl p-1 transition-all shadow-sm group"
         title={
           isPaused
             ? 'Auto-refresh is paused. Click to refresh now.'
@@ -144,11 +144,11 @@ export const CircularCountdownRefresh: React.FC = () => {
           {/* Center Content: Spinner during loading, or Countdown Value, or Pause Icon */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {isLoading ? (
-              <RefreshCw className="w-3.5 h-3.5 text-[#2F6BFF] animate-spin" />
+              <RefreshCw className="w-3.5 h-3.5 text-accent animate-spin" />
             ) : isPaused ? (
-              <Pause className="w-3 h-3 text-[#8E9299]" />
+              <Pause className="w-3 h-3 text-fg-muted" />
             ) : (
-              <span className="text-[10px] font-bold text-white tracking-tighter leading-none group-hover:text-[#2F6BFF] transition-colors">
+              <span className="text-[10px] font-bold text-fg tracking-tighter leading-none group-hover:text-accent transition-colors">
                 {secondsRemaining}
               </span>
             )}
@@ -159,12 +159,12 @@ export const CircularCountdownRefresh: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsMenuOpen((prev) => !prev)}
-          className="px-1 py-1.5 text-[#8E9299] hover:text-white transition-colors focus:outline-none flex items-center"
+          className="px-1 py-1.5 text-fg-muted hover:text-fg transition-colors focus:outline-none flex items-center"
           title="Change auto-refresh interval"
         >
           <ChevronDown
             className={`w-3 h-3 transition-transform duration-200 ${
-              isMenuOpen ? 'rotate-180 text-white' : ''
+              isMenuOpen ? 'rotate-180 text-fg' : ''
             }`}
           />
         </button>
@@ -172,9 +172,9 @@ export const CircularCountdownRefresh: React.FC = () => {
 
       {/* Interval Selector Popover Menu */}
       {isMenuOpen && (
-        <div className="absolute right-0 top-full mt-2 w-44 bg-[#16171d] border border-[#2a2b30] rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-          <div className="px-3 py-1.5 border-b border-[#2a2b30] flex items-center gap-1.5 text-[11px] font-semibold text-[#8E9299] uppercase tracking-wider">
-            <Clock className="w-3 h-3 text-[#2F6BFF]" />
+        <div className="absolute right-0 top-full mt-2 w-44 bg-[#16171d] border border-line rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-3 py-1.5 border-b border-line flex items-center gap-1.5 text-[11px] font-semibold text-fg-muted uppercase tracking-wider">
+            <Clock className="w-3 h-3 text-accent" />
             <span>Refresh Interval</span>
           </div>
 
@@ -191,17 +191,17 @@ export const CircularCountdownRefresh: React.FC = () => {
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     isSelected
-                      ? 'bg-[#2F6BFF]/15 text-[#2F6BFF]'
-                      : 'text-[#C5C8D0] hover:bg-[#1f212a] hover:text-white'
+                      ? 'bg-accent/15 text-accent'
+                      : 'text-fg hover:bg-[#1f212a] hover:text-fg'
                   }`}
                 >
                   <span className="flex items-center gap-1.5">
                     {isSelected && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#2F6BFF]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                     )}
                     {opt.label}
                   </span>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-[#2F6BFF]" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}
                 </button>
               );
             })}

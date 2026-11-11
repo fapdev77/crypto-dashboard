@@ -111,20 +111,20 @@ export function CustomDateRangeModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="custom-date-range-title"
-        className="w-full max-w-md bg-[#16171a] border border-[#2a2b30] rounded-xl shadow-2xl p-5 sm:p-6 text-white space-y-5"
+        className="w-full max-w-md bg-surface border border-line rounded-xl shadow-2xl p-5 sm:p-6 text-fg space-y-5"
         onClick={e => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#2a2b30]">
+        <div className="flex items-center justify-between pb-3 border-b border-line">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#2F6BFF]/15 border border-[#2F6BFF]/30 flex items-center justify-center text-[#2F6BFF]">
+            <div className="w-8 h-8 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center text-accent">
               <CalendarIcon className="w-4 h-4" />
             </div>
             <div>
-              <h3 id="custom-date-range-title" className="text-base font-semibold text-white">
+              <h3 id="custom-date-range-title" className="text-base font-semibold text-fg">
                 {t('common.customDateModal.title', 'Select Custom Date Range')}
               </h3>
-              <p className="text-xs text-[#8E9299]">
+              <p className="text-xs text-fg-muted">
                 {t('common.customDateModal.subtitle', 'Filter activity by precise calendar day boundaries')}
               </p>
             </div>
@@ -132,7 +132,7 @@ export function CustomDateRangeModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-[#8E9299] hover:text-white p-1 rounded-md transition-colors"
+            className="text-fg-muted hover:text-fg p-1 rounded-md transition-colors"
             aria-label={t('common.close', 'Close')}
           >
             <X className="w-5 h-5" />
@@ -141,7 +141,7 @@ export function CustomDateRangeModal({
 
         {/* Quick presets pills */}
         <div>
-          <label className="text-xs font-medium text-[#8E9299] mb-2 flex items-center gap-1.5">
+          <label className="text-xs font-medium text-fg-muted mb-2 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-blue-400" />
             {t('common.customDateModal.quickPresets', 'Quick Presets')}
           </label>
@@ -149,35 +149,35 @@ export function CustomDateRangeModal({
             <button
               type="button"
               onClick={() => applyPreset(7)}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
+              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.last7Days', 'Last 7 Days')}
             </button>
             <button
               type="button"
               onClick={() => applyPreset(30)}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
+              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.last30Days', 'Last 30 Days')}
             </button>
             <button
               type="button"
               onClick={applyThisMonth}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
+              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.thisMonth', 'This Month (MTD)')}
             </button>
             <button
               type="button"
               onClick={applyLastMonth}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
+              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.lastMonth', 'Last Month')}
             </button>
             <button
               type="button"
               onClick={applyThisYear}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-[#2F6BFF]/20 hover:text-white text-gray-300 rounded-md border border-[#2a2b30] transition-colors"
+              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.thisYear', 'This Year (YTD)')}
             </button>
@@ -187,7 +187,7 @@ export function CustomDateRangeModal({
         {/* Date Inputs Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
           <div>
-            <label htmlFor="custom-start-date" className="block text-xs font-medium text-gray-300 mb-1.5">
+            <label htmlFor="custom-start-date" className="block text-xs font-medium text-fg mb-1.5">
               {t('common.customDateModal.startDate', 'Start Date (From)')}
             </label>
             <input
@@ -195,12 +195,12 @@ export function CustomDateRangeModal({
               type="date"
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors [color-scheme:dark]"
+              className="w-full bg-elevated border border-line rounded-lg px-3 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors [color-scheme:dark]"
             />
           </div>
 
           <div>
-            <label htmlFor="custom-end-date" className="block text-xs font-medium text-gray-300 mb-1.5">
+            <label htmlFor="custom-end-date" className="block text-xs font-medium text-fg mb-1.5">
               {t('common.customDateModal.endDate', 'End Date (To)')}
             </label>
             <input
@@ -208,7 +208,7 @@ export function CustomDateRangeModal({
               type="date"
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
-              className="w-full bg-[#1a1b1e] border border-[#2a2b30] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2F6BFF] transition-colors [color-scheme:dark]"
+              className="w-full bg-elevated border border-line rounded-lg px-3 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors [color-scheme:dark]"
             />
           </div>
         </div>
@@ -223,20 +223,20 @@ export function CustomDateRangeModal({
 
         {/* Active Range Preview */}
         {!validationError && startDate && endDate && (
-          <div className="flex items-center justify-between text-xs text-[#8E9299] bg-[#1a1b1e]/60 px-3 py-2 rounded-lg border border-[#2a2b30]/60">
+          <div className="flex items-center justify-between text-xs text-fg-muted bg-elevated/60 px-3 py-2 rounded-lg border border-line/60">
             <span>{t('common.customDateModal.selectedRange', 'Selected Range:')}</span>
-            <span className="font-mono text-gray-200">
-              {startDate} <span className="text-[#8E9299]">{t('common.customDateModal.to', 'to')}</span> {endDate}
+            <span className="font-mono text-fg">
+              {startDate} <span className="text-fg-muted">{t('common.customDateModal.to', 'to')}</span> {endDate}
             </span>
           </div>
         )}
 
         {/* Modal Actions */}
-        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#2a2b30]">
+        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-line">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-[#8E9299] hover:text-white rounded-lg transition-colors cursor-pointer"
+            className="px-4 py-2 text-sm text-fg-muted hover:text-fg rounded-lg transition-colors cursor-pointer"
           >
             {t('common.customDateModal.cancel', 'Cancel')}
           </button>
@@ -244,7 +244,7 @@ export function CustomDateRangeModal({
             type="button"
             onClick={handleApply}
             disabled={!!validationError || (!startDate && !endDate)}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-[#2F6BFF] hover:bg-[#285ce0] text-white rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-accent hover:bg-[#285ce0] text-white rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <Check className="w-4 h-4" />
             {t('common.customDateModal.applyRange', 'Apply Range')}

@@ -1,4 +1,11 @@
 {
+  "theme": {
+    "title": "Interface theme",
+    "terminalDark": "Terminal Dark",
+    "terminalDarkDesc": "Low-light interface for long sessions",
+    "terminalLight": "Terminal Light",
+    "terminalLightDesc": "High-contrast interface for daylight"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

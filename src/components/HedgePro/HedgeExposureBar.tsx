@@ -31,7 +31,7 @@ export function HedgeExposureBar({
   tooltip,
 }: HedgeExposureBarProps) {
   const bar = (
-    <div className={`relative h-2 rounded-full w-full bg-[#2a2b30] ${tooltip ? 'cursor-help' : ''}`}>
+    <div className={`relative h-2 rounded-full w-full bg-line ${tooltip ? 'cursor-help' : ''}`}>
       {/* Balance track — exactly 100% of the capital */}
       <div
         className="absolute inset-y-0 left-0 flex overflow-hidden rounded-full transition-all duration-300"
@@ -48,7 +48,7 @@ export function HedgeExposureBar({
         />
       )}
       {/* 100% of capital marker (rendered on top, so it stays visible at the leveraged boundary) */}
-      <div className="absolute inset-y-0 w-px bg-[#8E9299]/80" style={{ left: `${balanceWidthPct}%` }} />
+      <div className="absolute inset-y-0 w-px bg-fg-muted/80" style={{ left: `${balanceWidthPct}%` }} />
     </div>
   );
 

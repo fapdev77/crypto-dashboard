@@ -73,16 +73,16 @@ export function CurrencyApiDiagnostics() {
   return (
     <div
       data-testid="currency-api-diagnostics"
-      className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 text-white"
+      className="bg-surface border border-line rounded-xl p-4 text-fg"
     >
-      <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#2a2b30]/60">
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-line/60">
         <div className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-[#2F6BFF]" />
+          <Activity className="w-4 h-4 text-accent" />
           <div>
-            <h4 className="text-xs font-semibold text-white">
+            <h4 className="text-xs font-semibold text-fg">
               {t('currencyDiagnostics.title', 'Currency API Diagnostics')}
             </h4>
-            <p className="text-[10px] text-[#8E9299]">
+            <p className="text-[10px] text-fg-muted">
               {t('currencyDiagnostics.subtitle', 'Live connection health & latency monitor')}
             </p>
           </div>
@@ -91,44 +91,44 @@ export function CurrencyApiDiagnostics() {
         <button
           onClick={handleTestConnection}
           disabled={isTesting}
-          className="px-2.5 py-1 bg-[#1e2024] hover:bg-[#2a2b30] border border-[#2a2b30] text-[11px] font-medium text-white rounded-lg flex items-center gap-1.5 transition-colors disabled:opacity-50"
+          className="px-2.5 py-1 bg-elevated hover:bg-line border border-line text-[11px] font-medium text-fg rounded-lg flex items-center gap-1.5 transition-colors disabled:opacity-50"
         >
-          <RefreshCw className={`w-3 h-3 ${isTesting ? 'animate-spin text-[#2F6BFF]' : 'text-[#8E9299]'}`} />
+          <RefreshCw className={`w-3 h-3 ${isTesting ? 'animate-spin text-accent' : 'text-fg-muted'}`} />
           <span>{isTesting ? t('currencyDiagnostics.testing', 'Testing...') : t('currencyDiagnostics.testBtn', 'Test Connection')}</span>
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Frankfurter Diagnostic Card */}
-        <div className="bg-[#1a1b1e] border border-[#2a2b30]/80 rounded-lg p-3 space-y-2">
+        <div className="bg-elevated border border-line/80 rounded-lg p-3 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-white">Frankfurter v2</span>
-              <span className="text-[10px] text-[#8E9299] font-mono">(Fiat Rates)</span>
+              <span className="text-xs font-semibold text-fg">Frankfurter v2</span>
+              <span className="text-[10px] text-fg-muted font-mono">(Fiat Rates)</span>
             </div>
             {renderStatusBadge(frankfurter.status)}
           </div>
 
-          <p className="text-[10px] font-mono text-[#8E9299] truncate" title={frankfurter.endpoint}>
+          <p className="text-[10px] font-mono text-fg-muted truncate" title={frankfurter.endpoint}>
             {frankfurter.endpoint}
           </p>
 
-          <div className="pt-2 border-t border-[#2a2b30]/40 grid grid-cols-2 gap-2 text-[10px]">
+          <div className="pt-2 border-t border-line/40 grid grid-cols-2 gap-2 text-[10px]">
             <div>
-              <span className="text-[#8E9299] flex items-center gap-1">
+              <span className="text-fg-muted flex items-center gap-1">
                 <Clock className="w-2.5 h-2.5" />
                 {t('currencyDiagnostics.lastSync', 'Last Sync')}
               </span>
-              <span className="font-mono text-white mt-0.5 block">
+              <span className="font-mono text-fg mt-0.5 block">
                 {formatTimestamp(frankfurter.lastUpdated)}
               </span>
             </div>
             <div>
-              <span className="text-[#8E9299] flex items-center gap-1">
+              <span className="text-fg-muted flex items-center gap-1">
                 <Zap className="w-2.5 h-2.5" />
                 {t('currencyDiagnostics.latency', 'Latency')}
               </span>
-              <span className="font-mono text-white mt-0.5 block">
+              <span className="font-mono text-fg mt-0.5 block">
                 {frankfurter.latencyMs !== undefined ? `${frankfurter.latencyMs} ms` : '--'}
               </span>
             </div>
@@ -143,31 +143,31 @@ export function CurrencyApiDiagnostics() {
         </div>
 
         {/* CoinGecko Diagnostic Card */}
-        <div className="bg-[#1a1b1e] border border-[#2a2b30]/80 rounded-lg p-3 space-y-2">
+        <div className="bg-elevated border border-line/80 rounded-lg p-3 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-white">CoinGecko v3</span>
+              <span className="text-xs font-semibold text-fg">CoinGecko v3</span>
               <span className="text-[10px] text-[#26a69a] font-mono">(USD/USDT)</span>
             </div>
             {renderStatusBadge(coingecko.status)}
           </div>
 
-          <p className="text-[10px] font-mono text-[#8E9299] truncate" title={coingecko.endpoint}>
+          <p className="text-[10px] font-mono text-fg-muted truncate" title={coingecko.endpoint}>
             {coingecko.endpoint}
           </p>
 
-          <div className="pt-2 border-t border-[#2a2b30]/40 grid grid-cols-2 gap-2 text-[10px]">
+          <div className="pt-2 border-t border-line/40 grid grid-cols-2 gap-2 text-[10px]">
             <div>
-              <span className="text-[#8E9299] flex items-center gap-1">
+              <span className="text-fg-muted flex items-center gap-1">
                 <Clock className="w-2.5 h-2.5" />
                 {t('currencyDiagnostics.lastSync', 'Last Sync')}
               </span>
-              <span className="font-mono text-white mt-0.5 block">
+              <span className="font-mono text-fg mt-0.5 block">
                 {formatTimestamp(coingecko.lastUpdated)}
               </span>
             </div>
             <div>
-              <span className="text-[#8E9299] flex items-center gap-1">
+              <span className="text-fg-muted flex items-center gap-1">
                 <Zap className="w-2.5 h-2.5" />
                 {t('currencyDiagnostics.quote', 'Current Quote')}
               </span>

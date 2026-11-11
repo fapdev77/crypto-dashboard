@@ -27,15 +27,15 @@ export function LanguageCurrencyButton({ className = '', showText = true }: Lang
       <AppTooltip description={`${t('selector.title', 'Language & Currency')}: ${currentLocale} / ${currentFiat}`}>
         <button
           onClick={() => setIsOpen(true)}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-[#1a1b1e] hover:bg-[#2a2b30] border border-[#2a2b30] hover:border-gray-600 rounded-lg transition-all duration-150 cursor-pointer ${className}`}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-fg hover:text-fg bg-elevated hover:bg-line border border-line hover:border-gray-600 rounded-lg transition-all duration-150 cursor-pointer ${className}`}
           aria-label={t('selector.title', 'Language & Currency')}
           aria-haspopup="dialog"
           aria-expanded={isOpen}
         >
           <FlagIcon code={currentLocale} className="w-4 h-3 rounded-[2px] shadow-xs shrink-0" />
           {showText && (
-            <span className="font-semibold tracking-wider text-gray-200">
-              {langCode} <span className="text-gray-500">/</span> {currentFiat}
+            <span className="font-semibold tracking-wider text-fg">
+              {langCode} <span className="text-fg-muted">/</span> {currentFiat}
             </span>
           )}
         </button>

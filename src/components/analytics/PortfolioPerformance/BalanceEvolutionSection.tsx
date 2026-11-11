@@ -39,8 +39,8 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
     if (!active || !payload || !payload.length) return null;
     const data = payload[0].payload as EvolutionPoint;
     return (
-      <div className="bg-[#161b22] border border-[#2a2b30] p-3 rounded-lg shadow-xl text-xs space-y-1.5 font-mono">
-        <div className="font-semibold text-white border-b border-[#2a2b30] pb-1">
+      <div className="bg-elevated border border-line p-3 rounded-lg shadow-xl text-xs space-y-1.5 font-mono">
+        <div className="font-semibold text-fg border-b border-line pb-1">
           {new Date(data.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
         </div>
         <div className="flex justify-between gap-4 text-amber-400">
@@ -51,7 +51,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
           <span>Funding Gain:</span>
           <span>{isPrivateMode ? '****' : `${data.fundingGain > 0 ? '+' : ''}${data.fundingGain} ${denomination}`}</span>
         </div>
-        <div className="flex justify-between gap-4 text-white font-bold pt-1 border-t border-[#2a2b30]/60">
+        <div className="flex justify-between gap-4 text-fg font-bold pt-1 border-t border-line/60">
           <span>Total Combined:</span>
           <span>{isPrivateMode ? '****' : `${data.totalGain > 0 ? '+' : ''}${data.totalGain} ${denomination}`}</span>
         </div>
@@ -62,19 +62,19 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#2a2b30]/60">
-        <h3 className="text-base font-bold text-white flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-[#2F6BFF]" />
+      <div className="flex items-center justify-between pb-2 border-b border-line/60">
+        <h3 className="text-base font-bold text-fg flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-accent" />
           {t('analytics.portfolio.evolution.title', 'Balance Evolution')}
         </h3>
-        <span className="text-xs text-[#8E9299]">Cumulative Progression</span>
+        <span className="text-xs text-fg-muted">Cumulative Progression</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Chart 1: Trading Gains Evolution */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col justify-between">
+        <div className="bg-surface border border-line rounded-xl p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-white uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-fg uppercase tracking-wider flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-amber-400" />
               Trading Gains Evolution ({denomination})
             </span>
@@ -108,9 +108,9 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
         </div>
 
         {/* Chart 2: Funding Gains Evolution */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col justify-between">
+        <div className="bg-surface border border-line rounded-xl p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-white uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-fg uppercase tracking-wider flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
               Funding Gains Evolution ({denomination})
             </span>

@@ -31,18 +31,18 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
   const pctOfBalance = (value: number, balance: number) => (balance > 0 ? (value / balance) * 100 : 0);
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-surface border border-line rounded-xl p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-fg flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
           {t('hedgePro.breakdownChart.title')}
         </h3>
-        <div className="flex items-center gap-4 text-[10px] text-[#8E9299] uppercase tracking-wider">
+        <div className="flex items-center gap-4 text-[10px] text-fg-muted uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-emerald-500/80 inline-block" /> {t('hedgePro.breakdownChart.protected')}
           </span>
           <span className="flex items-center gap-1.5">
-            <Activity className="w-3 h-3 text-white" /> {t('hedgePro.breakdownChart.exposed')}
+            <Activity className="w-3 h-3 text-fg" /> {t('hedgePro.breakdownChart.exposed')}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-amber-400/80 inline-block" /> {t('hedgePro.breakdownChart.leveraged')}
@@ -50,7 +50,7 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
         </div>
       </div>
 
-      <p className="text-[10px] text-[#8E9299] -mt-1.5">
+      <p className="text-[10px] text-fg-muted -mt-1.5">
         {t('hedgePro.breakdownChart.subtitle')}
       </p>
 
@@ -79,7 +79,7 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
             {
               label: t('hedgePro.breakdownChart.exposed'),
               value: `${formatCurrency(row.exposedBaseUsd, 'usd', 2)} · ${exposedPct.toFixed(1)}%`,
-              valueClassName: 'text-white',
+              valueClassName: 'text-fg',
             },
             {
               label: t('hedgePro.breakdownChart.leveragedLongs'),
@@ -89,8 +89,8 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
             ...row.accounts.map(acc => ({
               label: `${getExchangeDisplayName(acc.exchange)} · ${acc.accountLabel}`,
               value: `${formatCurrency(acc.protectedUsd, 'usd', 0)} / ${formatCurrency(acc.exposedBaseUsd, 'usd', 0)} / ${formatCurrency(acc.leveragedUsd, 'usd', 0)}`,
-              labelClassName: 'text-[11px] text-[#8E9299]',
-              valueClassName: 'text-[11px] text-[#8E9299]',
+              labelClassName: 'text-[11px] text-fg-muted',
+              valueClassName: 'text-[11px] text-fg-muted',
             })),
           ];
 
@@ -99,7 +99,7 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
               {/* Coin label */}
               <div className="flex items-center justify-end gap-1.5 w-24 shrink-0">
                 <CoinIcon symbol={row.baseCoin} className="w-4 h-4 shrink-0" />
-                <span className="text-xs font-semibold text-white whitespace-nowrap">{row.baseCoin}</span>
+                <span className="text-xs font-semibold text-fg whitespace-nowrap">{row.baseCoin}</span>
               </div>
 
               {/* Bar — Protected + Exposed = 100% of the coin's balance; Leveraged extends beyond the marker */}
@@ -126,7 +126,7 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
                     />
                   )}
                   {/* 100% of balance marker (on top, so it stays visible at the leveraged boundary) */}
-                  <div className="absolute inset-y-0 w-px bg-[#8E9299]/80" style={{ left: `${balancePct}%` }} />
+                  <div className="absolute inset-y-0 w-px bg-fg-muted/80" style={{ left: `${balancePct}%` }} />
                 </div>
               </AppTooltip>
 
@@ -134,7 +134,7 @@ export function HedgeProBreakdownChart({ summaries, formatCurrency }: HedgeProBr
                   mobile; inline right-aligned column from sm up */}
               <div className="w-full sm:w-32 sm:shrink-0 text-[10px] font-mono text-left sm:text-right whitespace-nowrap">
                 <span className="text-emerald-400">P {protectedPct.toFixed(0)}%</span>{' '}
-                <span className="text-white">E {exposedPct.toFixed(0)}%</span>{' '}
+                <span className="text-fg">E {exposedPct.toFixed(0)}%</span>{' '}
                 {leveragedOfBalancePct > 0 && (
                   <span className="text-amber-400">L +{leveragedOfBalancePct.toFixed(0)}%</span>
                 )}

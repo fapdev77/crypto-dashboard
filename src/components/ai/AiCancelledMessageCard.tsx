@@ -25,7 +25,7 @@ export const AiCancelledMessageCard: React.FC<AiCancelledMessageCardProps> = ({
               Abortada
             </span>
           </p>
-          <p className="text-xs text-gray-300 leading-relaxed font-normal">
+          <p className="text-xs text-fg leading-relaxed font-normal">
             {message || 'A geração da resposta foi cancelada pelo usuário.'}
           </p>
         </div>
@@ -37,7 +37,7 @@ export const AiCancelledMessageCard: React.FC<AiCancelledMessageCardProps> = ({
           <button
             type="button"
             onClick={onRetry}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-white bg-[#2F6BFF] hover:bg-[#2F6BFF]/85 rounded-lg transition cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-white bg-accent hover:bg-accent/85 rounded-lg transition cursor-pointer shadow-sm"
           >
             <RotateCcw className="w-3 h-3" />
             <span>Tentar novamente</span>
@@ -48,9 +48,9 @@ export const AiCancelledMessageCard: React.FC<AiCancelledMessageCardProps> = ({
           <button
             type="button"
             onClick={onOpenRawDebug}
-            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-gray-300 hover:text-white bg-[#1a1b20] hover:bg-[#25262c] border border-[#2a2b30] rounded-lg transition cursor-pointer font-sans"
+            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-fg hover:text-fg bg-elevated hover:bg-[#25262c] border border-line rounded-lg transition cursor-pointer font-sans"
           >
-            <ShieldCheck className="w-3 h-3 text-[#2F6BFF]" />
+            <ShieldCheck className="w-3 h-3 text-accent" />
             <span>Inspecionar Auditoria</span>
           </button>
         )}

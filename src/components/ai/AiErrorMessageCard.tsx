@@ -38,7 +38,7 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
           <p className="font-semibold text-[11px] text-rose-300">
             AI Execution Notice
           </p>
-          <p className="text-xs text-gray-200 leading-relaxed font-normal">
+          <p className="text-xs text-fg leading-relaxed font-normal">
             {message}
           </p>
         </div>
@@ -49,7 +49,7 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
         {onRetry && (
           <button
             onClick={onRetry}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-white bg-[#2F6BFF] hover:bg-[#2F6BFF]/80 rounded-lg transition cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-white bg-accent hover:bg-accent/80 rounded-lg transition cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" />
             <span>Try again</span>
@@ -68,9 +68,9 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
         {onOpenSettings && (
           <button
             onClick={onOpenSettings}
-            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-gray-300 hover:text-white bg-[#1a1b20] hover:bg-[#25262c] border border-[#2a2b30] rounded-lg transition cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-fg hover:text-fg bg-elevated hover:bg-[#25262c] border border-line rounded-lg transition cursor-pointer"
           >
-            <Settings className="w-3 h-3 text-[#2F6BFF]" />
+            <Settings className="w-3 h-3 text-accent" />
             <span>AI Settings</span>
           </button>
         )}
@@ -78,7 +78,7 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
         {technicalDetails && (
           <button
             onClick={() => setShowDetails((prev) => !prev)}
-            className="flex items-center gap-1 px-2 py-1 text-[11px] text-[#8E9299] hover:text-gray-300 hover:bg-[#1a1b20] rounded-lg transition cursor-pointer ml-auto"
+            className="flex items-center gap-1 px-2 py-1 text-[11px] text-fg-muted hover:text-fg hover:bg-elevated rounded-lg transition cursor-pointer ml-auto"
           >
             <span>Technical log</span>
             {showDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -88,12 +88,12 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
 
       {/* Collapsible Technical Details for debugging */}
       {showDetails && technicalDetails && (
-        <div className="mt-2 p-2.5 bg-[#0b0c10] border border-[#2a2b30] rounded-lg text-[10px] font-mono text-gray-400 space-y-1.5 animate-fadeIn">
-          <div className="flex items-center justify-between text-[#8E9299] pb-1 border-b border-[#202227]">
+        <div className="mt-2 p-2.5 bg-canvas border border-line rounded-lg text-[10px] font-mono text-fg-muted space-y-1.5 animate-fadeIn">
+          <div className="flex items-center justify-between text-fg-muted pb-1 border-b border-[#202227]">
             <span>Raw diagnostic error:</span>
             <button
               onClick={handleCopyDetails}
-              className="flex items-center gap-1 text-[10px] text-[#2F6BFF] hover:underline cursor-pointer"
+              className="flex items-center gap-1 text-[10px] text-accent hover:underline cursor-pointer"
             >
               {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
               <span>{copied ? 'Copiado' : 'Copiar log'}</span>

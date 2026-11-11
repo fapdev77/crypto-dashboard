@@ -17,15 +17,15 @@ export function AiPikaChatButton({ onClick, isEnabled }: AiPikaChatButtonProps) 
       <button
         onClick={onClick}
         aria-label={isEnabled ? 'Open PIKA Assistant' : 'PIKA Assistant Disabled'}
-        className={`group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#2F6BFF] focus:ring-offset-2 dark:focus:ring-offset-[#0b0c10] select-none ${
+        className={`group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 dark:focus:ring-offset-canvas select-none ${
           isEnabled
-            ? 'bg-[#151619] hover:bg-[#1e1f24] border-[#2a2b30] hover:border-[#2F6BFF]/60 text-white shadow-xs cursor-pointer'
-            : 'bg-[#151619]/60 border-[#2a2b30] text-gray-500 hover:text-gray-300 opacity-60 hover:opacity-90 cursor-pointer'
+            ? 'bg-surface hover:bg-elevated border-line hover:border-accent/60 text-fg shadow-xs cursor-pointer'
+            : 'bg-surface/60 border-line text-fg-muted hover:text-fg opacity-60 hover:opacity-90 cursor-pointer'
         }`}
         style={{ minHeight: '38px' }}
       >
         {/* PIKA Brand Name */}
-        <span className="font-extrabold text-[12px] tracking-wider uppercase font-mono text-white/90 group-hover:text-white transition-colors">
+        <span className="font-extrabold text-[12px] tracking-wider uppercase font-mono text-fg/90 group-hover:text-fg transition-colors">
           PIKA
         </span>
 

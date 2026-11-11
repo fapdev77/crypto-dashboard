@@ -98,16 +98,16 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-[#121316] border border-[#2a2b30] rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-4xl bg-canvas border border-line rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
         {/* Top Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#232429] bg-[#16171b] shrink-0">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-line bg-[#16171b] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#2F6BFF]/10 border border-[#2F6BFF]/30 rounded-xl text-[#2F6BFF]">
+            <div className="p-2 bg-accent/10 border border-accent/30 rounded-xl text-accent">
               <Terminal className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-white tracking-tight">{t('ai.settings.audit.modalTitle', 'PIKA AI Auditor & Debugger')}</h2>
+                <h2 className="text-sm font-bold text-fg tracking-tight">{t('ai.settings.audit.modalTitle', 'PIKA AI Auditor & Debugger')}</h2>
                 <span
                   className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                     status === 'success'
@@ -123,7 +123,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-[#8E9299]">
+              <p className="text-[11px] text-fg-muted">
                 {log?.timestamp ? formatTime(log.timestamp) : 'Real-Time Session'} — ID: {log?.id || 'live-session'}
               </p>
             </div>
@@ -132,21 +132,21 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopyFullBundle}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#1f2026] hover:bg-[#282931] text-gray-200 hover:text-white rounded-lg text-xs font-medium border border-[#2e3038] transition cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-line hover:bg-[#282931] text-fg hover:text-fg rounded-lg text-xs font-medium border border-line transition cursor-pointer"
             >
-              {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#2F6BFF]" />}
+              {copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-accent" />}
               <span>{copiedAll ? t('common.copied', 'Copied!') : t('common.copyJson', 'Copy All (JSON)')}</span>
             </button>
             <button
               onClick={handleDownloadFullBundle}
-              className="p-1.5 bg-[#1f2026] hover:bg-[#282931] text-[#8E9299] hover:text-white rounded-lg border border-[#2e3038] transition cursor-pointer"
+              className="p-1.5 bg-line hover:bg-[#282931] text-fg-muted hover:text-fg rounded-lg border border-line transition cursor-pointer"
               title="Download Complete Log"
             >
               <Download className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-[#8E9299] hover:text-white rounded-lg hover:bg-[#1f2026] transition cursor-pointer ml-1"
+              className="p-1.5 text-fg-muted hover:text-fg rounded-lg hover:bg-line transition cursor-pointer ml-1"
             >
               <X className="w-5 h-5" />
             </button>
@@ -154,13 +154,13 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-1 px-4 py-2 border-b border-[#232429] bg-[#121316] overflow-x-auto shrink-0 scrollbar-none">
+        <div className="flex items-center gap-1 px-4 py-2 border-b border-line bg-canvas overflow-x-auto shrink-0 scrollbar-none">
           <button
             onClick={() => setActiveTab('overview')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer shrink-0 ${
               activeTab === 'overview'
-                ? 'bg-[#2F6BFF] text-white shadow-md'
-                : 'text-[#8E9299] hover:text-gray-200 hover:bg-[#1a1b20]'
+                ? 'bg-accent text-white shadow-md'
+                : 'text-fg-muted hover:text-fg hover:bg-elevated'
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
@@ -171,8 +171,8 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             onClick={() => setActiveTab('request')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer shrink-0 ${
               activeTab === 'request'
-                ? 'bg-[#2F6BFF] text-white shadow-md'
-                : 'text-[#8E9299] hover:text-gray-200 hover:bg-[#1a1b20]'
+                ? 'bg-accent text-white shadow-md'
+                : 'text-fg-muted hover:text-fg hover:bg-elevated'
             }`}
           >
             <FileCode className="w-3.5 h-3.5" />
@@ -183,8 +183,8 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             onClick={() => setActiveTab('tools')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer shrink-0 ${
               activeTab === 'tools'
-                ? 'bg-[#2F6BFF] text-white shadow-md'
-                : 'text-[#8E9299] hover:text-gray-200 hover:bg-[#1a1b20]'
+                ? 'bg-accent text-white shadow-md'
+                : 'text-fg-muted hover:text-fg hover:bg-elevated'
             }`}
           >
             <Database className="w-3.5 h-3.5" />
@@ -195,8 +195,8 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             onClick={() => setActiveTab('response')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer shrink-0 ${
               activeTab === 'response'
-                ? 'bg-[#2F6BFF] text-white shadow-md'
-                : 'text-[#8E9299] hover:text-gray-200 hover:bg-[#1a1b20]'
+                ? 'bg-accent text-white shadow-md'
+                : 'text-fg-muted hover:text-fg hover:bg-elevated'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -207,8 +207,8 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             onClick={() => setActiveTab('bundle')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer shrink-0 ${
               activeTab === 'bundle'
-                ? 'bg-[#2F6BFF] text-white shadow-md'
-                : 'text-[#8E9299] hover:text-gray-200 hover:bg-[#1a1b20]'
+                ? 'bg-accent text-white shadow-md'
+                : 'text-fg-muted hover:text-fg hover:bg-elevated'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
@@ -217,31 +217,31 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
         </div>
 
         {/* Tab Body */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs text-gray-300 bg-[#0a0b0e]">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 text-xs text-fg bg-[#0a0b0e]">
           {/* TAB 1: OVERVIEW */}
           {activeTab === 'overview' && (
             <div className="space-y-4 animate-in fade-in-50 duration-150">
               {/* Metric Chips */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
-                <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl">
-                  <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block">Model</span>
-                  <span className="font-semibold text-white truncate block">{modelName}</span>
-                  <span className="text-[10px] text-[#2F6BFF] uppercase">{provider}</span>
+                <div className="p-3 bg-canvas border border-line rounded-xl">
+                  <span className="text-[10px] text-fg-muted uppercase tracking-wider block">Model</span>
+                  <span className="font-semibold text-fg truncate block">{modelName}</span>
+                  <span className="text-[10px] text-accent uppercase">{provider}</span>
                 </div>
-                <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl">
-                  <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block">Total Duration</span>
+                <div className="p-3 bg-canvas border border-line rounded-xl">
+                  <span className="text-[10px] text-fg-muted uppercase tracking-wider block">Total Duration</span>
                   <span className="font-semibold text-amber-400 text-sm block">{durationMs} ms</span>
-                  <span className="text-[10px] text-[#8E9299]">E2E Latency</span>
+                  <span className="text-[10px] text-fg-muted">E2E Latency</span>
                 </div>
-                <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl">
-                  <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block">Tokens Consumed</span>
+                <div className="p-3 bg-canvas border border-line rounded-xl">
+                  <span className="text-[10px] text-fg-muted uppercase tracking-wider block">Tokens Consumed</span>
                   <span className="font-semibold text-emerald-400 text-sm block">{totalTokens}</span>
-                  <span className="text-[10px] text-[#8E9299]">
+                  <span className="text-[10px] text-fg-muted">
                     {promptTokens} in / {completionTokens} out
                   </span>
                 </div>
-                <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl">
-                  <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block">Execution Status</span>
+                <div className="p-3 bg-canvas border border-line rounded-xl">
+                  <span className="text-[10px] text-fg-muted uppercase tracking-wider block">Execution Status</span>
                   <span
                     className={`font-semibold uppercase text-xs block ${
                       status === 'success' ? 'text-emerald-400' : 'text-rose-400'
@@ -249,7 +249,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   >
                     {status}
                   </span>
-                  <span className="text-[10px] text-[#8E9299]">
+                  <span className="text-[10px] text-fg-muted">
                     {toolsExecution.length || toolsInvoked.length} tool(s)
                   </span>
                 </div>
@@ -267,19 +267,19 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
 
               {/* User Message */}
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E9299] block mb-1.5 flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-fg-muted block mb-1.5 flex items-center justify-between">
                   <span>User Prompt</span>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(userMessage);
                       toast.success(t('toasts.userPromptCopied', 'User prompt copied!'));
                     }}
-                    className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
+                    className="text-[10px] text-accent hover:underline flex items-center gap-1 cursor-pointer font-sans"
                   >
                     <Copy className="w-3 h-3" /> Copy
                   </button>
                 </span>
-                <div className="p-3.5 bg-[#131418] border border-[#232429] rounded-xl text-white font-mono whitespace-pre-wrap leading-relaxed select-text">
+                <div className="p-3.5 bg-canvas border border-line rounded-xl text-fg font-mono whitespace-pre-wrap leading-relaxed select-text">
                   {userMessage || '[Empty message]'}
                 </div>
               </div>
@@ -293,19 +293,19 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                     </span>
                     <button
                       onClick={() => setActiveTab('tools')}
-                      className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
+                      className="text-[10px] text-accent hover:underline flex items-center gap-1 cursor-pointer font-sans"
                     >
                       View raw store data <ArrowRight className="w-3 h-3" />
                     </button>
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {(toolsExecution.length > 0 ? toolsExecution : toolsInvoked).map((t: any, idx: number) => (
-                      <div key={idx} className="p-2.5 bg-[#131418] border border-[#232429] rounded-xl font-mono text-[11px]">
-                        <div className="flex items-center justify-between text-[#2F6BFF] font-semibold mb-1">
+                      <div key={idx} className="p-2.5 bg-canvas border border-line rounded-xl font-mono text-[11px]">
+                        <div className="flex items-center justify-between text-accent font-semibold mb-1">
                           <span className="truncate">{t.name}</span>
                           <span className="text-amber-400 text-[10px]">{t.executionTimeMs} ms</span>
                         </div>
-                        <div className="text-[10px] text-[#8E9299] truncate">
+                        <div className="text-[10px] text-fg-muted truncate">
                           Args: {JSON.stringify(t.inputArgs || t.args || {})}
                         </div>
                       </div>
@@ -327,7 +327,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                       navigator.clipboard.writeText(errorMessage || assistantResponse);
                       toast.success(t('toasts.responseCopied', 'Response copied!'));
                     }}
-                    className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
+                    className="text-[10px] text-accent hover:underline flex items-center gap-1 cursor-pointer font-sans"
                   >
                     <Copy className="w-3 h-3" /> Copy
                   </button>
@@ -336,7 +336,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   className={`p-3.5 rounded-xl whitespace-pre-wrap select-text leading-relaxed font-mono ${
                     status === 'error'
                       ? 'bg-rose-950/20 border border-rose-900/40 text-rose-300'
-                      : 'bg-[#131418] border border-[#232429] text-gray-200'
+                      : 'bg-canvas border border-line text-fg'
                   }`}
                 >
                   {errorMessage || assistantResponse || '[No response generated]'}
@@ -348,8 +348,8 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
           {/* TAB 2: PROMPT & REQUEST */}
           {activeTab === 'request' && (
             <div className="space-y-4 animate-in fade-in-50 duration-150">
-              <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl flex items-center gap-2 text-xs text-[#8E9299]">
-                <Info className="w-4 h-4 text-[#2F6BFF] shrink-0" />
+              <div className="p-3 bg-canvas border border-line rounded-xl flex items-center gap-2 text-xs text-fg-muted">
+                <Info className="w-4 h-4 text-accent shrink-0" />
                 <span>
                   Detailed view of everything transmitted to the model: system prompt, message history, tool declarations, and inference parameters.
                 </span>
@@ -367,26 +367,26 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                       navigator.clipboard.writeText(sys);
                       toast.success(t('toasts.systemPromptCopied', 'System prompt copied!'));
                     }}
-                    className="text-[10px] text-[#2F6BFF] hover:underline flex items-center gap-1 cursor-pointer font-sans"
+                    className="text-[10px] text-accent hover:underline flex items-center gap-1 cursor-pointer font-sans"
                   >
                     <Copy className="w-3 h-3" /> Copy System Prompt
                   </button>
                 </div>
-                <div className="p-3.5 bg-[#0e0f12] border border-[#232429] rounded-xl text-gray-300 font-mono max-h-48 overflow-y-auto select-text whitespace-pre-wrap text-[11px]">
+                <div className="p-3.5 bg-[#0e0f12] border border-line rounded-xl text-fg font-mono max-h-48 overflow-y-auto select-text whitespace-pre-wrap text-[11px]">
                   {debugData?.request?.systemInstruction || log?.fullPayloadSnapshot?.sentPrompt || '[Default system prompt]'}
                 </div>
               </div>
 
               {/* Messages Array Sent */}
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#2F6BFF] block mb-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-accent block mb-1">
                   Message History Sent ({debugData?.request?.messages?.length || 0} turns)
                 </span>
                 <div className="space-y-2">
                   {(debugData?.request?.messages || []).map((msg: any, idx: number) => {
                     const role = msg.role || (msg.parts ? 'model' : 'user');
                     return (
-                      <div key={idx} className="p-3 bg-[#0e0f12] border border-[#232429] rounded-xl font-mono text-[11px]">
+                      <div key={idx} className="p-3 bg-[#0e0f12] border border-line rounded-xl font-mono text-[11px]">
                         <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-[#1c1d22]">
                           <span
                             className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
@@ -399,11 +399,11 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                           >
                             Turn {idx + 1} • {role}
                           </span>
-                          <span className="text-[#8E9299] text-[10px]">
+                          <span className="text-fg-muted text-[10px]">
                             {Array.isArray(msg.parts) ? `${msg.parts.length} parts` : 'Direct text'}
                           </span>
                         </div>
-                        <div className="whitespace-pre-wrap select-text text-gray-300">
+                        <div className="whitespace-pre-wrap select-text text-fg">
                           {msg.content || (msg.parts ? JSON.stringify(msg.parts, null, 2) : JSON.stringify(msg))}
                         </div>
                       </div>
@@ -414,7 +414,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
 
               {/* Raw Request Payload */}
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-fg-muted block mb-1">
                   Complete Request Raw JSON
                 </span>
                 <AiRawJsonViewer
@@ -428,7 +428,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
           {/* TAB 3: TOOLS TRACE & DATA */}
           {activeTab === 'tools' && (
             <div className="space-y-4 animate-in fade-in-50 duration-150">
-              <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl flex items-center gap-2 text-xs text-amber-300/90">
+              <div className="p-3 bg-canvas border border-line rounded-xl flex items-center gap-2 text-xs text-amber-300/90">
                 <Database className="w-4 h-4 text-amber-400 shrink-0" />
                 <span>
                   Raw data returned by local tools (IndexedDB / Zustand store). This is the exact context fed to the LLM to ground its response.
@@ -436,10 +436,10 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
               </div>
 
               {toolsExecution.length === 0 && toolsInvoked.length === 0 ? (
-                <div className="text-center py-10 text-[#8E9299] space-y-2">
+                <div className="text-center py-10 text-fg-muted space-y-2">
                   <Wrench className="w-8 h-8 mx-auto text-[#4b4e57]" />
                   <p>No local tools were invoked in this query.</p>
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-[10px] text-fg-muted">
                     The model responded directly from the prompt and conversation history.
                   </p>
                 </div>
@@ -453,28 +453,28 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                     executionTimeMs: t.executionTimeMs,
                     error: t.resultSummary.includes('error') ? t.resultSummary : undefined,
                   }))).map((toolExec, idx) => (
-                    <div key={idx} className="bg-[#121316] border border-[#232429] rounded-xl p-4 space-y-3 shadow-md">
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#1f2026]">
+                    <div key={idx} className="bg-canvas border border-line rounded-xl p-4 space-y-3 shadow-md">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-line">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-lg bg-[#2F6BFF]/10 text-[#2F6BFF] border border-[#2F6BFF]/20 flex items-center justify-center font-bold text-xs">
+                          <span className="w-6 h-6 rounded-lg bg-accent/10 text-accent border border-accent/20 flex items-center justify-center font-bold text-xs">
                             {idx + 1}
                           </span>
-                          <span className="font-mono font-bold text-sm text-white">{toolExec.name}</span>
+                          <span className="font-mono font-bold text-sm text-fg">{toolExec.name}</span>
                           <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20">
                             {toolExec.executionTimeMs} ms
                           </span>
                         </div>
-                        <span className="text-[10px] text-[#8E9299] font-mono">
+                        <span className="text-[10px] text-fg-muted font-mono">
                           Execution turn: #{toolExec.turn || 1}
                         </span>
                       </div>
 
                       {/* Arguments */}
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E9299] block mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-fg-muted block mb-1">
                           Parameters Received from Model (Input Args):
                         </span>
-                        <div className="p-2.5 bg-[#0a0b0e] border border-[#1f2026] rounded-lg font-mono text-[11px] text-cyan-300">
+                        <div className="p-2.5 bg-[#0a0b0e] border border-line rounded-lg font-mono text-[11px] text-cyan-300">
                           {JSON.stringify(toolExec.inputArgs || {}, null, 2)}
                         </div>
                       </div>
@@ -502,8 +502,8 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             <div className="space-y-4 animate-in fade-in-50 duration-150">
               {/* Status & Timing */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono">
-                <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl">
-                  <span className="text-[10px] text-[#8E9299] uppercase block">HTTP Status</span>
+                <div className="p-3 bg-canvas border border-line rounded-xl">
+                  <span className="text-[10px] text-fg-muted uppercase block">HTTP Status</span>
                   <span
                     className={`font-semibold text-sm ${
                       debugData?.response?.status === 200 || status === 'success'
@@ -514,15 +514,15 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                     {debugData?.response?.status || (status === 'success' ? '200 OK' : 'Error')}
                   </span>
                 </div>
-                <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl">
-                  <span className="text-[10px] text-[#8E9299] uppercase block">Tokens</span>
-                  <span className="font-semibold text-white text-sm">
+                <div className="p-3 bg-canvas border border-line rounded-xl">
+                  <span className="text-[10px] text-fg-muted uppercase block">Tokens</span>
+                  <span className="font-semibold text-fg text-sm">
                     {debugData?.response?.usage?.totalTokens || totalTokens}
                   </span>
                 </div>
-                <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl">
-                  <span className="text-[10px] text-[#8E9299] uppercase block">Model Tool Calls</span>
-                  <span className="font-semibold text-[#2F6BFF] text-sm">
+                <div className="p-3 bg-canvas border border-line rounded-xl">
+                  <span className="text-[10px] text-fg-muted uppercase block">Model Tool Calls</span>
+                  <span className="font-semibold text-accent text-sm">
                     {debugData?.response?.toolCalls?.length || toolsExecution.length || 0}
                   </span>
                 </div>
@@ -546,7 +546,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 block mb-1">
                     Generated Text (Output)
                   </span>
-                  <div className="p-3.5 bg-[#0e0f12] border border-[#232429] rounded-xl text-gray-200 font-mono whitespace-pre-wrap select-text text-[11px]">
+                  <div className="p-3.5 bg-[#0e0f12] border border-line rounded-xl text-fg font-mono whitespace-pre-wrap select-text text-[11px]">
                     {debugData.response.text}
                   </div>
                 </div>
@@ -554,7 +554,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
 
               {/* Full Raw Response Object */}
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-fg-muted block mb-1">
                   Raw Provider Response JSON Object
                 </span>
                 <AiRawJsonViewer
@@ -574,15 +574,15 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
           {/* TAB 5: FULL BUNDLE */}
           {activeTab === 'bundle' && (
             <div className="space-y-4 animate-in fade-in-50 duration-150">
-              <div className="p-3 bg-[#131418] border border-[#232429] rounded-xl flex items-center justify-between gap-3 text-xs">
-                <span className="text-[#8E9299]">
+              <div className="p-3 bg-canvas border border-line rounded-xl flex items-center justify-between gap-3 text-xs">
+                <span className="text-fg-muted">
                   Full export of all telemetry metadata, prompt snapshots, tool data, and raw response.
                 </span>
                 <button
                   onClick={handleCopyFullBundle}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2F6BFF] hover:bg-[#2F6BFF]/80 text-white rounded-lg text-xs font-semibold transition cursor-pointer shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-accent hover:bg-accent/80 text-white rounded-lg text-xs font-semibold transition cursor-pointer shrink-0"
                 >
-                  {copiedAll ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5 text-white" />}
+                  {copiedAll ? <Check className="w-3.5 h-3.5 text-fg" /> : <Copy className="w-3.5 h-3.5 text-fg" />}
                   <span>{copiedAll ? 'Copied!' : 'Copy Full Bundle'}</span>
                 </button>
               </div>
@@ -601,15 +601,15 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-[#232429] bg-[#16171b] flex items-center justify-between shrink-0">
-          <div className="text-[11px] text-[#8E9299] flex items-center gap-2">
+        <div className="px-5 py-3 border-t border-line bg-[#16171b] flex items-center justify-between shrink-0">
+          <div className="text-[11px] text-fg-muted flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
             <span>100% Isolated & secure audit (Zero credentials exposed)</span>
           </div>
 
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-[#1f2026] hover:bg-[#282931] text-gray-200 rounded-lg text-xs font-medium transition cursor-pointer border border-[#2e3038]"
+            className="px-4 py-1.5 bg-line hover:bg-[#282931] text-fg rounded-lg text-xs font-medium transition cursor-pointer border border-line"
           >
             Close
           </button>

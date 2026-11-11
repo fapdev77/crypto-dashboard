@@ -21,7 +21,7 @@ export const PeriodSegmentedControl: React.FC<Props> = ({ value, onChange }) => 
   const { t } = useTranslation();
 
   return (
-    <div className="flex bg-[#0e0f11] p-1 rounded-lg border border-[#2a2b30] w-max overflow-x-auto">
+    <div className="flex bg-canvas p-1 rounded-lg border border-line w-max overflow-x-auto">
       {PERIODS.map((period) => (
         <button
           key={period.id}
@@ -29,8 +29,8 @@ export const PeriodSegmentedControl: React.FC<Props> = ({ value, onChange }) => 
           className={clsx(
             "px-4 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
             value === period.id
-              ? "bg-[#2a2b30] text-white shadow-sm"
-              : "text-[#8E9299] hover:text-white"
+              ? "bg-line text-fg shadow-sm"
+              : "text-fg-muted hover:text-fg"
           )}
         >
           {t(period.key, period.defaultLabel)}

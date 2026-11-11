@@ -77,8 +77,8 @@ const CustomTooltip = ({ active, payload, formatCurrency, t }: any) => {
     const assets = row.rawAssets || [];
     
     return (
-      <div data-theme={row.exchange.toLowerCase()} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-4 shadow-xl z-50 min-w-[220px]">
-        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[#2a2b30]">
+      <div data-theme={row.exchange.toLowerCase()} className="bg-elevated border border-line rounded-lg p-4 shadow-xl z-50 min-w-[220px]">
+        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-line">
           <div className="w-5 h-5 grayscale opacity-80 mix-blend-screen">
              <ExchangeIcon exchange={row.exchange} />
           </div>
@@ -94,13 +94,13 @@ const CustomTooltip = ({ active, payload, formatCurrency, t }: any) => {
                   <div className="w-5 h-5 flex-shrink-0">
                     <CoinIcon symbol={asset.name} className="w-full h-full" />
                   </div>
-                  <span className="text-[#8E9299] font-semibold text-xs tracking-wider uppercase">{asset.name}</span>
+                  <span className="text-fg-muted font-semibold text-xs tracking-wider uppercase">{asset.name}</span>
                 </div>
                 <div className="text-right flex items-center justify-end gap-3 min-w-[100px]">
-                  <span className="text-white font-mono">
+                  <span className="text-fg font-mono">
                     {formatCurrency ? formatCurrency(asset.value, 'usd') : `$${asset.value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}`}
                   </span>
-                  <span className="text-[#8E9299] opacity-80 font-mono text-xs w-10 text-right">{asset.percent.toFixed(1)}%</span>
+                  <span className="text-fg-muted opacity-80 font-mono text-xs w-10 text-right">{asset.percent.toFixed(1)}%</span>
                 </div>
               </div>
             );
@@ -143,8 +143,8 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
   const maxTotal = Math.max(...data.map(d => d.total));
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] p-5 rounded-xl flex flex-col h-[300px]">
-      <h3 className="text-sm font-semibold text-white mb-4">
+    <div className="bg-surface border border-line p-5 rounded-xl flex flex-col h-[300px]">
+      <h3 className="text-sm font-semibold text-fg mb-4">
         {t('dashboardExtra.crossExchangeAssetComposition', 'Cross-Exchange Asset Composition')}
       </h3>
       <div className="flex-1 min-h-0 min-w-0 w-full relative">

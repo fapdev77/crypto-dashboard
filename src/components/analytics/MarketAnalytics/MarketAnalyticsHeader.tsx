@@ -56,7 +56,7 @@ export const MarketAnalyticsHeader: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-2.5 sm:p-3 shadow-lg">
+    <div className="bg-canvas border border-line rounded-xl p-2.5 sm:p-3 shadow-lg">
       <div className="flex flex-wrap items-center justify-between gap-2.5">
         {/* Left / Center Controls: Unified Asset & Market Modal, Timeframe */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -66,18 +66,18 @@ export const MarketAnalyticsHeader: React.FC = () => {
               type="button"
               id="market-filter-modal-trigger"
               onClick={() => setIsFilterModalOpen(true)}
-              className="flex items-center gap-2.5 bg-[#1a1b22] hover:bg-[#20222b] border border-[#2a2b30] hover:border-[#2F6BFF]/60 px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition-all shadow-sm group"
+              className="flex items-center gap-2.5 bg-elevated hover:bg-elevated border border-line hover:border-accent/60 px-3 py-1.5 rounded-xl text-xs font-semibold text-fg transition-all shadow-sm group"
             >
               {/* Asset Identity */}
               <div className="flex items-center gap-2">
                 <CoinIcon symbol={selectedSymbol} className="w-5 h-5 shrink-0" />
-                <span className="font-bold text-sm tracking-tight text-white">{selectedSymbol}</span>
+                <span className="font-bold text-sm tracking-tight text-fg">{selectedSymbol}</span>
                 <span className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border ${kindBadge.bg} ${kindBadge.text} ${kindBadge.border}`}>
                   {kindBadge.label}
                 </span>
               </div>
 
-              <div className="w-[1px] h-4 bg-[#2e3038]" />
+              <div className="w-[1px] h-4 bg-line" />
 
               {/* Selected Markets Badge */}
               <div className="flex items-center gap-1">
@@ -86,7 +86,7 @@ export const MarketAnalyticsHeader: React.FC = () => {
                 </span>
               </div>
 
-              <div className="w-[1px] h-4 bg-[#2e3038]" />
+              <div className="w-[1px] h-4 bg-line" />
 
               {/* Selected Exchanges Icons */}
               <div className="flex items-center gap-1.5">
@@ -94,19 +94,19 @@ export const MarketAnalyticsHeader: React.FC = () => {
                   {selectedExchanges.map((ex) => (
                     <div
                       key={ex}
-                      className="w-4 h-4 rounded-full bg-[#1e2026] border border-[#2a2b30] flex items-center justify-center"
+                      className="w-4 h-4 rounded-full bg-[#1e2026] border border-line flex items-center justify-center"
                       title={ex}
                     >
                       <ExchangeIcon exchange={ex} className="w-3 h-3" />
                     </div>
                   ))}
                 </div>
-                <span className="hidden sm:inline text-[11px] font-medium text-[#8E9299]">
+                <span className="hidden sm:inline text-[11px] font-medium text-fg-muted">
                   {getExchangesLabel()}
                 </span>
               </div>
 
-              <SlidersHorizontal className="w-3.5 h-3.5 text-[#8E9299] group-hover:text-[#2F6BFF] ml-1 transition-colors" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-fg-muted group-hover:text-accent ml-1 transition-colors" />
             </button>
           </AssetSelectorTooltip>
 

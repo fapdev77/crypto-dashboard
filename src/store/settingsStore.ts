@@ -8,6 +8,7 @@ import {
   CurrencyApiDiagnostics,
 } from '../services/currency/currencyTypes';
 import i18n from '../i18n/config';
+import { applyThemeMode, type ThemeMode } from '../utils/themeMode';
 
 export type { SupportedLocale, SupportedFiatCurrency };
 
@@ -15,6 +16,9 @@ interface SettingsState {
   /** Selected display language/locale (e.g. 'pt-BR', 'en-US'). Default 'pt-BR'. */
   locale: SupportedLocale;
   setLocale: (locale: SupportedLocale) => void;
+  /** Visual mode of the interface: 'dark' (Terminal Dark) or 'light' (Terminal Light). Default 'dark'. */
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
   /** Selected display fiat currency (e.g. 'USD', 'BRL', 'EUR', 'GBP'). Default 'USD'. */
   fiatCurrency: SupportedFiatCurrency;
   setFiatCurrency: (currency: SupportedFiatCurrency) => void;
@@ -106,6 +110,11 @@ export const useSettingsStore = create<SettingsState>()(
       setLocale: (locale: SupportedLocale) => {
         i18n.changeLanguage(locale);
         set({ locale });
+      },
+      themeMode: 'dark',
+      setThemeMode: (themeMode: ThemeMode) => {
+        applyThemeMode(themeMode);
+        set({ themeMode });
       },
       fiatCurrency: 'USD',
       setFiatCurrency: (fiatCurrency: SupportedFiatCurrency) => set({ fiatCurrency }),

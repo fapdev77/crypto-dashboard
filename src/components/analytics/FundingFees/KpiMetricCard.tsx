@@ -15,14 +15,14 @@ export interface KpiMetricCardProps {
 const colorClasses: Record<string, string> = {
   green: 'text-green-400',
   red: 'text-red-400',
-  white: 'text-white',
+  white: 'text-fg',
   amber: 'text-amber-400',
 };
 
 const trendIcons: Record<string, { icon: string; cls: string }> = {
   up: { icon: '↑', cls: 'text-green-400' },
   down: { icon: '↓', cls: 'text-red-400' },
-  neutral: { icon: '→', cls: 'text-[#8E9299]' },
+  neutral: { icon: '→', cls: 'text-fg-muted' },
 };
 
 export const KpiMetricCard = ({
@@ -36,14 +36,14 @@ export const KpiMetricCard = ({
   subtext,
 }: KpiMetricCardProps) => {
   const content = (
-    <div className={`bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col gap-1.5 hover:border-[#3a3b40] transition-colors ${className}`}>
+    <div className={`bg-surface border border-line rounded-xl p-4 flex flex-col gap-1.5 hover:border-line-strong transition-colors ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-[#8E9299]">{icon}</span>
-          <span className="text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">{label}</span>
+          <span className="text-fg-muted">{icon}</span>
+          <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">{label}</span>
         </div>
         {trend && (
-          <span className={`text-xs font-mono ${trendIcons[trend]?.cls ?? 'text-[#8E9299]'}`}>
+          <span className={`text-xs font-mono ${trendIcons[trend]?.cls ?? 'text-fg-muted'}`}>
             {trendIcons[trend]?.icon}
           </span>
         )}
@@ -52,7 +52,7 @@ export const KpiMetricCard = ({
         {value}
       </span>
       {subtext && (
-        <div className="text-[11px] font-mono mt-0.5 text-[#8E9299]">
+        <div className="text-[11px] font-mono mt-0.5 text-fg-muted">
           {subtext}
         </div>
       )}

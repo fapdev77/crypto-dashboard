@@ -19,21 +19,21 @@ export const AiModelStatsTable: React.FC<AiModelStatsTableProps> = ({ summaries 
   };
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden shadow-xl">
-      <div className="px-6 py-4 border-b border-[#2a2b30] bg-[#151619]">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+    <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-xl">
+      <div className="px-6 py-4 border-b border-line bg-surface">
+        <h3 className="text-sm font-bold text-fg flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-emerald-400" />
           {t('ai.settings.modelStats.title', 'Statistics by AI Model')}
         </h3>
-        <p className="text-xs text-[#8E9299]">
+        <p className="text-xs text-fg-muted">
           {t('ai.settings.modelStats.subtitle', 'Detailed breakdown of inference volume, average latency, and token efficiency per model')}
         </p>
       </div>
 
-      <div className="overflow-x-auto bg-[#0b0c10]">
+      <div className="overflow-x-auto bg-canvas">
         <table className="w-full text-left text-xs">
           <thead>
-            <tr className="border-b border-[#2a2b30] bg-[#151619] text-[#8E9299] uppercase tracking-wider text-[10px]">
+            <tr className="border-b border-line bg-surface text-fg-muted uppercase tracking-wider text-[10px]">
               <th className="py-3 px-4">{t('ai.settings.modelStats.modelProvider', 'Model & Provider')}</th>
               <th className="py-3 px-4">{t('common.status', 'Status')}</th>
               <th className="py-3 px-4 text-right">{t('ai.settings.telemetry.totalCalls', 'Invocations')}</th>
@@ -44,10 +44,10 @@ export const AiModelStatsTable: React.FC<AiModelStatsTableProps> = ({ summaries 
               <th className="py-3 px-4 text-right">{t('ai.settings.modelStats.lastUsed', 'Last Used')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#2a2b30] text-gray-300">
+          <tbody className="divide-y divide-line text-fg">
             {summaryList.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-[#8E9299]">
+                <td colSpan={8} className="py-8 text-center text-fg-muted">
                   {t('ai.settings.modelStats.noData', 'No inference data recorded yet. Statistics will populate as the assistant is used.')}
                 </td>
               </tr>
@@ -55,27 +55,27 @@ export const AiModelStatsTable: React.FC<AiModelStatsTableProps> = ({ summaries 
               summaryList.map((item) => {
                 const avgTokensPerCall = item.callsCount > 0 ? Math.round(item.totalTokens / item.callsCount) : 0;
                 return (
-                  <tr key={item.modelId} className="hover:bg-[#151619]/80 transition font-mono">
-                    <td className="py-3 px-4 font-sans font-medium text-white">
+                  <tr key={item.modelId} className="hover:bg-surface/80 transition font-mono">
+                    <td className="py-3 px-4 font-sans font-medium text-fg">
                       <div>{item.modelName}</div>
-                      <span className="text-[10px] text-[#8E9299] font-mono uppercase">{item.provider}</span>
+                      <span className="text-[10px] text-fg-muted font-mono uppercase">{item.provider}</span>
                     </td>
                     <td className="py-3 px-4 font-sans">
                       <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
                         {t('common.active', 'Active')}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right font-medium text-white">{formatNumber(item.callsCount)}</td>
-                    <td className="py-3 px-4 text-right text-gray-400">
+                    <td className="py-3 px-4 text-right font-medium text-fg">{formatNumber(item.callsCount)}</td>
+                    <td className="py-3 px-4 text-right text-fg-muted">
                       <span className="text-emerald-400">{formatNumber(item.promptTokens)}</span> /{' '}
-                      <span className="text-[#2F6BFF]">{formatNumber(item.completionTokens)}</span>
+                      <span className="text-accent">{formatNumber(item.completionTokens)}</span>
                     </td>
-                    <td className="py-3 px-4 text-right text-gray-300">{formatNumber(avgTokensPerCall)}</td>
+                    <td className="py-3 px-4 text-right text-fg">{formatNumber(avgTokensPerCall)}</td>
                     <td className="py-3 px-4 text-right text-amber-400">{item.averageDurationMs} ms</td>
                     <td className="py-3 px-4 text-right text-emerald-400 font-medium">
                       ${item.estimatedCostUsd.toFixed(4)}
                     </td>
-                    <td className="py-3 px-4 text-right text-[#8E9299] text-[11px] font-sans">
+                    <td className="py-3 px-4 text-right text-fg-muted text-[11px] font-sans">
                       {formatTime(item.lastUsedTimestamp)}
                     </td>
                   </tr>

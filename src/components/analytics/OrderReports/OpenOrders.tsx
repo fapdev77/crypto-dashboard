@@ -91,8 +91,8 @@ export function OpenOrders() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-              <ArrowLeftRight className="w-5 h-5 text-[#2F6BFF]" />
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-fg">
+              <ArrowLeftRight className="w-5 h-5 text-accent" />
               {t('orders.openOrdersTitle', 'Open Orders')}
             </h2>
             <SimulationModeBadge />
@@ -107,17 +107,17 @@ export function OpenOrders() {
       {orders.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           {/* Total Orders / Sides */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
             <div className='flex flex-col'>
               <div className="flex items-center gap-2">
-                <span className="text-2xl text-[#8E9299]">{t('orders.stats.totalOrders', 'Total Orders')}: </span>
-                <span className="text-xl font-medium text-white">{orders.length}</span>
+                <span className="text-2xl text-fg-muted">{t('orders.stats.totalOrders', 'Total Orders')}: </span>
+                <span className="text-xl font-medium text-fg">{orders.length}</span>
               </div>
               <div className="flex items-baseline gap-2">
                 <div className="flex text-[15px] gap-2 font-mono mt-1">
-                  <span className="text-[#00C853]">{stats.buyCount} {t('orders.stats.buyCount', 'Buy')} ({((stats.buyCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
-                  <span className="text-[#8E9299]"> | </span>
-                  <span className="text-[#FF4444]">{stats.sellCount} {t('orders.stats.sellCount', 'Sell')} ({((stats.sellCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
+                  <span className="text-success">{stats.buyCount} {t('orders.stats.buyCount', 'Buy')} ({((stats.buyCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
+                  <span className="text-fg-muted"> | </span>
+                  <span className="text-danger">{stats.sellCount} {t('orders.stats.sellCount', 'Sell')} ({((stats.sellCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
                 </div>
               </div>
             </div>
@@ -137,11 +137,11 @@ export function OpenOrders() {
           </div>
 
           {/* Order Types */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
             <div className='flex flex-col'>
-              <span className="text-2xl text-[#8E9299]">{t('orders.allTypes', 'Order Types')}</span>
+              <span className="text-2xl text-fg-muted">{t('orders.allTypes', 'Order Types')}</span>
               <div className="flex flex-col text-[13px] gap-0.5 font-mono mt-1">
-                <span className="text-[#2F6BFF]">{t('orders.stats.limitCount', 'Limit')}: {stats.limitCount}</span>
+                <span className="text-accent">{t('orders.stats.limitCount', 'Limit')}: {stats.limitCount}</span>
                 <span className="text-[#FFB300]">{t('orders.stats.marketCount', 'Market')}: {stats.marketCount}</span>
                 <span className="text-[#9C27B0]">{t('orders.stats.conditionalCount', 'Conditional')}: {stats.conditionalCount}</span>
               </div>
@@ -162,11 +162,11 @@ export function OpenOrders() {
           </div>
 
           {/* Total Value */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
             <AppTooltip description="The total estimated USD value of all open orders, calculated based on their limit trigger prices.">
-              <span className="text-2xl text-[#8E9299] w-max cursor-help border-b border-dashed border-[#8E9299]/50">{t('orders.stats.totalVolume', 'Est. Total Volume')}</span>
+              <span className="text-2xl text-fg-muted w-max cursor-help border-b border-dashed border-fg-muted/50">{t('orders.stats.totalVolume', 'Est. Total Volume')}</span>
             </AppTooltip>
-            <span className="text-xl font-medium text-white mt-1">
+            <span className="text-xl font-medium text-fg mt-1">
               {formatCurrency(stats.totalVolume, 'usd')}
             </span>
           </div>
