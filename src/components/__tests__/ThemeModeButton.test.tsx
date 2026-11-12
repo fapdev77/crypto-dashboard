@@ -28,6 +28,9 @@ describe('ThemeModeButton', () => {
 
     expect(screen.getByRole('menuitemradio', { name: /Terminal Dark/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitemradio', { name: /Terminal Light/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { name: /Wise Dark/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { name: /Wise Light/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitemradio', { name: /Custom/i })).toBeInTheDocument();
   });
 
   it('marks the active theme as checked', () => {

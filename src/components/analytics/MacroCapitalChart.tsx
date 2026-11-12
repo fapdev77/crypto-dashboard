@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, L
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../../store/settingsStore';
+import { isHexColorLight } from '../../utils/themeMode';
 
 interface MacroCapitalChartProps {
   data: Array<{ name: string; value: number }>;
@@ -24,7 +25,11 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
   const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
   const themeMode = useSettingsStore(state => state.themeMode);
-  const isLight = themeMode === 'light';
+  const customTokens = useSettingsStore(state => state.customThemeTokens);
+  const isLight =
+    themeMode === 'light' ||
+    themeMode === 'wise-light' ||
+    (themeMode === 'custom' && isHexColorLight(customTokens.canvas));
 
   const totalValue = useMemo(() => data.reduce((acc, cur) => acc + cur.value, 0), [data]);
 

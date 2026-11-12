@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, Moon, Sun } from 'lucide-react';
+import { Check, Moon, Sun, Sparkles, Palette, Sliders } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../../store/settingsStore';
 import type { ThemeMode } from '../../utils/themeMode';
@@ -8,6 +8,9 @@ import { AppTooltip } from './Tooltip';
 const THEME_ICONS: Record<ThemeMode, React.ElementType> = {
   dark: Moon,
   light: Sun,
+  'wise-dark': Moon,
+  'wise-light': Sun,
+  custom: Sliders,
 };
 
 interface ThemeModeButtonProps {
@@ -16,7 +19,7 @@ interface ThemeModeButtonProps {
 }
 
 /**
- * Seletor de tema do aplicativo (Terminal Dark / Terminal Light).
+ * Seletor de tema do aplicativo (Terminal Dark / Terminal Light / Wise Dark / Wise Light / Customizado).
  * Fica ao lado do seletor de idioma e não interfere nos temas de marca
  * por corretora, que continuam sendo aplicados via `data-theme`.
  */
@@ -41,6 +44,21 @@ export function ThemeModeButton({ className = '', showText = true }: ThemeModeBu
       id: 'light',
       label: t('theme.terminalLight', 'Terminal Light'),
       description: t('theme.terminalLightDesc', 'High-contrast interface for daylight'),
+    },
+    {
+      id: 'wise-dark',
+      label: t('theme.wiseDark', 'Wise Dark'),
+      description: t('theme.wiseDarkDesc', 'WisePay deep navy theme for high focus'),
+    },
+    {
+      id: 'wise-light',
+      label: t('theme.wiseLight', 'Wise Light'),
+      description: t('theme.wiseLightDesc', 'WisePay clean light theme for daily operations'),
+    },
+    {
+      id: 'custom',
+      label: t('theme.custom', 'Customizado'),
+      description: t('theme.customDesc', 'Personalized custom palette configured in Settings'),
     },
   ];
 

@@ -8,17 +8,26 @@ import {
   CurrencyApiDiagnostics,
 } from '../services/currency/currencyTypes';
 import i18n from '../i18n/config';
-import { applyThemeMode, type ThemeMode } from '../utils/themeMode';
+import {
+  applyThemeMode,
+  type ThemeMode,
+  type CustomThemeTokens,
+  DEFAULT_CUSTOM_TOKENS,
+} from '../utils/themeMode';
 
-export type { SupportedLocale, SupportedFiatCurrency };
+export type { SupportedLocale, SupportedFiatCurrency, CustomThemeTokens };
 
 interface SettingsState {
   /** Selected display language/locale (e.g. 'pt-BR', 'en-US'). Default 'pt-BR'. */
   locale: SupportedLocale;
   setLocale: (locale: SupportedLocale) => void;
-  /** Visual mode of the interface: 'dark' (Terminal Dark) or 'light' (Terminal Light). Default 'dark'. */
+  /** Visual mode / palette of the interface: 'dark', 'light', 'wise-dark', 'wise-light', 'custom'. Default 'dark'. */
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
+  /** Custom theme color tokens when themeMode is 'custom' */
+  customThemeTokens: CustomThemeTokens;
+  setCustomThemeTokens: (tokens: Partial<CustomThemeTokens>) => void;
+  resetCustomThemeTokens: () => void;
   /** Selected display fiat currency (e.g. 'USD', 'BRL', 'EUR', 'GBP'). Default 'USD'. */
   fiatCurrency: SupportedFiatCurrency;
   setFiatCurrency: (currency: SupportedFiatCurrency) => void;
@@ -105,7 +114,7 @@ interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       locale: 'en-US',
       setLocale: (locale: SupportedLocale) => {
         i18n.changeLanguage(locale);
@@ -113,8 +122,26 @@ export const useSettingsStore = create<SettingsState>()(
       },
       themeMode: 'dark',
       setThemeMode: (themeMode: ThemeMode) => {
-        applyThemeMode(themeMode);
+        const state = get();
+        applyThemeMode(themeMode, state.customThemeTokens);
         set({ themeMode });
+      },
+      customThemeTokens: { ...DEFAULT_CUSTOM_TOKENS },
+      setCustomThemeTokens: (newTokens: Partial<CustomThemeTokens>) => {
+        set((prev) => {
+          const updated = { ...prev.customThemeTokens, ...newTokens };
+          if (prev.themeMode === 'custom') {
+            applyThemeMode('custom', updated);
+          }
+          return { customThemeTokens: updated };
+        });
+      },
+      resetCustomThemeTokens: () => {
+        set(() => {
+          const resetTokens = { ...DEFAULT_CUSTOM_TOKENS };
+          applyThemeMode('custom', resetTokens);
+          return { customThemeTokens: resetTokens };
+        });
       },
       fiatCurrency: 'USD',
       setFiatCurrency: (fiatCurrency: SupportedFiatCurrency) => set({ fiatCurrency }),

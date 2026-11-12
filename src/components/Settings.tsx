@@ -23,6 +23,7 @@ import {
 } from '../services/currency/currencyTypes';
 import { CurrencyService } from '../services/currency/CurrencyService';
 import { CurrencyApiDiagnostics } from './currency/CurrencyApiDiagnostics';
+import { ThemeSettingsCard } from './settings/ThemeSettingsCard';
 
 export function Settings() {
   const { t } = useTranslation();
@@ -298,6 +299,9 @@ export function Settings() {
             </div>
           </div>
         </div>
+
+        {/* Card: Theme & Visual Identity Customizer */}
+        <ThemeSettingsCard />
 
         {/* Card 1: Preferences & Testing */}
         <div className="bg-surface border border-line rounded-xl p-6 flex flex-col h-full">

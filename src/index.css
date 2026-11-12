@@ -86,6 +86,54 @@
   color-scheme: light;
 }
 
+/* ------------------------------------------------------------------
+   Wise Dark - WisePay Figma Design System Theme (Dark)
+   Extraído com precisão do Figma: #0A0A0A canvas, #171717 cards,
+   #262626 bordas/tabs, #FAFAFA texto, #A1A1A1 muted, #2B7FFF accent
+   ------------------------------------------------------------------ */
+[data-theme-palette="wise-dark"],
+[data-mode="wise-dark"] {
+  --canvas: #0a0a0a;
+  --surface: #171717;
+  --elevated: #262626;
+  --elevated-hover: #2e2e2e;
+  --line: #262626;
+  --line-strong: #3a3a3a;
+  --fg: #fafafa;
+  --fg-muted: #a1a1a1;
+  --accent: #2b7fff;
+  --accent-hover: #1a6ae6;
+  --success: #00c950;
+  --danger: #d53436;
+  --warning: #f0b100;
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------
+   Wise Light - WisePay Figma Design System Theme (Light)
+   Extraído com precisão do Figma: #FFFFFF canvas/cards, #F3F3F5 inputs,
+   #E5E7EB bordas, #0A0A0A texto, #717182 muted, #2B7FFF / #030213
+   ------------------------------------------------------------------ */
+[data-theme-palette="wise-light"],
+[data-mode="wise-light"] {
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --elevated: #f3f3f5;
+  --elevated-hover: #eaecef;
+  --line: #e5e7eb;
+  --line-strong: #d1d5db;
+  --fg: #0a0a0a;
+  --fg-muted: #717182;
+  --accent: #2b7fff;
+  --accent-hover: #1a6ae6;
+  --success: #00a63e;
+  --danger: #d4183d;
+  --warning: #fdc700;
+
+  color-scheme: light;
+}
+
 /* Tema Padrão / Bitget */
 :root, [data-theme="bitget"] {
   --brand-normal: #03aac7;
@@ -166,8 +214,8 @@
 
 /* Rede de segurança do modo claro: texto que ainda use text-fg em cima de
    superfícies saturadas (acento, sucesso, erro, marca) precisa seguir branco. */
-[data-mode="light"] :is(.bg-accent, .bg-accent-hover, .bg-success, .bg-danger, .bg-warning, .bg-brand-normal, .bg-brand-hover, .bg-brand-pressed) .text-fg,
-[data-mode="light"] :is(.bg-accent, .bg-accent-hover, .bg-success, .bg-danger, .bg-warning, .bg-brand-normal, .bg-brand-hover, .bg-brand-pressed).text-fg {
+:is([data-mode="light"], [data-mode="wise-light"]) :is(.bg-accent, .bg-accent-hover, .bg-success, .bg-danger, .bg-warning, .bg-brand-normal, .bg-brand-hover, .bg-brand-pressed) .text-fg,
+:is([data-mode="light"], [data-mode="wise-light"]) :is(.bg-accent, .bg-accent-hover, .bg-success, .bg-danger, .bg-warning, .bg-brand-normal, .bg-brand-hover, .bg-brand-pressed).text-fg {
   color: #ffffff;
 }
 

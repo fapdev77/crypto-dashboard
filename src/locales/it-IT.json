@@ -4,7 +4,13 @@
     "terminalDark": "Terminal Dark",
     "terminalDarkDesc": "Interfaccia scura per sessioni lunghe",
     "terminalLight": "Terminal Light",
-    "terminalLightDesc": "Interfaccia chiara ad alto contrasto per il giorno"
+    "terminalLightDesc": "Interfaccia chiara ad alto contrasto per il giorno",
+    "wiseDark": "Wise Dark",
+    "wiseDarkDesc": "Tema blu navy profondo WisePay per la massima concentrazione",
+    "wiseLight": "Wise Light",
+    "wiseLightDesc": "Tema chiaro e pulito WisePay per le operazioni quotidiane",
+    "custom": "Personalizzato",
+    "customDesc": "Tavolozza personalizzata configurabile per token di colore"
   },
   "common": {
     "save": "Salva",
@@ -262,6 +268,40 @@
   },
   "settings": {
     "title": "Impostazioni",
+    "theme": {
+      "title": "Aspetto e Temi",
+      "subtitle": "Passa da una modalità ufficiale all'altra o personalizza completamente la tua tavolozza di colori.",
+      "selectTheme": "Temi di Sistema",
+      "presetsTitle": "Predefiniti Pronti (Carica in Personalizzato)",
+      "presetsDesc": "Carica rapidamente combinaciones di colori curate per la tua interfaccia.",
+      "customTokensTitle": "Personalizzazione dei Colori",
+      "customTokensDesc": "Regola i valori esadecimali per adattare la dashboard alle tue preferenze visive.",
+      "notCustomWarning": "Il tema attuale è ufficiale. Modificando qualsiasi colore passerai al tema Personalizzato.",
+      "activateCustom": "Attiva Personalizzato",
+      "canvas": "Sfondo dell'Applicazione (Canvas)",
+      "surface": "Superficie di Schede e Pannelli",
+      "elevated": "Elementi Elevati e Input",
+      "line": "Bordi e Separatori",
+      "fg": "Tipografia Principale",
+      "fgMuted": "Tipografia Secondaria / Etichette",
+      "accent": "Colore di Accento / Azione",
+      "success": "Indicatore Positivo (Successo / Profitto)",
+      "danger": "Indicatore Negativo (Allerta / Perdita)",
+      "warning": "Indicatore di Avviso",
+      "previewTitle": "Anteprima in Tempo Reale della Tavolozza",
+      "previewDesc": "Visualizzazione dinamica dei componenti con la tavolozza configurata.",
+      "previewMetricLabel": "Rendimento Stimato (24h)",
+      "previewActionButton": "Esegui Ordine",
+      "resetBtn": "Ripristina Predefiniti",
+      "resetConfirm": "Tavolozza personalizzata ripristinata ai valori predefiniti.",
+      "presetApplied": "Predefinito {{name}} applicato al tema personalizzato.",
+      "presets": {
+        "wiseDark": "WisePay Dark (Figma)",
+        "wiseLight": "WisePay Light (Figma)",
+        "midnightNavy": "Midnight Navy",
+        "dracula": "Dracula Pro"
+      }
+    },
     "languageAndCurrency": "Lingua e Valuta",
     "languageDesc": "Configura la lingua di visualizzazione e la valuta preferita per i calcoli del portafoglio.",
     "languageLabel": "Lingua",
@@ -1633,6 +1673,7 @@
     }
   },
   "toasts": {
+    "themeSet": "Tema impostato su {{theme}}",
     "idbHealth": "IndexedDB è integro (Versione {{version}}, 14 archivi attivi)",
     "idbError": "Errore IndexedDB: {{error}}",
     "idbHealthFailed": "Controllo di integrità fallito: {{error}}",

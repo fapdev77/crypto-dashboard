@@ -8,6 +8,7 @@ import { formatCompactUSD } from '../../utils/formatters';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../../store/settingsStore';
+import { isHexColorLight } from '../../utils/themeMode';
 
 const CustomBarShape = (props: any) => {
   const { fill, x, y, width, height, payload, dataKey, fillOpacity, value } = props;
@@ -141,7 +142,11 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
   const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
   const themeMode = useSettingsStore(state => state.themeMode);
-  const isLight = themeMode === 'light';
+  const customTokens = useSettingsStore(state => state.customThemeTokens);
+  const isLight =
+    themeMode === 'light' ||
+    themeMode === 'wise-light' ||
+    (themeMode === 'custom' && isHexColorLight(customTokens.canvas));
   const palette = isLight ? EXCHANGE_COLORS_LIGHT : EXCHANGE_COLORS;
 
   const segments = Array.from({ length: maxSegments }).map((_, i) => `segment${i}`);

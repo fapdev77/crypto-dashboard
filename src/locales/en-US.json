@@ -4,7 +4,13 @@
     "terminalDark": "Terminal Dark",
     "terminalDarkDesc": "Low-light interface for long sessions",
     "terminalLight": "Terminal Light",
-    "terminalLightDesc": "High-contrast interface for daylight"
+    "terminalLightDesc": "High-contrast interface for daylight",
+    "wiseDark": "Wise Dark",
+    "wiseDarkDesc": "WisePay deep navy theme for high focus",
+    "wiseLight": "Wise Light",
+    "wiseLightDesc": "WisePay clean light theme for daily operations",
+    "custom": "Custom",
+    "customDesc": "Personalized custom palette configurable per color token"
   },
   "common": {
     "save": "Save",
@@ -262,6 +268,40 @@
   },
   "settings": {
     "title": "Settings",
+    "theme": {
+      "title": "Appearance & Themes",
+      "subtitle": "Switch between official display modes or fully customize your own palette.",
+      "selectTheme": "System Themes",
+      "presetsTitle": "Ready Presets (Load into Custom)",
+      "presetsDesc": "Quickly load curated color schemes into your interface.",
+      "customTokensTitle": "Color Customization",
+      "customTokensDesc": "Adjust hexadecimal values to tailor the dashboard to your visual preference.",
+      "notCustomWarning": "Current mode is official. Adjusting any color switches to Custom mode.",
+      "activateCustom": "Enable Custom",
+      "canvas": "App Background (Canvas)",
+      "surface": "Cards & Panels (Surface)",
+      "elevated": "Elevated Layers & Inputs",
+      "line": "Borders & Dividers",
+      "fg": "Primary Typography",
+      "fgMuted": "Secondary Typography / Labels",
+      "accent": "Brand Accent / Action",
+      "success": "Positive Indicator (Profit / Success)",
+      "danger": "Negative Indicator (Loss / Alert)",
+      "warning": "Warning Indicator",
+      "previewTitle": "Live Palette Preview",
+      "previewDesc": "Dynamic component preview with the active color palette.",
+      "previewMetricLabel": "Estimated Return (24h)",
+      "previewActionButton": "Execute Order",
+      "resetBtn": "Reset to Default",
+      "resetConfirm": "Custom palette restored to default values successfully.",
+      "presetApplied": "Preset {{name}} applied to custom theme.",
+      "presets": {
+        "wiseDark": "WisePay Dark (Figma)",
+        "wiseLight": "WisePay Light (Figma)",
+        "midnightNavy": "Midnight Navy",
+        "dracula": "Dracula Pro"
+      }
+    },
     "languageAndCurrency": "Language & Currency",
     "languageDesc": "Configure your display language and preferred currency for portfolio calculations.",
     "languageLabel": "Language",
@@ -1633,6 +1673,7 @@
     }
   },
   "toasts": {
+    "themeSet": "Theme set to {{theme}}",
     "idbHealth": "IndexedDB is healthy (Version {{version}}, 14 stores active)",
     "idbError": "IndexedDB Error: {{error}}",
     "idbHealthFailed": "Health check failed: {{error}}",

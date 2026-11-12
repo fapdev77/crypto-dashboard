@@ -4,7 +4,13 @@
     "terminalDark": "Terminal Dark",
     "terminalDarkDesc": "Interface escura para sessões longas",
     "terminalLight": "Terminal Light",
-    "terminalLightDesc": "Interface clara de alto contraste para o dia"
+    "terminalLightDesc": "Interface clara de alto contraste para o dia",
+    "wiseDark": "Wise Dark",
+    "wiseDarkDesc": "Tema azul-marinho profundo WisePay para elevado foco",
+    "wiseLight": "Wise Light",
+    "wiseLightDesc": "Tema claro e limpo WisePay para operações diárias",
+    "custom": "Personalizado",
+    "customDesc": "Paleta personalizada configurável por token de cor"
   },
   "common": {
     "save": "Guardar",
@@ -262,6 +268,40 @@
   },
   "settings": {
     "title": "Definições",
+    "theme": {
+      "title": "Aparência e Temas",
+      "subtitle": "Alterne entre os modos oficiais ou personalize totalmente a sua própria paleta de cores.",
+      "selectTheme": "Temas do Sistema",
+      "presetsTitle": "Predefinições Prontas (Carregar no Custom)",
+      "presetsDesc": "Carregue rapidamente combinações de cores curadas para a sua interface.",
+      "customTokensTitle": "Personalização de Cores",
+      "customTokensDesc": "Ajuste os valores hexadecimais para adaptar o dashboard à sua preferência visual.",
+      "notCustomWarning": "O tema atual é oficial. Ao ajustar qualquer cor, a aplicação mudará para o tema Personalizado.",
+      "activateCustom": "Ativar Custom",
+      "canvas": "Fundo da Aplicação (Canvas)",
+      "surface": "Superfície dos Cartões e Painéis",
+      "elevated": "Elementos Elevados e Entradas",
+      "line": "Bordos e Divisores",
+      "fg": "Tipografia Principal",
+      "fgMuted": "Tipografia Secundária / Rótulos",
+      "accent": "Cor de Destaque / Ação",
+      "success": "Indicador Positivo (Sucesso / Lucro)",
+      "danger": "Indicador Negativo (Alerta / Prejuízo)",
+      "warning": "Indicador de Aviso",
+      "previewTitle": "Pré-visualização em Tempo Real da Paleta",
+      "previewDesc": "Visualização dinâmica dos componentes com a paleta configurada.",
+      "previewMetricLabel": "Retorno Estimado (24h)",
+      "previewActionButton": "Executar Ordem",
+      "resetBtn": "Repor Predefinições",
+      "resetConfirm": "Paleta personalizada reposta com sucesso para o padrão.",
+      "presetApplied": "Predefinição {{name}} aplicada ao tema personalizado.",
+      "presets": {
+        "wiseDark": "WisePay Dark (Figma)",
+        "wiseLight": "WisePay Light (Figma)",
+        "midnightNavy": "Midnight Navy",
+        "dracula": "Dracula Pro"
+      }
+    },
     "languageAndCurrency": "Idioma e Moeda",
     "languageDesc": "Configure o seu idioma de visualização e a moeda preferida para os cálculos da carteira.",
     "languageLabel": "Idioma",
@@ -1633,6 +1673,7 @@
     }
   },
   "toasts": {
+    "themeSet": "Tema alterado para {{theme}}",
     "idbHealth": "IndexedDB está operacional (Versão {{version}}, 14 tabelas ativas)",
     "idbError": "Erro no IndexedDB: {{error}}",
     "idbHealthFailed": "Falha na verificação de integridade: {{error}}",
