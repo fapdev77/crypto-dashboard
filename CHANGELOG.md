@@ -1,3 +1,10 @@
+# [2.34.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.33.0...v2.34.0) (2026-11-12)
+
+
+### Features
+
+* **theme:** add support for Wise and custom themes ([dc4bdab](https://github.com/fapdev77/crypto-dashboard/commit/dc4bdabe152e6632f7e484bb9cd5b525db3bd99d))
+
 # [2.33.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.32.0...v2.33.0) (2026-11-11)
 
 
