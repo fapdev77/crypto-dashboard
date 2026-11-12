@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ShieldAlert, ArrowLeftRight, Coins, LayoutDashboard } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AiQuickActionChipsProps {
   onSelectPrompt: (prompt: string) => void;
@@ -14,32 +15,34 @@ interface PromptCard {
 }
 
 export const AiQuickActionChips: React.FC<AiQuickActionChipsProps> = ({ onSelectPrompt, disabled }) => {
-  const cards: PromptCard[] = [
+  const { t } = useTranslation();
+
+  const cards: PromptCard[] = useMemo(() => [
     {
-      title: 'Liquidation Risk',
-      subtitle: 'Audit margin levels & liquidation price distance',
-      prompt: 'Perform a liquidation risk audit on my currently open positions.',
+      title: t('ai.quickActions.liquidationRisk.title', 'Liquidation Risk'),
+      subtitle: t('ai.quickActions.liquidationRisk.subtitle', 'Audit margin levels & liquidation price distance'),
+      prompt: t('ai.quickActions.liquidationRisk.prompt', 'Perform a liquidation risk audit on my currently open positions.'),
       icon: ShieldAlert,
     },
     {
-      title: 'Hedge Imbalance',
-      subtitle: 'Identify volume delta mismatch across positions',
-      prompt: 'Identify any volume mismatch and net delta exposure across my hedged positions.',
+      title: t('ai.quickActions.hedgeImbalance.title', 'Hedge Imbalance'),
+      subtitle: t('ai.quickActions.hedgeImbalance.subtitle', 'Identify volume delta mismatch across positions'),
+      prompt: t('ai.quickActions.hedgeImbalance.prompt', 'Identify any volume mismatch and net delta exposure across my hedged positions.'),
       icon: ArrowLeftRight,
     },
     {
-      title: 'Funding Efficiency',
-      subtitle: 'Review 7-day cumulative funding payments',
-      prompt: 'Generate a summary of funding fees over the last 7 days: am I net paying or receiving fees?',
+      title: t('ai.quickActions.fundingEfficiency.title', 'Funding Efficiency'),
+      subtitle: t('ai.quickActions.fundingEfficiency.subtitle', 'Review 7-day cumulative funding payments'),
+      prompt: t('ai.quickActions.fundingEfficiency.prompt', 'Generate a summary of funding fees over the last 7 days: am I net paying or receiving fees?'),
       icon: Coins,
     },
     {
-      title: 'Portfolio Overview',
-      subtitle: 'Consolidated equity, open PnL & exchange shares',
-      prompt: 'Generate a consolidated executive summary with total net equity, unrealized PnL, and exchange allocation.',
+      title: t('ai.quickActions.portfolioOverview.title', 'Portfolio Overview'),
+      subtitle: t('ai.quickActions.portfolioOverview.subtitle', 'Consolidated equity, open PnL & exchange shares'),
+      prompt: t('ai.quickActions.portfolioOverview.prompt', 'Generate a consolidated executive summary with total net equity, unrealized PnL, and exchange allocation.'),
       icon: LayoutDashboard,
     },
-  ];
+  ], [t]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md mx-auto">

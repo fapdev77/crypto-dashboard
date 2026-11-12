@@ -120,7 +120,34 @@
       "helpClose": "Fechar guia de boas-vindas e ajuda",
       "privacyHide": "Ocultar valores numéricos sensíveis na aplicação",
       "privacyShow": "Apresentar valores numéricos sensíveis na aplicação"
-    }
+    },
+    "yes": "Sim",
+    "no": "Não",
+    "never": "Nunca",
+    "refreshing": "A atualizar...",
+    "clearingSyncing": "A limpar e a sincronizar...",
+    "updating": "A atualizar...",
+    "healthy": "Saudável",
+    "showLess": "Mostrar Menos",
+    "copyJson": "Copiar Tudo (JSON)",
+    "overview": "Visão Geral",
+    "unlimited": "Ilimitado",
+    "testing": "A testar...",
+    "validating": "A validar Ping...",
+    "status": "Estado",
+    "neutral": "Neutro",
+    "noData": "Sem dados",
+    "clearSearch": "Limpar pesquisa",
+    "syncingNow": "A sincronizar agora",
+    "inTime": "em",
+    "operational": "Operacional",
+    "recovering": "A recuperar...",
+    "errorConflict": "Erro / Conflito",
+    "resetting": "A repor...",
+    "syncing": "A sincronizar...",
+    "synced": "Sincronizado!",
+    "clearing": "A limpar...",
+    "cleared": "Limpo!"
   },
   "nav": {
     "dashboard": "Painel Principal",
@@ -146,7 +173,8 @@
     "apiTester": "Testador de API",
     "bybitTransactions": "Transações Bybit",
     "bitgetTransactions": "Transações Bitget",
-    "okxTransactions": "Transações OKX"
+    "okxTransactions": "Transações OKX",
+    "cryptoMultiExchange": "Cripto Multi-Exchange"
   },
   "selector": {
     "title": "Idioma e Moeda",
@@ -172,7 +200,8 @@
     "asset": "Ativo",
     "balance": "Saldo",
     "value": "Valor",
-    "exchange": "Bolsa"
+    "exchange": "Bolsa",
+    "variation": "Variação de Preço"
   },
   "unlock": {
     "title": "Cofre Encriptado",
@@ -187,7 +216,13 @@
     "confirmResetTitle": "Confirmar Reposição",
     "confirmResetDesc": "Esta ação apagará permanentemente todas as chaves e dados locais. Deseja continuar?",
     "confirmResetAction": "Sim, Limpar Tudo",
-    "cancelResetAction": "Cancelar"
+    "cancelResetAction": "Cancelar",
+    "troubleModal": {
+      "whatHappensTitle": "O que acontece ao repor?",
+      "whatHappensDesc": "Uma reposição de fábrica eliminará permanentemente todas as chaves de API guardadas localmente neste navegador, definições personalizadas e histórico de cache.",
+      "howToStartTitle": "Como voltar a utilizar?",
+      "howToStartDesc": "A aplicação será recarregada automaticamente e estará pronta para utilização! Para ligar as suas contas, basta registar as suas chaves de API novamente ou importar as Chaves de API a partir de um ficheiro de cópia de segurança gerado anteriormente (.enc)."
+    }
   },
   "welcome": {
     "title": "Bem-vindo ao Crypto Portfolio Manager",
@@ -221,7 +256,9 @@
     "statusFallback": "Modo de Segurança",
     "lastUpdated": "Atualizado às {{time}}",
     "refreshTooltip": "Atualizar cotações agora",
-    "activeBadge": "Moeda Ativa"
+    "activeBadge": "Moeda Ativa",
+    "refreshedSuccess": "Taxas de câmbio atualizadas com sucesso",
+    "refreshedError": "Não foi possível atualizar as taxas em direto. A usar taxas em cache."
   },
   "settings": {
     "title": "Definições",
@@ -290,7 +327,16 @@
     },
     "security": {
       "title": "Segurança e Cofre de Credenciais",
-      "desc": "Cópia de segurança local encriptada, exportação/importação e bloqueio automático do cofre."
+      "desc": "Cópia de segurança local encriptada, exportação/importação e bloqueio automático do cofre.",
+      "tabVault": "Cofre e Bloqueio Automático",
+      "tabExport": "Exportar Cópia de Segurança",
+      "tabImport": "Importar Cópia de Segurança",
+      "vaultTitle": "Cofre Encriptado Zero-Trust",
+      "unlocked": "Desbloqueado",
+      "locked": "Bloqueado",
+      "lockNow": "Bloquear Cofre Agora",
+      "autoLockTitle": "Bloqueio Automático por Inatividade",
+      "autoLockDesc": "Bloqueia o cofre quando inativo"
     },
     "indexedDB": {
       "title": "Motor de Armazenamento IndexedDB",
@@ -358,11 +404,26 @@
       "clearedAll": "Todo o cache limpo!",
       "recoverDbTooltip": "Eliminar e reconstruir integralmente o esquema v12 do IndexedDB para solucionar erros de versão/permissão",
       "rebuildDbBtn": "Reconstruir Base de Dados",
-      "rebuildingDb": "A reconstruir DB..."
+      "rebuildingDb": "A reconstruir DB...",
+      "prunedToast": "Removidos {{count}} registos com mais de {{days}} dias",
+      "verifying": "A verificar...",
+      "verified": "Verificado"
     },
     "version": {
       "title": "Versão e Changelog",
-      "desc": "Detalhes do lançamento do sistema, histórico de versões e ligações do repositório."
+      "desc": "Detalhes do lançamento do sistema, histórico de versões e ligações do repositório.",
+      "newAvailable": "Nova Versão Disponível",
+      "readyInstall": "Pronto a instalar",
+      "updateBtn": "Atualizar Agora",
+      "currentVersion": "Versão Atual",
+      "releaseDate": "Data de Lançamento",
+      "repoSource": "Fonte do Repositório",
+      "clickHere": "Clique aqui",
+      "indexedDbLabel": "Base de Dados de Cache IndexedDB",
+      "clearCache": "Limpar Cache",
+      "highlights": "Destaques da Última Versão (v{{version}})",
+      "viewPrevious": "Ver Versões Anteriores",
+      "fullChangelog": "CHANGELOG.md Completo"
     },
     "preferencesTesting": "Preferências & Testes",
     "preferencesDesc": "Preferências do utilizador e ferramentas de teste",
@@ -514,7 +575,8 @@
       "fundingBias": "Tendência de Fees de Funding: {{bias}}. Avaliado com base no peso das posições perpétuas e taxas atuais de funding.",
       "btcDominance": "Estimativa de Dominância de Mercado do Bitcoin: ~{{dominance}}%. Reflete a fatia de alocação de capital na principal referência de cripto.",
       "tacticalAdvice": "Recomendação tática contextual calculada a partir do regime de mercado, momentum do sentimento e risco de alavancagem."
-    }
+    },
+    "sourceTitle": "Fonte de Dados: API Alternative.me Crypto Fear & Greed Index"
   },
   "positions": {
     "title": "Open Positions",
@@ -930,7 +992,8 @@
       "noTxAvailable": "Nenhuma transação disponível",
       "grandTotal": "Total Geral",
       "byExchange": "Detalhamento por Corretora",
-      "txs": "transações"
+      "txs": "transações",
+      "totalEq": "Total Equivalente"
     },
     "report": {
       "description": "Desempenho operacional detalhado por ativo, calculando retornos absolutos, distribuição de trades, impacto de funding e comissões.",
@@ -970,7 +1033,9 @@
       "totalCashFlow": "Fluxo de Caixa Total",
       "feesPaid": "Comissões Pagas",
       "dailyAvgRoi": "ROI Médio Diário",
-      "pctPerDay": "{{value}}%/dia"
+      "pctPerDay": "{{value}}%/dia",
+      "activeDays": "{{count}} dias ativos",
+      "tradesCount": "{{count}} operações"
     },
     "filters": {
       "searchPlaceholder": "Pesquisar símbolo...",
@@ -1003,7 +1068,8 @@
       "dmcbl": "Futuros Coin-M",
       "margin": "Margem",
       "swap": "Swap Perpétuo",
-      "futures": "Futuros"
+      "futures": "Futuros",
+      "others": "Outros"
     },
     "bybit": {
       "title": "Transações Bybit",
@@ -1084,7 +1150,8 @@
       "selectAsset": "Selecionar Ativo",
       "searchSymbol": "Procurar símbolo...",
       "searchCoinOrContract": "Procurar moeda ou contrato...",
-      "noData": "Nenhuns dados analíticos disponíveis para os parâmetros selecionados."
+      "noData": "Nenhuns dados analíticos disponíveis para os parâmetros selecionados.",
+      "allInstruments": "Todos os Instrumentos"
     },
     "portfolio": {
       "title": "Desempenho do Portfólio",
@@ -1262,7 +1329,8 @@
         "cumulative30d": "Acumulado 30 Dias",
         "annualizedYield": "Rendimento Carry Anualizado",
         "longsPayShorts": "Longs pagam Shorts",
-        "shortsPayLongs": "Shorts pagam Longs"
+        "shortsPayLongs": "Shorts pagam Longs",
+        "marketOverview": "Visão Geral do Mercado"
       },
       "comparison": {
         "title": "Comparativo de Taxas Cross-Exchange",
@@ -1272,6 +1340,10 @@
         "bestOpportunity": "Melhor Oportunidade de Yield",
         "selectSymbols": "Selecionar símbolos...",
         "noSymbolsFound": "Nenhum símbolo encontrado."
+      },
+      "tabs": {
+        "overview": "Visão Histórica Geral",
+        "comparison": "Comparação de Taxas de Funding"
       }
     },
     "reports": {
@@ -1382,7 +1454,11 @@
       "saveBtn": "Guardar Chave de API",
       "cancelBtn": "Cancelar",
       "deleteConfirmTitle": "Eliminar Chave de API?",
-      "deleteConfirmMsg": "Tem a certeza de que pretende remover esta chave de API? O rastreio ativo para esta corretora será desligado."
+      "deleteConfirmMsg": "Tem a certeza de que pretende remover esta chave de API? O rastreio ativo para esta corretora será desligado.",
+      "labelLabel": "Etiqueta da Ligação",
+      "apiSecretPlaceholder": "Insira o Segredo da API",
+      "passphrasePlaceholder": "Insira a Frase-passe",
+      "saveChangesBtn": "Guardar Alterações"
     },
     "vault": {
       "setupTitle": "Configurar Cofre de Segurança",
@@ -1391,8 +1467,32 @@
       "confirmPlaceholder": "Confirme a palavra-passe mestra",
       "activateBtn": "Ativar Cofre de Segurança",
       "passphraseMismatch": "As palavras-passe não coincidem. Verifique ambos os campos.",
-      "passphraseTooShort": "A Palavra-passe Mestra deve conter pelo menos 8 carateres."
-    }
+      "passphraseTooShort": "A Palavra-passe Mestra deve conter pelo menos 8 carateres.",
+      "passphraseMinLength": "A Frase-passe Mestra deve ter pelo menos 8 carateres.",
+      "encryptFailed": "Falha ao encriptar credenciais legadas.",
+      "upgradeBadge": "Ação Necessária • Atualização de Segurança",
+      "mandatoryTitle": "Encriptação Obrigatória no Cofre",
+      "legacyDetectedTitle": "Credenciais Legadas em Texto Limpo Detetadas",
+      "legacyDetectedDesc": "Detetámos {{count}} ligação(ões) de chaves de API guardadas sem encriptação de uma versão anterior. Para garantir segurança zero-trust e impedir o acesso não autorizado por scripts ou extensões do navegador, deve definir uma Frase-passe Mestra para encriptar as suas credenciais com PBKDF2 de nível militar (600.000 iterações) e AES-GCM-256 antes de aceder ao terminal.",
+      "detectedConnections": "Ligações Detetadas para Proteger ({{count}}):",
+      "createPassphraseLabel": "Criar Frase-passe Mestra",
+      "confirmPassphraseLabel": "Confirmar Frase-passe Mestra",
+      "encrypting": "A encriptar Credenciais...",
+      "encryptUnlockBtn": "Encriptar Chaves e Desbloquear Terminal",
+      "dontNeedKeys": "Não precisa destas credenciais?",
+      "discardPrompt": "Eliminar chaves e começar do zero",
+      "discardDialogTitle": "Eliminar Credenciais Legadas?",
+      "discardDialogDesc": "Isto eliminará permanentemente as {{count}} chaves de API não encriptadas do armazenamento do seu navegador. Terá de adicioná-las novamente após configurar um cofre.",
+      "discardConfirmBtn": "Sim, Eliminar",
+      "setupRequired": "Configuração Necessária",
+      "setupDesc": "Para garantir segurança máxima, chaves de API reais e o auditor PIKA AI exigem um cofre ativo. A sua frase-passe mestra encripta todos os dados confidenciais estritamente dentro da memória e armazenamento locais do navegador."
+    },
+    "vaultRequired": "Antes de adicionar chaves de API das exchanges, o Cofre de Segurança Zero-Trust deve ser ativado para garantir que todas as suas credenciais sejam encriptadas localmente.",
+    "noKeysDesc": "Ligue as suas chaves de API só de leitura da Bitget, Bybit ou OKX para monitorizar saldos consolidados, posições abertas e métricas de risco.",
+    "activateVaultBtn": "Ativar Cofre e Adicionar Chave",
+    "addFirstKeyBtn": "Adicionar Primeira Chave de API",
+    "noFundingBadge": "Sem Taxa de Financiamento",
+    "deleteConfirmPrompt": "Eliminar chave?"
   },
   "ai": {
     "settings": {
@@ -1411,7 +1511,8 @@
         "cloneBtn": "Clonar",
         "editBtn": "Editar",
         "deleteBtn": "Eliminar",
-        "noModels": "Nenhum modelo de IA registado. Adicione um modelo para iniciar."
+        "noModels": "Nenhum modelo de IA registado. Adicione um modelo para iniciar.",
+        "totalModels": "Total de Modelos:"
       },
       "modal": {
         "addTitle": "Adicionar Modelo de IA",
@@ -1428,7 +1529,8 @@
         "isFallback": "Ativar como Contingência (Fallback)",
         "isActive": "Ativo",
         "saveBtn": "Guardar Modelo",
-        "cancelBtn": "Cancelar"
+        "cancelBtn": "Cancelar",
+        "proceedAnyway": "Prosseguir Mesmo Assim e Guardar"
       },
       "telemetry": {
         "title": "Telemetria e Consumo do Motor de IA",
@@ -1451,8 +1553,83 @@
         "latency": "Latência",
         "detailsBtn": "Inspecionar Detalhes",
         "clearBtn": "Limpar Histórico de Auditoria",
-        "noLogs": "Nenhuma atividade de IA registada até ao momento."
+        "noLogs": "Nenhuma atividade de IA registada até ao momento.",
+        "modalTitle": "Auditor e Depurador PIKA AI",
+        "promptRequest": "Prompt e Pedido (Em Bruto)",
+        "toolsContext": "Ferramentas e Contexto Local",
+        "clearConfirmTitle": "Limpar Registos de Auditoria?",
+        "clearConfirmDesc": "Tem a certeza de que deseja eliminar todos os registos de execução locais? Isto não pode ser anulado."
+      },
+      "dailyTokens": {
+        "title": "Consumo Diário de Tokens (Últimos 7 Dias)",
+        "subtitle": "Monitorização diária dos volumes de tokens de prompt e conclusão",
+        "noData": "Nenhum consumo diário de tokens registado ainda."
+      },
+      "modelStats": {
+        "title": "Estatísticas por Modelo de IA",
+        "subtitle": "Detalhamento de volume de inferência, latência média e eficiência de tokens por modelo",
+        "modelProvider": "Modelo e Fornecedor",
+        "tokensPromptCompl": "Tokens (Prompt/Concl)",
+        "avgCall": "Média/Chamada",
+        "lastUsed": "Última Utilização",
+        "noData": "Nenhum dado de inferência registado ainda. As estatísticas serão preenchidas à medida que o assistente for utilizado."
+      },
+      "activeBadge": "Ativo na Aplicação",
+      "disabledBadge": "Desativado (Predefinição)",
+      "description": "Portfolio Information & Knowledge Assistant — Auditoria quantitativa, análise de cobertura (hedge) e diagnósticos de comissões com suporte para modelos locais (Ollama) ou endpoints em nuvem seguros com failover automático.",
+      "activeGlobally": "Ativo globalmente",
+      "disabledByDefault": "Desativado por predefinição",
+      "zeroTrustActive": "Zero-Trust Ativo: As chaves de API das exchanges nunca são incluídas nos pedidos de IA.",
+      "globalInferenceTitle": "Parâmetros Globais de Inferência e Segurança",
+      "globalInferenceSubtitle": "Ajuste a lógica de contingência de recurso, parâmetros de temperatura e diretrizes de sistema do assistente",
+      "autoFailover": "Failover Automático (Recurso)",
+      "autoFailoverDesc": "Alterna automaticamente para modelos de reserva quando o principal estiver indisponível",
+      "obfuscation": "Ofuscação de Valores Financeiros",
+      "obfuscationDesc": "Normaliza os saldos brutos em ponderações percentuais antes de consultar modelos na nuvem",
+      "defaultTemp": "Temperatura Predefinida",
+      "tempDesc": "Valores baixos (0,10) eliminam alucinações criativas e garantem consistência analítica.",
+      "systemPromptLabel": "Instruções de Base do Sistema (System Prompt)",
+      "systemPromptDesc": "Diretrizes estritas garantem segurança só de leitura, âmbito analítico fechado e cálculos precisos.",
+      "telemetrySubtitle": "Métricas consolidadas de desempenho, latência média e estatísticas de consumo de tokens",
+      "resetMetrics": "Repor Métricas"
+    },
+    "cancelled": {
+      "defaultMsg": "A geração da resposta foi cancelada pelo utilizador.",
+      "title": "Análise Interrompida",
+      "badge": "Cancelado",
+      "retry": "Tentar Novamente",
+      "inspectAudit": "Inspecionar Auditoria"
+    },
+    "quickActions": {
+      "liquidationRisk": {
+        "title": "Risco de Liquidação",
+        "subtitle": "Auditar níveis de margem e distância até ao preço de liquidação",
+        "prompt": "Realize uma auditoria de risco de liquidação nas minhas posições abertas."
+      },
+      "hedgeImbalance": {
+        "title": "Desequilíbrio de Cobertura (Hedge)",
+        "subtitle": "Identificar divergências de delta de volume entre posições",
+        "prompt": "Identifique qualquer divergência de volume e exposição líquida de delta nas minhas posições em hedge."
+      },
+      "fundingEfficiency": {
+        "title": "Eficiência de Funding",
+        "subtitle": "Rever pagamentos acumulados de funding nos últimos 7 dias",
+        "prompt": "Gere um resumo das taxas de funding dos últimos 7 dias: estou a pagar ou a receber taxas em termos líquidos?"
+      },
+      "portfolioOverview": {
+        "title": "Visão Geral do Portfólio",
+        "subtitle": "Património consolidado, PnL aberto e distribuição por exchange",
+        "prompt": "Gere um resumo executivo consolidado com património líquido total, PnL não realizado e alocação por exchange."
       }
+    },
+    "toolBadges": {
+      "balances": "A ler saldos consolidados do portfólio...",
+      "openPositions": "A consultar posições abertas nas exchanges...",
+      "hedgeCorrelation": "A calcular correlação de cobertura e divergência de exposição...",
+      "fundingFees": "A obter histórico de taxas de funding do IndexedDB...",
+      "tradingFees": "A analisar histórico de comissões e taxas de negociação...",
+      "closedPositions": "A analisar histórico de posições encerradas...",
+      "default": "A executar ferramenta local: {{name}}..."
     }
   },
   "toasts": {
@@ -1618,5 +1795,32 @@
       "clearCache": "A limpar todo o cache da aplicação...",
       "clearTxCache": "A limpar cache de registos de transações..."
     }
+  },
+  "errorBoundary": {
+    "title": "Erro de Renderização do Componente",
+    "descriptionIsolated": "Ocorreu um erro inesperado dentro do componente ",
+    "descriptionGlobal": "Ocorreu uma exceção não tratada na renderização. A aplicação encontrou um estado inesperado.",
+    "retryModule": "Tentar Módulo Novamente",
+    "reloadPage": "Recarregar Página",
+    "resetting": "A repor...",
+    "clearCacheReload": "Limpar Cache e Recarregar",
+    "copyDetails": "Copiar detalhes do erro para a área de transferência",
+    "copied": "Copiado",
+    "copyReport": "Copiar Relatório"
+  },
+  "currencyDiagnostics": {
+    "testSuccess": "Conetividade da API de moedas verificada com sucesso",
+    "testError": "Falha ao ligar a uma ou mais APIs de moedas",
+    "connected": "Ligado",
+    "cached": "Em Cache",
+    "offline": "Offline",
+    "never": "Nunca",
+    "title": "Diagnósticos da API de Moedas",
+    "subtitle": "Monitor de integridade de ligação e latência em direto",
+    "testing": "A testar...",
+    "testBtn": "Testar Ligação",
+    "lastSync": "Última Sincronização",
+    "latency": "Latência",
+    "quote": "Cotação Atual"
   }
 }

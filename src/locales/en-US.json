@@ -120,7 +120,34 @@
       "helpClose": "Close welcome & help guide",
       "privacyHide": "Hide sensitive numeric values across the application",
       "privacyShow": "Show sensitive numeric values across the application"
-    }
+    },
+    "yes": "Yes",
+    "no": "No",
+    "never": "Never",
+    "refreshing": "Refreshing...",
+    "clearingSyncing": "Clearing & Syncing...",
+    "updating": "Updating...",
+    "healthy": "Healthy",
+    "showLess": "Show Less",
+    "copyJson": "Copy All (JSON)",
+    "overview": "Overview",
+    "unlimited": "Unlimited",
+    "testing": "Testing...",
+    "validating": "Validating Ping...",
+    "status": "Status",
+    "neutral": "Neutral",
+    "noData": "No data",
+    "clearSearch": "Clear search",
+    "syncingNow": "Syncing now",
+    "inTime": "in",
+    "operational": "Operational",
+    "recovering": "Recovering...",
+    "errorConflict": "Error / Conflict",
+    "resetting": "Resetting...",
+    "syncing": "Syncing...",
+    "synced": "Synced!",
+    "clearing": "Clearing...",
+    "cleared": "Cleared!"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -146,7 +173,8 @@
     "apiTester": "API Tester",
     "bybitTransactions": "Bybit Transactions",
     "bitgetTransactions": "Bitget Transactions",
-    "okxTransactions": "OKX Transactions"
+    "okxTransactions": "OKX Transactions",
+    "cryptoMultiExchange": "Crypto Multi-Exchange"
   },
   "selector": {
     "title": "Language & Currency",
@@ -172,7 +200,8 @@
     "asset": "Asset",
     "balance": "Balance",
     "value": "Value",
-    "exchange": "Exchange"
+    "exchange": "Exchange",
+    "variation": "Price Variation"
   },
   "unlock": {
     "title": "Encrypted Storage",
@@ -187,7 +216,13 @@
     "confirmResetTitle": "Confirm Reset",
     "confirmResetDesc": "This will permanently delete all stored API keys and local data. Are you sure you want to continue?",
     "confirmResetAction": "Yes, Clear Everything",
-    "cancelResetAction": "Cancel"
+    "cancelResetAction": "Cancel",
+    "troubleModal": {
+      "whatHappensTitle": "What happens upon resetting?",
+      "whatHappensDesc": "A factory reset will permanently delete any API keys stored locally in this browser, custom settings and cache history.",
+      "howToStartTitle": "How to start using again?",
+      "howToStartDesc": "The app will reload automatically and will be ready to use! To connect your accounts, just register your API keys again or import the API Keys from a previously generated backup file (.enc)."
+    }
   },
   "welcome": {
     "title": "Welcome to Crypto Portfolio Manager",
@@ -221,7 +256,9 @@
     "statusFallback": "Safety Mode",
     "lastUpdated": "Updated at {{time}}",
     "refreshTooltip": "Refresh rates now",
-    "activeBadge": "Active Currency"
+    "activeBadge": "Active Currency",
+    "refreshedSuccess": "Currency rates refreshed successfully",
+    "refreshedError": "Could not refresh live rates. Using cached rates."
   },
   "settings": {
     "title": "Settings",
@@ -290,7 +327,16 @@
     },
     "security": {
       "title": "Security & Credential Vault",
-      "desc": "Encrypted local key backup, export/import and automated vault locking."
+      "desc": "Encrypted local key backup, export/import and automated vault locking.",
+      "tabVault": "Vault & Auto-Lock",
+      "tabExport": "Export Backup",
+      "tabImport": "Import Backup",
+      "vaultTitle": "Zero-Trust Encrypted Vault",
+      "unlocked": "Unlocked",
+      "locked": "Locked",
+      "lockNow": "Lock Vault Now",
+      "autoLockTitle": "Auto-Lock on Inactivity",
+      "autoLockDesc": "Locks vault when idle"
     },
     "indexedDB": {
       "title": "IndexedDB Storage Engine",
@@ -358,11 +404,26 @@
       "clearedAll": "Cleared All!",
       "recoverDbTooltip": "Completely delete and rebuild IndexedDB schema v12 to resolve version/permission errors",
       "rebuildDbBtn": "Rebuild Database",
-      "rebuildingDb": "Rebuilding DB..."
+      "rebuildingDb": "Rebuilding DB...",
+      "prunedToast": "Pruned {{count}} records older than {{days}} days",
+      "verifying": "Checking...",
+      "verified": "Verified"
     },
     "version": {
       "title": "Version & Changelog",
-      "desc": "System release details, changelog history and repository links."
+      "desc": "System release details, changelog history and repository links.",
+      "newAvailable": "New Version Available",
+      "readyInstall": "Ready to install",
+      "updateBtn": "Update Now",
+      "currentVersion": "Current Version",
+      "releaseDate": "Release Date",
+      "repoSource": "Repository Source",
+      "clickHere": "Click here",
+      "indexedDbLabel": "IndexedDB Cache Database",
+      "clearCache": "Clear Cache",
+      "highlights": "Latest Release Highlights (v{{version}})",
+      "viewPrevious": "View Previous Releases",
+      "fullChangelog": "Full CHANGELOG.md"
     },
     "preferencesTesting": "Preferences & Testing",
     "preferencesDesc": "User preferences and testing tools",
@@ -514,7 +575,8 @@
       "fundingBias": "Market Funding Bias: {{bias}}. Evaluated using active perpetual position weights and current funding rates.",
       "btcDominance": "Estimated Bitcoin Market Dominance: ~{{dominance}}%. Reflects capital allocation share in top crypto benchmark.",
       "tacticalAdvice": "Contextual tactical recommendation calculated from market regime, sentiment momentum, and leverage risk."
-    }
+    },
+    "sourceTitle": "Data Source: Alternative.me Crypto Fear & Greed Index API"
   },
   "positions": {
     "title": "Open Positions",
@@ -930,7 +992,8 @@
       "noTxAvailable": "No transactions available",
       "grandTotal": "Grand Total",
       "byExchange": "Breakdown by Exchange Venue",
-      "txs": "txs"
+      "txs": "txs",
+      "totalEq": "Total Equivalent"
     },
     "report": {
       "description": "Detailed operational performance by asset, calculating absolute returns, trade distributions, funding impact, and fees.",
@@ -970,7 +1033,9 @@
       "totalCashFlow": "Total Cash Flow",
       "feesPaid": "Fees Paid",
       "dailyAvgRoi": "Daily Avg ROI",
-      "pctPerDay": "{{value}}%/day"
+      "pctPerDay": "{{value}}%/day",
+      "activeDays": "{{count}} active days",
+      "tradesCount": "{{count}} trades"
     },
     "filters": {
       "searchPlaceholder": "Search symbol...",
@@ -1003,7 +1068,8 @@
       "dmcbl": "Coin-M Futures",
       "margin": "Margin",
       "swap": "Perpetual Swap",
-      "futures": "Futures"
+      "futures": "Futures",
+      "others": "Other"
     },
     "bybit": {
       "title": "Bybit Transactions",
@@ -1084,7 +1150,8 @@
       "selectAsset": "Select Asset",
       "searchSymbol": "Search symbol...",
       "searchCoinOrContract": "Search coin or contract...",
-      "noData": "No analytics data available for the selected parameters."
+      "noData": "No analytics data available for the selected parameters.",
+      "allInstruments": "All Instruments"
     },
     "portfolio": {
       "title": "Portfolio Performance",
@@ -1262,7 +1329,8 @@
         "cumulative30d": "Cumulative 30 Days",
         "annualizedYield": "Annualized Carry Yield",
         "longsPayShorts": "Longs pay Shorts",
-        "shortsPayLongs": "Shorts pay Longs"
+        "shortsPayLongs": "Shorts pay Longs",
+        "marketOverview": "Market Overview"
       },
       "comparison": {
         "title": "Cross-Exchange Rate Comparison",
@@ -1272,6 +1340,10 @@
         "bestOpportunity": "Best Yield Opportunity",
         "selectSymbols": "Select symbols...",
         "noSymbolsFound": "No symbols found."
+      },
+      "tabs": {
+        "overview": "Historical Overview",
+        "comparison": "Funding Rate Comparison"
       }
     },
     "reports": {
@@ -1382,7 +1454,11 @@
       "saveBtn": "Save API Key",
       "cancelBtn": "Cancel",
       "deleteConfirmTitle": "Delete API Key?",
-      "deleteConfirmMsg": "Are you sure you want to remove this API key? Active tracking for this exchange will be disconnected."
+      "deleteConfirmMsg": "Are you sure you want to remove this API key? Active tracking for this exchange will be disconnected.",
+      "labelLabel": "Connection Label",
+      "apiSecretPlaceholder": "Enter API Secret",
+      "passphrasePlaceholder": "Enter Passphrase",
+      "saveChangesBtn": "Save Changes"
     },
     "vault": {
       "setupTitle": "Set Up Security Vault",
@@ -1391,8 +1467,32 @@
       "confirmPlaceholder": "Confirm master passphrase",
       "activateBtn": "Activate Security Vault",
       "passphraseMismatch": "Passphrases do not match. Please verify both fields.",
-      "passphraseTooShort": "Master Passphrase must be at least 8 characters long."
-    }
+      "passphraseTooShort": "Master Passphrase must be at least 8 characters long.",
+      "passphraseMinLength": "Master Passphrase must be at least 8 characters long.",
+      "encryptFailed": "Failed to encrypt legacy credentials.",
+      "upgradeBadge": "Action Required • Security Upgrade",
+      "mandatoryTitle": "Mandatory Vault Encryption",
+      "legacyDetectedTitle": "Legacy Plaintext Credentials Detected",
+      "legacyDetectedDesc": "We detected {{count}} API key connection(s) stored without encryption from a prior version. To guarantee zero-trust security and prevent unauthorized access by browser scripts or extensions, you must set a Master Passphrase to encrypt your credentials with military-grade PBKDF2 (600,000 iterations) and AES-GCM-256 before accessing the terminal.",
+      "detectedConnections": "Detected Connections to Secure ({{count}}):",
+      "createPassphraseLabel": "Create Master Passphrase",
+      "confirmPassphraseLabel": "Confirm Master Passphrase",
+      "encrypting": "Encrypting Credentials...",
+      "encryptUnlockBtn": "Encrypt Keys & Unlock Terminal",
+      "dontNeedKeys": "Don't need these credentials?",
+      "discardPrompt": "Discard keys & start fresh",
+      "discardDialogTitle": "Discard Legacy Credentials?",
+      "discardDialogDesc": "This will permanently delete the {{count}} unencrypted API keys from your browser storage. You will need to re-add them after setting up a vault.",
+      "discardConfirmBtn": "Yes, Discard",
+      "setupRequired": "Setup Required",
+      "setupDesc": "To ensure maximum safety, real API keys and the PIKA AI auditor require an active vault. Your master passphrase encrypts all sensitive data strictly within your local browser memory and storage."
+    },
+    "vaultRequired": "Before adding exchange API keys, the Zero-Trust Security Vault must be activated to ensure all your credentials are encrypted locally.",
+    "noKeysDesc": "Connect your Bitget, Bybit, or OKX read-only API keys to monitor consolidated balances, open positions, and risk metrics.",
+    "activateVaultBtn": "Activate Vault & Add Key",
+    "addFirstKeyBtn": "Add First API Key",
+    "noFundingBadge": "No Funding",
+    "deleteConfirmPrompt": "Delete key?"
   },
   "ai": {
     "settings": {
@@ -1411,7 +1511,8 @@
         "cloneBtn": "Clone",
         "editBtn": "Edit",
         "deleteBtn": "Delete",
-        "noModels": "No AI models registered. Add a model to start."
+        "noModels": "No AI models registered. Add a model to start.",
+        "totalModels": "Total Models:"
       },
       "modal": {
         "addTitle": "Add AI Model",
@@ -1428,7 +1529,8 @@
         "isFallback": "Enable as Contingency / Fallback",
         "isActive": "Active",
         "saveBtn": "Save Model",
-        "cancelBtn": "Cancel"
+        "cancelBtn": "Cancel",
+        "proceedAnyway": "Proceed Anyway & Save"
       },
       "telemetry": {
         "title": "AI Engine Telemetry & Consumption",
@@ -1451,8 +1553,83 @@
         "latency": "Latency",
         "detailsBtn": "Inspect Details",
         "clearBtn": "Clear Audit History",
-        "noLogs": "No AI activity logged yet."
+        "noLogs": "No AI activity logged yet.",
+        "modalTitle": "PIKA AI Auditor & Debugger",
+        "promptRequest": "Prompt & Request (Raw)",
+        "toolsContext": "Tools & Local Context",
+        "clearConfirmTitle": "Clear Audit Logs?",
+        "clearConfirmDesc": "Are you sure you want to delete all local execution logs? This cannot be undone."
+      },
+      "dailyTokens": {
+        "title": "Daily Token Consumption (Last 7 Days)",
+        "subtitle": "Daily monitoring of prompt and completion token volumes",
+        "noData": "No daily token consumption recorded yet."
+      },
+      "modelStats": {
+        "title": "Statistics by AI Model",
+        "subtitle": "Detailed breakdown of inference volume, average latency, and token efficiency per model",
+        "modelProvider": "Model & Provider",
+        "tokensPromptCompl": "Tokens (Prompt/Compl)",
+        "avgCall": "Avg/Call",
+        "lastUsed": "Last Used",
+        "noData": "No inference data recorded yet. Statistics will populate as the assistant is used."
+      },
+      "activeBadge": "Active in App",
+      "disabledBadge": "Disabled (Default)",
+      "description": "Portfolio Information & Knowledge Assistant — Quantitative auditing, hedge analysis, and commission diagnostics with support for local models (Ollama) or secure cloud endpoints with automated failover.",
+      "activeGlobally": "Active globally",
+      "disabledByDefault": "Disabled by default",
+      "zeroTrustActive": "Zero-Trust Active: Exchange API keys are never included in AI prompts.",
+      "globalInferenceTitle": "Global Inference & Safety Parameters",
+      "globalInferenceSubtitle": "Adjust fallback contingency logic, temperature parameters, and assistant system guidelines",
+      "autoFailover": "Automatic Failover (Fallback)",
+      "autoFailoverDesc": "Switch to backup models automatically when primary is unavailable",
+      "obfuscation": "Financial Value Obfuscation",
+      "obfuscationDesc": "Normalize raw balances into percentage weightings before querying cloud models",
+      "defaultTemp": "Default Temperature",
+      "tempDesc": "Low values (0.10) eliminate creative hallucinations and guarantee analytical consistency.",
+      "systemPromptLabel": "Base System Instructions (System Prompt)",
+      "systemPromptDesc": "Hardcoded directives enforce read-only safety, closed analytical scope, and accurate calculations.",
+      "telemetrySubtitle": "Consolidated performance metrics, average latency, and token consumption statistics",
+      "resetMetrics": "Reset Metrics"
+    },
+    "cancelled": {
+      "defaultMsg": "Response generation was cancelled by user.",
+      "title": "Analysis Interrupted",
+      "badge": "Aborted",
+      "retry": "Retry",
+      "inspectAudit": "Inspect Audit"
+    },
+    "quickActions": {
+      "liquidationRisk": {
+        "title": "Liquidation Risk",
+        "subtitle": "Audit margin levels & liquidation price distance",
+        "prompt": "Perform a liquidation risk audit on my currently open positions."
+      },
+      "hedgeImbalance": {
+        "title": "Hedge Imbalance",
+        "subtitle": "Identify volume delta mismatch across positions",
+        "prompt": "Identify any volume mismatch and net delta exposure across my hedged positions."
+      },
+      "fundingEfficiency": {
+        "title": "Funding Efficiency",
+        "subtitle": "Review 7-day cumulative funding payments",
+        "prompt": "Generate a summary of funding fees over the last 7 days: am I net paying or receiving fees?"
+      },
+      "portfolioOverview": {
+        "title": "Portfolio Overview",
+        "subtitle": "Consolidated equity, open PnL & exchange shares",
+        "prompt": "Generate a consolidated executive summary with total net equity, unrealized PnL, and exchange allocation."
       }
+    },
+    "toolBadges": {
+      "balances": "Reading consolidated portfolio balances...",
+      "openPositions": "Querying open positions on exchanges...",
+      "hedgeCorrelation": "Calculating hedge correlation and exposure mismatch...",
+      "fundingFees": "Retrieving funding fees history from IndexedDB...",
+      "tradingFees": "Scanning historical trading commissions and fees...",
+      "closedPositions": "Analyzing closed positions history...",
+      "default": "Executing local tool: {{name}}..."
     }
   },
   "toasts": {
@@ -1618,5 +1795,32 @@
       "clearCache": "Clearing all application cache...",
       "clearTxCache": "Clearing transaction logs cache..."
     }
+  },
+  "errorBoundary": {
+    "title": "Component Render Error",
+    "descriptionIsolated": "An unexpected error occurred inside the ",
+    "descriptionGlobal": "An unhandled render exception occurred. The app encountered an unexpected state.",
+    "retryModule": "Retry Module",
+    "reloadPage": "Reload Page",
+    "resetting": "Resetting...",
+    "clearCacheReload": "Clear Cache & Reload",
+    "copyDetails": "Copy error details to clipboard",
+    "copied": "Copied",
+    "copyReport": "Copy Report"
+  },
+  "currencyDiagnostics": {
+    "testSuccess": "Currency API connectivity verified successfully",
+    "testError": "Failed to connect to one or more currency APIs",
+    "connected": "Connected",
+    "cached": "Cached",
+    "offline": "Offline",
+    "never": "Never",
+    "title": "Currency API Diagnostics",
+    "subtitle": "Live connection health & latency monitor",
+    "testing": "Testing...",
+    "testBtn": "Test Connection",
+    "lastSync": "Last Sync",
+    "latency": "Latency",
+    "quote": "Current Quote"
   }
 }

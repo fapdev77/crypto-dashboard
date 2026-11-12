@@ -16,7 +16,7 @@ export function PrivacyToggleButton() {
     >
       <button
         onClick={togglePrivacyMode}
-        className="p-2 text-fg-muted hover:text-fg bg-gray-100 dark:bg-surface border border-gray-200 dark:border-line hover:bg-gray-200 dark:hover:bg-line rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 dark:focus:ring-offset-canvas"
+        className="p-2 text-fg-muted hover:text-fg bg-surface border border-line hover:bg-elevated-hover hover:border-line-strong rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-canvas"
         aria-label={isPrivateMode ? t('common.buttons.privacyShow', 'Enable visible mode') : t('common.buttons.privacyHide', 'Enable private mode')}
       >
         {isPrivateMode ? (

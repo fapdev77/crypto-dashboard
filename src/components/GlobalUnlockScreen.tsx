@@ -5,6 +5,7 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { AppTooltip, TooltipProvider } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 import { LanguageCurrencyButton } from './ui/LanguageCurrencyButton';
+import { ThemeModeButton } from './ui/ThemeModeButton';
 
 export function GlobalUnlockScreen() {
   const { t } = useTranslation();
@@ -63,8 +64,9 @@ export function GlobalUnlockScreen() {
     <TooltipProvider>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-canvas backdrop-blur-sm">
         <div className="bg-surface border border-line rounded-xl p-8 max-w-sm w-full shadow-2xl relative">
-          {/* Standard Language & Currency Selector identical to rest of app */}
-          <div className="absolute top-4 right-4">
+          {/* Standard Language & Theme Selectors */}
+          <div className="absolute top-4 right-4 flex items-center gap-1.5">
+            <ThemeModeButton showText={false} />
             <LanguageCurrencyButton />
           </div>
 
@@ -129,10 +131,10 @@ export function GlobalUnlockScreen() {
                 align="center"
                 description={
                   <div className="space-y-1.5 text-left text-xs text-fg leading-relaxed">
-                    <p className="font-semibold text-fg">What happens upon resetting?</p>
-                    <p>A factory reset will permanently delete any API keys stored locally in this browser, custom settings and cache history.</p>
-                    <p className="font-semibold text-fg mt-1">How to start using again?</p>
-                    <p>The app will reload automatically and will be ready to use! To connect your accounts, just register your API keys again or import the API Keys from a previously generated backup file (.enc).</p>
+                    <p className="font-semibold text-fg">{t('unlock.troubleModal.whatHappensTitle', 'What happens upon resetting?')}</p>
+                    <p>{t('unlock.troubleModal.whatHappensDesc', 'A factory reset will permanently delete any API keys stored locally in this browser, custom settings and cache history.')}</p>
+                    <p className="font-semibold text-fg mt-1">{t('unlock.troubleModal.howToStartTitle', 'How to start using again?')}</p>
+                    <p>{t('unlock.troubleModal.howToStartDesc', 'The app will reload automatically and will be ready to use! To connect your accounts, just register your API keys again or import the API Keys from a previously generated backup file (.enc).')}</p>
                   </div>
                 }
               >

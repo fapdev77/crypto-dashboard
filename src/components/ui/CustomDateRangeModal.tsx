@@ -149,35 +149,35 @@ export function CustomDateRangeModal({
             <button
               type="button"
               onClick={() => applyPreset(7)}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
+              className="px-2.5 py-1 text-xs bg-elevated hover:bg-elevated-hover hover:border-line-strong text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.last7Days', 'Last 7 Days')}
             </button>
             <button
               type="button"
               onClick={() => applyPreset(30)}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
+              className="px-2.5 py-1 text-xs bg-elevated hover:bg-elevated-hover hover:border-line-strong text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.last30Days', 'Last 30 Days')}
             </button>
             <button
               type="button"
               onClick={applyThisMonth}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
+              className="px-2.5 py-1 text-xs bg-elevated hover:bg-elevated-hover hover:border-line-strong text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.thisMonth', 'This Month (MTD)')}
             </button>
             <button
               type="button"
               onClick={applyLastMonth}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
+              className="px-2.5 py-1 text-xs bg-elevated hover:bg-elevated-hover hover:border-line-strong text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.lastMonth', 'Last Month')}
             </button>
             <button
               type="button"
               onClick={applyThisYear}
-              className="px-2.5 py-1 text-xs bg-[#202227] hover:bg-accent/20 hover:text-fg text-fg rounded-md border border-line transition-colors"
+              className="px-2.5 py-1 text-xs bg-elevated hover:bg-elevated-hover hover:border-line-strong text-fg rounded-md border border-line transition-colors"
             >
               {t('common.customDateModal.thisYear', 'This Year (YTD)')}
             </button>

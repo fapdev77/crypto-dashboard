@@ -182,7 +182,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                 <img src={logo1} alt="Logo" className="w-8 h-8 object-contain shrink-0" />
                 <span className="text-[15px] font-bold leading-tight">
                   Portfolio Manager
-                  <span className="block text-[11px] text-fg-muted font-normal tracking-wide mt-0.5">Crypto Multi-Exchange</span>
+                  <span className="block text-[11px] text-fg-muted font-normal tracking-wide mt-0.5">{t('nav.cryptoMultiExchange', 'Crypto Multi-Exchange')}</span>
                 </span>
               </div>
             </h1>

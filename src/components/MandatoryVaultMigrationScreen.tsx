@@ -35,12 +35,12 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
     setError('');
 
     if (!passphrase || passphrase.length < 8) {
-      setError('Master Passphrase must be at least 8 characters long.');
+      setError(t('apiKeys.vault.passphraseMinLength', 'Master Passphrase must be at least 8 characters long.'));
       return;
     }
 
     if (passphrase !== confirmPassphrase) {
-      setError('Passphrases do not match. Please verify both fields.');
+      setError(t('apiKeys.vault.passphraseMismatch', 'Passphrases do not match. Please verify both fields.'));
       return;
     }
 
@@ -54,7 +54,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
       });
       onMigrated();
     } catch (err: any) {
-      setError(err?.message || 'Failed to encrypt legacy credentials.');
+      setError(err?.message || t('apiKeys.vault.encryptFailed', 'Failed to encrypt legacy credentials.'));
       toast.error(t('toasts.vaultMigrationFailed', 'Encryption migration failed. Please try again.'));
     } finally {
       setIsSubmitting(false);
@@ -84,7 +84,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                Action Required • Security Upgrade
+                {t('apiKeys.vault.upgradeBadge', 'Action Required • Security Upgrade')}
               </span>
               <h2 className="text-lg sm:text-xl font-bold text-fg mt-1">
                 {t('apiKeys.vault.mandatoryTitle', 'Mandatory Vault Encryption')}
@@ -100,17 +100,17 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
         <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-5 space-y-1.5 text-xs">
           <div className="flex items-center gap-1.5 text-amber-300 font-semibold">
             <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
-            <span>Legacy Plaintext Credentials Detected</span>
+            <span>{t('apiKeys.vault.legacyDetectedTitle', 'Legacy Plaintext Credentials Detected')}</span>
           </div>
           <p className="text-fg text-[11px] leading-relaxed">
-            We detected <strong className="text-fg">{legacyKeys.length}</strong> API key connection(s) stored without encryption from a prior version. To guarantee zero-trust security and prevent unauthorized access by browser scripts or extensions, you must set a Master Passphrase to encrypt your credentials with military-grade PBKDF2 (600,000 iterations) and AES-GCM-256 before accessing the terminal.
+            {t('apiKeys.vault.legacyDetectedDesc', 'We detected {{count}} API key connection(s) stored without encryption from a prior version. To guarantee zero-trust security and prevent unauthorized access by browser scripts or extensions, you must set a Master Passphrase to encrypt your credentials with military-grade PBKDF2 (600,000 iterations) and AES-GCM-256 before accessing the terminal.', { count: legacyKeys.length })}
           </p>
         </div>
 
         {/* Detected Keys Summary */}
         <div className="mb-5 space-y-2">
           <label className="text-xs font-medium text-fg-muted uppercase tracking-wider block">
-            Detected Connections to Secure ({legacyKeys.length}):
+            {t('apiKeys.vault.detectedConnections', 'Detected Connections to Secure ({{count}}):', { count: legacyKeys.length })}
           </label>
           <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1 divide-y divide-line bg-canvas border border-line rounded-xl p-2.5">
             {legacyKeys.map((k, idx) => (
@@ -202,14 +202,14 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
 
         {/* Secondary Option: Discard Old Keys */}
         <div className="mt-6 pt-4 border-t border-line/80 flex items-center justify-between text-xs">
-          <span className="text-fg-muted">Don&apos;t need these credentials?</span>
+          <span className="text-fg-muted">{t('apiKeys.vault.dontNeedKeys', "Don't need these credentials?")}</span>
           <button
             type="button"
             onClick={() => setShowDiscardConfirm(true)}
             className="text-fg-muted hover:text-rose-400 transition-colors flex items-center gap-1.5 underline"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Discard keys & start fresh</span>
+            <span>{t('apiKeys.vault.discardPrompt', 'Discard keys & start fresh')}</span>
           </button>
         </div>
 
@@ -221,9 +221,9 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-fg">Discard Legacy Credentials?</h3>
+                <h3 className="text-sm font-bold text-fg">{t('apiKeys.vault.discardDialogTitle', 'Discard Legacy Credentials?')}</h3>
                 <p className="text-xs text-fg-muted mt-1 leading-relaxed">
-                  This will permanently delete the {legacyKeys.length} unencrypted API keys from your browser storage. You will need to re-add them after setting up a vault.
+                  {t('apiKeys.vault.discardDialogDesc', 'This will permanently delete the {{count}} unencrypted API keys from your browser storage. You will need to re-add them after setting up a vault.', { count: legacyKeys.length })}
                 </p>
               </div>
               <div className="flex gap-2">

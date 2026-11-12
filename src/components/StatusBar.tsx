@@ -44,7 +44,7 @@ export function StatusBar() {
 
   if (keys.length === 0 && !useMockData) {
     return (
-      <div className="h-8 bg-canvas border-t border-[#1f2937] flex items-center px-4 shrink-0 select-none overflow-x-auto hide-scrollbar">
+      <div className="h-8 bg-canvas border-t border-line flex items-center px-4 shrink-0 select-none overflow-x-auto hide-scrollbar">
         <div className="flex items-center justify-between w-full min-w-max">
           <div className="flex items-center gap-3">
             <AppTooltip description={isEncrypted ? t('common.statusBar.encryptionOn', 'Security & Backup (Encryption is ON)') : t('common.statusBar.encryptionOff', 'Security & Backup (Encryption is OFF)')}>
@@ -58,7 +58,7 @@ export function StatusBar() {
                 </span>
               </button>
             </AppTooltip>
-            <div className="w-px h-4 bg-[#1f2937]/50" />
+            <div className="w-px h-4 bg-line" />
             <AppTooltip description={t('common.statusBar.manageApi', 'Manage API Connections & Status')}>
               <button
                 onClick={handleApiKeysClick}
@@ -87,7 +87,7 @@ export function StatusBar() {
             <AppTooltip description={t('common.statusBar.viewVersion', 'View Version & Release Notes')}>
               <button
                 onClick={handleVersionClick}
-                className="text-[10px] font-mono text-fg-muted hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+                className="text-[10px] font-mono text-fg-muted hover:text-fg hover:bg-elevated px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-line-strong"
               >
                 v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}
               </button>
@@ -99,7 +99,7 @@ export function StatusBar() {
   }
 
   return (
-    <div className="h-8 bg-canvas border-t border-[#1f2937] flex items-center px-4 shrink-0 select-none overflow-x-auto hide-scrollbar">
+    <div className="h-8 bg-canvas border-t border-line flex items-center px-4 shrink-0 select-none overflow-x-auto hide-scrollbar">
       <div className="flex items-center justify-between w-full min-w-max">
         <div className="flex items-center gap-3">
           <AppTooltip description={isEncrypted ? t('common.statusBar.encryptionOn', 'Security & Backup (Encryption is ON)') : t('common.statusBar.encryptionOff', 'Security & Backup (Encryption is OFF)')}>
@@ -114,12 +114,12 @@ export function StatusBar() {
             </button>
           </AppTooltip>
 
-          <div className="w-px h-4 bg-white/50" />
+          <div className="w-px h-4 bg-line" />
 
           <AppTooltip description={t('common.statusBar.manageApi', 'Manage API Connections & Status')}>
             <button
               onClick={handleApiKeysClick}
-              className="p-1 rounded text-fg-muted hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="p-1 rounded text-fg-muted hover:text-fg hover:bg-elevated transition-colors cursor-pointer"
             >
               <KeyRound className="w-3.5 h-3.5" />
             </button>
@@ -158,7 +158,7 @@ export function StatusBar() {
                   key={exchange}
                   description={
                     <div className="flex flex-col gap-1.5 min-w-[140px]">
-                      <p className="font-semibold text-fg text-[13px] capitalize border-b border-gray-700/50 pb-1.5 mb-1">{exchange}</p>
+                      <p className="font-semibold text-fg text-[13px] capitalize border-b border-line pb-1.5 mb-1">{exchange}</p>
                       {xKeys.map(k => {
                         const status = !k.isActive ? 'disabled' : (useMockData ? 'connected' : statuses[k.id] || 'disconnected');
                         const error = errors[k.id];
@@ -179,7 +179,7 @@ export function StatusBar() {
                 >
                   <button
                     onClick={handleApiKeysClick}
-                    className="flex items-center gap-1.5 bg-[#1a1d24] px-2 py-0.5 rounded border border-[#2a2d35] cursor-pointer hover:border-gray-500 hover:bg-[#222630] transition-colors"
+                    className="flex items-center gap-1.5 bg-elevated px-2 py-0.5 rounded border border-line cursor-pointer hover:border-line-strong hover:bg-elevated-hover transition-colors"
                   >
                     <ExchangeIcon exchange={exchange} className="w-3.5 h-3.5 opacity-80" />
                     <span className="hidden md:inline text-[10px] uppercase font-bold text-fg-muted tracking-wider">
@@ -220,7 +220,7 @@ export function StatusBar() {
           <AppTooltip description={t('common.statusBar.viewVersion', 'View Version & Release Notes')}>
             <button
               onClick={handleVersionClick}
-              className="text-[10px] font-mono text-fg-muted hover:text-white hover:bg-white/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-gray-700 ml-4 shrink-0"
+              className="text-[10px] font-mono text-fg-muted hover:text-fg hover:bg-elevated px-1.5 py-0.5 rounded transition-colors cursor-pointer border border-transparent hover:border-line-strong ml-4 shrink-0"
             >
               v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'}
             </button>

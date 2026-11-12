@@ -42,7 +42,7 @@ export function CoinIcon({ symbol, className = "w-6 h-6", size = 32, category, n
   // Fallback visual se nenhuma imagem carregar
   if (imageState === 'error' || !cleanSymbol) {
     return (
-      <div className={`rounded-full bg-[#1e2025] border border-line flex items-center justify-center shrink-0 ${className}`}>
+      <div className={`rounded-full bg-elevated border border-line flex items-center justify-center shrink-0 ${className}`}>
         <span className="text-[10px] sm:text-xs font-bold text-fg-muted">
           {(cleanSymbol || symbol).substring(0, 2).toUpperCase()}
         </span>

@@ -414,7 +414,7 @@ export function IndexedDBCacheCard() {
       {/* Main Grid Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
         {/* Section 1: Database Engine & Health Info */}
-        <div className="bg-[#0c0d0e] border border-line/60 rounded-lg p-4 flex flex-col justify-between space-y-3">
+        <div className="bg-canvas border border-line rounded-lg p-4 flex flex-col justify-between space-y-3">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-fg/90 font-medium flex items-center gap-1.5">
@@ -523,7 +523,7 @@ export function IndexedDBCacheCard() {
         </div>
 
         {/* Section 2: Transaction Logs Cache Consolidation */}
-        <div className="bg-[#0c0d0e] border border-line/60 rounded-lg p-4 flex flex-col justify-between space-y-3">
+        <div className="bg-canvas border border-line rounded-lg p-4 flex flex-col justify-between space-y-3">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-fg/90 font-medium flex items-center gap-1.5">
@@ -597,7 +597,7 @@ export function IndexedDBCacheCard() {
       </div>
 
       {/* Section 3: Sliders and Cadence Configurations */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 bg-[#0c0d0e] border border-line/60 p-4 rounded-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 bg-canvas border border-line p-4 rounded-lg">
         {/* Background Update Interval */}
         <div>
           <div className="flex justify-between items-center mb-1">
@@ -668,7 +668,7 @@ export function IndexedDBCacheCard() {
       </div>
 
       {/* Section 3.5: IndexedDB Historical Retention & Quota Pruning */}
-      <div className="mt-4 bg-[#0c0d0e] border border-line/60 p-4 rounded-lg">
+      <div className="mt-4 bg-canvas border border-line p-4 rounded-lg">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">

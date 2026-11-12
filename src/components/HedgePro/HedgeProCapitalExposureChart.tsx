@@ -63,7 +63,7 @@ const CustomTooltip = ({ active, payload, formatCurrency, totals, t }: CustomToo
               ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
               : data.id === 'leveraged'
                 ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                : 'bg-white/10 text-white border border-white/20'
+                : 'bg-fg/10 text-fg border border-fg/20'
             }`}
         >
           {data.category}

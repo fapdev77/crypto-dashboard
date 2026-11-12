@@ -143,11 +143,11 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
             data={data}
             margin={{ top: 20, right: 80, left: 0, bottom: 20 }}
           >
-            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={true} stroke="#2a2b30" />
+            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={true} stroke="var(--line)" />
             <XAxis 
               type="number" 
               tickFormatter={(val) => formatPercent(val)} 
-              stroke="#8E9299" 
+              stroke="var(--fg-muted)" 
               fontSize={12}
               tickLine={false}
               axisLine={false}
@@ -155,7 +155,7 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
             <YAxis 
               type="category" 
               dataKey="label" 
-              axisLine={{ stroke: '#2a2b30' }}
+              axisLine={{ stroke: 'var(--line)' }}
               tickLine={false}
               interval={0}
               width={180}
@@ -185,7 +185,7 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
                           "flex items-center px-1 py-[1px] rounded border text-[8px] font-medium capitalize shrink-0",
                           item.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
                           item.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
-                          item.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
+                          item.exchange === 'okx' ? "bg-fg/10 text-fg border-fg/20" :
                           "bg-line text-fg-muted border-line"
                         )}>
                           {item.exchange}
