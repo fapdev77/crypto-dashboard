@@ -112,6 +112,9 @@ export default function App() {
         if (customEvent.detail === 'settings-version') {
           tab = 'settings';
           targetId = 'version-info-card';
+        } else if (customEvent.detail === 'settings-theme') {
+          tab = 'settings';
+          targetId = 'theme-settings-card';
         } else if (customEvent.detail === 'settings') {
           tab = 'settings';
           targetId = 'security-settings-card';

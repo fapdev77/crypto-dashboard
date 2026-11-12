@@ -6,11 +6,13 @@
     "terminalLight": "Terminal Light",
     "terminalLightDesc": "High-contrast interface for daylight",
     "wiseDark": "Wise Dark",
-    "wiseDarkDesc": "WisePay deep navy theme for high focus",
+    "wiseDarkDesc": "Wise deep navy theme for high focus",
     "wiseLight": "Wise Light",
-    "wiseLightDesc": "WisePay clean light theme for daily operations",
+    "wiseLightDesc": "Wise clean light theme for daily operations",
     "custom": "Custom",
-    "customDesc": "Personalised custom palette configurable per colour token"
+    "customDesc": "Personalised custom palette configurable per colour token",
+    "customDesign": "Custom design",
+    "customDesignDesc": "Customise colour palette and save your themes"
   },
   "common": {
     "save": "Save",
@@ -295,9 +297,20 @@
       "resetBtn": "Reset to Default",
       "resetConfirm": "Custom palette restored to default values successfully.",
       "presetApplied": "Preset {{name}} applied to custom theme.",
+      "saveThemeTitle": "Save Custom Theme",
+      "savedCount": "saved",
+      "saveThemeDesc": "Name your current palette and save it to reuse at any time.",
+      "themeNamePlaceholder": "e.g. My Dark Theme",
+      "saveThemeBtn": "Save Theme",
+      "savedThemesTitle": "Your Saved Themes",
+      "loadTheme": "Load",
+      "deleteTheme": "Delete",
+      "themeSavedSuccess": "Theme '{{name}}' saved successfully!",
+      "themeLoadedSuccess": "Theme '{{name}}' loaded!",
+      "themeDeletedSuccess": "Theme deleted.",
       "presets": {
-        "wiseDark": "WisePay Dark (Figma)",
-        "wiseLight": "WisePay Light (Figma)",
+        "wiseDark": "Wise Dark",
+        "wiseLight": "Wise Light",
         "midnightNavy": "Midnight Navy",
         "dracula": "Dracula Pro"
       }

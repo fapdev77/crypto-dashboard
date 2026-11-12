@@ -5,8 +5,8 @@
  * Paletas suportadas:
  * - 'dark': Terminal Dark (esquema original dark)
  * - 'light': Terminal Light (esquema original light)
- * - 'wise-dark': WisePay Fintech Dark (extraído do Figma: #0A0A0A canvas, #171717 surface, #262626 borders)
- * - 'wise-light': WisePay Fintech Light (extraído do Figma: #FFFFFF canvas/surface, #F3F3F5 elevated, #0A0A0A text)
+ * - 'wise-dark': Wise Dark (extraído do Figma: #0A0A0A canvas, #171717 surface, #262626 borders)
+ * - 'wise-light': Wise Light (extraído do Figma: #FFFFFF canvas/surface, #F3F3F5 elevated, #0A0A0A text)
  * - 'custom': Tema customizado pelo usuário com tokens configuráveis
  */
 
@@ -45,6 +45,13 @@ export const DEFAULT_CUSTOM_TOKENS: CustomThemeTokens = {
   danger: '#d53436',
   warning: '#f0b100',
 };
+
+export interface SavedCustomTheme {
+  id: string;
+  name: string;
+  palette: CustomThemeTokens;
+  updatedAt: number;
+}
 
 export interface ThemePreset {
   id: string;
@@ -236,19 +243,28 @@ export function applyThemeMode(mode: ThemeMode, customTokens?: CustomThemeTokens
  * Lê o modo salvo antes do React montar, evitando um flash de tema errado
  * no primeiro paint (o persist do zustand só hidrata depois do render).
  */
-export function readStoredThemeMode(): { mode: ThemeMode; customTokens?: CustomThemeTokens } {
+export function readStoredThemeMode(): {
+  mode: ThemeMode;
+  customTokens?: CustomThemeTokens;
+  customThemeName?: string;
+} {
   if (typeof localStorage === 'undefined') return { mode: 'dark' };
 
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (!raw) return { mode: 'dark' };
     const parsed = JSON.parse(raw) as {
-      state?: { themeMode?: ThemeMode; customThemeTokens?: CustomThemeTokens };
+      state?: {
+        themeMode?: ThemeMode;
+        customThemeTokens?: CustomThemeTokens;
+        customThemeName?: string;
+      };
     };
     const mode = parsed?.state?.themeMode;
     const customTokens = parsed?.state?.customThemeTokens;
+    const customThemeName = parsed?.state?.customThemeName;
     if (mode && (THEME_MODES as readonly string[]).includes(mode)) {
-      return { mode, customTokens };
+      return { mode, customTokens, customThemeName };
     }
     return { mode: 'dark' };
   } catch {

@@ -8,7 +8,7 @@ import {
 } from '../themeMode';
 import { useSettingsStore } from '../../store/settingsStore';
 
-describe('themeMode (Terminal, WisePay and Custom Themes)', () => {
+describe('themeMode (Terminal, Wise and Custom Themes)', () => {
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.removeAttribute('data-mode');

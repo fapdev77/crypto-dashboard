@@ -6,11 +6,13 @@
     "terminalLight": "Terminal Light",
     "terminalLightDesc": "Interfaccia chiara ad alto contrasto per il giorno",
     "wiseDark": "Wise Dark",
-    "wiseDarkDesc": "Tema blu navy profondo WisePay per la massima concentrazione",
+    "wiseDarkDesc": "Tema blu navy profondo Wise per la massima concentrazione",
     "wiseLight": "Wise Light",
-    "wiseLightDesc": "Tema chiaro e pulito WisePay per le operazioni quotidiane",
+    "wiseLightDesc": "Tema chiaro e pulito Wise per le operazioni quotidiane",
     "custom": "Personalizzato",
-    "customDesc": "Tavolozza personalizzata configurabile per token di colore"
+    "customDesc": "Tavolozza personalizzata configurabile per token di colore",
+    "customDesign": "Design personalizzato",
+    "customDesignDesc": "Personalizza la tavolozza dei colori e salva i tuoi temi"
   },
   "common": {
     "save": "Salva",
@@ -295,9 +297,20 @@
       "resetBtn": "Ripristina Predefiniti",
       "resetConfirm": "Tavolozza personalizzata ripristinata ai valori predefiniti.",
       "presetApplied": "Predefinito {{name}} applicato al tema personalizzato.",
+      "saveThemeTitle": "Salva Tema Personalizzato",
+      "savedCount": "salvato/i",
+      "saveThemeDesc": "Assegna un nome alla tua tavolozza attuale e salvala per riutilizzarla in qualsiasi momento.",
+      "themeNamePlaceholder": "Es: Il Mio Tema Scuro",
+      "saveThemeBtn": "Salva Tema",
+      "savedThemesTitle": "I Tuoi Temi Salvati",
+      "loadTheme": "Carica",
+      "deleteTheme": "Elimina",
+      "themeSavedSuccess": "Tema '{{name}}' salvato con successo!",
+      "themeLoadedSuccess": "Tema '{{name}}' caricato!",
+      "themeDeletedSuccess": "Tema eliminato.",
       "presets": {
-        "wiseDark": "WisePay Dark (Figma)",
-        "wiseLight": "WisePay Light (Figma)",
+        "wiseDark": "Wise Dark",
+        "wiseLight": "Wise Light",
         "midnightNavy": "Midnight Navy",
         "dracula": "Dracula Pro"
       }

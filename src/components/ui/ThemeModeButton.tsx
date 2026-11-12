@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, Moon, Sun, Sparkles, Palette, Sliders } from 'lucide-react';
+import { Check, Moon, Sun, Sparkles, Palette, Sliders, Settings as SettingsIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../../store/settingsStore';
 import type { ThemeMode } from '../../utils/themeMode';
@@ -31,8 +31,13 @@ export function ThemeModeButton({ className = '', showText = true }: ThemeModeBu
 
   const themeMode = useSettingsStore(state => state.themeMode);
   const setThemeMode = useSettingsStore(state => state.setThemeMode);
+  const customThemeName = useSettingsStore(state => state.customThemeName);
 
   const CurrentIcon = THEME_ICONS[themeMode] ?? Moon;
+
+  const customLabel = customThemeName
+    ? `${t('theme.custom', 'Customizado')} (${customThemeName})`
+    : t('theme.custom', 'Customizado');
 
   const options: Array<{ id: ThemeMode; label: string; description: string }> = [
     {
@@ -48,16 +53,16 @@ export function ThemeModeButton({ className = '', showText = true }: ThemeModeBu
     {
       id: 'wise-dark',
       label: t('theme.wiseDark', 'Wise Dark'),
-      description: t('theme.wiseDarkDesc', 'WisePay deep navy theme for high focus'),
+      description: t('theme.wiseDarkDesc', 'Wise deep navy theme for high focus'),
     },
     {
       id: 'wise-light',
       label: t('theme.wiseLight', 'Wise Light'),
-      description: t('theme.wiseLightDesc', 'WisePay clean light theme for daily operations'),
+      description: t('theme.wiseLightDesc', 'Wise clean light theme for daily operations'),
     },
     {
       id: 'custom',
-      label: t('theme.custom', 'Customizado'),
+      label: customLabel,
       description: t('theme.customDesc', 'Personalized custom palette configured in Settings'),
     },
   ];
@@ -146,6 +151,39 @@ export function ThemeModeButton({ className = '', showText = true }: ThemeModeBu
               </button>
             );
           })}
+
+          <div className="border-t border-line my-1.5" />
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setIsOpen(false);
+              window.dispatchEvent(
+                new CustomEvent('navigate-to-tab', {
+                  detail: { tab: 'settings', targetId: 'theme-settings-card' },
+                })
+              );
+              window.dispatchEvent(new CustomEvent('open-theme-customizer'));
+            }}
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-fg hover:bg-line/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer group"
+          >
+            <div className="w-5 h-5 rounded-md flex items-center justify-center bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white transition-colors shrink-0">
+              <SettingsIcon className="w-3.5 h-3.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between">
+                <span className="block text-xs font-semibold tracking-wide text-fg group-hover:text-accent transition-colors">
+                  {t('theme.customDesign', 'Custom design')}
+                </span>
+                <span className="text-[10px] text-accent font-medium opacity-80 group-hover:opacity-100 transition-opacity">
+                  &rarr;
+                </span>
+              </div>
+              <span className="block text-[11px] text-fg-muted leading-snug truncate">
+                {t('theme.customDesignDesc', 'Customize palette and save your themes')}
+              </span>
+            </div>
+          </button>
         </div>
       )}
     </div>

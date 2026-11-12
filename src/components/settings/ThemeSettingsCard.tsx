@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
@@ -11,6 +11,9 @@ import {
   RotateCcw,
   Eye,
   TrendingUp,
+  Save,
+  Trash2,
+  FolderOpen,
 } from 'lucide-react';
 import { useSettingsStore } from '../../store/settingsStore';
 import {
@@ -21,7 +24,6 @@ import {
   type ThemeMode,
   type CustomThemeTokens,
 } from '../../utils/themeMode';
-import { AppTooltip } from '../ui/Tooltip';
 
 const THEME_OPTIONS: Array<{
   id: ThemeMode;
@@ -52,20 +54,20 @@ const THEME_OPTIONS: Array<{
   },
   {
     id: 'wise-dark',
-    icon: Sparkles,
+    icon: Moon,
     labelKey: 'theme.wiseDark',
     descKey: 'theme.wiseDarkDesc',
     defaultLabel: 'Wise Dark',
-    defaultDesc: 'WisePay Fintech — Obsidian profundo com acentos de foco',
+    defaultDesc: 'Wise — Obsidian profundo com acentos de foco',
     swatches: ['#0a0a0a', '#171717', '#2b7fff'],
   },
   {
     id: 'wise-light',
-    icon: Palette,
+    icon: Sun,
     labelKey: 'theme.wiseLight',
     descKey: 'theme.wiseLightDesc',
     defaultLabel: 'Wise Light',
-    defaultDesc: 'WisePay Fintech — Branco puro com bordas suaves e obsidian',
+    defaultDesc: 'Wise — Branco puro com bordas suaves e obsidian',
     swatches: ['#ffffff', '#ffffff', '#2b7fff'],
   },
   {
@@ -86,27 +88,57 @@ interface TokenField {
 }
 
 const TOKEN_FIELDS: TokenField[] = [
-  { key: 'canvas', labelKey: 'settings.theme.canvas', defaultLabel: 'Fundo (Canvas)' },
-  { key: 'surface', labelKey: 'settings.theme.surface', defaultLabel: 'Cards (Surface)' },
-  { key: 'elevated', labelKey: 'settings.theme.elevated', defaultLabel: 'Entradas (Elevated)' },
-  { key: 'line', labelKey: 'settings.theme.line', defaultLabel: 'Bordas (Line)' },
-  { key: 'fg', labelKey: 'settings.theme.fg', defaultLabel: 'Texto Principal' },
-  { key: 'fgMuted', labelKey: 'settings.theme.fgMuted', defaultLabel: 'Texto Secundário' },
-  { key: 'accent', labelKey: 'settings.theme.accent', defaultLabel: 'Destaque (Accent)' },
-  { key: 'success', labelKey: 'settings.theme.success', defaultLabel: 'Sucesso (Verde)' },
-  { key: 'danger', labelKey: 'settings.theme.danger', defaultLabel: 'Alerta / Prejuízo' },
-  { key: 'warning', labelKey: 'settings.theme.warning', defaultLabel: 'Aviso (Amarelo)' },
+  { key: 'canvas', labelKey: 'settings.theme.canvas', defaultLabel: 'Fundo da Aplicação (Canvas)' },
+  { key: 'surface', labelKey: 'settings.theme.surface', defaultLabel: 'Cards e Painéis (Surface)' },
+  { key: 'elevated', labelKey: 'settings.theme.elevated', defaultLabel: 'Entradas e Camadas (Elevated)' },
+  { key: 'line', labelKey: 'settings.theme.line', defaultLabel: 'Bordas e Linhas (Line)' },
+  { key: 'fg', labelKey: 'settings.theme.fg', defaultLabel: 'Tipografia Principal' },
+  { key: 'fgMuted', labelKey: 'settings.theme.fgMuted', defaultLabel: 'Tipografia Secundária / Rótulos' },
+  { key: 'accent', labelKey: 'settings.theme.accent', defaultLabel: 'Destaque e Ações (Accent)' },
+  { key: 'success', labelKey: 'settings.theme.success', defaultLabel: 'Indicador Positivo (Lucro)' },
+  { key: 'danger', labelKey: 'settings.theme.danger', defaultLabel: 'Indicador Negativo (Alerta / Prejuízo)' },
+  { key: 'warning', labelKey: 'settings.theme.warning', defaultLabel: 'Indicador de Aviso' },
 ];
 
 export function ThemeSettingsCard() {
   const { t } = useTranslation();
+  const cardRef = useRef<HTMLDivElement>(null);
+
   const themeMode = useSettingsStore((s) => s.themeMode);
   const setThemeMode = useSettingsStore((s) => s.setThemeMode);
   const customThemeTokens = useSettingsStore((s) => s.customThemeTokens);
   const setCustomThemeTokens = useSettingsStore((s) => s.setCustomThemeTokens);
   const resetCustomThemeTokens = useSettingsStore((s) => s.resetCustomThemeTokens);
 
+  const customThemeName = useSettingsStore((s) => s.customThemeName);
+  const setCustomThemeName = useSettingsStore((s) => s.setCustomThemeName);
+  const savedCustomThemes = useSettingsStore((s) => s.savedCustomThemes);
+  const saveCurrentCustomTheme = useSettingsStore((s) => s.saveCurrentCustomTheme);
+  const loadSavedCustomTheme = useSettingsStore((s) => s.loadSavedCustomTheme);
+  const deleteSavedCustomTheme = useSettingsStore((s) => s.deleteSavedCustomTheme);
+
   const [activeTab, setActiveTab] = useState<'themes' | 'customizer'>('themes');
+  const [themeNameInput, setThemeNameInput] = useState(customThemeName || 'Meu Tema');
+
+  // Keep input in sync when customThemeName updates
+  useEffect(() => {
+    if (customThemeName) {
+      setThemeNameInput(customThemeName);
+    }
+  }, [customThemeName]);
+
+  // Listen for navigation event from header or anywhere in the app
+  useEffect(() => {
+    const handleOpenCustomizer = () => {
+      setActiveTab('customizer');
+      setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    };
+
+    window.addEventListener('open-theme-customizer', handleOpenCustomizer);
+    return () => window.removeEventListener('open-theme-customizer', handleOpenCustomizer);
+  }, []);
 
   const handleSelectMode = (mode: ThemeMode) => {
     setThemeMode(mode);
@@ -121,10 +153,11 @@ export function ThemeSettingsCard() {
 
   const handleApplyPreset = (presetId: string, palette: CustomThemeTokens, nameKey: string) => {
     setCustomThemeTokens(palette);
+    const presetName = t(nameKey, presetId);
+    setCustomThemeName(presetName);
     if (themeMode !== 'custom') {
       setThemeMode('custom');
     }
-    const presetName = t(nameKey, presetId);
     toast.success(
       t('settings.theme.presetApplied', 'Predefinição {{name}} aplicada ao tema customizado.', {
         name: presetName,
@@ -139,10 +172,44 @@ export function ThemeSettingsCard() {
 
   const handleResetTokens = () => {
     resetCustomThemeTokens();
+    setCustomThemeName('Meu Tema');
     toast.success(
       t('settings.theme.resetConfirm', 'Paleta customizada restaurada para o padrão com sucesso.'),
       { id: 'theme-reset-tokens' }
     );
+  };
+
+  const handleSaveTheme = (e: React.FormEvent) => {
+    e.preventDefault();
+    const finalName = themeNameInput.trim() || 'Meu Tema';
+    saveCurrentCustomTheme(finalName);
+    if (themeMode !== 'custom') {
+      setThemeMode('custom');
+    }
+    toast.success(
+      t('settings.theme.themeSavedSuccess', "Tema '{{name}}' salvo com sucesso!", {
+        name: finalName,
+      }),
+      { id: 'theme-save-success' }
+    );
+  };
+
+  const handleLoadSavedTheme = (id: string, name: string) => {
+    loadSavedCustomTheme(id);
+    toast.success(
+      t('settings.theme.themeLoadedSuccess', "Tema '{{name}}' carregado!", {
+        name,
+      }),
+      { id: 'theme-load-success' }
+    );
+  };
+
+  const handleDeleteSavedTheme = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteSavedCustomTheme(id);
+    toast.success(t('settings.theme.themeDeletedSuccess', 'Tema excluído.'), {
+      id: 'theme-delete-success',
+    });
   };
 
   // Determine button text color on accent preview
@@ -150,7 +217,11 @@ export function ThemeSettingsCard() {
   const accentTextColor = accentIsLight ? '#0a0a0a' : '#ffffff';
 
   return (
-    <div className="bg-surface border border-line rounded-xl p-6 flex flex-col h-full">
+    <div
+      ref={cardRef}
+      id="theme-settings-card"
+      className="bg-surface border border-line rounded-xl p-6 flex flex-col h-full scroll-mt-6 transition-all"
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div>
@@ -172,7 +243,7 @@ export function ThemeSettingsCard() {
         <button
           type="button"
           onClick={() => setActiveTab('themes')}
-          className={`pb-2 px-1 text-xs font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+          className={`pb-2 px-1 text-xs font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'themes'
               ? 'border-accent text-accent'
               : 'border-transparent text-fg-muted hover:text-fg'
@@ -184,7 +255,7 @@ export function ThemeSettingsCard() {
         <button
           type="button"
           onClick={() => setActiveTab('customizer')}
-          className={`pb-2 px-1 text-xs font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+          className={`pb-2 px-1 text-xs font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
             activeTab === 'customizer'
               ? 'border-accent text-accent'
               : 'border-transparent text-fg-muted hover:text-fg'
@@ -206,33 +277,38 @@ export function ThemeSettingsCard() {
             {THEME_OPTIONS.map((opt) => {
               const Icon = opt.icon;
               const isSelected = themeMode === opt.id;
+              const label =
+                opt.id === 'custom' && customThemeName
+                  ? `${t(opt.labelKey, opt.defaultLabel)} (${customThemeName})`
+                  : t(opt.labelKey, opt.defaultLabel);
+
               return (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => handleSelectMode(opt.id)}
-                  className={`text-left p-3 rounded-lg border transition-all relative flex flex-col justify-between ${
+                  className={`text-left p-3 rounded-lg border transition-all relative flex flex-col justify-between cursor-pointer ${
                     isSelected
                       ? 'border-accent bg-accent/10 shadow-xs'
                       : 'border-line bg-elevated/40 hover:bg-elevated hover:border-line-strong'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0 pr-2">
                       <div
-                        className={`w-7 h-7 rounded-md flex items-center justify-center ${
+                        className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${
                           isSelected ? 'bg-accent text-white' : 'bg-surface text-fg-muted'
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
                       </div>
-                      <span className="text-xs font-medium text-fg">
-                        {t(opt.labelKey, opt.defaultLabel)}
+                      <span className="text-xs font-medium text-fg truncate">
+                        {label}
                       </span>
                     </div>
 
                     {/* Swatch mini preview */}
-                    <div className="flex items-center gap-1 bg-surface/80 px-1.5 py-1 rounded border border-line">
+                    <div className="flex items-center gap-1 bg-surface/80 px-1.5 py-1 rounded border border-line shrink-0">
                       {opt.swatches.map((color, idx) => (
                         <span
                           key={idx}
@@ -273,7 +349,7 @@ export function ThemeSettingsCard() {
                     key={preset.id}
                     type="button"
                     onClick={() => handleApplyPreset(preset.id, preset.palette, preset.nameKey)}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-elevated border border-line hover:border-accent/50 text-left transition-colors"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-elevated border border-line hover:border-accent/50 text-left transition-colors cursor-pointer"
                   >
                     <span className="text-xs text-fg font-medium truncate">{label}</span>
                     <div className="flex items-center gap-1 ml-2 shrink-0">
@@ -310,42 +386,155 @@ export function ThemeSettingsCard() {
               <button
                 type="button"
                 onClick={() => handleSelectMode('custom')}
-                className="shrink-0 px-2 py-1 text-[11px] font-medium bg-accent text-white rounded hover:bg-accent-hover transition-colors ml-2"
+                className="shrink-0 px-2 py-1 text-[11px] font-medium bg-accent text-white rounded hover:bg-accent-hover transition-colors ml-2 cursor-pointer"
               >
                 {t('settings.theme.activateCustom', 'Ativar Custom')}
               </button>
             </div>
           )}
 
-          {/* Color Tokens Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
+          {/* Save Theme Section */}
+          <form
+            onSubmit={handleSaveTheme}
+            className="p-3 rounded-lg bg-elevated/40 border border-line space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-fg flex items-center gap-1.5">
+                <Save className="w-3.5 h-3.5 text-accent" />
+                {t('settings.theme.saveThemeTitle', 'Salvar Tema Personalizado')}
+              </span>
+              <span className="text-[10px] text-fg-muted font-mono">
+                {savedCustomThemes.length} {t('settings.theme.savedCount', 'salvo(s)')}
+              </span>
+            </div>
+            <p className="text-[11px] text-fg-muted leading-tight">
+              {t(
+                'settings.theme.saveThemeDesc',
+                'Dê um nome para a sua paleta atual e salve para reutilizar a qualquer momento.'
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={themeNameInput}
+                onChange={(e) => setThemeNameInput(e.target.value)}
+                placeholder={t('settings.theme.themeNamePlaceholder', 'Ex: Meu Tema Escuro')}
+                className="flex-1 px-3 py-1.5 text-xs text-fg bg-surface border border-line rounded-lg focus:outline-hidden focus:border-accent"
+                maxLength={30}
+              />
+              <button
+                type="submit"
+                className="px-3 py-1.5 text-xs font-medium bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>{t('settings.theme.saveThemeBtn', 'Salvar Tema')}</span>
+              </button>
+            </div>
+          </form>
+
+          {/* Saved Themes Carousel / List */}
+          {savedCustomThemes.length > 0 && (
+            <div className="p-3 rounded-lg bg-elevated/30 border border-line space-y-2">
+              <span className="text-[11px] font-semibold text-fg block">
+                {t('settings.theme.savedThemesTitle', 'Seus Temas Salvos')}
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+                {savedCustomThemes.map((saved) => {
+                  const isActive =
+                    themeMode === 'custom' && customThemeName === saved.name;
+                  return (
+                    <div
+                      key={saved.id}
+                      onClick={() => handleLoadSavedTheme(saved.id, saved.name)}
+                      className={`flex items-center justify-between p-2 rounded-lg border text-left cursor-pointer transition-colors ${
+                        isActive
+                          ? 'border-accent bg-accent/10'
+                          : 'border-line bg-surface hover:border-line-strong'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <span className="text-xs font-medium text-fg block truncate">
+                          {saved.name}
+                        </span>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-black/10"
+                            style={{ backgroundColor: saved.palette.canvas }}
+                          />
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-black/10"
+                            style={{ backgroundColor: saved.palette.surface }}
+                          />
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: saved.palette.accent }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLoadSavedTheme(saved.id, saved.name);
+                          }}
+                          title={t('settings.theme.loadTheme', 'Carregar')}
+                          className="p-1 rounded text-fg-muted hover:text-accent hover:bg-elevated transition-colors"
+                        >
+                          <FolderOpen className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteSavedTheme(saved.id, e)}
+                          title={t('settings.theme.deleteTheme', 'Excluir')}
+                          className="p-1 rounded text-fg-muted hover:text-danger hover:bg-elevated transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Color Tokens Grid - Fixed layout so color swatch never overlaps label */}
+          <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
             {TOKEN_FIELDS.map((f) => {
               const val = (customThemeTokens[f.key] as string) || '#000000';
               return (
                 <div
                   key={f.key}
-                  className="flex items-center justify-between p-2 rounded-lg bg-elevated/60 border border-line"
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-elevated/50 border border-line hover:border-line-strong transition-colors gap-3"
                 >
-                  <div className="min-w-0 pr-2">
-                    <label className="text-[11px] font-medium text-fg block truncate">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-medium text-fg block truncate">
                       {t(f.labelKey, f.defaultLabel)}
-                    </label>
-                    <span className="text-[10px] font-mono text-fg-muted uppercase">
+                    </span>
+                    <span className="text-[10px] font-mono text-fg-muted uppercase tracking-wider block">
                       {f.key}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <input
-                      type="color"
-                      value={val}
-                      onChange={(e) => {
-                        handleUpdateToken(f.key, e.target.value);
-                        if (themeMode !== 'custom') setThemeMode('custom');
-                      }}
-                      className="w-7 h-7 rounded border border-line cursor-pointer bg-transparent p-0 overflow-hidden"
-                      title={t(f.labelKey, f.defaultLabel)}
-                    />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <label className="relative flex items-center justify-center cursor-pointer shrink-0">
+                      <span
+                        className="w-8 h-8 rounded-lg border border-line shadow-xs block transition-transform hover:scale-105"
+                        style={{ backgroundColor: val }}
+                      />
+                      <input
+                        type="color"
+                        value={val}
+                        onChange={(e) => {
+                          handleUpdateToken(f.key, e.target.value);
+                          if (themeMode !== 'custom') setThemeMode('custom');
+                        }}
+                        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                        aria-label={t(f.labelKey, f.defaultLabel)}
+                      />
+                    </label>
                     <input
                       type="text"
                       value={val}
@@ -354,8 +543,9 @@ export function ThemeSettingsCard() {
                         handleUpdateToken(f.key, next);
                         if (themeMode !== 'custom') setThemeMode('custom');
                       }}
-                      className="w-18 px-1.5 py-0.5 text-[11px] font-mono text-fg bg-surface border border-line rounded focus:outline-hidden focus:border-accent text-center"
+                      className="w-22 px-2 py-1 text-xs font-mono text-fg bg-surface border border-line rounded-lg focus:outline-hidden focus:border-accent text-center uppercase"
                       maxLength={7}
+                      placeholder="#000000"
                     />
                   </div>
                 </div>
@@ -373,7 +563,7 @@ export function ThemeSettingsCard() {
               <button
                 type="button"
                 onClick={handleResetTokens}
-                className="text-[11px] text-fg-muted hover:text-accent flex items-center gap-1 transition-colors"
+                className="text-[11px] text-fg-muted hover:text-accent flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
                 {t('settings.theme.resetBtn', 'Restaurar Padrão')}
@@ -413,7 +603,10 @@ export function ThemeSettingsCard() {
                 </span>
               </div>
 
-              <div className="flex items-end justify-between mt-2 pt-2 border-t" style={{ borderColor: customThemeTokens.line || '#262626' }}>
+              <div
+                className="flex items-end justify-between mt-2 pt-2 border-t"
+                style={{ borderColor: customThemeTokens.line || '#262626' }}
+              >
                 <div>
                   <span
                     className="text-[10px] block"
@@ -434,7 +627,7 @@ export function ThemeSettingsCard() {
 
                 <button
                   type="button"
-                  className="px-2.5 py-1 text-[11px] font-medium rounded-md shadow-xs transition-opacity"
+                  className="px-2.5 py-1 text-[11px] font-medium rounded-md shadow-xs transition-opacity cursor-pointer"
                   style={{
                     backgroundColor: customThemeTokens.accent || '#2b7fff',
                     color: accentTextColor,

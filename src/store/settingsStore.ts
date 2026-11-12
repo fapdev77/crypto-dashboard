@@ -12,10 +12,11 @@ import {
   applyThemeMode,
   type ThemeMode,
   type CustomThemeTokens,
+  type SavedCustomTheme,
   DEFAULT_CUSTOM_TOKENS,
 } from '../utils/themeMode';
 
-export type { SupportedLocale, SupportedFiatCurrency, CustomThemeTokens };
+export type { SupportedLocale, SupportedFiatCurrency, CustomThemeTokens, SavedCustomTheme };
 
 interface SettingsState {
   /** Selected display language/locale (e.g. 'pt-BR', 'en-US'). Default 'pt-BR'. */
@@ -28,6 +29,14 @@ interface SettingsState {
   customThemeTokens: CustomThemeTokens;
   setCustomThemeTokens: (tokens: Partial<CustomThemeTokens>) => void;
   resetCustomThemeTokens: () => void;
+  /** Name of the active custom theme (e.g. 'Meu Tema', 'Cyber Dark') */
+  customThemeName: string;
+  setCustomThemeName: (name: string) => void;
+  /** List of user-saved custom themes */
+  savedCustomThemes: SavedCustomTheme[];
+  saveCurrentCustomTheme: (name?: string) => string;
+  loadSavedCustomTheme: (id: string) => void;
+  deleteSavedCustomTheme: (id: string) => void;
   /** Selected display fiat currency (e.g. 'USD', 'BRL', 'EUR', 'GBP'). Default 'USD'. */
   fiatCurrency: SupportedFiatCurrency;
   setFiatCurrency: (currency: SupportedFiatCurrency) => void;
@@ -142,6 +151,52 @@ export const useSettingsStore = create<SettingsState>()(
           applyThemeMode('custom', resetTokens);
           return { customThemeTokens: resetTokens };
         });
+      },
+      customThemeName: 'Meu Tema',
+      setCustomThemeName: (customThemeName: string) => set({ customThemeName }),
+      savedCustomThemes: [],
+      saveCurrentCustomTheme: (name?: string) => {
+        const state = get();
+        const finalName = (name || state.customThemeName || 'Meu Tema').trim();
+        const existingIndex = state.savedCustomThemes.findIndex(
+          (t) => t.name.toLowerCase() === finalName.toLowerCase()
+        );
+        const id = existingIndex >= 0 ? state.savedCustomThemes[existingIndex].id : `theme-${Date.now()}`;
+        const newTheme: SavedCustomTheme = {
+          id,
+          name: finalName,
+          palette: { ...state.customThemeTokens },
+          updatedAt: Date.now(),
+        };
+
+        const updatedThemes = [...state.savedCustomThemes];
+        if (existingIndex >= 0) {
+          updatedThemes[existingIndex] = newTheme;
+        } else {
+          updatedThemes.unshift(newTheme);
+        }
+
+        set({
+          customThemeName: finalName,
+          savedCustomThemes: updatedThemes,
+        });
+        return id;
+      },
+      loadSavedCustomTheme: (id: string) => {
+        const state = get();
+        const target = state.savedCustomThemes.find((t) => t.id === id);
+        if (!target) return;
+        applyThemeMode('custom', target.palette);
+        set({
+          themeMode: 'custom',
+          customThemeName: target.name,
+          customThemeTokens: { ...target.palette },
+        });
+      },
+      deleteSavedCustomTheme: (id: string) => {
+        set((prev) => ({
+          savedCustomThemes: prev.savedCustomThemes.filter((t) => t.id !== id),
+        }));
       },
       fiatCurrency: 'USD',
       setFiatCurrency: (fiatCurrency: SupportedFiatCurrency) => set({ fiatCurrency }),

@@ -6,11 +6,13 @@
     "terminalLight": "Terminal Light",
     "terminalLightDesc": "Interfaz clara de alto contraste para el día",
     "wiseDark": "Wise Dark",
-    "wiseDarkDesc": "Tema azul marino profundo WisePay para alta concentración",
+    "wiseDarkDesc": "Tema azul marino profundo Wise para alta concentración",
     "wiseLight": "Wise Light",
-    "wiseLightDesc": "Tema claro y limpio WisePay para operaciones diarias",
+    "wiseLightDesc": "Tema claro y limpio Wise para operaciones diarias",
     "custom": "Personalizado",
-    "customDesc": "Paleta personalizada configurable por token de color"
+    "customDesc": "Paleta personalizada configurable por token de color",
+    "customDesign": "Diseño personalizado",
+    "customDesignDesc": "Personaliza la paleta de colores y guarda tus temas"
   },
   "common": {
     "save": "Guardar",
@@ -295,9 +297,20 @@
       "resetBtn": "Restaurar Predeterminado",
       "resetConfirm": "Paleta personalizada restaurada a valores predeterminados.",
       "presetApplied": "Preajuste {{name}} aplicado al tema personalizado.",
+      "saveThemeTitle": "Guardar Tema Personalizado",
+      "savedCount": "guardado(s)",
+      "saveThemeDesc": "Ponle un nombre a tu paleta actual y guárdala para reutilizarla en cualquier momento.",
+      "themeNamePlaceholder": "Ej: Mi Tema Oscuro",
+      "saveThemeBtn": "Guardar Tema",
+      "savedThemesTitle": "Tus Temas Guardados",
+      "loadTheme": "Cargar",
+      "deleteTheme": "Eliminar",
+      "themeSavedSuccess": "¡Tema '{{name}}' guardado con éxito!",
+      "themeLoadedSuccess": "¡Tema '{{name}}' cargado!",
+      "themeDeletedSuccess": "Tema eliminado.",
       "presets": {
-        "wiseDark": "WisePay Dark (Figma)",
-        "wiseLight": "WisePay Light (Figma)",
+        "wiseDark": "Wise Dark",
+        "wiseLight": "Wise Light",
         "midnightNavy": "Midnight Navy",
         "dracula": "Dracula Pro"
       }
