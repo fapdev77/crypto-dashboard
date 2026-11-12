@@ -1,3 +1,10 @@
+# [2.35.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.34.0...v2.35.0) (2026-11-12)
+
+
+### Features
+
+* **settings:** add custom theme management ([3cf8586](https://github.com/fapdev77/crypto-dashboard/commit/3cf8586a227105d06eca1677b986331df6982920))
+
 # [2.34.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.33.0...v2.34.0) (2026-11-12)
 
 
