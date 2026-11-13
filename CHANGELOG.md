@@ -1,3 +1,11 @@
+# [2.37.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.36.0...v2.37.0) (2026-11-13)
+
+
+### Features
+
+* add donation support ([c345a76](https://github.com/fapdev77/crypto-dashboard/commit/c345a768fdbf628f5b5af08e28bdea3087b64718))
+* update package-lock.json dependencies ([b4db09f](https://github.com/fapdev77/crypto-dashboard/commit/b4db09f4d5a30f4d80d6b3333d18f11ab69627e7))
+
 # [2.36.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.35.0...v2.36.0) (2026-11-13)
 
 
