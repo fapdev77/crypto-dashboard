@@ -1,3 +1,10 @@
+# [2.36.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.35.0...v2.36.0) (2026-11-13)
+
+
+### Features
+
+* add AI table rendering and report export functionality with Excel and PDF support ([16eaea3](https://github.com/fapdev77/crypto-dashboard/commit/16eaea34e0d1aeb6697b68b5e55107897979488b))
+
 # [2.35.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.34.0...v2.35.0) (2026-11-12)
 
 
