@@ -1,6 +1,6 @@
 {
   "name": "Crypto Portfolio Manager",
-  "description": "Unified cryptocurrency portfolio manager and institutional analytics terminal supporting Bitget, Bybit, and OKX. Version 2.29.0 featuring 6-language internationalization, multi-currency fiat conversion, Zero-Trust PBKDF2 (600k iterations) vault, Portfolio Performance analytics, Consolidated Net Change auditing, PIKA AI quantitative auditor, Hedge Pro delta-neutral risk engine, and 763 automated tests.",
+  "description": "Unified cryptocurrency portfolio manager and institutional analytics terminal supporting Bitget, Bybit, and OKX. Version 2.35.0 featuring 6-language internationalization (1,624 keys), 5-mode Multi-Theme engine & Custom Theme Builder, dual-source fiat/USDT conversion (Frankfurter v2 + CoinGecko), Zero-Trust PBKDF2 (600k iterations) vault with .enc backups, Portfolio Performance analytics, Consolidated Net Change auditing, PIKA AI quantitative auditor (7 tools & kill-switch), Hedge Pro delta-neutral risk engine, and 835 automated tests across 99 test files.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

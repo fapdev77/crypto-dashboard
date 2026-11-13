@@ -1,9 +1,9 @@
 # Crypto Portfolio Manager — Product Requirements Document (PRD)
 
-> **Versão do Documento:** 2.29.0  
+> **Versão do Documento:** 2.35.0  
 > **Status:** Aprovado & Em Produção  
 > **Produto:** Crypto Portfolio Manager (CPM) — Multi-Exchange Terminal  
-> **Testes Automatizados:** 88 arquivos de teste, 763 testes passando (Vitest v8)
+> **Testes Automatizados:** 99 arquivos de teste, 835 testes passando (Vitest v8)
 
 ---
 
@@ -53,7 +53,7 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
 
 ### 5.1. Suportado (In Scope)
 - **Exchanges Integradas:**
-  - **Bybit:** API V5 (Unified Trading Account), suporte a Mainnet e Testnet, roteamento multi-regional (Global, Holanda, Turquia, Hong Kong, Cazaquistão, Geórgia) e injeção automática de cabeçalhos de conformidade para Brasil (`x-site-id: 10001`) e Argentina (`x-site-id: 10002`).
+  - **Bybit:** API V5 (Unified Trading Account), suporte a Mainnet e Testnet, roteamento multi-regional com 15 perfis (Global, Bytick, Brasil, Argentina, Holanda, Turquia, Cazaquistão, Geórgia, UAE, EEA, Indonésia, Japão `api.manepa.jp`, Hong Kong `api.spark-fintech.com` com `x-refer-site-id: HKG`) e injeção automática de cabeçalhos de conformidade para Brasil International (`x-site-id: BRA_BTL`) e Argentina International (`x-site-id: ARG_BTL`).
   - **Bitget:** API V2 com adaptadores dedicados para contas **Classic** (Mix/Futures e Spot) e **UTA** (Unified Trading Account), precificação dinâmica de moedas via Spot Tickers, suporte a subcontas e inclusão seletiva da carteira de financiamento.
   - **OKX:** API V5 com suporte a contas unificadas de trading e carteiras de funding (Dual-Wallet) com segregação visual e tags `UNIFIED` e `FUNDING`.
 - **Módulos Operacionais e Analíticos:**
@@ -68,12 +68,13 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
   - **Portfolio Performance Dashboard**: Painel posicionado no topo de Analytics com evolução patrimonial (duplo gráfico de saldo e resultado acumulado), análise temporal por mês e dia da semana, marcos de preço, resultados primários, análise de taxas/arrasto e métricas avançadas (Profit Factor, Win Rate, Índice de Consistência).
   - Market Analytics com Open Interest, Regimes de Mercado, Arbitragem de Funding, CVD e Inverse Coin-M Dashboard.
   - Funding Fees Dashboard com somatórios pré-calculados no serviço e comparador horizontal.
-  - PIKA Assistant com 9 ferramentas de leitura, auditoria de compatibilidade de modelos, telemetria de tokens e exportação de logs.
+  - PIKA Assistant com **7 ferramentas de leitura** (`aiGet*`), 6 provedores (`ollama`, `gemini`, `openrouter`, `openai`, `anthropic`, `custom`), auditoria de compatibilidade de modelos, telemetria de tokens, exportação de logs e kill-switch via `AI_CHAT_BOT_ENABLED`.
   - Progressive Web App (PWA) instalável com Service Worker e cache offline.
-  - Migração Obrigatória de Vault para formatos de criptografia PBKDF2/AES-GCM (600.000 iterações).
-  - Internacionalização Completa (i18n) em 6 idiomas (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`) com preservação de termos de mercado.
-  - Conversão e exibição multi-moedas fiat (USD, BRL, EUR, GBP) via Frankfurter API com cache offline resiliente.
-  - Governança de Configurações e Cache com TTL de símbolos (1-24h), refresh em background (1-60m) e expurgo de histórico.
+  - Migração Obrigatória de Vault para formatos de criptografia PBKDF2/AES-GCM (600.000 iterações) e backups `.enc`.
+  - Internacionalização Completa (i18n) em 6 idiomas (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.624 chaves cada) com preservação de termos de mercado.
+  - Sistema Multi-Temas (`Terminal Dark`, `Terminal Light`, `Wise Dark`, `Wise Light`, `Customizado`) com 4 predefinições, editor de 10 tokens CSS, gerenciamento de temas salvos nomeados e seletor no cabeçalho (`ThemeModeButton`).
+  - Conversão e exibição multi-moedas fiat (USD, BRL, EUR, GBP) via **Frankfurter API v2** e paridade **USDT/USD** via **CoinGecko**, com cache offline resiliente e painel `CurrencyApiDiagnostics`.
+  - Governança de Configurações em **10 cards modulares** (`Settings.tsx`) com TTL de cotações (5–60m), catálogo de símbolos (1–24h), refresh de histórico/funding e expurgo de histórico.
 
 ### 5.2. Não Suportado (Out of Scope)
 - Envio de ordens de negociação ativas (compra/venda) a partir do CPM — o terminal opera em **estrito modo de leitura e auditoria (Read-Only)**.
@@ -87,7 +88,7 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
 ### 6.1. Segurança Zero-Trust e Proteção de Credenciais
 1. **Custódia Local Estrita:** Credenciais de API são persistidas apenas no `localStorage` do navegador do usuário.
 2. **Criptografia com Desbloqueio Global:** Ao habilitar Master Password, as chaves são cifradas com PBKDF2 (600.000 iterações) e AES-GCM 256-bit. A tela `GlobalUnlockScreen` bloqueia todo o acesso sem a senha correta e a tela `MandatoryVaultMigrationScreen` força a migração caso chaves não criptografadas sejam encontradas.
-3. **Backup Criptografado:** Exportação e importação em arquivo `.cpmbackup` protegido por senha mestra.
+3. **Backup Criptografado:** Exportação e importação em arquivo `.enc` (`crypto_dashboard_keys_AAAA-MM-DD.enc`) protegido por senha mestra.
 4. **Proxy Inerte:** O relé `/api/proxy` recebe cabeçalhos criptografados e parâmetros já assinados na ponta do cliente, repassando-os sem registrar logs nem armazenar chaves.
 5. **Fail-Fast de Autenticação:** Detecção algorítmica de erros 401/403 e códigos de rejeição das exchanges (Bybit `10003/10004/10005/33004`, OKX `50100/50105/50111/50113`, Bitget `40001/40005/40006/40014`). Ao identificar falha de credenciais, o sistema cancela imediatamente retries automáticos para proteger o IP do usuário contra banimentos de rate limit.
 6. **Backoff com Jitter e Circuit Breaker:** Erros de rede e respostas 5xx utilizam backoff exponencial com jitter (5s a 60s) e pausa automática após 5 tentativas consecutivas.
@@ -112,11 +113,11 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 *Trade & Orders*, *Funding Fee*, *Transfer In / Deposit*, *Transfer Out / Withdraw*, *Liquidation & ADL*, *Interest & Loans*, *Rewards & Bonus*, *Delivery & Settle*, *Others*, *All Types*. Modais de detalhes fornecem o **Total Stats Summary** com volume total, taxas e variação líquida do lote.
 
 ### 6.5. Assistente Quantitativo PIKA
-1. **Desabilitado por Padrão:** Requer ativação explícita em **AI Settings**.
+1. **Desabilitado por Padrão & Kill-Switch:** Requer ativação explícita em **AI Settings** e suporta desativação global em tempo de build/runtime via `AI_CHAT_BOT_ENABLED` / `VITE_AI_CHAT_BOT_ENABLED`.
 2. **Zero-Trust de Chaves:** O motor de IA nunca tem acesso a credenciais de API.
-3. **9 Ferramentas de Leitura:** Saldos consolidados, posições abertas, ordens, funding rates, métricas de hedge, market analytics, extratos contábeis, saúde das conexões e PnL por símbolo.
+3. **7 Ferramentas de Leitura (`aiToolRegistry.ts`):** `aiGetPortfolioBalances`, `aiGetOpenPositions`, `aiGetHedgeCorrelationSummary`, `aiGetFundingFeesHistory`, `aiGetMarketFundingRates`, `aiGetTradingFeesHistory` e `aiGetClosedPositionsSummary`.
 4. **Mascaramento no Modo Privacidade:** Converte valores nominais em proporções percentuais quando o Modo Privacidade estiver ativo.
-5. **Multi-Provedor com Fallback:** Suporte a Ollama local (`localhost:11434`), Google Gemini Cloud (`@google/genai`) e OpenRouter, com comutação automática para modelo secundário em caso de falha.
+5. **Multi-Provedor com Fallback (6 Provedores):** Suporte a Ollama local (`llama3.2:latest` em `localhost:11434`), Google Gemini (`gemini-3.8-flash` via `@google/genai`), OpenRouter, OpenAI, Anthropic e Custom, com comutação automática para modelo secundário em caso de falha.
 6. **Auditoria e Telemetria:** Registro de cada interação com payload bruto, latência e consumo de tokens, com exportação em JSON e CSV.
 
 ---
@@ -143,8 +144,8 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 | **FR-16** | Terminal de logs de rede em tempo real com máscara de dados sensíveis e filtros | Connection Logs |
 | **FR-17** | Testador de conectividade REST e WebSockets isolados | API Tester |
 | **FR-18** | Ticker deslizante no topo do workspace espelhando posições em aberto (Positions Ticker) | Positions Ticker |
-| **FR-19** | Assistente PIKA com 9 ferramentas de leitura, multi-provedor (Ollama/Gemini), telemetria e auditoria | PIKA Assistant |
-| **FR-20** | Roteamento multi-regional da Bybit (NL, TR, HK, KZ, GE) e injeção de cabeçalhos oficiais para Brasil e Argentina | Bybit Endpoints |
+| **FR-19** | Assistente PIKA com 7 ferramentas de leitura (`aiGet*`), 6 provedores (Ollama/Gemini/OpenRouter/OpenAI/Anthropic/Custom), telemetria e auditoria | PIKA Assistant |
+| **FR-20** | Roteamento multi-regional da Bybit (15 perfis: Global, Bytick, NL, TR, KZ, GE, AE, EEA, ID, JP, HK com `x-refer-site-id: HKG`, BR/ARG Int com `x-site-id: BRA_BTL`/`ARG_BTL`) | Bybit Endpoints |
 | **FR-21** | Suporte a adaptadores Bitget Classic vs UTA, subcontas e inclusão da carteira de funding | Bitget Adapters |
 | **FR-22** | Modo Simulação (Mock Data) com interrupção programática de chamadas reais e badge visual | Simulation Mode |
 | **FR-23** | Modo Privacidade com mascaramento instantâneo de valores e ofuscação automática nas ferramentas de IA | Privacy Mode |
@@ -153,22 +154,24 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 | **FR-26** | Resiliência global com Fail-Fast de autenticação, circuit breaker e Global Error Boundary com Safe Recovery | System Resilience |
 | **FR-27** | Consolidated Net Change Dashboard com 4 macro KPI cards, agrupamento por exchange/moeda e exportação CSV/Excel/PDF | Consolidated Transactions |
 | **FR-28** | Portfolio Performance Dashboard com curvas de saldo/resultado, análise temporal (mês/dia), marcos de preço, resultados primários e métricas avançadas (Profit Factor, Win Rate, Consistency Index) | Portfolio Performance |
-| **FR-29** | Tela e fluxo de migração mandatória de vault para credenciais legadas em texto plano | Security & Vault |
+| **FR-29** | Tela e fluxo de migração mandatória de vault para credenciais legadas em texto plano e backups `.enc` | Security & Vault |
 | **FR-30** | Otimização de renderização com downsampling a 80 pontos, animations desativadas e seletores atômicos no Zustand | Performance Optimization |
-| **FR-31** | Internacionalização completa em 6 idiomas (pt-BR, pt-PT, en-US, en-GB, es-419, it-IT) com seleção dinâmica, tooltips contextuais e mensagens toast | Internationalization (i18n) |
-| **FR-32** | Conversão cambial multi-moedas fiat (USD, BRL, EUR, GBP) via Frankfurter API com cache offline e formatação monetária limpa | Multi-Currency Engine |
-| **FR-33** | Painel de governança de configurações e cache com TTL de símbolos (1-24h), refresh de histórico em background (1-60m) e expurgo seletivo | Settings & Storage |
+| **FR-31** | Internacionalização completa em 6 idiomas (pt-BR, pt-PT, en-US, en-GB, es-419, it-IT; 1.624 chaves cada) com seleção dinâmica, tooltips e toasts | Internationalization (i18n) |
+| **FR-32** | Conversão cambial multi-moedas fiat (USD, BRL, EUR, GBP) via Frankfurter API v2 + paridade USDT/USD via CoinGecko, com TTL configurável e cache offline | Multi-Currency Engine |
+| **FR-33** | Painel de governança em 10 cards modulares com TTL de catálogo de símbolos (1–24h), refresh de funding/polling, auto-lock e expurgo seletivo | Settings & Storage |
+| **FR-34** | Motor Multi-Temas (Terminal Dark/Light, Wise Dark/Light, Customizado) com 4 presets, 10 tokens CSS editáveis, temas salvos nomeados e atalho "Custom design" no cabeçalho | Multi-Theme Engine |
+| **FR-35** | Painel de diagnóstico das APIs cambiais (`CurrencyApiDiagnostics`) e Kill-Switch de IA via variável de ambiente (`AI_CHAT_BOT_ENABLED`) | Diagnostics & Feature Flags |
 
 ---
 
 ## 8. Requisitos Não-Funcionais
 
 - **Segurança:** Postura Zero-Trust; chaves nunca saem do navegador; Web Crypto nativo (PBKDF2 600.000 iterações + AES-GCM-256); proxy inerte com allowlist anti-SSRF.
-- **Confiabilidade:** Suíte abrangente de 88 arquivos de teste e 763 testes unitários e de integração 100% verdes; tolerância a clock skew das exchanges.
+- **Confiabilidade:** Suíte abrangente de 99 arquivos de teste e 835 testes unitários e de integração 100% verdes; tolerância a clock skew das exchanges.
 - **Performance:** Latência zero no carregamento inicial de telas analíticas via IndexedDB; período padrão inicial de 7 dias, downsampling de séries e memoização rigorosa para prevenir renderizações desnecessárias.
 - **Precisão Matemática:** Uso universal de Big.js para aritmética de funding, hedge e saldos.
 - **Compatibilidade:** Suporte nativo a navegadores Desktop e Mobile (PWA); compatibilidade com ambientes serverless (Vercel) e instâncias Node.js (engines `>=24`).
 
 ---
 
-*Crypto Portfolio Manager — Product Requirements Document (PRD v2.29.0).*
+*Crypto Portfolio Manager — Product Requirements Document (PRD v2.35.0).*

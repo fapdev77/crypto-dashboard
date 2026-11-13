@@ -1,6 +1,6 @@
 # 📘 User Manual - Crypto Portfolio Manager (CPM)
 
-> **Application Version:** 2.29.0  
+> **Application Version:** 2.35.0  
 > **Supported Exchanges:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Security Architecture:** Zero-Trust Client-Side (Web Crypto PBKDF2 + AES-GCM 256-bit Encryption)
 
@@ -20,7 +20,7 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
 3. [Global Master Password, Encrypted Backups & Mandatory Vault Inactivity Auto-Lock](#3-global-master-password-encrypted-backups--mandatory-vault-inactivity-auto-lock)
 4. [Simulation Mode (Mock Data)](#4-simulation-mode-mock-data)
 5. [Integrated Log Terminal (Connection Logs)](#5-integrated-log-terminal-connection-logs)
-6. [Synchronisation, Retention & Cache Settings](#6-synchronisation-retention--cache-settings)
+6. [Appearance, Themes, Synchronisation & Settings](#6-appearance-themes-synchronisation--settings)
 7. [Screens & Daily Usability Guide](#7-screens--daily-usability-guide)
    - [🏠 Dashboard Home](#-dashboard-home)
    - [⚡ Positions Ticker (Real-Time Header Marquee)](#-positions-ticker-real-time-header-marquee)
@@ -39,9 +39,9 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [👁️ Privacy Mode](#-privacy-mode)
 8. [PIKA Assistant (Portfolio Information & Knowledge Assistant)](#8-pika-assistant-portfolio-information--knowledge-assistant)
    - [Security & Privacy Principles](#-security--privacy-principles)
-   - [Supported Providers (Local Ollama, Cloud Gemini, OpenRouter)](#-supported-providers-local-ollama-cloud-gemini-openrouter)
-   - [Analytical Tool Calling Catalogue (9 Tools)](#-analytical-tool-calling-catalogue-9-tools)
-   - [Tool Compatibility Audit](#-tool-compatibility-audit)
+   - [Supported Providers (Local Ollama, Cloud Gemini, OpenRouter)](#supported-providers-local-ollama-cloud-gemini-openrouter)
+   - [Analytical Tool Calling Catalogue (7 Tools)](#analytical-tool-calling-catalogue-7-tools)
+   - [Tool Compatibility Audit](#tool-compatibility-audit)
    - [Deep Telemetry, Daily Token Charts & Audit Export](#-deep-telemetry-daily-token-charts--audit-export)
    - [Global Shortcut & Chat Drawer](#-global-shortcut--chat-drawer)
 9. [Inverse Contract Normalisation & Numeric Precision](#9-inverse-contract-normalisation--numeric-precision)
@@ -80,15 +80,19 @@ To connect your exchange accounts to CPM:
 ### Bybit Regional Endpoints & Origin Headers
 For Bybit accounts, the connection modal provides regional compliance and network options:
 - **Environment**: Switch between **Mainnet** (Production) and **Testnet** (Simulated Network).
-- **Account Region / Origin**: Automatically routes to the legally compliant regional domain:
-  - *Global Default* (`api.bybit.com`)
+- **Account Region / Origin**: Automatically routes across 15 supported regional presets:
+  - *Global Default* (`api.bybit.com`) and *Global / Bytick* (`api.bytick.com`)
+  - *Brazil (Standard)* (`api.bybit.com`) and *Brazil - Int* (`api.bybit.com` with `x-site-id: BRA_BTL` header)
+  - *Argentina (Standard)* (`api.bybit.com`) and *Argentina - Int* (`api.bybit.com` with `x-site-id: ARG_BTL` header)
   - *Netherlands* (`api.bybit.nl`)
-  - *Turkey* (`api.bybit-tr.com`)
-  - *Hong Kong* (`api.bybit.com.hk`)
+  - *Turkey* (`api.bybit.tr`)
   - *Kazakhstan* (`api.bybit.kz`)
-  - *Georgia* (`api.bybit.com.ge`)
-  - *Brazil International* (`api.bybit.com` with auto-injected official header `x-site-id: 10001`)
-  - *Argentina International* (`api.bybit.com` with auto-injected official header `x-site-id: 10002`)
+  - *Georgia* (`api.bybitgeorgia.ge`)
+  - *UAE* (`api.bybit.ae`)
+  - *EEA* (`api.bybit.eu`)
+  - *Indonesia* (`api.bybit.id`)
+  - *Japan* (`api.manepa.jp` / Testnet: `api-testnet.manepa.jp`)
+  - *Hong Kong* (`api.spark-fintech.com` / Testnet: `api-testnet.spark-fintech.com` with `x-refer-site-id: HKG` header)
 
 ### Bitget: Classic vs UTA Selection, Sub-Accounts & Funding
 - **Account Type**:
@@ -117,8 +121,8 @@ To safeguard your sensitive financial telemetry and credentials on personal, sha
    - The `useVaultAutoLock` hook tracks active user inputs. Once the idle duration elapses, CPM automatically locks the vault and **instantly purges all decrypted keys from system RAM**.
 4. **On-Demand Manual Lock (Lock Vault Now)**:
    - In the security panel, click the **Lock Vault Now** button to immediately lock the application without needing to refresh the page.
-5. **Encrypted File Backups (`.cpmbackup`)**:
-   - Export all your configured exchange connections and preferences in a single encrypted `.cpmbackup` file.
+5. **Encrypted File Backups (`.enc`)**:
+   - Export and restore all your configured exchange connections and preferences in a single encrypted file (`crypto_dashboard_keys_YYYY-MM-DD.enc`).
 
 ---
 
@@ -140,9 +144,21 @@ For network transparency and technical diagnostics:
 
 ---
 
-## 6. Synchronisation, Retention & Cache Settings
+## 6. Appearance, Themes, Synchronisation & Settings
 
-CPM operates on a high-speed **SWR (Stale-While-Revalidate)** cache engine backed by browser **IndexedDB**:
+The **Settings** screen organises configuration across **10 modular cards**:
+
+### Multi-Theme Engine & Custom Theme Builder
+- **5 Built-In Modes**: Switch seamlessly via the header `ThemeModeButton` or **Appearance & Themes** between **Terminal Dark**, **Terminal Light**, **Wise Dark**, **Wise Light**, and **Custom**.
+- **Custom Palette Editor**: Customise **10 CSS tokens** (`canvas`, `surface`, `elevated`, `line`, `fg`, `fgMuted`, `accent`, `success`, `danger`, `warning`) with live card preview and automatic contrast adaptation.
+- **Quick Presets & Named Themes**: Apply 4 presets (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) or save, load, and delete multiple named custom themes (shown beside Custom in the header theme menu). Click **Custom design** in the header menu to jump straight to the customiser tab.
+
+### Language, Fiat Currency & API Diagnostics
+- **6 Locales & 4 Fiat Currencies**: Full coverage across `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, and `it-IT`, with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
+- **Dual-Provider Engine**: Fetches fiat FX rates from **Frankfurter API v2** (`api.frankfurter.dev`) and **USDT/USD** spot rate from **CoinGecko** (`api.coingecko.com`) with configurable TTL (5–60m), offline cache fallback, and live API diagnostics.
+
+### Synchronisation, Retention & Cache Settings
+CPM operates on a high-speed **SWR (Stale-While-Revalidate)** cache engine backed by browser **IndexedDB** (14 object stores, DB v12):
 - **Zero-Latency Rendering**: Visualisations and tables load instantly from local IndexedDB cache, while background workers pull delta records to keep data fresh.
 - **Browser Storage Quota Governance (`storageQuota`)**: Live measurement of used megabytes and available browser quota via `navigator.storage.estimate()`.
 - **Data Retention & History Pruning**: Configurable retention periods: *30 days*, *60 days*, *90 days*, *180 days*, *365 days (Default)*, or *730 days (2 years)*.
@@ -179,10 +195,11 @@ Dedicated module for funding arbitrage and delta-neutral risk management in COIN
 
 ## 8. PIKA Assistant (Portfolio Information & Knowledge Assistant)
 
-**PIKA** is the native quantitative AI auditor built directly into CPM:
-- **Zero-Trust**: Never sees or receives API Keys, Secrets, or Passphrases.
+**PIKA** is the native quantitative AI auditor built directly into CPM (disabled by default and controllable via `AI_CHAT_BOT_ENABLED`):
+- **Zero-Trust**: Never sees or receives API Keys, Secrets, or Passphrases, and automatically masks nominal values when Privacy Mode is active.
 - **Read-Only**: Purely consultative without execution permissions.
-- **Supported Providers**: Local Ollama, Google Gemini Cloud, and OpenRouter / OpenAI.
+- **Supported Providers**: Local Ollama (`llama3.2:latest`), Google Gemini (`gemini-3.8-flash`), OpenRouter, OpenAI, Anthropic, and custom OpenAPI endpoints.
+- **7 Read-Only Analytical Tools**: `aiGetPortfolioBalances`, `aiGetOpenPositions`, `aiGetHedgeCorrelationSummary`, `aiGetFundingFeesHistory`, `aiGetMarketFundingRates`, `aiGetTradingFeesHistory`, and `aiGetClosedPositionsSummary`.
 - **Shortcut**: Press **`Ctrl + J`** (or **`Cmd + J`** on macOS) from any screen to open the assistant.
 
 ---

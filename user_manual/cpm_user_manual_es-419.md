@@ -1,6 +1,6 @@
 # 📘 Manual de Usuario - Crypto Portfolio Manager (CPM)
 
-> **Versión de la Aplicación:** 2.29.0  
+> **Versión de la Aplicación:** 2.35.0  
 > **Plataformas Soportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitectura de Seguridad:** Zero-Trust Client-Side (Cifrado Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -20,7 +20,7 @@ Nuestra prioridad fundamental es la **seguridad zero-trust** y la **preservació
 3. [Contraseña Maestra Global, Copias de Seguridad Cifradas y Bloqueo por Inactividad](#3-contraseña-maestra-global-copias-de-seguridad-cifradas-y-bloqueo-por-inactividad)
 4. [Modo de Simulación (Mock Data)](#4-modo-de-simulación-mock-data)
 5. [Terminal de Registros Integrado (Connection Logs)](#5-terminal-de-registros-integrado-connection-logs)
-6. [Sincronización, Retención y Configuración de Caché](#6-sincronización-retención-y-configuración-de-caché)
+6. [Apariencia, Temas, Sincronización y Configuración (Settings)](#6-apariencia-temas-sincronización-y-configuración-settings)
 7. [Guía de Pantallas y Uso Diario](#7-guía-de-pantallas-y-uso-diario)
    - [🏠 Panel Principal (Dashboard)](#-panel-principal-dashboard)
    - [⚡ Positions Ticker (Cinta en Tiempo Real)](#-positions-ticker-cinta-en-tiempo-real)
@@ -40,7 +40,7 @@ Nuestra prioridad fundamental es la **seguridad zero-trust** y la **preservació
 8. [Asistente PIKA (Portfolio Information & Knowledge Assistant)](#8-asistente-pika-portfolio-information--knowledge-assistant)
    - [Principios de Seguridad y Privacidad](#-principios-de-seguridad-y-privacidad)
    - [Proveedores Compatibles y Modelos Locales/Nube](#-proveedores-compatibles-y-modelos-localesnube)
-   - [Catálogo de Herramientas Analíticas (Tool Calling)](#-catálogo-de-herramientas-analíticas-tool-calling)
+   - [Catálogo de Herramientas Analíticas (7 Herramientas)](#-catálogo-de-herramientas-analíticas-7-herramientas)
    - [Auditoría de Compatibilidad](#-auditoría-de-compatibilidad)
    - [Telemetría Avanzada y Exportación de Registros](#-telemetría-avanzada-y-exportación-de-registros)
    - [Atajo Global y Panel Lateral de Chat](#-atajo-global-y-panel-lateral-de-chat)
@@ -78,7 +78,7 @@ Para conectar sus cuentas reales a CPM:
 
 ### Configuración Regional y Origen de Bybit
 - **Environment**: Alternancia entre **Mainnet** (Producción) y **Testnet** (Pruebas).
-- **Account Region / Origin**: Dominios regulados compatibles (*Global*, *Netherlands*, *Turkey*, *Brazil International*, *Argentina International*, etc.).
+- **Account Region / Origin**: 15 regiones compatibles: *Global* (`api.bybit.com`), *Bytick* (`api.bytick.com`), *Brazil Standard / Brazil Int* (`x-site-id: BRA_BTL`), *Argentina Standard / Argentina Int* (`x-site-id: ARG_BTL`), *Netherlands* (`api.bybit.nl`), *Turkey* (`api.bybit.tr`), *Kazakhstan* (`api.bybit.kz`), *Georgia* (`api.bybitgeorgia.ge`), *UAE* (`api.bybit.ae`), *EEA* (`api.bybit.eu`), *Indonesia* (`api.bybit.id`), *Japan* (`api.manepa.jp`) y *Hong Kong* (`api.spark-fintech.com` con `x-refer-site-id: HKG`).
 
 ---
 
@@ -87,7 +87,7 @@ Para conectar sus cuentas reales a CPM:
 - **Inicialización del Vault**: Al registrar su primera conexión, configure una contraseña maestra (mínimo 8 caracteres) cifrada mediante PBKDF2 y AES-GCM.
 - **Pantalla de Bloqueo**: Al reiniciar la página, una pantalla solicita la contraseña para salvaguardar sus datos.
 - **Bloqueo Automático (`useVaultAutoLock`)**: Configure un límite de inactividad entre **1 y 60 minutos** en Configuración. Al agotarse, las claves descifradas se eliminan al instante de la memoria RAM.
-- **Copias de Seguridad (`.cpmbackup`)**: Exporte e importe sus cuentas en un archivo cifrado con su contraseña maestra.
+- **Copias de Seguridad (`.enc`)**: Exporte e importe sus cuentas en un archivo cifrado (`crypto_dashboard_keys_AAAA-MM-DD.enc`) con su contraseña maestra.
 
 ---
 
@@ -103,9 +103,12 @@ Acceda a **Logs** para supervisar diagnósticos de conexión con filtro automát
 
 ---
 
-## 6. Sincronización, Retención y Configuración de Caché
+## 6. Apariencia, Temas, Sincronización y Configuración (Settings)
 
-- **Representación Instantánea (SWR)**: Los datos se cargan desde **IndexedDB** local mientras los procesos en segundo plano actualizan la información.
+La pantalla **Settings** agrupa la gobernanza en **10 tarjetas modulares**:
+- **Motor Multi-Temas y Tema Customizado**: Alterne entre **Terminal Dark**, **Terminal Light**, **Wise Dark**, **Wise Light** y **Customizado** desde el selector superior (`ThemeModeButton`) o Settings. Personalice **10 tokens de color CSS**, aplique 4 predefiniciones rápidas (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) y guarde, cargue o elimine múltiples temas personalizados con nombre propio (acceso directo mediante **Custom design** en el menú superior).
+- **Idioma, Monedas Fiat y Diagnóstico API**: Soporte para 6 idiomas y conversión en tiempo real (USD, BRL, EUR, GBP) consultando **Frankfurter API v2** y paridad **USDT/USD** en **CoinGecko**, con TTL configurable (5–60 min) y caché offline.
+- **Representación Instantánea (SWR)**: Los datos se cargan desde **IndexedDB** local (14 almacenes, versión 12) mientras los procesos en segundo plano actualizan la información.
 - **Retención de Historial**: Periodos configurables de 30 a 730 días con opción de depuración de registros obsoletos.
 
 ---
@@ -136,9 +139,9 @@ Acceda a **Logs** para supervisar diagnósticos de conexión con filtro automát
 
 ## 8. Asistente PIKA (Portfolio Information & Knowledge Assistant)
 
-- **Zero-Trust**: No tiene acceso a claves secretas.
-- **Solo Lectura**: Análisis consultivo sin permisos de ejecución.
-- **Proveedores**: Ollama local (100% privado), Google Gemini Cloud y OpenRouter.
+- **Zero-Trust**: Desactivado por defecto (y configurable con `AI_CHAT_BOT_ENABLED`); sin acceso a claves secretas y con enmascaramiento automático en Modo Privacidad.
+- **Solo Lectura**: Análisis consultivo sin permisos de ejecución, con **7 herramientas** (`aiGetPortfolioBalances`, `aiGetOpenPositions`, `aiGetHedgeCorrelationSummary`, `aiGetFundingFeesHistory`, `aiGetMarketFundingRates`, `aiGetTradingFeesHistory`, `aiGetClosedPositionsSummary`).
+- **Proveedores**: Ollama local (`llama3.2:latest`), Google Gemini (`gemini-3.8-flash`), OpenRouter, OpenAI, Anthropic y proveedores Custom.
 - **Atajo**: Presione **`Ctrl + J`** (o **`Cmd + J`** en macOS) para abrir el asistente.
 
 ---
