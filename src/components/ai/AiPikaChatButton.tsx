@@ -1,13 +1,18 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { AppTooltip } from '../ui/Tooltip';
 
 interface AiPikaChatButtonProps {
   onClick: () => void;
   isEnabled: boolean;
+  compactOnMobile?: boolean;
 }
 
-export function AiPikaChatButton({ onClick, isEnabled }: AiPikaChatButtonProps) {
+export function AiPikaChatButton({
+  onClick,
+  isEnabled,
+  compactOnMobile = false,
+}: AiPikaChatButtonProps) {
   const tooltipText = isEnabled
     ? 'Open PIKA Assistant (Ctrl+J)'
     : 'PIKA Assistant (Disabled - Click to configure)';
@@ -15,48 +20,42 @@ export function AiPikaChatButton({ onClick, isEnabled }: AiPikaChatButtonProps) 
   return (
     <AppTooltip description={tooltipText} side="bottom" align="end">
       <button
+        type="button"
         onClick={onClick}
         aria-label={isEnabled ? 'Open PIKA Assistant' : 'PIKA Assistant Disabled'}
-        className={`group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#2F6BFF] focus:ring-offset-2 dark:focus:ring-offset-[#0b0c10] select-none ${
+        className={`group relative h-9 inline-flex items-center justify-center rounded-lg border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas select-none whitespace-nowrap shrink-0 cursor-pointer ${
+          compactOnMobile
+            ? 'w-9 px-0 sm:w-auto sm:px-2.5 sm:gap-1.5'
+            : 'gap-1.5 px-2.5'
+        } ${
           isEnabled
-            ? 'bg-[#151619] hover:bg-[#1e1f24] border-[#2a2b30] hover:border-[#2F6BFF]/60 text-white shadow-xs cursor-pointer'
-            : 'bg-[#151619]/60 border-[#2a2b30] text-gray-500 hover:text-gray-300 opacity-60 hover:opacity-90 cursor-pointer'
+            ? 'bg-surface hover:bg-elevated-hover border-line hover:border-line-strong text-fg'
+            : 'bg-surface/60 hover:bg-elevated-hover border-line hover:border-line-strong text-fg-muted hover:text-fg opacity-70 hover:opacity-100'
         }`}
-        style={{ minHeight: '38px' }}
       >
-        {/* PIKA Brand Name */}
-        <span className="font-extrabold text-[12px] tracking-wider uppercase font-mono text-white/90 group-hover:text-white transition-colors">
-          PIKA
-        </span>
+        <Bot
+          className={`w-[18px] h-[18px] shrink-0 transition-transform duration-150 group-hover:scale-105 ${
+            isEnabled ? 'text-accent' : 'text-fg-muted'
+          } ${compactOnMobile ? 'sm:w-4 sm:h-4' : 'w-4 h-4'}`}
+        />
 
-        {/* Modern Animated AI Badge */}
         <span
-          className={`relative flex items-center justify-center text-[10px] font-black px-1.5 py-0.5 rounded leading-none transition-all duration-300 ${
-            isEnabled
-              ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 text-white shadow-xs shadow-cyan-400/30'
-              : 'bg-slate-700/60 text-slate-400 border border-slate-600/50'
+          className={`items-center gap-1.5 ${
+            compactOnMobile ? 'hidden sm:inline-flex' : 'inline-flex'
           }`}
         >
-          {/* Animated ping dot for high-tech indicator */}
-          {isEnabled && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
-            </span>
-          )}
-
-          {/* AI Text with shimmer gradient */}
-          <span className="relative z-10 flex items-center gap-0.5">
-            AI
-            {isEnabled && (
-              <Sparkles className="w-2.5 h-2.5 text-cyan-200 animate-pulse ml-0.5 inline-block" />
-            )}
+          <span className="font-bold text-[12px] tracking-wider uppercase font-mono text-fg/90 group-hover:text-fg transition-colors">
+            PIKA
           </span>
-
-          {/* Glowing animated background aura */}
-          {isEnabled && (
-            <span className="absolute inset-0 rounded bg-gradient-to-r from-indigo-400 to-cyan-400 opacity-0 group-hover:opacity-40 blur-xs transition-opacity duration-300 pointer-events-none" />
-          )}
+          <span
+            className={`inline-flex items-center justify-center text-[10px] font-black px-1.5 py-0.5 rounded leading-none ${
+              isEnabled
+                ? 'bg-accent/15 text-accent border border-accent/30'
+                : 'bg-line text-fg-muted border border-line-strong'
+            }`}
+          >
+            AI
+          </span>
         </span>
       </button>
     </AppTooltip>

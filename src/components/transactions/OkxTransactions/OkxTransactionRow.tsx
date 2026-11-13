@@ -14,6 +14,7 @@ import { getUniversalBadge, getOkxUniversalType } from '../../../utils/transacti
 import { useTranslation } from 'react-i18next';
 import { extractBaseCoin } from '../../../utils/unifiers';
 import { calculateOkxTradeDetails } from '../../../utils/okxUtils';
+import { classifyTradeSide } from '../../../utils/tradeSide';
 
 interface Props {
   entry: OkxTransactionLogEntry;
@@ -36,10 +37,14 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
   const { dateStr, timeStr } = formatDateTime(entry.transactionTime);
 
-  const sideLower = (entry.side || '').toLowerCase();
-  const isBuy = sideLower.includes('buy') || sideLower.includes('long') || sideLower.includes('in');
-  const isSell = sideLower.includes('sell') || sideLower.includes('short') || sideLower.includes('out');
-  const sideColor = isBuy ? 'text-[#00C853]' : isSell ? 'text-[#FF4444]' : 'text-[#8E9299]';
+  // "Close Long" is a sale and "Close Short" a purchase, so colour follows the cash flow.
+  const sideDirection = classifyTradeSide(entry.side);
+  const sideColor =
+    sideDirection === 'buy'
+      ? 'text-success'
+      : sideDirection === 'sell'
+        ? 'text-danger'
+        : 'text-fg-muted';
 
   const fundingNum = new Big(entry.funding || '0');
   const feeNum = new Big(entry.fee || '0');
@@ -160,33 +165,33 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
   return (
     <div
-      className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]"
+      className="bg-surface border border-line rounded-xl flex flex-col cursor-pointer transition-colors hover:border-line-strong"
       onClick={onToggle}
     >
       <div className="p-4 grid grid-cols-2 lg:grid-cols-8 gap-4 items-start">
         {/* Col 1: Time */}
         <div className="flex flex-col gap-1 col-span-2 lg:col-span-1">
           <AppTooltip description={t('transactions.table.timeTooltip', 'Transaction timestamp (UTC)')}>
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold tracking-wider border-b border-dashed border-fg-muted/30 w-max cursor-help">
               Time
             </span>
           </AppTooltip>
-          <span className="text-white text-sm font-sans">{dateStr}</span>
-          <span className="text-[10px] text-[#8E9299] font-mono">{timeStr}</span>
+          <span className="text-fg text-sm font-sans">{dateStr}</span>
+          <span className="text-[10px] text-fg-muted font-mono">{timeStr}</span>
         </div>
 
         {/* Col 2: Currency (ccy) + Contract (symbol) */}
-        <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
+        <div className="flex flex-col gap-1 lg:border-l border-line lg:pl-3 col-span-1">
           <AppTooltip description={`Currency (${entry.currency || 'USDT'}) and trading pair`}>
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold tracking-wider border-b border-dashed border-fg-muted/30 w-max cursor-help">
               Currency & Symbol
             </span>
           </AppTooltip>
           <div className="flex items-center gap-2">
             <CoinIcon symbol={entry.symbol || entry.currency || 'USDT'} size={20} className="w-5 h-5 shrink-0" />
             <div className="flex flex-col">
-              <span className="text-white text-xs font-semibold">{entry.currency || '-'}</span>
-              {entry.symbol && <span className="text-[10px] text-white/80 truncate max-w-[80px]">{entry.symbol}</span>}
+              <span className="text-fg text-xs font-semibold">{entry.currency || '-'}</span>
+              {entry.symbol && <span className="text-[10px] text-fg/80 truncate max-w-[80px]">{entry.symbol}</span>}
             </div>
           </div>
           <span className="w-max px-1.5 py-0.5 text-[9px] rounded font-semibold border text-white bg-white/10 border-white/20">
@@ -195,9 +200,9 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
         </div>
 
         {/* Col 3: Type & Category */}
-        <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
+        <div className="flex flex-col gap-1 lg:border-l border-line lg:pl-3 col-span-1">
           <AppTooltip description="Bill type and market category">
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold tracking-wider border-b border-dashed border-fg-muted/30 w-max cursor-help">
               Type & Category
             </span>
           </AppTooltip>
@@ -205,110 +210,110 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
             {badge.label}
           </span>
           {entry.category && (
-            <span className="text-[9px] text-white/80 uppercase tracking-wider">{entry.category}</span>
+            <span className="text-[9px] text-fg/80 uppercase tracking-wider">{entry.category}</span>
           )}
         </div>
 
         {/* Col 4: Direction (side) + Quantity (qty) */}
-        <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
+        <div className="flex flex-col gap-1 lg:border-l border-line lg:pl-3 col-span-1">
           <AppTooltip description={`Trade direction and quantity in crypto (${tradeDetails.baseCoin || baseCoin || entry.currency || 'coin'})${isTrade ? '. Estimated total trade value in USDT/USD' : ''}`}>
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold tracking-wider border-b border-dashed border-fg-muted/30 w-max cursor-help">
               Side & Qty
             </span>
           </AppTooltip>
           <span className={`text-xs font-mono uppercase ${sideColor}`}>
             {entry.side === 'None' || !entry.side ? '-' : entry.side}
           </span>
-          <span className="text-[10px] font-mono text-white/80">{fmtQty()}</span>
+          <span className="text-[10px] font-mono text-fg/80">{fmtQty()}</span>
           {fmtQtyUsdApprox() && (
-            <span className="text-[8px] font-mono text-white/80">{fmtQtyUsdApprox()}</span>
+            <span className="text-[8px] font-mono text-fg/80">{fmtQtyUsdApprox()}</span>
           )}
         </div>
 
         {/* Col 5: Filled Price (tradePrice) + Position (size) */}
-        <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
+        <div className="flex flex-col gap-1 lg:border-l border-line lg:pl-3 col-span-1">
           <AppTooltip description={`Trade execution price and crypto size (${tradeDetails.baseCoin || baseCoin || entry.currency || 'coin'})${isTrade ? '. Estimated total position value in USDT/USD' : ''}`}>
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold tracking-wider border-b border-dashed border-fg-muted/30 w-max cursor-help">
               Filled Price & Size
             </span>
           </AppTooltip>
-          <span className="text-xs text-white font-mono">{fmtPrice()}</span>
-          <span className="text-[10px] font-mono text-white/80">{fmtSize()}</span>
+          <span className="text-xs text-fg font-mono">{fmtPrice()}</span>
+          <span className="text-[10px] font-mono text-fg/80">{fmtSize()}</span>
           {fmtSizeUsdApprox() && (
-            <span className="text-[8px] font-mono text-white/80">{fmtSizeUsdApprox()}</span>
+            <span className="text-[8px] font-mono text-fg/80">{fmtSizeUsdApprox()}</span>
           )}
         </div>
 
         {/* Col 6: Funding + Fee */}
-        <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
+        <div className="flex flex-col gap-1 lg:border-l border-line lg:pl-3 col-span-1">
           <AppTooltip description={`Funding settlement and trading fee. Values in ${isInverse ? entry.currency : 'USD'}${isInverse && usdPrice ? `. 1 ${entry.currency} ≈ ${formatCurrency(usdPrice, 'usd')}` : ''}.`}>
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold tracking-wider border-b border-dashed border-fg-muted/30 w-max cursor-help">
               Funding & Trade Fee
             </span>
           </AppTooltip>
-          <span className={`text-xs font-mono ${fundingNum.gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+          <span className={`text-xs font-mono ${fundingNum.gte(0) ? 'text-success' : 'text-danger'}`}>
             {fmtFinancial(fundingNum)}
           </span>
           {isInverse && fmtUsdApprox(fundingNum) && (
-            <span className="text-[8px] font-mono text-white/80">{fmtUsdApprox(fundingNum)}</span>
+            <span className="text-[8px] font-mono text-fg/80">{fmtUsdApprox(fundingNum)}</span>
           )}
-          <span className={`text-[10px] font-mono ${feeNum.lt(0) ? 'text-[#FF4444]' : feeNum.gt(0) ? 'text-[#00C853]' : 'text-[#8E9299]'}`}>
+          <span className={`text-[10px] font-mono ${feeNum.lt(0) ? 'text-danger' : feeNum.gt(0) ? 'text-success' : 'text-fg-muted'}`}>
             {feeNum.gt(0) ? `+${fmtFinancial(feeNum)}` : fmtFinancial(feeNum)}
           </span>
           {isInverse && fmtUsdApprox(feeNum) && (
-            <span className="text-[8px] font-mono text-white/80">{fmtUsdApprox(feeNum)}</span>
+            <span className="text-[8px] font-mono text-fg/80">{fmtUsdApprox(feeNum)}</span>
           )}
         </div>
 
         {/* Col 7: Cash Flow + Change */}
-        <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
+        <div className="flex flex-col gap-1 lg:border-l border-line lg:pl-3 col-span-1">
           <AppTooltip description={`Cash flow and Net change. Values in ${isInverse ? entry.currency : 'USD'}${isInverse && usdPrice ? `. USD approx: multiply by ${formatCurrency(usdPrice, 'usd')}` : ''}.`}>
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold tracking-wider border-b border-dashed border-fg-muted/30 w-max cursor-help">
               Cash Flow & Change
             </span>
           </AppTooltip>
-          <span className={`text-xs font-mono ${cashFlowNum.gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+          <span className={`text-xs font-mono ${cashFlowNum.gte(0) ? 'text-success' : 'text-danger'}`}>
             {fmtFinancial(cashFlowNum)}
           </span>
           {isInverse && fmtUsdApprox(cashFlowNum) && (
-            <span className="text-[8px] font-mono text-white/80">{fmtUsdApprox(cashFlowNum)}</span>
+            <span className="text-[8px] font-mono text-fg/80">{fmtUsdApprox(cashFlowNum)}</span>
           )}
-          <span className={`text-[10px] font-mono ${changeNum.gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+          <span className={`text-[10px] font-mono ${changeNum.gte(0) ? 'text-success' : 'text-danger'}`}>
             {fmtFinancial(changeNum)}
           </span>
           {isInverse && fmtUsdApprox(changeNum) && (
-            <span className="text-[8px] font-mono text-white/80">{fmtUsdApprox(changeNum)}</span>
+            <span className="text-[8px] font-mono text-fg/80">{fmtUsdApprox(changeNum)}</span>
           )}
         </div>
 
         {/* Col 8: Wallet Balance + Expand */}
-        <div className="flex flex-col gap-1 lg:border-l border-[#2a2b30] lg:pl-3 col-span-1">
+        <div className="flex flex-col gap-1 lg:border-l border-line lg:pl-3 col-span-1">
           <div className="flex items-center justify-between w-full">
             <AppTooltip description={`Wallet balance after this bill. Value in ${isInverse ? entry.currency : 'USD'}${isInverse && usdPrice ? `. USD approx: multiply by ${formatCurrency(usdPrice, 'usd')}` : ''}.`}>
-              <span className="text-[10px] text-[#8E9299] uppercase font-semibold tracking-wider border-b border-dashed border-[#8E9299]/30 w-max cursor-help">
+              <span className="text-[10px] text-fg-muted uppercase font-semibold tracking-wider border-b border-dashed border-fg-muted/30 w-max cursor-help">
                 Wallet Balance
               </span>
             </AppTooltip>
             {isExpanded ? (
-              <ChevronUp className="w-4 h-4 text-[#8E9299] shrink-0" />
+              <ChevronUp className="w-4 h-4 text-fg-muted shrink-0" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-[#8E9299] shrink-0" />
+              <ChevronDown className="w-4 h-4 text-fg-muted shrink-0" />
             )}
           </div>
-          <span className="text-sm font-mono text-white font-semibold">
+          <span className="text-sm font-mono text-fg font-semibold">
             {fmtFinancial(balanceNum)}
           </span>
           {isInverse && fmtUsdApprox(balanceNum) && (
-            <span className="text-[9px] font-mono text-white/80">{fmtUsdApprox(balanceNum)}</span>
+            <span className="text-[9px] font-mono text-fg/80">{fmtUsdApprox(balanceNum)}</span>
           )}
-          <span className="text-[9px] text-[#8E9299] font-mono">{entry.currency || 'USDT'}</span>
+          <span className="text-[9px] text-fg-muted font-mono">{entry.currency || 'USDT'}</span>
         </div>
       </div>
 
       {/* Expanded Details */}
       {isExpanded && (
         <div
-          className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-[#2a2b30]"
+          className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-line"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-5 gap-x-4 text-sm mt-4">
@@ -317,20 +322,20 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
               <>
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1">
-                    <Layers className="w-3 h-3 text-[#8E9299]" />
-                    <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Number of contracts (sz)</span>
+                    <Layers className="w-3 h-3 text-fg-muted" />
+                    <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Number of contracts (sz)</span>
                   </div>
-                  <span className="text-white font-mono text-xs">
+                  <span className="text-fg font-mono text-xs">
                     {isPrivateMode ? '****' : `${tradeDetails.contracts} contracts`}
                   </span>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1">
-                    <Layers className="w-3 h-3 text-[#8E9299]" />
-                    <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Contract Value (ctVal)</span>
+                    <Layers className="w-3 h-3 text-fg-muted" />
+                    <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Contract Value (ctVal)</span>
                   </div>
-                  <span className="text-white font-mono text-xs">
+                  <span className="text-fg font-mono text-xs">
                     {isPrivateMode ? '****' : `${tradeDetails.ctVal} ${tradeDetails.ctType === 'inverse' ? 'USD' : (tradeDetails.baseCoin || 'BTC')}`}
                   </span>
                 </div>
@@ -338,19 +343,19 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1">
                     <CoinIcon symbol={tradeDetails.baseCoin || 'BTC'} size={14} className="w-3.5 h-3.5 shrink-0" />
-                    <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Total Crypto Amount</span>
+                    <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Total Crypto Amount</span>
                   </div>
-                  <span className="text-white font-mono text-xs font-semibold text-[#00C853]">
+                  <span className="text-fg font-mono text-xs font-semibold text-success">
                     {isPrivateMode ? '****' : `${formatCurrency(tradeDetails.cryptoQty, 'crypto', 8)} ${tradeDetails.baseCoin || 'BTC'}`}
                   </span>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1">
-                    <DollarSign className="w-3 h-3 text-[#8E9299]" />
-                    <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Total Trade Value (USD/USDT)</span>
+                    <DollarSign className="w-3 h-3 text-fg-muted" />
+                    <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Total Trade Value (USD/USDT)</span>
                   </div>
-                  <span className="text-white font-mono text-xs font-semibold text-[#2F6BFF]">
+                  <span className="text-fg font-mono text-xs font-semibold text-accent">
                     {isPrivateMode ? '****' : `≈ ${formatCurrency(tradeDetails.totalValueUsd, 'usd')}`}
                   </span>
                 </div>
@@ -359,57 +364,57 @@ export function OkxTransactionRow({ entry, isExpanded, onToggle }: Props) {
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1">
-                <Hash className="w-3 h-3 text-[#8E9299]" />
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Bill ID / Raw ID</span>
+                <Hash className="w-3 h-3 text-fg-muted" />
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Bill ID / Raw ID</span>
               </div>
-              <span className="text-white font-mono text-xs truncate max-w-[180px]" title={entry.billId || entry.rawId}>
+              <span className="text-fg font-mono text-xs truncate max-w-[180px]" title={entry.billId || entry.rawId}>
                 {entry.billId || entry.rawId || '--'}
               </span>
             </div>
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1">
-                <FileText className="w-3 h-3 text-[#8E9299]" />
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">{t('transactions.details.orderId', 'Order ID')}</span>
+                <FileText className="w-3 h-3 text-fg-muted" />
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('transactions.details.orderId', 'Order ID')}</span>
               </div>
-              <span className="text-white font-mono text-xs truncate max-w-[180px]" title={entry.orderId}>
+              <span className="text-fg font-mono text-xs truncate max-w-[180px]" title={entry.orderId}>
                 {entry.orderId || '--'}
               </span>
             </div>
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1">
-                <Percent className="w-3 h-3 text-[#8E9299]" />
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Fee Currency / Rate</span>
+                <Percent className="w-3 h-3 text-fg-muted" />
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Fee Currency / Rate</span>
               </div>
-              <span className="text-white font-mono text-xs">{entry.feeCurrency || entry.feeRate || '--'}</span>
+              <span className="text-fg font-mono text-xs">{entry.feeCurrency || entry.feeRate || '--'}</span>
             </div>
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1">
-                <Gift className="w-3 h-3 text-[#8E9299]" />
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Realized PnL / Extra</span>
+                <Gift className="w-3 h-3 text-fg-muted" />
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Realized PnL / Extra</span>
               </div>
-              <span className="text-white font-mono text-xs">{entry.pnl || entry.extra || '--'}</span>
+              <span className="text-fg font-mono text-xs">{entry.pnl || entry.extra || '--'}</span>
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">{t('transactions.details.tradeId', 'Trade ID')}</span>
-              <span className="text-white font-mono text-xs truncate max-w-[180px]" title={entry.tradeId}>
+              <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('transactions.details.tradeId', 'Trade ID')}</span>
+              <span className="text-fg font-mono text-xs truncate max-w-[180px]" title={entry.tradeId}>
                 {entry.tradeId || '--'}
               </span>
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">{t('transactions.details.account', 'Account')}</span>
-              <span className="text-white font-mono text-xs">{connectionLabel}</span>
+              <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('transactions.details.account', 'Account')}</span>
+              <span className="text-fg font-mono text-xs">{connectionLabel}</span>
             </div>
 
             <div className="flex flex-col gap-1">
               <AppTooltip description="Bill sub-type description">
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help">{t('transactions.details.subType', 'Sub Type')}</span>
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max cursor-help">{t('transactions.details.subType', 'Sub Type')}</span>
               </AppTooltip>
-              <span className="text-white font-mono text-xs">{entry.transSubType || entry.subType || '--'}</span>
+              <span className="text-fg font-mono text-xs">{entry.transSubType || entry.subType || '--'}</span>
             </div>
           </div>
         </div>

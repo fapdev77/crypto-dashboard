@@ -254,8 +254,9 @@ describe('BybitTransactionService', () => {
 
     it('should compute stats correctly', () => {
       const entries = [
-        makeMockEntry({ type: 'TRADE', funding: '-2.5', fee: '-15.5', cashFlow: '2500', change: '2515.5', cashBalance: '12500.5', currency: 'USDT' }),
-        makeMockEntry({ id: 'mock-2', type: 'TRADE', funding: '1.25', fee: '-6.12', cashFlow: '-1800', change: '-1806.12', cashBalance: '10694.38', currency: 'USDT' }),
+        // Bybit reports fees as positive costs (see v5 transaction-log docs)
+        makeMockEntry({ type: 'TRADE', funding: '-2.5', fee: '15.5', cashFlow: '2500', change: '2515.5', cashBalance: '12500.5', currency: 'USDT' }),
+        makeMockEntry({ id: 'mock-2', type: 'TRADE', funding: '1.25', fee: '6.12', cashFlow: '-1800', change: '-1806.12', cashBalance: '10694.38', currency: 'USDT' }),
         makeMockEntry({ id: 'mock-3', type: 'SETTLEMENT', funding: '-0.85', fee: '0', cashFlow: '0', change: '-0.85', cashBalance: '10693.53', currency: 'USDT' }),
       ];
 
@@ -265,22 +266,23 @@ describe('BybitTransactionService', () => {
       expect(stats.typeBreakdown).toEqual({ TRADE: 2, FUNDING_FEE: 1 });
       // funding: -2.5 + 1.25 + (-0.85) = -2.1
       expect(stats.stable.totalFunding).toBe('-2.1');
-      // fees: -15.5 + (-6.12) + 0 = -21.62
-      expect(stats.stable.totalFees).toBe('-21.62');
+      // fees: canonical convention keeps paid fees positive: 15.5 + 6.12 + 0 = 21.62
+      expect(stats.stable.totalFees).toBe('21.62');
       // cashFlow: 2500 + (-1800) + 0 = 700
       expect(stats.stable.totalCashFlow).toBe('700');
       // change: 2515.5 + (-1806.12) + (-0.85) = 708.53
       expect(stats.stable.totalChange).toBe('708.53');
       // finalBalance: from most recent entry (first one by default order)
       expect(stats.stable.finalBalance).toBe('12500.5');
-      // No per-currency breakdown for this test (all USDT)
-      expect(stats.perCurrency).toEqual({});
+      // Stablecoins also get their own per-currency bucket
+      expect(Object.keys(stats.perCurrency)).toEqual(['USDT']);
+      expect(stats.perCurrency.USDT.totalFees).toBe('21.62');
     });
 
     it('should exclude TRANSFER, TRANSFER_IN, and TRANSFER_OUT from totalChange and totalCashFlow but include in finalBalance', () => {
       const entries = [
         makeMockEntry({ id: 'tx-1', type: 'TRANSFER_IN', funding: '0', fee: '0', cashFlow: '100', change: '100', cashBalance: '100', currency: 'NEAR', transactionTime: 1710000000000 }),
-        makeMockEntry({ id: 'tx-2', type: 'TRADE', funding: '0', fee: '-1', cashFlow: '5', change: '5', cashBalance: '104', currency: 'NEAR', transactionTime: 1710000001000 }),
+        makeMockEntry({ id: 'tx-2', type: 'TRADE', funding: '0', fee: '1', cashFlow: '5', change: '5', cashBalance: '104', currency: 'NEAR', transactionTime: 1710000001000 }),
         makeMockEntry({ id: 'tx-3', type: 'TRANSFER_OUT', funding: '0', fee: '0', cashFlow: '-20', change: '-20', cashBalance: '84', currency: 'NEAR', transactionTime: 1710000002000 }),
       ];
 
@@ -292,8 +294,8 @@ describe('BybitTransactionService', () => {
       const nearStats = stats.perCurrency.NEAR;
       expect(nearStats).toBeDefined();
       
-      // Fees paid: -1
-      expect(nearStats.totalFees).toBe('-1');
+      // Fees paid are positive in the canonical convention
+      expect(nearStats.totalFees).toBe('1');
       // Only the TRADE's change (5) is added to totalChange (excluding TRANSFER_IN of 100 and TRANSFER_OUT of -20)
       expect(nearStats.totalChange).toBe('5');
       // Only the TRADE's cashFlow (5) is added to totalCashFlow (excluding TRANSFER_IN of 100 and TRANSFER_OUT of -20)

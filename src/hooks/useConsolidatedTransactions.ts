@@ -11,8 +11,9 @@ import { BitgetTransactionService } from '../services/bitget/BitgetTransactionSe
 import { OkxTransactionService } from '../services/okx/OkxTransactionService';
 import { getBybitTxLogCache, getBitgetTxLogCache, getOkxTxLogCache } from '../services/historyCache';
 import { matchUniversalTxType, UniversalTxType } from '../utils/transactionTypeMapper';
-import { fetchTokenUsdPrice } from './useTokenUsdPrice';
+import { getUsdPricesForVenues } from '../services/pricing/usdPrice';
 import { getStrictCalendarStartTime, resolvePeriodDateRange } from '../utils/dateTimeHelper';
+import { aggregateStatsToUsd, needsTokenRate } from '../utils/usdAggregation';
 import Big from 'big.js';
 
 export interface ConsolidatedTxFilters {
@@ -55,6 +56,8 @@ export interface ExchangeStatsBlock {
   stable: CurrencyStats;
   perCurrency: Record<string, CurrencyStats>;
   aggregatedUsd: CurrencyStats;
+  /** Currencies that could not be converted to USD (no price available). */
+  missingRates: string[];
 }
 
 export interface ConsolidatedStats {
@@ -63,6 +66,8 @@ export interface ConsolidatedStats {
   stable: CurrencyStats;
   perCurrency: Record<string, CurrencyStats>;
   aggregatedUsd: CurrencyStats;
+  /** Union of currencies excluded from the USD totals because no rate was known. */
+  missingRates: string[];
   byExchange: {
     bybit: ExchangeStatsBlock;
     bitget: ExchangeStatsBlock;
@@ -85,6 +90,7 @@ const emptyStatsBlock: ExchangeStatsBlock = {
     percentageChange: 0,
   },
   perCurrency: {},
+  missingRates: [],
   aggregatedUsd: {
     totalFunding: '0',
     totalFees: '0',
@@ -101,6 +107,7 @@ const emptyStatsBlock: ExchangeStatsBlock = {
 export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = defaultConsolidatedFilters) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const fiatRates = useSettingsStore(state => state.fiatRates);
   const syncStore = useSyncCoordinatorStore();
 
   const hasLoadedOnceRef = useRef(false);
@@ -299,25 +306,32 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
     };
   }, [filteredByExchange]);
 
-  // Collect all non-stable currencies needing USD rates
-  const nonStableCurrencies = useMemo(() => {
-    const set = new Set<string>();
-    [rawStatsByExchange.bybit, rawStatsByExchange.bitget, rawStatsByExchange.okx].forEach(stats => {
-      Object.keys(stats.perCurrency).forEach(c => set.add(c.toUpperCase()));
+  // Currencies still missing a price, grouped by the exchange they trade on.
+  // The venue matters: OKX does not list every exchange token (BGB, MNT), so a
+  // venue-less lookup could never price them while the balances page can.
+  const nonStableCurrenciesByExchange = useMemo(() => {
+    const groups: Partial<Record<'bybit' | 'bitget' | 'okx', string[]>> = {};
+
+    (['bybit', 'bitget', 'okx'] as const).forEach(exchange => {
+      const currencies = Object.keys(rawStatsByExchange[exchange].perCurrency)
+        .map(c => c.toUpperCase())
+        .filter(c => needsTokenRate(c, fiatRates) && tokenRates[c] === undefined);
+      if (currencies.length > 0) {
+        groups[exchange] = Array.from(new Set(currencies));
+      }
     });
-    return Array.from(set);
-  }, [rawStatsByExchange]);
+
+    return groups;
+  }, [rawStatsByExchange, fiatRates, tokenRates]);
+
+  const nonStableSignature = Object.entries(nonStableCurrenciesByExchange)
+    .map(([exchange, currencies]) => `${exchange}:${(currencies || []).join(',')}`)
+    .join('|');
 
   // Fetch prices for any missing non-stable currencies
   useEffect(() => {
     let isMounted = true;
-    if (nonStableCurrencies.length === 0) {
-      if (isCalculatingUsd) setIsCalculatingUsd(false);
-      return;
-    }
-
-    const missing = nonStableCurrencies.filter(c => tokenRates[c] === undefined);
-    if (missing.length === 0) {
+    if (!nonStableSignature) {
       if (isCalculatingUsd) setIsCalculatingUsd(false);
       return;
     }
@@ -325,78 +339,33 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
     setIsCalculatingUsd(true);
 
     const fetchRates = async () => {
-      const promises = missing.map(c => fetchTokenUsdPrice(c));
-      const results = await Promise.all(promises);
+      const { rates } = await getUsdPricesForVenues(nonStableCurrenciesByExchange, fiatRates);
 
       if (!isMounted) return;
 
-      const updatedRates = { ...tokenRates };
-      let changed = false;
-
-      missing.forEach((c, idx) => {
-        const rate = results[idx];
-        if (rate !== null) {
-          updatedRates[c] = rate;
-          changed = true;
-        }
-      });
-
-      if (changed) {
-        setTokenRates(updatedRates);
+      if (Object.keys(rates).length > 0) {
+        setTokenRates(prev => ({ ...prev, ...rates }));
       }
       setIsCalculatingUsd(false);
     };
 
     fetchRates();
-  }, [nonStableCurrencies.sort().join(',')]);
+  }, [nonStableSignature]);
 
   // Combine raw stats with dynamic USD equivalents into final ConsolidatedStats
   const stats = useMemo<ConsolidatedStats>(() => {
     const buildExchangeBlock = (raw: typeof rawStatsByExchange.bybit): ExchangeStatsBlock => {
-      let totalFundingUsd = new Big(raw.stable.totalFunding);
-      let totalFeesUsd = new Big(raw.stable.totalFees);
-      let totalCashFlowUsd = new Big(raw.stable.totalCashFlow);
-      let totalChangeUsd = new Big(raw.stable.totalChange);
-      let finalBalanceUsd = new Big(raw.stable.finalBalance);
-      let totalInflowUsd = new Big(raw.stable.totalInflow);
-      let totalOutflowUsd = new Big(raw.stable.totalOutflow);
-
-      for (const [ccy, vals] of Object.entries(raw.perCurrency)) {
-        const rate = tokenRates[ccy.toUpperCase()] || 0;
-        totalFundingUsd = totalFundingUsd.plus(new Big(vals.totalFunding).times(rate));
-        totalFeesUsd = totalFeesUsd.plus(new Big(vals.totalFees).times(rate));
-        totalCashFlowUsd = totalCashFlowUsd.plus(new Big(vals.totalCashFlow).times(rate));
-        totalChangeUsd = totalChangeUsd.plus(new Big(vals.totalChange).times(rate));
-        finalBalanceUsd = finalBalanceUsd.plus(new Big(vals.finalBalance).times(rate));
-        totalInflowUsd = totalInflowUsd.plus(new Big(vals.totalInflow).times(rate));
-        totalOutflowUsd = totalOutflowUsd.plus(new Big(vals.totalOutflow).times(rate));
-      }
-
-      const initialBalanceUsd = finalBalanceUsd.minus(totalChangeUsd).minus(totalInflowUsd).plus(totalOutflowUsd);
-      const basisUsd = initialBalanceUsd.plus(totalInflowUsd);
-      let percentageChangeUsd = 0;
-      if (basisUsd.gt(0)) {
-        percentageChangeUsd = totalChangeUsd.div(basisUsd).times(100).toNumber();
-      } else if (basisUsd.eq(0) && totalChangeUsd.gt(0)) {
-        percentageChangeUsd = 100;
-      }
+      // perCurrency already contains every currency (stablecoins included), so
+      // the USD totals are derived from a single shared aggregation.
+      const { stats: aggregatedUsd, missingRates } = aggregateStatsToUsd(raw.perCurrency, tokenRates, fiatRates);
 
       return {
         totalCount: raw.totalCount,
         typeBreakdown: raw.typeBreakdown,
         stable: raw.stable,
         perCurrency: raw.perCurrency,
-        aggregatedUsd: {
-          totalFunding: totalFundingUsd.toString(),
-          totalFees: totalFeesUsd.toString(),
-          totalCashFlow: totalCashFlowUsd.toString(),
-          totalChange: totalChangeUsd.toString(),
-          finalBalance: finalBalanceUsd.toString(),
-          totalInflow: totalInflowUsd.toString(),
-          totalOutflow: totalOutflowUsd.toString(),
-          initialBalance: initialBalanceUsd.toString(),
-          percentageChange: percentageChangeUsd,
-        },
+        aggregatedUsd,
+        missingRates: raw.totalCount > 0 ? missingRates : [],
       };
     };
 
@@ -452,6 +421,10 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
       percentageChangeUsd = 100;
     }
 
+    const missingRates = Array.from(new Set(
+      [bybitBlock, bitgetBlock, okxBlock].flatMap(block => block.missingRates)
+    )).sort();
+
     return {
       totalCount,
       typeBreakdown: combinedTypeBreakdown,
@@ -467,6 +440,7 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
         percentageChange: percentageChangeUsd,
       },
       perCurrency: {}, // Filled dynamically if needed
+      missingRates,
       aggregatedUsd: {
         totalFunding: totalFundingUsd.toString(),
         totalFees: totalFeesUsd.toString(),
@@ -484,7 +458,7 @@ export function useConsolidatedTransactions(filters: ConsolidatedTxFilters = def
         okx: okxBlock,
       },
     };
-  }, [rawStatsByExchange, tokenRates]);
+  }, [rawStatsByExchange, tokenRates, fiatRates]);
 
   // Multi-exchange sync states
   const isSyncing = syncStore.isBybitTxSyncing || syncStore.isBitgetTxSyncing || syncStore.isOkxTxSyncing;

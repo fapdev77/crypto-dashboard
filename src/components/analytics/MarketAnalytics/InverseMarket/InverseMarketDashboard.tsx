@@ -132,7 +132,7 @@ export const InverseMarketDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            <h2 className="text-lg font-bold tracking-tight text-fg flex items-center gap-2">
               <Coins className="w-5 h-5 text-cyan-400" />
               {t('analytics.inverseMarket.title', 'Inverse (Coin-M) Derivative Analytics')}
             </h2>
@@ -141,7 +141,7 @@ export const InverseMarketDashboard: React.FC = () => {
               Native Collateralized
             </span>
           </div>
-          <p className="text-xs text-[#8E9299] mt-0.5">
+          <p className="text-xs text-fg-muted mt-0.5">
             {t('analytics.inverseMarket.subtitle', 'Capital preservation, synthetic USD hedging and Coin-margined contract dynamics.')}
           </p>
         </div>
@@ -154,53 +154,53 @@ export const InverseMarketDashboard: React.FC = () => {
       {/* Top 5 KPI Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {/* Total Assets */}
-        <div className="bg-[#121318] border border-[#23252d] rounded-xl p-3.5 space-y-1">
-          <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+        <div className="bg-canvas border border-[#23252d] rounded-xl p-3.5 space-y-1">
+          <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
             {t('analytics.inverseMarket.activeContracts', 'Active Coin-M Contracts')}
           </span>
-          <div className="text-lg font-bold font-mono text-white flex items-baseline gap-1.5">
+          <div className="text-lg font-bold font-mono text-fg flex items-baseline gap-1.5">
             {kpis.totalAssets}
             <span className="text-xs font-normal text-cyan-400 font-sans">contracts</span>
           </div>
-          <span className="text-[11px] text-[#8E9299]">Bybit, OKX & Bitget</span>
+          <span className="text-[11px] text-fg-muted">Bybit, OKX & Bitget</span>
         </div>
 
         {/* 24h USD Notional Volume */}
-        <div className="bg-[#121318] border border-[#23252d] rounded-xl p-3.5 space-y-1">
-          <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+        <div className="bg-canvas border border-[#23252d] rounded-xl p-3.5 space-y-1">
+          <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
             {t('analytics.inverseMarket.volume24h', '24h Coin-M Volume')}
           </span>
-          <div className="text-lg font-bold font-mono text-white">
+          <div className="text-lg font-bold font-mono text-fg">
             {formatUsd(kpis.totalUsdVolume)}
           </div>
           <span className="text-[11px] text-cyan-400/90 font-mono">Aggregated Coin-M</span>
         </div>
 
         {/* Total Open Interest */}
-        <div className="bg-[#121318] border border-[#23252d] rounded-xl p-3.5 space-y-1">
-          <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+        <div className="bg-canvas border border-[#23252d] rounded-xl p-3.5 space-y-1">
+          <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
             {t('analytics.inverseMarket.notionalOi', 'Total Notional USD Open Interest')}
           </span>
           <div className="text-lg font-bold font-mono text-amber-400">
             {formatUsd(kpis.totalOiUsd)}
           </div>
-          <span className="text-[11px] text-[#8E9299]">Active Margin Locked</span>
+          <span className="text-[11px] text-fg-muted">Active Margin Locked</span>
         </div>
 
         {/* Top Funding Spread */}
-        <div className="bg-[#121318] border border-[#23252d] rounded-xl p-3.5 space-y-1">
-          <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+        <div className="bg-canvas border border-[#23252d] rounded-xl p-3.5 space-y-1">
+          <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
             Max Funding Spread
           </span>
           <div className="text-lg font-bold font-mono text-emerald-400 flex items-baseline gap-1">
             {kpis.topSpreadAsset?.maxFundingSpreadApr ? `+${kpis.topSpreadAsset.maxFundingSpreadApr}%` : '—'}
             {kpis.topSpreadAsset && (
-              <span className="text-[11px] font-semibold text-white/80 font-sans">
+              <span className="text-[11px] font-semibold text-fg/80 font-sans">
                 ({kpis.topSpreadAsset.symbol})
               </span>
             )}
           </div>
-          <span className="text-[11px] text-[#8E9299]">
+          <span className="text-[11px] text-fg-muted">
             {kpis.topSpreadAsset?.bestLongExchange && kpis.topSpreadAsset?.bestShortExchange
               ? `${kpis.topSpreadAsset.bestLongExchange.toUpperCase()} ↔ ${kpis.topSpreadAsset.bestShortExchange.toUpperCase()}`
               : 'Delta-neutral APR'}
@@ -208,8 +208,8 @@ export const InverseMarketDashboard: React.FC = () => {
         </div>
 
         {/* Average Funding APR */}
-        <div className="bg-[#121318] border border-[#23252d] rounded-xl p-3.5 space-y-1">
-          <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+        <div className="bg-canvas border border-[#23252d] rounded-xl p-3.5 space-y-1">
+          <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
             Mean Market APR
           </span>
           <div className="text-lg font-bold font-mono text-purple-400">
@@ -220,16 +220,16 @@ export const InverseMarketDashboard: React.FC = () => {
       </div>
 
       {/* Control Bar: Search, Favorites Filter, Expand All */}
-      <div className="bg-[#121318] border border-[#22242d] rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
+      <div className="bg-canvas border border-[#22242d] rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
         <div className="flex items-center gap-2.5 flex-1 min-w-[240px] max-w-md">
           <div className="relative w-full">
-            <Search className="w-4 h-4 text-[#8E9299] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-fg-muted absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search Coin-M asset (e.g. BTC, ETH, SOL)..."
-              className="w-full bg-[#181a22] border border-[#2a2d38] rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-[#6c707d] focus:outline-none focus:border-cyan-400/50 transition-colors"
+              className="w-full bg-[#181a22] border border-[#2a2d38] rounded-lg pl-9 pr-3 py-1.5 text-xs text-fg placeholder-[#6c707d] focus:outline-none focus:border-cyan-400/50 transition-colors"
             />
           </div>
         </div>
@@ -241,7 +241,7 @@ export const InverseMarketDashboard: React.FC = () => {
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border ${
               showFavoritesOnly
                 ? 'bg-amber-400/10 text-amber-400 border-amber-400/30 shadow-sm'
-                : 'bg-[#181a22] text-[#8E9299] border-[#2a2d38] hover:text-white hover:border-[#383c4b]'
+                : 'bg-[#181a22] text-fg-muted border-[#2a2d38] hover:text-fg hover:border-[#383c4b]'
             }`}
           >
             <Star
@@ -256,7 +256,7 @@ export const InverseMarketDashboard: React.FC = () => {
           {/* Expand/Collapse All Button */}
           <button
             onClick={() => setExpandAll(!expandAll)}
-            className="px-3 py-1.5 bg-[#181a22] hover:bg-[#20222c] border border-[#2a2d38] hover:border-[#383c4b] rounded-lg text-xs font-semibold text-[#8E9299] hover:text-white flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 bg-[#181a22] hover:bg-[#20222c] border border-[#2a2d38] hover:border-[#383c4b] rounded-lg text-xs font-semibold text-fg-muted hover:text-fg flex items-center gap-1.5 transition-colors"
           >
             {expandAll ? <ChevronsDownUp className="w-3.5 h-3.5" /> : <ChevronsUpDown className="w-3.5 h-3.5" />}
             <span>{expandAll ? 'Collapse All' : 'Expand All'}</span>
@@ -271,7 +271,7 @@ export const InverseMarketDashboard: React.FC = () => {
           <span>{error}</span>
           <button
             onClick={() => loadData(true)}
-            className="ml-auto underline hover:text-white font-semibold"
+            className="ml-auto underline hover:text-fg font-semibold"
           >
             Retry
           </button>
@@ -280,18 +280,18 @@ export const InverseMarketDashboard: React.FC = () => {
 
       {/* Loading Skeleton */}
       {isLoading && data.length === 0 && (
-        <div className="bg-[#121318] border border-[#22242d] rounded-xl p-12 flex flex-col items-center justify-center space-y-3">
+        <div className="bg-canvas border border-[#22242d] rounded-xl p-12 flex flex-col items-center justify-center space-y-3">
           <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
-          <p className="text-xs text-[#8E9299]">Scanning Coin-M markets on Bybit, OKX & Bitget...</p>
+          <p className="text-xs text-fg-muted">Scanning Coin-M markets on Bybit, OKX & Bitget...</p>
         </div>
       )}
 
       {/* Master Coin-M Table */}
       {(!isLoading || data.length > 0) && (
-        <div className="bg-[#121318] border border-[#22242d] rounded-xl shadow-xl overflow-hidden">
+        <div className="bg-canvas border border-[#22242d] rounded-xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs whitespace-nowrap min-w-[1280px]">
-              <thead className="bg-[#151720] text-[#8E9299] border-b border-[#22242d] text-[10px] font-bold uppercase tracking-wider">
+              <thead className="bg-[#151720] text-fg-muted border-b border-[#22242d] text-[10px] font-bold uppercase tracking-wider">
                 <tr>
                   <th className="py-3 px-3 w-10 text-center">
                     <span className="sr-only">Favorite</span>
@@ -362,10 +362,10 @@ export const InverseMarketDashboard: React.FC = () => {
 
                 {filteredData.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-[#8E9299]">
+                    <td colSpan={8} className="py-12 text-center text-fg-muted">
                       <div className="flex flex-col items-center justify-center space-y-2">
                         <Coins className="w-8 h-8 text-[#4e515d]" />
-                        <p className="text-xs font-semibold text-white">No Coin-M assets found</p>
+                        <p className="text-xs font-semibold text-fg">No Coin-M assets found</p>
                         <p className="text-[11px] text-[#6b6e79]">
                           {showFavoritesOnly
                             ? 'You have no favorited Coin-M assets matching this query. Click the star icon to favorite an asset.'

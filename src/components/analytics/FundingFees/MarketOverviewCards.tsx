@@ -39,10 +39,10 @@ export const MarketOverviewCards = ({
   if (marketMetrics.totalSymbols === 0) return null;
 
   return (
-    <div className={`bg-[#151619] border border-[#2a2b30] rounded-xl ${className}`}>
+    <div className={`bg-surface border border-line rounded-xl ${className}`}>
       {/* ── Toggle Header ── */}
       <div
-        className="relative flex items-center justify-between px-6 py-3 cursor-pointer bg-[#1A1C20] hover:bg-[#202226] transition-colors select-none overflow-hidden"
+        className="relative flex items-center justify-between px-6 py-3 cursor-pointer bg-elevated hover:bg-elevated transition-colors select-none overflow-hidden"
         onClick={() => setExpanded(prev => !prev)}
         role="button"
         tabIndex={0}
@@ -52,12 +52,12 @@ export const MarketOverviewCards = ({
       >
         <div className="flex items-center gap-2">
           {expanded ? (
-            <ChevronDown className="w-4 h-4 text-[#8E9299]" />
+            <ChevronDown className="w-4 h-4 text-fg-muted" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-[#8E9299]" />
+            <ChevronRight className="w-4 h-4 text-fg-muted" />
           )}
-          <h3 className="text-sm font-semibold text-white">{t('analytics.funding.cards.marketOverview', 'Market Overview')}</h3>
-          <span className="text-xs text-[#8E9299] font-normal">
+          <h3 className="text-sm font-semibold text-fg">{t('analytics.funding.cards.marketOverview', 'Market Overview')}</h3>
+          <span className="text-xs text-fg-muted font-normal">
             ({marketMetrics.totalSymbols} symbols · {rankings.topPayers.length} top / {rankings.bottomPayers.length} bottom)
           </span>
         </div>
@@ -71,14 +71,14 @@ export const MarketOverviewCards = ({
 
         {/* Mini preview when collapsed */}
         {!expanded && (
-          <div className="flex items-center gap-3 text-[11px] text-[#8E9299]">
+          <div className="flex items-center gap-3 text-[11px] text-fg-muted">
             <span className="hidden sm:inline">
-              Avg: <span className={marketMetrics.avgTodayRate > 0 ? 'text-green-400' : marketMetrics.avgTodayRate < 0 ? 'text-red-400' : 'text-white'}>
+              Avg: <span className={marketMetrics.avgTodayRate > 0 ? 'text-green-400' : marketMetrics.avgTodayRate < 0 ? 'text-red-400' : 'text-fg'}>
                 {formatPercent(marketMetrics.avgTodayRate)}
               </span>
             </span>
             <span>
-              ±<span className="text-white">{formatPercent(marketMetrics.stdDevTodayRate)}</span>
+              ±<span className="text-fg">{formatPercent(marketMetrics.stdDevTodayRate)}</span>
             </span>
           </div>
         )}
@@ -90,35 +90,35 @@ export const MarketOverviewCards = ({
           {/* Row 1: Numeric Metric Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {/* Active Symbols with instrument type breakdown */}
-            <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col gap-1.5 hover:border-[#3a3b40] transition-colors">
+            <div className="bg-surface border border-line rounded-xl p-4 flex flex-col gap-1.5 hover:border-line-strong transition-colors">
               <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-[#8E9299]" />
-                <span className="text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">Active Symbols</span>
+                <Layers className="w-4 h-4 text-fg-muted" />
+                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">Active Symbols</span>
               </div>
-              <span className="text-xl font-bold font-mono tracking-tight text-white">
+              <span className="text-xl font-bold font-mono tracking-tight text-fg">
                 {marketMetrics.totalSymbols}
               </span>
               <div className="flex flex-col gap-0.5 text-[11px]">
                 <AppTooltip description="Linear perpetual contracts settled in USDT." side="top" align="center">
-                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-[#8E9299]/20 text-[#8E9299]">
+                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-fg-muted">
                     <span>USDT-M</span>
-                    <span className="font-mono text-white">{marketMetrics.usdtmSymbols}</span>
+                    <span className="font-mono text-fg">{marketMetrics.usdtmSymbols}</span>
                   </span>
                 </AppTooltip>
                 <AppTooltip description="Inverse perpetual contracts settled in the base coin (e.g. BTC, ETH)." side="top" align="center">
-                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-[#8E9299]/20 text-[#8E9299]">
+                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-fg-muted">
                     <span>COIN-M</span>
-                    <span className="font-mono text-white">{marketMetrics.coinmSymbols}</span>
+                    <span className="font-mono text-fg">{marketMetrics.coinmSymbols}</span>
                   </span>
                 </AppTooltip>
               </div>
             </div>
             {/* Combined Distribution card: Positive + Neutral + Negative + Net spread */}
-            <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col gap-2 hover:border-[#3a3b40] transition-colors">
+            <div className="bg-surface border border-line rounded-xl p-4 flex flex-col gap-2 hover:border-line-strong transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#8E9299]" />
-                  <span className="text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">Distribution Today</span>
+                  <Activity className="w-4 h-4 text-fg-muted" />
+                  <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">Distribution Today</span>
                 </div>
                 <AppTooltip
                   description="Net positive spread: the difference between the % of positive and negative symbols. A positive value means more symbols have Longs paying Shorts than vice versa."
@@ -126,8 +126,8 @@ export const MarketOverviewCards = ({
                   align="center"
                 >
                   <span
-                    className={`text-xs font-mono font-bold cursor-help border-b border-dashed border-[#8E9299]/30 ${
-                      marketMetrics.netPositiveSpread > 0 ? 'text-green-400' : marketMetrics.netPositiveSpread < 0 ? 'text-red-400' : 'text-white'
+                    className={`text-xs font-mono font-bold cursor-help border-b border-dashed border-fg-muted/30 ${
+                      marketMetrics.netPositiveSpread > 0 ? 'text-green-400' : marketMetrics.netPositiveSpread < 0 ? 'text-red-400' : 'text-fg'
                     }`}
                   >
                     Net {marketMetrics.netPositiveSpread >= 0 ? '+' : ''}{formatPercentShort(marketMetrics.netPositiveSpread)}
@@ -147,7 +147,7 @@ export const MarketOverviewCards = ({
                   </span>
                 </AppTooltip>
                 <AppTooltip description="Percentage of symbols with zero cumulative funding today (no payment exchanged)." side="top" align="center">
-                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-[#8E9299]/20 text-[#8E9299]">
+                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-fg-muted">
                     <span className="flex items-center gap-1.5">
                       <span className="w-3 h-3 flex items-center justify-center text-[10px]">—</span>
                       Neutral
@@ -167,25 +167,25 @@ export const MarketOverviewCards = ({
               </div>
             </div>
             {/* Combined Rate Stats: Avg Rate + Std Deviation */}
-            <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 flex flex-col gap-1.5 hover:border-[#3a3b40] transition-colors">
+            <div className="bg-surface border border-line rounded-xl p-4 flex flex-col gap-1.5 hover:border-line-strong transition-colors">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-[#8E9299]" />
-                <span className="text-[10px] font-medium text-[#8E9299] uppercase tracking-wider">Rate Stats</span>
+                <BarChart3 className="w-4 h-4 text-fg-muted" />
+                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">Rate Stats</span>
               </div>
               <AppTooltip description="Average cumulative funding rate across all symbols for today (UTC). A positive value means Longs are generally paying Shorts." side="top" align="center">
-                <span className="flex items-center justify-between cursor-help border-b border-dashed border-[#8E9299]/20 text-[11px]">
-                  <span className="text-[#8E9299]">Avg Rate</span>
+                <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-[11px]">
+                  <span className="text-fg-muted">Avg Rate</span>
                   <span className={`font-mono font-medium ${
-                    marketMetrics.avgTodayRate > 0 ? 'text-green-400' : marketMetrics.avgTodayRate < 0 ? 'text-red-400' : 'text-white'
+                    marketMetrics.avgTodayRate > 0 ? 'text-green-400' : marketMetrics.avgTodayRate < 0 ? 'text-red-400' : 'text-fg'
                   }`}>
                     {formatPercent(marketMetrics.avgTodayRate)}
                   </span>
                 </span>
               </AppTooltip>
               <AppTooltip description="Standard deviation of today's funding rates. Higher values indicate greater dispersion between coins — some cost much more to hold than others." side="top" align="center">
-                <span className="flex items-center justify-between cursor-help border-b border-dashed border-[#8E9299]/20 text-[11px]">
-                  <span className="text-[#8E9299]">Std Dev</span>
-                  <span className="font-mono font-medium text-white">
+                <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-[11px]">
+                  <span className="text-fg-muted">Std Dev</span>
+                  <span className="font-mono font-medium text-fg">
                     {formatPercent(marketMetrics.stdDevTodayRate)}
                   </span>
                 </span>

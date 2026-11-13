@@ -33,8 +33,8 @@ export function HedgeProCoinRows({
 
   if (summaries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl flex-1 text-center">
-        <p className="text-[#8E9299] text-sm">{t('hedgePro.coinRows.noPositions')}</p>
+      <div className="flex flex-col items-center justify-center p-12 bg-surface border border-line rounded-xl flex-1 text-center">
+        <p className="text-fg-muted text-sm">{t('hedgePro.coinRows.noPositions')}</p>
       </div>
     );
   }

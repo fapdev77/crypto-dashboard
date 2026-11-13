@@ -18,15 +18,16 @@ export function HelpToggleButton({ isOpen, onClick }: HelpToggleButtonProps) {
       align="end"
     >
       <button
+        type="button"
         onClick={onClick}
-        className={`p-2 border rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#2F6BFF] focus:ring-offset-2 dark:focus:ring-offset-[#0b0c10] ${
+        className={`w-9 h-9 inline-flex items-center justify-center shrink-0 border rounded-lg transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas ${
           isOpen
-            ? 'text-[#2F6BFF] border-[#2F6BFF]/30 bg-[#2F6BFF]/10 hover:bg-[#2F6BFF]/20'
-            : 'text-gray-400 hover:text-white bg-gray-100 dark:bg-[#151619] border-gray-200 dark:border-[#2a2b30] hover:bg-gray-200 dark:hover:bg-[#2a2b30]'
+            ? 'text-accent border-accent/30 bg-accent/10 hover:bg-accent/20'
+            : 'text-fg-muted hover:text-fg bg-surface border-line hover:bg-elevated-hover hover:border-line-strong'
         }`}
         aria-label={isOpen ? t('common.buttons.helpClose', 'Close help guide') : t('common.buttons.helpOpen', 'Open help guide')}
       >
-        <HelpCircle className="w-5 h-5 transition-transform hover:scale-105" />
+        <HelpCircle className="w-[18px] h-[18px] transition-transform hover:scale-105" />
       </button>
     </AppTooltip>
   );

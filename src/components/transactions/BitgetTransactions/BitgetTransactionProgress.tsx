@@ -24,7 +24,7 @@ export function BitgetTransactionProgress({ isSyncing, progress }: BitgetTransac
         { label: t('transactions.common.status', 'Status'), value: pct >= 100 ? t('transactions.common.complete', 'Complete') : t('transactions.common.inProgress', 'In Progress') },
       ]}
     >
-      <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-[#2F6BFF]/30 bg-[#2F6BFF]/10 text-[#2F6BFF] font-medium select-none">
+      <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-accent/30 bg-accent/10 text-accent font-medium select-none">
         <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
         <span>{t('transactions.common.syncing', 'Syncing')}</span>
         <span className="font-mono">{pct}%</span>

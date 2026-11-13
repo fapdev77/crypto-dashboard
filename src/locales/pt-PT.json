@@ -1,4 +1,19 @@
 {
+  "theme": {
+    "title": "Tema da interface",
+    "terminalDark": "Terminal Dark",
+    "terminalDarkDesc": "Interface escura para sessões longas",
+    "terminalLight": "Terminal Light",
+    "terminalLightDesc": "Interface clara de alto contraste para o dia",
+    "wiseDark": "Wise Dark",
+    "wiseDarkDesc": "Tema azul-marinho profundo Wise para elevado foco",
+    "wiseLight": "Wise Light",
+    "wiseLightDesc": "Tema claro e limpo Wise para operações diárias",
+    "custom": "Personalizado",
+    "customDesc": "Paleta personalizada configurável por token de cor",
+    "customDesign": "Design Personalizado",
+    "customDesignDesc": "Personalize a paleta de cores e guarde os seus temas"
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -113,7 +128,34 @@
       "helpClose": "Fechar guia de boas-vindas e ajuda",
       "privacyHide": "Ocultar valores numéricos sensíveis na aplicação",
       "privacyShow": "Apresentar valores numéricos sensíveis na aplicação"
-    }
+    },
+    "yes": "Sim",
+    "no": "Não",
+    "never": "Nunca",
+    "refreshing": "A atualizar...",
+    "clearingSyncing": "A limpar e a sincronizar...",
+    "updating": "A atualizar...",
+    "healthy": "Saudável",
+    "showLess": "Mostrar Menos",
+    "copyJson": "Copiar Tudo (JSON)",
+    "overview": "Visão Geral",
+    "unlimited": "Ilimitado",
+    "testing": "A testar...",
+    "validating": "A validar Ping...",
+    "status": "Estado",
+    "neutral": "Neutro",
+    "noData": "Sem dados",
+    "clearSearch": "Limpar pesquisa",
+    "syncingNow": "A sincronizar agora",
+    "inTime": "em",
+    "operational": "Operacional",
+    "recovering": "A recuperar...",
+    "errorConflict": "Erro / Conflito",
+    "resetting": "A repor...",
+    "syncing": "A sincronizar...",
+    "synced": "Sincronizado!",
+    "clearing": "A limpar...",
+    "cleared": "Limpo!"
   },
   "nav": {
     "dashboard": "Painel Principal",
@@ -139,7 +181,8 @@
     "apiTester": "Testador de API",
     "bybitTransactions": "Transações Bybit",
     "bitgetTransactions": "Transações Bitget",
-    "okxTransactions": "Transações OKX"
+    "okxTransactions": "Transações OKX",
+    "cryptoMultiExchange": "Cripto Multi-Exchange"
   },
   "selector": {
     "title": "Idioma e Moeda",
@@ -165,7 +208,8 @@
     "asset": "Ativo",
     "balance": "Saldo",
     "value": "Valor",
-    "exchange": "Bolsa"
+    "exchange": "Bolsa",
+    "variation": "Variação de Preço"
   },
   "unlock": {
     "title": "Cofre Encriptado",
@@ -180,7 +224,13 @@
     "confirmResetTitle": "Confirmar Reposição",
     "confirmResetDesc": "Esta ação apagará permanentemente todas as chaves e dados locais. Deseja continuar?",
     "confirmResetAction": "Sim, Limpar Tudo",
-    "cancelResetAction": "Cancelar"
+    "cancelResetAction": "Cancelar",
+    "troubleModal": {
+      "whatHappensTitle": "O que acontece ao repor?",
+      "whatHappensDesc": "Uma reposição de fábrica eliminará permanentemente todas as chaves de API guardadas localmente neste navegador, definições personalizadas e histórico de cache.",
+      "howToStartTitle": "Como voltar a utilizar?",
+      "howToStartDesc": "A aplicação será recarregada automaticamente e estará pronta para utilização! Para ligar as suas contas, basta registar as suas chaves de API novamente ou importar as Chaves de API a partir de um ficheiro de cópia de segurança gerado anteriormente (.enc)."
+    }
   },
   "welcome": {
     "title": "Bem-vindo ao Crypto Portfolio Manager",
@@ -214,10 +264,57 @@
     "statusFallback": "Modo de Segurança",
     "lastUpdated": "Atualizado às {{time}}",
     "refreshTooltip": "Atualizar cotações agora",
-    "activeBadge": "Moeda Ativa"
+    "activeBadge": "Moeda Ativa",
+    "refreshedSuccess": "Taxas de câmbio atualizadas com sucesso",
+    "refreshedError": "Não foi possível atualizar as taxas em direto. A usar taxas em cache."
   },
   "settings": {
     "title": "Definições",
+    "theme": {
+      "title": "Aparência e Temas",
+      "subtitle": "Alterne entre os modos oficiais ou personalize totalmente a sua própria paleta de cores.",
+      "selectTheme": "Temas do Sistema",
+      "presetsTitle": "Predefinições Prontas (Carregar no Custom)",
+      "presetsDesc": "Carregue rapidamente combinações de cores curadas para a sua interface.",
+      "customTokensTitle": "Personalização de Cores",
+      "customTokensDesc": "Ajuste os valores hexadecimais para adaptar o dashboard à sua preferência visual.",
+      "notCustomWarning": "O tema atual é oficial. Ao ajustar qualquer cor, a aplicação mudará para o tema Personalizado.",
+      "activateCustom": "Ativar Custom",
+      "canvas": "Fundo da Aplicação (Canvas)",
+      "surface": "Superfície dos Cartões e Painéis",
+      "elevated": "Elementos Elevados e Entradas",
+      "line": "Bordos e Divisores",
+      "fg": "Tipografia Principal",
+      "fgMuted": "Tipografia Secundária / Rótulos",
+      "accent": "Cor de Destaque / Ação",
+      "success": "Indicador Positivo (Sucesso / Lucro)",
+      "danger": "Indicador Negativo (Alerta / Prejuízo)",
+      "warning": "Indicador de Aviso",
+      "previewTitle": "Pré-visualização em Tempo Real da Paleta",
+      "previewDesc": "Visualização dinâmica dos componentes com a paleta configurada.",
+      "previewMetricLabel": "Retorno Estimado (24h)",
+      "previewActionButton": "Executar Ordem",
+      "resetBtn": "Repor Predefinições",
+      "resetConfirm": "Paleta personalizada reposta com sucesso para o padrão.",
+      "presetApplied": "Predefinição {{name}} aplicada ao tema personalizado.",
+      "saveThemeTitle": "Guardar Tema Personalizado",
+      "savedCount": "guardado(s)",
+      "saveThemeDesc": "Dê um nome para a sua paleta atual e guarde para reutilizar a qualquer momento.",
+      "themeNamePlaceholder": "Ex: Meu Tema Escuro",
+      "saveThemeBtn": "Guardar Tema",
+      "savedThemesTitle": "Os Seus Temas Guardados",
+      "loadTheme": "Carregar",
+      "deleteTheme": "Eliminar",
+      "themeSavedSuccess": "Tema '{{name}}' guardado com sucesso!",
+      "themeLoadedSuccess": "Tema '{{name}}' carregado!",
+      "themeDeletedSuccess": "Tema eliminado.",
+      "presets": {
+        "wiseDark": "Wise Dark",
+        "wiseLight": "Wise Light",
+        "midnightNavy": "Midnight Navy",
+        "dracula": "Dracula Pro"
+      }
+    },
     "languageAndCurrency": "Idioma e Moeda",
     "languageDesc": "Configure o seu idioma de visualização e a moeda preferida para os cálculos da carteira.",
     "languageLabel": "Idioma",
@@ -283,7 +380,16 @@
     },
     "security": {
       "title": "Segurança e Cofre de Credenciais",
-      "desc": "Cópia de segurança local encriptada, exportação/importação e bloqueio automático do cofre."
+      "desc": "Cópia de segurança local encriptada, exportação/importação e bloqueio automático do cofre.",
+      "tabVault": "Cofre e Bloqueio Automático",
+      "tabExport": "Exportar Cópia de Segurança",
+      "tabImport": "Importar Cópia de Segurança",
+      "vaultTitle": "Cofre Encriptado Zero-Trust",
+      "unlocked": "Desbloqueado",
+      "locked": "Bloqueado",
+      "lockNow": "Bloquear Cofre Agora",
+      "autoLockTitle": "Bloqueio Automático por Inatividade",
+      "autoLockDesc": "Bloqueia o cofre quando inativo"
     },
     "indexedDB": {
       "title": "Motor de Armazenamento IndexedDB",
@@ -351,11 +457,26 @@
       "clearedAll": "Todo o cache limpo!",
       "recoverDbTooltip": "Eliminar e reconstruir integralmente o esquema v12 do IndexedDB para solucionar erros de versão/permissão",
       "rebuildDbBtn": "Reconstruir Base de Dados",
-      "rebuildingDb": "A reconstruir DB..."
+      "rebuildingDb": "A reconstruir DB...",
+      "prunedToast": "Removidos {{count}} registos com mais de {{days}} dias",
+      "verifying": "A verificar...",
+      "verified": "Verificado"
     },
     "version": {
       "title": "Versão e Changelog",
-      "desc": "Detalhes do lançamento do sistema, histórico de versões e ligações do repositório."
+      "desc": "Detalhes do lançamento do sistema, histórico de versões e ligações do repositório.",
+      "newAvailable": "Nova Versão Disponível",
+      "readyInstall": "Pronto a instalar",
+      "updateBtn": "Atualizar Agora",
+      "currentVersion": "Versão Atual",
+      "releaseDate": "Data de Lançamento",
+      "repoSource": "Fonte do Repositório",
+      "clickHere": "Clique aqui",
+      "indexedDbLabel": "Base de Dados de Cache IndexedDB",
+      "clearCache": "Limpar Cache",
+      "highlights": "Destaques da Última Versão (v{{version}})",
+      "viewPrevious": "Ver Versões Anteriores",
+      "fullChangelog": "CHANGELOG.md Completo"
     },
     "preferencesTesting": "Preferências & Testes",
     "preferencesDesc": "Preferências do utilizador e ferramentas de teste",
@@ -507,7 +628,8 @@
       "fundingBias": "Tendência de Fees de Funding: {{bias}}. Avaliado com base no peso das posições perpétuas e taxas atuais de funding.",
       "btcDominance": "Estimativa de Dominância de Mercado do Bitcoin: ~{{dominance}}%. Reflete a fatia de alocação de capital na principal referência de cripto.",
       "tacticalAdvice": "Recomendação tática contextual calculada a partir do regime de mercado, momentum do sentimento e risco de alavancagem."
-    }
+    },
+    "sourceTitle": "Fonte de Dados: API Alternative.me Crypto Fear & Greed Index"
   },
   "positions": {
     "title": "Open Positions",
@@ -855,18 +977,21 @@
       "exportPdf": "Exportar PDF",
       "totalTransactions": "Total de Transações",
       "totalTransactionsTooltip": "Número total de transações correspondentes aos filtros atuais. Clique aqui para ver detalhes.",
-      "totalFunding": "Funding Total (USD)",
-      "totalFundingTooltip": "Soma das taxas de funding em USD. Clique aqui para ver detalhes.",
-      "fundingReceived": "Funding recebido",
-      "fundingPaid": "Funding pago",
+      "totalFunding": "Funding Total",
+      "totalFundingTooltip": "Soma das taxas de funding. Clique aqui para ver detalhes.",
+      "fundingLabel": "Funding",
+      "fundingReceived": "recebido",
+      "fundingPaid": "pago",
       "calculatingUsd": "A calcular USD...",
       "calculatingUsdTooltip": "A obter preços em tempo real em USD para ativos não-estáveis...",
-      "totalFees": "Comissões Totais (USD)",
-      "totalFeesTooltip": "Soma das comissões de negociação em USD. Clique aqui para ver detalhes.",
+      "missingRatesTitle": "Totais em USD incompletos",
+      "missingRatesText": "Sem cotação em USD para {{currencies}} — estes ativos ficaram de fora dos totais.",
+      "totalFees": "Comissões Totais",
+      "totalFeesTooltip": "Soma das comissões de negociação. Clique aqui para ver detalhes.",
       "feesPaid": "Comissões de negociação pagas",
-      "netChange": "Variação Líquida (USD)",
-      "netChangeTooltip": "Variação líquida em USD (valor de stablecoins e outros ativos). Clique aqui para ver detalhes.",
-      "walletBalance": "Saldo da Carteira (USD)",
+      "netChange": "Variação Líquida",
+      "netChangeTooltip": "Variação líquida (valor de stablecoins e outros ativos). Clique aqui para ver detalhes.",
+      "walletBalance": "Saldo da Carteira",
       "walletBalanceTooltip": "Saldo agregado final da carteira entre moedas. Clique aqui para ver detalhes.",
       "noMatchingFilter": "Nenhuma transação corresponde aos filtros atuais.",
       "noDataAvailable": "Nenhum dado disponível",
@@ -908,7 +1033,7 @@
       "fundingBreakdown": "Discriminação de Funding",
       "feesBreakdown": "Discriminação de Comissões",
       "balanceBreakdown": "Discriminação do Saldo da Carteira",
-      "netChangeReport": "Relatório de Variação Líquida (USD)",
+      "netChangeReport": "Relatório de Variação Líquida",
       "txBreakdown": "Discriminação do Total de Transações",
       "totalUsdEq": "Total (Eq. USD)",
       "stablecoins": "Stablecoins (USDT, USDC, etc.)",
@@ -920,7 +1045,8 @@
       "noTxAvailable": "Nenhuma transação disponível",
       "grandTotal": "Total Geral",
       "byExchange": "Detalhamento por Corretora",
-      "txs": "transações"
+      "txs": "transações",
+      "totalEq": "Total Equivalente"
     },
     "report": {
       "description": "Desempenho operacional detalhado por ativo, calculando retornos absolutos, distribuição de trades, impacto de funding e comissões.",
@@ -929,6 +1055,13 @@
       "collapseAll": "Recolher Todos",
       "activeDays_one": "{{count}} dia ativo",
       "activeDays_other": "{{count}} dias ativos",
+      "txsCount": "{{count}} transações",
+      "txsCount_one": "{{count}} transação",
+      "txsCount_other": "{{count}} transações",
+      "trackedAssets": "{{count}} ativos monitorizados",
+      "trackedAssets_one": "{{count}} ativo monitorizado",
+      "trackedAssets_other": "{{count}} ativos monitorizados",
+      "exchangeNetChange": "Variação Líquida da Corretora",
       "primaryResult": "Resultado Primário",
       "assetSummary": "Resumo do Ativo",
       "initialBalance": "Saldo Inicial",
@@ -937,7 +1070,8 @@
       "finalBalance": "Saldo Final",
       "percentageGain": "Ganho Percentual",
       "absoluteGain": "Ganho Absoluto",
-      "absoluteGainUsd": "Ganho Absoluto (USD)",
+      "absoluteGainUsd": "Ganho Absoluto",
+      "absoluteGainFiat": "Ganho Absoluto",
       "operationalMetrics": "Métricas Operacionais",
       "operationalStats": "Estatísticas Operacionais",
       "totalTradesExecuted": "Total de Transações Executadas",
@@ -951,7 +1085,10 @@
       "fundingSettled": "Funding Liquidado",
       "totalCashFlow": "Fluxo de Caixa Total",
       "feesPaid": "Comissões Pagas",
-      "dailyAvgRoi": "ROI Médio Diário"
+      "dailyAvgRoi": "ROI Médio Diário",
+      "pctPerDay": "{{value}}%/dia",
+      "activeDays": "{{count}} dias ativos",
+      "tradesCount": "{{count}} operações"
     },
     "filters": {
       "searchPlaceholder": "Pesquisar símbolo...",
@@ -984,7 +1121,8 @@
       "dmcbl": "Futuros Coin-M",
       "margin": "Margem",
       "swap": "Swap Perpétuo",
-      "futures": "Futuros"
+      "futures": "Futuros",
+      "others": "Outros"
     },
     "bybit": {
       "title": "Transações Bybit",
@@ -1016,7 +1154,9 @@
       "bybitBadge": "Bybit",
       "bitgetBadge": "Bitget",
       "okxBadge": "OKX",
-      "sectionTitle": "Desempenho por Corretora e Ativo"
+      "sectionTitle": "Desempenho por Corretora e Ativo",
+      "aggregatingExchanges": "Agregando {{count}} corretora(s)",
+      "noDataDesc": "Nenhum registo encontrado correspondente aos filtros ativos de corretora, moeda ou período. Ajuste os seus filtros ou aguarde a conclusão da sincronização."
     },
     "cache": {
       "title": "Cache de Registos de Transações",
@@ -1063,7 +1203,8 @@
       "selectAsset": "Selecionar Ativo",
       "searchSymbol": "Procurar símbolo...",
       "searchCoinOrContract": "Procurar moeda ou contrato...",
-      "noData": "Nenhuns dados analíticos disponíveis para os parâmetros selecionados."
+      "noData": "Nenhuns dados analíticos disponíveis para os parâmetros selecionados.",
+      "allInstruments": "Todos os Instrumentos"
     },
     "portfolio": {
       "title": "Desempenho do Portfólio",
@@ -1241,7 +1382,8 @@
         "cumulative30d": "Acumulado 30 Dias",
         "annualizedYield": "Rendimento Carry Anualizado",
         "longsPayShorts": "Longs pagam Shorts",
-        "shortsPayLongs": "Shorts pagam Longs"
+        "shortsPayLongs": "Shorts pagam Longs",
+        "marketOverview": "Visão Geral do Mercado"
       },
       "comparison": {
         "title": "Comparativo de Taxas Cross-Exchange",
@@ -1251,6 +1393,10 @@
         "bestOpportunity": "Melhor Oportunidade de Yield",
         "selectSymbols": "Selecionar símbolos...",
         "noSymbolsFound": "Nenhum símbolo encontrado."
+      },
+      "tabs": {
+        "overview": "Visão Histórica Geral",
+        "comparison": "Comparação de Taxas de Funding"
       }
     },
     "reports": {
@@ -1361,7 +1507,11 @@
       "saveBtn": "Guardar Chave de API",
       "cancelBtn": "Cancelar",
       "deleteConfirmTitle": "Eliminar Chave de API?",
-      "deleteConfirmMsg": "Tem a certeza de que pretende remover esta chave de API? O rastreio ativo para esta corretora será desligado."
+      "deleteConfirmMsg": "Tem a certeza de que pretende remover esta chave de API? O rastreio ativo para esta corretora será desligado.",
+      "labelLabel": "Etiqueta da Ligação",
+      "apiSecretPlaceholder": "Insira o Segredo da API",
+      "passphrasePlaceholder": "Insira a Frase-passe",
+      "saveChangesBtn": "Guardar Alterações"
     },
     "vault": {
       "setupTitle": "Configurar Cofre de Segurança",
@@ -1370,8 +1520,32 @@
       "confirmPlaceholder": "Confirme a palavra-passe mestra",
       "activateBtn": "Ativar Cofre de Segurança",
       "passphraseMismatch": "As palavras-passe não coincidem. Verifique ambos os campos.",
-      "passphraseTooShort": "A Palavra-passe Mestra deve conter pelo menos 8 carateres."
-    }
+      "passphraseTooShort": "A Palavra-passe Mestra deve conter pelo menos 8 carateres.",
+      "passphraseMinLength": "A Frase-passe Mestra deve ter pelo menos 8 carateres.",
+      "encryptFailed": "Falha ao encriptar credenciais legadas.",
+      "upgradeBadge": "Ação Necessária • Atualização de Segurança",
+      "mandatoryTitle": "Encriptação Obrigatória no Cofre",
+      "legacyDetectedTitle": "Credenciais Legadas em Texto Limpo Detetadas",
+      "legacyDetectedDesc": "Detetámos {{count}} ligação(ões) de chaves de API guardadas sem encriptação de uma versão anterior. Para garantir segurança zero-trust e impedir o acesso não autorizado por scripts ou extensões do navegador, deve definir uma Frase-passe Mestra para encriptar as suas credenciais com PBKDF2 de nível militar (600.000 iterações) e AES-GCM-256 antes de aceder ao terminal.",
+      "detectedConnections": "Ligações Detetadas para Proteger ({{count}}):",
+      "createPassphraseLabel": "Criar Frase-passe Mestra",
+      "confirmPassphraseLabel": "Confirmar Frase-passe Mestra",
+      "encrypting": "A encriptar Credenciais...",
+      "encryptUnlockBtn": "Encriptar Chaves e Desbloquear Terminal",
+      "dontNeedKeys": "Não precisa destas credenciais?",
+      "discardPrompt": "Eliminar chaves e começar do zero",
+      "discardDialogTitle": "Eliminar Credenciais Legadas?",
+      "discardDialogDesc": "Isto eliminará permanentemente as {{count}} chaves de API não encriptadas do armazenamento do seu navegador. Terá de adicioná-las novamente após configurar um cofre.",
+      "discardConfirmBtn": "Sim, Eliminar",
+      "setupRequired": "Configuração Necessária",
+      "setupDesc": "Para garantir segurança máxima, chaves de API reais e o auditor PIKA AI exigem um cofre ativo. A sua frase-passe mestra encripta todos os dados confidenciais estritamente dentro da memória e armazenamento locais do navegador."
+    },
+    "vaultRequired": "Antes de adicionar chaves de API das exchanges, o Cofre de Segurança Zero-Trust deve ser ativado para garantir que todas as suas credenciais sejam encriptadas localmente.",
+    "noKeysDesc": "Ligue as suas chaves de API só de leitura da Bitget, Bybit ou OKX para monitorizar saldos consolidados, posições abertas e métricas de risco.",
+    "activateVaultBtn": "Ativar Cofre e Adicionar Chave",
+    "addFirstKeyBtn": "Adicionar Primeira Chave de API",
+    "noFundingBadge": "Sem Taxa de Financiamento",
+    "deleteConfirmPrompt": "Eliminar chave?"
   },
   "ai": {
     "settings": {
@@ -1390,7 +1564,8 @@
         "cloneBtn": "Clonar",
         "editBtn": "Editar",
         "deleteBtn": "Eliminar",
-        "noModels": "Nenhum modelo de IA registado. Adicione um modelo para iniciar."
+        "noModels": "Nenhum modelo de IA registado. Adicione um modelo para iniciar.",
+        "totalModels": "Total de Modelos:"
       },
       "modal": {
         "addTitle": "Adicionar Modelo de IA",
@@ -1407,7 +1582,8 @@
         "isFallback": "Ativar como Contingência (Fallback)",
         "isActive": "Ativo",
         "saveBtn": "Guardar Modelo",
-        "cancelBtn": "Cancelar"
+        "cancelBtn": "Cancelar",
+        "proceedAnyway": "Prosseguir Mesmo Assim e Guardar"
       },
       "telemetry": {
         "title": "Telemetria e Consumo do Motor de IA",
@@ -1430,11 +1606,87 @@
         "latency": "Latência",
         "detailsBtn": "Inspecionar Detalhes",
         "clearBtn": "Limpar Histórico de Auditoria",
-        "noLogs": "Nenhuma atividade de IA registada até ao momento."
+        "noLogs": "Nenhuma atividade de IA registada até ao momento.",
+        "modalTitle": "Auditor e Depurador PIKA AI",
+        "promptRequest": "Prompt e Pedido (Em Bruto)",
+        "toolsContext": "Ferramentas e Contexto Local",
+        "clearConfirmTitle": "Limpar Registos de Auditoria?",
+        "clearConfirmDesc": "Tem a certeza de que deseja eliminar todos os registos de execução locais? Isto não pode ser anulado."
+      },
+      "dailyTokens": {
+        "title": "Consumo Diário de Tokens (Últimos 7 Dias)",
+        "subtitle": "Monitorização diária dos volumes de tokens de prompt e conclusão",
+        "noData": "Nenhum consumo diário de tokens registado ainda."
+      },
+      "modelStats": {
+        "title": "Estatísticas por Modelo de IA",
+        "subtitle": "Detalhamento de volume de inferência, latência média e eficiência de tokens por modelo",
+        "modelProvider": "Modelo e Fornecedor",
+        "tokensPromptCompl": "Tokens (Prompt/Concl)",
+        "avgCall": "Média/Chamada",
+        "lastUsed": "Última Utilização",
+        "noData": "Nenhum dado de inferência registado ainda. As estatísticas serão preenchidas à medida que o assistente for utilizado."
+      },
+      "activeBadge": "Ativo na Aplicação",
+      "disabledBadge": "Desativado (Predefinição)",
+      "description": "Portfolio Information & Knowledge Assistant — Auditoria quantitativa, análise de cobertura (hedge) e diagnósticos de comissões com suporte para modelos locais (Ollama) ou endpoints em nuvem seguros com failover automático.",
+      "activeGlobally": "Ativo globalmente",
+      "disabledByDefault": "Desativado por predefinição",
+      "zeroTrustActive": "Zero-Trust Ativo: As chaves de API das exchanges nunca são incluídas nos pedidos de IA.",
+      "globalInferenceTitle": "Parâmetros Globais de Inferência e Segurança",
+      "globalInferenceSubtitle": "Ajuste a lógica de contingência de recurso, parâmetros de temperatura e diretrizes de sistema do assistente",
+      "autoFailover": "Failover Automático (Recurso)",
+      "autoFailoverDesc": "Alterna automaticamente para modelos de reserva quando o principal estiver indisponível",
+      "obfuscation": "Ofuscação de Valores Financeiros",
+      "obfuscationDesc": "Normaliza os saldos brutos em ponderações percentuais antes de consultar modelos na nuvem",
+      "defaultTemp": "Temperatura Predefinida",
+      "tempDesc": "Valores baixos (0,10) eliminam alucinações criativas e garantem consistência analítica.",
+      "systemPromptLabel": "Instruções de Base do Sistema (System Prompt)",
+      "systemPromptDesc": "Diretrizes estritas garantem segurança só de leitura, âmbito analítico fechado e cálculos precisos.",
+      "telemetrySubtitle": "Métricas consolidadas de desempenho, latência média e estatísticas de consumo de tokens",
+      "resetMetrics": "Repor Métricas"
+    },
+    "cancelled": {
+      "defaultMsg": "A geração da resposta foi cancelada pelo utilizador.",
+      "title": "Análise Interrompida",
+      "badge": "Cancelado",
+      "retry": "Tentar Novamente",
+      "inspectAudit": "Inspecionar Auditoria"
+    },
+    "quickActions": {
+      "liquidationRisk": {
+        "title": "Risco de Liquidação",
+        "subtitle": "Auditar níveis de margem e distância até ao preço de liquidação",
+        "prompt": "Realize uma auditoria de risco de liquidação nas minhas posições abertas."
+      },
+      "hedgeImbalance": {
+        "title": "Desequilíbrio de Cobertura (Hedge)",
+        "subtitle": "Identificar divergências de delta de volume entre posições",
+        "prompt": "Identifique qualquer divergência de volume e exposição líquida de delta nas minhas posições em hedge."
+      },
+      "fundingEfficiency": {
+        "title": "Eficiência de Funding",
+        "subtitle": "Rever pagamentos acumulados de funding nos últimos 7 dias",
+        "prompt": "Gere um resumo das taxas de funding dos últimos 7 dias: estou a pagar ou a receber taxas em termos líquidos?"
+      },
+      "portfolioOverview": {
+        "title": "Visão Geral do Portfólio",
+        "subtitle": "Património consolidado, PnL aberto e distribuição por exchange",
+        "prompt": "Gere um resumo executivo consolidado com património líquido total, PnL não realizado e alocação por exchange."
       }
+    },
+    "toolBadges": {
+      "balances": "A ler saldos consolidados do portfólio...",
+      "openPositions": "A consultar posições abertas nas exchanges...",
+      "hedgeCorrelation": "A calcular correlação de cobertura e divergência de exposição...",
+      "fundingFees": "A obter histórico de taxas de funding do IndexedDB...",
+      "tradingFees": "A analisar histórico de comissões e taxas de negociação...",
+      "closedPositions": "A analisar histórico de posições encerradas...",
+      "default": "A executar ferramenta local: {{name}}..."
     }
   },
   "toasts": {
+    "themeSet": "Tema alterado para {{theme}}",
     "idbHealth": "IndexedDB está operacional (Versão {{version}}, 14 tabelas ativas)",
     "idbError": "Erro no IndexedDB: {{error}}",
     "idbHealthFailed": "Falha na verificação de integridade: {{error}}",
@@ -1597,5 +1849,67 @@
       "clearCache": "A limpar todo o cache da aplicação...",
       "clearTxCache": "A limpar cache de registos de transações..."
     }
+  },
+  "errorBoundary": {
+    "title": "Erro de Renderização do Componente",
+    "descriptionIsolated": "Ocorreu um erro inesperado dentro do componente ",
+    "descriptionGlobal": "Ocorreu uma exceção não tratada na renderização. A aplicação encontrou um estado inesperado.",
+    "retryModule": "Tentar Módulo Novamente",
+    "reloadPage": "Recarregar Página",
+    "resetting": "A repor...",
+    "clearCacheReload": "Limpar Cache e Recarregar",
+    "copyDetails": "Copiar detalhes do erro para a área de transferência",
+    "copied": "Copiado",
+    "copyReport": "Copiar Relatório"
+  },
+  "currencyDiagnostics": {
+    "testSuccess": "Conetividade da API de moedas verificada com sucesso",
+    "testError": "Falha ao ligar a uma ou mais APIs de moedas",
+    "connected": "Ligado",
+    "cached": "Em Cache",
+    "offline": "Offline",
+    "never": "Nunca",
+    "title": "Diagnósticos da API de Moedas",
+    "subtitle": "Monitor de integridade de ligação e latência em direto",
+    "testing": "A testar...",
+    "testBtn": "Testar Ligação",
+    "lastSync": "Última Sincronização",
+    "latency": "Latência",
+    "quote": "Cotação Atual"
+  },
+  "donation": {
+    "buttonTooltipOpen": "Pague uma imperial (Doar cripto)",
+    "buttonTooltipClose": "Fechar janela de doação",
+    "title": "Pague uma Cerveja",
+    "subtitle": "Apoie o programador com criptomoedas",
+    "message": "Gostou da app e ela está a ajudá-lo? Então não seja uma sardinha alucinada que só queima dinheiro em shitcoins! Considere pagar-me uma cerveja 🍺. Pode enviar essas shitcoins e livrar-se desse lixo, mas se preferir também aceito BTC, ETH ou USDT 😁😁😁! Isso motiva-me a continuar a trazer melhorias e novas funcionalidades por aqui.",
+    "solanaLabel": "Solana",
+    "solanaBadge": "SOL / SPL",
+    "evmLabel": "EVM",
+    "evmAcceptedNote": "Mesmo endereço válido nas redes Ethereum, Polygon e Arbitrum:",
+    "btcLabel": "Bitcoin",
+    "btcBadge": "BTC",
+    "btcAlert": "Utilize este endereço apenas para depositar BTC. Não deposite inscriptions, NFTs nem quaisquer outros ativos que não sejam BTC, pois não podem ser creditados nem devolvidos.",
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "showFull": "Ver completo",
+    "hideFull": "Resumir",
+    "qrShow": "Código QR",
+    "qrHide": "Ocultar QR",
+    "qrHintSolana": "Leia com a sua carteira Solana (Phantom, Solflare, Backpack) para enviar SOL ou tokens SPL.",
+    "qrHintEvm": "Leia com a sua carteira EVM (MetaMask, Rabby, Trust) selecionando Ethereum, Polygon ou Arbitrum.",
+    "qrHintBtc": "Leia com a sua carteira Bitcoin (BlueWallet, Sparrow, Electrum, Ledger) para enviar apenas BTC on-chain.",
+    "footerNote": "As doações são voluntárias! Nunca entraremos em contacto a solicitar qualquer valor ou pagamento"
+  },
+  "updateNotification": {
+    "title": "Atualização Disponível",
+    "countdown": "em {{seconds}}s",
+    "description": "Está pronta uma nova versão com melhorias de desempenho e atualizações.",
+    "viewChangelog": "Ver Versão e Registo de Alterações",
+    "dismissAria": "Dispensar notificação",
+    "dismissTitle": "Dispensar (Não atualizar agora)",
+    "notNow": "Agora Não",
+    "updating": "A atualizar...",
+    "updateNow": "Atualizar Agora"
   }
 }

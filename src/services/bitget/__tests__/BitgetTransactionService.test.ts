@@ -82,6 +82,7 @@ describe('BitgetTransactionService', () => {
   describe('computeStats', () => {
     it('computes stats correctly including funding and balances', () => {
       const entries = [
+        // Bitget bills report fees as negative costs; stats expose them as positive costs
         makeMockBitgetEntry({ type: 'ORDER_DEALT_IN', change: '500', fee: '-0.5', balance: '1500', currency: 'USDT' }),
         makeMockBitgetEntry({ id: 'bg-2', type: 'CONTRACT_MAIN_SETTLE_FEE', change: '-2.5', fee: '0', balance: '1497.5', currency: 'USDT' }),
       ];
@@ -89,8 +90,10 @@ describe('BitgetTransactionService', () => {
       const stats = BitgetTransactionService.computeStats(entries);
       expect(stats.totalCount).toBe(2);
       expect(stats.stable.totalFunding).toBe('-2.5');
-      expect(stats.stable.totalFees).toBe('-0.5');
+      expect(stats.stable.totalFees).toBe('0.5');
       expect(stats.stable.finalBalance).toBe('1500');
+      // Stablecoins keep their own per-currency bucket
+      expect(stats.perCurrency.USDT.totalFees).toBe('0.5');
     });
   });
 

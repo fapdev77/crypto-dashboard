@@ -1,6 +1,6 @@
 # 📘 Manual do Usuário - Crypto Portfolio Manager (CPM)
 
-> **Versão da Aplicação:** 2.28.0  
+> **Versão da Aplicação:** 2.35.0  
 > **Plataformas Suportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitetura de Segurança:** Zero-Trust Client-Side (Criptografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -20,7 +20,7 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
 3. [Senha Mestra Global, Backups Criptografados e Migração Mandatória de Vault](#3-senha-mestra-global-backups-criptografados-e-migração-mandatória-de-vault)
 4. [Modo Simulação (Mock Data)](#4-modo-simulação-mock-data)
 5. [Terminal de Logs Integrado (Connection Logs)](#5-terminal-de-logs-integrado-connection-logs)
-6. [Sincronização, Retenção e Configurações de Cache (Settings)](#6-sincronização-retenção-e-configurações-de-cache-settings)
+6. [Aparência, Temas, Sincronização e Configurações (Settings)](#6-aparência-temas-sincronização-e-configurações-settings)
 7. [Guia de Telas e Navegação Diária](#7-guia-de-telas-e-navegação-diária)
    - [🏠 Dashboard Principal](#-dashboard-principal)
    - [⚡ Positions Ticker (Marquee em Tempo Real)](#-positions-ticker-marquee-em-tempo-real)
@@ -37,15 +37,10 @@ Nossa prioridade absoluta é a **segurança de nível zero-trust** e a **preserv
    - [📑 Reports (Exportação de Relatórios Gerenciais)](#-reports-exportação-de-relatórios-gerenciais)
    - [⚡ API Tester (Testador de Conexões e Endpoints)](#-api-tester-testador-de-conexões-e-endpoints)
    - [👁️ Modo Privacidade (Privacy Mode)](#-modo-privacidade-privacy-mode)
-   - [📊 PnL by Symbol (Lucros e Perdas por Símbolo)](#-pnl-by-symbol-lucros-e-perdas-por-símbolo)
-   - [💸 Dashboard de Taxas de Financiamento (Funding Fees)](#-dashboard-de-taxas-de-financiamento-funding-fees)
-   - [📑 Reports (Exportação de Relatórios Gerenciais)](#-reports-exportação-de-relatórios-gerenciais)
-   - [⚡ API Tester (Testador de Conexões e Endpoints)](#-api-tester-testador-de-conexões-e-endpoints)
-   - [👁️ Modo Privacidade (Privacy Mode)](#-modo-privacidade-privacy-mode)
 8. [PIKA Assistant (Portfolio Information & Knowledge Assistant)](#8-pika-assistant-portfolio-information--knowledge-assistant)
    - [Princípios de Segurança e Privacidade](#-princípios-de-segurança-e-privacidade)
    - [Provedores Suportados e Modelos Locais/Nuvem](#-provedores-suportados-e-modelos-locaisnuvem)
-   - [Catálogo de Ferramentas Analíticas (Tool Calling)](#-catálogo-de-ferramentas-analíticas-tool-calling)
+   - [Catálogo de Ferramentas Analíticas (7 Ferramentas)](#-catálogo-de-ferramentas-analíticas-7-ferramentas)
    - [Auditoria de Compatibilidade de Ferramentas](#-auditoria-de-compatibilidade-de-ferramentas)
    - [Telemetria Avançada, Gráfico Diário e Exportação de Logs](#-telemetria-avançada-gráfico-diário-e-exportação-de-logs)
    - [Atalho Global e Chat Drawer](#-atalho-global-e-chat-drawer)
@@ -85,15 +80,19 @@ Para conectar suas contas reais ao terminal CPM:
 ### Configurações Regionais e Origem Bybit
 Para usuários da Bybit, o modal oferece seletores avançados de ambiente e conformidade regulatória:
 - **Environment**: Alternância transparente entre **Mainnet** (Ambiente Real de Produção) e **Testnet** (Rede de Testes Simulada).
-- **Account Region / Origin**: Roteamento direto para o domínio regulatório correspondente:
-  - *Global Default* (`api.bybit.com`)
+- **Account Region / Origin**: Roteamento direto para os **15 perfis regulamentares** suportados:
+  - *Global Default* (`api.bybit.com`) e *Global / Bytick* (`api.bytick.com`)
+  - *Brazil (Standard)* (`api.bybit.com`) e *Brazil - Int (International Account)* (`api.bybit.com` com cabeçalho `x-site-id: BRA_BTL`)
+  - *Argentina (Standard)* (`api.bybit.com`) e *Argentina - Int (International Account)* (`api.bybit.com` com cabeçalho `x-site-id: ARG_BTL`)
   - *Netherlands* (`api.bybit.nl`)
-  - *Turkey* (`api.bybit-tr.com`)
-  - *Hong Kong* (`api.bybit.com.hk`)
+  - *Turkey* (`api.bybit.tr`)
   - *Kazakhstan* (`api.bybit.kz`)
-  - *Georgia* (`api.bybit.com.ge`)
-  - *Brazil International* (`api.bybit.com` com injeção automática do cabeçalho oficial `x-site-id: 10001`)
-  - *Argentina International* (`api.bybit.com` com injeção automática do cabeçalho oficial `x-site-id: 10002`)
+  - *Georgia* (`api.bybitgeorgia.ge`)
+  - *UAE* (`api.bybit.ae`)
+  - *EEA* (`api.bybit.eu`)
+  - *Indonesia* (`api.bybit.id`)
+  - *Japan* (`api.manepa.jp` / Testnet: `api-testnet.manepa.jp`)
+  - *Hong Kong* (`api.spark-fintech.com` / Testnet: `api-testnet.spark-fintech.com` com cabeçalho `x-refer-site-id: HKG`)
 
 ### Bitget: Seleção Classic vs UTA, Subcontas e Funding
 - **Account Type**:
@@ -127,11 +126,11 @@ Para proteger suas informações caso utilize um computador compartilhado ou dis
    - Deseja trocar sua senha? Acesse **Security Settings** $\to$ **Change Passphrase**. Informe a senha atual e a nova senha mestra (mínimo 8 caracteres). O CPM re-criptografa todas as suas chaves cadastradas em lote, preservando suas contas intactas.
 6. **Aviso Temporário de Inicialização (Vault Setup Notice Modal)**:
    - Caso você utilize o aplicativo sem configurar uma senha mestra, um aviso sutil de 5 segundos é exibido na inicialização alertando sobre os benefícios de segurança do cofre e oferecendo um botão direto para configuração. Esse aviso pode ser desativado a qualquer momento nas configurações.
-7. **Exportação de Backups Criptografados (`.cpmbackup`)**:
-   - Clique em **Export Backup File** para gerar um arquivo seguro contendo todas as conexões, preferências e configurações.
+7. **Exportação de Backups Criptografados (`.enc`)**:
+   - Clique em **Export Backup File** para gerar um arquivo `.enc` seguro (`crypto_dashboard_keys_AAAA-MM-DD.enc`) contendo as conexões selecionadas criptografadas com a passphrase informada.
    - O arquivo pode ser transferido com total segurança por pen drive, nuvem ou armazenado em cofre offline.
 8. **Restauração de Backup**:
-   - Clique em **Import Backup**, selecione seu arquivo `.cpmbackup` e forneça a senha mestra correspondente para restaurar instantaneamente o ambiente.
+   - Clique em **Import Backup**, selecione seu arquivo `.enc` e forneça a passphrase correspondente para restaurar instantaneamente suas conexões.
 
 ---
 
@@ -165,9 +164,22 @@ Para auditoria técnica e diagnóstico de latência e conectividade:
 
 ---
 
-## 6. Sincronização, Retenção e Configurações de Cache (Settings)
+## 6. Aparência, Temas, Sincronização e Configurações (Settings)
 
-O CPM implementa o padrão **SWR (Stale-While-Revalidate)** e armazenamento local em **IndexedDB** (`crypto-dashboard-cache` com 14 stores estruturadas):
+A tela **Settings** é organizada em **10 cards modulares**: *Language & Currency*, *Aparência e Temas*, *Preferences & Testing*, *Security & Backup*, *Version & Changelog*, *Consolidated IndexedDB Storage & Cache*, *Exchange Specifications*, *Symbol Catalog Cache*, *Funding Fees Sync* e *Danger Zone*.
+
+### 🎨 Motor Multi-Temas & Tema Customizado (`v2.33.0`–`v2.35.0`)
+- **5 Temas Integrados**: Alterne no botão do cabeçalho (`ThemeModeButton`) ou no card **Aparência e Temas** entre **Terminal Dark**, **Terminal Light**, **Wise Dark**, **Wise Light** e **Customizado**.
+- **Atalho "Custom design"**: No menu de temas do cabeçalho, clique em **Custom design** (ícone de engrenagem) para navegar diretamente para a aba de personalização de cores em **Settings**.
+- **Editor de Paleta (10 Tokens CSS)**: Personalize `canvas`, `surface`, `elevated`, `line`, `fg`, `fgMuted`, `accent`, `success`, `danger` e `warning` com seletores de cor, campos hexadecimais e cartão de prévia em tempo real.
+- **Predefinições & Gerenciamento de Temas Salvos**: Carregue 4 paletas prontas (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) ou salve, carregue e exclua múltiplos temas personalizados com nome próprio (exibido ao lado de *Customizado* no seletor do cabeçalho).
+
+### 🌐 Idioma, Moedas Fiat & Diagnóstico de Câmbio
+- **6 Idiomas & 4 Moedas Fiat**: Cobertura completa em `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419` e `it-IT` (1.624 chaves por idioma) e exibição em **USD**, **BRL**, **EUR** e **GBP**.
+- **Cotações Duplas & Diagnóstico (`CurrencyApiDiagnostics`)**: Consulta concorrentemente a **Frankfurter API v2** (`api.frankfurter.dev`) para taxas fiat e a **CoinGecko** (`api.coingecko.com`) para paridade **USDT/USD**, com TTL configurável (5 a 60 min), fallback em cache offline e monitoramento de latência/status em tempo real.
+
+### 🔄 Sincronização, Retenção e Configurações de Cache (IndexedDB)
+O CPM implementa o padrão **SWR (Stale-While-Revalidate)** e armazenamento local em **IndexedDB** (`crypto-dashboard-cache` com 14 stores estruturadas, versão 12):
 
 - **Latência Zero**: Gráficos e tabelas são exibidos imediatamente com base no cache local persistido, enquanto requisições de fundo buscam apenas deltas incrementais.
 - **Coordenação Global de Sync (`lastSyncTime`)**: Alternar entre abas de histórico (Ordens, Posições, Trade History, PnL by Symbol) não dispara requisições concorrentes redundantes se uma sincronização recente já tiver ocorrido.
@@ -230,12 +242,12 @@ Promovido a um **módulo de navegação de primeiro nível** no menu lateral, pr
 Posicionado estrategicamente como o **primeiro item do submenu Transactions History**, este painel resolve o desafio de auditar o fluxo de caixa agregado entre múltiplas contas e corretoras:
 - **4 Cards Macro no Topo (Cross-Exchange KPIs)**:
   - **Total Transactions**: Contagem global de transações registradas no período.
-  - **Total Funding**: Soma líquida de todas as taxas de financiamento recebidas (crédito) e pagas (débito).
+  - **Total Funding**: Soma líquida de todas as taxas de financiamento recebidas (crédito) e pagas (débito), convertida na moeda fiduciária selecionada (BRL, USD, EUR, GBP).
   - **Total Fees**: Custo acumulado total com taxas de corretagem (trading fees) e transferências.
-  - **Consolidated Net Change**: Variação líquida consolidada de capital em USD (`Net Change = Cashflow + Funding - Fees`), destacando com clareza a rentabilidade do período.
-- **Agrupamento Hierárquico em Cascata**:
-  - **1º Nível (Corretora)**: Consolida Bybit, Bitget e OKX com seus respectivos totais de transações, taxas, funding e Net Change em USD. Permite expandir e recolher cada exchange individualmente.
-  - **2º Nível (Ativo/Moeda)**: Dentro de cada corretora, os ativos (BTC, ETH, SOL, USDT, etc.) são desdobrados com métricas completas: contagem de operações, volume de trades, depósitos, saques, taxas pagas, funding e a variação líquida tanto na **moeda nativa** quanto convertida em **USD**.
+  - **Consolidated Net Change**: Variação líquida consolidada de capital convertida na moeda fiduciária ativa (`Net Change = Cashflow + Funding - Fees`), destacando com clareza a rentabilidade do período.
+- **Agrupamento Hierárquico em Cascata 100% Internacionalizado**:
+  - **1º Nível (Corretora)**: Consolida Bybit, Bitget e OKX com seus respectivos totais de transações, taxas, funding e Net Change na moeda selecionada pelo usuário. Permite expandir e recolher cada exchange individualmente com os botões "Expand All" / "Collapse All" totalmente traduzidos.
+  - **2º Nível (Ativo/Moeda)**: Dentro de cada corretora, os ativos (BTC, ETH, SOL, USDT, etc.) são desdobrados com métricas completas: contagem de operações, volume de trades, depósitos, saques, taxas pagas, funding e a variação líquida tanto na **moeda nativa** quanto convertida e formatada na **moeda fiduciária ativa (BRL, USD, EUR, GBP)** sem sobreposições ou sufixos monetários conflitantes.
 - **Controles de Sincronismo e Privacidade**:
   - Botão de sincronização manual com feedback de progresso e respeito aos dados cacheados via SWR.
   - Compatibilidade nativa com o **Modo Privacidade**, ofuscando montantes nominais sem prejudicar a usabilidade.
@@ -372,27 +384,25 @@ O **PIKA** é o assistente quantitativo e auditor de inteligência artificial na
 
 ### ⚙️ Provedores Suportados e Modelos Locais/Nuvem
 - **Ollama (100% Local e Privado)**:
-  - Comunicação direta com sua instância local do Ollama (`http://localhost:11434` ou endpoint de rede customizado).
+  - Comunicação direta com sua instância local do Ollama (`http://localhost:11434` ou endpoint de rede customizado; modelo padrão `llama3.2:latest`).
   - Descoberta automática de modelos instalados (`llama3.2`, `qwen2.5`, `mistral`, etc.).
   - Nenhum dado trafega para a nuvem.
 - **Google Gemini Cloud**:
-  - Integração moderna via SDK `@google/genai` utilizando modelos multimodais de alta performance (`gemini-2.5-flash`, `gemini-1.5-pro`).
+  - Integração moderna via SDK `@google/genai` (fallback padrão `gemini-3.8-flash`).
   - Suporte a rotas proxy de backend seguras para gestão de chaves.
 - **OpenRouter / OpenAI / Anthropic / Custom**:
-  - Conexão flexível com qualquer provedor compatível com o protocolo OpenAPI utilizando chave própria salva exclusivamente no navegador.
+  - Conexão flexível com qualquer um dos 6 provedores suportados (`ollama`, `gemini`, `openrouter`, `openai`, `anthropic`, `custom`) com chave mantida exclusivamente em memória.
 - **Política de Fallback Automático**: Caso o modelo primário (ex: Ollama local) não responda ou sofra timeout, o PIKA recorre automaticamente ao modelo secundário configurado.
 
-### 🛠️ Catálogo de Ferramentas Analíticas (Tool Calling)
-O PIKA conta com 9 ferramentas de leitura registradas em tempo de execução:
-1. `get_consolidated_balances`: Recupera saldos consolidados por moeda, corretora e categoria.
-2. `get_open_positions`: Inspeciona posições ativas, preços de entrada, mark price, margem e liquidação.
-3. `get_order_history`: Consulta histórico recente de ordens e execuções.
-4. `get_funding_rates`: Retorna taxas atuais e projeções de financiamento para derivativos perpétuos.
-5. `get_hedge_pro_metrics`: Fornece métricas de proteção de capital, saldo protegido e exposição em contratos inversos.
-6. `get_market_analytics`: Fornece diagnósticos quantitativos de Open Interest, regime de mercado e CVD.
-7. `get_transaction_summary`: Resume o extrato de transações contábeis, taxas e variações de caixa.
-8. `get_exchange_connection_health`: Informa o status de sincronização, latência e saúde das conexões.
-9. `get_pnl_by_symbol`: Fornece a matriz de lucro e perda agregada por símbolo.
+### 🛠️ Catálogo de Ferramentas Analíticas (7 Ferramentas)
+O PIKA conta com **7 ferramentas de leitura** registradas em tempo de execução (`aiToolRegistry.ts`):
+1. `aiGetPortfolioBalances`: Recupera saldos consolidados, patrimônio total em USD, margem disponível e detalhamento por corretora e ativo.
+2. `aiGetOpenPositions`: Inspeciona posições ativas com preço de entrada, mark price, PnL não realizado (UPL), liquidação, modo de margem e alavancagem.
+3. `aiGetHedgeCorrelationSummary`: Calcula análise de hedge cross-exchange, exposição líquida (net delta) e risco de liquidação unilateral.
+4. `aiGetFundingFeesHistory`: Consulta fluxo de caixa real de taxas de financiamento creditadas/debitadas em USD nos extratos das corretoras.
+5. `aiGetMarketFundingRates`: Retorna taxas de financiamento perpétuas (%) atuais e históricas multi-horizonte, comparações cross-exchange e rankings de mercado.
+6. `aiGetTradingFeesHistory`: Consulta taxas e comissões de corretagem pagas em execuções recentes.
+7. `aiGetClosedPositionsSummary`: Resume posições encerradas históricas (PnL realizado, contagem de trades ganhos/perdedores e Win Rate %).
 
 ### 🔍 Auditoria de Compatibilidade de Ferramentas
 No modal de gerenciamento de modelos (**AI Settings** $\to$ **Manage Models**), o CPM audita ativamente se cada modelo suporta chamadas de função estruturadas (*Tool-Calling*), exibindo selos visuais de compatibilidade e orientando a escolha dos modelos mais capazes.
@@ -441,7 +451,7 @@ Para garantir que ativos na carteira de financiamento (Spot/Funding) ou moedas a
 - **Backoff Exponencial com Jitter para Falhas de Rede**: Em instabilidades transitórias de conexão, o sistema re-tenta com intervalos progressivos (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) adicionados de variação aleatória (jitter), limitado a 5 tentativas antes de acionar o circuit breaker.
 - **Global Error Boundary**: Se ocorrer uma falha inesperada na árvore do React, a aplicação não quebra em tela branca. Uma tela de proteção graciosa (**Safe Recovery**) oferece diagnóstico do incidente e dois botões de restauração em um clique: **Reload Dashboard** e **Clear Cache & Reload**.
 - **Reset Automático de Scroll**: Ao navegar entre abas no menu lateral, o leitor de layout do React reseta instantaneamente a rolagem para o topo da página, garantindo foco imediato nas informações principais.
-- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **65 arquivos de teste com 660 testes unitários e de integração**.
+- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **99 arquivos de teste com 835 testes unitários e de integração**.
 
 ---
 
@@ -464,7 +474,7 @@ O CPM é um Progressive Web App (PWA) de última geração:
 5. Na **Bitget**, se sua conta foi migrada para o formato unificado, selecione o tipo de conta **UTA** no modal de chaves.
 
 ### Esqueci minha Senha Mestra. É possível recuperá-la por e-mail?
-Não. Como o CPM adota uma arquitetura Zero-Trust, não existem servidores de terceiros ou bancos de dados remotos para recuperação de senha. Caso a esqueça, utilize o botão de redefinição de fábrica na tela de desbloqueio para apagar as chaves locais e configure suas conexões novamente (ou restaure a partir de um backup `.cpmbackup` previamente salvo).
+Não. Como o CPM adota uma arquitetura Zero-Trust, não existem servidores de terceiros ou bancos de dados remotos para recuperação de senha. Caso a esqueça, utilize o botão de redefinição de fábrica na tela de desbloqueio para apagar as chaves locais e configure suas conexões novamente (ou restaure a partir de um backup `.enc` previamente salvo).
 
 ### O assistente PIKA não responde ou dá timeout.
 1. Se estiver utilizando o **Ollama Local**, confirme se o aplicativo do Ollama está em execução no seu computador (`http://localhost:11434`) e se o modelo configurado foi baixado (`ollama run llama3.2`).

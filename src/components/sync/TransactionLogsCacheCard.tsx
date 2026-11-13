@@ -139,10 +139,10 @@ export function TransactionLogsCacheCard() {
   };
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-6 flex flex-col h-full">
+    <div className="bg-surface border border-line rounded-xl p-6 flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-base font-semibold text-white flex items-center gap-2">
+        <h3 className="text-base font-semibold text-fg flex items-center gap-2">
           <ArrowLeftRight className="w-4 h-4 text-emerald-400" />
           {t('transactions.cache.title', 'Transaction Logs Cache')}
         </h3>
@@ -153,64 +153,64 @@ export function TransactionLogsCacheCard() {
           >
             DB v{DB_VERSION}
           </span>
-          <div className="flex items-center gap-1.5 bg-[#2a2b30]/50 px-2 py-0.5 rounded-md border border-[#2a2b30]">
-            <span className="text-[#8E9299] text-[10px]">{t('transactions.cache.totalTx', 'Total Tx:')}</span>
+          <div className="flex items-center gap-1.5 bg-line/50 px-2 py-0.5 rounded-md border border-line">
+            <span className="text-fg-muted text-[10px]">{t('transactions.cache.totalTx', 'Total Tx:')}</span>
             <span className="text-emerald-400 font-mono text-xs font-medium">
               {dbCounts.total.toLocaleString()}
             </span>
           </div>
         </div>
       </div>
-      <p className="text-[#8E9299] text-xs mb-4">
+      <p className="text-fg-muted text-xs mb-4">
         {t('transactions.cache.subtitle', 'Granular cache & sync controls for Bybit, Bitget and OKX transaction logs')}
       </p>
 
       <div className="flex flex-col gap-4 flex-1">
         {/* Exchange breakdown badges */}
-        <div className="grid grid-cols-3 gap-2 bg-[#0c0d0e] border border-[#2a2b30]/60 p-3 rounded-lg">
+        <div className="grid grid-cols-3 gap-2 bg-[#0c0d0e] border border-line/60 p-3 rounded-lg">
           <div className="flex flex-col">
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold">
               {t('transactions.cache.bybitTx', 'Bybit Tx')}
             </span>
-            <span className="text-sm font-mono font-medium text-white">
+            <span className="text-sm font-mono font-medium text-fg">
               {dbCounts.bybit.toLocaleString()}
             </span>
           </div>
-          <div className="flex flex-col border-l border-[#2a2b30] pl-2.5">
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold">
+          <div className="flex flex-col border-l border-line pl-2.5">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold">
               {t('transactions.cache.bitgetTx', 'Bitget Tx')}
             </span>
-            <span className="text-sm font-mono font-medium text-white">
+            <span className="text-sm font-mono font-medium text-fg">
               {dbCounts.bitget.toLocaleString()}
             </span>
           </div>
-          <div className="flex flex-col border-l border-[#2a2b30] pl-2.5">
-            <span className="text-[10px] text-[#8E9299] uppercase font-semibold">
+          <div className="flex flex-col border-l border-line pl-2.5">
+            <span className="text-[10px] text-fg-muted uppercase font-semibold">
               {t('transactions.cache.okxTx', 'OKX Tx')}
             </span>
-            <span className="text-sm font-mono font-medium text-white">
+            <span className="text-sm font-mono font-medium text-fg">
               {dbCounts.okx.toLocaleString()}
             </span>
           </div>
         </div>
 
         {/* Sync Status info */}
-        <div className="flex justify-between items-center text-xs text-[#8E9299]">
+        <div className="flex justify-between items-center text-xs text-fg-muted">
           <span>{t('transactions.cache.lastSync', 'Last Synchronized:')}</span>
-          <span className="font-mono text-white/90">{formatLastSync(lastSyncTime)}</span>
+          <span className="font-mono text-fg/90">{formatLastSync(lastSyncTime)}</span>
         </div>
 
-        <div className="border-t border-[#2a2b30]" />
+        <div className="border-t border-line" />
 
         {/* Force Sync Transactions */}
         <div>
           <div className="mb-2">
             <AppTooltip description={t('transactions.cache.forceSyncTooltip', 'Performs parallel transaction log synchronization for all active Bybit, Bitget, and OKX connections without waiting for background interval.')}>
-              <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">
+              <h4 className="text-fg font-medium text-sm w-fit cursor-help border-b border-dashed border-fg-muted/50">
                 {t('transactions.cache.forceSyncTitle', 'Force Sync Transactions')}
               </h4>
             </AppTooltip>
-            <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
+            <p className="text-fg-muted text-xs mt-1 leading-relaxed">
               {t('transactions.cache.forceSyncDesc', 'Downloads the latest transaction histories across all 3 exchanges simultaneously.')}
             </p>
           </div>
@@ -218,7 +218,7 @@ export function TransactionLogsCacheCard() {
           <button
             onClick={handleForceSync}
             disabled={isGlobalSyncing || synced || isClearing || !hasTxKeys}
-            className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-2 bg-line hover:bg-line disabled:opacity-50 text-fg px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
           >
             {isGlobalSyncing ? (
               <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
@@ -235,17 +235,17 @@ export function TransactionLogsCacheCard() {
           </button>
         </div>
 
-        <div className="border-t border-[#2a2b30]" />
+        <div className="border-t border-line" />
 
         {/* Clear Transactions Cache */}
         <div>
           <div className="mb-2">
             <AppTooltip description={t('transactions.cache.clearCacheTooltip', 'Wipes cached Bybit, Bitget, and OKX transaction logs and triggers a clean multi-month backfill download from exchange APIs.')}>
-              <h4 className="text-white font-medium text-sm w-fit cursor-help border-b border-dashed border-[#8E9299]/50">
+              <h4 className="text-fg font-medium text-sm w-fit cursor-help border-b border-dashed border-fg-muted/50">
                 {t('transactions.cache.clearCacheTitle', 'Clear Transactions Cache')}
               </h4>
             </AppTooltip>
-            <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
+            <p className="text-fg-muted text-xs mt-1 leading-relaxed">
               {t('transactions.cache.clearCacheDesc', 'Forces a full deep re-fetch of all transaction ledger entries from scratch.')}
             </p>
           </div>
@@ -253,7 +253,7 @@ export function TransactionLogsCacheCard() {
           <button
             onClick={handleClearCache}
             disabled={isClearing || cleared || isGlobalSyncing || !hasTxKeys}
-            className="flex items-center gap-2 bg-[#2a2b30] hover:bg-[#323339] disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-2 bg-line hover:bg-line disabled:opacity-50 text-fg px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
           >
             {isClearing ? (
               <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />

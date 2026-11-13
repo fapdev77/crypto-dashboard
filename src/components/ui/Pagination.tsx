@@ -158,17 +158,17 @@ export function Pagination({
   return (
     <div
       id={id}
-      className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-[#111216] border border-[#2a2b30] rounded-xl text-sm"
+      className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-canvas border border-line rounded-xl text-sm"
     >
       {/* Items Count Summary */}
       <div className="flex items-center gap-2">
-        <div id={`${id}-summary`} className="text-gray-400 font-medium">
+        <div id={`${id}-summary`} className="text-fg-muted font-medium">
           {t('common.pagination.showing', 'Showing')}{' '}
-          <span className="text-white font-mono">{startItem}</span>{' '}
+          <span className="text-fg font-mono">{startItem}</span>{' '}
           {t('common.pagination.to', 'to')}{' '}
-          <span className="text-white font-mono">{endItem}</span>{' '}
+          <span className="text-fg font-mono">{endItem}</span>{' '}
           {t('common.pagination.of', 'of')}{' '}
-          <span className="text-white font-mono">{totalItems}</span>{' '}
+          <span className="text-fg font-mono">{totalItems}</span>{' '}
           {t('common.pagination.records', 'records')}
         </div>
         {refreshAnim === 'loading' && (
@@ -199,7 +199,7 @@ export function Pagination({
           id={`${id}-btn-first`}
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          className="p-1.5 rounded bg-elevated border border-line text-fg-muted hover:text-fg disabled:opacity-40 disabled:hover:text-fg-muted transition-colors cursor-pointer disabled:cursor-not-allowed"
           title={t('common.pagination.firstPage', 'First Page')}
         >
           <ChevronsLeft className="w-4 h-4" />
@@ -210,7 +210,7 @@ export function Pagination({
           id={`${id}-btn-prev`}
           onClick={handlePrev}
           disabled={currentPage === 1}
-          className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          className="p-1.5 rounded bg-elevated border border-line text-fg-muted hover:text-fg disabled:opacity-40 disabled:hover:text-fg-muted transition-colors cursor-pointer disabled:cursor-not-allowed"
           title={t('common.pagination.prevPage', 'Previous Page')}
         >
           <ChevronLeft className="w-4 h-4" />
@@ -223,7 +223,7 @@ export function Pagination({
               return (
                 <span
                   key={`ellipsis-${idx}`}
-                  className="px-2 py-1 text-gray-500 font-mono select-none"
+                  className="px-2 py-1 text-fg-muted font-mono select-none"
                 >
                   ...
                 </span>
@@ -238,8 +238,8 @@ export function Pagination({
                 onClick={() => onPageChange(p as number)}
                 className={`min-w-[28px] px-2 py-1 rounded text-center font-mono font-medium transition-colors cursor-pointer select-none ${
                   isCurrent
-                    ? 'bg-[#2F6BFF] text-white font-bold'
-                    : 'bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white'
+                    ? 'bg-accent text-white font-bold'
+                    : 'bg-elevated border border-line text-fg-muted hover:text-fg'
                 }`}
               >
                 {p}
@@ -253,7 +253,7 @@ export function Pagination({
           id={`${id}-btn-next`}
           onClick={handleNext}
           disabled={currentPage === totalPages}
-          className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          className="p-1.5 rounded bg-elevated border border-line text-fg-muted hover:text-fg disabled:opacity-40 disabled:hover:text-fg-muted transition-colors cursor-pointer disabled:cursor-not-allowed"
           title={t('common.pagination.nextPage', 'Next Page')}
         >
           <ChevronRight className="w-4 h-4" />
@@ -264,7 +264,7 @@ export function Pagination({
           id={`${id}-btn-last`}
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="p-1.5 rounded bg-[#1a1b1e] border border-[#2a2b30] text-gray-400 hover:text-white disabled:opacity-40 disabled:hover:text-gray-400 transition-colors cursor-pointer disabled:cursor-not-allowed"
+          className="p-1.5 rounded bg-elevated border border-line text-fg-muted hover:text-fg disabled:opacity-40 disabled:hover:text-fg-muted transition-colors cursor-pointer disabled:cursor-not-allowed"
           title={t('common.pagination.lastPage', 'Last Page')}
         >
           <ChevronsRight className="w-4 h-4" />

@@ -102,27 +102,27 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
       case 'area':
         return <Activity className="w-3.5 h-3.5 text-emerald-400" />;
       default:
-        return <BarChart3 className="w-3.5 h-3.5 text-[#2F6BFF]" />;
+        return <BarChart3 className="w-3.5 h-3.5 text-accent" />;
     }
   };
 
   return (
-    <div className="my-3 rounded-xl border border-[#2a2b30] bg-[#0d0e12] overflow-hidden shadow-lg text-xs">
+    <div className="my-3 rounded-xl border border-line bg-[#0d0e12] overflow-hidden shadow-lg text-xs">
       {/* Header */}
       {(title || description) && (
-        <div className="px-3.5 py-2.5 bg-[#14151a] border-b border-[#2a2b30] flex items-center justify-between">
+        <div className="px-3.5 py-2.5 bg-[#14151a] border-b border-line flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1 rounded bg-[#1f2027] border border-[#2e3038]">
+            <div className="p-1 rounded bg-[#1f2027] border border-line">
               {renderIcon()}
             </div>
             <div>
-              {title && <h4 className="text-xs font-semibold text-white tracking-tight">{title}</h4>}
+              {title && <h4 className="text-xs font-semibold text-fg tracking-tight">{title}</h4>}
               {description && (
-                <p className="text-[10px] text-[#8E9299] mt-0.5">{description}</p>
+                <p className="text-[10px] text-fg-muted mt-0.5">{description}</p>
               )}
             </div>
           </div>
-          <span className="font-mono text-[9px] uppercase tracking-wider text-gray-400 px-2 py-0.5 rounded bg-[#1a1b22] border border-[#2a2b30]">
+          <span className="font-mono text-[9px] uppercase tracking-wider text-fg-muted px-2 py-0.5 rounded bg-elevated border border-line">
             {type} chart
           </span>
         </div>

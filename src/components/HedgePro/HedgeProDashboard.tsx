@@ -62,19 +62,19 @@ export function HedgeProDashboard() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-fg flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-400" />
               Hedge Pro
             </h2>
             <SimulationModeBadge />
           </div>
-          <p className="text-xs text-[#8E9299] mt-0.5">
+          <p className="text-xs text-fg-muted mt-0.5">
             {t('hedgePro.dashboard.subtitle')}
           </p>
         </div>
 
         {/* PnL Concept Mode Toggle */}
-        <div className="flex items-center bg-[#151619] border border-[#26282d] p-0.5 rounded-lg text-xs">
+        <div className="flex items-center bg-surface border border-line p-0.5 rounded-lg text-xs">
           <AppTooltip
             description={t('hedgePro.dashboard.classicPnlTooltip')}
             side="bottom"
@@ -82,8 +82,8 @@ export function HedgeProDashboard() {
             <button
               onClick={() => handleTogglePnlConcept('standard')}
               className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${pnlConceptMode === 'standard'
-                  ? 'bg-[#26282d] text-white shadow-sm'
-                  : 'text-[#8E9299] hover:text-white'
+                  ? 'bg-line text-fg shadow-sm'
+                  : 'text-fg-muted hover:text-fg'
                 }`}
             >
               <Layers className="w-3 h-3" />
@@ -99,7 +99,7 @@ export function HedgeProDashboard() {
               onClick={() => handleTogglePnlConcept('hedge')}
               className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors flex items-center gap-1.5 ${pnlConceptMode === 'hedge'
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
-                  : 'text-[#8E9299] hover:text-white'
+                  : 'text-fg-muted hover:text-fg'
                 }`}
             >
               <Scale className="w-3 h-3" />
@@ -113,21 +113,21 @@ export function HedgeProDashboard() {
       <HedgeProKpis totals={totals} formatCurrency={formatCurrency} />
 
       {/* Protected vs Exposed vs Leveraged summary bar (portfolio) */}
-      <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 space-y-2">
+      <div className="bg-surface border border-line rounded-xl p-4 space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-[#8E9299] uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-xs font-medium text-fg-muted uppercase tracking-wider flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> {t('hedgePro.dashboard.protected')}
           </span>
-          <span className="text-xs font-medium text-[#8E9299] uppercase tracking-wider flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-white" /> {t('hedgePro.dashboard.exposed')}
+          <span className="text-xs font-medium text-fg-muted uppercase tracking-wider flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5 text-fg" /> {t('hedgePro.dashboard.exposed')}
           </span>
-          <span className="text-xs font-medium text-[#8E9299] uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-xs font-medium text-fg-muted uppercase tracking-wider flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-amber-400/80 inline-block" /> {t('hedgePro.dashboard.leveraged')}
           </span>
         </div>
         <div className="flex justify-between text-[15px] font-semibold font-mono">
           <span className="text-emerald-500/90">{formatCurrency(totals.totalProtected, 'usd', 2)}</span>
-          <span className="text-white font-semibold">{formatCurrency(totals.summaryExposed, 'usd', 2)}</span>
+          <span className="text-fg font-semibold">{formatCurrency(totals.summaryExposed, 'usd', 2)}</span>
           <span className="text-amber-400 font-semibold">{formatCurrency(totals.totalLeveraged, 'usd', 2)}</span>
         </div>
         <HedgeExposureBar
@@ -137,7 +137,7 @@ export function HedgeProDashboard() {
           leveragedWidthPct={totals.leveragedWidthPct}
           tooltip={
             <div className="text-xs space-y-1.5 p-1 min-w-[230px]">
-              <div className="font-semibold text-white border-b border-[#2a2b30] pb-1">
+              <div className="font-semibold text-fg border-b border-line pb-1">
                 {t('hedgePro.dashboard.capitalExposureTooltip.title')}
               </div>
               <div className="space-y-1 font-mono text-[11px]">
@@ -155,11 +155,11 @@ export function HedgeProDashboard() {
                   </span>
                   <span>{formatCurrency(totals.stablecoinsProtectedUsd, 'usd', 2)} ({totals.stablesOfEquityPct.toFixed(2)}%)</span>
                 </div>
-                <div className="flex justify-between items-center gap-4 text-emerald-300 font-semibold border-t border-[#2a2b30]/60 pt-0.5">
+                <div className="flex justify-between items-center gap-4 text-emerald-300 font-semibold border-t border-line/60 pt-0.5">
                   <span>{t('hedgePro.dashboard.capitalExposureTooltip.totalProtected')}</span>
                   <span>{formatCurrency(totals.totalProtected, 'usd', 2)} ({totals.protectedPct.toFixed(2)}%)</span>
                 </div>
-                <div className="flex justify-between items-center gap-4 text-white border-t border-[#2a2b30]/60 pt-0.5">
+                <div className="flex justify-between items-center gap-4 text-fg border-t border-line/60 pt-0.5">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-white inline-block" />
                     {t('hedgePro.dashboard.capitalExposureTooltip.exposed')}
@@ -167,7 +167,7 @@ export function HedgeProDashboard() {
                   <span>{formatCurrency(totals.summaryExposed, 'usd', 2)} ({totals.exposedPct.toFixed(2)}%)</span>
                 </div>
                 {totals.totalLeveraged > 0 && (
-                  <div className="flex justify-between items-center gap-4 text-amber-400 border-t border-[#2a2b30]/60 pt-0.5">
+                  <div className="flex justify-between items-center gap-4 text-amber-400 border-t border-line/60 pt-0.5">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
                       {t('hedgePro.dashboard.capitalExposureTooltip.leveragedLongs')}
@@ -181,7 +181,7 @@ export function HedgeProDashboard() {
         />
         <div className="flex justify-between text-[15px] font-semibold font-mono">
           <span className="text-emerald-500/90">P {totals.protectedPct.toFixed(2)}%</span>
-          <span className="text-white font-semibold">E {totals.exposedPct.toFixed(2)}%</span>
+          <span className="text-fg font-semibold">E {totals.exposedPct.toFixed(2)}%</span>
           {totals.leveragedPct > 0 && (
             <span className="text-amber-400 font-semibold">L +{totals.leveragedPct.toFixed(2)}%</span>
           )}
@@ -201,7 +201,7 @@ export function HedgeProDashboard() {
       {/* Grouped Coin Hedge Section: Breakdown Chart + Per-Coin Hedge Rows */}
       <div
         id="hedge-coins-group"
-        className="bg-[#121316]/60 border border-[#26282d] rounded-2xl p-3 sm:p-4 flex flex-col gap-4"
+        className="bg-canvas/60 border border-line rounded-2xl p-3 sm:p-4 flex flex-col gap-4"
       >
         {/* Protected vs Exposed breakdown per coin (chart) */}
         <HedgeProBreakdownChart summaries={filteredSummaries} formatCurrency={formatCurrency} />
@@ -216,7 +216,7 @@ export function HedgeProDashboard() {
 
       {/* Filtered totals footnote */}
       {filteredSummaries.length !== coinSummaries.length && (
-        <div className="text-[11px] text-[#8E9299] -mt-2">
+        <div className="text-[11px] text-fg-muted -mt-2">
           {t('hedgePro.dashboard.filteredTotals', {
             protected: formatCurrency(filteredTotals.totalProtected, 'usd', 2),
             exposed: formatCurrency(filteredTotals.totalExposed, 'usd', 2),

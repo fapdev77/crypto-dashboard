@@ -1,7 +1,7 @@
 # Crypto Portfolio Manager: Multi-Exchange
 
-[![Version](https://img.shields.io/badge/version-2.29.0-blue.svg)](package.json)
-[![Tests](https://img.shields.io/badge/tests-763%20passed-success.svg)](specs/PRD.md)
+[![Version](https://img.shields.io/badge/version-2.35.0-blue.svg)](package.json)
+[![Tests](https://img.shields.io/badge/tests-835%20passed-success.svg)](specs/PRD.md)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/security-Zero--Trust%20Client-orange.svg)](user_manual/cpm_user_manual_pt-br.md)
 
@@ -13,7 +13,7 @@ Um gerenciador de portfólio, terminal analítico institucional e auditor contá
 
 O **Crypto Portfolio Manager (CPM)** foi construído com a premissa fundamental de **Zero-Trust Security**:
 - **Nenhuma Credencial em Servidores Terceiros**: Não existem bancos de dados na nuvem armazenando suas chaves de API, senhas ou histórico patrimonial. Todas as credenciais residem exclusivamente no armazenamento local do seu navegador (`localStorage`).
-- **Criptografia Militar no Cliente**: As chaves são protegidas por Senha Mestra utilizando algoritmos nativos da **Web Crypto API (PBKDF2 com 600.000 iterações + AES-GCM 256-bit)**, com bloqueio global de sessão (`GlobalUnlockScreen`), tela de migração mandatória de credenciais legadas (`MandatoryVaultMigrationScreen`) e suporte a exportação/importação de backups cifrados (`.cpmbackup`).
+- **Criptografia Militar no Cliente**: As chaves são protegidas por Senha Mestra utilizando algoritmos nativos da **Web Crypto API (PBKDF2 com 600.000 iterações + AES-GCM 256-bit)**, com bloqueio global de sessão (`GlobalUnlockScreen`), tela de migração mandatória de credenciais legadas (`MandatoryVaultMigrationScreen`) e suporte a exportação/importação de backups cifrados (`.enc`).
 - **Proxy Inerte Local e Serverless (`server.ts` & `/api/proxy.ts`)**: Para contornar restrições de CORS impostas pelos navegadores, o sistema utiliza um relé de alta performance em Node.js/Express. O frontend assina todas as requisições na ponta do cliente gerando os cabeçalhos criptográficos correspondentes. O proxy repassa os dados aos endpoints oficiais das corretoras de forma transparente, sem reter dados, sem manter logs sensíveis e com validação rígida de allowlist para prevenir SSRF.
 - **Auditor Quantitativo PIKA com Modo Privacidade**: Assistente analítico integrado que opera exclusivamente via chamadas de ferramentas de leitura local (Local Tool-Calling), convertendo automaticamente valores nominais em proporções percentuais quando o Modo Privacidade estiver ativo.
 
@@ -22,25 +22,27 @@ O **Crypto Portfolio Manager (CPM)** foi construído com a premissa fundamental 
 ## ⚙️ Tecnologias Utilizadas (A Stack)
 
 - **Frontend & Interface**: React 19, TypeScript ~5.8, **Vite 6**, **Tailwind CSS v4**, **Lucide React** para ícones otimizados e Radix UI para tooltips conceituais.
-- **Internacionalização (i18n)**: **i18next** e **react-i18next** com suporte dinâmico a 6 idiomas completos (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`), mantendo terminologias técnicas de mercado padronizadas.
-- **Multi-Moedas & Câmbio Fiat**: Conversão cambial em tempo real integrada à **Frankfurter API** com fallback em cache offline local para exibição fluida em USD, BRL, EUR e GBP sem duplicações de sufixo monetário.
-- **Gerenciamento de Estado**: **Zustand 5.0** com arquitetura desacoplada de micro-stores de alta coesão:
+- **Internacionalização (i18n)**: **i18next** e **react-i18next** com suporte dinâmico a 6 idiomas completos (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`) e paridade estrita de **1.624 chaves** por idioma, mantendo terminologias técnicas de mercado padronizadas.
+- **Sistema Multi-Temas & Personalização**: Motor de tokens CSS em Tailwind v4 (`themeMode.ts`) com **5 temas integrados** (*Terminal Dark*, *Terminal Light*, *Wise Dark*, *Wise Light*, *Customizado*), 4 predefinições rápidas, editor de 10 tokens de cor com prévia ao vivo, gerenciamento de temas salvos nomeados e inicialização sem flash visual (FOUC).
+- **Multi-Moedas & Câmbio Fiat**: Conversão cambial em tempo real integrada à **Frankfurter API v2** (USD, BRL, EUR, GBP) e paridade **USDT/USD** via **CoinGecko**, com cache offline resiliente e painel de diagnóstico de conectividade (`CurrencyApiDiagnostics`).
+- **Gerenciamento de Estado**: **Zustand 5.0** com arquitetura desacoplada de **14 micro-stores** de alta coesão:
   - `useBalancesStore` (saldos consolidados e fatias de carteira)
   - `usePositionsStore` (posições ativas e margens)
   - `useOrdersStore` (ordens em aberto)
   - `useApiKeysStore` (persistência segura e criptografia de chaves)
   - `useConnectionStore` (conectividade em tempo real)
+  - `useSyncCoordinatorStore` (coordenação em memória de timestamps e cooldowns de sincronização)
   - `useFundingStore` (taxas de funding e auto-sync)
   - `useMarketAnalyticsStore` (indicadores quantitativos e regimes de mercado)
   - `useAiChatStore`, `useAiSettingsStore` e `useAiTelemetryStore` (subsistema do PIKA AI)
-  - `useSettingsStore` (preferências globais, moeda base, idioma, TTL de símbolos e intervalos)
+  - `useSettingsStore` (preferências globais, temas, moeda base, idioma, TTL de símbolos/câmbio e intervalos)
   - `useLogStore` (terminal de logs do sistema)
   - `usePwaUpdateStore` (ciclo de vida e atualização do Service Worker)
 - **Persistência e Cache**: **IndexedDB** (`idb` 8.0) estruturado em 14 object stores sob o padrão **SWR (Stale-While-Revalidate)**, com ferramentas de auto-reparo de integridade, medição de quota e expurgo seletivo (pruning de 30d a 2 anos).
 - **Aritmética Financeira**: **Big.js** para cálculos de alta precisão em taxas de funding, ratios de hedge e fluxo de caixa contábil.
 - **Subsistema de IA**: `@google/genai` (SDK 1.29.0) para Google Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm`.
 - **Relatórios & Gráficos**: **Recharts 3.8** (curvas de Open Interest, CVD, Hedge Pro e gráficos de tokens), **jsPDF** com **jsPDF-AutoTable** e **SheetJS (xlsx)**.
-- **Testes Automatizados**: **Vitest 4.1** com jsdom e `@testing-library/react`. Suíte abrangente com **88 arquivos de teste e 763 testes unitários e de integração automatizados** 100% verdes.
+- **Testes Automatizados**: **Vitest 4.1** com jsdom e `@testing-library/react`. Suíte abrangente com **99 arquivos de teste e 835 testes unitários e de integração automatizados** 100% verdes.
 
 ---
 
@@ -77,7 +79,7 @@ npm start
 # Validação estrita de tipagem TypeScript (zero erros)
 npm run lint
 
-# Execução completa da suíte de 763 testes automatizados
+# Execução completa da suíte de 835 testes automatizados
 npm test
 ```
 
@@ -86,12 +88,12 @@ npm test
 ## 🛠 Principais Funcionalidades e Recursos
 
 ### 1. PIKA Assistant (Portfolio Information & Knowledge Assistant — v2.0+)
-- **Auditor Quantitativo com 9 Ferramentas de Leitura**:
-  - `get_consolidated_balances`, `get_open_positions`, `get_order_history`, `get_funding_rates`, `get_hedge_pro_metrics`, `get_market_analytics`, `get_transaction_summary`, `get_exchange_connection_health`, `get_pnl_by_symbol`.
-- **Arquitetura Multi-Provedor**:
-  - **Ollama Local (100% Privado)**: Comunica-se com o Ollama em `http://localhost:11434`, descobre modelos locais (`llama3.2`, `qwen2.5`) e audita compatibilidade com Tool Calling.
-  - **Google Gemini Cloud**: Integração de alta performance via SDK `@google/genai`.
-  - **OpenRouter / Provedores Customizados**: Chaves salvas exclusivamente no navegador com política de fallback automático.
+- **Auditor Quantitativo com 7 Ferramentas de Leitura**:
+  - `aiGetPortfolioBalances`, `aiGetOpenPositions`, `aiGetHedgeCorrelationSummary`, `aiGetFundingFeesHistory`, `aiGetMarketFundingRates`, `aiGetTradingFeesHistory`, `aiGetClosedPositionsSummary`.
+- **Arquitetura Multi-Provedor (6 Provedores)**:
+  - **Ollama Local (100% Privado)**: Comunica-se com o Ollama em `http://localhost:11434` (modelo padrão `llama3.2:latest`), descobre modelos instalados e audita compatibilidade com Tool Calling.
+  - **Google Gemini Cloud**: Integração via SDK `@google/genai` (fallback padrão `gemini-3.8-flash`).
+  - **OpenRouter / OpenAI / Anthropic / Provedores Customizados**: Chaves salvas exclusivamente em memória com política de fallback automático e kill-switch global via `AI_CHAT_BOT_ENABLED` / `VITE_AI_CHAT_BOT_ENABLED`.
 - **Proteção no Modo Privacidade**: Converte dados sensíveis em porcentagens quando o Privacy Mode estiver ativado.
 - **Telemetria Completa e Auditoria**: Gráfico diário de consumo de tokens, tempo de resposta, histórico de requisições com visualizador de JSON bruto e exportação de relatórios em JSON/CSV.
 - **Atalho Global**: Pressione **`Ctrl + J`** (ou **`Cmd + J`** no macOS) para alternar o drawer lateral.
@@ -132,8 +134,7 @@ npm test
 ### 5. Conectividade Especializada por Corretora
 - **Bybit (API V5 UTA)**:
   - Suporte a ambientes **Mainnet** e **Testnet**.
-  - Roteamento multi-regional: Global (`api.bybit.com`), Holanda (`api.bybit.nl`), Turquia (`api.bybit-tr.com`), Hong Kong (`api.bybit.com.hk`), Cazaquistão e Geórgia.
-  - Injeção automática de cabeçalhos de conformidade para contas internacionais do Brasil (`x-site-id: 10001`) e Argentina (`x-site-id: 10002`).
+  - Roteamento multi-regional (15 regiões): Global (`api.bybit.com`), Global/Bytick (`api.bytick.com`), Brasil (`api.bybit.com` e International com `x-site-id: BRA_BTL`), Argentina (`api.bybit.com` e International com `x-site-id: ARG_BTL`), Holanda (`api.bybit.nl`), Turquia (`api.bybit.tr`), Cazaquistão (`api.bybit.kz`), Geórgia (`api.bybitgeorgia.ge`), Emirados Árabes (`api.bybit.ae`), EEA (`api.bybit.eu`), Indonésia (`api.bybit.id`), Japão (`api.manepa.jp` / Testnet `api-testnet.manepa.jp`) e Hong Kong (`api.spark-fintech.com` / Testnet `api-testnet.spark-fintech.com` com cabeçalho `x-refer-site-id: HKG`).
 - **Bitget (API V2 Classic & UTA)**:
   - Adaptadores dedicados: `BitgetClassicAdapter` (carteiras segregadas Spot e Mix/Futures) e `BitgetUTAAdapter` (conta unificada).
   - Precificação dinâmica de ativos via `/api/v2/spot/market/tickers` e proxy fallback (`fetchTokenUsdPrice`).
@@ -178,32 +179,36 @@ npm test
 - **Modo Privacidade (Privacy Mode)**: Mascaramento instantâneo de valores financeiros com um clique no botão de olho e proteção automática no auditor PIKA AI.
 - **Positions Ticker**: Marquee deslizante contínuo no topo espelhando posições em aberto e cotações ao vivo.
 
-### 10. Internacionalização Completa (6 Idiomas Nativos) & Multi-Moedas Fiat
-- **Suporte Nativo a 6 Idiomas**:
+### 10. Internacionalização Completa (6 Idiomas Nativos), Multi-Moedas Fiat & Multi-Temas
+- **Suporte Nativo a 6 Idiomas (1.624 chaves em paridade estrita)**:
   - `pt-BR` (Português do Brasil)
   - `pt-PT` (Português de Portugal)
   - `en-US` (English - US)
   - `en-GB` (English - UK)
   - `es-419` (Español Latinoamericano)
   - `it-IT` (Italiano)
-- **Localização Contextual Abrangente**: 100% de cobertura nos 6 cards de Settings, modais de confirmação, badges analíticos, tooltips conceituais (Radix UI) e toasts de notificação (`react-hot-toast`).
+- **Localização Contextual Abrangente**: 100% de cobertura nos **10 cards de Settings**, modais de confirmação, badges analíticos, tooltips conceituais (Radix UI) e toasts de notificação (`react-hot-toast`).
 - **Seletor de Datas Internacionalizado e Seguro**: Modais com formatação localizada de calendário e atalhos rápidos (`Hoje`, `Ontem`, `Últimos 7d`, `Últimos 30d`, etc.) sem alterar o padrão ISO/UTC das consultas de APIs (`yyyy-MM-dd`).
 - **Preservação de Terminologias Técnicas**: Termos consolidados de mercado mantidos padronizados em todos os idiomas (`Long`, `Short`, `Inverse`, `Coin-M`, `Spot`, `Perp`, `USDT-M`, `Maker/Taker`).
-- **Sistema Multi-Moedas com Câmbio em Tempo Real**:
+- **Sistema Multi-Temas & Custom Theme Builder (`v2.33.0`–`v2.35.0`)**:
+  - **5 Paletas Integradas**: *Terminal Dark*, *Terminal Light*, *Wise Dark*, *Wise Light* e *Customizado*, alternáveis no cabeçalho (`ThemeModeButton`) ou em **Aparência e Temas** nas Configurações.
+  - **Editor de Paleta Customizada**: 4 predefinições rápidas (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*), **10 tokens CSS configuráveis** (`canvas`, `surface`, `elevated`, `line`, `fg`, `fgMuted`, `accent`, `success`, `danger`, `warning`), prévia ao vivo, gerenciamento completo de temas salvos nomeados (salvar, carregar, excluir) e atalho **Custom design** no menu do cabeçalho.
+  - **Contrast Adaptation & Zero-FOUC**: Detecção perceptual de luminância (ITU-R BT.601 via `isHexColorLight`) para ajustar `color-scheme` e cores de marca das corretoras sobre fundos claros/escuros, com hidratação pré-paint em `src/main.tsx`.
+- **Sistema Multi-Moedas com Câmbio e Diagnóstico em Tempo Real**:
   - Exibição de valores na moeda de preferência do usuário (**USD**, **BRL**, **EUR**, **GBP**).
-  - Cotações atualizadas via **Frankfurter API** com fallback automático em cache offline local.
-  - Indicador de status cambial transparente (`live`, `cached`, `fallback`).
+  - Cotações fiat atualizadas via **Frankfurter API v2** (`api.frankfurter.dev`) e paridade **USDT/USD** via **CoinGecko** (`api.coingecko.com`), com fallback em cache offline, indicador de status (`live`, `cached`, `fallback`) e painel `CurrencyApiDiagnostics`.
   - Formatação monetária limpa e padronizada (ex: `R$ 1.250,00`), eliminando sufixos hardcoded concorrentes (`(USD)` ou `USD`).
 
-### 11. Governança de Cache, Armazenamento e Configurações Avançadas
+### 11. Governança de Cache, Armazenamento e Configurações Avançadas (10 Cards Modulares)
+- **Painel Settings Modular (10 Cards)**: Idioma & Moeda (+ Diagnóstico API), Aparência & Temas (`ThemeSettingsCard`), Preferências & Testes, Segurança & Backup (`.enc`), Versão & Changelog, Armazenamento & Cache IndexedDB, Especificações de Exchange (polling 1–60s), Cache do Catálogo de Símbolos (1–24h), Sincronização de Funding Fees e Zona de Perigo (Factory Reset).
 - **IndexedDB Engine v12**: 14 object stores otimizadas sob padrão Stale-While-Revalidate (SWR).
 - **Monitoramento de Quota e Saúde de Armazenamento**: Medição periódica via `navigator.storage.estimate()` exibindo disco consumido, percentual e limites do navegador.
 - **Expurgo Seletivo sob Demanda (Prune History)**: Janelas de retenção configuráveis (30d a 2 anos) para limpar transações e ordens antigas preservando conexões e configurações.
 - **Ferramentas de Manutenção e Auto-Reparo**: Botões dedicados para diagnóstico, auto-reparo e redefinição de integridade do cache local.
 - **Governança Granular de Polling e Catálogo**:
-  - *Asset Metadata TTL*: Duração do cache de símbolos e especificações de contrato em IndexedDB (1h a 24h).
-  - *History Background Refresh*: Intervalo de checagem periódica em segundo plano de novas ordens e posições (1m a 60m).
-  - *Onboarding Guide Toggle*: Controle para exibir ou ocultar o guia introdutório ao iniciar a aplicação.
+  - *Asset Metadata / Catalog TTL*: Duração do cache de símbolos e especificações de contrato em IndexedDB (1h a 24h).
+  - *Fiat Rates Cache TTL*: Intervalo de atualização das cotações cambiais e USDT (5m a 60m).
+  - *Onboarding Guide & Vault Notice Toggles*: Controles para exibir ou ocultar o guia introdutório e o aviso do cofre ao iniciar a aplicação.
 
 ---
 

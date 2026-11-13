@@ -69,7 +69,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
     switch (provider) {
       case 'gemini':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-[#2F6BFF]/20 text-[#2F6BFF] border border-[#2F6BFF]/40">
+          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-accent/20 text-accent border border-accent/40">
             GEMINI
           </span>
         );
@@ -99,7 +99,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
         );
       default:
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-gray-500/20 text-gray-300 border border-gray-500/40">
+          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-gray-500/20 text-fg border border-gray-500/40">
             CUSTOM
           </span>
         );
@@ -107,32 +107,32 @@ export const AiModelList: React.FC<AiModelListProps> = ({
   };
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden shadow-xl">
+    <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-xl">
       {/* Header matching user reference image */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-4 border-b border-[#2a2b30] bg-[#151619]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-4 border-b border-line bg-surface">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400">
             <Layers className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold tracking-wider uppercase text-white font-mono flex items-center gap-2">
+            <h3 className="text-sm font-bold tracking-wider uppercase text-fg font-mono flex items-center gap-2">
               {t('ai.settings.models.title', 'PROVIDERS & CONTINGENCY MODELS LIST')}
             </h3>
-            <p className="text-xs text-[#8E9299]">
+            <p className="text-xs text-fg-muted">
               {t('ai.settings.models.subtitle', 'Manage primary models, automatic contingencies, and execution parameters')}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="text-xs font-mono text-[#8E9299]">
-            {t('ai.settings.models.totalModels', 'Total Models:')} <strong className="text-white font-bold">{models.length}</strong>
+          <span className="text-xs font-mono text-fg-muted">
+            {t('ai.settings.models.totalModels', 'Total Models:')} <strong className="text-fg font-bold">{models.length}</strong>
           </span>
 
           <AppTooltip description="Configure a new local (Ollama) or cloud AI model" side="left">
             <button
               onClick={onAddModel}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2F6BFF] hover:bg-[#2F6BFF]/80 text-white rounded-lg text-xs font-semibold shadow-md transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent hover:bg-accent/80 text-white rounded-lg text-xs font-semibold shadow-md transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               {t('ai.settings.models.addBtn', 'Add Model')}
@@ -142,9 +142,9 @@ export const AiModelList: React.FC<AiModelListProps> = ({
       </div>
 
       {/* Model Cards List */}
-      <div className="p-4 space-y-3 bg-[#0b0c10]">
+      <div className="p-4 space-y-3 bg-canvas">
         {models.length === 0 ? (
-          <div className="py-12 text-center text-[#8E9299] text-xs">
+          <div className="py-12 text-center text-fg-muted text-xs">
             {t('ai.settings.models.noModels', 'No models configured. Click "Add Model" to configure.')}
           </div>
         ) : (
@@ -157,24 +157,24 @@ export const AiModelList: React.FC<AiModelListProps> = ({
             return (
               <div
                 key={model.id}
-                className={`bg-[#151619] border rounded-xl p-4 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${model.isActive ? 'border-[#2a2b30] hover:border-[#383b42]' : 'border-[#2a2b30]/60 opacity-60'
+                className={`bg-surface border rounded-xl p-4 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${model.isActive ? 'border-line hover:border-line-strong' : 'border-line/60 opacity-60'
                   }`}
               >
                 {/* Left Side: Rank Order & Details */}
                 <div className="flex items-start gap-4 flex-1 min-w-0">
                   {/* Rank & Reorder Arrows */}
-                  <div className="flex flex-col items-center justify-center shrink-0 text-[#8E9299] pt-0.5">
+                  <div className="flex flex-col items-center justify-center shrink-0 text-fg-muted pt-0.5">
                     <AppTooltip description="Move up in execution priority" side="top">
                       <button
                         onClick={() => onReorderModel(model.id, 'up')}
                         disabled={isFirst}
                         aria-label="Move up"
-                        className="p-1 hover:text-white disabled:opacity-20 disabled:hover:text-[#8E9299] transition cursor-pointer"
+                        className="p-1 hover:text-fg disabled:opacity-20 disabled:hover:text-fg-muted transition cursor-pointer"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
                     </AppTooltip>
-                    <span className="font-mono text-xs font-bold text-white px-1.5 py-0.5 rounded bg-[#1e1f24] border border-[#2a2b30] my-0.5">
+                    <span className="font-mono text-xs font-bold text-fg px-1.5 py-0.5 rounded bg-elevated border border-line my-0.5">
                       #{index + 1}
                     </span>
                     <AppTooltip description="Move down in execution priority" side="bottom">
@@ -182,7 +182,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                         onClick={() => onReorderModel(model.id, 'down')}
                         disabled={isLast}
                         aria-label="Move down"
-                        className="p-1 hover:text-white disabled:opacity-20 disabled:hover:text-[#8E9299] transition cursor-pointer"
+                        className="p-1 hover:text-fg disabled:opacity-20 disabled:hover:text-fg-muted transition cursor-pointer"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
@@ -193,7 +193,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   <div className="flex-1 min-w-0 space-y-2">
                     {/* Title + Badges */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-bold text-white tracking-tight">
+                      <span className="text-sm font-bold text-fg tracking-tight">
                         {model.name} {model.isPrimary ? '(Primary)' : model.isFallback ? '(Contingency)' : ''}
                       </span>
                       {getProviderBadge(model.provider)}
@@ -245,18 +245,18 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                     </div>
 
                     {/* Metadata Specs Row */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#8E9299] font-mono">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-fg-muted font-mono">
                       <div className="flex items-center gap-1.5">
-                        <Cpu className="w-3.5 h-3.5 text-gray-500" />
+                        <Cpu className="w-3.5 h-3.5 text-fg-muted" />
                         <span>ID:</span>
-                        <span className="text-white font-medium">{model.modelId}</span>
+                        <span className="text-fg font-medium">{model.modelId}</span>
                       </div>
 
                       {model.baseUrl && (
                         <div className="flex items-center gap-1.5">
-                          <Globe className="w-3.5 h-3.5 text-gray-500" />
+                          <Globe className="w-3.5 h-3.5 text-fg-muted" />
                           <span>Endpoint:</span>
-                          <span className="text-gray-300 truncate max-w-[200px]" title={model.baseUrl}>
+                          <span className="text-fg truncate max-w-[200px]" title={model.baseUrl}>
                             {model.baseUrl}
                           </span>
                         </div>
@@ -269,7 +269,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                       </div>
 
                       <div>
-                        <span>Tokens:</span> <span className="text-gray-300">{model.maxTokens}</span>
+                        <span>Tokens:</span> <span className="text-fg">{model.maxTokens}</span>
                       </div>
 
                       <div className="flex items-center gap-1">
@@ -284,7 +284,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                 </div>
 
                 {/* Right Side: Action Buttons matching reference image */}
-                <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#2a2b30]/50">
+                <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-line/50">
                   {/* 1. Test Connection Button */}
                   <AppTooltip description="Test latency and connectivity with the AI model" side="top">
                     <button
@@ -339,10 +339,10 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                       onClick={() => onToggleFallback(model.id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${model.isFallback
                         ? 'bg-amber-500/10 text-amber-400 border border-amber-500/40 hover:bg-amber-500/20'
-                        : 'bg-[#1e1f24] text-[#8E9299] hover:text-white border border-[#2a2b30] hover:border-[#383b42]'
+                        : 'bg-elevated text-fg-muted hover:text-fg border border-line hover:border-line-strong'
                         }`}
                     >
-                      <Shield className={`w-3.5 h-3.5 ${model.isFallback ? 'text-amber-400' : 'text-[#8E9299]'}`} />
+                      <Shield className={`w-3.5 h-3.5 ${model.isFallback ? 'text-amber-400' : 'text-fg-muted'}`} />
                       <span>Fallback</span>
                     </button>
                   </AppTooltip>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { BitgetTransactionRow } from '../BitgetTransactions/BitgetTransactionRow';
@@ -114,6 +115,19 @@ describe('Bitget transaction components (components/transactions/BitgetTransacti
       expect(screen.getAllByText('USDT').length).toBeGreaterThan(0);
     });
 
+    it('colours the side by cash flow: Close Long is a sale, Close Short a purchase', () => {
+      const { unmount } = renderTransactionUi(
+        <BitgetTransactionRow entry={{ ...entry, side: 'Close Long' }} isExpanded={false} onToggle={() => {}} />
+      );
+      expect(screen.getByText('Close Long')).toHaveClass('text-danger');
+      unmount();
+
+      renderTransactionUi(
+        <BitgetTransactionRow entry={{ ...entry, side: 'Close Short' }} isExpanded={false} onToggle={() => {}} />
+      );
+      expect(screen.getByText('Close Short')).toHaveClass('text-success');
+    });
+
     it('calls onToggle when the row is clicked', () => {
       const onToggle = vi.fn();
       renderTransactionUi(<BitgetTransactionRow entry={entry} isExpanded={false} onToggle={onToggle} />);
@@ -189,7 +203,7 @@ describe('Bitget transaction components (components/transactions/BitgetTransacti
     it('renders the net change report', () => {
       renderDetailsModal('netchange');
 
-      expect(screen.getByText('Net Change Report (USD)')).toBeDefined();
+      expect(screen.getByText(/Net Change Report/)).toBeDefined();
     });
   });
 });

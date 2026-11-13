@@ -228,14 +228,14 @@ export function FundingSyncTimingPanel() {
 
   return (
     <div className="space-y-3">
-      <div className="border-t border-[#2a2b30] pt-4" />
+      <div className="border-t border-line pt-4" />
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-orange-400" />
           <AppTooltip description={t('settings.fundingTiming.tooltip', 'Displays real-time and historical performance data for the background synchronization of funding rates.')}>
-            <h4 className="text-white font-medium text-sm cursor-help border-b border-dashed border-[#8E9299]/50">{t('settings.fundingTiming.title', 'Sync Performance')}</h4>
+            <h4 className="text-fg font-medium text-sm cursor-help border-b border-dashed border-fg-muted/50">{t('settings.fundingTiming.title', 'Sync Performance')}</h4>
           </AppTooltip>
         </div>
       </div>
@@ -273,7 +273,7 @@ export function FundingSyncTimingPanel() {
           </AppTooltip>
           {/* Last sync timestamp */}
           {lastSyncTime > 0 && (
-            <span className="text-[10px] font-mono text-[#8E9299] flex items-center gap-1">
+            <span className="text-[10px] font-mono text-fg-muted flex items-center gap-1">
               {t('settings.fundingTiming.lastSync', 'Last Sync:')}
               <Clock className="w-3 h-3" />
               {formatTime(lastSyncTime)} ({timeAgo(lastSyncTime)})
@@ -287,7 +287,7 @@ export function FundingSyncTimingPanel() {
         nextScheduledSyncTime > 0 && (
           <div className={`flex items-center justify-between rounded-lg px-3 py-2 border transition-all duration-500 ${isFundingImminent5min
             ? 'bg-amber-400/5 border-amber-400/40 shadow-[0_0_12px_-4px_rgba(251,191,36,0.3)]'
-            : 'bg-[#1a1b1e] border-[#2a2b30]/50'
+            : 'bg-elevated border-line/50'
             }`}>
             <div className="flex flex-col gap-0.5 min-w-0">
               <div className="flex items-center gap-2">
@@ -296,9 +296,9 @@ export function FundingSyncTimingPanel() {
                 ) : (
                   <Clock className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                 )}
-                <span className="text-xs text-[#8E9299] truncate">
+                <span className="text-xs text-fg-muted truncate">
                   📅 {t('settings.fundingTiming.nextFunding', 'Next funding')}{' '}
-                  <span className={`font-mono ${isFundingImminent5min ? 'text-amber-300' : 'text-white'}`}>
+                  <span className={`font-mono ${isFundingImminent5min ? 'text-amber-300' : 'text-fg'}`}>
                     {formatTime(nextFundingTime)}
                   </span>
                   {' '}→ {t('settings.fundingTiming.syncTo', 'Sync')}{' '}
@@ -319,7 +319,7 @@ export function FundingSyncTimingPanel() {
                   align="start"
                 >
                   <span className="cursor-help shrink-0">
-                    <Info className={`w-3 h-3 transition-colors ${isFundingImminent5min ? 'text-amber-400' : 'text-[#8E9299] hover:text-orange-400'}`} />
+                    <Info className={`w-3 h-3 transition-colors ${isFundingImminent5min ? 'text-amber-400' : 'text-fg-muted hover:text-orange-400'}`} />
                   </span>
                 </AppTooltip>
               </div>
@@ -342,9 +342,9 @@ export function FundingSyncTimingPanel() {
 
       {
         !hasData ? (
-          <div className="flex items-center gap-2 bg-[#1a1b1e] rounded-lg px-3 py-2.5 border border-[#2a2b30]/50">
-            <RefreshCw className="w-3.5 h-3.5 text-[#8E9299]" />
-            <span className="text-xs text-[#8E9299]">
+          <div className="flex items-center gap-2 bg-elevated rounded-lg px-3 py-2.5 border border-line/50">
+            <RefreshCw className="w-3.5 h-3.5 text-fg-muted" />
+            <span className="text-xs text-fg-muted">
               {t('settings.fundingTiming.noData', 'No sync data yet. Run a Funding sync to see performance metrics.')}
             </span>
           </div>
@@ -352,14 +352,14 @@ export function FundingSyncTimingPanel() {
           <>
             {/* Overall summary */}
             {overallTiming && (
-              <div className="bg-[#1a1b1e] rounded-lg p-3 border border-[#2a2b30]/50">
+              <div className="bg-elevated rounded-lg p-3 border border-line/50">
                 <div className="grid grid-cols-3 gap-3">
                   <AppTooltip description={t('settings.fundingTiming.totalTimeTooltip', 'Total time taken for the complete synchronization process, including fetching from all exchanges and saving to the local database.')}>
                     <div className="text-center cursor-help">
-                      <div className="text-lg font-bold text-white font-mono">
+                      <div className="text-lg font-bold text-fg font-mono">
                         {overallTiming.totalSec.toFixed(1)}s
                       </div>
-                      <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.totalTime', 'Total Time')}</div>
+                      <div className="text-[10px] text-fg-muted font-mono mt-0.5 border-b border-dashed border-fg-muted/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.totalTime', 'Total Time')}</div>
                     </div>
                   </AppTooltip>
 
@@ -368,7 +368,7 @@ export function FundingSyncTimingPanel() {
                       <div className="text-lg font-bold text-orange-400 font-mono">
                         {overallTiming.fetchSec.toFixed(1)}s
                       </div>
-                      <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.apiFetch', 'API Fetch')}</div>
+                      <div className="text-[10px] text-fg-muted font-mono mt-0.5 border-b border-dashed border-fg-muted/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.apiFetch', 'API Fetch')}</div>
                     </div>
                   </AppTooltip>
 
@@ -377,13 +377,13 @@ export function FundingSyncTimingPanel() {
                       <div className="text-lg font-bold text-blue-400 font-mono">
                         {overallTiming.writeSec.toFixed(1)}s
                       </div>
-                      <div className="text-[10px] text-[#8E9299] font-mono mt-0.5 border-b border-dashed border-[#8E9299]/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.dbWrite', 'DB Write')}</div>
+                      <div className="text-[10px] text-fg-muted font-mono mt-0.5 border-b border-dashed border-fg-muted/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.dbWrite', 'DB Write')}</div>
                     </div>
                   </AppTooltip>
                 </div>
                 <div className="flex justify-center mt-2">
                   <AppTooltip description={t('settings.fundingTiming.symbolsSyncedTooltip', 'Total number of trading pairs successfully synced across all connected exchanges.')}>
-                    <span className="text-[10px] font-mono text-[#8E9299] bg-[#2a2b30]/50 px-2 py-0.5 rounded cursor-help">
+                    <span className="text-[10px] font-mono text-fg-muted bg-line/50 px-2 py-0.5 rounded cursor-help">
                       {overallTiming.symbols} {t('settings.fundingTiming.symbolsSynced', 'symbols synced')}
                     </span>
                   </AppTooltip>
@@ -398,33 +398,33 @@ export function FundingSyncTimingPanel() {
                   const color = EXCHANGE_COLORS[ex.name] || '#8E9299';
                   const pct = ex.stale > 0 ? Math.round((ex.synced / ex.stale) * 100) : 0;
                   return (
-                    <div key={ex.name} className="flex items-center gap-3 bg-[#1a1b1e] rounded px-3 py-2 border border-[#2a2b30]/30">
+                    <div key={ex.name} className="flex items-center gap-3 bg-elevated rounded px-3 py-2 border border-line/30">
                       {/* Exchange indicator */}
                       <div
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: color }}
                       />
                       {/* Name */}
-                      <span className="text-xs font-bold uppercase text-white w-14 shrink-0 font-mono">
+                      <span className="text-xs font-bold uppercase text-fg w-14 shrink-0 font-mono">
                         {ex.name}
                       </span>
                       {/* Timing bar */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 text-[11px] font-mono text-[#8E9299]">
+                        <div className="flex items-center gap-2 text-[11px] font-mono text-fg-muted">
                           <AppTooltip description={`Total time spent fetching from ${ex.name}.`}>
-                            <span className="cursor-help border-b border-dashed border-[#8E9299]/50">{ex.totalSec.toFixed(1)}s</span>
+                            <span className="cursor-help border-b border-dashed border-fg-muted/50">{ex.totalSec.toFixed(1)}s</span>
                           </AppTooltip>
-                          <span className="text-[#8E9299]/50">|</span>
+                          <span className="text-fg-muted/50">|</span>
                           <AppTooltip description="Number of symbols successfully synced out of the total stale symbols that needed updates.">
-                            <span className="cursor-help border-b border-dashed border-[#8E9299]/50">{ex.synced}/{ex.stale}</span>
+                            <span className="cursor-help border-b border-dashed border-fg-muted/50">{ex.synced}/{ex.stale}</span>
                           </AppTooltip>
-                          <span className="text-[#8E9299]/50">|</span>
+                          <span className="text-fg-muted/50">|</span>
                           <AppTooltip description="Average latency (in milliseconds) per API request batch.">
-                            <span className="cursor-help border-b border-dashed border-[#8E9299]/50">{ex.avgMs}ms avg</span>
+                            <span className="cursor-help border-b border-dashed border-fg-muted/50">{ex.avgMs}ms avg</span>
                           </AppTooltip>
                         </div>
                         {/* Mini progress bar */}
-                        <div className="mt-1 h-1 bg-[#2a2b30] rounded-full overflow-hidden">
+                        <div className="mt-1 h-1 bg-line rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{
@@ -443,7 +443,7 @@ export function FundingSyncTimingPanel() {
                         }>
                           <div className="cursor-help">
                             {pct >= 80 ? (
-                              <Zap className="w-3.5 h-3.5 text-[#00C853]" />
+                              <Zap className="w-3.5 h-3.5 text-success" />
                             ) : pct >= 50 ? (
                               <RefreshCw className="w-3.5 h-3.5 text-yellow-400" />
                             ) : (
@@ -460,7 +460,7 @@ export function FundingSyncTimingPanel() {
 
             {/* Legacy entries indicator */}
             {exchangeTimings.length > 0 && exchangeTimings.length < 3 && (
-              <div className="flex items-center gap-1.5 text-[10px] text-[#8E9299] font-mono">
+              <div className="flex items-center gap-1.5 text-[10px] text-fg-muted font-mono">
                 <Database className="w-3 h-3" />
                 <span>Showing {exchangeTimings.length}/3 exchanges (recent sync data only)</span>
               </div>

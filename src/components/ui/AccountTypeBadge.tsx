@@ -41,8 +41,8 @@ export function AccountTypeBadge({
         <span
           className={`inline-flex items-center font-mono uppercase tracking-wider rounded border font-medium select-none ${
             isUta
-              ? 'bg-[#00C853]/10 text-[#00C853] border-[#00C853]/30'
-              : 'bg-[#8E9299]/15 text-[#8E9299] border-[#8E9299]/25'
+              ? 'bg-success/10 text-success border-success/30'
+              : 'bg-fg-muted/15 text-fg-muted border-fg-muted/25'
           } ${sizeClasses}`}
           title={`Bitget ${isUta ? 'Unified Trading Account (UTA / v3)' : 'Classic Account (v2 / CLS)'}`}
         >
@@ -66,7 +66,7 @@ export function AccountTypeBadge({
           className={`inline-flex items-center font-mono uppercase tracking-wider rounded border font-medium select-none ${
             isTestnet
               ? 'bg-[#F2C94C]/15 text-[#F2C94C] border-[#F2C94C]/35'
-              : 'bg-[#2F6BFF]/10 text-[#60A5FA] border-[#2F6BFF]/30'
+              : 'bg-accent/10 text-accent border-accent/30'
           } ${sizeClasses}`}
           title={`Bybit Environment: ${isTestnet ? 'Testnet' : 'Mainnet'}`}
         >
@@ -80,8 +80,8 @@ export function AccountTypeBadge({
               bybitRegion === 'brazil_int' || bybitRegion === 'argentina_int'
                 ? 'bg-[#8B5CF6]/15 text-[#A78BFA] border-[#8B5CF6]/40'
                 : bybitRegion === 'brazil' || bybitRegion === 'argentina'
-                ? 'bg-[#10B981]/15 text-[#34D399] border-[#10B981]/30'
-                : 'bg-[#8E9299]/15 text-[#D1D5DB] border-[#8E9299]/30'
+                ? 'bg-success/15 text-[#34D399] border-success/30'
+                : 'bg-fg-muted/15 text-fg border-fg-muted/30'
             } ${sizeClasses}`}
             title={`${regionOpt.name} - ${regionOpt.description}`}
           >

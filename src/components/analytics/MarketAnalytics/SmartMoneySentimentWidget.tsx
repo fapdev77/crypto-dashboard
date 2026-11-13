@@ -81,7 +81,7 @@ export const SmartMoneySentimentWidget: React.FC = () => {
   const theme = getScoreTheme(greedFearScore);
 
   return (
-    <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-5 shadow-lg space-y-5">
+    <div className="bg-canvas border border-line rounded-xl p-5 shadow-lg space-y-5">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
@@ -91,15 +91,15 @@ export const SmartMoneySentimentWidget: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <SentimentTitleTooltip>
-                <h3 className="text-base font-bold text-white tracking-tight cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-purple-400 transition-colors">
+                <h3 className="text-base font-bold text-fg tracking-tight cursor-help border-b border-dotted border-fg-muted/50 hover:text-purple-400 transition-colors">
                   Smart Money vs. Retail Sentiment
                 </h3>
               </SentimentTitleTooltip>
-              <span className="px-2 py-0.5 text-[10px] font-bold bg-[#1a1b22] text-[#d1d5db] border border-[#2a2b30] rounded">
+              <span className="px-2 py-0.5 text-[10px] font-bold bg-elevated text-fg border border-line rounded">
                 Positioning Divergence
               </span>
             </div>
-            <p className="text-xs text-[#8E9299]">
+            <p className="text-xs text-fg-muted">
               Compares retail trader account counts against top whale volume positioning
             </p>
           </div>
@@ -109,14 +109,14 @@ export const SmartMoneySentimentWidget: React.FC = () => {
         <FearAndGreedTooltip>
           <div className={`flex items-center gap-3 px-3.5 py-1.5 rounded-xl border ${theme.bg} ${theme.border} transition-opacity hover:opacity-90`}>
             <div className="text-right">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-[#8E9299] block">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-fg-muted block">
                 Market Emotion
               </span>
               <span className={`text-sm font-bold ${theme.color}`}>{greedFearLabel}</span>
             </div>
             <div className={`text-2xl font-black font-mono ${theme.color}`}>
               {greedFearScore}
-              <span className="text-xs font-normal text-[#8E9299]">/100</span>
+              <span className="text-xs font-normal text-fg-muted">/100</span>
             </div>
           </div>
         </FearAndGreedTooltip>
@@ -133,7 +133,7 @@ export const SmartMoneySentimentWidget: React.FC = () => {
               <span className="text-xs font-bold text-purple-300">
                 Institutional Positioning Divergence Detected:
               </span>
-              <p className="text-xs text-[#d1d5db] mt-0.5 leading-relaxed">
+              <p className="text-xs text-fg mt-0.5 leading-relaxed">
                 {divergenceMessage}
               </p>
             </div>
@@ -144,17 +144,17 @@ export const SmartMoneySentimentWidget: React.FC = () => {
       {/* Retail vs Smart Money Comparative Bars */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Retail Traders Card */}
-        <div className="bg-[#1a1b22] border border-[#2a2b30] rounded-xl p-4 space-y-3">
+        <div className="bg-elevated border border-line rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-blue-400" />
               <RetailRatioTooltip>
-                <span className="text-xs font-bold text-white uppercase tracking-wide cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-blue-400 transition-colors">
+                <span className="text-xs font-bold text-fg uppercase tracking-wide cursor-help border-b border-dotted border-fg-muted/50 hover:text-blue-400 transition-colors">
                   Retail Accounts Ratio
                 </span>
               </RetailRatioTooltip>
             </div>
-            <span className="text-[10px] text-[#8E9299]">Bybit & OKX Accounts</span>
+            <span className="text-[10px] text-fg-muted">Bybit & OKX Accounts</span>
           </div>
 
           <div className="flex items-center justify-between text-xs font-mono">
@@ -163,7 +163,7 @@ export const SmartMoneySentimentWidget: React.FC = () => {
           </div>
 
           {/* Segmented bar */}
-          <div className="w-full h-2.5 rounded-full bg-[#121318] overflow-hidden flex border border-[#2a2b30]">
+          <div className="w-full h-2.5 rounded-full bg-canvas overflow-hidden flex border border-line">
             <div
               style={{ width: `${retailLongRatio}%` }}
               className="bg-emerald-500 h-full transition-all"
@@ -174,23 +174,23 @@ export const SmartMoneySentimentWidget: React.FC = () => {
             />
           </div>
 
-          <p className="text-[11px] text-[#8E9299] leading-tight">
+          <p className="text-[11px] text-fg-muted leading-tight">
             Percentage of total active trader accounts holding open long versus short positions.
           </p>
         </div>
 
         {/* Top Traders (Smart Money) Card */}
-        <div className="bg-[#1a1b22] border border-[#2a2b30] rounded-xl p-4 space-y-3">
+        <div className="bg-elevated border border-line rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-amber-400" />
               <TopTraderRatioTooltip>
-                <span className="text-xs font-bold text-white uppercase tracking-wide cursor-help border-b border-dotted border-[#8E9299]/50 hover:text-amber-400 transition-colors">
+                <span className="text-xs font-bold text-fg uppercase tracking-wide cursor-help border-b border-dotted border-fg-muted/50 hover:text-amber-400 transition-colors">
                   Top Traders (Smart Money)
                 </span>
               </TopTraderRatioTooltip>
             </div>
-            <span className="text-[10px] text-[#8E9299]">Volume-Weighted Elite</span>
+            <span className="text-[10px] text-fg-muted">Volume-Weighted Elite</span>
           </div>
 
           <div className="flex items-center justify-between text-xs font-mono">
@@ -199,7 +199,7 @@ export const SmartMoneySentimentWidget: React.FC = () => {
           </div>
 
           {/* Segmented bar */}
-          <div className="w-full h-2.5 rounded-full bg-[#121318] overflow-hidden flex border border-[#2a2b30]">
+          <div className="w-full h-2.5 rounded-full bg-canvas overflow-hidden flex border border-line">
             <div
               style={{ width: `${topTraderLongRatio}%` }}
               className="bg-emerald-500 h-full transition-all"
@@ -210,16 +210,16 @@ export const SmartMoneySentimentWidget: React.FC = () => {
             />
           </div>
 
-          <p className="text-[11px] text-[#8E9299] leading-tight">
+          <p className="text-[11px] text-fg-muted leading-tight">
             Nocional positioning of the top 20% most profitable and high-volume accounts on OKX/Bitget.
           </p>
         </div>
       </div>
 
       {/* Fear and Greed Meter Visual Bar */}
-      <div className="bg-[#1a1b22] border border-[#2a2b30] rounded-xl p-4 space-y-2">
-        <div className="flex items-center justify-between text-xs text-[#8E9299]">
-          <span className="font-semibold text-white">Market Sentiment Spectrum</span>
+      <div className="bg-elevated border border-line rounded-xl p-4 space-y-2">
+        <div className="flex items-center justify-between text-xs text-fg-muted">
+          <span className="font-semibold text-fg">Market Sentiment Spectrum</span>
           <div className="flex items-center gap-2 text-[10px]">
             <span className="text-rose-400">Extreme Fear</span>
             <span>•</span>
@@ -236,8 +236,8 @@ export const SmartMoneySentimentWidget: React.FC = () => {
             style={{ left: `${Math.max(2, Math.min(98, greedFearScore))}%` }}
             className="absolute top-0 transform -translate-x-1/2 flex flex-col items-center"
           >
-            <div className="w-4 h-4 bg-white rounded-full border-2 border-[#121318] shadow-lg" />
-            <span className="text-[10px] font-mono font-bold text-white mt-1 bg-[#121318] px-1 rounded border border-[#2a2b30]">
+            <div className="w-4 h-4 bg-white rounded-full border-2 border-canvas shadow-lg" />
+            <span className="text-[10px] font-mono font-bold text-fg mt-1 bg-canvas px-1 rounded border border-line">
               {greedFearScore}
             </span>
           </div>

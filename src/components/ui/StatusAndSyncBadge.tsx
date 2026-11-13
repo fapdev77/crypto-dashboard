@@ -137,7 +137,7 @@ export function StatusAndSyncBadge({
         }
       >
         {isSyncing ? (
-          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none bg-[#2F6BFF]/10 text-[#2F6BFF] border-[#2F6BFF]/20">
+          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none bg-accent/10 text-accent border-accent/20">
             <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
             <span className="truncate max-w-[200px]">{syncMessage || t('common.sync.syncing', 'Syncing...')}</span>
           </div>
@@ -158,8 +158,8 @@ export function StatusAndSyncBadge({
             <span>{t('common.sync.syncWarning', 'Sync Warning')}</span>
           </button>
         ) : (
-          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20">
-            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#10B981]" />
+          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-300 select-none bg-success/10 text-success border-success/20">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-success" />
             <span>{t('common.sync.upToDate', 'Up to Date')}</span>
           </div>
         )}
@@ -174,11 +174,11 @@ export function StatusAndSyncBadge({
           { label: 'Next Scheduled', value: formatTimeOnly(nextSyncTime) }
         ]}
       >
-        <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-[#2a2b30] bg-[#1a1b1e] text-[#8E9299] select-none">
-          <Clock className="w-3.5 h-3.5 shrink-0 text-[#8E9299]" />
-          <span>{t('common.sync.lastSync', 'Last sync:')} <strong className="text-gray-300 font-mono">{formattedLastSync}</strong></span>
-          <span className="text-[#2a2b30] font-mono">|</span>
-          <span>{t('common.sync.nextAuto', 'Next auto:')} <strong className="text-gray-300 font-mono">{nextSyncStr}</strong></span>
+        <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border border-line bg-elevated text-fg-muted select-none">
+          <Clock className="w-3.5 h-3.5 shrink-0 text-fg-muted" />
+          <span>{t('common.sync.lastSync', 'Last sync:')} <strong className="text-fg font-mono">{formattedLastSync}</strong></span>
+          <span className="text-line font-mono">|</span>
+          <span>{t('common.sync.nextAuto', 'Next auto:')} <strong className="text-fg font-mono">{nextSyncStr}</strong></span>
         </div>
       </AppTooltip>
 
@@ -211,8 +211,8 @@ export function StatusAndSyncBadge({
           disabled={cooldownLeft > 0 || isSyncing || useMockData}
           className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-200 select-none ${
             cooldownLeft > 0 || isSyncing || useMockData
-              ? 'bg-[#151619] text-gray-500 border-[#2a2b30] cursor-not-allowed opacity-60'
-              : 'bg-[#1a1b1e] border-[#2a2b30] text-gray-300 hover:bg-[#2a2b30] hover:text-white cursor-pointer active:scale-95'
+              ? 'bg-surface text-fg-muted border-line cursor-not-allowed opacity-60'
+              : 'bg-elevated border-line text-fg hover:bg-line hover:text-fg cursor-pointer active:scale-95'
           }`}
         >
           <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin' : ''}`} />

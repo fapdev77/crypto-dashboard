@@ -23,8 +23,8 @@ export function OrdersTable({ orders, loading }: Props) {
 
   if (orders.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl flex-1">
-        <p className="text-[#8E9299]">{t('orders.noOpenOrders', 'No Open Orders found.')}</p>
+      <div className="flex flex-col items-center justify-center p-12 bg-surface border border-line rounded-xl flex-1">
+        <p className="text-fg-muted">{t('orders.noOpenOrders', 'No Open Orders found.')}</p>
       </div>
     );
   }

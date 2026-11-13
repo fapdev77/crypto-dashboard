@@ -60,29 +60,29 @@ export const MarketBreakdownStrip: React.FC = () => {
   const latestCvd = snapshot.takerFlowHistory[snapshot.takerFlowHistory.length - 1]?.cvd || 0;
 
   return (
-    <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-4 shadow-lg space-y-3">
+    <div className="bg-canvas border border-line rounded-xl p-4 shadow-lg space-y-3">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-cyan-400" />
-          <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
+          <h3 className="text-xs font-semibold text-fg uppercase tracking-wider">
             Exchange × Market Breakdown
           </h3>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#1e2028] text-cyan-400 border border-[#2a2b30]">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#1e2028] text-cyan-400 border border-line">
             {breakdown.length} feed{breakdown.length > 1 ? 's' : ''}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-[#8E9299]">
-          <Activity className="w-3.5 h-3.5 text-[#2F6BFF]" />
+        <div className="flex items-center gap-1.5 text-[11px] text-fg-muted">
+          <Activity className="w-3.5 h-3.5 text-accent" />
           <span>Real-time metrics segregated across active combinations</span>
         </div>
       </div>
 
       {/* Matrix Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-[#C5C8D0] min-w-[700px]">
+        <table className="w-full text-left text-xs text-fg min-w-[700px]">
           <thead>
-            <tr className="border-b border-[#202229] text-[10px] uppercase font-bold tracking-wider text-[#8E9299]">
+            <tr className="border-b border-[#202229] text-[10px] uppercase font-bold tracking-wider text-fg-muted">
               <th className="py-2 px-3">Exchange</th>
               <th className="py-2 px-3">Market</th>
               <th className="py-2 px-3 text-right">Price</th>
@@ -105,7 +105,7 @@ export const MarketBreakdownStrip: React.FC = () => {
                   <td className="py-2 px-3">
                     <div className="flex items-center gap-2">
                       <ExchangeIcon exchange={row.exchange} className="w-4 h-4 shrink-0" />
-                      <span className="font-medium text-white">{getExchangeName(row.exchange)}</span>
+                      <span className="font-medium text-fg">{getExchangeName(row.exchange)}</span>
                     </div>
                   </td>
 
@@ -115,7 +115,7 @@ export const MarketBreakdownStrip: React.FC = () => {
                   </td>
 
                   {/* Price */}
-                  <td className="py-2 px-3 text-right font-mono font-bold text-white">
+                  <td className="py-2 px-3 text-right font-mono font-bold text-fg">
                     {formatPrice(row.price)}
                   </td>
 
@@ -129,7 +129,7 @@ export const MarketBreakdownStrip: React.FC = () => {
                     {row.oiUsd !== null ? (
                       <span className="text-amber-400 font-semibold">{formatUsd(row.oiUsd)}</span>
                     ) : (
-                      <span className="text-[#555861]">—</span>
+                      <span className="text-fg-muted">—</span>
                     )}
                   </td>
 
@@ -142,14 +142,14 @@ export const MarketBreakdownStrip: React.FC = () => {
                             ? 'text-emerald-400'
                             : isNegativeRate
                             ? 'text-rose-400'
-                            : 'text-[#8E9299]'
+                            : 'text-fg-muted'
                         }`}
                       >
                         {(row.fundingApr || 0) > 0 ? '+' : ''}
                         {row.fundingApr}%
                       </span>
                     ) : (
-                      <span className="text-[#555861]">—</span>
+                      <span className="text-fg-muted">—</span>
                     )}
                   </td>
 
@@ -166,28 +166,28 @@ export const MarketBreakdownStrip: React.FC = () => {
 
           {/* Aggregate Summary Footer Row */}
           <tfoot>
-            <tr className="border-t-2 border-[#2a2b30] bg-[#161820]/80 font-semibold text-white">
+            <tr className="border-t-2 border-line bg-[#161820]/80 font-semibold text-fg">
               <td className="py-2.5 px-3">
                 <div className="flex items-center gap-1.5 text-cyan-400">
                   <span className="font-bold tracking-wide">Aggregate</span>
                 </div>
               </td>
               <td className="py-2.5 px-3">
-                <span className="text-[10px] font-mono text-[#8E9299] bg-[#1e2028] px-2 py-0.5 rounded border border-[#2a2b30]">
+                <span className="text-[10px] font-mono text-fg-muted bg-[#1e2028] px-2 py-0.5 rounded border border-line">
                   {marketTypes.join(' + ')}
                 </span>
               </td>
-              <td className="py-2.5 px-3 text-right font-mono font-bold text-white">
+              <td className="py-2.5 px-3 text-right font-mono font-bold text-fg">
                 {formatPrice(currentPrice)}
               </td>
-              <td className="py-2.5 px-3 text-right font-mono text-white font-bold">
+              <td className="py-2.5 px-3 text-right font-mono text-fg font-bold">
                 {formatUsd(totalVolume24hUsd)}
               </td>
               <td className="py-2.5 px-3 text-right font-mono font-bold text-amber-400">
-                {hasDerivatives ? formatUsd(totalOiUsd) : <span className="text-[#555861]">—</span>}
+                {hasDerivatives ? formatUsd(totalOiUsd) : <span className="text-fg-muted">—</span>}
               </td>
               <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-400">
-                {currentFunding ? `+${currentFunding.spreadApr}% (Spread)` : <span className="text-[#555861]">—</span>}
+                {currentFunding ? `+${currentFunding.spreadApr}% (Spread)` : <span className="text-fg-muted">—</span>}
               </td>
               <td className="py-2.5 px-3 text-right font-mono font-bold">
                 <span className={latestCvd >= 0 ? 'text-cyan-400' : 'text-rose-400'}>

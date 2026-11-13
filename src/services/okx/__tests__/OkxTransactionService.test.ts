@@ -98,8 +98,10 @@ describe('OkxTransactionService', () => {
       const stats = OkxTransactionService.computeStats(entries);
       expect(stats.totalCount).toBe(2);
       expect(stats.stable.totalFunding).toBe('-1.2');
-      expect(stats.stable.totalFees).toBe('-0.25');
+      // OKX bills report fees as negative costs; stats expose them as positive costs
+      expect(stats.stable.totalFees).toBe('0.25');
       expect(stats.stable.finalBalance).toBe('2500');
+      expect(stats.perCurrency.USDT.totalFees).toBe('0.25');
     });
   });
 });

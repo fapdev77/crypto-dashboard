@@ -1,5 +1,3 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
 import i18n from '../../i18n/config';
 import { LogManager } from '../LogManager';
@@ -83,6 +81,12 @@ function parseTableLines(lines: string[]): { headers: string[]; rows: string[][]
  */
 export async function exportAiAnalysisToPdf(options: ExportReportOptions): Promise<void> {
   try {
+    // Loaded on demand so the PDF engine stays out of the initial bundle.
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ]);
+
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',

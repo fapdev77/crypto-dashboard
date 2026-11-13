@@ -54,37 +54,37 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
   return (
     <div className="space-y-4">
       {/* Header and Step Interval controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#2a2b30]/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-line/60">
         <div>
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <Milestone className="w-4 h-4 text-[#2F6BFF]" />
+          <h3 className="text-base font-bold text-fg flex items-center gap-2">
+            <Milestone className="w-4 h-4 text-accent" />
             {t('analytics.portfolio.milestones.title', 'Price Milestone & Range Passage Analysis')}
           </h3>
-          <p className="text-xs text-[#8E9299] mt-0.5">
+          <p className="text-xs text-fg-muted mt-0.5">
             Evaluates equity accumulation each time price revisits the same valuation level
           </p>
         </div>
 
         {/* Step configuration */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#8E9299] whitespace-nowrap">{t('analytics.portfolio.milestones.intervalStep', 'Step Interval')}:</span>
-          <div className="flex items-center gap-1 bg-[#1a1b1e] p-1 rounded-lg border border-[#2a2b30]">
+          <span className="text-xs text-fg-muted whitespace-nowrap">{t('analytics.portfolio.milestones.intervalStep', 'Step Interval')}:</span>
+          <div className="flex items-center gap-1 bg-elevated p-1 rounded-lg border border-line">
             {presetSteps.map((step) => (
               <button
                 key={step}
                 onClick={() => onStepChange(step)}
                 className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition-all ${
                   milestoneStep === step
-                    ? 'bg-[#2F6BFF] text-white shadow-sm'
-                    : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/40'
+                    ? 'bg-accent text-white shadow-sm'
+                    : 'text-fg-muted hover:text-fg hover:bg-line/40'
                 }`}
               >
                 ${step >= 1000 ? `${step / 1000}k` : step}
               </button>
             ))}
-            <div className="h-4 w-px bg-[#2a2b30] mx-0.5" />
+            <div className="h-4 w-px bg-line mx-0.5" />
             <div className="flex items-center gap-1 pl-1">
-              <span className="text-xs text-[#8E9299]">$</span>
+              <span className="text-xs text-fg-muted">$</span>
               <input
                 type="number"
                 min={1}
@@ -93,7 +93,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                   const val = parseFloat(e.target.value);
                   if (!isNaN(val) && val > 0) onStepChange(val);
                 }}
-                className="w-16 bg-[#151619] border border-[#2a2b30] rounded px-1.5 py-0.5 text-xs font-mono text-white focus:outline-none focus:border-[#2F6BFF]"
+                className="w-16 bg-surface border border-line rounded px-1.5 py-0.5 text-xs font-mono text-fg focus:outline-none focus:border-accent"
                 placeholder="Custom"
               />
             </div>
@@ -102,17 +102,17 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
       </div>
 
       {/* Main Container */}
-      <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 space-y-6 shadow-sm">
+      <div className="bg-surface border border-line rounded-xl p-5 space-y-6 shadow-sm">
         {milestones.length === 0 ? (
-          <div className="py-12 text-center text-sm text-[#8E9299]">
+          <div className="py-12 text-center text-sm text-fg-muted">
             No price milestones recorded for this asset and timeframe. Try adjusting the step interval or date filter.
           </div>
         ) : (
           <>
             {/* Horizontal Bar Chart showing Gain/Loss across Milestones */}
-            <div className="bg-[#1a1b1e]/50 border border-[#2a2b30]/60 rounded-xl p-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#8E9299] mb-3 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-[#2F6BFF]" />
+            <div className="bg-elevated/50 border border-line/60 rounded-xl p-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted mb-3 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-accent" />
                 Accumulated Volatility Gain / Loss per Price Level
               </h4>
               <div className="h-64 w-full">
@@ -144,24 +144,24 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                           const data = payload[0].payload as PriceMilestoneItem;
                           const isGain = data.gainLoss >= 0;
                           return (
-                            <div className="bg-[#1b1c20] border border-[#2a2b30] p-3 rounded-lg shadow-xl text-xs space-y-1">
-                              <p className="font-bold text-white border-b border-[#2a2b30] pb-1">
+                            <div className="bg-[#1b1c20] border border-line p-3 rounded-lg shadow-xl text-xs space-y-1">
+                              <p className="font-bold text-fg border-b border-line pb-1">
                                 Price Level: {data.formattedMilestone}
                               </p>
-                              <div className="flex justify-between gap-4 text-[#8E9299]">
+                              <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Passages / Crossings:</span>
-                                <span className="font-mono text-white font-bold">{data.passages}x</span>
+                                <span className="font-mono text-fg font-bold">{data.passages}x</span>
                               </div>
-                              <div className="flex justify-between gap-4 text-[#8E9299]">
+                              <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>1st Passage Equity:</span>
-                                <span className="font-mono text-white">{maskVal(data.firstPassageEquity.toFixed(4))} {denomination}</span>
+                                <span className="font-mono text-fg">{maskVal(data.firstPassageEquity.toFixed(4))} {denomination}</span>
                               </div>
-                              <div className="flex justify-between gap-4 text-[#8E9299]">
+                              <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Last Passage Equity:</span>
-                                <span className="font-mono text-white">{maskVal(data.lastPassageEquity.toFixed(4))} {denomination}</span>
+                                <span className="font-mono text-fg">{maskVal(data.lastPassageEquity.toFixed(4))} {denomination}</span>
                               </div>
-                              <div className="flex justify-between gap-4 text-[#8E9299] pt-1 border-t border-[#2a2b30]">
-                                <span className="font-bold text-white">Net Volatility Harvest:</span>
+                              <div className="flex justify-between gap-4 text-fg-muted pt-1 border-t border-line">
+                                <span className="font-bold text-fg">Net Volatility Harvest:</span>
                                 <span className={`font-mono font-bold ${isGain ? 'text-emerald-400' : 'text-rose-400'}`}>
                                   {formatGain(data.gainLoss)} ({isGain ? '+' : ''}{data.gainLossPct.toFixed(2)}%)
                                 </span>
@@ -187,13 +187,13 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
 
             {/* Milestones Data Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border border-[#2a2b30] rounded-lg overflow-hidden">
-                <thead className="bg-[#1b1c20] text-[#8E9299] uppercase text-[10px] tracking-wider border-b border-[#2a2b30]">
+              <table className="w-full text-left text-xs border border-line rounded-lg overflow-hidden">
+                <thead className="bg-[#1b1c20] text-fg-muted uppercase text-[10px] tracking-wider border-b border-line">
                   <tr>
                     <th className="py-2.5 px-4 font-semibold">Price Milestone</th>
                     <th className="py-2.5 px-4 font-semibold text-center">
                       <AppTooltip description="Number of times trades crossed or oscillated across this price range">
-                        <span className="cursor-help border-b border-dashed border-[#8E9299]/50">
+                        <span className="cursor-help border-b border-dashed border-fg-muted/50">
                           Passages
                         </span>
                       </AppTooltip>
@@ -204,23 +204,23 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                     <th className="py-2.5 px-4 font-semibold text-right">Return (%)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#2a2b30]/60 font-mono">
+                <tbody className="divide-y divide-line/60 font-mono">
                   {milestones.map((m) => {
                     const isGain = m.gainLoss >= 0;
                     return (
-                      <tr key={m.milestonePrice} className="hover:bg-[#1a1b1e] transition-colors">
-                        <td className="py-2.5 px-4 font-sans font-bold text-white flex items-center gap-2">
+                      <tr key={m.milestonePrice} className="hover:bg-elevated transition-colors">
+                        <td className="py-2.5 px-4 font-sans font-bold text-fg flex items-center gap-2">
                           <span>{m.formattedMilestone}</span>
                         </td>
                         <td className="py-2.5 px-4 text-center">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#2a2b30] text-white">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-line text-fg">
                             {m.passages}x
                           </span>
                         </td>
-                        <td className="py-2.5 px-4 text-right text-[#8E9299]">
+                        <td className="py-2.5 px-4 text-right text-fg-muted">
                           {maskVal(m.firstPassageEquity.toFixed(4))} {denomination}
                         </td>
-                        <td className="py-2.5 px-4 text-right text-white">
+                        <td className="py-2.5 px-4 text-right text-fg">
                           {maskVal(m.lastPassageEquity.toFixed(4))} {denomination}
                         </td>
                         <td className={`py-2.5 px-4 text-right font-bold ${isGain ? 'text-emerald-400' : 'text-rose-400'}`}>

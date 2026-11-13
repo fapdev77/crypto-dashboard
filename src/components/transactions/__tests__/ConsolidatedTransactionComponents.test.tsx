@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
+import { ConsolidatedTransactions } from '../ConsolidatedTransactions/ConsolidatedTransactions';
 import { ConsolidatedNetChangeReport } from '../ConsolidatedTransactions/ConsolidatedNetChangeReport';
 import { ConsolidatedTransactionFilters } from '../ConsolidatedTransactions/ConsolidatedTransactionFilters';
 import { ConsolidatedTransactionDetailsModal } from '../ConsolidatedTransactions/ConsolidatedTransactionDetailsModal';
 import { ConsolidatedTxFilters, defaultConsolidatedFilters, ConsolidatedStats } from '../../../hooks/useConsolidatedTransactions';
 import { BybitTransactionLogEntry, BitgetTransactionLogEntry, OkxTransactionLogEntry } from '../../../types';
 import { useApiKeysStore } from '../../../store/apiKeysStore';
+import { useSettingsStore } from '../../../store/settingsStore';
 import { renderTransactionUi, setPrivacyMode } from './transactionTestFixtures';
 
 const sampleBybitEntry: BybitTransactionLogEntry = {
@@ -27,7 +29,8 @@ const sampleBybitEntry: BybitTransactionLogEntry = {
   currency: 'USDT',
   tradePrice: '42000',
   funding: '1.5',
-  fee: '-5.2',
+  // Bybit reports fees as positive costs
+  fee: '5.2',
   cashFlow: '100',
   change: '96.3',
   cashBalance: '5000',
@@ -51,7 +54,8 @@ const sampleBitgetEntry: BitgetTransactionLogEntry = {
   transactionTime: Date.UTC(2024, 0, 16, 12, 0, 0),
   type: 'ORDER_DEALT_IN',
   currency: 'USDT',
-  fee: '2.1',
+  // Bitget reports fees as negative costs
+  fee: '-2.1',
   cashFlow: '50',
   change: '47.9',
   cashBalance: '3500',
@@ -93,6 +97,7 @@ const sampleExchangeStats = {
       percentageChange: 1.96,
     },
     perCurrency: {},
+    missingRates: [],
     aggregatedUsd: {
       totalFunding: '1.5',
       totalFees: '5.2',
@@ -120,6 +125,7 @@ const sampleExchangeStats = {
       percentageChange: 1.38,
     },
     perCurrency: {},
+    missingRates: [],
     aggregatedUsd: {
       totalFunding: '0',
       totalFees: '2.1',
@@ -147,6 +153,7 @@ const sampleExchangeStats = {
       percentageChange: 1.89,
     },
     perCurrency: {},
+    missingRates: [],
     aggregatedUsd: {
       totalFunding: '0',
       totalFees: '1.8',
@@ -176,6 +183,7 @@ const consolidatedStats: ConsolidatedStats = {
     percentageChange: 1.78,
   },
   perCurrency: {},
+  missingRates: [],
   aggregatedUsd: {
     totalFunding: '1.5',
     totalFees: '9.1',
@@ -307,8 +315,6 @@ describe('ConsolidatedTransactionComponents', () => {
         detailsModalType="tx"
         setDetailsModalType={setModalMock}
         stats={consolidatedStats}
-        tokenRates={{ USDT: 1 }}
-        maskVal={(v) => `$${v}`}
         isPrivateMode={false}
       />
     );
@@ -323,8 +329,6 @@ describe('ConsolidatedTransactionComponents', () => {
         detailsModalType="funding"
         setDetailsModalType={setModalMock}
         stats={consolidatedStats}
-        tokenRates={{ USDT: 1 }}
-        maskVal={(v) => `$${v}`}
         isPrivateMode={false}
       />
     );
@@ -333,4 +337,56 @@ describe('ConsolidatedTransactionComponents', () => {
     expect(screen.getByText('Breakdown by Exchange Venue')).toBeInTheDocument();
     expect(screen.getByText('Grand Total')).toBeInTheDocument();
   });
+
+  it('formats monetary values in BRL and does not append hardcoded USD when BRL is selected', () => {
+    useSettingsStore.setState({
+      fiatCurrency: 'BRL',
+      locale: 'pt-BR',
+      fiatRates: { USD: 1, BRL: 5.5, EUR: 0.92, GBP: 0.79 },
+    });
+
+    renderTransactionUi(
+      <ConsolidatedNetChangeReport
+        filteredByExchange={{
+          bybit: [sampleBybitEntry],
+          bitget: [],
+          okx: [],
+        }}
+        exchangeStats={sampleExchangeStats}
+        tokenRates={{ USDT: 1 }}
+        isPrivateMode={false}
+      />
+    );
+
+    // Expand to see details
+    fireEvent.click(screen.getByRole('button', { name: /expand all/i }));
+
+    // Should render R$ and NOT have "USD" concatenated in monetary values
+    const textContent = document.body.textContent || '';
+    expect(textContent).toContain('R$');
+    expect(textContent).not.toMatch(/R\$\s*[\d.,]+\s*\bUSD\b/);
+
+    // Should render localized exchange net change and counters
+    expect(screen.getByText(/exchange net change/i)).toBeInTheDocument();
+  });
+
+  it('renders ConsolidatedTransactions macro cards with BRL and without duplicate text', () => {
+    useSettingsStore.setState({
+      fiatCurrency: 'BRL',
+      locale: 'pt-BR',
+      useMockData: true,
+      fiatRates: { USD: 1, BRL: 5.5, EUR: 0.92, GBP: 0.79 },
+    });
+
+    renderTransactionUi(<ConsolidatedTransactions />);
+
+    const textContent = document.body.textContent || '';
+    // Must contain R$
+    expect(textContent).toContain('R$');
+    // Must not contain "R$ ... USD"
+    expect(textContent).not.toMatch(/R\$\s*[\d.,]+\s*\bUSD\b/);
+    // Must not contain duplicate "Funding recebido Funding recebido"
+    expect(textContent).not.toContain('Funding recebido Funding recebido');
+  });
 });
+

@@ -1,6 +1,6 @@
 # 📘 User Manual - Crypto Portfolio Manager (CPM)
 
-> **Application Version:** 2.29.0  
+> **Application Version:** 2.35.0  
 > **Supported Exchanges:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Security Architecture:** Zero-Trust Client-Side (Web Crypto PBKDF2 + AES-GCM 256-bit Encryption)
 
@@ -20,7 +20,7 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
 3. [Global Master Password, Encrypted Backups & Mandatory Vault Migration](#3-global-master-password-encrypted-backups--mandatory-vault-migration)
 4. [Simulation Mode (Mock Data)](#4-simulation-mode-mock-data)
 5. [Integrated Log Terminal (Connection Logs)](#5-integrated-log-terminal-connection-logs)
-6. [Synchronization, Retention & Cache Settings](#6-synchronization-retention--cache-settings)
+6. [Appearance, Themes, Synchronization & Settings](#6-appearance-themes-synchronization--settings)
 7. [Screens & Daily Usability Guide](#7-screens--daily-usability-guide)
    - [🏠 Dashboard Home](#-dashboard-home)
    - [⚡ Positions Ticker (Real-Time Header Marquee)](#-positions-ticker-real-time-header-marquee)
@@ -37,15 +37,10 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [📑 Reports (Operational & Executive Export)](#-reports-operational--executive-export)
    - [⚡ API Tester (REST & WebSocket Diagnostics)](#-api-tester-rest--websocket-diagnostics)
    - [👁️ Privacy Mode](#-privacy-mode)
-   - [📊 PnL by Symbol (Profit & Loss Distribution)](#-pnl-by-symbol-profit--loss-distribution)
-   - [💸 Funding Fees Dashboard (Cross-Exchange Analytics)](#-funding-fees-dashboard-cross-exchange-analytics)
-   - [📑 Reports (Operational & Executive Export)](#-reports-operational--executive-export)
-   - [⚡ API Tester (REST & WebSocket Diagnostics)](#-api-tester-rest--websocket-diagnostics)
-   - [👁️ Privacy Mode](#-privacy-mode)
 8. [PIKA Assistant (Portfolio Information & Knowledge Assistant)](#8-pika-assistant-portfolio-information--knowledge-assistant)
    - [Security & Privacy Principles](#-security--privacy-principles)
    - [Supported Providers (Local Ollama, Cloud Gemini, OpenRouter)](#-supported-providers-local-ollama-cloud-gemini-openrouter)
-   - [Analytical Tool Calling Catalog (9 Tools)](#-analytical-tool-calling-catalog-9-tools)
+   - [Analytical Tool Calling Catalog (7 Tools)](#-analytical-tool-calling-catalog-7-tools)
    - [Tool Compatibility Audit](#-tool-compatibility-audit)
    - [Deep Telemetry, Daily Token Charts & Audit Export](#-deep-telemetry-daily-token-charts--audit-export)
    - [Global Shortcut & Chat Drawer](#-global-shortcut--chat-drawer)
@@ -85,15 +80,19 @@ To connect your exchange accounts to CPM:
 ### Bybit Regional Endpoints & Origin Headers
 For Bybit accounts, the connection modal provides regional compliance and network options:
 - **Environment**: Switch between **Mainnet** (Production) and **Testnet** (Simulated Network).
-- **Account Region / Origin**: Automatically routes to the legally compliant regional domain:
-  - *Global Default* (`api.bybit.com`)
+- **Account Region / Origin**: Automatically routes across **15 supported regional presets**:
+  - *Global Default* (`api.bybit.com`) and *Global / Bytick* (`api.bytick.com`)
+  - *Brazil (Standard)* (`api.bybit.com`) and *Brazil - Int (International Account)* (`api.bybit.com` with `x-site-id: BRA_BTL` header)
+  - *Argentina (Standard)* (`api.bybit.com`) and *Argentina - Int (International Account)* (`api.bybit.com` with `x-site-id: ARG_BTL` header)
   - *Netherlands* (`api.bybit.nl`)
-  - *Turkey* (`api.bybit-tr.com`)
-  - *Hong Kong* (`api.bybit.com.hk`)
+  - *Turkey* (`api.bybit.tr`)
   - *Kazakhstan* (`api.bybit.kz`)
-  - *Georgia* (`api.bybit.com.ge`)
-  - *Brazil International* (`api.bybit.com` with auto-injected official header `x-site-id: 10001`)
-  - *Argentina International* (`api.bybit.com` with auto-injected official header `x-site-id: 10002`)
+  - *Georgia* (`api.bybitgeorgia.ge`)
+  - *UAE* (`api.bybit.ae`)
+  - *EEA* (`api.bybit.eu`)
+  - *Indonesia* (`api.bybit.id`)
+  - *Japan* (`api.manepa.jp` / Testnet: `api-testnet.manepa.jp`)
+  - *Hong Kong* (`api.spark-fintech.com` / Testnet: `api-testnet.spark-fintech.com` with `x-refer-site-id: HKG` header)
 
 ### Bitget: Classic vs UTA Selection, Sub-Accounts & Funding
 - **Account Type**:
@@ -127,11 +126,11 @@ To safeguard your sensitive financial telemetry and credentials on personal, sha
    - Need to change your master passphrase? Go to **Security Settings** $\to$ **Change Passphrase**. Provide your current passphrase and your new passphrase (minimum 8 characters). CPM safely re-encrypts all configured connections in a single atomic batch, preserving all your account labels and configurations.
 6. **Startup Vault Setup Notice Modal**:
    - If you use the application without having configured a master password, an unobtrusive 5-second countdown alert appears at startup informing you of the vault's security benefits and providing a 1-click shortcut to set it up. This notice can be toggled off at any time in Settings.
-7. **Encrypted File Backups (`.cpmbackup`)**:
-   - Export all your configured exchange connections and preferences in a single encrypted `.cpmbackup` file.
+7. **Encrypted File Backups (`.enc`)**:
+   - Export selected exchange connections into a single encrypted `.enc` file (`crypto_dashboard_keys_YYYY-MM-DD.enc`) protected with your chosen passphrase.
    - The backup can be safely moved to another device or saved in an offline password vault.
 8. **Backup Restoration**:
-   - Import your `.cpmbackup` file and enter your master password to instantly recover all connections and preferences.
+   - Import your `.enc` file and enter the backup passphrase to restore all exported connections.
 
 ---
 
@@ -165,9 +164,22 @@ For network transparency and technical diagnostics:
 
 ---
 
-## 6. Synchronization, Retention & Cache Settings
+## 6. Appearance, Themes, Synchronization & Settings
 
-CPM operates on a high-speed **SWR (Stale-While-Revalidate)** cache engine backed by browser **IndexedDB** (`crypto-dashboard-cache` across 14 specialized stores):
+The **Settings** screen organizes configuration across **10 modular cards**: *Language & Currency*, *Appearance & Themes*, *Preferences & Testing*, *Security & Backup*, *Version & Changelog*, *Consolidated IndexedDB Storage & Cache*, *Exchange Specifications*, *Symbol Catalog Cache*, *Funding Fees Sync*, and *Danger Zone*.
+
+### 🎨 Multi-Theme Engine & Custom Theme Builder (`v2.33.0`–`v2.35.0`)
+- **5 Built-In Themes**: Switch anytime from the header (`ThemeModeButton`) or **Appearance & Themes** between **Terminal Dark**, **Terminal Light**, **Wise Dark**, **Wise Light**, and **Custom**.
+- **Header "Custom design" Shortcut**: Click **Custom design** (gear icon) inside the header theme menu to jump straight to the color customizer tab in Settings.
+- **Custom Palette Editor (10 CSS Tokens)**: Customize `canvas`, `surface`, `elevated`, `line`, `fg`, `fgMuted`, `accent`, `success`, `danger`, and `warning` with color pickers, hex inputs, and a live preview card.
+- **Quick Presets & Saved Themes**: Load 4 curated presets (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) or save, load, and delete named custom themes (shown beside *Custom* in the header theme selector).
+
+### 🌐 Language, Fiat Currency & API Diagnostics
+- **6 Locales & 4 Fiat Currencies**: Full coverage across `en-US`, `en-GB`, `pt-BR`, `pt-PT`, `es-419`, and `it-IT` (1,624 translation keys per locale) with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
+- **Dual-Provider Engine & Diagnostics (`CurrencyApiDiagnostics`)**: Concurrently queries **Frankfurter API v2** (`api.frankfurter.dev`) for FX rates and **CoinGecko** (`api.coingecko.com`) for the **USDT/USD** parity rate, with configurable cache TTL (5–60m), offline cache fallback, and live latency/status monitoring.
+
+### 🔄 Synchronization, Retention & Cache Settings (IndexedDB)
+CPM operates on a high-speed **SWR (Stale-While-Revalidate)** cache engine backed by browser **IndexedDB** (`crypto-dashboard-cache` across 14 specialized stores, DB v12):
 
 - **Zero-Latency Rendering**: Visualizations and tables load instantly from local IndexedDB cache, while background workers pull delta records to keep data fresh.
 - **Global Sync Coordination (`lastSyncTime`)**: Navigating between historical views (Orders, Positions, Trades, PnL by Symbol) avoids duplicate network requests if a sync recently completed.
@@ -371,27 +383,25 @@ Cross-exchange derivatives intelligence terminal:
 
 ### ⚙️ Supported Providers (Local Ollama, Cloud Gemini, OpenRouter)
 - **Ollama (100% Local & Private)**:
-  - Connects to your local Ollama daemon (`http://localhost:11434` or custom network endpoint).
+  - Connects to your local Ollama daemon (`http://localhost:11434` or custom network endpoint; default model `llama3.2:latest`).
   - Automatically discovers installed models (`llama3.2`, `qwen2.5`, etc.).
   - Zero financial data leaves your local machine.
 - **Google Gemini Cloud**:
-  - High-performance multimodal cloud integration via the official `@google/genai` TypeScript SDK.
+  - Multimodal cloud integration via the official `@google/genai` TypeScript SDK (default fallback `gemini-3.8-flash`).
   - Server-side proxy routing for secure key management.
 - **OpenRouter / OpenAI / Anthropic / Custom**:
-  - Connects to any standard OpenAPI endpoint using your own private API key stored in local browser memory.
+  - Connects to any of the 6 supported providers (`ollama`, `gemini`, `openrouter`, `openai`, `anthropic`, `custom`) using API keys held in memory.
 - **Automatic Fallback Policy**: If your primary provider encounters a timeout or connection failure, PIKA automatically falls back to your configured secondary model.
 
-### 🛠️ Analytical Tool Calling Catalog (9 Tools)
-PIKA has access to 9 verified read-only tools:
-1. `get_consolidated_balances`: Aggregated equity and balances by currency, wallet, and exchange.
-2. `get_open_positions`: Active positions, entry prices, mark prices, leverage, and liquidation risks.
-3. `get_order_history`: Recent orders, statuses, and execution history.
-4. `get_funding_rates`: Current rates and upcoming funding settlement projections.
-5. `get_hedge_pro_metrics`: Capital protection, locked USD, and inverse contract exposure.
-6. `get_market_analytics`: Open Interest, market regime classification, and CVD indicators.
-7. `get_transaction_summary`: Cash flow reconciliation, fee totals, and net transaction changes.
-8. `get_exchange_connection_health`: Live connectivity, sync status, and latency metrics.
-9. `get_pnl_by_symbol`: Consolidated profit/loss distribution by asset.
+### 🛠️ Analytical Tool Calling Catalog (7 Tools)
+PIKA has access to **7 verified read-only tools** registered in `aiToolRegistry.ts`:
+1. `aiGetPortfolioBalances`: Consolidated portfolio equity in USD, available margin, and asset breakdowns across Bitget, Bybit, and OKX.
+2. `aiGetOpenPositions`: Active positions with entry prices, mark prices, unrealized PnL (UPL in USD), margin mode, leverage, and liquidation prices.
+3. `aiGetHedgeCorrelationSummary`: Cross-exchange hedge analysis, net delta exposure, and single-leg liquidation risk metrics.
+4. `aiGetFundingFeesHistory`: Actual cash-flow funding fees credited/debited in USD from exchange transaction logs.
+5. `aiGetMarketFundingRates`: Market-wide perpetual funding rates (%), multi-horizon benchmarks, cross-exchange comparisons, and rankings.
+6. `aiGetTradingFeesHistory`: Exchange trading fees and commissions paid on recent executions.
+7. `aiGetClosedPositionsSummary`: Historical closed positions summary (realized PnL, win/loss trade counts, and win rate %).
 
 ### 🔍 Tool Compatibility Audit
 Under **AI Settings** $\to$ **Manage Models**, CPM automatically audits whether each available model supports structured function calling (*Tool-Calling*), displaying visual capability badges.
@@ -440,7 +450,7 @@ To ensure non-USDT funding balances and smaller cap tokens on Bitget and OKX are
 - **Exponential Backoff with Jitter for Network Drops**: Transient connectivity drops retry on an exponential delay schedule (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) with random jitter, stopping after 5 attempts via circuit breaker.
 - **Global Error Boundary**: Unhandled React rendering errors trigger an intuitive **Safe Recovery** screen with error stack diagnostics and single-click recovery buttons: **Reload Dashboard** and **Clear Cache & Reload**.
 - **Instant Scroll Position Reset**: Tab transitions automatically reset scroll positions to top-left (`useLayoutEffect`), ensuring optimal viewing upon switching views.
-- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **65 test files with 660 unit and integration tests**.
+- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **99 test files with 835 unit and integration tests**.
 
 ---
 
@@ -463,7 +473,7 @@ CPM is built as a Progressive Web App (PWA):
 5. On **Bitget**, if your account uses unified trading, select the **UTA** account type.
 
 ### Can I recover a forgotten Master Password via email?
-No. Because CPM follows a zero-trust model, there are no cloud accounts or recovery servers. If you forget your master password, use the factory reset button on the unlock screen to clear local keys, then re-enter your credentials or import an existing `.cpmbackup` file.
+No. Because CPM follows a zero-trust model, there are no cloud accounts or recovery servers. If you forget your master password, use the factory reset button on the unlock screen to clear local keys, then re-enter your credentials or import an existing `.enc` backup file.
 
 ### PIKA Assistant is timing out or failing to respond.
 1. If using **Ollama Local**, verify the Ollama service is active on your machine (`http://localhost:11434`) and that your chosen model is installed (`ollama run llama3.2`).

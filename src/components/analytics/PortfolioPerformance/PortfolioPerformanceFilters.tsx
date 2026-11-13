@@ -53,7 +53,7 @@ export function PortfolioPerformanceFilters({ filters, setFilters, onFilterChang
       {
         value: 'USD',
         label: t('analytics.portfolio.consolidatedUsd', 'Consolidated (USD)'),
-        icon: <DollarSign className="w-4 h-4 text-[#00C853]" />,
+        icon: <DollarSign className="w-4 h-4 text-success" />,
         tooltip: t('analytics.portfolio.consolidatedUsdTooltip', 'Convert all performance metrics into USD equivalent'),
       },
     ];

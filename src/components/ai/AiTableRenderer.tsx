@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import * as XLSX from 'xlsx';
 import { Download, Copy, Check, ArrowUpDown, FileSpreadsheet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -77,8 +76,11 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
     return { headers, rows };
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     try {
+      // Loaded on demand: SheetJS is only needed when a table is actually exported.
+      const XLSX = await import('xlsx');
+
       const { headers, rows } = extractTableData();
       if (headers.length === 0 && rows.length === 0) {
         toast.error(t('toasts.noTableDataExport', 'No table data to export'));
@@ -145,10 +147,10 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
   };
 
   return (
-    <div className="my-3 rounded-xl border border-[#2a2b30] bg-[#0c0d11] overflow-hidden shadow-lg text-xs">
+    <div className="my-3 rounded-xl border border-line bg-[#0c0d11] overflow-hidden shadow-lg text-xs">
       {/* Top Table Toolbar */}
-      <div className="flex items-center justify-between px-3.5 py-2 bg-[#14151a] border-b border-[#2a2b30] text-[11px] text-[#8E9299]">
-        <div className="flex items-center gap-1.5 font-medium text-gray-300">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-[#14151a] border-b border-line text-[11px] text-fg-muted">
+        <div className="flex items-center gap-1.5 font-medium text-fg">
           <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
           <span>Financial Data Table</span>
         </div>
@@ -158,7 +160,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
           <button
             type="button"
             onClick={handleCopyForSheets}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1d1f27] hover:bg-[#262833] text-gray-300 hover:text-white border border-[#2e303c] transition cursor-pointer text-[10px]"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1d1f27] hover:bg-[#262833] text-fg hover:text-fg border border-[#2e303c] transition cursor-pointer text-[10px]"
             title="Copy as Tab-Separated Values to paste directly in Google Sheets or Excel"
           >
             {copied ? (
@@ -168,7 +170,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
               </>
             ) : (
               <>
-                <Copy className="w-3 h-3 text-[#2F6BFF]" />
+                <Copy className="w-3 h-3 text-accent" />
                 <span>Copy for Sheets</span>
               </>
             )}

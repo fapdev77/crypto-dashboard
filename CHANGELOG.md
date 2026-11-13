@@ -1,8 +1,66 @@
+# [2.37.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.36.0...v2.37.0) (2026-11-13)
+
+
+### Features
+
+* add donation support ([c345a76](https://github.com/fapdev77/crypto-dashboard/commit/c345a768fdbf628f5b5af08e28bdea3087b64718))
+* update package-lock.json dependencies ([b4db09f](https://github.com/fapdev77/crypto-dashboard/commit/b4db09f4d5a30f4d80d6b3333d18f11ab69627e7))
+
+# [2.36.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.35.0...v2.36.0) (2026-11-13)
+
+
+### Features
+
+* add AI table rendering and report export functionality with Excel and PDF support ([16eaea3](https://github.com/fapdev77/crypto-dashboard/commit/16eaea34e0d1aeb6697b68b5e55107897979488b))
+
+# [2.35.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.34.0...v2.35.0) (2026-11-12)
+
+
+### Features
+
+* **settings:** add custom theme management ([3cf8586](https://github.com/fapdev77/crypto-dashboard/commit/3cf8586a227105d06eca1677b986331df6982920))
+
+# [2.34.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.33.0...v2.34.0) (2026-11-12)
+
+
+### Features
+
+* **theme:** add support for Wise and custom themes ([dc4bdab](https://github.com/fapdev77/crypto-dashboard/commit/dc4bdabe152e6632f7e484bb9cd5b525db3bd99d))
+
+# [2.33.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.32.0...v2.33.0) (2026-11-11)
+
+
+### Features
+
+* implement new theme system with dark and light mode, initialize Crypto Portfolio Manager application structure and remodel/modernize the UI components . ([4690a49](https://github.com/fapdev77/crypto-dashboard/commit/4690a4906a084955cdb4dd65be29fcc29106f2f2))
+
+# [2.32.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.31.0...v2.32.0) (2026-11-11)
+
+
+### Features
+
+* improve stable coin value fetch and add dashboard, order reports, exchange adapters, and transaction hooks ([f96aacc](https://github.com/fapdev77/crypto-dashboard/commit/f96aacc15e6a36a662348cbaa5b7f2869d03aab5))
+
+# [2.31.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.30.0...v2.31.0) (2026-11-10)
+
+
+### Features
+
+* add transaction services, UI components, and multi-language support for Bitget, Bybit, and OKX exchanges ([f14440e](https://github.com/fapdev77/crypto-dashboard/commit/f14440e967eb042f5b70efef3e22731d5b9c04b3))
+
+# [2.30.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.29.0...v2.30.0) (2026-11-10)
+
+
+### Features
+
+* **i18n:** internationalize consolidated transaction components ([a96d624](https://github.com/fapdev77/crypto-dashboard/commit/a96d6243514a9a85cfb3b6fbf786f20a66f9c5ba))
+
 # [2.29.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.28.0...v2.29.0) (2026-11-10)
 
 
 ### Features
 
+* **i18n:** internationalize Consolidated Net Change components, fiat currency formatting, and translations across 6 locales
 * add comprehensive connection log terminal and portfolio components internatiomalization ([3ed1651](https://github.com/fapdev77/crypto-dashboard/commit/3ed1651fceaaafe2bb0396cd26e292f2e7d22ae2))
 
 # [2.28.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.27.0...v2.28.0) (2026-11-09)

@@ -10,12 +10,17 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { ConsolidatedTransactionFilters } from './ConsolidatedTransactionFilters';
 import { ConsolidatedNetChangeReport } from './ConsolidatedNetChangeReport';
 import { ConsolidatedTransactionDetailsModal, DetailsModalType } from './ConsolidatedTransactionDetailsModal';
+import { MissingRatesNotice, missingRatesNote } from '../MissingRatesNotice';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../../../utils/exportUtils';
 import { LogManager } from '../../../services/LogManager';
 import { TabLoadingSkeleton } from '../../ui/TabLoadingSkeleton';
 import { UNIVERSAL_BADGE_STYLE, UNIVERSAL_HEX_COLOR_MAP, UniversalTxType } from '../../../utils/transactionTypeMapper';
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../../../store/settingsStore';
+import { getConsolidatedMetric, feeDisplaySign } from '../../../utils/consolidatedTotals';
+import { resolveUsdRate } from '../../../utils/usdAggregation';
+import { classifyTradeSide } from '../../../utils/tradeSide';
 
 export function ConsolidatedTransactions() {
   const { t } = useTranslation();
@@ -39,6 +44,7 @@ export function ConsolidatedTransactions() {
 
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
+  const fiatRates = useSettingsStore(state => state.fiatRates);
 
   // Collect all unique currencies across all loaded transactions
   const availableCurrencies = useMemo(() => {
@@ -51,7 +57,7 @@ export function ConsolidatedTransactions() {
 
   const maskVal = (val: string | number) => {
     if (isPrivateMode) return '****';
-    return formatCurrency(Number(val), 'usd');
+    return formatCurrency(Number(val), 'fiat');
   };
 
   // Export summary report handler
@@ -81,8 +87,6 @@ export function ConsolidatedTransactions() {
 
     const rows: Array<Array<string | number>> = [];
 
-    const isStable = (currency: string) => ['USDT', 'USDC', 'DAI', 'USD', 'BUSD'].includes(currency.toUpperCase());
-
     const appendExchangeRows = (
       exchangeName: string,
       entries: any[],
@@ -104,8 +108,7 @@ export function ConsolidatedTransactions() {
         const latestTime = sorted[sorted.length - 1]?.transactionTime || Date.now();
         const days = Math.max(1, Math.ceil((latestTime - earliestTime) / (1000 * 60 * 60 * 24)));
 
-        const stableMatch = isStable(cur);
-        const curStats = stableMatch ? statsBlock.stable : (statsBlock.perCurrency[cur] || {
+        const curStats = statsBlock.perCurrency[cur] || {
           totalFunding: '0',
           totalFees: '0',
           totalCashFlow: '0',
@@ -115,21 +118,17 @@ export function ConsolidatedTransactions() {
           totalOutflow: '0',
           initialBalance: '0',
           percentageChange: 0,
-        });
+        };
 
-        const rate = stableMatch ? 1 : (tokenRates[cur.toUpperCase()] || 0);
+        // Stablecoins are converted with the same rate resolution as the UI:
+        // USD-pegged = 1, fiat codes via the fiat table, the rest via token prices.
+        const rate = resolveUsdRate(cur, tokenRates, fiatRates) ?? 0;
         const ganhoAbsolutoUSD = new Big(curStats.totalChange).times(rate).toFixed(2);
 
         const tradeEntries = curEntries.filter(e => getUniversalTypeFn(e) === 'TRADE');
         const totalTrades = tradeEntries.length;
-        const buysCount = tradeEntries.filter(e => {
-          const side = getSideFn(e).toLowerCase();
-          return side.includes('buy') || side.includes('long');
-        }).length;
-        const sellsCount = tradeEntries.filter(e => {
-          const side = getSideFn(e).toLowerCase();
-          return side.includes('sell') || side.includes('short');
-        }).length;
+        const buysCount = tradeEntries.filter(e => classifyTradeSide(getSideFn(e)) === 'buy').length;
+        const sellsCount = tradeEntries.filter(e => classifyTradeSide(getSideFn(e)) === 'sell').length;
 
         const tradesLiquido = tradeEntries
           .reduce((sum, e) => sum.plus(new Big(e.change || e.cashFlow || '0')), new Big(0))
@@ -182,9 +181,11 @@ export function ConsolidatedTransactions() {
       (e) => `${e.side || ''} ${e.transSubType || e.subType || ''}`
     );
 
+    const note = missingRatesNote(t, stats.missingRates);
     const config: ExportConfig = {
       title: t('transactions.consolidated.reportTitle', 'Consolidated Transactions Report'),
       filename: `Consolidated_Net_Change_${Date.now()}`,
+      notes: note ? [note] : undefined,
       headers,
       rows,
     };
@@ -207,8 +208,8 @@ export function ConsolidatedTransactions() {
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
         <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-            <Layers className="w-5 h-5 text-[#2F6BFF]" />
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-fg">
+            <Layers className="w-5 h-5 text-accent" />
             {t('transactions.consolidated.title', 'Consolidated Net Change')}
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
@@ -217,8 +218,11 @@ export function ConsolidatedTransactions() {
               syncMessage={isSyncing ? t('transactions.consolidated.syncingMessage', 'Syncing transactions across all exchanges...') : null}
               syncError={error}
             />
-            <span className="text-[11px] text-[#8E9299]">
-              Aggregating {activeExchanges.length} {activeExchanges.length === 1 ? 'exchange' : 'exchanges'}
+            <span className="text-[11px] text-fg-muted">
+              {t('transactions.consolidated.aggregatingExchanges', {
+                count: activeExchanges.length,
+                defaultValue: `Aggregating ${activeExchanges.length} ${activeExchanges.length === 1 ? 'exchange' : 'exchanges'}`
+              })}
             </span>
           </div>
         </div>
@@ -227,31 +231,31 @@ export function ConsolidatedTransactions() {
         <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}
-            className="px-3.5 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none cursor-pointer"
+            className="px-3.5 py-2 bg-elevated border border-line text-fg flex items-center gap-2 rounded-lg hover:bg-line/50 transition-colors text-sm focus:outline-none cursor-pointer"
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">{t('transactions.common.export', 'Export Report')}</span>
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute top-11 right-0 w-36 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
+            <div className="absolute top-11 right-0 w-36 bg-elevated border border-line rounded-lg shadow-xl z-50 overflow-hidden text-sm text-fg">
               <button
                 onClick={() => handleExport('csv')}
-                className="w-full text-left px-4 py-2.5 hover:bg-[#2a2b30]/50 transition-colors cursor-pointer"
+                className="w-full text-left px-4 py-2.5 hover:bg-line/50 transition-colors cursor-pointer"
               >
-                Export CSV
+                {t('transactions.common.exportCsv', 'Export CSV')}
               </button>
               <button
                 onClick={() => handleExport('excel')}
-                className="w-full text-left px-4 py-2.5 hover:bg-[#2a2b30]/50 transition-colors cursor-pointer"
+                className="w-full text-left px-4 py-2.5 hover:bg-line/50 transition-colors cursor-pointer"
               >
-                Export Excel
+                {t('transactions.common.exportExcel', 'Export Excel')}
               </button>
               <button
                 onClick={() => handleExport('pdf')}
-                className="w-full text-left px-4 py-2.5 hover:bg-[#2a2b30]/50 transition-colors cursor-pointer"
+                className="w-full text-left px-4 py-2.5 hover:bg-line/50 transition-colors cursor-pointer"
               >
-                Export PDF
+                {t('transactions.common.exportPdf', 'Export PDF')}
               </button>
             </div>
           )}
@@ -269,20 +273,20 @@ export function ConsolidatedTransactions() {
       {totalFilteredCount > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Total Transactions & Pie Chart */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#2F6BFF] shrink-0" />
+                <FileText className="w-4 h-4 text-accent shrink-0" />
                 <AppTooltip description={t('transactions.common.totalTransactionsTooltip', 'Total number of transactions across all selected exchanges. Click for breakdown.')}>
                   <span
                     onClick={() => setDetailsModalType('tx')}
-                    className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
+                    className="text-[11px] text-fg-muted uppercase tracking-wider cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors"
                   >
                     {t('transactions.common.totalTransactions', 'Total Transactions')}
                   </span>
                 </AppTooltip>
               </div>
-              <span className="text-2xl font-bold text-white mt-1 font-mono">{stats.totalCount.toLocaleString()}</span>
+              <span className="text-2xl font-bold text-fg mt-1 font-mono">{stats.totalCount.toLocaleString()}</span>
               <div className="flex flex-wrap gap-1 mt-2">
                 {Object.entries(stats.typeBreakdown)
                   .sort((a, b) => b[1] - a[1])
@@ -342,13 +346,13 @@ export function ConsolidatedTransactions() {
           </div>
 
           {/* Card 2: Total Funding (USD) */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-[#00C853] shrink-0" />
+              <TrendingUp className="w-4 h-4 text-success shrink-0" />
               <AppTooltip description={t('transactions.common.totalFundingTooltip', 'Sum of contract funding fees across all selected exchanges in USD. Click for details.')}>
                 <span
                   onClick={() => setDetailsModalType('funding')}
-                  className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
+                  className="text-[11px] text-fg-muted uppercase tracking-wider cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors"
                 >
                   {t('transactions.common.totalFunding', 'Total Funding (USD)')}
                 </span>
@@ -356,15 +360,18 @@ export function ConsolidatedTransactions() {
             </div>
             <span
               className={`text-xl font-bold font-mono ${
-                new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'
+                new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'text-success' : 'text-danger'
               }`}
             >
-              {maskVal(stats.aggregatedUsd.totalFunding)} USD
+              {maskVal(stats.aggregatedUsd.totalFunding)}
             </span>
 
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] text-[#8E9299]">
-                {t('transactions.common.fundingReceived', 'Funding')} {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? t('transactions.common.fundingReceived', 'received') : t('transactions.common.fundingPaid', 'paid')}
+              <span className="text-[10px] text-fg-muted">
+                {t('transactions.common.fundingLabel', 'Funding')}{' '}
+                {new Big(stats.aggregatedUsd.totalFunding).gte(0)
+                  ? t('transactions.common.fundingReceived', 'received')
+                  : t('transactions.common.fundingPaid', 'paid')}
               </span>
               {isCalculatingUsd && (
                 <AppTooltip description={t('transactions.common.calculatingUsdTooltip', 'Fetching real-time USD prices for non-stable assets...')}>
@@ -377,34 +384,30 @@ export function ConsolidatedTransactions() {
             </div>
           </div>
 
-          {/* Card 3: Total Fees (USD) */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+          {/* Card 3: Total Fees */}
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
-              <CreditCard className="w-4 h-4 text-[#FF4444] shrink-0" />
-              <AppTooltip description={t('transactions.common.totalFeesTooltip', 'Sum of trading fees across all selected exchanges in USD. Click for details.')}>
+              <CreditCard className="w-4 h-4 text-danger shrink-0" />
+              <AppTooltip description={t('transactions.common.totalFeesTooltip', 'Sum of trading fees across all selected exchanges. Click for details.')}>
                 <span
                   onClick={() => setDetailsModalType('fees')}
-                  className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
+                  className="text-[11px] text-fg-muted uppercase tracking-wider cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors"
                 >
-                  {t('transactions.common.totalFees', 'Total Fees (USD)')}
+                  {t('transactions.common.totalFees', 'Total Fees')}
                 </span>
               </AppTooltip>
             </div>
-            <span
-              className={`text-xl font-bold font-mono ${
-                new Big(stats.aggregatedUsd.totalFees).gte(0) ? 'text-[#FF4444]' : 'text-[#00C853]'
-              }`}
-            >
+            <span className={`text-xl font-bold font-mono ${new Big(getConsolidatedMetric(stats, 'fees').grandTotal).lt(0) ? 'text-success' : 'text-danger'}`}>
               {(() => {
-                const feeBig = new Big(stats.aggregatedUsd.totalFees);
-                if (feeBig.abs().toString() === '0') return `${maskVal(feeBig.toFixed(2))} USD`;
-                if (feeBig.gte(0)) return `-${maskVal(feeBig.toString())} USD`;
-                return `+${maskVal(feeBig.abs().toString())} USD`;
+                if (isPrivateMode) return '****';
+                const feeBig = new Big(getConsolidatedMetric(stats, 'fees').grandTotal);
+                if (feeBig.eq(0)) return maskVal(0);
+                return `${feeDisplaySign(feeBig)}${maskVal(feeBig.abs().toString())}`;
               })()}
             </span>
 
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] text-[#8E9299]">{t('transactions.common.feesPaid', 'Trading fees paid')}</span>
+              <span className="text-[10px] text-fg-muted">{t('transactions.common.feesPaid', 'Trading fees paid')}</span>
               {isCalculatingUsd && (
                 <AppTooltip description={t('transactions.common.calculatingUsdTooltip', 'Fetching real-time USD prices for non-stable assets...')}>
                   <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
@@ -416,44 +419,49 @@ export function ConsolidatedTransactions() {
             </div>
           </div>
 
-          {/* Card 4: Net Change & Final Balance (USD) */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-2">
+          {/* Card 4: Net Change & Final Balance */}
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center gap-2">
             <div className="flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-[#8E9299] shrink-0" />
-              <AppTooltip description={t('transactions.common.netChangeTooltip', 'Combined Net Change in USD across all selected exchanges. Click for details.')}>
+              <Wallet className="w-4 h-4 text-fg-muted shrink-0" />
+              <AppTooltip description={t('transactions.common.netChangeTooltip', 'Combined Net Change across all selected exchanges. Click for details.')}>
                 <span
                   onClick={() => setDetailsModalType('netchange')}
-                  className="text-[11px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
+                  className="text-[11px] text-fg-muted uppercase tracking-wider cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors"
                 >
-                  {t('transactions.common.netChange', 'Net Change (USD)')}
+                  {t('transactions.common.netChange', 'Net Change')}
                 </span>
               </AppTooltip>
             </div>
             <span
               className={`text-lg font-bold font-mono ${
-                new Big(stats.aggregatedUsd.totalChange).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'
+                new Big(stats.aggregatedUsd.totalChange).gte(0) ? 'text-success' : 'text-danger'
               }`}
             >
-              {maskVal(stats.aggregatedUsd.totalChange)} USD
+              {maskVal(stats.aggregatedUsd.totalChange)}
             </span>
 
-            <div className="border-t border-[#2a2b30] pt-2 flex flex-col">
+            <div className="border-t border-line pt-2 flex flex-col">
               <div className="flex items-center gap-2">
                 <AppTooltip description={t('transactions.common.walletBalanceTooltip', 'Aggregated final wallet balance across all exchanges. Click for details.')}>
                   <span
                     onClick={() => setDetailsModalType('balance')}
-                    className="text-[9px] text-[#8E9299] uppercase tracking-wider cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors"
+                    className="text-[9px] text-fg-muted uppercase tracking-wider cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors"
                   >
-                    {t('transactions.common.walletBalance', 'Wallet Balance (USD)')}
+                    {t('transactions.common.walletBalance', 'Wallet Balance')}
                   </span>
                 </AppTooltip>
               </div>
-              <span className="text-[13px] font-bold text-white mt-0.5 font-mono">
-                {maskVal(stats.aggregatedUsd.finalBalance)} USD
+              <span className="text-[13px] font-bold text-fg mt-0.5 font-mono">
+                {maskVal(stats.aggregatedUsd.finalBalance)}
               </span>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Currencies without a USD price are excluded from the totals above */}
+      {stats.missingRates.length > 0 && (
+        <MissingRatesNotice currencies={stats.missingRates} />
       )}
 
       {/* Error Notice */}
@@ -476,8 +484,6 @@ export function ConsolidatedTransactions() {
         detailsModalType={detailsModalType}
         setDetailsModalType={setDetailsModalType}
         stats={stats}
-        tokenRates={tokenRates}
-        maskVal={maskVal}
         isPrivateMode={isPrivateMode}
       />
     </div>

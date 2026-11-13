@@ -171,14 +171,14 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
         }}
         className={`group relative flex items-center justify-between p-2 rounded-xl text-xs transition cursor-pointer border ${
           isCurrent
-            ? 'bg-[#2F6BFF]/15 border-[#2F6BFF]/40 text-white font-medium shadow-sm'
-            : 'bg-[#151619] hover:bg-[#1e1f24] border-[#2a2b30] text-[#c9cbcf] hover:text-white'
+            ? 'bg-accent/15 border-accent/40 text-fg font-medium shadow-sm'
+            : 'bg-surface hover:bg-elevated border-line text-[#c9cbcf] hover:text-fg'
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-1">
           <div
             className={`w-2 h-2 rounded-full shrink-0 ${
-              isCurrent ? 'bg-[#2F6BFF] ring-2 ring-[#2F6BFF]/30' : 'bg-gray-600 group-hover:bg-gray-400'
+              isCurrent ? 'bg-accent ring-2 ring-accent/30' : 'bg-gray-600 group-hover:bg-gray-400'
             }`}
           />
 
@@ -194,15 +194,15 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                     if (e.key === 'Escape') setEditingSessionId(null);
                   }}
                   autoFocus
-                  className="w-full bg-[#0b0c10] border border-[#2F6BFF] rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
+                  className="w-full bg-canvas border border-accent rounded px-1.5 py-0.5 text-xs text-fg focus:outline-none"
                 />
                 <button
                   onClick={(e) => handleSaveRename(session.id, e)}
-                  className="p-1 text-emerald-400 hover:bg-[#2a2b30] rounded"
+                  className="p-1 text-emerald-400 hover:bg-line rounded"
                 >
                   <Check className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={handleCancelRename} className="p-1 text-gray-400 hover:bg-[#2a2b30] rounded">
+                <button onClick={handleCancelRename} className="p-1 text-fg-muted hover:bg-line rounded">
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -229,7 +229,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                       e.stopPropagation();
                       setConfirmDeleteId(null);
                     }}
-                    className="px-1.5 py-0.5 bg-[#2a2b30] hover:bg-[#34373c] text-gray-300 rounded text-[10px]"
+                    className="px-1.5 py-0.5 bg-line hover:bg-line-strong text-fg rounded text-[10px]"
                   >
                     No
                   </button>
@@ -238,7 +238,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
             ) : (
               <div>
                 <p className="truncate text-xs leading-snug">{session.title}</p>
-                <div className="flex items-center gap-2 text-[10px] text-[#8E9299] mt-0.5 font-mono">
+                <div className="flex items-center gap-2 text-[10px] text-fg-muted mt-0.5 font-mono">
                   <span>{session.messages.length} msgs</span>
                   <span>•</span>
                   <span>{new Date(session.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -250,15 +250,15 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
 
         {/* Action icons on hover */}
         {!isEditing && !isConfirmingDelete && (
-          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition bg-[#151619] pl-1 rounded">
+          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition bg-surface pl-1 rounded">
             <AppTooltip description={session.pinned ? 'Unpin' : 'Pin to top'} side="top">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   togglePinSession(session.id);
                 }}
-                className={`p-1 rounded hover:bg-[#2a2b30] transition cursor-pointer ${
-                  session.pinned ? 'text-amber-400' : 'text-[#8E9299] hover:text-white'
+                className={`p-1 rounded hover:bg-line transition cursor-pointer ${
+                  session.pinned ? 'text-amber-400' : 'text-fg-muted hover:text-fg'
                 }`}
               >
                 <Pin className="w-3 h-3" />
@@ -268,7 +268,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
             <AppTooltip description="Export as Markdown" side="top">
               <button
                 onClick={(e) => handleExportSession(session, e)}
-                className="p-1 text-[#8E9299] hover:text-white rounded hover:bg-[#2a2b30] transition cursor-pointer"
+                className="p-1 text-fg-muted hover:text-fg rounded hover:bg-line transition cursor-pointer"
               >
                 <Download className="w-3 h-3" />
               </button>
@@ -277,7 +277,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
             <AppTooltip description="Rename" side="top">
               <button
                 onClick={(e) => handleStartRename(session, e)}
-                className="p-1 text-[#8E9299] hover:text-white rounded hover:bg-[#2a2b30] transition cursor-pointer"
+                className="p-1 text-fg-muted hover:text-fg rounded hover:bg-line transition cursor-pointer"
               >
                 <Edit2 className="w-3 h-3" />
               </button>
@@ -289,7 +289,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                   e.stopPropagation();
                   setConfirmDeleteId(session.id);
                 }}
-                className="p-1 text-[#8E9299] hover:text-rose-400 rounded hover:bg-[#2a2b30] transition cursor-pointer"
+                className="p-1 text-fg-muted hover:text-rose-400 rounded hover:bg-line transition cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -304,10 +304,10 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
     if (items.length === 0) return null;
     return (
       <div className="space-y-1.5 mb-3">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-[#8E9299] px-2 flex items-center gap-1.5">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-fg-muted px-2 flex items-center gap-1.5">
           {label === 'Pinned' && <Pin className="w-2.5 h-2.5 text-amber-400" />}
           <span>{label}</span>
-          <span className="text-[9px] text-[#8E9299] font-normal font-mono">({items.length})</span>
+          <span className="text-[9px] text-fg-muted font-normal font-mono">({items.length})</span>
         </div>
         <div className="space-y-1">{items.map(renderSessionItem)}</div>
       </div>
@@ -315,22 +315,22 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
   };
 
   return (
-    <div className="absolute inset-y-0 left-0 w-72 sm:w-80 bg-[#111215] border-r border-[#2a2b30] z-40 flex flex-col shadow-2xl animate-in slide-in-from-left-4 duration-200">
+    <div className="absolute inset-y-0 left-0 w-72 sm:w-80 bg-canvas border-r border-line z-40 flex flex-col shadow-2xl animate-in slide-in-from-left-4 duration-200">
       {/* Header */}
-      <div className="p-3 border-b border-[#2a2b30] flex items-center justify-between shrink-0 bg-[#151619]">
+      <div className="p-3 border-b border-line flex items-center justify-between shrink-0 bg-surface">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-[#2F6BFF]/10 text-[#2F6BFF] rounded-lg border border-[#2F6BFF]/20">
+          <div className="p-1.5 bg-accent/10 text-accent rounded-lg border border-accent/20">
             <MessageSquare className="w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-bold text-white tracking-tight">Chat History</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-[#2a2b30] text-[#8E9299]">
+          <span className="text-xs font-bold text-fg tracking-tight">Chat History</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-line text-fg-muted">
             {sessionList.length}
           </span>
         </div>
 
         <button
           onClick={onClose}
-          className="p-1 text-[#8E9299] hover:text-white rounded-lg hover:bg-[#2a2b30] transition cursor-pointer"
+          className="p-1 text-fg-muted hover:text-fg rounded-lg hover:bg-line transition cursor-pointer"
           aria-label="Close history"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -338,10 +338,10 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
       </div>
 
       {/* Top Action Bar */}
-      <div className="p-3 space-y-2 border-b border-[#2a2b30] shrink-0 bg-[#151619]">
+      <div className="p-3 space-y-2 border-b border-line shrink-0 bg-surface">
         <button
           onClick={handleNewChat}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-[#2F6BFF] hover:bg-[#2F6BFF]/85 text-white rounded-xl text-xs font-semibold shadow-md shadow-[#2F6BFF]/20 transition cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-accent hover:bg-accent/85 text-white rounded-xl text-xs font-semibold shadow-md shadow-accent/20 transition cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>New Chat</span>
@@ -349,18 +349,18 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
 
         {/* Search Input */}
         <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#8E9299]" />
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-muted" />
           <input
             type="text"
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0b0c10] border border-[#2a2b30] rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-[#8E9299] focus:outline-none focus:border-[#2F6BFF] transition"
+            className="w-full bg-canvas border border-line rounded-lg pl-8 pr-7 py-1.5 text-xs text-fg placeholder-fg-muted focus:outline-none focus:border-accent transition"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#8E9299] hover:text-white"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg"
             >
               <X className="w-3 h-3" />
             </button>
@@ -371,9 +371,9 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
       {/* Session List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
         {filteredSessions.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-4 text-[#8E9299]">
+          <div className="h-full flex flex-col items-center justify-center text-center p-4 text-fg-muted">
             <Clock className="w-7 h-7 mb-2 text-[#43464d]" />
-            <p className="text-xs font-medium text-white mb-0.5">No conversations found</p>
+            <p className="text-xs font-medium text-fg mb-0.5">No conversations found</p>
             <p className="text-[11px] max-w-[180px]">
               {searchQuery ? 'Try a different search term.' : 'Click "+ New Chat" to begin a conversation.'}
             </p>
@@ -390,15 +390,15 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
       </div>
 
       {/* Footer Actions */}
-      <div className="p-2.5 border-t border-[#2a2b30] bg-[#151619] shrink-0">
+      <div className="p-2.5 border-t border-line bg-surface shrink-0">
         {confirmClearAll ? (
           <div className="bg-rose-500/10 border border-rose-500/25 rounded-xl p-2.5 space-y-2 text-center animate-in fade-in-0">
             <p className="text-[11px] font-bold text-rose-300">Clear all chat history?</p>
-            <p className="text-[10px] text-[#8E9299]">All conversation threads will be permanently erased.</p>
+            <p className="text-[10px] text-fg-muted">All conversation threads will be permanently erased.</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmClearAll(false)}
-                className="flex-1 py-1 text-xs bg-[#1e1f24] hover:bg-[#2a2b30] text-gray-300 rounded font-medium border border-[#2a2b30]"
+                className="flex-1 py-1 text-xs bg-elevated hover:bg-line text-fg rounded font-medium border border-line"
               >
                 Cancel
               </button>
@@ -417,7 +417,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
         ) : (
           <button
             onClick={() => setConfirmClearAll(true)}
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-[#8E9299] hover:text-rose-400 hover:bg-[#1e1f24] rounded-lg text-[11px] transition cursor-pointer border border-transparent hover:border-[#2a2b30]"
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-fg-muted hover:text-rose-400 hover:bg-elevated rounded-lg text-[11px] transition cursor-pointer border border-transparent hover:border-line"
           >
             <Trash2 className="w-3 h-3" />
             <span>Clear All History</span>

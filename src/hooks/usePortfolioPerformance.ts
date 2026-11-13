@@ -9,8 +9,10 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getBybitTxLogCache, getBitgetTxLogCache, getOkxTxLogCache } from '../services/historyCache';
 import { getBybitUniversalType, getBitgetUniversalType, getOkxUniversalType } from '../utils/transactionTypeMapper';
-import { fetchTokenUsdPrice } from './useTokenUsdPrice';
+import { getUsdPricesForVenues } from '../services/pricing/usdPrice';
+import { resolveUsdRate, needsTokenRate } from '../utils/usdAggregation';
 import { getStrictCalendarStartTime, resolvePeriodDateRange } from '../utils/dateTimeHelper';
+import { classifyTradeSide } from '../utils/tradeSide';
 
 export interface PortfolioPerformanceFilters {
   exchange: string;       // 'All' | 'bybit' | 'bitget' | 'okx'
@@ -186,6 +188,7 @@ export const defaultEmptyPerformanceData = {
 export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = defaultPerformanceFilters) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const fiatRates = useSettingsStore(state => state.fiatRates);
   const bybitTxLastSyncTime = useSyncCoordinatorStore(state => state.bybitTxLastSyncTime);
   const bitgetTxLastSyncTime = useSyncCoordinatorStore(state => state.bitgetTxLastSyncTime);
   const okxTxLastSyncTime = useSyncCoordinatorStore(state => state.okxTxLastSyncTime);
@@ -306,30 +309,6 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
     return Array.from(set).sort();
   }, [bybitEntries, bitgetEntries, okxEntries]);
 
-  // Fetch USD prices for non-stable tokens
-  useEffect(() => {
-    let isMounted = true;
-    const nonStables = availableCurrencies.filter(c => !['USDT', 'USDC', 'USD', 'DAI', 'BUSD'].includes(c));
-    const missing = nonStables.filter(c => tokenRates[c] === undefined);
-
-    if (missing.length === 0) return;
-
-    setIsCalculatingUsd(true);
-    Promise.all(missing.map(c => fetchTokenUsdPrice(c))).then(results => {
-      if (!isMounted) return;
-      const updated = { ...tokenRates };
-      let changed = false;
-      missing.forEach((c, idx) => {
-        if (results[idx] !== null) {
-          updated[c] = results[idx] as number;
-          changed = true;
-        }
-      });
-      if (changed) setTokenRates(updated);
-      setIsCalculatingUsd(false);
-    });
-  }, [availableCurrencies.join(',')]);
-
   // Normalize all entries into a unified structure
   const unifiedEntries = useMemo(() => {
     const list: Array<{
@@ -439,6 +418,53 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
     });
   }, [unifiedEntries, filters]);
 
+  // Currencies without a local rate, grouped by the exchange they trade on.
+  // USD-pegged stablecoins resolve to 1 and fiat codes (BRL, EUR, EURT, GBP)
+  // come from the fiat table, so only real tokens reach the network — and they
+  // must be looked up through their own exchange, since OKX does not list every
+  // exchange token (BGB, MNT) and would report them as unpriced.
+  const unpricedByExchange = useMemo(() => {
+    const groups: Partial<Record<'bybit' | 'bitget' | 'okx', string[]>> = {};
+
+    filteredEntries.forEach(entry => {
+      const ccy = (entry.currency || '').toUpperCase();
+      if (!ccy || !needsTokenRate(ccy, fiatRates) || tokenRates[ccy] !== undefined) return;
+
+      const venue = entry.exchange;
+      if (!groups[venue]) groups[venue] = [];
+      if (!groups[venue]!.includes(ccy)) groups[venue]!.push(ccy);
+    });
+
+    return groups;
+  }, [filteredEntries, fiatRates, tokenRates]);
+
+  const unpricedSignature = Object.entries(unpricedByExchange)
+    .map(([exchange, currencies]) => `${exchange}:${(currencies || []).join(',')}`)
+    .join('|');
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!unpricedSignature) {
+      if (isCalculatingUsd) setIsCalculatingUsd(false);
+      return;
+    }
+
+    setIsCalculatingUsd(true);
+    getUsdPricesForVenues(unpricedByExchange, fiatRates)
+      .then(({ rates }) => {
+        if (!isMounted) return;
+        if (Object.keys(rates).length > 0) {
+          setTokenRates(prev => ({ ...prev, ...rates }));
+        }
+        setIsCalculatingUsd(false);
+      })
+      .catch(err => {
+        if (!isMounted) return;
+        console.error('Error fetching portfolio performance USD prices:', err);
+        setIsCalculatingUsd(false);
+      });
+  }, [unpricedSignature]);
+
   // Core calculations and 7 analytical suites
   const performanceData = useMemo(() => {
     if (filteredEntries.length === 0) {
@@ -446,10 +472,7 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
     }
 
     const isUsdDenom = filters.denomination === 'USD';
-    const rateOf = (ccy: string) => {
-      if (['USDT', 'USDC', 'USD', 'DAI', 'BUSD'].includes(ccy)) return 1;
-      return tokenRates[ccy] || 0;
-    };
+    const rateOf = (ccy: string) => resolveUsdRate(ccy, tokenRates, fiatRates) ?? 0;
 
     // Conversion helper: converts amount to target denomination
     const toDenom = (amount: number, ccy: string): number => {
@@ -539,9 +562,10 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
         totalOutflow = totalOutflow.plus(new Big(Math.abs(valDenom)));
       } else if (e.universalType === 'TRADE') {
         totalTrades++;
-        const s = e.side.toLowerCase();
-        if (s.includes('buy') || s.includes('long')) buysCount++;
-        if (s.includes('sell') || s.includes('short')) sellsCount++;
+        // "Close Long" is a sale and "Close Short" is a purchase.
+        const direction = classifyTradeSide(e.side);
+        if (direction === 'buy') buysCount++;
+        if (direction === 'sell') sellsCount++;
 
         if (cashFlowDenom > 0) grossCashFlow = grossCashFlow.plus(new Big(cashFlowDenom));
         feesPaid = feesPaid.plus(new Big(feeDenom));
@@ -808,7 +832,18 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
       },
       priceMilestones: priceMilestonesList,
     };
-  }, [filteredEntries, filters, tokenRates]);
+  }, [filteredEntries, filters, tokenRates, fiatRates]);
+
+  // Currencies present in the loaded entries that still have no USD rate; their
+  // amounts are excluded from every USD metric, so the screen must say so.
+  const missingRates = useMemo(() => {
+    const codes = new Set<string>();
+    filteredEntries.forEach(entry => {
+      const ccy = (entry.currency || '').toUpperCase();
+      if (ccy && resolveUsdRate(ccy, tokenRates, fiatRates) === null) codes.add(ccy);
+    });
+    return Array.from(codes).sort();
+  }, [filteredEntries, tokenRates, fiatRates]);
 
   const isSyncing = isBybitTxSyncing || isBitgetTxSyncing || isOkxTxSyncing;
   const syncError = bybitTxSyncError || bitgetTxSyncError || okxTxSyncError;
@@ -822,5 +857,6 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
     error: syncError,
     availableCurrencies,
     tokenRates,
+    missingRates,
   };
 }

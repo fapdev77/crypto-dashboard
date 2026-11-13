@@ -15,7 +15,7 @@ import { ExchangeHierarchyTable } from './ExchangeHierarchyTable';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
-import { isStablecoin } from '../utils/formatters';
+import { isUsdPeggedStablecoin } from '../utils/usdAggregation';
 import { AppTooltip } from './ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 
@@ -172,7 +172,7 @@ export function Dashboard() {
   const stablecoinsProtectedUsd = useMemo(() => {
     return Number(
       activeBalances
-        .filter(b => isStablecoin(b.ccy))
+        .filter(b => isUsdPeggedStablecoin(b.ccy))
         .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
     );
   }, [activeBalances]);
@@ -345,19 +345,19 @@ export function Dashboard() {
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
         {/* Card 1: Total Equity */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between">
+        <div className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">
+                <span className="text-fg-muted text-xs font-medium tracking-wider uppercase">
                   {t('dashboardExtra.totalEquityUsd', 'Total Equity ({{currency}})', { currency: currentFiat })}
                 </span>
                 <span className={`inline-block w-2 h-2 rounded-full ${openPositionsTotalPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
               </div>
-              <DollarSign className="w-4 h-4 text-[#8E9299]/60" />
+              <DollarSign className="w-4 h-4 text-fg-muted/60" />
             </div>
             <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-2xl lg:text-3xl font-bold text-white font-mono tracking-tight">
+              <p className="text-2xl lg:text-3xl font-bold text-fg font-mono tracking-tight">
                 {formatCurrency(totalEquity, 'usd')}
               </p>
               {openPositionsTotalPnL >= 0 ? (
@@ -367,7 +367,7 @@ export function Dashboard() {
               )}
             </div>
           </div>
-          <div className="mt-4 text-xs text-[#8E9299] font-medium">
+          <div className="mt-4 text-xs text-fg-muted font-medium">
             {t('dashboardExtra.netBalanceDesc', 'Net balance across all connected exchanges')}
           </div>
         </div>
@@ -377,22 +377,22 @@ export function Dashboard() {
           type="button"
           onClick={handleOpenPositionsClick}
           title={t('dashboardExtra.clickToViewOpenPositions', 'Click to view Open Positions')}
-          className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-[#3a3b40] transition-colors"
+          className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-line-strong transition-colors"
         >
           <div className="w-full">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
+              <span className="text-fg-muted text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-accent transition-colors">
                 {t('dashboardExtra.openPositionsPnl', 'Open Positions P&L')}
                 <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
               </span>
-              <Activity className="w-4 h-4 text-[#8E9299]/70" />
+              <Activity className="w-4 h-4 text-fg-muted/70" />
             </div>
 
             <div className="space-y-3">
               {/* Unrealized */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-0.5">
+                  <div className="text-[10px] text-fg-muted uppercase tracking-wider mb-0.5">
                     {t('dashboardExtra.unrealizedPnlLabel', 'Unrealized P&L')}
                   </div>
                   <div className="flex items-baseline gap-1.5">
@@ -417,7 +417,7 @@ export function Dashboard() {
               {/* Realized */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-0.5">
+                  <div className="text-[10px] text-fg-muted uppercase tracking-wider mb-0.5">
                     {t('dashboardExtra.realizedPnlLabel', 'Realized P&L')}
                   </div>
                   <div className="flex items-baseline gap-1.5">
@@ -447,21 +447,21 @@ export function Dashboard() {
           type="button"
           onClick={handleOpenPositionsClick}
           title={t('dashboardExtra.clickToViewOpenPositions', 'Click to view Open Positions')}
-          className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-[#3a3b40] transition-colors"
+          className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-line-strong transition-colors"
         >
           <div className="w-full">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
+              <span className="text-fg-muted text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-accent transition-colors">
                 {t('dashboardExtra.activePositionsCount', 'Active Positions')}
                 <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
               </span>
-              <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
+              <BarChart2 className="w-4 h-4 text-accent opacity-60" />
             </div>
             <div className="flex items-baseline gap-1.5 mt-1">
-              <p className="text-3xl font-bold text-white font-mono">
+              <p className="text-3xl font-bold text-fg font-mono">
                 {openPositionsCount}
               </p>
-              <span className="text-xs text-[#8E9299] font-semibold">
+              <span className="text-xs text-fg-muted font-semibold">
                 {t('dashboardExtra.active', 'Active')}
               </span>
             </div>
@@ -476,14 +476,14 @@ export function Dashboard() {
                   <TrendingDown className="w-3 h-3" /> {t('dashboardExtra.shorts', 'Shorts')}: {shortPositions}
                 </span>
               </div>
-              <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
+              <div className="h-1.5 w-full bg-elevated rounded-full overflow-hidden flex">
                 {openPositionsCount > 0 ? (
                   <>
                     <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${longPercent}%` }} />
                     <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${shortPercent}%` }} />
                   </>
                 ) : (
-                  <div className="h-full w-full bg-[#2a2b30]" />
+                  <div className="h-full w-full bg-line" />
                 )}
               </div>
               <div className="flex justify-between text-xs font-semibold">
@@ -503,25 +503,25 @@ export function Dashboard() {
           type="button"
           onClick={handleHedgeProClick}
           title={t('dashboardExtra.clickToOpenHedgePro', 'Click to open Hedge Pro dashboard for detailed information about hedge')}
-          className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-[#3a3b40] transition-colors"
+          className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-line-strong transition-colors"
         >
           <div className="w-full">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
+              <span className="text-fg-muted text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-accent transition-colors">
                 {t('dashboardExtra.hedgeModeInverseCard', 'Hedge Mode (Inverse)')}
                 <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-emerald-500">{t('dashboardExtra.hedged', 'Hedged')}: {inverseShortCount}</span>
-                <span className="text-xs font-bold text-[#8E9299]">|</span>
+                <span className="text-xs font-bold text-fg-muted">|</span>
                 <span className="text-xs font-semibold text-amber-400">{t('dashboardExtra.leveraged', 'Leveraged')}: {inverseLongCount}</span>
               </div>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <p className="text-xl font-bold text-white font-mono">
+              <p className="text-xl font-bold text-fg font-mono">
                 {inverseOpenCount}
               </p>
-              <span className="text-xs text-[#8E9299] font-medium">{t('dashboardExtra.activePositionsCount', 'Active Positions')}</span>
+              <span className="text-xs text-fg-muted font-medium">{t('dashboardExtra.activePositionsCount', 'Active Positions')}</span>
             </div>
 
             {/* Protected vs Exposed Bar */}
@@ -530,7 +530,7 @@ export function Dashboard() {
                 <AppTooltip
                   description={
                     <div className="text-xs space-y-1.5 p-1 min-w-[230px]">
-                      <div className="font-semibold text-white border-b border-[#2a2b30] pb-1">
+                      <div className="font-semibold text-fg border-b border-line pb-1">
                         {t('dashboardExtra.protectedCapitalBreakdown', 'Protected Capital Breakdown')}
                       </div>
                       <div className="space-y-1 font-mono text-[11px]">
@@ -542,7 +542,7 @@ export function Dashboard() {
                           <span>{t('dashboardExtra.stablecoins', 'Stablecoins:')}</span>
                           <span>{formatCurrency(stablecoinsProtectedUsd, 'usd', 2)} ({stablesOfProtectedPct.toFixed(2)}%)</span>
                         </div>
-                        <div className="flex justify-between items-center text-white border-t border-[#2a2b30] pt-1 font-semibold">
+                        <div className="flex justify-between items-center text-fg border-t border-line pt-1 font-semibold">
                           <span>{t('dashboardExtra.totalProtected', 'Total Protected:')}</span>
                           <span>{formatCurrency(totalProtected, 'usd', 2)} ({protectedPercent.toFixed(2)}% {t('dashboardExtra.equity', 'equity')})</span>
                         </div>
@@ -556,21 +556,21 @@ export function Dashboard() {
                     {t('dashboardExtra.prot', 'Prot:')} {formatCurrency(totalProtected, 'usd', 2)}
                   </span>
                 </AppTooltip>
-                <span className="text-white font-semibold">{t('dashboardExtra.exp', 'Exp:')} {formatCurrency(totalExposed, 'usd', 2)}</span>
+                <span className="text-fg font-semibold">{t('dashboardExtra.exp', 'Exp:')} {formatCurrency(totalExposed, 'usd', 2)}</span>
               </div>
-              <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
+              <div className="h-1.5 w-full bg-elevated rounded-full overflow-hidden flex">
                 {totalEquity > 0 ? (
                   <>
                     <div className="h-full bg-emerald-500/80 transition-all duration-300" style={{ width: `${Math.max(0, protectedPercent)}%` }} />
                     <div className="h-full bg-white transition-all duration-300" style={{ width: `${Math.max(0, exposedPercent)}%` }} />
                   </>
                 ) : (
-                  <div className="h-full w-full bg-[#2a2b30]" />
+                  <div className="h-full w-full bg-line" />
                 )}
               </div>
               <div className="flex justify-between text-xs font-semibold font-mono">
                 <span className="text-emerald-500/90">{protectedPercent.toFixed(2)}%</span>
-                <span className="text-white font-semibold">{exposedPercent.toFixed(2)}%</span>
+                <span className="text-fg font-semibold">{exposedPercent.toFixed(2)}%</span>
               </div>
             </div>
           </div>

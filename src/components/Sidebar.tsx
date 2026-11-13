@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight, BrainCircuit, History, ShieldCheck } from 'lucide-react';
+import { X, ChevronDown, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { NAV_SECTION_ICONS } from '../config/navigationConfig';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
@@ -101,43 +102,43 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   }, [activeExchanges, useMockData, t]);
 
   const navItems: NavItem[] = useMemo(() => [
-    { id: 'dashboard', label: t('nav.dashboard', 'Dashboard'), icon: LayoutDashboard },
+    { id: 'dashboard', label: t('nav.dashboard', 'Dashboard'), icon: NAV_SECTION_ICONS.dashboard },
     {
-      id: 'hedge-pro', label: t('nav.hedgePro', 'Hedge Pro'), icon: ShieldCheck, subItems: [
+      id: 'hedge-pro', label: t('nav.hedgePro', 'Hedge Pro'), icon: NAV_SECTION_ICONS.hedgePro, subItems: [
         { id: 'analytics-hedge-pro', label: t('nav.hedgePro', 'Hedge Pro') }
       ]
     },
     {
-      id: 'positions', label: t('nav.openPositions', 'Positions'), icon: Activity, subItems: [
+      id: 'positions', label: t('nav.openPositions', 'Positions'), icon: NAV_SECTION_ICONS.positions, subItems: [
         { id: 'positions-open', label: t('nav.openPositions', 'Open Positions'), badge: openCount },
         { id: 'positions-history', label: t('nav.closedPositions', 'Positions History') }
       ]
     },
     {
-      id: 'orders', label: t('nav.orders', 'Orders'), icon: ClipboardList, subItems: [
+      id: 'orders', label: t('nav.orders', 'Orders'), icon: NAV_SECTION_ICONS.orders, subItems: [
         { id: 'orders-open', label: t('nav.openOrders', 'Open Orders'), badge: openOrdersCount },
         { id: 'orders-history', label: t('nav.orderHistory', 'Orders History') }
       ]
     },
     {
-      id: 'trade', label: t('nav.trade', 'Trade'), icon: ArrowLeftRight, subItems: [
+      id: 'trade', label: t('nav.trade', 'Trade'), icon: NAV_SECTION_ICONS.trade, subItems: [
         { id: 'trade-history', label: t('nav.trade', 'Trade History') }
       ]
     },
     ...(transactionHistoryItems.length > 0
       ? [{
-          id: 'transactions-history', label: t('nav.transactions', 'Transactions History'), icon: History, subItems: transactionHistoryItems
+          id: 'transactions-history', label: t('nav.transactions', 'Transactions History'), icon: NAV_SECTION_ICONS.transactions, subItems: transactionHistoryItems
         }]
       : []),
     {
-      id: 'analytics', label: t('nav.analytics', 'Analytics'), icon: BarChart2, subItems: [
+      id: 'analytics', label: t('nav.analytics', 'Analytics'), icon: NAV_SECTION_ICONS.analytics, subItems: [
         { id: 'analytics-portfolio-performance', label: t('nav.portfolioPerformance', 'Portfolio Performance') },
         { id: 'analytics-market-advanced', label: t('nav.marketAnalytics', 'Market Analytics') },
         { id: 'analytics-pnl-symbol', label: t('nav.pnlBySymbol', 'PnL by Symbol') },
         { id: 'analytics-funding', label: t('nav.fundingDashboard', 'Funding Fees') }
       ]
     },
-    { id: 'reports', label: t('nav.reports', 'Reports'), icon: FileText },
+    { id: 'reports', label: t('nav.reports', 'Reports'), icon: NAV_SECTION_ICONS.reports },
   ], [t, openCount, openOrdersCount, transactionHistoryItems]);
 
   // Accordion state management
@@ -173,16 +174,16 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   };
 
   return (
-    <aside className={`fixed lg:static inset-y-0 left-0 z-40 ${collapsed ? 'w-20' : 'w-64'} bg-[#151619] border-r border-[#2a2b30] flex flex-col h-full transform transition-all duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className={`p-4 lg:p-5 border-b border-[#2a2b30] flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative shrink-0`}>
+    <aside className={`fixed lg:static inset-y-0 left-0 z-40 ${collapsed ? 'w-20' : 'w-64'} bg-surface border-r border-line flex flex-col h-full transform transition-all duration-300 ease-in-out lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`p-4 lg:p-5 border-b border-line flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative shrink-0`}>
         {!collapsed ? (
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-white flex flex-col gap-1">
+            <h1 className="text-xl font-semibold tracking-tight text-fg flex flex-col gap-1">
               <div className="flex items-center gap-3">
                 <img src={logo1} alt="Logo" className="w-8 h-8 object-contain shrink-0" />
                 <span className="text-[15px] font-bold leading-tight">
                   Portfolio Manager
-                  <span className="block text-[11px] text-[#8E9299] font-normal tracking-wide mt-0.5">Crypto Multi-Exchange</span>
+                  <span className="block text-[11px] text-fg-muted font-normal tracking-wide mt-0.5">{t('nav.cryptoMultiExchange', 'Crypto Multi-Exchange')}</span>
                 </span>
               </div>
             </h1>
@@ -194,7 +195,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         {/* Mobile Close Button */}
         <button
           onClick={() => setIsMobileMenuOpen?.(false)}
-          className="lg:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#2a2b30] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="lg:hidden p-2 text-fg-muted hover:text-fg rounded-lg hover:bg-line transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Close menu"
         >
           <X className="w-5 h-5" />
@@ -203,7 +204,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         {/* Desktop Collapse Toggle */}
         <button
           onClick={() => setIsCollapsed?.(!isCollapsed)}
-          className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-[#1a1b1e] border border-[#2a2b30] rounded-full items-center justify-center text-gray-400 hover:text-white hover:bg-[#2a2b30] transition-colors z-50"
+          className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-elevated border border-line rounded-full items-center justify-center text-fg-muted hover:text-fg hover:bg-line transition-colors z-50"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -234,12 +235,12 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                   collapsed ? 'justify-center py-3.5' : 'justify-between px-3.5 py-2.5'
                 } rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
-                    : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
+                    ? 'bg-accent/10 text-accent'
+                    : 'text-fg-muted hover:text-fg hover:bg-line/50'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <item.icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#2F6BFF]' : 'text-gray-400'}`} />
+                  <item.icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-accent' : 'text-fg-muted'}`} />
                   {!collapsed && (
                     <span className="truncate text-left">{item.label}</span>
                   )}
@@ -249,15 +250,15 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                   <div className="flex items-center gap-1.5 shrink-0">
                     {'badge' in item && item.badge !== undefined && (item.badge as number) > 0 && (
                       <span className={`px-2 py-0.5 text-xs rounded-full ${
-                        isActive ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+                        isActive ? 'bg-accent text-white' : 'bg-line text-fg-muted'
                       }`}>
                         {item.badge as number}
                       </span>
                     )}
                     {hasSubItems && (
                       <ChevronDown
-                        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                          isExpanded ? 'rotate-180 text-white' : ''
+                        className={`w-4 h-4 text-fg-muted transition-transform duration-200 ${
+                          isExpanded ? 'rotate-180 text-fg' : ''
                         }`}
                       />
                     )}
@@ -266,7 +267,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
 
                 {/* Badge indicator on collapsed view */}
                 {collapsed && hasSubItems && isParentActive && (
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#2F6BFF]" />
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-accent" />
                 )}
               </button>
 
@@ -281,14 +282,14 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                         onClick={() => handleTabClick(sub.id)}
                         className={`flex items-center justify-between text-left text-xs lg:text-sm py-2 px-3 rounded-md transition-colors ${
                           isSubActive
-                            ? 'text-white bg-[#2a2b30] font-medium'
-                            : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/40'
+                            ? 'text-fg bg-line font-medium'
+                            : 'text-fg-muted hover:text-fg hover:bg-line/40'
                         }`}
                       >
                         <span className="truncate">{sub.label}</span>
                         {sub.badge !== undefined && sub.badge > 0 && (
                           <span className={`px-2 py-0.5 text-[11px] rounded-full shrink-0 ${
-                            isSubActive ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+                            isSubActive ? 'bg-accent text-white' : 'bg-line text-fg-muted'
                           }`}>
                             {sub.badge}
                           </span>
@@ -301,8 +302,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
 
               {/* Submenu flyout when collapsed */}
               {collapsed && hasSubItems && (
-                <div className="absolute left-full top-0 ml-2 w-52 bg-[#151619] border border-[#2a2b30] rounded-lg shadow-xl hidden group-hover:flex flex-col py-2 z-50 transition-all duration-200">
-                  <div className="px-3.5 py-1.5 text-[11px] font-bold text-[#8E9299] uppercase tracking-wider border-b border-[#2a2b30]/65 mb-1">
+                <div className="absolute left-full top-0 ml-2 w-52 bg-surface border border-line rounded-lg shadow-xl hidden group-hover:flex flex-col py-2 z-50 transition-all duration-200">
+                  <div className="px-3.5 py-1.5 text-[11px] font-bold text-fg-muted uppercase tracking-wider border-b border-line/65 mb-1">
                     {item.label}
                   </div>
                   {item.subItems!.map((sub) => {
@@ -313,14 +314,14 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
                         onClick={() => handleTabClick(sub.id)}
                         className={`w-full text-left text-xs lg:text-sm py-2 px-3.5 transition-colors flex items-center justify-between ${
                           isSubActive
-                            ? 'text-[#2F6BFF] bg-[#2F6BFF]/10 font-semibold'
-                            : 'text-gray-400 hover:text-white hover:bg-[#2a2b30]/50'
+                            ? 'text-accent bg-accent/10 font-semibold'
+                            : 'text-fg-muted hover:text-fg hover:bg-line/50'
                         }`}
                       >
                         <span className="truncate">{sub.label}</span>
                         {sub.badge !== undefined && sub.badge > 0 && (
                           <span className={`px-1.5 py-0.5 text-[10px] rounded-full shrink-0 ${
-                            isSubActive ? 'bg-[#2F6BFF] text-white' : 'bg-[#2a2b30] text-[#8E9299]'
+                            isSubActive ? 'bg-accent text-white' : 'bg-line text-fg-muted'
                           }`}>
                             {sub.badge}
                           </span>
@@ -335,13 +336,13 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
         })}
       </nav>
 
-      <div className={`p-3 lg:p-4 border-t border-[#2a2b30] shrink-0 ${collapsed ? 'px-3' : ''}`}>
+      <div className={`p-3 lg:p-4 border-t border-line shrink-0 ${collapsed ? 'px-3' : ''}`}>
         {[
-          { id: 'api-keys', label: t('nav.apiKeys', 'API Keys'), icon: KeyRound },
-          { id: 'logs', label: t('nav.connectionLogs', 'Logs'), icon: AlignLeft },
-          { id: 'api-tester', label: t('nav.apiTester', 'API Tester'), icon: Terminal },
-          ...(isAiChatbotFeatureEnabled() ? [{ id: 'ai-settings', label: t('nav.aiSettings', 'AI Settings'), icon: BrainCircuit }] : []),
-          { id: 'settings', label: t('nav.settings', 'Settings'), icon: Settings },
+          { id: 'api-keys', label: t('nav.apiKeys', 'API Keys'), icon: NAV_SECTION_ICONS.apiKeys },
+          { id: 'logs', label: t('nav.connectionLogs', 'Logs'), icon: NAV_SECTION_ICONS.logs },
+          { id: 'api-tester', label: t('nav.apiTester', 'API Tester'), icon: NAV_SECTION_ICONS.apiTester },
+          ...(isAiChatbotFeatureEnabled() ? [{ id: 'ai-settings', label: t('nav.aiSettings', 'AI Settings'), icon: NAV_SECTION_ICONS.aiSettings }] : []),
+          { id: 'settings', label: t('nav.settings', 'Settings'), icon: NAV_SECTION_ICONS.settings },
         ].map((item) => (
           <button
             key={item.id}
@@ -351,8 +352,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
               collapsed ? 'justify-center py-3' : 'gap-3 px-3.5 py-2'
             } text-sm font-medium rounded-lg transition-colors mt-0.5 relative ${
               activeTab === item.id
-                ? 'bg-[#2F6BFF]/10 text-[#2F6BFF]'
-                : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50'
+                ? 'bg-accent/10 text-accent'
+                : 'text-fg-muted hover:text-fg hover:bg-line/50'
             }`}
           >
             <item.icon className="w-5 h-5 shrink-0" />

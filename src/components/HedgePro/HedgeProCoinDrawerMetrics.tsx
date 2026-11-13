@@ -40,7 +40,7 @@ export function HedgeProCoinDrawerMetrics({
   // Colors and labels depending on mode
   let uplLabel = t('hedgePro.drawer.unrealizedPnl');
   let uplTooltip = t('hedgePro.drawer.unrealizedPnlTooltip');
-  let uplColor = isUplPositive ? 'text-[#00C853]' : isUplNegative ? 'text-[#FF4444]' : 'text-[#8E9299]';
+  let uplColor = isUplPositive ? 'text-success' : isUplNegative ? 'text-danger' : 'text-fg-muted';
 
   if (pnlConceptMode === 'hedge') {
     if (isUplNegative) {
@@ -49,56 +49,56 @@ export function HedgeProCoinDrawerMetrics({
       uplTooltip = t('hedgePro.drawer.opportunityCostTooltip');
     } else if (isUplPositive) {
       uplLabel = t('hedgePro.drawer.accumulatedAsset');
-      uplColor = 'text-[#00C853]';
+      uplColor = 'text-success';
       uplTooltip = t('hedgePro.drawer.accumulatedAssetTooltip');
     } else {
       uplLabel = t('hedgePro.drawer.hedgeBalanced');
-      uplColor = 'text-[#8E9299]';
+      uplColor = 'text-fg-muted';
       uplTooltip = t('hedgePro.drawer.hedgeBalancedTooltip');
     }
   }
 
   const isRplPositive = coin.realizedPnlUsd > 0;
   const isRplNegative = coin.realizedPnlUsd < 0;
-  const rplColor = isRplPositive ? 'text-[#00C853]' : isRplNegative ? 'text-[#FF4444]' : 'text-[#8E9299]';
+  const rplColor = isRplPositive ? 'text-success' : isRplNegative ? 'text-danger' : 'text-fg-muted';
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
       {/* Card 1: Wallet Balance */}
-      <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
+      <div className="p-2.5 rounded-lg bg-surface border border-line flex flex-col justify-between">
         <AppTooltip
           description={t('hedgePro.drawer.walletBalanceTooltip')}
           side="top"
         >
-          <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
+          <span className="text-[10px] text-fg-muted uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-fg-muted/50 w-fit">
             {t('hedgePro.drawer.walletBalance')}
           </span>
         </AppTooltip>
         <div className="mt-1">
-          <div className="font-mono text-white text-sm font-semibold">
+          <div className="font-mono text-fg text-sm font-semibold">
             {formatCurrency(coin.walletBalanceUsd, 'usd', 2)}
           </div>
-          <div className="font-mono text-[11px] text-[#8E9299] truncate">
+          <div className="font-mono text-[11px] text-fg-muted truncate">
             {formatCoinValue(coin.walletBalance, coin.baseCoin, formatCurrency)} {coin.baseCoin}
           </div>
         </div>
       </div>
 
       {/* Card 2: Net Balance */}
-      <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
+      <div className="p-2.5 rounded-lg bg-surface border border-line flex flex-col justify-between">
         <AppTooltip
           description={t('hedgePro.drawer.netBalanceTooltip')}
           side="top"
         >
-          <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50 w-fit">
+          <span className="text-[10px] text-fg-muted uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-fg-muted/50 w-fit">
             {t('hedgePro.drawer.netBalance')}
           </span>
         </AppTooltip>
         <div className="mt-1">
-          <div className="font-mono text-white text-sm font-semibold">
+          <div className="font-mono text-fg text-sm font-semibold">
             {formatCurrency(coin.netBalanceUsd, 'usd', 2)}
           </div>
-          <div className="font-mono text-[11px] text-[#8E9299] truncate">
+          <div className="font-mono text-[11px] text-fg-muted truncate">
             {formatCoinValue(coin.netBalance, coin.baseCoin, formatCurrency)} {coin.baseCoin}
           </div>
         </div>
@@ -139,7 +139,7 @@ export function HedgeProCoinDrawerMetrics({
           >
             {formatCurrency(coin.netProtectedUsd, 'usd', 2)}
           </div>
-          <div className="font-mono text-[11px] text-[#8E9299] truncate">
+          <div className="font-mono text-[11px] text-fg-muted truncate">
             {formatCoinValue(coin.netProtectedSize, coin.baseCoin, formatCurrency)} {coin.baseCoin}
           </div>
         </div>
@@ -164,7 +164,7 @@ export function HedgeProCoinDrawerMetrics({
           <div className="font-mono text-emerald-400 text-sm font-semibold">
             {formatCurrency(coin.protectedUsd, 'usd', 2)}
           </div>
-          <div className="font-mono text-[11px] text-[#8E9299] truncate">
+          <div className="font-mono text-[11px] text-fg-muted truncate">
             {formatCoinValue(coin.protectedSize, coin.baseCoin, formatCurrency)} {coin.baseCoin}
           </div>
         </div>
@@ -174,7 +174,7 @@ export function HedgeProCoinDrawerMetrics({
       <div
         className={`p-2.5 rounded-lg border flex flex-col justify-between ${coin.leveragedUsd > 0
             ? 'bg-amber-500/5 border-amber-500/20'
-            : 'bg-[#151619] border-[#26282d]'
+            : 'bg-surface border-line'
           }`}
       >
         <div className="flex items-center justify-between">
@@ -183,14 +183,14 @@ export function HedgeProCoinDrawerMetrics({
             side="top"
           >
             <span
-              className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${coin.leveragedUsd > 0 ? 'text-amber-400 border-amber-500/40' : 'text-[#8E9299] border-[#8E9299]/50'
+              className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${coin.leveragedUsd > 0 ? 'text-amber-400 border-amber-500/40' : 'text-fg-muted border-fg-muted/50'
                 }`}
             >
               {t('hedgePro.drawer.leveraged')}
             </span>
           </AppTooltip>
           <span
-            className={`text-[10px] font-mono font-semibold ${coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-[#8E9299]'
+            className={`text-[10px] font-mono font-semibold ${coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-fg-muted'
               }`}
           >
             {coin.leveragedOfEquityPct.toFixed(1)}%
@@ -198,47 +198,47 @@ export function HedgeProCoinDrawerMetrics({
         </div>
         <div className="mt-1">
           <div
-            className={`font-mono text-sm font-semibold ${coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-white'
+            className={`font-mono text-sm font-semibold ${coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-fg'
               }`}
           >
             {coin.leveragedUsd > 0 ? '+' : ''}{formatCurrency(coin.leveragedUsd, 'usd', 2)}
           </div>
-          <div className="font-mono text-[11px] text-[#8E9299] truncate">
+          <div className="font-mono text-[11px] text-fg-muted truncate">
             {formatCoinValue(coin.leveragedSize, coin.baseCoin, formatCurrency)} {coin.baseCoin}
           </div>
         </div>
       </div>
 
       {/* Card 6: Exposed */}
-      <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
+      <div className="p-2.5 rounded-lg bg-surface border border-line flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip
             description={t('hedgePro.drawer.exposedTooltip')}
             side="top"
           >
-            <span className="text-[10px] uppercase font-bold text-white tracking-wider cursor-help border-b border-dashed border-[#8E9299]/50">
+            <span className="text-[10px] uppercase font-bold text-fg tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
               {t('hedgePro.drawer.exposed')}
             </span>
           </AppTooltip>
-          <span className="text-[10px] font-mono font-semibold text-white">
+          <span className="text-[10px] font-mono font-semibold text-fg">
             {coin.barMetrics.exposedPct.toFixed(1)}%
           </span>
         </div>
         <div className="mt-1">
-          <div className="font-mono text-white text-sm font-semibold">
+          <div className="font-mono text-fg text-sm font-semibold">
             {formatCurrency(coin.exposedBaseUsd, 'usd', 2)}
           </div>
-          <div className="font-mono text-[11px] text-[#8E9299] truncate">
+          <div className="font-mono text-[11px] text-fg-muted truncate">
             {formatCoinValue(coin.exposedSize, coin.baseCoin, formatCurrency)} {coin.baseCoin}
           </div>
         </div>
       </div>
 
       {/* Card 7: Unrealized PnL / Opportunity Cost / Accumulated Asset */}
-      <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
+      <div className="p-2.5 rounded-lg bg-surface border border-line flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip description={uplTooltip} side="top">
-            <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50 truncate max-w-[90px]">
+            <span className="text-[10px] text-fg-muted uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-fg-muted/50 truncate max-w-[90px]">
               {uplLabel}
             </span>
           </AppTooltip>
@@ -257,13 +257,13 @@ export function HedgeProCoinDrawerMetrics({
       </div>
 
       {/* Card 8: Realized PnL & ROI */}
-      <div className="p-2.5 rounded-lg bg-[#151619] border border-[#26282d] flex flex-col justify-between">
+      <div className="p-2.5 rounded-lg bg-surface border border-line flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip
             description={t('hedgePro.drawer.realizedPnlTooltip')}
             side="top"
           >
-            <span className="text-[10px] text-[#8E9299] uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-[#8E9299]/50">
+            <span className="text-[10px] text-fg-muted uppercase tracking-wider block font-medium cursor-help border-b border-dashed border-fg-muted/50">
               {t('hedgePro.drawer.realizedPnl')}
             </span>
           </AppTooltip>

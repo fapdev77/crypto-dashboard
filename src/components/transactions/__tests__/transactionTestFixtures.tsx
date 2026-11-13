@@ -26,6 +26,7 @@ export interface TestTransactionStats {
   stable: TestCurrencyStats;
   perCurrency: Record<string, TestCurrencyStats>;
   aggregatedUsd: TestCurrencyStats;
+  missingRates: string[];
 }
 
 export interface TestTxFilters {
@@ -72,6 +73,7 @@ export function makeTransactionStats(overrides: Partial<TestTransactionStats> = 
       totalChange: '11.25',
       finalBalance: '1500',
     }),
+    missingRates: [],
     ...overrides,
   };
 }

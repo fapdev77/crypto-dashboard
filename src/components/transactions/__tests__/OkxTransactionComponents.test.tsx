@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { OkxTransactionRow } from '../OkxTransactions/OkxTransactionRow';
@@ -119,6 +120,19 @@ describe('OKX transaction components (components/transactions/OkxTransactions)',
       expect(screen.getAllByText('USDT').length).toBeGreaterThan(0);
     });
 
+    it('colours the side by cash flow: Close Long is a sale, Close Short a purchase', () => {
+      const { unmount } = renderTransactionUi(
+        <OkxTransactionRow entry={{ ...entry, side: 'Close Long' }} isExpanded={false} onToggle={() => {}} />
+      );
+      expect(screen.getByText('Close Long')).toHaveClass('text-danger');
+      unmount();
+
+      renderTransactionUi(
+        <OkxTransactionRow entry={{ ...entry, side: 'Close Short' }} isExpanded={false} onToggle={() => {}} />
+      );
+      expect(screen.getByText('Close Short')).toHaveClass('text-success');
+    });
+
     it('calls onToggle when the row is clicked', () => {
       const onToggle = vi.fn();
       renderTransactionUi(<OkxTransactionRow entry={entry} isExpanded={false} onToggle={onToggle} />);
@@ -194,7 +208,7 @@ describe('OKX transaction components (components/transactions/OkxTransactions)',
     it('renders the net change report', () => {
       renderDetailsModal('netchange');
 
-      expect(screen.getByText('Net Change Report (USD)')).toBeDefined();
+      expect(screen.getByText(/Net Change Report/)).toBeDefined();
     });
   });
 });

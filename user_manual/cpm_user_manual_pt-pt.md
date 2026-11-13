@@ -1,6 +1,6 @@
 # 📘 Manual do Utilizador - Crypto Portfolio Manager (CPM)
 
-> **Versão da Aplicação:** 2.28.0  
+> **Versão da Aplicação:** 2.35.0  
 > **Plataformas Suportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitetura de Segurança:** Zero-Trust Client-Side (Criptografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -20,7 +20,7 @@ A nossa prioridade absoluta é a **segurança de nível zero-trust** e a **prese
 3. [Palavra-passe Mestra Global, Cópias de Segurança Cifradas e Bloqueio Automático](#3-palavra-passe-mestra-global-cópias-de-segurança-cifradas-e-bloqueio-automático)
 4. [Modo de Simulação (Mock Data)](#4-modo-de-simulação-mock-data)
 5. [Terminal de Registos Integrado (Connection Logs)](#5-terminal-de-registos-integrado-connection-logs)
-6. [Sincronização, Retenção e Definições de Cache (Settings)](#6-sincronização-retenção-e-definições-de-cache-settings)
+6. [Aparência, Temas, Sincronização e Definições (Settings)](#6-aparência-temas-sincronização-e-definições-settings)
 7. [Guia de Ecrãs e Navegação Diária](#7-guia-de-ecrãs-e-navegação-diária)
    - [🏠 Painel Principal (Dashboard)](#-painel-principal-dashboard)
    - [⚡ Positions Ticker (Marquee em Tempo Real)](#-positions-ticker-marquee-em-tempo-real)
@@ -40,7 +40,7 @@ A nossa prioridade absoluta é a **segurança de nível zero-trust** e a **prese
 8. [Assistente PIKA (Portfolio Information & Knowledge Assistant)](#8-assistente-pika-portfolio-information--knowledge-assistant)
    - [Princípios de Segurança e Privacidade](#-princípios-de-segurança-e-privacidade)
    - [Fornecedores Suportados e Modelos Locais/Nuvem](#-fornecedores-suportados-e-modelos-locaisnuvem)
-   - [Catálogo de Ferramentas Analíticas (Tool Calling)](#-catálogo-de-ferramentas-analíticas-tool-calling)
+   - [Catálogo de Ferramentas Analíticas (7 Ferramentas)](#-catálogo-de-ferramentas-analíticas-7-ferramentas)
    - [Auditoria de Compatibilidade de Ferramentas](#-auditoria-de-compatibilidade-de-ferramentas)
    - [Telemetria Avançada, Gráficos Diários e Exportação](#-telemetria-avançada-gráficos-diários-e-exportação)
    - [Atalho Global e Gaveta de Chat](#-atalho-global-e-gaveta-de-chat)
@@ -80,15 +80,19 @@ Para ligar as suas contas reais ao terminal CPM:
 ### Configurações Regionais e Origem Bybit
 Para utilizadores da Bybit, o modal disponibiliza seletores de ambiente e conformidade regulamentar:
 - **Environment**: Alternância transparente entre **Mainnet** (Ambiente Real de Produção) e **Testnet** (Rede de Testes Simulada).
-- **Account Region / Origin**: Encaminhamento direto para o domínio regulamentar correspondente:
-  - *Global Default* (`api.bybit.com`)
+- **Account Region / Origin**: Encaminhamento direto para os 15 perfis regulamentares suportados:
+  - *Global Default* (`api.bybit.com`) e *Global / Bytick* (`api.bytick.com`)
+  - *Brazil (Standard)* (`api.bybit.com`) e *Brazil - Int* (`api.bybit.com` com cabeçalho `x-site-id: BRA_BTL`)
+  - *Argentina (Standard)* (`api.bybit.com`) e *Argentina - Int* (`api.bybit.com` com cabeçalho `x-site-id: ARG_BTL`)
   - *Netherlands* (`api.bybit.nl`)
-  - *Turkey* (`api.bybit-tr.com`)
-  - *Hong Kong* (`api.bybit.com.hk`)
+  - *Turkey* (`api.bybit.tr`)
   - *Kazakhstan* (`api.bybit.kz`)
-  - *Georgia* (`api.bybit.com.ge`)
-  - *Brazil International* (`api.bybit.com` com cabeçalho `x-site-id: 10001`)
-  - *Argentina International* (`api.bybit.com` com cabeçalho `x-site-id: 10002`)
+  - *Georgia* (`api.bybitgeorgia.ge`)
+  - *UAE* (`api.bybit.ae`)
+  - *EEA* (`api.bybit.eu`)
+  - *Indonesia* (`api.bybit.id`)
+  - *Japan* (`api.manepa.jp` / Testnet: `api-testnet.manepa.jp`)
+  - *Hong Kong* (`api.spark-fintech.com` / Testnet: `api-testnet.spark-fintech.com` com cabeçalho `x-refer-site-id: HKG`)
 
 ### Bitget: Seleção Classic vs UTA, Subcontas e Funding
 - **Account Type**:
@@ -110,7 +114,7 @@ Para proteger a sua informação financeira em dispositivos partilhados ou de es
 2. **Ecrã Global de Bloqueio**: Ao atualizar a página ou reabrir o separador, é apresentado um ecrã de desbloqueio que protege os dados contra acessos indevidos.
 3. **Bloqueio Automático por Inatividade (`useVaultAutoLock`)**: Em **Definições** $\to$ **Segurança**, ative o temporizador configurável entre **1 e 60 minutos** (padrão: 15 minutos). Esgotado o tempo sem atividade, as chaves decifradas são instantaneamente purgadas da memória RAM.
 4. **Bloqueio Manual Imediato**: Clique em **Bloquear Cofre Agora** para fechar a sessão instantaneamente.
-5. **Cópia de Segurança Cifrada (`.cpmbackup`)**: Exporte todas as ligações e preferências num único ficheiro cifrado seguro.
+5. **Cópia de Segurança Cifrada (`.enc`)**: Exporte e importe todas as ligações e preferências num único ficheiro cifrado seguro (`crypto_dashboard_keys_AAAA-MM-DD.enc`).
 
 ---
 
@@ -132,9 +136,21 @@ Para total transparência técnica:
 
 ---
 
-## 6. Sincronização, Retenção e Definições de Cache (Settings)
+## 6. Aparência, Temas, Sincronização e Definições (Settings)
 
-O CPM funciona com o padrão **SWR (Stale-While-Revalidate)** suportado por **IndexedDB**:
+O painel **Settings** organiza as preferências do terminal em **10 cartões modulares**:
+
+### Motor Multi-Temas e Tema Customizado
+- **5 Paletas Integradas**: Alterne instantaneamente no menu superior (`ThemeModeButton`) ou em **Aparência e Temas** entre **Terminal Dark**, **Terminal Light**, **Wise Dark**, **Wise Light** e **Customizado**.
+- **Personalizador Avançado**: Ajuste **10 tokens CSS** (`canvas`, `surface`, `elevated`, `line`, `fg`, `fgMuted`, `accent`, `success`, `danger`, `warning`) com prévia em tempo real e adaptação automática de contraste.
+- **Predefinições & Temas Guardados**: Carregue 4 predefinições prontas (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) ou guarde, carregue e elimine múltiplos temas personalizados com nome próprio (exibido no seletor do cabeçalho). Utilize o atalho **Custom design** no menu de temas do cabeçalho para abrir diretamente o editor em **Settings**.
+
+### Idioma, Moeda Fiat & Diagnóstico de Câmbio
+- **6 Idiomas & 4 Moedas Fiat**: `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT` e conversão em tempo real para **USD**, **BRL**, **EUR** e **GBP**.
+- **Duas Fontes Oficiais**: Cotações fiat via **Frankfurter API v2** (`api.frankfurter.dev`) e paridade **USDT/USD** via **CoinGecko** (`api.coingecko.com`), com TTL configurável (5–60 min), fallback em cache offline e painel de diagnóstico em tempo real.
+
+### Sincronização, Retenção e Cache (IndexedDB)
+O CPM funciona com o padrão **SWR (Stale-While-Revalidate)** suportado por **IndexedDB** (14 stores, versão 12):
 - **Carregamento Instantâneo**: Gráficos e tabelas são exibidos imediatamente a partir da cache local, enquanto os processos de fundo atualizam os dados.
 - **Quota de Armazenamento**: Monitorização em tempo real do espaço utilizado no navegador.
 - **Retenção de Histórico**: Períodos configuráveis de 30 a 730 dias com opção de limpeza de registos antigos.
@@ -174,10 +190,11 @@ Módulo dedicado na barra lateral concebido para arbitragem de taxas de financia
 
 ## 8. Assistente PIKA (Portfolio Information & Knowledge Assistant)
 
-O **PIKA** é o assistente analítico integrado no CPM:
-- **Zero-Trust**: Não tem acesso às suas chaves de API secretas.
+O **PIKA** é o assistente analítico integrado no CPM (desativado por predefinição e controlável globalmente via `AI_CHAT_BOT_ENABLED`):
+- **Zero-Trust**: Não tem acesso às suas chaves de API secretas e mascara valores nominais quando o Modo Privacidade está ativo.
 - **Estritamente Consultivo**: Sem capacidade para realizar ordens ou movimentar fundos.
-- **Modelos Suportados**: Ollama local (100% privado), Google Gemini Cloud e fornecedores compatíveis com OpenAPI via OpenRouter.
+- **Modelos e Fornecedores Suportados**: Ollama local (`llama3.2:latest`, 100% privado), Google Gemini (`gemini-3.8-flash`), OpenRouter, OpenAI, Anthropic e fornecedores Custom compatíveis com OpenAPI.
+- **Catálogo de 7 Ferramentas Analíticas (Tool Calling)**: `aiGetPortfolioBalances`, `aiGetOpenPositions`, `aiGetHedgeCorrelationSummary`, `aiGetFundingFeesHistory`, `aiGetMarketFundingRates`, `aiGetTradingFeesHistory` e `aiGetClosedPositionsSummary`.
 - **Atalho Rápido**: Prima **`Ctrl + J`** (ou **`Cmd + J`** em macOS) em qualquer ecrã para abrir o assistente.
 
 ---

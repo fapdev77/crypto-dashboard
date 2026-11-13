@@ -187,7 +187,7 @@ describe('Bybit transaction components (components/transactions/BybitTransaction
     it('renders the net change report', () => {
       renderDetailsModal('netchange');
 
-      expect(screen.getByText('Net Change Report (USD)')).toBeDefined();
+      expect(screen.getByText(/Net Change Report/)).toBeDefined();
     });
   });
 });

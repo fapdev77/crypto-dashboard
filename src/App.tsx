@@ -4,7 +4,8 @@
  */
 
 import React, { useState, useEffect, useLayoutEffect, useRef, Suspense } from 'react';
-import { Menu, Bot, Sparkles } from 'lucide-react';
+import { Menu } from 'lucide-react';
+import { getTabHeaderMeta } from './config/navigationConfig';
 import { Sidebar } from './components/Sidebar';
 import { ApiKeys } from './components/ApiKeys';
 import { WorkSpace } from './components/WorkSpace';
@@ -18,6 +19,8 @@ import { PrivacyToggleButton } from './components/PrivacyToggleButton';
 import { TooltipProvider } from './components/ui/Tooltip';
 import { useSettingsStore } from './store/settingsStore';
 import { HelpToggleButton } from './components/HelpToggleButton';
+import { DonationToggleButton } from './components/DonationToggleButton';
+import { DonationModal } from './components/DonationModal';
 import { WelcomeHelpModal } from './components/WelcomeHelpModal';
 import { UpdateNotification } from './components/UpdateNotification';
 import { useApiKeysStore } from './store/apiKeysStore';
@@ -36,6 +39,7 @@ import { MandatoryVaultMigrationScreen } from './components/MandatoryVaultMigrat
 import { detectLegacyUnencryptedKeys } from './utils/vaultHelpers';
 import { ApiCredentials } from './store/apiKeysStore';
 import { LanguageCurrencyButton } from './components/ui/LanguageCurrencyButton';
+import { ThemeModeButton } from './components/ui/ThemeModeButton';
 import { CurrencyService } from './services/currency/CurrencyService';
 import { useTranslation } from 'react-i18next';
 
@@ -64,6 +68,7 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+  const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [isVaultNoticeOpen, setIsVaultNoticeOpen] = useState(false);
   const [isVaultSetupModalOpen, setIsVaultSetupModalOpen] = useState(false);
   const [legacyKeys, setLegacyKeys] = useState<ApiCredentials[]>(() => detectLegacyUnencryptedKeys());
@@ -111,6 +116,9 @@ export default function App() {
         if (customEvent.detail === 'settings-version') {
           tab = 'settings';
           targetId = 'version-info-card';
+        } else if (customEvent.detail === 'settings-theme') {
+          tab = 'settings';
+          targetId = 'theme-settings-card';
         } else if (customEvent.detail === 'settings') {
           tab = 'settings';
           targetId = 'security-settings-card';
@@ -131,9 +139,9 @@ export default function App() {
           const el = document.getElementById(targetId);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
+            el.classList.add('ring-2', 'ring-accent', 'ring-offset-2', 'ring-offset-canvas', 'animate-pulse');
             setTimeout(() => {
-              el.classList.remove('ring-2', 'ring-[#2F6BFF]', 'ring-offset-2', 'ring-offset-[#0b0c10]', 'animate-pulse');
+              el.classList.remove('ring-2', 'ring-accent', 'ring-offset-2', 'ring-offset-canvas', 'animate-pulse');
             }, 2000);
           }
         }, 150);
@@ -211,29 +219,7 @@ export default function App() {
     return <GlobalUnlockScreen />;
   }
 
-  let activeTabName = activeTab.replace('analytics-', '').replace('-', ' ');
-  if (activeTab === 'dashboard') activeTabName = t('nav.dashboard', 'Dashboard');
-  else if (activeTab === 'api-keys') activeTabName = t('nav.apiKeys', 'API Keys Manager');
-  else if (activeTab === 'logs') activeTabName = t('nav.connectionLogs', 'Live Connection Logs');
-  else if (activeTab === 'settings') activeTabName = t('nav.settings', 'Settings');
-  else if (activeTab === 'ai-settings') activeTabName = t('nav.aiSettings', 'AI Settings');
-  else if (activeTab === 'api-tester') activeTabName = t('nav.apiTester', 'API Tester');
-  else if (activeTab === 'positions-open') activeTabName = t('nav.openPositions', 'Open Positions');
-  else if (activeTab === 'positions-history') activeTabName = t('nav.closedPositions', 'Closed Positions');
-  else if (activeTab.startsWith('positions-')) activeTabName = t('nav.openPositions', 'Positions');
-  else if (activeTab === 'orders-open') activeTabName = t('nav.openOrders', 'Open Orders');
-  else if (activeTab === 'orders-history') activeTabName = t('nav.orderHistory', 'Order History');
-  else if (activeTab.startsWith('orders-')) activeTabName = t('nav.orders', 'Orders');
-  else if (activeTab.startsWith('trade-')) activeTabName = t('nav.trade', 'Trade');
-  else if (activeTab === 'transactions-history-consolidated') activeTabName = t('nav.consolidated', 'Consolidated Net Change');
-  else if (activeTab.startsWith('transactions-history-')) activeTabName = t('nav.transactions', 'Transactions History');
-  else if (activeTab === 'analytics-portfolio-performance') activeTabName = t('nav.portfolioPerformance', 'Portfolio Performance');
-  else if (activeTab === 'analytics-hedge-pro') activeTabName = t('nav.hedgePro', 'Hedge Pro');
-  else if (activeTab === 'analytics-market-advanced') activeTabName = t('nav.marketAnalytics', 'Market Analytics');
-  else if (activeTab === 'analytics-funding-fees') activeTabName = t('nav.fundingDashboard', 'Funding & Fees');
-  else if (activeTab === 'analytics-pnl-symbol') activeTabName = t('nav.pnlBySymbol', 'PnL by Symbol');
-  else if (activeTab.startsWith('analytics-')) activeTabName = t('nav.analytics', 'Analytics');
-  else if (activeTab === 'reports') activeTabName = t('nav.reports', 'Reports');
+  const { title: activeTabName, icon: ActiveTabIcon } = getTabHeaderMeta(activeTab, t);
 
   return (
     <PrivacyProvider>
@@ -243,25 +229,25 @@ export default function App() {
             position="top-right"
             toastOptions={{
               style: {
-                background: '#1a1b1e',
-                color: '#fff',
-                border: '1px solid #2a2b30',
+                background: 'var(--surface)',
+                color: 'var(--fg)',
+                border: '1px solid var(--line)',
               },
               success: {
                 iconTheme: {
-                  primary: '#10B981',
-                  secondary: '#1a1b1e',
+                  primary: 'var(--success)',
+                  secondary: 'var(--surface)',
                 },
               },
               error: {
                 iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#1a1b1e',
+                  primary: 'var(--danger)',
+                  secondary: 'var(--surface)',
                 },
               },
             }}
           />
-          <div className="flex flex-col h-screen bg-[#0b0c10] overflow-hidden">
+          <div className="flex flex-col h-screen bg-canvas overflow-hidden">
             <PositionsTicker />
             <div className="flex flex-1 overflow-hidden relative">
               <Sidebar
@@ -273,23 +259,41 @@ export default function App() {
                 setIsCollapsed={setIsSidebarCollapsed}
               />
 
-              <main className="flex-1 overflow-hidden bg-[#0b0c10] p-4 md:p-6 flex flex-col min-w-0">
-                <header className="mb-4 md:mb-6 shrink-0 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
+              <main className="flex-1 overflow-hidden bg-canvas p-4 md:p-6 flex flex-col min-w-0">
+                <header className="mb-4 md:mb-6 shrink-0 flex items-center justify-between gap-2 sm:gap-3">
+                  <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1">
                     <button
+                      type="button"
                       onClick={() => setIsMobileMenuOpen(true)}
-                      className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white hover:bg-[#2a2b30] rounded-lg transition-colors"
+                      className="lg:hidden w-9 h-9 -ml-1.5 shrink-0 inline-flex items-center justify-center text-fg-muted hover:text-fg hover:bg-elevated-hover rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       aria-label="Open menu"
                     >
                       <Menu className="w-5 h-5" />
                     </button>
-                    <h2 className="text-xl lg:text-2xl font-semibold tracking-tight text-white capitalize">
-                      {activeTabName}
-                    </h2>
+                    <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                      <ActiveTabIcon
+                        className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0 text-accent"
+                        aria-hidden="true"
+                      />
+                      <h2
+                        title={activeTabName}
+                        className="text-base sm:text-xl lg:text-2xl font-semibold tracking-tight text-fg truncate whitespace-nowrap capitalize"
+                      >
+                        {activeTabName}
+                      </h2>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <LanguageCurrencyButton />
-                    {isAiFeatureEnabled && <AiPikaChatButton onClick={openChatDrawer} isEnabled={isAiEnabled} />}
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                    <LanguageCurrencyButton compactOnMobile />
+                    <ThemeModeButton compactOnMobile />
+                    {isAiFeatureEnabled && (
+                      <AiPikaChatButton
+                        onClick={openChatDrawer}
+                        isEnabled={isAiEnabled}
+                        compactOnMobile
+                      />
+                    )}
+                    <DonationToggleButton isOpen={isDonationOpen} onClick={() => setIsDonationOpen(!isDonationOpen)} />
                     <HelpToggleButton isOpen={isWelcomeOpen} onClick={() => setIsWelcomeOpen(!isWelcomeOpen)} />
                     <PrivacyToggleButton />
                   </div>
@@ -335,6 +339,7 @@ export default function App() {
             <StatusBar />
           </div>
           <WelcomeHelpModal isOpen={isWelcomeOpen} onClose={handleCloseWelcome} />
+          <DonationModal isOpen={isDonationOpen} onClose={() => setIsDonationOpen(false)} />
           <VaultSetupNoticeModal
             isOpen={isVaultNoticeOpen}
             onClose={() => setIsVaultNoticeOpen(false)}

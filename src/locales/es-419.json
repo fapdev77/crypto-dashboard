@@ -1,4 +1,19 @@
 {
+  "theme": {
+    "title": "Tema de la interfaz",
+    "terminalDark": "Terminal Dark",
+    "terminalDarkDesc": "Interfaz oscura para sesiones largas",
+    "terminalLight": "Terminal Light",
+    "terminalLightDesc": "Interfaz clara de alto contraste para el día",
+    "wiseDark": "Wise Dark",
+    "wiseDarkDesc": "Tema azul marino profundo Wise para alta concentración",
+    "wiseLight": "Wise Light",
+    "wiseLightDesc": "Tema claro y limpio Wise para operaciones diarias",
+    "custom": "Personalizado",
+    "customDesc": "Paleta personalizada configurable por token de color",
+    "customDesign": "Diseño personalizado",
+    "customDesignDesc": "Personaliza la paleta de colores y guarda tus temas"
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -113,7 +128,34 @@
       "helpClose": "Cerrar guía de bienvenida y ayuda",
       "privacyHide": "Ocultar valores numéricos sensibles en la aplicación",
       "privacyShow": "Mostrar valores numéricos sensibles en la aplicación"
-    }
+    },
+    "yes": "Sí",
+    "no": "No",
+    "never": "Nunca",
+    "refreshing": "Actualizando...",
+    "clearingSyncing": "Limpiando y Sincronizando...",
+    "updating": "Actualizando...",
+    "healthy": "Saludable",
+    "showLess": "Mostrar Menos",
+    "copyJson": "Copiar Todo (JSON)",
+    "overview": "Visión General",
+    "unlimited": "Ilimitado",
+    "testing": "Probando...",
+    "validating": "Validando Ping...",
+    "status": "Estado",
+    "neutral": "Neutro",
+    "noData": "Sin datos",
+    "clearSearch": "Limpiar búsqueda",
+    "syncingNow": "Sincronizando ahora",
+    "inTime": "en",
+    "operational": "Operativo",
+    "recovering": "Recuperando...",
+    "errorConflict": "Error / Conflicto",
+    "resetting": "Restableciendo...",
+    "syncing": "Sincronizando...",
+    "synced": "¡Sincronizado!",
+    "clearing": "Limpiando...",
+    "cleared": "¡Limpiado!"
   },
   "nav": {
     "dashboard": "Panel Principal",
@@ -139,7 +181,8 @@
     "apiTester": "Probador de API",
     "bybitTransactions": "Transacciones Bybit",
     "bitgetTransactions": "Transacciones Bitget",
-    "okxTransactions": "Transacciones OKX"
+    "okxTransactions": "Transacciones OKX",
+    "cryptoMultiExchange": "Cripto Multi-Exchange"
   },
   "selector": {
     "title": "Idioma y Moneda",
@@ -165,7 +208,8 @@
     "asset": "Activo",
     "balance": "Saldo",
     "value": "Valor",
-    "exchange": "Exchange"
+    "exchange": "Exchange",
+    "variation": "Variación de Precio"
   },
   "unlock": {
     "title": "Almacenamiento Cifrado",
@@ -180,7 +224,13 @@
     "confirmResetTitle": "Confirmar Restablecimiento",
     "confirmResetDesc": "Esta acción eliminará permanentemente todas las claves y datos locales. ¿Desea continuar?",
     "confirmResetAction": "Sí, Borrar Todo",
-    "cancelResetAction": "Cancelar"
+    "cancelResetAction": "Cancelar",
+    "troubleModal": {
+      "whatHappensTitle": "¿Qué ocurre al restablecer?",
+      "whatHappensDesc": "Un restablecimiento de fábrica eliminará permanentemente las claves API almacenadas localmente en este navegador, las configuraciones personalizadas y el historial de caché.",
+      "howToStartTitle": "¿Cómo empezar a usar de nuevo?",
+      "howToStartDesc": "¡La aplicación se recargará automáticamente y estará lista para usar! Para conectar sus cuentas, solo registre sus claves API nuevamente o importe las claves API desde un archivo de respaldo generado previamente (.enc)."
+    }
   },
   "welcome": {
     "title": "Bienvenido a Crypto Portfolio Manager",
@@ -214,10 +264,57 @@
     "statusFallback": "Modo de Seguridad",
     "lastUpdated": "Actualizado a las {{time}}",
     "refreshTooltip": "Actualizar cotizaciones ahora",
-    "activeBadge": "Moneda Activa"
+    "activeBadge": "Moneda Activa",
+    "refreshedSuccess": "Tasas de cambio actualizadas con éxito",
+    "refreshedError": "No se pudieron actualizar las tasas en vivo. Usando tasas en caché."
   },
   "settings": {
     "title": "Configuraciones",
+    "theme": {
+      "title": "Apariencia y Temas",
+      "subtitle": "Cambia entre los modos oficiales o personaliza completamente tu propia paleta de colores.",
+      "selectTheme": "Temas del Sistema",
+      "presetsTitle": "Preajustes Listos (Cargar en Personalizado)",
+      "presetsDesc": "Carga rápidamente combinaciones de colores seleccionadas para tu interfaz.",
+      "customTokensTitle": "Personalización de Colores",
+      "customTokensDesc": "Ajusta los valores hexadecimales para adaptar el panel a tu preferencia visual.",
+      "notCustomWarning": "El tema actual es oficial. Al ajustar cualquier color, se cambiará al tema Personalizado.",
+      "activateCustom": "Activar Personalizado",
+      "canvas": "Fundo de la Aplicación (Canvas)",
+      "surface": "Superficie de Tarjetas y Paneles",
+      "elevated": "Elementos Elevados y Entradas",
+      "line": "Bordes y Divisores",
+      "fg": "Tipografía Principal",
+      "fgMuted": "Tipografia Secundaria / Etiquetas",
+      "accent": "Color de Énfasis / Acción",
+      "success": "Indicador Positivo (Éxito / Ganancia)",
+      "danger": "Indicador Negativo (Alerta / Pérdida)",
+      "warning": "Indicador de Advertencia",
+      "previewTitle": "Vista Previa en Tiempo Real",
+      "previewDesc": "Visualización dinámica de componentes con la paleta activa.",
+      "previewMetricLabel": "Retorno Estimado (24h)",
+      "previewActionButton": "Ejecutar Orden",
+      "resetBtn": "Restaurar Predeterminado",
+      "resetConfirm": "Paleta personalizada restaurada a valores predeterminados.",
+      "presetApplied": "Preajuste {{name}} aplicado al tema personalizado.",
+      "saveThemeTitle": "Guardar Tema Personalizado",
+      "savedCount": "guardado(s)",
+      "saveThemeDesc": "Ponle un nombre a tu paleta actual y guárdala para reutilizarla en cualquier momento.",
+      "themeNamePlaceholder": "Ej: Mi Tema Oscuro",
+      "saveThemeBtn": "Guardar Tema",
+      "savedThemesTitle": "Tus Temas Guardados",
+      "loadTheme": "Cargar",
+      "deleteTheme": "Eliminar",
+      "themeSavedSuccess": "¡Tema '{{name}}' guardado con éxito!",
+      "themeLoadedSuccess": "¡Tema '{{name}}' cargado!",
+      "themeDeletedSuccess": "Tema eliminado.",
+      "presets": {
+        "wiseDark": "Wise Dark",
+        "wiseLight": "Wise Light",
+        "midnightNavy": "Midnight Navy",
+        "dracula": "Dracula Pro"
+      }
+    },
     "languageAndCurrency": "Idioma y Moneda",
     "languageDesc": "Configure el idioma de visualización y la moneda preferida para los cálculos de la cartera.",
     "languageLabel": "Idioma",
@@ -283,7 +380,16 @@
     },
     "security": {
       "title": "Seguridad y Bóveda de Credenciales",
-      "desc": "Copia de seguridad local cifrada, exportación/importación y bloqueo automático de la bóveda."
+      "desc": "Copia de seguridad local cifrada, exportación/importación y bloqueo automático de la bóveda.",
+      "tabVault": "Cofre y Bloqueo Automático",
+      "tabExport": "Exportar Respaldo",
+      "tabImport": "Importar Respaldo",
+      "vaultTitle": "Cofre Cifrado Zero-Trust",
+      "unlocked": "Desbloqueado",
+      "locked": "Bloqueado",
+      "lockNow": "Bloquear Cofre Ahora",
+      "autoLockTitle": "Bloqueo Automático por Inactividad",
+      "autoLockDesc": "Bloquea el cofre cuando está inactivo"
     },
     "indexedDB": {
       "title": "Motor de Almacenamiento IndexedDB",
@@ -351,11 +457,26 @@
       "clearedAll": "¡Todo el Caché Limpio!",
       "recoverDbTooltip": "Borrar y reconstruir completamente el esquema v12 de IndexedDB para solucionar errores de versión/permiso",
       "rebuildDbBtn": "Reconstruir Base de Datos",
-      "rebuildingDb": "Reconstruyendo DB..."
+      "rebuildingDb": "Reconstruyendo DB...",
+      "prunedToast": "Se depuraron {{count}} registros más antiguos de {{days}} días",
+      "verifying": "Comprobando...",
+      "verified": "Verificado"
     },
     "version": {
       "title": "Versión y Registro de Cambios",
-      "desc": "Detalles del lanzamiento del sistema, historial de versiones y enlaces al repositorio."
+      "desc": "Detalles del lanzamiento del sistema, historial de versiones y enlaces al repositorio.",
+      "newAvailable": "Nueva Versión Disponible",
+      "readyInstall": "Listo para instalar",
+      "updateBtn": "Actualizar Ahora",
+      "currentVersion": "Versión Actual",
+      "releaseDate": "Fecha de Lanzamiento",
+      "repoSource": "Fuente del Repositorio",
+      "clickHere": "Haga clic aquí",
+      "indexedDbLabel": "Base de Datos de Caché IndexedDB",
+      "clearCache": "Limpiar Caché",
+      "highlights": "Aspectos Destacados de la Última Versión (v{{version}})",
+      "viewPrevious": "Ver Versiones Anteriores",
+      "fullChangelog": "CHANGELOG.md Completo"
     },
     "preferencesTesting": "Preferencias y Pruebas",
     "preferencesDesc": "Preferencias del usuario y herramientas de prueba",
@@ -507,7 +628,8 @@
       "fundingBias": "Sesgo de Tarifas de Funding: {{bias}}. Evaluado en función del peso de las posiciones perpetuas y las tasas de funding actuales.",
       "btcDominance": "Estimación del Dominio de Mercado de Bitcoin: ~{{dominance}}%. Refleja la cuota de asignación de capital en la principal referencia cripto.",
       "tacticalAdvice": "Recomendación táctica contextual calculada a partir del régimen de mercado, el momentum del sentimiento y el riesgo de apalancamiento."
-    }
+    },
+    "sourceTitle": "Fuente de Datos: API de Índice Crypto Fear & Greed de Alternative.me"
   },
   "positions": {
     "title": "Posiciones Abiertas",
@@ -855,18 +977,21 @@
       "exportPdf": "Exportar PDF",
       "totalTransactions": "Transacciones Totales",
       "totalTransactionsTooltip": "Número total de transacciones que coinciden con los filtros actuales. Haga clic aquí para ver detalles.",
-      "totalFunding": "Funding Total (USD)",
-      "totalFundingTooltip": "Suma de tarifas de funding en USD. Haga clic aquí para ver detalles.",
-      "fundingReceived": "Funding recibido",
-      "fundingPaid": "Funding pagado",
+      "totalFunding": "Funding Total",
+      "totalFundingTooltip": "Suma de tarifas de funding. Haga clic aquí para ver detalles.",
+      "fundingLabel": "Funding",
+      "fundingReceived": "recibido",
+      "fundingPaid": "pagado",
       "calculatingUsd": "Calculando USD...",
       "calculatingUsdTooltip": "Obteniendo precios en tiempo real en USD para activos no estables...",
-      "totalFees": "Comisiones Totales (USD)",
-      "totalFeesTooltip": "Suma de comisiones de trading en USD. Haga clic aquí para ver detalles.",
+      "missingRatesTitle": "Totales en USD incompletos",
+      "missingRatesText": "Sin cotización en USD para {{currencies}}: estos activos quedan fuera de los totales.",
+      "totalFees": "Comisiones Totales",
+      "totalFeesTooltip": "Suma de comisiones de trading. Haga clic aquí para ver detalles.",
       "feesPaid": "Comisiones de trading pagadas",
-      "netChange": "Variación Neta (USD)",
-      "netChangeTooltip": "Variación neta en USD (valor de stablecoins y activos no estables). Haga clic aquí para ver detalles.",
-      "walletBalance": "Saldo de Billetera (USD)",
+      "netChange": "Variación Neta",
+      "netChangeTooltip": "Variación neta (valor de stablecoins y activos no estables). Haga clic aquí para ver detalles.",
+      "walletBalance": "Saldo de Billetera",
       "walletBalanceTooltip": "Saldo final agregado de billetera entre monedas. Haga clic aquí para ver detalles.",
       "noMatchingFilter": "Ninguna transacción coincide con los filtros actuales.",
       "noDataAvailable": "No hay datos disponibles",
@@ -908,7 +1033,7 @@
       "fundingBreakdown": "Desglose de Funding",
       "feesBreakdown": "Desglose de Comisiones",
       "balanceBreakdown": "Desglose de Saldo de Billetera",
-      "netChangeReport": "Informe de Variación Neta (USD)",
+      "netChangeReport": "Informe de Variación Neta",
       "txBreakdown": "Desglose de Transacciones Totales",
       "totalUsdEq": "Total (Eq. USD)",
       "stablecoins": "Stablecoins (USDT, USDC, etc.)",
@@ -920,7 +1045,8 @@
       "noTxAvailable": "No hay transacciones disponibles",
       "grandTotal": "Total General",
       "byExchange": "Desglose por Exchange",
-      "txs": "transacciones"
+      "txs": "transacciones",
+      "totalEq": "Total Equivalente"
     },
     "report": {
       "description": "Rendimiento operativo detallado por activo, calculando rendimientos absolutos, distribución de operaciones, impacto de funding y comisiones.",
@@ -929,6 +1055,13 @@
       "collapseAll": "Contraer Todo",
       "activeDays_one": "{{count}} día activo",
       "activeDays_other": "{{count}} días activos",
+      "txsCount": "{{count}} transacciones",
+      "txsCount_one": "{{count}} transacción",
+      "txsCount_other": "{{count}} transacciones",
+      "trackedAssets": "{{count}} activos monitoreados",
+      "trackedAssets_one": "{{count}} activo monitoreado",
+      "trackedAssets_other": "{{count}} activos monitoreados",
+      "exchangeNetChange": "Variación Neta del Exchange",
       "primaryResult": "Resultado Primario",
       "assetSummary": "Resumen del Activo",
       "initialBalance": "Saldo Inicial",
@@ -937,7 +1070,8 @@
       "finalBalance": "Saldo Final",
       "percentageGain": "Ganancia Porcentual",
       "absoluteGain": "Ganancia Absoluta",
-      "absoluteGainUsd": "Ganancia Absoluta (USD)",
+      "absoluteGainUsd": "Ganancia Absoluta",
+      "absoluteGainFiat": "Ganancia Absoluta",
       "operationalMetrics": "Métricas Operativas",
       "operationalStats": "Estadísticas Operativas",
       "totalTradesExecuted": "Total de Operaciones Ejecutadas",
@@ -951,7 +1085,10 @@
       "fundingSettled": "Funding Liquidado",
       "totalCashFlow": "Flujo de Caja Total",
       "feesPaid": "Comisiones Pagadas",
-      "dailyAvgRoi": "ROI Promedio Diario"
+      "dailyAvgRoi": "ROI Promedio Diario",
+      "pctPerDay": "{{value}}%/día",
+      "activeDays": "{{count}} días activos",
+      "tradesCount": "{{count}} operaciones"
     },
     "filters": {
       "searchPlaceholder": "Buscar símbolo...",
@@ -984,7 +1121,8 @@
       "dmcbl": "Futuros Coin-M",
       "margin": "Margen",
       "swap": "Swap Perpetuo",
-      "futures": "Futuros"
+      "futures": "Futuros",
+      "others": "Otros"
     },
     "bybit": {
       "title": "Transacciones Bybit",
@@ -1016,7 +1154,9 @@
       "bybitBadge": "Bybit",
       "bitgetBadge": "Bitget",
       "okxBadge": "OKX",
-      "sectionTitle": "Desglose de Rendimiento por Exchange y Activo"
+      "sectionTitle": "Desglose de Rendimiento por Exchange y Activo",
+      "aggregatingExchanges": "Agregando {{count}} exchange(s)",
+      "noDataDesc": "No se encontraron registros que coincidan con los filtros activos de exchange, moneda o período. Ajuste sus filtros o espere a que se complete la sincronización."
     },
     "cache": {
       "title": "Caché de Registros de Transacciones",
@@ -1063,7 +1203,8 @@
       "selectAsset": "Seleccionar Activo",
       "searchSymbol": "Buscar símbolo...",
       "searchCoinOrContract": "Buscar moneda o contrato...",
-      "noData": "No hay datos analíticos disponibles para los parámetros seleccionados."
+      "noData": "No hay datos analíticos disponibles para los parámetros seleccionados.",
+      "allInstruments": "Todos los Instrumentos"
     },
     "portfolio": {
       "title": "Rendimiento del Portafolio",
@@ -1241,7 +1382,8 @@
         "cumulative30d": "Acumulado 30 Días",
         "annualizedYield": "Rendimiento Carry Anualizado",
         "longsPayShorts": "Longs pagan a Shorts",
-        "shortsPayLongs": "Shorts pagan a Longs"
+        "shortsPayLongs": "Shorts pagan a Longs",
+        "marketOverview": "Visión General del Mercado"
       },
       "comparison": {
         "title": "Comparativo de Tasas Entre Exchanges",
@@ -1251,6 +1393,10 @@
         "bestOpportunity": "Mejor Oportunidad de Rendimiento",
         "selectSymbols": "Seleccionar símbolos...",
         "noSymbolsFound": "No se encontraron símbolos."
+      },
+      "tabs": {
+        "overview": "Visión Histórica General",
+        "comparison": "Comparación de Tasas de Financiación"
       }
     },
     "reports": {
@@ -1361,7 +1507,11 @@
       "saveBtn": "Guardar Clave de API",
       "cancelBtn": "Cancelar",
       "deleteConfirmTitle": "¿Eliminar Clave de API?",
-      "deleteConfirmMsg": "¿Está seguro de que desea eliminar esta clave de API? El seguimiento activo para este exchange se desconectará."
+      "deleteConfirmMsg": "¿Está seguro de que desea eliminar esta clave de API? El seguimiento activo para este exchange se desconectará.",
+      "labelLabel": "Etiqueta de Conexión",
+      "apiSecretPlaceholder": "Ingrese el Secreto de API",
+      "passphrasePlaceholder": "Ingrese la Frase de Contraseña",
+      "saveChangesBtn": "Guardar Cambios"
     },
     "vault": {
       "setupTitle": "Configurar Bóveda de Seguridad",
@@ -1370,8 +1520,32 @@
       "confirmPlaceholder": "Confirme la contraseña maestra",
       "activateBtn": "Activar Bóveda de Seguridad",
       "passphraseMismatch": "Las contraseñas no coinciden. Verifique ambos campos.",
-      "passphraseTooShort": "La Contraseña Maestra debe tener al menos 8 caracteres."
-    }
+      "passphraseTooShort": "La Contraseña Maestra debe tener al menos 8 caracteres.",
+      "passphraseMinLength": "La Frase de Contraseña Maestra debe tener al menos 8 caracteres.",
+      "encryptFailed": "Error al cifrar credenciales anteriores.",
+      "upgradeBadge": "Acción Requerida • Actualización de Seguridad",
+      "mandatoryTitle": "Cifrado Obligatorio en Cofre",
+      "legacyDetectedTitle": "Credenciales Anteriores en Texto sin Formato Detectadas",
+      "legacyDetectedDesc": "Detectamos {{count}} conexión(es) de claves API almacenadas sin cifrado de una versión anterior. Para garantizar la seguridad de confianza cero y evitar el acceso no autorizado por parte de scripts o extensiones del navegador, debe establecer una Frase de Contraseña Maestra para cifrar sus credenciales con PBKDF2 de grado militar (600.000 iteraciones) y AES-GCM-256 antes de acceder a la terminal.",
+      "detectedConnections": "Conexiones Detectadas para Proteger ({{count}}):",
+      "createPassphraseLabel": "Crear Frase de Contraseña Maestra",
+      "confirmPassphraseLabel": "Confirmar Frase de Contraseña Maestra",
+      "encrypting": "Cifrando Credenciales...",
+      "encryptUnlockBtn": "Cifrar Claves y Desbloquear Terminal",
+      "dontNeedKeys": "¿No necesita estas credenciales?",
+      "discardPrompt": "Descartar claves y empezar de nuevo",
+      "discardDialogTitle": "¿Descartar Credenciales Anteriores?",
+      "discardDialogDesc": "Esto eliminará permanentemente las {{count}} claves API no cifradas del almacenamiento de su navegador. Deberá volver a agregarlas después de configurar un cofre.",
+      "discardConfirmBtn": "Sí, Descartar",
+      "setupRequired": "Configuración Requerida",
+      "setupDesc": "Para garantizar la máxima seguridad, las claves de API reales y el auditor de IA PIKA requieren un cofre activo. Su frase de contraseña maestra cifra todos los datos confidenciales estrictamente en la memoria y el almacenamiento locales del navegador."
+    },
+    "vaultRequired": "Antes de agregar claves API de exchanges, se debe activar el Cofre de Seguridad Zero-Trust para garantizar que todas sus credenciales se cifren localmente.",
+    "noKeysDesc": "Conecte sus claves de API de solo lectura de Bitget, Bybit u OKX para monitorear saldos consolidados, posiciones abiertas y métricas de riesgo.",
+    "activateVaultBtn": "Activar Cofre y Agregar Clave",
+    "addFirstKeyBtn": "Agregar Primera Clave de API",
+    "noFundingBadge": "Sin Tasa de Financiación",
+    "deleteConfirmPrompt": "¿Eliminar clave?"
   },
   "ai": {
     "settings": {
@@ -1390,7 +1564,8 @@
         "cloneBtn": "Clonar",
         "editBtn": "Editar",
         "deleteBtn": "Eliminar",
-        "noModels": "No hay modelos de IA registrados. Agregue un modelo para comenzar."
+        "noModels": "No hay modelos de IA registrados. Agregue un modelo para comenzar.",
+        "totalModels": "Total de Modelos:"
       },
       "modal": {
         "addTitle": "Agregar Modelo de IA",
@@ -1407,7 +1582,8 @@
         "isFallback": "Habilitar como Contingencia (Fallback)",
         "isActive": "Activo",
         "saveBtn": "Guardar Modelo",
-        "cancelBtn": "Cancelar"
+        "cancelBtn": "Cancelar",
+        "proceedAnyway": "Continuar de Todos Modos y Guardar"
       },
       "telemetry": {
         "title": "Telemetría y Consumo del Motor de IA",
@@ -1430,11 +1606,87 @@
         "latency": "Latencia",
         "detailsBtn": "Inspeccionar Detalles",
         "clearBtn": "Borrar Historial de Auditoría",
-        "noLogs": "No hay actividad de IA registrada todavía."
+        "noLogs": "No hay actividad de IA registrada todavía.",
+        "modalTitle": "Auditor y Depurador PIKA AI",
+        "promptRequest": "Prompt y Solicitud (En Bruto)",
+        "toolsContext": "Herramientas y Contexto Local",
+        "clearConfirmTitle": "¿Limpiar Registros de Auditoría?",
+        "clearConfirmDesc": "¿Está seguro de que desea eliminar todos los registros de ejecución locales? Esto no se puede deshacer."
+      },
+      "dailyTokens": {
+        "title": "Consumo Diario de Tokens (Últimos 7 Días)",
+        "subtitle": "Monitoreo diario de volúmenes de tokens de prompt y finalización",
+        "noData": "Aún no se ha registrado consumo diario de tokens."
+      },
+      "modelStats": {
+        "title": "Estadísticas por Modelo de IA",
+        "subtitle": "Desglose detallado del volumen de inferencia, latencia promedio y eficiencia de tokens por modelo",
+        "modelProvider": "Modelo y Proveedor",
+        "tokensPromptCompl": "Tokens (Prompt/Compl)",
+        "avgCall": "Prom./Llamada",
+        "lastUsed": "Último Uso",
+        "noData": "Aún no se han registrado datos de inferencia. Las estadísticas se completarán a medida que se use el asistente."
+      },
+      "activeBadge": "Activo en la App",
+      "disabledBadge": "Desactivado (Predeterminado)",
+      "description": "Portfolio Information & Knowledge Assistant — Auditoría cuantitativa, análisis de coberturas y diagnósticos de comisiones con soporte para modelos locales (Ollama) o endpoints en la nube seguros con failover automatizado.",
+      "activeGlobally": "Activo globalmente",
+      "disabledByDefault": "Desactivado por defecto",
+      "zeroTrustActive": "Zero-Trust Activo: Las claves API de los exchanges nunca se incluyen en los prompts de IA.",
+      "globalInferenceTitle": "Parámetros Globales de Inferencia y Seguridad",
+      "globalInferenceSubtitle": "Ajuste la lógica de contingencia de respaldo, los parámetros de temperatura y las directrices del sistema del asistente",
+      "autoFailover": "Failover Automático (Respaldo)",
+      "autoFailoverDesc": "Cambia automáticamente a modelos de respaldo cuando el principal no está disponible",
+      "obfuscation": "Ofuscación de Valores Financieros",
+      "obfuscationDesc": "Normaliza los saldos sin procesar en ponderaciones porcentuales antes de consultar modelos en la nube",
+      "defaultTemp": "Temperatura Predeterminada",
+      "tempDesc": "Los valores bajos (0.10) eliminan las alucinaciones creativas y garantizan la coherencia analítica.",
+      "systemPromptLabel": "Instrucciones Base del Sistema (System Prompt)",
+      "systemPromptDesc": "Las directivas estrictas garantizan seguridad de solo lectura, alcance analítico cerrado y cálculos precisos.",
+      "telemetrySubtitle": "Métricas consolidadas de rendimiento, latencia promedio y estadísticas de consumo de tokens",
+      "resetMetrics": "Restablecer Métricas"
+    },
+    "cancelled": {
+      "defaultMsg": "La generación de la respuesta fue cancelada por el usuario.",
+      "title": "Análisis Interrumpido",
+      "badge": "Abortado",
+      "retry": "Reintentar",
+      "inspectAudit": "Inspeccionar Auditoría"
+    },
+    "quickActions": {
+      "liquidationRisk": {
+        "title": "Riesgo de Liquidación",
+        "subtitle": "Auditar niveles de margen y distancia al precio de liquidación",
+        "prompt": "Realice una auditoría de riesgo de liquidación en mis posiciones abiertas."
+      },
+      "hedgeImbalance": {
+        "title": "Desequilibrio de Cobertura (Hedge)",
+        "subtitle": "Identificar desajustes de delta de volumen entre posiciones",
+        "prompt": "Identifique cualquier desajuste de volumen y exposición delta neta en mis posiciones cubiertas."
+      },
+      "fundingEfficiency": {
+        "title": "Eficiencia de Financiación",
+        "subtitle": "Revisar pagos acumulados de financiación de 7 días",
+        "prompt": "Genere un resumen de las tarifas de financiación de los últimos 7 días: ¿estoy pagando o recibiendo tarifas netas?"
+      },
+      "portfolioOverview": {
+        "title": "Visión General del Portafolio",
+        "subtitle": "Patrimonio consolidado, PnL abierto y participación por exchange",
+        "prompt": "Genere un resumen ejecutivo consolidado con patrimonio neto total, PnL no realizado y asignación por exchange."
       }
+    },
+    "toolBadges": {
+      "balances": "Leyendo saldos consolidados del portafolio...",
+      "openPositions": "Consultando posiciones abiertas en los exchanges...",
+      "hedgeCorrelation": "Calculando correlación de cobertura y desajuste de exposición...",
+      "fundingFees": "Recuperando historial de tarifas de financiación de IndexedDB...",
+      "tradingFees": "Escaneando comisiones y tarifas comerciales históricas...",
+      "closedPositions": "Analizando historial de posiciones cerradas...",
+      "default": "Ejecutando herramienta local: {{name}}..."
     }
   },
   "toasts": {
+    "themeSet": "Tema cambiado a {{theme}}",
     "idbHealth": "IndexedDB está en buen estado (Versión {{version}}, 14 almacenes activos)",
     "idbError": "Error de IndexedDB: {{error}}",
     "idbHealthFailed": "Error en la comprobación de estado: {{error}}",
@@ -1597,5 +1849,67 @@
       "clearCache": "Borrando todo el caché de la aplicación...",
       "clearTxCache": "Borrando caché de registros de transacciones..."
     }
+  },
+  "errorBoundary": {
+    "title": "Error de Renderizado del Componente",
+    "descriptionIsolated": "Ocurrió un error inesperado dentro del componente ",
+    "descriptionGlobal": "Ocurrió una excepción no controlada de renderizado. La aplicación encontró un estado inesperado.",
+    "retryModule": "Reintentar Módulo",
+    "reloadPage": "Recargar Página",
+    "resetting": "Restableciendo...",
+    "clearCacheReload": "Limpiar Caché y Recargar",
+    "copyDetails": "Copiar detalles del error al portapapeles",
+    "copied": "Copiado",
+    "copyReport": "Copiar Informe"
+  },
+  "currencyDiagnostics": {
+    "testSuccess": "Conectividad de API de divisas verificada con éxito",
+    "testError": "Error al conectar con una o más APIs de divisas",
+    "connected": "Conectado",
+    "cached": "En Caché",
+    "offline": "Desconectado",
+    "never": "Nunca",
+    "title": "Diagnósticos de API de Divisas",
+    "subtitle": "Monitor de estado de conexión y latencia en vivo",
+    "testing": "Probando...",
+    "testBtn": "Probar Conexión",
+    "lastSync": "Última Sincronización",
+    "latency": "Latencia",
+    "quote": "Cotización Actual"
+  },
+  "donation": {
+    "buttonTooltipOpen": "Invítame una cerveza (Donar cripto)",
+    "buttonTooltipClose": "Cerrar ventana de donación",
+    "title": "Invítame una Cerveza",
+    "subtitle": "Apoya al desarrollador con criptomonedas",
+    "message": "¿Te gustó la app y te está ayudando? ¡Entonces no seas una sardina alocada que solo quema dinero en shitcoins! Considera invitarme una cerveza 🍺. Puedes donar esas shitcoins y deshacerte de esa basura, pero si quieres también puedes mandar BTC, ETH o USDT 😁😁😁! Eso me motiva a seguir trayendo mejoras y nuevas funciones por aquí.",
+    "solanaLabel": "Solana",
+    "solanaBadge": "SOL / SPL",
+    "evmLabel": "EVM",
+    "evmAcceptedNote": "Misma dirección válida en Ethereum, Polygon y Arbitrum:",
+    "btcLabel": "Bitcoin",
+    "btcBadge": "BTC",
+    "btcAlert": "Usa esta dirección solo para depositar BTC. No deposites inscriptions, NFTs ni ningún otro activo que no sea BTC, ya que no se podrán acreditar ni devolver.",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "showFull": "Ver completa",
+    "hideFull": "Ocultar",
+    "qrShow": "Código QR",
+    "qrHide": "Ocultar QR",
+    "qrHintSolana": "Escanea con tu billetera Solana (Phantom, Solflare, Backpack) para enviar SOL o tokens SPL.",
+    "qrHintEvm": "Escanea con tu billetera EVM (MetaMask, Rabby, Trust) eligiendo Ethereum, Polygon o Arbitrum.",
+    "qrHintBtc": "Escanea con tu billetera Bitcoin (BlueWallet, Sparrow, Electrum, Ledger) para enviar solo BTC on-chain.",
+    "footerNote": "¡Las donaciones son voluntarias! Nunca nos pondremos en contacto contigo para solicitar ningún monto o pago"
+  },
+  "updateNotification": {
+    "title": "Actualización Disponible",
+    "countdown": "en {{seconds}}s",
+    "description": "Hay una nueva versión lista con mejoras de rendimiento y actualizaciones.",
+    "viewChangelog": "Ver Versión y Changelog",
+    "dismissAria": "Descartar notificación",
+    "dismissTitle": "Descartar (No actualizar ahora)",
+    "notNow": "Ahora No",
+    "updating": "Actualizando...",
+    "updateNow": "Actualizar Ahora"
   }
 }

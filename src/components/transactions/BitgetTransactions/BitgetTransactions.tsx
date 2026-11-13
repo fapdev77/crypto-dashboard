@@ -18,6 +18,7 @@ import { LogManager } from '../../../services/LogManager';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { UNIVERSAL_BADGE_STYLE, UNIVERSAL_HEX_COLOR_MAP, UniversalTxType } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
+import { MissingRatesNotice, missingRatesNote } from '../MissingRatesNotice';
 
 export function BitgetTransactions() {
   const { t } = useTranslation();
@@ -83,9 +84,11 @@ export function BitgetTransactions() {
       e.orderId || '',
     ]);
 
+    const note = missingRatesNote(t, stats.missingRates);
     const config: ExportConfig = {
       title: t('transactions.bitget.reportTitle', 'Bitget Transactions Report'),
       filename: `Bitget_Transactions_${Date.now()}`,
+      notes: note ? [note] : undefined,
       headers,
       rows,
     };
@@ -101,8 +104,8 @@ export function BitgetTransactions() {
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
         <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-            <Activity className="w-5 h-5 text-[#2F6BFF]" />
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-fg">
+            <Activity className="w-5 h-5 text-accent" />
             {t('transactions.bitget.title', 'Bitget Transactions')}
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
@@ -113,16 +116,16 @@ export function BitgetTransactions() {
         <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}
-            className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
+            className="px-3 py-2 bg-elevated border border-line text-fg flex items-center gap-2 rounded-lg hover:bg-line/50 transition-colors text-sm focus:outline-none"
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">{t('transactions.common.export', 'Export')}</span> <ChevronDown className="w-3 h-3" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
-              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('transactions.common.exportCsv', 'Export CSV')}</button>
-              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('transactions.common.exportExcel', 'Export Excel')}</button>
-              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">{t('transactions.common.exportPdf', 'Export PDF')}</button>
+            <div className="absolute top-11 right-0 w-32 bg-elevated border border-line rounded-lg shadow-xl z-50 overflow-hidden text-sm text-fg">
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">{t('transactions.common.exportCsv', 'Export CSV')}</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">{t('transactions.common.exportExcel', 'Export Excel')}</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">{t('transactions.common.exportPdf', 'Export PDF')}</button>
             </div>
           )}
         </div>
@@ -135,17 +138,17 @@ export function BitgetTransactions() {
       {filteredEntries.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Total Transactions + PieChart by Type */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#2F6BFF] shrink-0" />
+                <FileText className="w-4 h-4 text-accent shrink-0" />
                 <AppTooltip description={t('transactions.common.totalTransactionsTooltip', 'Total number of transactions matching the current filters. Click here for details.')}>
-                  <span onClick={() => setDetailsModalType('tx')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
+                  <span onClick={() => setDetailsModalType('tx')} className="text-[11px] text-fg-muted uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors">
                     {t('transactions.common.totalTransactions', 'Total Transactions')}
                   </span>
                 </AppTooltip>
               </div>
-              <span className="text-2xl font-bold text-white mt-1">{stats.totalCount}</span>
+              <span className="text-2xl font-bold text-fg mt-1">{stats.totalCount}</span>
               <div className="flex flex-wrap gap-1 mt-2">
                 {Object.entries(stats.typeBreakdown)
                   .sort((a, b) => b[1] - a[1])
@@ -192,21 +195,21 @@ export function BitgetTransactions() {
           </div>
 
           {/* Card 2: Total Funding (aggregated USD) */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-[#00C853] shrink-0" />
+              <TrendingUp className="w-4 h-4 text-success shrink-0" />
               <AppTooltip description={t('transactions.common.totalFundingTooltip', 'Sum of funding fees in USD. Click here for details.')}>
-                <span onClick={() => setDetailsModalType('funding')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
+                <span onClick={() => setDetailsModalType('funding')} className="text-[11px] text-fg-muted uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors">
                   {t('transactions.common.totalFunding', 'Total Funding (USD)')}
                 </span>
               </AppTooltip>
             </div>
-            <span className={`text-xl font-bold ${new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+            <span className={`text-xl font-bold ${new Big(stats.aggregatedUsd.totalFunding).gte(0) ? 'text-success' : 'text-danger'}`}>
               {maskVal(stats.aggregatedUsd.totalFunding)} USD
             </span>
             
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] text-[#8E9299]">
+              <span className="text-[10px] text-fg-muted">
                 {t('transactions.common.fundingReceived', 'Funding')} {new Big(stats.aggregatedUsd.totalFunding).gte(0) ? t('transactions.common.fundingReceived', 'received') : t('transactions.common.fundingPaid', 'paid')}
               </span>
               {isCalculatingUsd && (
@@ -221,37 +224,33 @@ export function BitgetTransactions() {
           </div>
 
           {/* Card 3: Total Fees (aggregated USD) */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
-              <CreditCard className="w-4 h-4 text-[#FF4444] shrink-0" />
+              <CreditCard className="w-4 h-4 text-danger shrink-0" />
               <AppTooltip description={t('transactions.common.totalFeesTooltip', 'Sum of trading fees in USD. Click here for details.')}>
-                <span onClick={() => setDetailsModalType('fees')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
+                <span onClick={() => setDetailsModalType('fees')} className="text-[11px] text-fg-muted uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors">
                   {t('transactions.common.totalFees', 'Total Fees (USD)')}
                 </span>
               </AppTooltip>
             </div>
             <span className={`text-xl font-bold ${
-              new Big(stats.aggregatedUsd.totalFees).lt(0) 
-                ? 'text-[#FF4444]' 
-                : new Big(stats.aggregatedUsd.totalFees).gt(0) 
-                ? 'text-[#00C853]' 
-                : 'text-white'
+              new Big(stats.aggregatedUsd.totalFees).gt(0)
+                ? 'text-danger'
+                : new Big(stats.aggregatedUsd.totalFees).lt(0)
+                ? 'text-success'
+                : 'text-fg'
             }`}>
               {(() => {
                 const feeBig = new Big(stats.aggregatedUsd.totalFees);
                 if (feeBig.eq(0)) return `${maskVal(0)} USD`;
-                if (feeBig.lt(0)) {
-                  // Negative value (fee paid) - maskVal outputs -$X.XX
-                  return `${maskVal(feeBig.toString())} USD`;
-                }
-                // Positive value (fee rebate received)
-                return `+${maskVal(feeBig.toString())} USD`;
+                // Canonical convention: positive = fee paid, negative = rebate received
+                return `${feeBig.gt(0) ? '-' : '+'}${maskVal(feeBig.abs().toString())} USD`;
               })()}
             </span>
             
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] text-[#8E9299]">
-                {new Big(stats.aggregatedUsd.totalFees).gt(0) ? 'Trading fee rebates' : t('transactions.common.feesPaid', 'Trading fees paid')}
+              <span className="text-[10px] text-fg-muted">
+                {new Big(stats.aggregatedUsd.totalFees).lt(0) ? 'Trading fee rebates' : t('transactions.common.feesPaid', 'Trading fees paid')}
               </span>
               {isCalculatingUsd && (
                 <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
@@ -265,30 +264,35 @@ export function BitgetTransactions() {
           </div>
 
           {/* Card 4: Net Change + Wallet Balance */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-2">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center gap-2">
             <div className="flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-[#8E9299] shrink-0" />
+              <Wallet className="w-4 h-4 text-fg-muted shrink-0" />
               <AppTooltip description={t('transactions.common.netChangeTooltip', 'Net change in USD (stablecoins + non-stables value). Click here for details.')}>
-                <span onClick={() => setDetailsModalType('netchange')} className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
+                <span onClick={() => setDetailsModalType('netchange')} className="text-[11px] text-fg-muted uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors">
                   {t('transactions.common.netChange', 'Net Change (USD)')}
                 </span>
               </AppTooltip>
             </div>
-            <span className={`text-lg font-bold ${new Big(stats.aggregatedUsd.totalChange).gte(0) ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+            <span className={`text-lg font-bold ${new Big(stats.aggregatedUsd.totalChange).gte(0) ? 'text-success' : 'text-danger'}`}>
               {maskVal(stats.aggregatedUsd.totalChange)} USD
             </span>
-            <div className="border-t border-[#2a2b30] pt-2 flex flex-col">
+            <div className="border-t border-line pt-2 flex flex-col">
               <div className="flex items-center gap-2">
                 <AppTooltip description={t('transactions.common.walletBalanceTooltip', 'Aggregated final wallet balance across currencies. Click here for details.')}>
-                  <span onClick={() => setDetailsModalType('balance')} className="text-[9px] text-[#8E9299] uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-[#8E9299]/50 hover:text-white transition-colors">
+                  <span onClick={() => setDetailsModalType('balance')} className="text-[9px] text-fg-muted uppercase tracking-wider w-max cursor-pointer border-b border-dashed border-fg-muted/50 hover:text-fg transition-colors">
                     {t('transactions.common.walletBalance', 'Wallet Balance (USD)')}
                   </span>
                 </AppTooltip>
               </div>
-              <span className="text-[13px] font-bold text-white mt-0.5">{maskVal(stats.aggregatedUsd.finalBalance)} USD</span>
+              <span className="text-[13px] font-bold text-fg mt-0.5">{maskVal(stats.aggregatedUsd.finalBalance)} USD</span>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Currencies without a USD price are excluded from the totals above */}
+      {stats.missingRates.length > 0 && (
+        <MissingRatesNotice currencies={stats.missingRates} />
       )}
 
       {/* Error */}
@@ -301,15 +305,15 @@ export function BitgetTransactions() {
       {/* Loading */}
       {isLoading && filteredEntries.length === 0 && (
         <div className="flex justify-center items-center p-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2F6BFF]"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
         </div>
       )}
 
       {/* Empty */}
       {!isLoading && filteredEntries.length === 0 && (
-        <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-          <FileText className="w-12 h-12 text-[#8E9299] mb-3" />
-          <p className="text-[#8E9299] text-center">
+        <div className="flex flex-col items-center justify-center p-12 bg-surface border border-line rounded-xl">
+          <FileText className="w-12 h-12 text-fg-muted mb-3" />
+          <p className="text-fg-muted text-center">
             {entriesTotal > 0 ? t('transactions.common.noMatchingFilter', 'No transactions match the current filters.') : t('transactions.bitget.noData', 'No Bitget transactions found. Add Bitget API keys to start syncing.')}
           </p>
         </div>

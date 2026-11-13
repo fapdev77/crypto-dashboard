@@ -1,9 +1,14 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
-import fetch from "node-fetch"; // natively available globally in Node 18+ but let's use standard global fetch
 import { ServerLogger } from './src/utils/serverLogger';
 import { validateSafeUpstreamUrl, SSRF_VALIDATION_CONFIG } from './src/config/ssrfAllowlist';
+
+// `npm start` passes --production instead of the POSIX-only `NODE_ENV=production` prefix,
+// which cmd.exe cannot parse on Windows.
+if (process.argv.includes('--production')) {
+  process.env.NODE_ENV = 'production';
+}
 
 async function startServer() {
   const app = express();

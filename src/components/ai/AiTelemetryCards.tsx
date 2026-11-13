@@ -36,19 +36,19 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
         description="Total number of AI requests, queries, and assistant interactions processed by the engine."
         side="top"
       >
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-[#383b42] transition">
+        <div className="bg-surface border border-line rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-line-strong transition">
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E9299] block mb-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-muted block mb-1">
               {t('ai.settings.telemetry.totalCalls', 'Total Invocations')}
             </span>
-            <div className="text-2xl font-bold text-white font-mono">
+            <div className="text-2xl font-bold text-fg font-mono">
               {formatNumber(stats.totalCalls)}
             </div>
-            <span className="text-[10px] text-[#8E9299] mt-0.5 block">
+            <span className="text-[10px] text-fg-muted mt-0.5 block">
               Last: {formatLastActivity(stats.lastActivityTimestamp)}
             </span>
           </div>
-          <div className="p-3 bg-[#2F6BFF]/10 border border-[#2F6BFF]/25 rounded-xl text-[#2F6BFF]">
+          <div className="p-3 bg-accent/10 border border-accent/25 rounded-xl text-accent">
             <Activity className="w-5 h-5" />
           </div>
         </div>
@@ -59,15 +59,15 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
         description="Consolidated count of prompt tokens sent and completion tokens generated across all active models."
         side="top"
       >
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-[#383b42] transition">
+        <div className="bg-surface border border-line rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-line-strong transition">
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E9299] block mb-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-muted block mb-1">
               {t('ai.settings.telemetry.totalTokens', 'Total Tokens Used')}
             </span>
-            <div className="text-2xl font-bold text-white font-mono">
+            <div className="text-2xl font-bold text-fg font-mono">
               {formatNumber(stats.totalTokens)}
             </div>
-            <span className="text-[10px] text-[#8E9299] mt-0.5 block">
+            <span className="text-[10px] text-fg-muted mt-0.5 block">
               Prompt: {formatNumber(stats.totalPromptTokens)} | Compl: {formatNumber(stats.totalCompletionTokens)}
             </span>
           </div>
@@ -82,15 +82,15 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
         description="Average round-trip response time from query submission to completion generation across models."
         side="top"
       >
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-[#383b42] transition">
+        <div className="bg-surface border border-line rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-line-strong transition">
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E9299] block mb-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-muted block mb-1">
               {t('ai.settings.telemetry.avgLatency', 'Average Latency')}
             </span>
-            <div className="text-2xl font-bold text-white font-mono">
+            <div className="text-2xl font-bold text-fg font-mono">
               {formatLatency(stats.averageLatencyMs)}
             </div>
-            <span className="text-[10px] text-[#8E9299] mt-0.5 block">
+            <span className="text-[10px] text-fg-muted mt-0.5 block">
               Total runtime: {formatLatency(stats.totalDurationMs)}
             </span>
           </div>
@@ -105,12 +105,12 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
         description="Theoretical USD cost based on token pricing benchmarks. Local Ollama instances always incur $0.00."
         side="top"
       >
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-[#383b42] transition">
+        <div className="bg-surface border border-line rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-line-strong transition">
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E9299] block mb-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-muted block mb-1">
               {t('ai.settings.telemetry.estimatedCost', 'Estimated Cost')}
             </span>
-            <div className="text-2xl font-bold text-white font-mono">
+            <div className="text-2xl font-bold text-fg font-mono">
               ${stats.estimatedCostUsd.toFixed(4)}
             </div>
             <span className="text-[10px] text-emerald-400 mt-0.5 block">

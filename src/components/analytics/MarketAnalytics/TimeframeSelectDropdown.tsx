@@ -44,25 +44,25 @@ export const TimeframeSelectDropdown: React.FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center gap-2 bg-[#1a1b22] hover:bg-[#20222b] border rounded-xl px-3 py-2 text-xs font-medium transition-all shadow-sm ${
+        className={`flex items-center gap-2 bg-elevated hover:bg-elevated border rounded-xl px-3 py-2 text-xs font-medium transition-all shadow-sm ${
           isOpen
-            ? 'border-[#2F6BFF] text-white'
-            : 'border-[#2a2b30] text-[#C5C8D0] hover:text-white'
+            ? 'border-accent text-fg'
+            : 'border-line text-fg hover:text-fg'
         }`}
       >
-        <Clock className="w-3.5 h-3.5 text-[#2F6BFF]" />
+        <Clock className="w-3.5 h-3.5 text-accent" />
         <span className="font-semibold">{activeOption.label}</span>
         <ChevronDown
-          className={`w-3.5 h-3.5 text-[#8E9299] transition-transform duration-200 ${
-            isOpen ? 'rotate-180 text-white' : ''
+          className={`w-3.5 h-3.5 text-fg-muted transition-transform duration-200 ${
+            isOpen ? 'rotate-180 text-fg' : ''
           }`}
         />
       </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 w-44 bg-[#16171d] border border-[#2a2b30] rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-          <div className="px-3 py-1.5 border-b border-[#2a2b30] text-[11px] font-semibold text-[#8E9299] uppercase tracking-wider">
+        <div className="absolute left-0 top-full mt-2 w-44 bg-[#16171d] border border-line rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-3 py-1.5 border-b border-line text-[11px] font-semibold text-fg-muted uppercase tracking-wider">
             Timeframe
           </div>
 
@@ -79,20 +79,20 @@ export const TimeframeSelectDropdown: React.FC = () => {
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     isSelected
-                      ? 'bg-[#2F6BFF]/15 text-[#2F6BFF]'
-                      : 'text-[#C5C8D0] hover:bg-[#1f212a] hover:text-white'
+                      ? 'bg-accent/15 text-accent'
+                      : 'text-fg hover:bg-[#1f212a] hover:text-fg'
                   }`}
                 >
                   <span className="flex items-center gap-1.5">
                     {isSelected && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#2F6BFF]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                     )}
                     <span className="font-bold">{tf.label}</span>
-                    <span className="text-[10px] text-[#8E9299] font-normal">
+                    <span className="text-[10px] text-fg-muted font-normal">
                       ({tf.desc.split(' ')[0]})
                     </span>
                   </span>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-[#2F6BFF]" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}
                 </button>
               );
             })}

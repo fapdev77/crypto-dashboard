@@ -5,6 +5,7 @@ import { useApiKeysStore } from '../store/apiKeysStore';
 import { AppTooltip, TooltipProvider } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 import { LanguageCurrencyButton } from './ui/LanguageCurrencyButton';
+import { ThemeModeButton } from './ui/ThemeModeButton';
 
 export function GlobalUnlockScreen() {
   const { t } = useTranslation();
@@ -61,29 +62,30 @@ export function GlobalUnlockScreen() {
 
   return (
     <TooltipProvider>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0b0c10] backdrop-blur-sm">
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-8 max-w-sm w-full shadow-2xl relative">
-          {/* Standard Language & Currency Selector identical to rest of app */}
-          <div className="absolute top-4 right-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-canvas backdrop-blur-sm">
+        <div className="bg-surface border border-line rounded-xl p-8 max-w-sm w-full shadow-2xl relative">
+          {/* Standard Language & Theme Selectors */}
+          <div className="absolute top-4 right-4 flex items-center gap-1.5">
+            <ThemeModeButton showText={false} />
             <LanguageCurrencyButton />
           </div>
 
           {/* Centered Shield Icon */}
           <div className="flex justify-center mb-4 mt-1">
-            <div className="p-3 bg-[#FF4444]/10 rounded-full">
-              <ShieldAlert className="w-8 h-8 text-[#FF4444]" />
+            <div className="p-3 bg-danger/10 rounded-full">
+              <ShieldAlert className="w-8 h-8 text-danger" />
             </div>
           </div>
 
           <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
-            <h2 className="text-xl font-medium text-white text-center">
+            <h2 className="text-xl font-medium text-fg text-center">
               {t('unlock.title', 'Encrypted Storage')}
             </h2>
-            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[#2F6BFF]/10 text-[#2F6BFF] border border-[#2F6BFF]/20">
+            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
               v{version}
             </span>
           </div>
-          <p className="text-sm text-[#8E9299] text-center mb-6">
+          <p className="text-sm text-fg-muted text-center mb-6">
             {t('unlock.subtitle', 'Your API keys are encrypted locally. Please enter your passphrase to unlock them.')}
           </p>
 
@@ -96,31 +98,31 @@ export function GlobalUnlockScreen() {
                   value={unlockPassphrase}
                   onChange={(e) => setUnlockPassphrase(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                  className="w-full bg-[#111216] border border-[#2a2b30] rounded-lg px-3 py-2 pr-10 text-white focus:outline-hidden focus:border-[#2F6BFF]"
+                  className="w-full bg-canvas border border-line rounded-lg px-3 py-2 pr-10 text-fg focus:outline-hidden focus:border-accent"
                   placeholder={t('unlock.placeholder', 'Enter passphrase')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E9299] hover:text-[#e1e2e6] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-[#e1e2e6] transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {unlockError && <p className="text-[#FF4444] text-xs mt-1">{unlockError}</p>}
+              {unlockError && <p className="text-danger text-xs mt-1">{unlockError}</p>}
             </div>
             <button
               onClick={handleUnlock}
-              className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white font-medium rounded-lg transition-colors cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-accent hover:bg-accent-hover text-white font-medium rounded-lg transition-colors cursor-pointer"
             >
               <Unlock className="w-4 h-4" />
               {t('unlock.button', 'Unlock')}
             </button>
           </div>
 
-          <div className="border-t border-[#2a2b30]/60 my-5 pt-4">
-            <div className="flex items-start gap-2 text-xs text-[#8E9299]">
+          <div className="border-t border-line/60 my-5 pt-4">
+            <div className="flex items-start gap-2 text-xs text-fg-muted">
               <div className="flex-1 leading-relaxed">
                 {t('unlock.troubleDesc', 'If you forgot your passphrase, you can perform a full app reset to clear local data and app will load with default settings.')}
               </div>
@@ -128,15 +130,15 @@ export function GlobalUnlockScreen() {
                 side="top"
                 align="center"
                 description={
-                  <div className="space-y-1.5 text-left text-xs text-gray-300 leading-relaxed">
-                    <p className="font-semibold text-white">What happens upon resetting?</p>
-                    <p>A factory reset will permanently delete any API keys stored locally in this browser, custom settings and cache history.</p>
-                    <p className="font-semibold text-white mt-1">How to start using again?</p>
-                    <p>The app will reload automatically and will be ready to use! To connect your accounts, just register your API keys again or import the API Keys from a previously generated backup file (.enc).</p>
+                  <div className="space-y-1.5 text-left text-xs text-fg leading-relaxed">
+                    <p className="font-semibold text-fg">{t('unlock.troubleModal.whatHappensTitle', 'What happens upon resetting?')}</p>
+                    <p>{t('unlock.troubleModal.whatHappensDesc', 'A factory reset will permanently delete any API keys stored locally in this browser, custom settings and cache history.')}</p>
+                    <p className="font-semibold text-fg mt-1">{t('unlock.troubleModal.howToStartTitle', 'How to start using again?')}</p>
+                    <p>{t('unlock.troubleModal.howToStartDesc', 'The app will reload automatically and will be ready to use! To connect your accounts, just register your API keys again or import the API Keys from a previously generated backup file (.enc).')}</p>
                   </div>
                 }
               >
-                <button className="text-[#2F6BFF] hover:text-[#1E56DF] p-0.5 rounded focus:outline-hidden shrink-0" type="button" aria-label="Reset Information">
+                <button className="text-accent hover:text-accent-hover p-0.5 rounded focus:outline-hidden shrink-0" type="button" aria-label="Reset Information">
                   <HelpCircle className="w-4 h-4" />
                 </button>
               </AppTooltip>
@@ -156,7 +158,7 @@ export function GlobalUnlockScreen() {
                   </button>
                   <button
                     onClick={() => setShowResetConfirm(false)}
-                    className="flex-1 py-1.5 px-3 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] hover:text-white text-xs font-semibold rounded transition-colors cursor-pointer"
+                    className="flex-1 py-1.5 px-3 bg-line hover:bg-line text-fg-muted hover:text-fg text-xs font-semibold rounded transition-colors cursor-pointer"
                   >
                     {t('unlock.cancelResetAction', 'Cancel')}
                   </button>

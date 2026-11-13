@@ -67,13 +67,13 @@ export const MarketAnalyticsDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-[#2F6BFF]" />
+            <h1 className="text-xl font-bold tracking-tight text-fg flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-accent" />
               {t('analytics.market.title', 'Market Analytics')}
             </h1>
             <SimulationModeBadge />
           </div>
-          <p className="text-xs text-[#8E9299] mt-0.5">
+          <p className="text-xs text-fg-muted mt-0.5">
             {t('analytics.market.subtitle', 'Quantitative cross-exchange derivatives intelligence, open interest regimes, taker order flow & funding arbitrage across Bybit, OKX & Bitget.')}
           </p>
         </div>
@@ -85,11 +85,11 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           onClick={() => setActiveTab('multi-market')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'multi-market'
-              ? 'bg-[#1c1f28] text-white border border-[#2d3240] shadow-sm'
-              : 'text-[#8E9299] hover:text-white hover:bg-[#161820]'
+              ? 'bg-[#1c1f28] text-fg border border-[#2d3240] shadow-sm'
+              : 'text-fg-muted hover:text-fg hover:bg-[#161820]'
           }`}
         >
-          <BarChart3 className={`w-4 h-4 ${activeTab === 'multi-market' ? 'text-[#2F6BFF]' : ''}`} />
+          <BarChart3 className={`w-4 h-4 ${activeTab === 'multi-market' ? 'text-accent' : ''}`} />
           <span>{t('analytics.market.tabs.multiMarket', 'Multi-Market Intelligence')}</span>
         </button>
 
@@ -97,8 +97,8 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           onClick={() => setActiveTab('inverse-coinm')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'inverse-coinm'
-              ? 'bg-[#1c1f28] text-white border border-[#2d3240] shadow-sm'
-              : 'text-[#8E9299] hover:text-white hover:bg-[#161820]'
+              ? 'bg-[#1c1f28] text-fg border border-[#2d3240] shadow-sm'
+              : 'text-fg-muted hover:text-fg hover:bg-[#161820]'
           }`}
         >
           <Coins className={`w-4 h-4 ${activeTab === 'inverse-coinm' ? 'text-cyan-400' : ''}`} />
@@ -124,7 +124,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           <span>{error}</span>
           <button
             onClick={() => refreshData(true)}
-            className="ml-auto underline hover:text-white font-semibold"
+            className="ml-auto underline hover:text-fg font-semibold"
           >
             Retry
           </button>
@@ -134,8 +134,8 @@ export const MarketAnalyticsDashboard: React.FC = () => {
       {/* Initial Skeleton Loader */}
       {!snapshot && isLoading && (
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
-          <Loader2 className="w-8 h-8 text-[#2F6BFF] animate-spin" />
-          <p className="text-xs text-[#8E9299]">Loading market analytics snapshot...</p>
+          <Loader2 className="w-8 h-8 text-accent animate-spin" />
+          <p className="text-xs text-fg-muted">Loading market analytics snapshot...</p>
         </div>
       )}
 
@@ -144,13 +144,13 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {/* Price */}
-            <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
+            <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <PriceMetricTooltip>
-                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
                   Index Price ({snapshot.symbol})
                 </span>
               </PriceMetricTooltip>
-              <div className="text-lg font-bold font-mono text-white">
+              <div className="text-lg font-bold font-mono text-fg">
                 {snapshot.currentPrice < 1
                   ? `$${snapshot.currentPrice.toFixed(4)}`
                   : `$${snapshot.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -171,22 +171,22 @@ export const MarketAnalyticsDashboard: React.FC = () => {
             </div>
 
             {/* 24h Volume */}
-            <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
+            <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <Volume24hTooltip>
-                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
                   24h Notional Volume
                 </span>
               </Volume24hTooltip>
-              <div className="text-lg font-bold font-mono text-white">
+              <div className="text-lg font-bold font-mono text-fg">
                 {formatCurrency(snapshot.totalVolume24hUsd)}
               </div>
-              <span className="text-[11px] text-[#8E9299]">Aggregated Takers</span>
+              <span className="text-[11px] text-fg-muted">Aggregated Takers</span>
             </div>
 
             {/* Total Open Interest */}
-            <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
+            <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <OpenInterestMetricTooltip>
-                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
                   Total Open Interest
                 </span>
               </OpenInterestMetricTooltip>
@@ -206,9 +206,9 @@ export const MarketAnalyticsDashboard: React.FC = () => {
             </div>
 
             {/* Funding Spread */}
-            <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
+            <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <MaxFundingSpreadTooltip>
-                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
                   Max Funding Spread
                 </span>
               </MaxFundingSpreadTooltip>
@@ -217,13 +217,13 @@ export const MarketAnalyticsDashboard: React.FC = () => {
                   ? 'N/A'
                   : `+${snapshot.currentFunding.spreadApr}%`}
               </div>
-              <span className="text-[11px] text-[#8E9299]">Annualized (APR)</span>
+              <span className="text-[11px] text-fg-muted">Annualized (APR)</span>
             </div>
 
             {/* CVD Momentum */}
-            <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
+            <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <TakerFlowMetricTooltip>
-                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
                   Taker Flow (CVD)
                 </span>
               </TakerFlowMetricTooltip>
@@ -238,19 +238,19 @@ export const MarketAnalyticsDashboard: React.FC = () => {
                   snapshot.takerFlowHistory[snapshot.takerFlowHistory.length - 1]?.cvd || 0
                 )}
               </div>
-              <span className="text-[11px] text-[#8E9299]">Aggressive Net Flow</span>
+              <span className="text-[11px] text-fg-muted">Aggressive Net Flow</span>
             </div>
 
             {/* Fear & Greed */}
-            <div className="bg-[#121318] border border-[#2a2b30] rounded-xl p-3.5 space-y-1">
+            <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <FearAndGreedTooltip>
-                <span className="text-[10px] font-bold text-[#8E9299] uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
                   Sentiment Index
                 </span>
               </FearAndGreedTooltip>
               <div className="text-lg font-bold font-mono text-purple-400">
                 {snapshot.sentiment.greedFearScore}
-                <span className="text-xs font-normal text-[#8E9299]">/100</span>
+                <span className="text-xs font-normal text-fg-muted">/100</span>
               </div>
               <span className="text-[11px] font-semibold text-purple-300">
                 {snapshot.sentiment.greedFearLabel}

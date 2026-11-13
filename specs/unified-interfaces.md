@@ -16,7 +16,8 @@ export type UnifiedPositionMode = 'hedge' | 'one_way' | 'unknown';
 export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
 export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
 export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
-export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL' | 'TRAILING_STOP' | 'OCO';
+export type OrderExecutionScope = 'FULL_POSITION' | 'PARTIAL';
 export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
 ```
 
@@ -29,7 +30,8 @@ export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer'
 | `UnifiedInstrumentType` | UnifiedPosition, UnifiedHistoryPosition, UnifiedOrder | Instrument class (spot, perp, inverse, futures, option) |
 | `UnifiedAssetCategory` | AssetClassifierAggregator | High-level asset classification (crypto, stock, unknown) |
 | `UnifiedOrderStatus` | UnifiedOrder | Order lifecycle state |
-| `UnifiedOrderType` | UnifiedOrder | Order type (limit, market, TP, SL, conditional) |
+| `UnifiedOrderType` | UnifiedOrder | Order type (limit, market, TP, SL, conditional, trailing stop, OCO) |
+| `OrderExecutionScope` | UnifiedOrder | Full position vs partial execution scope |
 | `BillType` | UnifiedBillRecord | Wallet flow classification |
 
 ---
@@ -43,6 +45,9 @@ export interface UnifiedBalance {
   id: string; // e.g., 'connId-ccy'
   connectionId: string;
   exchange: ExchangeName; // 'bybit' | 'bitget' | 'okx'
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   ccy: string;
   amount: number;
@@ -84,6 +89,9 @@ export interface UnifiedPosition {
   id: string; // Ex: 'connId-okx-BTC-USDT-long'
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string; // Account label/name
   symbol: string;
   baseCoin: string; // E.g., 'BTC'
@@ -108,6 +116,8 @@ export interface UnifiedPosition {
   roe?: number; // Return on Equity (%)
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
+  tpMode?: 'full' | 'partial';
+  slMode?: 'full' | 'partial';
   instrumentType?: UnifiedInstrumentType; // 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN'
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
@@ -155,6 +165,9 @@ export interface UnifiedHistoryPosition {
   id: string;
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   symbol: string;
   baseCoin: string;
@@ -238,6 +251,9 @@ export interface UnifiedBillRecord {
   id: string;
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   type: BillType;
   amount: number;
@@ -280,13 +296,17 @@ Captures exchange orders (open and historical) with normalized fields for unifor
 
 ```typescript
 export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
-export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL' | 'TRAILING_STOP' | 'OCO';
+export type OrderExecutionScope = 'FULL_POSITION' | 'PARTIAL';
 
 export interface UnifiedOrder {
   id: string;
   exchangeOrderId: string;
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
@@ -300,6 +320,14 @@ export interface UnifiedOrder {
   filledQty: number;
   value?: number;
   triggerPrice?: number;
+  executionScope?: OrderExecutionScope;
+  closeFraction?: number;
+  tpTriggerPrice?: number;
+  slTriggerPrice?: number;
+  tpOrderPrice?: number;
+  slOrderPrice?: number;
+  isPositionTpsl?: boolean;
+  parentOrderId?: string;
   reduceOnly?: boolean;
   timeInForce?: string;
   createdTime: number;
@@ -709,33 +737,42 @@ Captures transaction logs and bills across Bitget Classic (`/api/v2/mix/account/
 
 ```typescript
 export interface BitgetTransactionLogEntry {
-  // Primary key = `${connectionId}-${rawId || id}-${transactionTime}`
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
   id: string;
   connectionId: string;
   exchange: 'bitget';
+  accountType?: 'classic' | 'uta';
   label: string;
 
   rawId: string;
-  billId?: string;
   symbol: string;
-  category: string;        // usdt-futures, coin-futures, usdc-futures, spot, uta
-  side: 'Buy' | 'Sell' | 'None';
+  category: string;        // SPOT, MARGIN, USDT-FUTURES, COIN-FUTURES, USDC-FUTURES, OTHER
+  side: 'Buy' | 'Sell' | 'None' | string;
   transactionTime: number; // ms timestamp
-  type: string;            // trade, transfer, fee, funding, settle, pnl, etc.
+  type: string;            // TRANSFER_IN, ORDER_DEALT_IN, ORDER_DEALT_OUT, FUNDING_FEE_IN, etc.
   transSubType?: string;
-  qty: string;
+  groupType?: string;
+  positionType?: string;
+  qty?: string;
   size?: string;
+  amount?: string;
   currency: string;
   tradePrice?: string;
-  funding: string;
+  funding?: string;
   fee: string;
+  feeCurrency?: string;
   cashFlow: string;
-  change: string;
-  cashBalance?: string;
+  change: string;          // net change
+  cashBalance: string;
   balance?: string;
+  positionAmount?: string;
   positionBalance?: string;
   feeRate?: string;
+  bonusChange?: string;
+  tradeId?: string;
   orderId?: string;
+  orderLinkId?: string;
+  extra?: string;
 
   raw: Record<string, unknown>;
 }
@@ -747,7 +784,7 @@ Captures financial and account bills from OKX (`/api/v5/account/bills` e `/api/v
 
 ```typescript
 export interface OkxTransactionLogEntry {
-  // Primary key = `${connectionId}-${rawId || billId}-${transactionTime}`
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
   id: string;
   connectionId: string;
   exchange: 'okx';
@@ -756,25 +793,38 @@ export interface OkxTransactionLogEntry {
   rawId: string;
   billId?: string;
   symbol: string;
-  category: string;        // swap, futures, spot, margin, funding
-  side: 'Buy' | 'Sell' | 'None';
+  category: string;        // SPOT, MARGIN, SWAP, FUTURES, OPTION
+  side: 'Buy' | 'Sell' | 'None' | string;
   transactionTime: number; // ms timestamp
-  type: string;            // 1: transfer, 2: trade, 8: fee, 14: funding, etc.
-  transSubType?: string;   // subType ID (e.g. 110, 111, 112, etc.)
+  type: string;            // Type display (Trade, Funding fee, Transfer, etc.)
+  transSubType?: string;   // SubType display (Buy, Sell, Funding expense, etc.)
   subType?: string;
-  qty: string;
+  typeCode?: string;
+  subTypeCode?: string;
+  qty?: string;
   size?: string;
+  contracts?: string;
+  contractVal?: string;
+  cryptoQty?: string;
+  totalValueUsd?: string;
+  amount?: string;
   currency: string;
   tradePrice?: string;
-  funding: string;
+  funding?: string;
   fee: string;
+  feeCurrency?: string;
   cashFlow: string;
-  change: string;
-  cashBalance?: string;
+  change: string;          // balChg
+  cashBalance: string;     // bal
   balance?: string;
   positionBalance?: string;
   feeRate?: string;
+  bonusChange?: string;
+  tradeId?: string;
   orderId?: string;
+  orderLinkId?: string;
+  pnl?: string;
+  extra?: string;
 
   raw: Record<string, unknown>;
 }
@@ -935,13 +985,20 @@ export type AccountType = 'classic' | 'uta';
 export type ApiEnvironment = 'mainnet' | 'testnet';
 export type BybitRegion =
   | 'global'
+  | 'global_bytick'
+  | 'brazil'
+  | 'brazil_int'
+  | 'argentina'
+  | 'argentina_int'
   | 'netherlands'
   | 'turkey'
-  | 'hongkong'
   | 'kazakhstan'
   | 'georgia'
-  | 'brazil_int'
-  | 'argentina_int';
+  | 'uae'
+  | 'eea'
+  | 'indonesia'
+  | 'japan'
+  | 'hongkong';
 
 export interface ApiCredentials {
   id: string;
@@ -1016,72 +1073,175 @@ export interface MarketAnalyticsSnapshot {
 
 ---
 
-## 18. PIKA AI Subsystem Interfaces (`src/types/aiTypes.ts`)
+## 18. PIKA AI Subsystem Interfaces (`src/types/aiTypes.ts` & `src/services/ai/aiToolRegistry.ts`)
 
 Define as estruturas de dados para o subsistema de inteligência quantitativa e auditoria:
 
 ```typescript
-export type AiProviderType = 'ollama' | 'gemini' | 'openrouter' | 'custom';
+export type AiProviderType = 'gemini' | 'ollama' | 'openrouter' | 'openai' | 'anthropic' | 'custom';
 
-export type AiToolName =
-  | 'get_consolidated_balances'
-  | 'get_open_positions'
-  | 'get_order_history'
-  | 'get_funding_rates'
-  | 'get_hedge_pro_metrics'
-  | 'get_market_analytics'
-  | 'get_transaction_summary'
-  | 'get_exchange_connection_health'
-  | 'get_pnl_by_symbol';
+// 7 ferramentas registradas em AI_TOOL_DEFINITIONS (src/services/ai/aiToolRegistry.ts)
+export type RegisteredAiToolName =
+  | 'aiGetPortfolioBalances'
+  | 'aiGetOpenPositions'
+  | 'aiGetHedgeCorrelationSummary'
+  | 'aiGetFundingFeesHistory'
+  | 'aiGetMarketFundingRates'
+  | 'aiGetTradingFeesHistory'
+  | 'aiGetClosedPositionsSummary';
+
+export interface AiModelConfig {
+  id: string;
+  name: string;
+  provider: AiProviderType;
+  modelId: string;
+  baseUrl?: string;
+  apiKey?: string;
+  isActive: boolean;
+  isPrimary: boolean;
+  isFallback: boolean;
+  fallbackOrder?: number;
+  temperature: number;
+  topP: number;
+  maxTokens: number;
+  systemInstruction?: string;
+  maxRpm: number; // 0 = unlimited
+  maxRpd: number; // 0 = unlimited
+  currentRpmCount?: number;
+  currentRpdCount?: number;
+  lastUsedTimestamp?: number;
+  lastPingStatus?: 'healthy' | 'unreachable' | 'deprecated' | 'quota_exceeded' | 'unknown';
+  lastPingLatencyMs?: number;
+  lastPingMessage?: string;
+  lastPingAt?: number;
+  supportsTools?: boolean;
+}
+
+export interface AiAuditToolInvocation {
+  name: string;
+  args: Record<string, any>;
+  executionTimeMs: number;
+  resultSummary: string;
+}
 
 export interface AiChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system' | 'tool';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: number;
-  toolCalls?: Array<{
-    id: string;
-    name: AiToolName;
-    arguments: Record<string, unknown>;
-  }>;
-  toolResults?: Array<{
-    toolCallId: string;
-    result: unknown;
-  }>;
-  tokenUsage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
-  latencyMs?: number;
+  status?: 'sending' | 'thinking' | 'streaming' | 'complete' | 'error' | 'cancelled';
+  toolsInvoked?: AiAuditToolInvocation[];
+  usedModelName?: string;
+  wasFallback?: boolean;
+  errorMessage?: string;
+  auditLogId?: string;
+  rawDebug?: AiRawDebugData;
+  unverifiedData?: boolean;
+  auditWarning?: string;
+  incompatibleToolModel?: boolean;
+  recommendedModelSuggestion?: string;
 }
 
 export interface AiAuditLogEntry {
   id: string;
   timestamp: number;
+  modelId: string;
+  modelName: string;
   provider: AiProviderType;
-  model: string;
-  promptSnippet: string;
-  toolsInvoked: AiToolName[];
-  latencyMs: number;
-  tokensTotal: number;
-  status: 'success' | 'error' | 'cancelled';
-  rawRequestPayload?: unknown;
-  rawResponsePayload?: unknown;
+  wasFallback: boolean;
+  fallbackReason?: string;
+  type: 'chat_query' | 'diagnostic_chip' | 'tool_execution';
+  userMessage: string;
+  assistantResponse: string;
+  toolsInvoked: AiAuditToolInvocation[];
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  durationMs: number;
+  latencyFirstTokenMs?: number;
+  status: 'success' | 'rate_limited' | 'error' | 'refused_out_of_scope' | 'cancelled';
   errorMessage?: string;
+  fullPayloadSnapshot?: {
+    sentPrompt?: string;
+    rawToolResults?: any;
+    requestPayload?: any;
+    rawResponse?: any;
+    rawDebug?: AiRawDebugData;
+  };
+  rawDebug?: AiRawDebugData;
 }
 
 export interface AiTelemetryStats {
-  totalRequests: number;
-  successfulRequests: number;
-  failedRequests: number;
-  totalTokensUsed: number;
+  totalCalls: number;
+  totalPromptTokens: number;
+  totalCompletionTokens: number;
+  totalTokens: number;
+  totalDurationMs: number;
   averageLatencyMs: number;
-  dailyUsage: Array<{
-    date: string;
-    tokens: number;
-    requests: number;
-  }>;
+  estimatedCostUsd: number;
+  lastActivityTimestamp: number | null;
+}
+```
+
+---
+
+## 19. Theme Engine & Currency Diagnostics Interfaces
+
+### 19.1 Multi-Theme & Custom Palette Interfaces (`src/utils/themeMode.ts`)
+
+Define os 5 modos visuais suportados (`dark`, `light`, `wise-dark`, `wise-light`, `custom`), os 10 tokens editáveis (+ 3 tokens derivados) e os temas salvos no `useSettingsStore`:
+
+```typescript
+export const THEME_MODES = ['dark', 'light', 'wise-dark', 'wise-light', 'custom'] as const;
+export type ThemeMode = (typeof THEME_MODES)[number];
+
+export interface CustomThemeTokens {
+  canvas: string;
+  surface: string;
+  elevated: string;
+  elevatedHover?: string;
+  line: string;
+  lineStrong?: string;
+  fg: string;
+  fgMuted: string;
+  accent: string;
+  accentHover?: string;
+  success?: string;
+  danger?: string;
+  warning?: string;
+}
+
+export interface SavedCustomTheme {
+  id: string;
+  name: string;
+  palette: CustomThemeTokens;
+  updatedAt: number;
+}
+
+export interface ThemePreset {
+  id: string;
+  nameKey: string;
+  palette: CustomThemeTokens;
+}
+```
+
+### 19.2 Currency & Stablecoin API Diagnostics (`src/services/currency/currencyTypes.ts`)
+
+```typescript
+export type SupportedLocale = 'en-US' | 'en-GB' | 'it-IT' | 'es-419' | 'pt-BR' | 'pt-PT';
+export type SupportedFiatCurrency = 'USD' | 'EUR' | 'GBP' | 'BRL';
+
+export interface ApiProviderDiagnostic {
+  status: 'connected' | 'cached' | 'error';
+  lastUpdated: number | null;
+  latencyMs?: number;
+  error?: string | null;
+  endpoint: string;
+}
+
+export interface CurrencyApiDiagnostics {
+  frankfurter: ApiProviderDiagnostic; // https://api.frankfurter.dev/v2/rates
+  coingecko: ApiProviderDiagnostic;   // https://api.coingecko.com/api/v3/simple/price
 }
 ```
 

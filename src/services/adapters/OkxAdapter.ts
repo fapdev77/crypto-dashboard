@@ -12,6 +12,7 @@ import { mapPositionSide, mapMarginMode, extractBaseCoin, extractQuoteCoin, extr
 import { calculateOkxTradeDetails } from '../../utils/okxUtils';
 import { ApiRateLimitError } from '../../utils/retryHelper';
 import { fetchTokenUsdPrice } from '../../hooks/useTokenUsdPrice';
+import { resolveUsdRate } from '../../utils/usdAggregation';
 
 const MAX_DEEP_PAGES = 30;
 
@@ -109,14 +110,6 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       }
     });
 
-    // Default prices for stablecoins
-    const stables = ['USDT', 'USDC', 'USD', 'DAI', 'EURT', 'BUSD', 'USDE', 'USDD'];
-    stables.forEach(s => {
-      if (prices[s] === undefined) {
-        prices[s] = 1.0;
-      }
-    });
-
     // Calculate additional funding equity
     let additionalFundingUsd = 0;
     const fundingBalances: UnifiedBalance[] = [];
@@ -140,7 +133,13 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
             // ignore
           }
         }
-        price = price || 0;
+        // USD-pegged stablecoins resolve to 1 and fiat balances use the fiat rate
+        // table; anything unresolvable is valued by the caller's zero, never by an
+        // invented 1:1 rate.
+        if (price === undefined || price <= 0) {
+          price = resolveUsdRate(ccy, undefined) ?? 0;
+          if (price > 0) prices[ccy] = price;
+        }
         const usdValue = amount * price;
         additionalFundingUsd += usdValue;
 
@@ -189,7 +188,11 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
       }
 
       const walletBalCoin = rawCashBal;
-      const walletBalUsd = coinPrice > 0 ? walletBalCoin * coinPrice : (rawEqUsd > 0 ? rawEqUsd : walletBalCoin);
+      const walletBalUsd = coinPrice > 0
+        ? walletBalCoin * coinPrice
+        : rawEqUsd > 0
+          ? rawEqUsd
+          : walletBalCoin * (resolveUsdRate(ccy, undefined) ?? 0);
 
       return {
         id: `${key.id}-UNIFIED-${ccy}`,

@@ -74,24 +74,24 @@ export const AiAuditLogTable: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden shadow-xl relative">
+    <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-xl relative">
       {/* Clear Logs Confirmation Overlay */}
       {showClearConfirm && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-30 animate-in fade-in-0">
-          <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-5 max-w-xs w-full text-center space-y-4 shadow-2xl">
+          <div className="bg-surface border border-line rounded-xl p-5 max-w-xs w-full text-center space-y-4 shadow-2xl">
             <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">{t('ai.settings.audit.clearConfirmTitle', 'Clear Audit Logs?')}</h3>
-              <p className="text-xs text-[#8E9299] mt-1">
+              <h3 className="text-sm font-bold text-fg">{t('ai.settings.audit.clearConfirmTitle', 'Clear Audit Logs?')}</h3>
+              <p className="text-xs text-fg-muted mt-1">
                 {t('ai.settings.audit.clearConfirmDesc', 'Are you sure you want to delete all local execution logs? This cannot be undone.')}
               </p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="flex-1 py-2 bg-[#1e1f24] hover:bg-[#2a2b30] text-gray-300 rounded-lg text-xs font-semibold transition cursor-pointer border border-[#2a2b30]"
+                className="flex-1 py-2 bg-elevated hover:bg-line text-fg rounded-lg text-xs font-semibold transition cursor-pointer border border-line"
               >
                 {t('common.cancel', 'Cancel')}
               </button>
@@ -106,13 +106,13 @@ export const AiAuditLogTable: React.FC = () => {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-4 border-b border-[#2a2b30] bg-[#151619]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-4 border-b border-line bg-surface">
         <div>
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#2F6BFF]" />
+          <h3 className="text-sm font-bold text-fg flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-accent" />
             {t('ai.settings.audit.title', 'Call History & Audit Trail')}
           </h3>
-          <p className="text-xs text-[#8E9299]">
+          <p className="text-xs text-fg-muted">
             {t('ai.settings.audit.subtitle', 'Transparent register of all local inferences, triggered tools, and token consumption')}
           </p>
         </div>
@@ -122,7 +122,7 @@ export const AiAuditLogTable: React.FC = () => {
             <button
               onClick={fetchLogs}
               disabled={isLoading}
-              className="p-1.5 bg-[#1e1f24] hover:bg-[#2a2b30] text-[#8E9299] hover:text-white rounded-lg text-xs transition cursor-pointer border border-[#2a2b30]"
+              className="p-1.5 bg-elevated hover:bg-line text-fg-muted hover:text-fg rounded-lg text-xs transition cursor-pointer border border-line"
               aria-label="Refresh Logs"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -132,9 +132,9 @@ export const AiAuditLogTable: React.FC = () => {
           <AppTooltip description="Export history as JSON" side="top">
             <button
               onClick={handleExportJson}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-[#1e1f24] hover:bg-[#2a2b30] text-gray-200 border border-[#2a2b30] rounded-lg text-xs font-medium transition cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-elevated hover:bg-line text-fg border border-line rounded-lg text-xs font-medium transition cursor-pointer"
             >
-              <Download className="w-3 h-3 text-[#2F6BFF]" />
+              <Download className="w-3 h-3 text-accent" />
               JSON
             </button>
           </AppTooltip>
@@ -142,7 +142,7 @@ export const AiAuditLogTable: React.FC = () => {
           <AppTooltip description="Export history as CSV" side="top">
             <button
               onClick={handleExportCsv}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-[#1e1f24] hover:bg-[#2a2b30] text-gray-200 border border-[#2a2b30] rounded-lg text-xs font-medium transition cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-elevated hover:bg-line text-fg border border-line rounded-lg text-xs font-medium transition cursor-pointer"
             >
               <Download className="w-3 h-3 text-emerald-400" />
               CSV
@@ -153,7 +153,7 @@ export const AiAuditLogTable: React.FC = () => {
             <AppTooltip description="Clear all audit log entries" side="top">
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="p-1.5 bg-[#1e1f24] hover:bg-rose-900/40 text-[#8E9299] hover:text-rose-400 border border-[#2a2b30] rounded-lg text-xs transition cursor-pointer"
+                className="p-1.5 bg-elevated hover:bg-rose-900/40 text-fg-muted hover:text-rose-400 border border-line rounded-lg text-xs transition cursor-pointer"
                 aria-label="Clear Logs"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -163,10 +163,10 @@ export const AiAuditLogTable: React.FC = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-[#0b0c10]">
+      <div className="overflow-x-auto bg-canvas">
         <table className="w-full text-left text-xs">
           <thead>
-            <tr className="border-b border-[#2a2b30] bg-[#151619] text-[#8E9299] uppercase tracking-wider text-[10px]">
+            <tr className="border-b border-line bg-surface text-fg-muted uppercase tracking-wider text-[10px]">
               <th className="py-3 px-4">Date/Time</th>
               <th className="py-3 px-4">Model & Provider</th>
               <th className="py-3 px-4">Type</th>
@@ -177,31 +177,31 @@ export const AiAuditLogTable: React.FC = () => {
               <th className="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#2a2b30] text-gray-300">
+          <tbody className="divide-y divide-line text-fg">
             {logs.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-[#8E9299]">
+                <td colSpan={8} className="py-8 text-center text-fg-muted">
                   {t('ai.settings.audit.noLogs', 'No audit log entries recorded yet.')}
                 </td>
               </tr>
             ) : (
               logs.map((log) => (
-                <tr key={log.id} className="hover:bg-[#151619]/80 transition">
-                  <td className="py-3 px-4 font-mono text-[11px] text-[#8E9299]">
+                <tr key={log.id} className="hover:bg-surface/80 transition">
+                  <td className="py-3 px-4 font-mono text-[11px] text-fg-muted">
                     {formatTime(log.timestamp)}
                   </td>
-                  <td className="py-3 px-4 font-medium text-white">
+                  <td className="py-3 px-4 font-medium text-fg">
                     <div>{log.modelName}</div>
-                    <div className="text-[10px] text-[#8E9299] font-mono">
+                    <div className="text-[10px] text-fg-muted font-mono">
                       {log.provider} {log.wasFallback && '• Fallback'}
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#1e1f24] text-gray-300 border border-[#2a2b30]">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-elevated text-fg border border-line">
                       {log.type === 'chat_query' ? 'Chat' : 'Diagnostic'}
                     </span>
                   </td>
-                  <td className="py-3 px-4 max-w-xs truncate text-gray-200" title={log.userMessage}>
+                  <td className="py-3 px-4 max-w-xs truncate text-fg" title={log.userMessage}>
                     {log.userMessage}
                   </td>
                   <td className="py-3 px-4 text-right font-mono text-emerald-400 font-medium">
@@ -225,7 +225,7 @@ export const AiAuditLogTable: React.FC = () => {
                     <AppTooltip description="View complete execution details" side="left">
                       <button
                         onClick={() => setSelectedLog(log)}
-                        className="p-1.5 text-[#8E9299] hover:text-[#2F6BFF] rounded-lg hover:bg-[#1e1f24] transition cursor-pointer"
+                        className="p-1.5 text-fg-muted hover:text-accent rounded-lg hover:bg-elevated transition cursor-pointer"
                         aria-label="View Details"
                       >
                         <Eye className="w-3.5 h-3.5" />

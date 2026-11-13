@@ -12,7 +12,8 @@ import {
   getBybitTxLogMeta,
   updateBybitTxLogMeta,
 } from '../historyCache';
-import { isStablecoin } from '../../utils/formatters';
+import { toFeeCost } from '../../utils/feeSign';
+import { isUsdPeggedStablecoin } from '../../utils/usdAggregation';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const TWO_YEARS_MS = 2 * 365 * 24 * 60 * 60 * 1000;
@@ -339,20 +340,22 @@ export class BybitTransactionService {
    * Financial values are separated by currency group to avoid mixing
    * coin-denominated values (BTC, ETH for inverse contracts) with
    * stablecoin values (USDT, USDC for linear contracts).
+   *
+   * Fees are normalized to the canonical convention (positive = paid,
+   * negative = rebate) — the Bybit API already reports fees as positive costs.
    */
   static computeStats(entries: BybitTransactionLogEntry[]): {
     totalCount: number;
     typeBreakdown: Record<string, number>;
-    /** Stablecoin totals (USDT, USDC) — displayed as USD */
+    /** Aggregate of the USD-pegged stablecoin buckets — displayed as USD */
     stable: { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string; totalInflow: string; totalOutflow: string; initialBalance: string; percentageChange: number };
-    /** Per-currency breakdown for non-stable (e.g. BTC, ETH) */
+    /** Per-currency breakdown for every currency, stablecoins included */
     perCurrency: Record<string, { totalFunding: string; totalFees: string; totalCashFlow: string; totalChange: string; finalBalance: string; totalInflow: string; totalOutflow: string; initialBalance: string; percentageChange: number }>;
   } {
     const typeBreakdown: Record<string, number> = {};
-    const stable = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) };
     const perCurrency: Record<string, { totalFunding: Big; totalFees: Big; totalCashFlow: Big; totalChange: Big; finalBalance: Big; totalInflow: Big; totalOutflow: Big }> = {};
-
-    const isStable = (currency: string) => isStablecoin(currency)
+    const bucketFor = (currency: string) =>
+      perCurrency[currency] || (perCurrency[currency] = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) });
 
     const latestBalance: Record<string, { time: number; balance: Big }> = {};
 
@@ -364,8 +367,7 @@ export class BybitTransactionService {
       const uType = getBybitUniversalType(e.type, e.funding);
       typeBreakdown[uType] = (typeBreakdown[uType] || 0) + 1;
 
-      const stableMatch = isStable(e.currency);
-      const bucket = stableMatch ? stable : (perCurrency[e.currency] || (perCurrency[e.currency] = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) }));
+      const bucket = bucketFor(e.currency || '');
 
       const typeUpper = e.type.toUpperCase();
       const changeBig = new Big(e.change || '0');
@@ -383,7 +385,7 @@ export class BybitTransactionService {
       const isTransferOrExchange = isInflow || isOutflow || typeUpper === 'TRANSFER';
 
       bucket.totalFunding = bucket.totalFunding.plus(new Big(e.funding || '0'));
-      bucket.totalFees = bucket.totalFees.plus(new Big(e.fee || '0'));
+      bucket.totalFees = bucket.totalFees.plus(toFeeCost('bybit', e.fee));
       
       if (isInflow) {
         bucket.totalInflow = bucket.totalInflow.plus(changeBig.abs());
@@ -407,12 +409,26 @@ export class BybitTransactionService {
       const dashIndex = key.lastIndexOf('-');
       const currency = key.substring(dashIndex + 1);
       if (!currency) continue;
-      
-      if (isStable(currency)) {
-        stable.finalBalance = stable.finalBalance.plus(data.balance);
-      } else if (perCurrency[currency]) {
-        perCurrency[currency].finalBalance = perCurrency[currency].finalBalance.plus(data.balance);
+
+      const bucket = perCurrency[currency];
+      if (bucket) {
+        bucket.finalBalance = bucket.finalBalance.plus(data.balance);
       }
+    }
+
+    // USD-pegged stablecoins are summed 1:1 into the stable bucket.
+    // Other stable-pegged assets (e.g. BRL, EURT) keep their own bucket so they
+    // can be converted with a real rate instead of being treated as USD.
+    const stable = { totalFunding: new Big(0), totalFees: new Big(0), totalCashFlow: new Big(0), totalChange: new Big(0), finalBalance: new Big(0), totalInflow: new Big(0), totalOutflow: new Big(0) };
+    for (const [currency, bucket] of Object.entries(perCurrency)) {
+      if (!isUsdPeggedStablecoin(currency)) continue;
+      stable.totalFunding = stable.totalFunding.plus(bucket.totalFunding);
+      stable.totalFees = stable.totalFees.plus(bucket.totalFees);
+      stable.totalCashFlow = stable.totalCashFlow.plus(bucket.totalCashFlow);
+      stable.totalChange = stable.totalChange.plus(bucket.totalChange);
+      stable.finalBalance = stable.finalBalance.plus(bucket.finalBalance);
+      stable.totalInflow = stable.totalInflow.plus(bucket.totalInflow);
+      stable.totalOutflow = stable.totalOutflow.plus(bucket.totalOutflow);
     }
 
     const calcDerived = (bucket: any) => {
