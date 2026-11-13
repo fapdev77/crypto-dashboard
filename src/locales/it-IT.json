@@ -1876,5 +1876,40 @@
     "lastSync": "Ultima Sincronizzazione",
     "latency": "Latenza",
     "quote": "Quotazione Attuale"
+  },
+  "donation": {
+    "buttonTooltipOpen": "Offrimi una birra (Dona cripto)",
+    "buttonTooltipClose": "Chiudi finestra donazioni",
+    "title": "Offrimi una Birra",
+    "subtitle": "Supporta lo sviluppatore con le criptovalute",
+    "message": "Ti piace l'app e ti sta aiutando? Allora non fare la sardina scatenata che brucia soldi solo in shitcoin! Considera di offrirmi una birra 🍺. Puoi donare quelle shitcoin e liberarti di quella spazzatura, ma se preferisci puoi mandare anche BTC, ETH o USDT 😁😁😁! Mi motiva a continuare a portare miglioramenti e nuove funzioni qui.",
+    "solanaLabel": "Solana",
+    "solanaBadge": "SOL / SPL",
+    "evmLabel": "EVM",
+    "evmAcceptedNote": "Stesso indirizzo valido sulle reti Ethereum, Polygon e Arbitrum:",
+    "btcLabel": "Bitcoin",
+    "btcBadge": "BTC",
+    "btcAlert": "Utilizza questo indirizzo solo per depositare BTC. Non depositare inscription, NFT o altri asset diversi da BTC, poiché non possono essere accreditati né restituiti.",
+    "copy": "Copia",
+    "copied": "Copiato!",
+    "showFull": "Mostra tutto",
+    "hideFull": "Comprimi",
+    "qrShow": "Codice QR",
+    "qrHide": "Nascondi QR",
+    "qrHintSolana": "Scansiona con il tuo wallet Solana (Phantom, Solflare, Backpack) per inviare SOL o token SPL.",
+    "qrHintEvm": "Scansiona con il tuo wallet EVM (MetaMask, Rabby, Trust) selezionando Ethereum, Polygon o Arbitrum.",
+    "qrHintBtc": "Scansiona con il tuo wallet Bitcoin (BlueWallet, Sparrow, Electrum, Ledger) per inviare solo BTC on-chain.",
+    "footerNote": "Le donazioni sono volontarie! Non ti contatteremo mai per richiedere alcun importo o pagamento"
+  },
+  "updateNotification": {
+    "title": "Aggiornamento Disponibile",
+    "countdown": "tra {{seconds}}s",
+    "description": "È pronta una nuova versione con miglioramenti delle prestazioni e aggiornamenti.",
+    "viewChangelog": "Vedi Versione e Changelog",
+    "dismissAria": "Chiudi notifica",
+    "dismissTitle": "Chiudi (Non aggiornare ora)",
+    "notNow": "Non Ora",
+    "updating": "Aggiornamento...",
+    "updateNow": "Aggiorna Ora"
   }
 }

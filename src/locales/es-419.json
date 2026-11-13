@@ -1876,5 +1876,40 @@
     "lastSync": "Última Sincronización",
     "latency": "Latencia",
     "quote": "Cotización Actual"
+  },
+  "donation": {
+    "buttonTooltipOpen": "Invítame una cerveza (Donar cripto)",
+    "buttonTooltipClose": "Cerrar ventana de donación",
+    "title": "Invítame una Cerveza",
+    "subtitle": "Apoya al desarrollador con criptomonedas",
+    "message": "¿Te gustó la app y te está ayudando? ¡Entonces no seas una sardina alocada que solo quema dinero en shitcoins! Considera invitarme una cerveza 🍺. Puedes donar esas shitcoins y deshacerte de esa basura, pero si quieres también puedes mandar BTC, ETH o USDT 😁😁😁! Eso me motiva a seguir trayendo mejoras y nuevas funciones por aquí.",
+    "solanaLabel": "Solana",
+    "solanaBadge": "SOL / SPL",
+    "evmLabel": "EVM",
+    "evmAcceptedNote": "Misma dirección válida en Ethereum, Polygon y Arbitrum:",
+    "btcLabel": "Bitcoin",
+    "btcBadge": "BTC",
+    "btcAlert": "Usa esta dirección solo para depositar BTC. No deposites inscriptions, NFTs ni ningún otro activo que no sea BTC, ya que no se podrán acreditar ni devolver.",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "showFull": "Ver completa",
+    "hideFull": "Ocultar",
+    "qrShow": "Código QR",
+    "qrHide": "Ocultar QR",
+    "qrHintSolana": "Escanea con tu billetera Solana (Phantom, Solflare, Backpack) para enviar SOL o tokens SPL.",
+    "qrHintEvm": "Escanea con tu billetera EVM (MetaMask, Rabby, Trust) eligiendo Ethereum, Polygon o Arbitrum.",
+    "qrHintBtc": "Escanea con tu billetera Bitcoin (BlueWallet, Sparrow, Electrum, Ledger) para enviar solo BTC on-chain.",
+    "footerNote": "¡Las donaciones son voluntarias! Nunca nos pondremos en contacto contigo para solicitar ningún monto o pago"
+  },
+  "updateNotification": {
+    "title": "Actualización Disponible",
+    "countdown": "en {{seconds}}s",
+    "description": "Hay una nueva versión lista con mejoras de rendimiento y actualizaciones.",
+    "viewChangelog": "Ver Versión y Changelog",
+    "dismissAria": "Descartar notificación",
+    "dismissTitle": "Descartar (No actualizar ahora)",
+    "notNow": "Ahora No",
+    "updating": "Actualizando...",
+    "updateNow": "Actualizar Ahora"
   }
 }

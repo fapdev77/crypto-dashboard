@@ -1876,5 +1876,40 @@
     "lastSync": "Last Sync",
     "latency": "Latency",
     "quote": "Current Quote"
+  },
+  "donation": {
+    "buttonTooltipOpen": "Buy me a beer (Crypto donation)",
+    "buttonTooltipClose": "Close donation modal",
+    "title": "Buy Me a Beer",
+    "subtitle": "Support the developer with crypto",
+    "message": "Enjoying the app and finding it useful? Then don't be a crazy retail degen who only burns money on shitcoins! Consider buying me a beer 🍺. Feel free to dump those shitcoins on me to get rid of that trash, or send BTC, ETH, or USDT if you prefer 😁😁😁! It keeps me motivated to ship more upgrades and new features here.",
+    "solanaLabel": "Solana",
+    "solanaBadge": "SOL / SPL",
+    "evmLabel": "EVM",
+    "evmAcceptedNote": "Same address accepted on Ethereum, Polygon, and Arbitrum:",
+    "btcLabel": "Bitcoin",
+    "btcBadge": "BTC",
+    "btcAlert": "Only use this address to deposit BTC. Please don't deposit inscriptions, NFTs, or any other non-BTC assets, as they can't be credited or returned.",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "showFull": "Show full",
+    "hideFull": "Hide full",
+    "qrShow": "QR Code",
+    "qrHide": "Hide QR",
+    "qrHintSolana": "Scan with your Solana wallet (Phantom, Solflare, Backpack) to send SOL or SPL tokens.",
+    "qrHintEvm": "Scan with your EVM wallet (MetaMask, Rabby, Trust) on Ethereum, Polygon, or Arbitrum.",
+    "qrHintBtc": "Scan with your Bitcoin wallet (BlueWallet, Sparrow, Electrum, Ledger) to send on-chain BTC only.",
+    "footerNote": "Donations are voluntary! We will never contact you requesting any amount or payment"
+  },
+  "updateNotification": {
+    "title": "Update Available",
+    "countdown": "in {{seconds}}s",
+    "description": "A new version with performance improvements and updates is ready.",
+    "viewChangelog": "View Version & Changelog",
+    "dismissAria": "Dismiss notification",
+    "dismissTitle": "Dismiss (Do not update now)",
+    "notNow": "Not Now",
+    "updating": "Updating...",
+    "updateNow": "Update Now"
   }
 }

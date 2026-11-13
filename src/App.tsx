@@ -18,6 +18,8 @@ import { PrivacyToggleButton } from './components/PrivacyToggleButton';
 import { TooltipProvider } from './components/ui/Tooltip';
 import { useSettingsStore } from './store/settingsStore';
 import { HelpToggleButton } from './components/HelpToggleButton';
+import { DonationToggleButton } from './components/DonationToggleButton';
+import { DonationModal } from './components/DonationModal';
 import { WelcomeHelpModal } from './components/WelcomeHelpModal';
 import { UpdateNotification } from './components/UpdateNotification';
 import { useApiKeysStore } from './store/apiKeysStore';
@@ -65,6 +67,7 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+  const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [isVaultNoticeOpen, setIsVaultNoticeOpen] = useState(false);
   const [isVaultSetupModalOpen, setIsVaultSetupModalOpen] = useState(false);
   const [legacyKeys, setLegacyKeys] = useState<ApiCredentials[]>(() => detectLegacyUnencryptedKeys());
@@ -295,6 +298,7 @@ export default function App() {
                     <LanguageCurrencyButton />
                     <ThemeModeButton />
                     {isAiFeatureEnabled && <AiPikaChatButton onClick={openChatDrawer} isEnabled={isAiEnabled} />}
+                    <DonationToggleButton isOpen={isDonationOpen} onClick={() => setIsDonationOpen(!isDonationOpen)} />
                     <HelpToggleButton isOpen={isWelcomeOpen} onClick={() => setIsWelcomeOpen(!isWelcomeOpen)} />
                     <PrivacyToggleButton />
                   </div>
@@ -340,6 +344,7 @@ export default function App() {
             <StatusBar />
           </div>
           <WelcomeHelpModal isOpen={isWelcomeOpen} onClose={handleCloseWelcome} />
+          <DonationModal isOpen={isDonationOpen} onClose={() => setIsDonationOpen(false)} />
           <VaultSetupNoticeModal
             isOpen={isVaultNoticeOpen}
             onClose={() => setIsVaultNoticeOpen(false)}

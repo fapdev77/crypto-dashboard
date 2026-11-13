@@ -1876,5 +1876,40 @@
     "lastSync": "Última Sincronização",
     "latency": "Latência",
     "quote": "Cotação Atual"
+  },
+  "donation": {
+    "buttonTooltipOpen": "Pague uma imperial (Doar cripto)",
+    "buttonTooltipClose": "Fechar janela de doação",
+    "title": "Pague uma Cerveja",
+    "subtitle": "Apoie o programador com criptomoedas",
+    "message": "Gostou da app e ela está a ajudá-lo? Então não seja uma sardinha alucinada que só queima dinheiro em shitcoins! Considere pagar-me uma cerveja 🍺. Pode enviar essas shitcoins e livrar-se desse lixo, mas se preferir também aceito BTC, ETH ou USDT 😁😁😁! Isso motiva-me a continuar a trazer melhorias e novas funcionalidades por aqui.",
+    "solanaLabel": "Solana",
+    "solanaBadge": "SOL / SPL",
+    "evmLabel": "EVM",
+    "evmAcceptedNote": "Mesmo endereço válido nas redes Ethereum, Polygon e Arbitrum:",
+    "btcLabel": "Bitcoin",
+    "btcBadge": "BTC",
+    "btcAlert": "Utilize este endereço apenas para depositar BTC. Não deposite inscriptions, NFTs nem quaisquer outros ativos que não sejam BTC, pois não podem ser creditados nem devolvidos.",
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "showFull": "Ver completo",
+    "hideFull": "Resumir",
+    "qrShow": "Código QR",
+    "qrHide": "Ocultar QR",
+    "qrHintSolana": "Leia com a sua carteira Solana (Phantom, Solflare, Backpack) para enviar SOL ou tokens SPL.",
+    "qrHintEvm": "Leia com a sua carteira EVM (MetaMask, Rabby, Trust) selecionando Ethereum, Polygon ou Arbitrum.",
+    "qrHintBtc": "Leia com a sua carteira Bitcoin (BlueWallet, Sparrow, Electrum, Ledger) para enviar apenas BTC on-chain.",
+    "footerNote": "As doações são voluntárias! Nunca entraremos em contacto a solicitar qualquer valor ou pagamento"
+  },
+  "updateNotification": {
+    "title": "Atualização Disponível",
+    "countdown": "em {{seconds}}s",
+    "description": "Está pronta uma nova versão com melhorias de desempenho e atualizações.",
+    "viewChangelog": "Ver Versão e Registo de Alterações",
+    "dismissAria": "Dispensar notificação",
+    "dismissTitle": "Dispensar (Não atualizar agora)",
+    "notNow": "Agora Não",
+    "updating": "A atualizar...",
+    "updateNow": "Atualizar Agora"
   }
 }

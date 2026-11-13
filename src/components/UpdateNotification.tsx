@@ -170,30 +170,30 @@ export function UpdateNotification() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <h3 id="pwa-update-title" className="text-[14px] font-semibold text-fg tracking-wide">
-              Update Available
+              {t('updateNotification.title', 'Update Available')}
             </h3>
             {!isCountdownCancelled && (
               <span className="text-[10px] font-mono text-fg-muted">
-                in {secondsRemaining}s
+                {t('updateNotification.countdown', 'in {{seconds}}s', { seconds: secondsRemaining })}
               </span>
             )}
           </div>
           <p className="text-xs text-fg leading-relaxed mb-2">
-            A new version with performance improvements and updates is ready.
+            {t('updateNotification.description', 'A new version with performance improvements and updates is ready.')}
           </p>
           <button
             onClick={handleViewChangelog}
             className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:text-blue-300 transition-colors cursor-pointer group"
           >
-            <span>View Version & Changelog</span>
+            <span>{t('updateNotification.viewChangelog', 'View Version & Changelog')}</span>
             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
         <button
           onClick={handleDismiss}
           className="text-fg-muted hover:text-fg transition-colors shrink-0 p-1.5 hover:bg-line rounded-md cursor-pointer"
-          aria-label="Dismiss notification"
-          title="Dismiss (Do not update now)"
+          aria-label={t('updateNotification.dismissAria', 'Dismiss notification')}
+          title={t('updateNotification.dismissTitle', 'Dismiss (Do not update now)')}
         >
           <X className="w-4 h-4" />
         </button>
@@ -215,7 +215,7 @@ export function UpdateNotification() {
           onClick={handleDismiss}
           className="flex-1 py-2.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-line/50 transition-colors cursor-pointer"
         >
-          Not Now
+          {t('updateNotification.notNow', 'Not Now')}
         </button>
         <button
           onClick={(e) => {
@@ -226,7 +226,11 @@ export function UpdateNotification() {
           className="flex-1 py-2.5 text-xs font-medium text-accent hover:text-blue-300 hover:bg-line/50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
-          <span>{isUpdating ? 'Updating...' : 'Update Now'}</span>
+          <span>
+            {isUpdating
+              ? t('updateNotification.updating', 'Updating...')
+              : t('updateNotification.updateNow', 'Update Now')}
+          </span>
         </button>
       </div>
     </div>
