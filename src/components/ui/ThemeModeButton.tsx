@@ -16,6 +16,7 @@ const THEME_ICONS: Record<ThemeMode, React.ElementType> = {
 interface ThemeModeButtonProps {
   className?: string;
   showText?: boolean;
+  compactOnMobile?: boolean;
 }
 
 /**
@@ -23,7 +24,11 @@ interface ThemeModeButtonProps {
  * Fica ao lado do seletor de idioma e não interfere nos temas de marca
  * por corretora, que continuam sendo aplicados via `data-theme`.
  */
-export function ThemeModeButton({ className = '', showText = true }: ThemeModeButtonProps) {
+export function ThemeModeButton({
+  className = '',
+  showText = true,
+  compactOnMobile = false,
+}: ThemeModeButtonProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -103,14 +108,22 @@ export function ThemeModeButton({ className = '', showText = true }: ThemeModeBu
           ref={buttonRef}
           type="button"
           onClick={() => setIsOpen(open => !open)}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-fg-muted hover:text-fg bg-elevated hover:bg-line border border-line hover:border-line-strong rounded-lg transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}
+          className={`h-9 inline-flex items-center justify-center text-xs font-medium text-fg-muted hover:text-fg bg-surface hover:bg-elevated-hover border border-line hover:border-line-strong rounded-lg transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas whitespace-nowrap shrink-0 ${
+            compactOnMobile && showText
+              ? 'w-9 px-0 sm:w-auto sm:px-2.5 sm:gap-1.5'
+              : showText
+              ? 'gap-1.5 px-2.5'
+              : 'w-9 px-0'
+          } ${className}`}
           aria-label={`${t('theme.title', 'Interface theme')}: ${currentLabel}`}
           aria-haspopup="menu"
           aria-expanded={isOpen}
         >
-          <CurrentIcon className="w-4 h-4 shrink-0" />
+          <CurrentIcon className="w-[18px] h-[18px] shrink-0" />
           {showText && (
-            <span className="font-semibold tracking-wide hidden sm:inline">{currentLabel}</span>
+            <span className="font-semibold tracking-wide whitespace-nowrap hidden sm:inline">
+              {currentLabel}
+            </span>
           )}
         </button>
       </AppTooltip>

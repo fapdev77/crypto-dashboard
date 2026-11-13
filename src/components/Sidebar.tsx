@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { LayoutDashboard, KeyRound, Settings, Activity, Terminal, X, ChevronDown, ChevronsLeft, ChevronsRight, BarChart2, FileText, AlignLeft, ClipboardList, ArrowLeftRight, BrainCircuit, History, ShieldCheck } from 'lucide-react';
+import { X, ChevronDown, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { NAV_SECTION_ICONS } from '../config/navigationConfig';
 import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useOrdersStore } from '../store/ordersStore';
@@ -101,43 +102,43 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
   }, [activeExchanges, useMockData, t]);
 
   const navItems: NavItem[] = useMemo(() => [
-    { id: 'dashboard', label: t('nav.dashboard', 'Dashboard'), icon: LayoutDashboard },
+    { id: 'dashboard', label: t('nav.dashboard', 'Dashboard'), icon: NAV_SECTION_ICONS.dashboard },
     {
-      id: 'hedge-pro', label: t('nav.hedgePro', 'Hedge Pro'), icon: ShieldCheck, subItems: [
+      id: 'hedge-pro', label: t('nav.hedgePro', 'Hedge Pro'), icon: NAV_SECTION_ICONS.hedgePro, subItems: [
         { id: 'analytics-hedge-pro', label: t('nav.hedgePro', 'Hedge Pro') }
       ]
     },
     {
-      id: 'positions', label: t('nav.openPositions', 'Positions'), icon: Activity, subItems: [
+      id: 'positions', label: t('nav.openPositions', 'Positions'), icon: NAV_SECTION_ICONS.positions, subItems: [
         { id: 'positions-open', label: t('nav.openPositions', 'Open Positions'), badge: openCount },
         { id: 'positions-history', label: t('nav.closedPositions', 'Positions History') }
       ]
     },
     {
-      id: 'orders', label: t('nav.orders', 'Orders'), icon: ClipboardList, subItems: [
+      id: 'orders', label: t('nav.orders', 'Orders'), icon: NAV_SECTION_ICONS.orders, subItems: [
         { id: 'orders-open', label: t('nav.openOrders', 'Open Orders'), badge: openOrdersCount },
         { id: 'orders-history', label: t('nav.orderHistory', 'Orders History') }
       ]
     },
     {
-      id: 'trade', label: t('nav.trade', 'Trade'), icon: ArrowLeftRight, subItems: [
+      id: 'trade', label: t('nav.trade', 'Trade'), icon: NAV_SECTION_ICONS.trade, subItems: [
         { id: 'trade-history', label: t('nav.trade', 'Trade History') }
       ]
     },
     ...(transactionHistoryItems.length > 0
       ? [{
-          id: 'transactions-history', label: t('nav.transactions', 'Transactions History'), icon: History, subItems: transactionHistoryItems
+          id: 'transactions-history', label: t('nav.transactions', 'Transactions History'), icon: NAV_SECTION_ICONS.transactions, subItems: transactionHistoryItems
         }]
       : []),
     {
-      id: 'analytics', label: t('nav.analytics', 'Analytics'), icon: BarChart2, subItems: [
+      id: 'analytics', label: t('nav.analytics', 'Analytics'), icon: NAV_SECTION_ICONS.analytics, subItems: [
         { id: 'analytics-portfolio-performance', label: t('nav.portfolioPerformance', 'Portfolio Performance') },
         { id: 'analytics-market-advanced', label: t('nav.marketAnalytics', 'Market Analytics') },
         { id: 'analytics-pnl-symbol', label: t('nav.pnlBySymbol', 'PnL by Symbol') },
         { id: 'analytics-funding', label: t('nav.fundingDashboard', 'Funding Fees') }
       ]
     },
-    { id: 'reports', label: t('nav.reports', 'Reports'), icon: FileText },
+    { id: 'reports', label: t('nav.reports', 'Reports'), icon: NAV_SECTION_ICONS.reports },
   ], [t, openCount, openOrdersCount, transactionHistoryItems]);
 
   // Accordion state management
@@ -337,11 +338,11 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
 
       <div className={`p-3 lg:p-4 border-t border-line shrink-0 ${collapsed ? 'px-3' : ''}`}>
         {[
-          { id: 'api-keys', label: t('nav.apiKeys', 'API Keys'), icon: KeyRound },
-          { id: 'logs', label: t('nav.connectionLogs', 'Logs'), icon: AlignLeft },
-          { id: 'api-tester', label: t('nav.apiTester', 'API Tester'), icon: Terminal },
-          ...(isAiChatbotFeatureEnabled() ? [{ id: 'ai-settings', label: t('nav.aiSettings', 'AI Settings'), icon: BrainCircuit }] : []),
-          { id: 'settings', label: t('nav.settings', 'Settings'), icon: Settings },
+          { id: 'api-keys', label: t('nav.apiKeys', 'API Keys'), icon: NAV_SECTION_ICONS.apiKeys },
+          { id: 'logs', label: t('nav.connectionLogs', 'Logs'), icon: NAV_SECTION_ICONS.logs },
+          { id: 'api-tester', label: t('nav.apiTester', 'API Tester'), icon: NAV_SECTION_ICONS.apiTester },
+          ...(isAiChatbotFeatureEnabled() ? [{ id: 'ai-settings', label: t('nav.aiSettings', 'AI Settings'), icon: NAV_SECTION_ICONS.aiSettings }] : []),
+          { id: 'settings', label: t('nav.settings', 'Settings'), icon: NAV_SECTION_ICONS.settings },
         ].map((item) => (
           <button
             key={item.id}
