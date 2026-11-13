@@ -84,4 +84,12 @@ describe('Sidebar Transactions History group', () => {
     expect(screen.getByText('Market Analytics')).toBeDefined();
     expect(screen.getByText('Funding Fees')).toBeDefined();
   });
+
+  it('renders Positions as parent menu item while preserving Open Positions and Closed Positions submenus', () => {
+    renderSidebar('positions-open');
+
+    expect(screen.getByText('Positions')).toBeDefined();
+    expect(screen.getByText('Open Positions')).toBeDefined();
+    expect(screen.getByText('Closed Positions')).toBeDefined();
+  });
 });

@@ -159,6 +159,7 @@
   },
   "nav": {
     "dashboard": "Panel Principal",
+    "positions": "Posiciones",
     "openPositions": "Posiciones Abiertas",
     "closedPositions": "Posiciones Cerradas",
     "trade": "Operaciones",

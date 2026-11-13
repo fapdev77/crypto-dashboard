@@ -109,7 +109,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       ]
     },
     {
-      id: 'positions', label: t('nav.openPositions', 'Positions'), icon: NAV_SECTION_ICONS.positions, subItems: [
+      id: 'positions', label: t('nav.positions', 'Positions'), icon: NAV_SECTION_ICONS.positions, subItems: [
         { id: 'positions-open', label: t('nav.openPositions', 'Open Positions'), badge: openCount },
         { id: 'positions-history', label: t('nav.closedPositions', 'Positions History') }
       ]

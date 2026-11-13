@@ -153,7 +153,7 @@ export function getTabHeaderMeta(activeTab: string, t: TFunction): TabHeaderMeta
     default:
       if (activeTab.startsWith('positions-')) {
         return {
-          title: t('nav.openPositions', 'Positions'),
+          title: t('nav.positions', 'Positions'),
           icon: NAV_SECTION_ICONS.positions,
         };
       }
