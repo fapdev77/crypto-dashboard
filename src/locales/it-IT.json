@@ -159,6 +159,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "positions": "Posizioni",
     "openPositions": "Posizioni Aperte",
     "closedPositions": "Posizioni Chiuse",
     "trade": "Operazioni",
