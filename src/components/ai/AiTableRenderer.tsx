@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import * as XLSX from 'xlsx';
 import { Download, Copy, Check, ArrowUpDown, FileSpreadsheet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -77,8 +76,11 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
     return { headers, rows };
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     try {
+      // Loaded on demand: SheetJS is only needed when a table is actually exported.
+      const XLSX = await import('xlsx');
+
       const { headers, rows } = extractTableData();
       if (headers.length === 0 && rows.length === 0) {
         toast.error(t('toasts.noTableDataExport', 'No table data to export'));

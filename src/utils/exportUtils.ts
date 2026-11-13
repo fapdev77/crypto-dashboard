@@ -1,6 +1,3 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 import { formatIsoDateTime } from './dateTimeHelper';
 
 export interface ExportConfig {
@@ -39,6 +36,9 @@ export const exportToExcel = async (config: ExportConfig) => {
   const { filename, headers, rows } = config;
   if (rows.length === 0) return;
 
+  // Loaded on demand: keeps the ~900 kB SheetJS parser out of the initial bundle.
+  const XLSX = await import('xlsx');
+
   const notes = normalizeNotes(config.notes);
   const headerRows: (string | number)[][] = notes.length > 0 ? [...notes.map(note => [note]), [], headers] : [headers];
   const worksheet = XLSX.utils.aoa_to_sheet([...headerRows, ...rows]);
@@ -48,9 +48,15 @@ export const exportToExcel = async (config: ExportConfig) => {
   XLSX.writeFile(workbook, `${filename}.xlsx`);
 };
 
-export const exportToPDF = (config: ExportConfig) => {
+export const exportToPDF = async (config: ExportConfig) => {
   const { title, filename, headers, rows } = config;
   if (rows.length === 0) return;
+
+  // Loaded on demand: jsPDF + autotable are only needed when the user actually exports.
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
 
   const doc = new jsPDF();
   

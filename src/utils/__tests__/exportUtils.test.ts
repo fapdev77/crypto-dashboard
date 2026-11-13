@@ -89,15 +89,15 @@ describe('exportUtils notes', () => {
     expect(captured.sheet).toEqual([[note], [], headers, ...rows]);
   });
 
-  it('prints the note on the PDF and starts the table below it', () => {
-    exportToPDF({ title: 'Report', filename: 'test', headers, rows, notes: [note] });
+  it('prints the note on the PDF and starts the table below it', async () => {
+    await exportToPDF({ title: 'Report', filename: 'test', headers, rows, notes: [note] });
 
     expect(captured.pdfTexts.map(t => t.text)).toContain(note);
     expect(captured.pdfStartY).toBeGreaterThan(28);
   });
 
-  it('starts the PDF table at the default position without notes', () => {
-    exportToPDF({ title: 'Report', filename: 'test', headers, rows });
+  it('starts the PDF table at the default position without notes', async () => {
+    await exportToPDF({ title: 'Report', filename: 'test', headers, rows });
 
     expect(captured.pdfStartY).toBe(28);
   });
