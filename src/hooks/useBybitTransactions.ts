@@ -7,9 +7,9 @@ import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { BybitTransactionService } from '../services/bybit/BybitTransactionService';
 import { getBybitTxLogCache } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
-import { fetchTokenUsdPrice } from './useTokenUsdPrice';
-import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
-import Big from 'big.js';
+import { getUsdPrices } from '../services/pricing/usdPrice';
+import { getStartOfTodayInMs, resolvePeriodDateRange } from '../utils/dateTimeHelper';
+import { aggregateStatsToUsd, needsTokenRate } from '../utils/usdAggregation';
 
 export interface TxFilters {
   search: string;
@@ -17,7 +17,9 @@ export interface TxFilters {
   type: string;         // 'All' | 'TRADE' | 'SETTLEMENT' | ...
   currency: string;     // 'All' | 'USDT' | 'USDC' | 'BTC' | ...
   accountId: string;    // 'All' or connectionId
-  timePeriod: number;   // ms
+  timePeriod: number | string; // ms (0 = All Time), 'mtd', 'ytd', 'custom'
+  customStartDate?: string;
+  customEndDate?: string;
 }
 
 const defaultFilters: TxFilters = {
@@ -46,18 +48,21 @@ export interface TxStats {
   typeBreakdown: Record<string, number>;
   /** Aggregated stablecoin values (USDT, USDC) */
   stable: CurrencyStats;
-  /** Per-currency breakdown for non-stable coins (BTC, ETH, etc.) */
+  /** Per-currency breakdown for every currency, stablecoins included */
   perCurrency: Record<string, CurrencyStats>;
   /** 
    * Grand total in USD (combines stable + dynamically fetched prices for non-stable).
    * Note: uses CURRENT market price, not historical transaction price.
    */
   aggregatedUsd: CurrencyStats;
+  /** Currencies excluded from the USD totals because no price was available. */
+  missingRates: string[];
 }
 
 export function useBybitTransactions(filters: TxFilters = defaultFilters) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const fiatRates = useSettingsStore(state => state.fiatRates);
   const syncStore = useSyncCoordinatorStore();
 
   const [entries, setEntries] = useState<BybitTransactionLogEntry[]>([]);
@@ -124,19 +129,11 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
 
   // Apply filters
   const filteredEntries = useMemo(() => {
-    let startTime: number | undefined;
-    let endTime: number | undefined;
-    const now = Date.now();
-
-    // timePeriod === 0 means "All Time" — no time filter
-    if (filters.timePeriod > 0) {
-      if (filters.timePeriod === 24 * 60 * 60 * 1000) {
-        startTime = getStartOfTodayInMs();
-      } else {
-        startTime = now - filters.timePeriod;
-      }
-      endTime = now;
-    }
+    const { startTime, endTime } = resolvePeriodDateRange(
+      filters.timePeriod,
+      filters.customStartDate,
+      filters.customEndDate
+    );
 
     return BybitTransactionService.filterEntries(entries, {
       search: filters.search || undefined,
@@ -144,8 +141,8 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
       type: filters.type.toLowerCase() !== 'all' ? filters.type : undefined,
       currency: filters.currency.toLowerCase() !== 'all' ? filters.currency : undefined,
       accountId: filters.accountId.toLowerCase() !== 'all' ? filters.accountId : undefined,
-      startTime,
-      endTime,
+      startTime: startTime ?? undefined,
+      endTime: endTime ?? undefined,
     });
   }, [entries, filters]);
 
@@ -157,7 +154,7 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
   // Fetch prices for any non-stable currencies we have in rawStats.perCurrency
   useEffect(() => {
     let isMounted = true;
-    const currencies = Object.keys(rawStats.perCurrency);
+    const currencies = Object.keys(rawStats.perCurrency).filter(ccy => needsTokenRate(ccy, fiatRates));
     
     if (currencies.length === 0) {
       if (isCalculatingUsd) setIsCalculatingUsd(false);
@@ -175,82 +172,35 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
 
       if (isMounted) setIsCalculatingUsd(true);
 
-      const promises = missingCurrencies.map(ccy => fetchTokenUsdPrice(ccy));
-      const results = await Promise.all(promises);
+      const { rates } = await getUsdPrices(missingCurrencies, { exchange: 'bybit', fiatRates });
 
       if (!isMounted) return;
 
-      const newRates = { ...tokenRates };
-      let updated = false;
-
-      missingCurrencies.forEach((ccy, index) => {
-        const price = results[index];
-        if (price !== null) {
-          newRates[ccy] = price;
-          updated = true;
-        }
-      });
-
-      if (updated) {
-        setTokenRates(newRates);
+      if (Object.keys(rates).length > 0) {
+        setTokenRates({ ...tokenRates, ...rates });
       }
       setIsCalculatingUsd(false);
     };
 
     fetchRates();
     // We intentionally only depend on the keys of perCurrency, not the whole object, to avoid refetches
-  }, [Object.keys(rawStats.perCurrency).join(',')]); 
+  }, [Object.keys(rawStats.perCurrency).join(','), fiatRates]); 
 
   // Combine raw stats with dynamic USD equivalents
   const stats = useMemo<TxStats>(() => {
-    let totalFundingUsd = new Big(rawStats.stable.totalFunding);
-    let totalFeesUsd = new Big(rawStats.stable.totalFees);
-    let totalCashFlowUsd = new Big(rawStats.stable.totalCashFlow);
-    let totalChangeUsd = new Big(rawStats.stable.totalChange);
-    let finalBalanceUsd = new Big(rawStats.stable.finalBalance);
-    let totalInflowUsd = new Big(rawStats.stable.totalInflow);
-    let totalOutflowUsd = new Big(rawStats.stable.totalOutflow);
-
-    for (const [ccy, vals] of Object.entries(rawStats.perCurrency)) {
-      const rate = tokenRates[ccy] || 0; // If rate isn't loaded yet, it contributes 0 to USD
-      
-      totalFundingUsd = totalFundingUsd.plus(new Big(vals.totalFunding).times(rate));
-      totalFeesUsd = totalFeesUsd.plus(new Big(vals.totalFees).times(rate));
-      totalCashFlowUsd = totalCashFlowUsd.plus(new Big(vals.totalCashFlow).times(rate));
-      totalChangeUsd = totalChangeUsd.plus(new Big(vals.totalChange).times(rate));
-      finalBalanceUsd = finalBalanceUsd.plus(new Big(vals.finalBalance).times(rate));
-      totalInflowUsd = totalInflowUsd.plus(new Big(vals.totalInflow).times(rate));
-      totalOutflowUsd = totalOutflowUsd.plus(new Big(vals.totalOutflow).times(rate));
-    }
-
-    const initialBalanceUsd = finalBalanceUsd.minus(totalChangeUsd).minus(totalInflowUsd).plus(totalOutflowUsd);
-    
-    const basisUsd = initialBalanceUsd.plus(totalInflowUsd);
-    let percentageChangeUsd = 0;
-    if (basisUsd.gt(0)) {
-      percentageChangeUsd = totalChangeUsd.div(basisUsd).times(100).toNumber();
-    } else if (basisUsd.eq(0) && totalChangeUsd.gt(0)) {
-      percentageChangeUsd = 100;
-    }
+    // perCurrency contains every currency (stablecoins included), so a single
+    // shared aggregation keeps page, consolidated dashboard and export aligned.
+    const { stats: aggregatedUsd, missingRates } = aggregateStatsToUsd(rawStats.perCurrency, tokenRates, fiatRates);
 
     return {
       totalCount: rawStats.totalCount,
       typeBreakdown: rawStats.typeBreakdown,
       stable: rawStats.stable,
       perCurrency: rawStats.perCurrency,
-      aggregatedUsd: {
-        totalFunding: totalFundingUsd.toString(),
-        totalFees: totalFeesUsd.toString(),
-        totalCashFlow: totalCashFlowUsd.toString(),
-        totalChange: totalChangeUsd.toString(),
-        finalBalance: finalBalanceUsd.toString(),
-        totalInflow: totalInflowUsd.toString(),
-        totalOutflow: totalOutflowUsd.toString(),
-        initialBalance: initialBalanceUsd.toString(),
-        percentageChange: percentageChangeUsd,
-      }
+      aggregatedUsd,
+      missingRates: rawStats.totalCount > 0 ? missingRates : [],
     };
-  }, [rawStats, tokenRates]);
+  }, [rawStats, tokenRates, fiatRates]);
 
   return {
     entries,
@@ -259,7 +209,7 @@ export function useBybitTransactions(filters: TxFilters = defaultFilters) {
     isSyncing: syncStore.isBybitTxSyncing,
     isCalculatingUsd,
     progress: syncStore.bybitTxProgress,
-    error,
+    error: error || syncStore.bybitTxSyncError,
     stats,
     tokenRates,
   };

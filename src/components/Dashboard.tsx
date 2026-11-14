@@ -9,16 +9,23 @@ import { DollarSign, TrendingUp, TrendingDown, BarChart2, Activity, ArrowUpRight
 import { Sparkline } from './ui/Sparkline';
 import { MacroCapitalChart } from './analytics/MacroCapitalChart';
 import { CrossExchangeAssetsChart } from './analytics/CrossExchangeAssetsChart';
+import { MarketSentiment } from './analytics/MarketSentiment';
+import { CurrencyRatesWidget } from './analytics/CurrencyRatesWidget';
 import { ExchangeHierarchyTable } from './ExchangeHierarchyTable';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
+import { isUsdPeggedStablecoin } from '../utils/usdAggregation';
+import { AppTooltip } from './ui/Tooltip';
+import { useTranslation } from 'react-i18next';
 
 export function Dashboard() {
+  const { t } = useTranslation();
   const balances = useBalancesStore(state => state.balances);
   const positions = usePositionsStore(state => state.positions);
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const currentFiat = useSettingsStore(state => state.fiatCurrency);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
 
@@ -28,19 +35,92 @@ export function Dashboard() {
   const positionsList = Object.values(positions);
   const activeKeyIds = useMemo(() => new Set(keys.filter(k => k.isActive).map(k => k.id)), [keys]);
 
-  const activeBalances = useMemo(() => {
-    if (!useMockData && activeKeyIds.size === 0) return [];
-    return useMockData
-      ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
-      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
-  }, [balancesList, useMockData, activeKeyIds]);
-
   const activePositions = useMemo(() => {
     if (!useMockData && activeKeyIds.size === 0) return [];
     return useMockData
       ? positionsList.filter(pos => pos.connectionId.startsWith('mocked-data'))
       : positionsList.filter(pos => !pos.connectionId.startsWith('mocked-data') && activeKeyIds.has(pos.connectionId));
   }, [positionsList, useMockData, activeKeyIds]);
+
+  const activeBalances = useMemo(() => {
+    if (!useMockData && activeKeyIds.size === 0) return [];
+    const rawList = useMockData
+      ? balancesList.filter(b => b.connectionId.startsWith('mocked-data'))
+      : balancesList.filter(b => !b.connectionId.startsWith('mocked-data') && activeKeyIds.has(b.connectionId));
+
+    // For Bybit, Bitget, and OKX in Dashboard: use Net Balance (Equity) instead of Gross Wallet Balance
+    return rawList.map(b => {
+      const ex = b.exchange?.toLowerCase();
+      if (ex !== 'bybit' && ex !== 'bitget' && ex !== 'okx') {
+        return b;
+      }
+
+      // Check if raw data has official exchange equity (net balance in coin and USD)
+      const rawObj: any = b.raw || {};
+      const rawEquity = rawObj.equity !== undefined && rawObj.equity !== null && rawObj.equity !== ''
+        ? parseFloat(String(rawObj.equity))
+        : (rawObj.eq !== undefined && rawObj.eq !== null && rawObj.eq !== ''
+            ? parseFloat(String(rawObj.eq))
+            : NaN);
+      const rawUsdValue = rawObj.usdValue !== undefined && rawObj.usdValue !== null && rawObj.usdValue !== ''
+        ? parseFloat(String(rawObj.usdValue))
+        : (rawObj.eqUsd !== undefined && rawObj.eqUsd !== null && rawObj.eqUsd !== ''
+            ? parseFloat(String(rawObj.eqUsd))
+            : NaN);
+
+      const coinPrice = (b.amount > 0 && (b.usdValue || 0) > 0)
+        ? (b.usdValue / b.amount)
+        : 0;
+
+      if (!isNaN(rawEquity) && rawEquity >= 0) {
+        const netAmount = rawEquity;
+        const netUsdValue = (!isNaN(rawUsdValue) && rawUsdValue > 0)
+          ? rawUsdValue
+          : (coinPrice > 0 ? netAmount * coinPrice : (b.usdValue || 0));
+
+        return {
+          ...b,
+          amount: netAmount,
+          usdValue: netUsdValue,
+        };
+      }
+
+      if (rawObj.unrealisedPnl !== undefined && rawObj.unrealisedPnl !== null && rawObj.unrealisedPnl !== '') {
+        const uPnl = parseFloat(String(rawObj.unrealisedPnl));
+        if (!isNaN(uPnl)) {
+          const netAmount = Math.max(0, (b.amount || 0) + uPnl);
+          const netUsdValue = coinPrice > 0 ? netAmount * coinPrice : (b.usdValue || 0);
+          return {
+            ...b,
+            amount: netAmount,
+            usdValue: netUsdValue,
+          };
+        }
+      }
+
+      // Fallback: derive Net Balance from active positions unrealized PnL if available
+      const matchingPositions = activePositions.filter(p =>
+        p.connectionId === b.connectionId &&
+        (p.ccy?.toUpperCase() === b.ccy.toUpperCase() || p.baseCoin?.toUpperCase() === b.ccy.toUpperCase())
+      );
+
+      if (matchingPositions.length > 0) {
+        const sumUnrealizedCoin = matchingPositions.reduce((acc, p) => acc + (p.unrealizedPnl || 0), 0);
+        const netAmount = Math.max(0, (b.amount || 0) + sumUnrealizedCoin);
+        const netUsdValue = coinPrice > 0
+          ? netAmount * coinPrice
+          : (b.usdValue || 0);
+
+        return {
+          ...b,
+          amount: netAmount,
+          usdValue: netUsdValue,
+        };
+      }
+
+      return b;
+    });
+  }, [balancesList, useMockData, activeKeyIds, activePositions]);
 
   const totalEquity = useMemo(() => {
     return Number(activeBalances.reduce((acc, curr) => acc.plus(curr.usdValue || 0), new Big(0)));
@@ -80,20 +160,41 @@ export function Dashboard() {
   const inverseLongCount = inversePositions.filter(pos => pos.side === 'long').length;
   const inverseShortCount = inversePositions.filter(pos => pos.side === 'short').length;
 
-  const totalProtected = Number(inversePositions.reduce((acc, pos) => {
-    if (pos.side === 'short') {
-      return acc.plus(getInverseShortUsdEntryValue(pos));
-    }
-    return acc;
-  }, new Big(0)));
-  const totalExposed = totalEquity - totalProtected;
+  const syntheticHedgeUsd = useMemo(() => {
+    return Number(inversePositions.reduce((acc, pos) => {
+      if (pos.side === 'short') {
+        return acc.plus(getInverseShortUsdEntryValue(pos));
+      }
+      return acc;
+    }, new Big(0)));
+  }, [inversePositions]);
+
+  const stablecoinsProtectedUsd = useMemo(() => {
+    return Number(
+      activeBalances
+        .filter(b => isUsdPeggedStablecoin(b.ccy))
+        .reduce((acc, b) => acc.plus(b.usdValue || 0), new Big(0)),
+    );
+  }, [activeBalances]);
+
+  const totalProtected = new Big(syntheticHedgeUsd).plus(stablecoinsProtectedUsd).toNumber();
+  const totalExposed = new Big(totalEquity).minus(totalProtected).toNumber();
 
   const protectedPercent = totalEquity > 0 ? (totalProtected / totalEquity) * 100 : 0;
   const exposedPercent = totalEquity > 0 ? (totalExposed / totalEquity) * 100 : 0;
 
+  const hedgeOfProtectedPct = totalProtected > 0 ? (syntheticHedgeUsd / totalProtected) * 100 : 0;
+  const stablesOfProtectedPct = totalProtected > 0 ? (stablecoinsProtectedUsd / totalProtected) * 100 : 0;
+
   const handleHedgeProClick = () => {
     window.dispatchEvent(new CustomEvent('navigate-to-tab', {
       detail: 'analytics-hedge-pro'
+    }));
+  };
+
+  const handleOpenPositionsClick = () => {
+    window.dispatchEvent(new CustomEvent('navigate-to-tab', {
+      detail: 'positions-open'
     }));
   };
 
@@ -150,7 +251,7 @@ export function Dashboard() {
     const dataMap: Record<string, Big> = {};
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
-      if (val > 1) { // Ignore dust
+      if (val >= 1) { // Ignore dust
         if (!dataMap[b.exchange]) dataMap[b.exchange] = new Big(0);
         dataMap[b.exchange] = dataMap[b.exchange].plus(val);
       }
@@ -166,7 +267,7 @@ export function Dashboard() {
 
     activeBalances.forEach(b => {
       const val = b.usdValue || 0;
-      if (val > 1) { // ignore dust
+      if (val >= 1) { // ignore dust
         if (!exchangesMap[b.exchange]) exchangesMap[b.exchange] = { total: new Big(0), assetsMap: {} };
         exchangesMap[b.exchange].total = exchangesMap[b.exchange].total.plus(val);
         if (!exchangesMap[b.exchange].assetsMap[b.ccy]) exchangesMap[b.exchange].assetsMap[b.ccy] = new Big(0);
@@ -205,7 +306,8 @@ export function Dashboard() {
 
       if (outrosVal > 0) {
         segments.push({
-          name: 'Outros',
+          name: t('dashboardExtra.others', 'Others'),
+          isOthers: true,
           value: outrosVal,
           percent: totalNum > 0 ? (outrosVal / totalNum) * 100 : 0,
           percentOfGlobal: globalTotalNum > 0 ? (outrosVal / globalTotalNum) * 100 : 0
@@ -219,7 +321,7 @@ export function Dashboard() {
       const rowData: any = { exchange: exchange.toLowerCase(), total: totalNum, rawAssets };
       segments.forEach((seg: any, idx: number) => {
         rowData[`segment${idx}`] = seg.value;
-        rowData[`_meta${idx}`] = { name: seg.name, percent: seg.percent, percentOfGlobal: seg.percentOfGlobal };
+        rowData[`_meta${idx}`] = { name: seg.name, isOthers: seg.isOthers, percent: seg.percent, percentOfGlobal: seg.percentOfGlobal };
       });
 
       formattedData.push(rowData);
@@ -236,62 +338,78 @@ export function Dashboard() {
       {useMockData && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center justify-center gap-2">
           <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
-          <span className="text-yellow-500 text-sm font-medium tracking-wide uppercase">Simulation Mode Active - Displaying Mock Data</span>
+          <span className="text-yellow-500 text-sm font-medium tracking-wide uppercase">
+            {t('dashboardExtra.simulationBanner', 'Simulation Mode Active - Displaying Mock Data')}
+          </span>
         </div>
       )}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Card 1: Patrimonio e P&L */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-6 md:divide-x divide-[#2a2b30]">
-          {/* Lado Esquerdo: Patrimonio */}
-          <div className="flex-1 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Total Equity (USD)</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        {/* Card 1: Total Equity */}
+        <div className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-fg-muted text-xs font-medium tracking-wider uppercase">
+                  {t('dashboardExtra.totalEquityUsd', 'Total Equity ({{currency}})', { currency: currentFiat })}
+                </span>
                 <span className={`inline-block w-2 h-2 rounded-full ${openPositionsTotalPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
               </div>
-              <div className="flex items-baseline gap-2 mt-1">
-                <p className="text-3xl font-bold text-white font-mono tracking-tight">
-                  {formatCurrency(totalEquity, 'usd')}
-                </p>
-                {openPositionsTotalPnL >= 0 ? (
-                  <TrendingUp className="w-4 h-4 text-emerald-500/70" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 text-red-500/70" />
-                )}
-              </div>
+              <DollarSign className="w-4 h-4 text-fg-muted/60" />
             </div>
-            <div className="mt-4 text-xs text-[#8E9299] font-medium">
-              Net balance across all connected exchanges
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-2xl lg:text-3xl font-bold text-fg font-mono tracking-tight">
+                {formatCurrency(totalEquity, 'usd')}
+              </p>
+              {openPositionsTotalPnL >= 0 ? (
+                <TrendingUp className="w-4 h-4 text-emerald-500/70 shrink-0" />
+              ) : (
+                <TrendingDown className="w-4 h-4 text-red-500/70 shrink-0" />
+              )}
             </div>
           </div>
+          <div className="mt-4 text-xs text-fg-muted font-medium">
+            {t('dashboardExtra.netBalanceDesc', 'Net balance across all connected exchanges')}
+          </div>
+        </div>
 
-          {/* Lado Direito: Open Positions P&L */}
-          <div className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Open Positions P&L</span>
-              <Activity className="w-5 h-5 text-[#8E9299]/70" />
+        {/* Card 2: Open Positions P&L */}
+        <button
+          type="button"
+          onClick={handleOpenPositionsClick}
+          title={t('dashboardExtra.clickToViewOpenPositions', 'Click to view Open Positions')}
+          className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-line-strong transition-colors"
+        >
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-fg-muted text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-accent transition-colors">
+                {t('dashboardExtra.openPositionsPnl', 'Open Positions P&L')}
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+              </span>
+              <Activity className="w-4 h-4 text-fg-muted/70" />
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Unrealized */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-1">Unrealized P&L</div>
-                  <div className="flex items-baseline gap-2">
-                    <p className={`text-xl font-bold font-mono tracking-tight ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                  <div className="text-[10px] text-fg-muted uppercase tracking-wider mb-0.5">
+                    {t('dashboardExtra.unrealizedPnlLabel', 'Unrealized P&L')}
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '$••••' : `${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsUnrealizedPnL, 'usd')}`}
                     </p>
-                    <span className={`text-xs font-semibold font-mono ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <span className={`text-[11px] font-semibold font-mono ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '(••••%)' : `(${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${unrealizedPnLPercent.toFixed(2)}%)`}
                     </span>
                   </div>
                 </div>
-                <div className="w-[60px] h-[24px] opacity-90 hidden sm:block">
+                <div className="w-[50px] h-[20px] opacity-90 hidden sm:block">
                   <Sparkline
                     data={[10, 20, 15, 30, 25, 40, 35, 50, openPositionsUnrealizedPnL >= 0 ? 70 : 20]}
                     color={openPositionsUnrealizedPnL >= 0 ? 'emerald' : 'red'}
-                    width={60}
-                    height={24}
+                    width={50}
+                    height={20}
                   />
                 </div>
               </div>
@@ -299,67 +417,76 @@ export function Dashboard() {
               {/* Realized */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-[#8E9299] uppercase tracking-wider mb-1">Realized P&L</div>
-                  <div className="flex items-baseline gap-2">
-                    <p className={`text-xl font-bold font-mono tracking-tight ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                  <div className="text-[10px] text-fg-muted uppercase tracking-wider mb-0.5">
+                    {t('dashboardExtra.realizedPnlLabel', 'Realized P&L')}
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '$••••' : `${openPositionsRealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsRealizedPnL, 'usd')}`}
                     </p>
-                    <span className={`text-xs font-semibold font-mono ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <span className={`text-[11px] font-semibold font-mono ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {isPrivateMode ? '(••••%)' : `(${openPositionsRealizedPnL >= 0 ? '+' : ''}${realizedPnLPercent.toFixed(2)}%)`}
                     </span>
                   </div>
                 </div>
-                <div className="w-[60px] h-[24px] opacity-90 hidden sm:block">
+                <div className="w-[50px] h-[20px] opacity-90 hidden sm:block">
                   <Sparkline
                     data={[15, 10, 25, 20, 35, 30, 45, 40, openPositionsRealizedPnL >= 0 ? 60 : 30]}
                     color={openPositionsRealizedPnL >= 0 ? 'emerald' : 'red'}
-                    width={60}
-                    height={24}
+                    width={50}
+                    height={20}
                   />
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </button>
 
-        {/* Card 2: Posições e Hedge Mode */}
-        <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden p-5 flex flex-col md:flex-row gap-1 md:divide-x divide-[#2a2b30]">
-          {/* Lado Esquerdo: Posições Ativas */}
-          <div className="flex-1 flex flex-col justify-between pr-5">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase">Active Positions</span>
-                <BarChart2 className="w-4 h-4 text-[#2F6BFF] opacity-60" />
-              </div>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <p className="text-3xl font-bold text-white font-mono">
-                  {openPositionsCount}
-                </p>
-                <span className="text-xs text-[#8E9299] font-semibold">Active</span>
-              </div>
+        {/* Card 3: Active Positions */}
+        <button
+          type="button"
+          onClick={handleOpenPositionsClick}
+          title={t('dashboardExtra.clickToViewOpenPositions', 'Click to view Open Positions')}
+          className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-line-strong transition-colors"
+        >
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-fg-muted text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-accent transition-colors">
+                {t('dashboardExtra.activePositionsCount', 'Active Positions')}
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+              </span>
+              <BarChart2 className="w-4 h-4 text-accent opacity-60" />
+            </div>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <p className="text-3xl font-bold text-fg font-mono">
+                {openPositionsCount}
+              </p>
+              <span className="text-xs text-fg-muted font-semibold">
+                {t('dashboardExtra.active', 'Active')}
+              </span>
             </div>
 
             {/* Long vs Short Bar */}
             <div className="space-y-2 mt-4">
-              <div className="flex justify-between text-[15px] font-semibold">
+              <div className="flex justify-between text-xs font-semibold">
                 <span className="text-emerald-500 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" /> Longs: {longPositions}
+                  <TrendingUp className="w-3 h-3" /> {t('dashboardExtra.longs', 'Longs')}: {longPositions}
                 </span>
                 <span className="text-red-500 flex items-center gap-1">
-                  <TrendingDown className="w-3 h-3" /> Shorts: {shortPositions}
+                  <TrendingDown className="w-3 h-3" /> {t('dashboardExtra.shorts', 'Shorts')}: {shortPositions}
                 </span>
               </div>
-              <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
+              <div className="h-1.5 w-full bg-elevated rounded-full overflow-hidden flex">
                 {openPositionsCount > 0 ? (
                   <>
                     <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${longPercent}%` }} />
                     <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${shortPercent}%` }} />
                   </>
                 ) : (
-                  <div className="h-full w-full bg-[#2a2b30]" />
+                  <div className="h-full w-full bg-line" />
                 )}
               </div>
-              <div className="flex justify-between text-[15px] font-semibold">
+              <div className="flex justify-between text-xs font-semibold">
                 <span className="text-emerald-500 flex items-center gap-1">
                   {longPercent.toFixed(0)}%
                 </span>
@@ -369,59 +496,88 @@ export function Dashboard() {
               </div>
             </div>
           </div>
+        </button>
 
-          {/* Lado Direito: Hedge Mode (Inverse) — clique leva ao Hedge Pro */}
-          <button
-            type="button"
-            onClick={handleHedgeProClick}
-            title="Open Hedge Pro dashboard"
-            className="flex-1 flex flex-col justify-between pt-5 md:pt-0 md:pl-6 text-left cursor-pointer group rounded-lg transition-colors"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[#8E9299] text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-[#2F6BFF] transition-colors">
-                  Hedge Mode (Inverse)
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-emerald-500">Longs: {inverseLongCount}</span>
-                  <span className="text-xs font-bold ">|</span>
-                  <span className="text-xs font-semibold text-red-500">Shorts: {inverseShortCount}</span>
-                </div>
+        {/* Card 4: Hedge Mode (Inverse) */}
+        <button
+          type="button"
+          onClick={handleHedgeProClick}
+          title={t('dashboardExtra.clickToOpenHedgePro', 'Click to open Hedge Pro dashboard for detailed information about hedge')}
+          className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between text-left cursor-pointer group hover:border-line-strong transition-colors"
+        >
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-fg-muted text-xs font-medium tracking-wider uppercase flex items-center gap-1.5 group-hover:text-accent transition-colors">
+                {t('dashboardExtra.hedgeModeInverseCard', 'Hedge Mode (Inverse)')}
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-emerald-500">{t('dashboardExtra.hedged', 'Hedged')}: {inverseShortCount}</span>
+                <span className="text-xs font-bold text-fg-muted">|</span>
+                <span className="text-xs font-semibold text-amber-400">{t('dashboardExtra.leveraged', 'Leveraged')}: {inverseLongCount}</span>
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <p className="text-xl font-bold text-white font-mono">
-                  {inverseOpenCount}
-                </p>
-                <span className="text-xs text-[#8E9299] font-medium">Active Positions</span>
-              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <p className="text-xl font-bold text-fg font-mono">
+                {inverseOpenCount}
+              </p>
+              <span className="text-xs text-fg-muted font-medium">{t('dashboardExtra.activePositionsCount', 'Active Positions')}</span>
             </div>
 
             {/* Protected vs Exposed Bar */}
             <div className="space-y-2 mt-4">
-              <div className="flex justify-between text-[15px] font-semibold font-mono">
-                <span className="text-emerald-500/90">Prot: {formatCurrency(totalProtected, 'usd', 2)} </span>
-                <span className="text-white font-semibold">Exp: {formatCurrency(totalExposed, 'usd', 2)} </span>
+              <div className="flex justify-between text-xs font-semibold font-mono">
+                <AppTooltip
+                  description={
+                    <div className="text-xs space-y-1.5 p-1 min-w-[230px]">
+                      <div className="font-semibold text-fg border-b border-line pb-1">
+                        {t('dashboardExtra.protectedCapitalBreakdown', 'Protected Capital Breakdown')}
+                      </div>
+                      <div className="space-y-1 font-mono text-[11px]">
+                        <div className="flex justify-between items-center text-emerald-400">
+                          <span>{t('dashboardExtra.hedgeShorts', 'Hedge (Shorts):')}</span>
+                          <span>{formatCurrency(syntheticHedgeUsd, 'usd', 2)} ({hedgeOfProtectedPct.toFixed(2)}%)</span>
+                        </div>
+                        <div className="flex justify-between items-center text-blue-400">
+                          <span>{t('dashboardExtra.stablecoins', 'Stablecoins:')}</span>
+                          <span>{formatCurrency(stablecoinsProtectedUsd, 'usd', 2)} ({stablesOfProtectedPct.toFixed(2)}%)</span>
+                        </div>
+                        <div className="flex justify-between items-center text-fg border-t border-line pt-1 font-semibold">
+                          <span>{t('dashboardExtra.totalProtected', 'Total Protected:')}</span>
+                          <span>{formatCurrency(totalProtected, 'usd', 2)} ({protectedPercent.toFixed(2)}% {t('dashboardExtra.equity', 'equity')})</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  side="top"
+                  align="start"
+                >
+                  <span className="text-emerald-500/90 underline decoration-dotted decoration-emerald-500/50 cursor-help">
+                    {t('dashboardExtra.prot', 'Prot:')} {formatCurrency(totalProtected, 'usd', 2)}
+                  </span>
+                </AppTooltip>
+                <span className="text-fg font-semibold">{t('dashboardExtra.exp', 'Exp:')} {formatCurrency(totalExposed, 'usd', 2)}</span>
               </div>
-              <div className="h-1.5 w-full bg-[#1a1b1e] rounded-full overflow-hidden flex">
+              <div className="h-1.5 w-full bg-elevated rounded-full overflow-hidden flex">
                 {totalEquity > 0 ? (
                   <>
-                    <div className="h-full bg-emerald-500/80 transition-all duration-300" style={{ width: `${protectedPercent}%` }} />
-                    <div className="h-full bg-white transition-all duration-300" style={{ width: `${exposedPercent}%` }} />
+                    <div className="h-full bg-emerald-500/80 transition-all duration-300" style={{ width: `${Math.max(0, protectedPercent)}%` }} />
+                    <div className="h-full bg-white transition-all duration-300" style={{ width: `${Math.max(0, exposedPercent)}%` }} />
                   </>
                 ) : (
-                  <div className="h-full w-full bg-[#2a2b30]" />
+                  <div className="h-full w-full bg-line" />
                 )}
               </div>
-              <div className="flex justify-between text-[15px] font-semibold font-mono">
-                <span className="text-emerald-500/90"> {protectedPercent.toFixed(2)}%</span>
-                <span className="text-white font-semibold"> {exposedPercent.toFixed(2)}%</span>
+              <div className="flex justify-between text-xs font-semibold font-mono">
+                <span className="text-emerald-500/90">{protectedPercent.toFixed(2)}%</span>
+                <span className="text-fg font-semibold">{exposedPercent.toFixed(2)}%</span>
               </div>
-
             </div>
-          </button>
-        </div>
+          </div>
+        </button>
       </div>
+
+
 
       {donutData.length > 0 && crossExchangeAssets.data.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -438,6 +594,12 @@ export function Dashboard() {
         hideSmallBalances={hideSmallBalances}
         setHideSmallBalances={setHideSmallBalances}
       />
+
+      {/* Market Sentiment & Fear / Greed Analysis (Positioned right below Balances table) */}
+      <MarketSentiment />
+
+      {/* Global Currency Rates Panel (Directly below Fear & Greed) */}
+      <CurrencyRatesWidget />
     </div>
   );
 }

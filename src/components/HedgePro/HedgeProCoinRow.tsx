@@ -1,0 +1,234 @@
+import React from 'react';
+import { ChevronDown, AlertTriangle, ShieldCheck, Activity, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { HedgeCoinSummary, getExchangeDisplayName } from '../../utils/hedgeUtils';
+import { CoinIcon } from '../ui/CoinIcon';
+import { ExchangeIcon } from '../ui/ExchangeIcon';
+import { AccountTypeBadge } from '../ui/AccountTypeBadge';
+import { AppTooltip } from '../ui/Tooltip';
+import { useApiKeysStore } from '../../store/apiKeysStore';
+import { HedgeExposureBar } from './HedgeExposureBar';
+import { HedgePositionLevelRow } from './HedgePositionLevelRow';
+import { HedgeProCoinDrawerMetrics } from './HedgeProCoinDrawerMetrics';
+import { HedgePnlConceptMode } from './HedgeProDashboard';
+
+interface HedgeProCoinRowProps {
+  coin: HedgeCoinSummary;
+  isExpanded: boolean;
+  onToggle: () => void;
+  formatCurrency: (
+    value: number | undefined | null,
+    type?: 'usd' | 'crypto' | 'price' | 'compact',
+    decimalsOrSymbol?: number | string,
+  ) => string;
+  pnlConceptMode?: HedgePnlConceptMode;
+}
+
+/**
+ * HedgeProCoinRow — Row-based layout for per-coin hedge summary:
+ * - Line 1: Asset info, tags, exchange, account, position counters & risk alert icon.
+ * - Line 2: Dedicated exposure & protection visual bar with leverage metrics.
+ * - Expanded Drawer: 8 analytical summary cards + interactive position rows with direct navigation to Open Positions.
+ */
+export function HedgeProCoinRow({
+  coin,
+  isExpanded,
+  onToggle,
+  formatCurrency,
+  pnlConceptMode = 'hedge',
+}: HedgeProCoinRowProps) {
+  const { t } = useTranslation();
+  const { barMetrics } = coin;
+  const keys = useApiKeysStore(state => state.keys);
+  const matchedKey = keys.find(k => k.id === coin.connectionId);
+  const accountType = coin.accountType || matchedKey?.accountType;
+  const environment = coin.environment || matchedKey?.environment;
+  const bybitRegion = coin.bybitRegion || matchedKey?.bybitRegion;
+
+  return (
+    <div
+      id={`hedge-row-${coin.key}`}
+      className="bg-surface border border-line rounded-xl flex flex-col cursor-pointer transition-colors hover:border-line-strong overflow-hidden"
+      onClick={onToggle}
+    >
+      {/* Main Row: 2-Line Clean Layout */}
+      <div className="p-4 flex flex-col gap-3">
+        {/* LINE 1: Asset details, exchange, account, positions counter, risk icon & expand trigger */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          {/* Left: Coin Icon + Symbols + Badges */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center relative shrink-0">
+              <CoinIcon symbol={coin.baseCoin} size={32} className="w-8 h-8" />
+              <div className="bg-surface rounded-full p-0.5 absolute -bottom-1 -right-1 border border-line">
+                <ExchangeIcon exchange={coin.exchange} className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-fg text-base tracking-tight">{coin.baseCoin}</span>
+              <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-elevated border border-line-strong text-fg-muted uppercase">
+                {t('hedgePro.coinRows.inverseBadge', 'INVERSE')}
+              </span>
+              <span className="text-[10px] font-semibold text-fg bg-elevated border border-line-strong py-0.5 px-1.5 rounded-[4px] capitalize">
+                {getExchangeDisplayName(coin.exchange)}
+              </span>
+              <span
+                className="text-[10px] font-semibold text-fg-muted bg-elevated border border-line-strong py-0.5 px-1.5 rounded-[4px] truncate max-w-[130px]"
+                title={coin.accountLabel}
+              >
+                {coin.accountLabel}
+              </span>
+              <AccountTypeBadge
+                exchange={coin.exchange}
+                accountType={accountType}
+                environment={environment}
+                bybitRegion={bybitRegion}
+              />
+
+              {/* Position counter & Risk Alert Icon (integrated together without text) */}
+              <div className="flex items-center gap-1.5 ml-1">
+                <AppTooltip description={t('hedgePro.coinRows.positionsTooltip', { longs: coin.longCount, shorts: coin.shortCount })}>
+                  <span className="text-[10px] font-mono bg-elevated border border-line px-1.5 py-0.5 rounded flex items-center gap-1 cursor-help">
+                    <span className="text-success font-medium">{coin.longCount}L</span>
+                    <span className="text-fg-muted">/</span>
+                    <span className="text-danger font-medium">{coin.shortCount}S</span>
+                  </span>
+                </AppTooltip>
+
+                {coin.overexposedCount > 0 && (
+                  <AppTooltip description={t('hedgePro.coinRows.overexposedTooltip', { count: coin.overexposedCount })}>
+                    <span className="inline-flex items-center justify-center p-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 cursor-help">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                    </span>
+                  </AppTooltip>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Positions count badge & Expand Chevron */}
+          <div className="flex items-center gap-2 shrink-0 text-fg-muted">
+            <span className="text-[11px] font-mono bg-elevated border border-line px-2 py-0.5 rounded text-fg-muted">
+              {coin.positions.length === 1
+                ? t('hedgePro.coinRows.positionsCount_one', { count: 1 })
+                : t('hedgePro.coinRows.positionsCount_other', { count: coin.positions.length })}
+            </span>
+            <div
+              className={`p-1 rounded hover:bg-elevated text-fg-muted hover:text-fg transition-transform duration-200 ${isExpanded ? 'rotate-180 text-fg' : ''
+                }`}
+            >
+              <ChevronDown className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+
+        {/* LINE 2: Dedicated row for Exposure, Protection & Leverage Bar (Matching main Hedge Pro pattern) */}
+        <div className="bg-[#121317] border border-[#23252a] rounded-lg p-3 space-y-2">
+          {/* Sub-line 1: Icons & Labels */}
+          <div className="flex items-center justify-between gap-2 text-xs font-medium text-fg-muted uppercase tracking-wider">
+            <AppTooltip description={t('hedgePro.coinRows.protectedTooltip')}>
+              <span className="flex items-center gap-1.5 cursor-help">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> {t('hedgePro.dashboard.protected')}
+              </span>
+            </AppTooltip>
+
+            <AppTooltip description={t('hedgePro.coinRows.exposedTooltip')}>
+              <span className="flex items-center gap-1.5 cursor-help">
+                <Activity className="w-3.5 h-3.5 text-fg" /> {t('hedgePro.dashboard.exposed')}
+              </span>
+            </AppTooltip>
+
+            {coin.leveragedUsd > 0 ? (
+              <AppTooltip description={t('hedgePro.coinRows.leveragedTooltip')}>
+                <span className="flex items-center gap-1.5 cursor-help">
+                  <TrendingUp className="w-3.5 h-3.5 text-amber-400" /> {t('hedgePro.dashboard.leveraged')}
+                </span>
+              </AppTooltip>
+            ) : (
+              <span className="hidden sm:flex items-center gap-1.5 text-fg-muted">
+                <TrendingUp className="w-3.5 h-3.5 text-fg-muted" /> {t('hedgePro.coinRows.noLeverage')}
+              </span>
+            )}
+          </div>
+
+          {/* Sub-line 2: USD Value and (%) */}
+          <div className="flex items-center justify-between gap-2 text-xs sm:text-sm font-semibold font-mono">
+            <span className="text-emerald-400">
+              {formatCurrency(coin.protectedUsd, 'usd', 2)}{' '}
+              <span className="text-[11px] sm:text-xs font-medium text-emerald-400/80 font-mono">
+                ({barMetrics.protectedPct.toFixed(1)}%)
+              </span>
+            </span>
+
+            <span className="text-fg">
+              {formatCurrency(coin.exposedBaseUsd, 'usd', 2)}{' '}
+              <span className="text-[11px] sm:text-xs font-medium text-fg-muted font-mono">
+                ({barMetrics.exposedPct.toFixed(1)}%)
+              </span>
+            </span>
+
+            {coin.leveragedUsd > 0 ? (
+              <span className="text-amber-400">
+                +{formatCurrency(coin.leveragedUsd, 'usd', 2)}{' '}
+                <span className="text-[11px] sm:text-xs font-medium text-amber-400/80 font-mono">
+                  (+{(barMetrics.leveragedOfBalancePct ?? 0).toFixed(1)}%)
+                </span>
+              </span>
+            ) : (
+              <span className="hidden sm:inline-block text-fg-muted font-mono text-xs">
+                $0.00 (0.0%)
+              </span>
+            )}
+          </div>
+
+          {/* Sub-line 3: The visual bar */}
+          <HedgeExposureBar
+            protectedPct={barMetrics.protectedPct}
+            exposedPct={barMetrics.exposedPct}
+            balanceWidthPct={barMetrics.balanceWidthPct}
+            leveragedWidthPct={barMetrics.leveragedWidthPct}
+          />
+        </div>
+      </div>
+
+      {/* Expanded Details Drawer */}
+      {isExpanded && (
+        <div
+          className="px-4 pb-4 pt-3 bg-[#101116] border-t border-line animate-in slide-in-from-top-2 duration-200 space-y-4"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header Summary Cards for this specific coin (8 Mini-Consolidated Cards) */}
+          <HedgeProCoinDrawerMetrics
+            coin={coin}
+            formatCurrency={formatCurrency}
+            pnlConceptMode={pnlConceptMode}
+          />
+
+          {/* Positions Under This Coin */}
+          <div className="border border-line rounded-lg bg-surface overflow-hidden divide-y divide-[#222429]">
+            <div className="px-3.5 py-2 bg-elevated border-b border-line flex items-center justify-between">
+              <span className="text-xs font-semibold text-fg">
+                {t('hedgePro.coinRows.openPositionsHeader', { coin: coin.baseCoin, count: coin.positions.length })}
+              </span>
+              <span className="text-[11px] text-fg-muted">
+                {t('hedgePro.coinRows.openPositionsHint')}
+              </span>
+            </div>
+            {coin.positions.map(pos => (
+              <HedgePositionLevelRow
+                key={pos.positionId}
+                level={pos}
+                formatCurrency={formatCurrency}
+                variant="card"
+                pnlConceptMode={pnlConceptMode}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default HedgeProCoinRow;
+

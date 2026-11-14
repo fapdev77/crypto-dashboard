@@ -23,3 +23,5 @@ fable-method/
 .eslintcache
 *.local
 .vercel/
+.aistudio/
+tmp

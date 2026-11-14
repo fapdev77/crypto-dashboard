@@ -27,6 +27,7 @@ export function useBybitTransactionSync() {
     setBybitTxOldestTransactionTime,
     setBybitTxTotalRecords,
     setCachedTxLog,
+    setBybitTxSyncError,
   } = useSyncCoordinatorStore();
 
   useEffect(() => {
@@ -49,23 +50,28 @@ export function useBybitTransactionSync() {
         let totalNewRecords = 0;
         let isIncremental = false;
 
+        const syncErrors: string[] = [];
         for (const key of bybitKeys) {
-          // Check if cache already exists in IndexedDB
-          // If yes: incremental sync from latest cached timestamp
-          // If no: full progressive deep sync (backfill up to 2 years)
-          const meta = await getBybitTxLogMeta(key.id);
-          if (meta && meta.latestTransactionTime > 0) {
-            isIncremental = true;
-            const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
-            totalNewRecords += newRecords.length;
-          } else {
-            const preMeta = await getBybitTxLogMeta(key.id);
-            const preCount = preMeta?.totalRecords || 0;
-            await service.syncAll(key, (pct, records) => {
-              setBybitTxProgress({ pct, records });
-            });
-            const postMeta = await getBybitTxLogMeta(key.id);
-            totalNewRecords += (postMeta?.totalRecords || 0) - preCount;
+          try {
+            // Check if cache already exists in IndexedDB
+            // If yes: incremental sync from latest cached timestamp
+            // If no: full progressive deep sync (backfill up to 2 years)
+            const meta = await getBybitTxLogMeta(key.id);
+            if (meta && meta.latestTransactionTime > 0) {
+              isIncremental = true;
+              const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
+              totalNewRecords += newRecords.length;
+            } else {
+              const preMeta = await getBybitTxLogMeta(key.id);
+              const preCount = preMeta?.totalRecords || 0;
+              await service.syncAll(key, (pct, records) => {
+                setBybitTxProgress({ pct, records });
+              });
+              const postMeta = await getBybitTxLogMeta(key.id);
+              totalNewRecords += (postMeta?.totalRecords || 0) - preCount;
+            }
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
           }
         }
         const fetchEndTime = Date.now();
@@ -93,6 +99,12 @@ export function useBybitTransactionSync() {
         setBybitTxTotalRecords(allEntries.length);
         setBybitTxLastSyncTime(now);
 
+        if (syncErrors.length > 0) {
+          setBybitTxSyncError(syncErrors.join('; '));
+        } else {
+          setBybitTxSyncError(null);
+        }
+
         LogManager.system(
           'BybitTxSync',
           `=== SYNC COMPLETE === ` +
@@ -102,8 +114,9 @@ export function useBybitTransactionSync() {
           `Total: ${totalSec.toFixed(1)}s | ` +
           `${totalNewRecords} new records | ${allEntries.length} total records`
         );
-      } catch (err) {
+      } catch (err: any) {
         LogManager.error('BybitTransactionSync', 'Deep sync error:', err);
+        setBybitTxSyncError(err?.message || 'Error syncing Bybit transactions');
       } finally {
         setIsBybitTxSyncing(false);
         setBybitTxProgress(null);
@@ -112,6 +125,12 @@ export function useBybitTransactionSync() {
 
     // On mount: smart sync — incremental if cache exists, deep sync if not
     initialSync();
+
+    const handleClearEvent = () => {
+      initialSync();
+    };
+    window.addEventListener('transactions-cache-cleared', handleClearEvent);
+    window.addEventListener('history-cache-cleared', handleClearEvent);
 
     // Periodic incremental sync
     const intervalMs = (historyCacheInterval || 5) * 60 * 1000;
@@ -124,11 +143,16 @@ export function useBybitTransactionSync() {
         const startTime = Date.now();
         let totalNewRecords = 0;
 
+        const syncErrors: string[] = [];
         for (const key of bybitKeys) {
-          const meta = await getBybitTxLogMeta(key.id);
-          if (meta && meta.latestTransactionTime > 0) {
-            const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
-            totalNewRecords += newRecords.length;
+          try {
+            const meta = await getBybitTxLogMeta(key.id);
+            if (meta && meta.latestTransactionTime > 0) {
+              const newRecords = await service.syncIncremental(key, meta.latestTransactionTime);
+              totalNewRecords += newRecords.length;
+            }
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
           }
         }
         const fetchEndTime = Date.now();
@@ -144,6 +168,12 @@ export function useBybitTransactionSync() {
         setBybitTxTotalRecords(allEntries.length);
         setBybitTxLastSyncTime(Date.now());
 
+        if (syncErrors.length > 0) {
+          setBybitTxSyncError(syncErrors.join('; '));
+        } else {
+          setBybitTxSyncError(null);
+        }
+
         const writeEndTime = Date.now();
         const fetchElapsed = fetchEndTime - startTime;
         const writeElapsed = writeEndTime - fetchEndTime;
@@ -158,8 +188,9 @@ export function useBybitTransactionSync() {
           `Total: ${totalSec.toFixed(1)}s | ` +
           `${totalNewRecords} new records | ${allEntries.length} total records`
         );
-      } catch (err) {
+      } catch (err: any) {
         LogManager.error('BybitTransactionSync', 'Incremental sync error:', err);
+        setBybitTxSyncError(err?.message || 'Error syncing Bybit transactions');
       } finally {
         setIsBybitTxSyncing(false);
         setBybitTxProgress(null);
@@ -168,6 +199,8 @@ export function useBybitTransactionSync() {
 
     return () => {
       clearInterval(intervalId);
+      window.removeEventListener('transactions-cache-cleared', handleClearEvent);
+      window.removeEventListener('history-cache-cleared', handleClearEvent);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keys, useMockData, historyCacheInterval]);

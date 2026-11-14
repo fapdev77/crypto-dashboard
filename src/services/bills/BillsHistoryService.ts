@@ -9,17 +9,25 @@ export class BillsHistoryService {
    * for the useBillsHistory hook.
    */
   public async fetchBills(key: ApiCredentials, start?: number, end?: number): Promise<UnifiedBillRecord[]> {
+    LogManager.info(
+      'History.Bills',
+      `[${key.label}] Fetching deposits and withdrawals (${key.exchange})...`
+    );
+
     try {
       const adapter = ExchangeAggregator.getAdapter(key);
       if (!adapter.fetchBills) {
-        LogManager.warn('BillsHistoryService', `Adapter for ${key.exchange} does not implement fetchBills.`);
+        LogManager.warn('History.Bills', `[${key.label}] Adapter for ${key.exchange} does not implement fetchBills.`);
         return [];
       }
-      // Depending on requirements, we can add cache logic here similar to PositionHistoryService
-      // For now, we do a direct fetch since these are paginated
-      return await adapter.fetchBills(key, start, end);
+      const records = await adapter.fetchBills(key, start, end);
+      LogManager.info(
+        'History.Bills',
+        `[${key.label}] Successfully fetched ${records.length} bill records`
+      );
+      return records;
     } catch (err) {
-      LogManager.error('BillsHistoryService', `Failed to fetch bills for ${key.id}:`, err);
+      LogManager.error('History.Bills', `[${key.label}] Failed to fetch bills:`, err);
       return [];
     }
   }

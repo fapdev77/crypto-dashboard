@@ -21,10 +21,10 @@ export function detectQtyIsCoin(params: {
 
   const ex = (exchange || '').toLowerCase();
 
-  if (ex === 'bitget') {
-    return true;
-  }
-  if (ex === 'okx' || ex === 'bybit') {
+  // Em contratos Inverse/Coin-M:
+  // Bitget, OKX e Bybit utilizam contratos cotados em USD (USD contracts).
+  // A quantidade (qty) representa o número de contratos / valor nocional em USD, NÃO a quantidade em moedas.
+  if (ex === 'bitget' || ex === 'okx' || ex === 'bybit') {
     return false;
   }
 
@@ -97,31 +97,20 @@ export function getOpenPositionSizeAndValue(pos: UnifiedPosition) {
 export function getInverseShortUsdEntryValue(pos: UnifiedPosition): number {
   if (pos.side !== 'short' || pos.instrumentType !== 'INVERSE') return 0;
 
-  const ex = (pos.exchange || '').toLowerCase();
   const entryPrice = pos.entryPrice || pos.markPrice || 0;
 
-  // Para Bybit e OKX: notionalUsd representa o valor fixo em contratos USD (ex: $10.000 USD).
+  // Para Bybit, OKX e Bitget: notionalUsd representa o valor fixo em contratos USD (ex: $2.445 USD ou $10.000 USD).
   // Não flutua com a variação do preço de mercado.
-  if ((ex === 'bybit' || ex === 'okx') && pos.notionalUsd && pos.notionalUsd > 0) {
-    return pos.notionalUsd;
-  }
-
-  // Para Bitget: pos.size é a quantidade fixa na moeda (ex: BTC), então o valor em USD no entryPrice
-  // é calculado multiplicando pos.size * entryPrice.
-  if (ex === 'bitget' && entryPrice > 0 && pos.size && pos.size > 0) {
-    return pos.size * entryPrice;
-  }
-
-  // Fallback genérico para outras exchanges / mock data:
   if (pos.notionalUsd && pos.notionalUsd > 0) {
     return pos.notionalUsd;
   }
 
+  // Fallback se notionalUsd não estiver preenchido, mas size e entryPrice estiverem disponíveis:
   if (entryPrice > 0 && pos.size && pos.size > 0) {
     return pos.size * entryPrice;
   }
 
-  return pos.notionalUsd || 0;
+  return 0;
 }
 
 export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
@@ -183,4 +172,19 @@ export function getHistoryPositionSizeAndValue(pos: UnifiedHistoryPosition) {
     positionValueUsd
   };
 }
+
+/**
+ * Detecta se um símbolo representa um contrato inverso / COIN-M.
+ * Cobre formatos de Bybit (ex: BTCUSD), OKX (ex: BTC-USD-SWAP), Bitget (ex: BTCUSD_DMCBL ou BTCUSD).
+ */
+export function isInverseSymbol(symbol?: string): boolean {
+  if (!symbol) return false;
+  const s = symbol.toUpperCase().trim();
+  if (s.endsWith('-USD-SWAP')) return true;
+  if (s.includes('-USD-') && !s.includes('-USDT-') && !s.includes('-USDC-')) return true;
+  if (s.endsWith('USD') && !s.includes('USDT') && !s.includes('USDC')) return true;
+  if (s.includes('_DMCBL') || s.includes('COIN-M') || s.includes('INVERSE')) return true;
+  return false;
+}
+
 

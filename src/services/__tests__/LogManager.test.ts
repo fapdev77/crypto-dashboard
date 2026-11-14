@@ -174,6 +174,27 @@ describe('LogManager', () => {
       expect(msg).toBe('deep {"level1":{"level2":{"level3":{"value":"deep"}}}}');
     });
 
+    it('should omit empty object serialization when all properties are undefined', () => {
+      LogManager.error('GlobalWindowError', 'Failed message', {
+        filename: undefined,
+        lineno: undefined,
+        colno: undefined,
+        error: undefined,
+      });
+      const msg = useLogStore.getState().entries[0].message;
+      expect(msg).toBe('Failed message');
+    });
+
+    it('should format DOM Event targets gracefully', () => {
+      const mockEvent = {
+        type: 'error',
+        target: { tagName: 'IMG' },
+      };
+      LogManager.warn('ResourceError', 'Load failed', mockEvent);
+      const msg = useLogStore.getState().entries[0].message;
+      expect(msg).toBe('Load failed [Event: error on <img>]');
+    });
+
     it('should not mutate shared state between successive calls', () => {
       LogManager.info('Src', 'first');
       LogManager.error('Src', 'second');

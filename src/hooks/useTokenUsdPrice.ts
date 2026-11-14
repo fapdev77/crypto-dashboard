@@ -1,42 +1,27 @@
 import { useState, useEffect } from 'react';
-import { LogManager } from '../services/LogManager';
+import { getUsdPrice } from '../services/pricing/usdPrice';
+import { needsTokenRate } from '../utils/usdAggregation';
 
-const cache: Record<string, { price: number; timestamp: number }> = {};
-const CACHE_TTL = 5 * 60 * 1000; // 5 min
-
+/**
+ * Backwards-compatible wrapper around the shared USD price cascade
+ * (exchange ticker -> OKX, with retry, success cache and negative cache).
+ *
+ * Returns null for codes that are already USD-denominated for callers
+ * (USD-pegged stablecoins and fiat proxies) and for anything the cascade
+ * cannot price. It never invents a 1:1 rate for symbols that merely contain
+ * "USD" (e.g. USDS, USD1).
+ */
 export async function fetchTokenUsdPrice(ccy: string): Promise<number | null> {
-  if (!ccy || ccy.includes('USD') || ccy === 'EUR') return null;
+  if (!ccy) return null;
 
-  const cleanCcy = ccy.toUpperCase();
-  const now = Date.now();
-  if (cache[cleanCcy] && now - cache[cleanCcy].timestamp < CACHE_TTL) {
-    return cache[cleanCcy].price;
-  }
+  const code = ccy.toUpperCase().trim();
+  if (!needsTokenRate(code)) return null;
 
-  try {
-    const instId = `${cleanCcy}-USDT`;
-    const res = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${instId}`);
-    if (res.ok) {
-      const json = await res.json();
-      if (json.code === '0' && json.data && json.data.length > 0) {
-        const p = parseFloat(json.data[0].last);
-        if (!isNaN(p)) {
-          cache[cleanCcy] = { price: p, timestamp: Date.now() };
-          return p;
-        }
-      }
-    }
-  } catch (err) {
-    LogManager.warn('TokenUsdPrice', `Failed to fetch price for ${cleanCcy}`, err);
-  }
-  return null;
+  return getUsdPrice(code);
 }
 
 /**
- * Fetch the current USD price for a given currency using the OKX ticker API.
- * Results are cached in-memory for 5 minutes to avoid redundant requests.
- *
- * Returns null for fiat currencies (USD, EUR) or when the price cannot be fetched.
+ * Fetch the current USD price for a given currency.
  *
  * @param ccy The currency code to look up (e.g. 'BTC', 'ETH').
  * @returns The current price in USD, or null if unavailable.

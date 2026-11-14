@@ -1,6 +1,6 @@
 {
   "name": "Crypto Portfolio Manager",
-  "description": "Gerenciador e painel unificado de portfólios para corretoras de criptomoedas, suportando Bitget, Bybit e OKX. Acompanhe saldos unificados, posições ativas, relatórios de ordens, histórico de execuções, PnL por símbolo, taxas de financiamento (Funding Fees) e análise de Logs Transacionais em tempo real e de forma segura.",
+  "description": "Unified cryptocurrency portfolio manager and institutional analytics terminal supporting Bitget, Bybit, and OKX. Version 2.35.0 featuring 6-language internationalization (1,624 keys), 5-mode Multi-Theme engine & Custom Theme Builder, dual-source fiat/USDT conversion (Frankfurter v2 + CoinGecko), Zero-Trust PBKDF2 (600k iterations) vault with .enc backups, Portfolio Performance analytics, Consolidated Net Change auditing, PIKA AI quantitative auditor (7 tools & kill-switch), Hedge Pro delta-neutral risk engine, and 835 automated tests across 99 test files.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

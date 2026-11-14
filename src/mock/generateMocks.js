@@ -651,7 +651,7 @@ function generate() {
   const txCategories = ['linear', 'inverse', 'spot'];
 
   bybitAccounts.forEach(acc => {
-    for (let j = 0; j < 25; j++) {
+    for (let j = 0; j < 30; j++) {
       const conf = randomItem(SYMBOL_CONFIGS);
       const type = randomItem(txTypes);
       const category = conf.instType === 'INVERSE' ? 'inverse' : (Math.random() < 0.2 ? 'spot' : 'linear');
@@ -693,6 +693,134 @@ function generate() {
         tradeId: `trade-${txIdCounter}`,
         orderId: `order-${txIdCounter}`,
         orderLinkId: `link-order-${txIdCounter}`,
+        raw: { mockData: true }
+      });
+      txIdCounter++;
+    }
+  });
+
+  // 6.1 GENERATE BITGET TRANSACTIONS (bitget-transactions.json)
+  const bitgetTransactions = [];
+  const bitgetAccounts = accounts.filter(a => a.exchange === 'bitget');
+  const bitgetTypes = [
+    { type: 'ORDER_DEALT_IN', sub: 'trade_buy', universal: 'TRADE' },
+    { type: 'ORDER_DEALT_OUT', sub: 'trade_sell', universal: 'TRADE' },
+    { type: 'FUNDING_FEE_IN', sub: 'funding_income', universal: 'FUNDING' },
+    { type: 'FUNDING_FEE_OUT', sub: 'funding_expense', universal: 'FUNDING' },
+    { type: 'TRANSFER_IN', sub: 'deposit', universal: 'TRANSFER_IN' },
+    { type: 'TRANSFER_OUT', sub: 'withdraw', universal: 'TRANSFER_OUT' },
+    { type: 'TRANSACTION_FEE', sub: 'fee_deduct', universal: 'TRADE' }
+  ];
+
+  bitgetAccounts.forEach(acc => {
+    for (let j = 0; j < 30; j++) {
+      const conf = randomItem(SYMBOL_CONFIGS);
+      const item = randomItem(bitgetTypes);
+      const category = conf.instType === 'INVERSE' ? 'coin-futures' : (Math.random() < 0.2 ? 'spot' : 'usdt-futures');
+      const side = item.type === 'ORDER_DEALT_IN' ? 'Buy' : (item.type === 'ORDER_DEALT_OUT' ? 'Sell' : 'None');
+      const ccy = conf.ccy;
+      const transTime = now - randomNum(0, 90 * 24 * 60 * 60 * 1000);
+
+      const tradePrice = item.universal === 'TRADE' ? String(round(conf.price * randomNum(0.95, 1.05), 2)) : '0';
+      const qty = String(round(conf.price > 1000 ? randomNum(0.05, 1.5) : randomNum(5, 50), 4));
+      const funding = item.universal === 'FUNDING' ? String(round(item.type === 'FUNDING_FEE_IN' ? randomNum(1, 18) : -randomNum(1, 12), 4)) : '0';
+      const fee = item.universal === 'TRADE' ? String(round(-randomNum(0.4, 3.8), 4)) : '0';
+      const cashFlow = item.universal === 'TRANSFER_IN' ? String(round(randomNum(1000, 8000), 2)) : (item.universal === 'TRANSFER_OUT' ? String(round(-randomNum(500, 4000), 2)) : String(round(randomNum(-120, 280), 2)));
+      const change = String(round(parseFloat(cashFlow) + parseFloat(funding) + parseFloat(fee), 2));
+      const cashBalance = String(round(randomNum(12000, 55000), 2));
+
+      bitgetTransactions.push({
+        id: `${acc.connectionId}-bg-${txIdCounter}-${transTime}`,
+        connectionId: acc.connectionId,
+        exchange: 'bitget',
+        label: acc.label,
+        rawId: `bg-raw-${txIdCounter}`,
+        billId: `bg-bill-${txIdCounter}`,
+        symbol: conf.symbol,
+        category,
+        side,
+        transactionTime: transTime,
+        type: item.type,
+        transSubType: item.sub,
+        qty,
+        size: qty,
+        amount: qty,
+        currency: ccy,
+        tradePrice,
+        funding,
+        fee,
+        feeCurrency: ccy,
+        cashFlow,
+        change,
+        cashBalance,
+        balance: cashBalance,
+        feeRate: '0.0006',
+        tradeId: `bg-trade-${txIdCounter}`,
+        orderId: `bg-ord-${txIdCounter}`,
+        raw: { mockData: true }
+      });
+      txIdCounter++;
+    }
+  });
+
+  // 6.2 GENERATE OKX TRANSACTIONS (okx-transactions.json)
+  const okxTransactions = [];
+  const okxAccounts = accounts.filter(a => a.exchange === 'okx');
+  const okxTypes = [
+    { type: 'Trade', sub: 'Buy', universal: 'TRADE' },
+    { type: 'Trade', sub: 'Sell', universal: 'TRADE' },
+    { type: 'Funding fee', sub: 'Funding income', universal: 'FUNDING' },
+    { type: 'Funding fee', sub: 'Funding expense', universal: 'FUNDING' },
+    { type: 'Transfer', sub: 'Transfer In', universal: 'TRANSFER_IN' },
+    { type: 'Transfer', sub: 'Transfer Out', universal: 'TRANSFER_OUT' },
+    { type: 'Fee', sub: 'Fee deduction', universal: 'TRADE' }
+  ];
+
+  okxAccounts.forEach(acc => {
+    for (let j = 0; j < 30; j++) {
+      const conf = randomItem(SYMBOL_CONFIGS);
+      const item = randomItem(okxTypes);
+      const category = conf.instType === 'INVERSE' ? 'SWAP' : (Math.random() < 0.2 ? 'SPOT' : 'FUTURES');
+      const side = item.sub === 'Buy' ? 'Buy' : (item.sub === 'Sell' ? 'Sell' : 'None');
+      const ccy = conf.ccy;
+      const transTime = now - randomNum(0, 90 * 24 * 60 * 60 * 1000);
+
+      const tradePrice = item.universal === 'TRADE' ? String(round(conf.price * randomNum(0.95, 1.05), 2)) : '0';
+      const qty = String(round(conf.price > 1000 ? randomNum(0.05, 1.5) : randomNum(5, 50), 4));
+      const funding = item.universal === 'FUNDING' ? String(round(item.sub === 'Funding income' ? randomNum(1.2, 16.5) : -randomNum(1.0, 14.0), 4)) : '0';
+      const fee = item.universal === 'TRADE' ? String(round(-randomNum(0.45, 4.2), 4)) : '0';
+      const cashFlow = item.universal === 'TRANSFER_IN' ? String(round(randomNum(1500, 10000), 2)) : (item.universal === 'TRANSFER_OUT' ? String(round(-randomNum(600, 5000), 2)) : String(round(randomNum(-140, 320), 2)));
+      const change = String(round(parseFloat(cashFlow) + parseFloat(funding) + parseFloat(fee), 2));
+      const cashBalance = String(round(randomNum(18000, 75000), 2));
+
+      okxTransactions.push({
+        id: `${acc.connectionId}-okx-${txIdCounter}-${transTime}`,
+        connectionId: acc.connectionId,
+        exchange: 'okx',
+        label: acc.label,
+        rawId: `okx-raw-${txIdCounter}`,
+        billId: `okx-bill-${txIdCounter}`,
+        symbol: conf.symbol,
+        category,
+        side,
+        transactionTime: transTime,
+        type: item.type,
+        transSubType: item.sub,
+        qty,
+        size: qty,
+        cryptoQty: qty,
+        currency: ccy,
+        tradePrice,
+        funding,
+        fee,
+        feeCurrency: ccy,
+        cashFlow,
+        change,
+        cashBalance,
+        balance: cashBalance,
+        feeRate: '0.0005',
+        tradeId: `okx-trade-${txIdCounter}`,
+        orderId: `okx-ord-${txIdCounter}`,
         raw: { mockData: true }
       });
       txIdCounter++;
@@ -741,6 +869,8 @@ function generate() {
   fs.writeFileSync(path.join(outDir, 'bills.json'), JSON.stringify(bills, null, 2));
   fs.writeFileSync(path.join(outDir, 'funding.json'), JSON.stringify(fundingSummaries, null, 2));
   fs.writeFileSync(path.join(outDir, 'bybit-transactions.json'), JSON.stringify(bybitTransactions, null, 2));
+  fs.writeFileSync(path.join(outDir, 'bitget-transactions.json'), JSON.stringify(bitgetTransactions, null, 2));
+  fs.writeFileSync(path.join(outDir, 'okx-transactions.json'), JSON.stringify(okxTransactions, null, 2));
 
   console.log('All mock data generated successfully:');
   console.log(`- Accounts: ${accounts.length}`);
@@ -750,6 +880,8 @@ function generate() {
   console.log(`- Orders: ${orders.length}`);
   console.log(`- Funding Summaries: ${fundingSummaries.length}`);
   console.log(`- Bybit Transactions: ${bybitTransactions.length}`);
+  console.log(`- Bitget Transactions: ${bitgetTransactions.length}`);
+  console.log(`- OKX Transactions: ${okxTransactions.length}`);
   console.log(`- Bills: ${bills.length}`);
 }
 

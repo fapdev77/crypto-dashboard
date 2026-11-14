@@ -35,6 +35,11 @@ export class ExchangeAggregator {
   public static async bootloadConnection(key: ApiCredentials): Promise<void> {
     const adapter = this.getAdapter(key);
     
+    LogManager.info(
+      'ExchangeAggregator',
+      `[${key.label}] Bootloading connection (${key.exchange}${key.exchange === 'bitget' ? ` - ${key.accountType || 'classic'}` : ''})...`
+    );
+
     useConnectionStore.getState().setConnectionStatus(key.id, 'connecting', null);
 
     try {
@@ -52,9 +57,9 @@ export class ExchangeAggregator {
       
       // Mark connection as connected
       useConnectionStore.getState().setConnectionStatus(key.id, 'connected', null);
-      LogManager.info('ExchangeAggregator', `Bootloaded connection ${key.id} (${key.exchange}${key.exchange === 'bitget' ? ` - ${key.accountType || 'classic'}` : ''}) successfully.`);
+      LogManager.info('ExchangeAggregator', `[${key.label}] Bootloaded connection successfully.`);
     } catch (err: any) {
-      LogManager.error('ExchangeAggregator', `Bootload failed for connection ${key.id}:`, err);
+      LogManager.error('ExchangeAggregator', `[${key.label}] Bootload failed:`, err);
       useConnectionStore.getState().setConnectionStatus(key.id, 'error', err.message || 'REST Bootload Failed');
       throw err;
     }

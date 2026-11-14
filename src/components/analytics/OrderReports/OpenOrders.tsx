@@ -11,8 +11,10 @@ import { detectQtyIsCoin } from '../../../utils/inverseUtils';
 import { usePagination } from '../../../hooks/usePagination';
 import { Pagination } from '../../ui/Pagination';
 import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
+import { useTranslation } from 'react-i18next';
 
 export function OpenOrders() {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<OrderFilters>({
     exchange: 'All',
     instrument: 'All',
@@ -52,12 +54,17 @@ export function OpenOrders() {
 
       let valUsd = 0;
       if (o.category === 'INVERSE') {
-        const qtyIsCoin = detectQtyIsCoin({ exchange: o.exchange, qty: o.qty, price: o.price, value: o.value });
-
-        if (qtyIsCoin) {
-          valUsd = o.value || (o.price > 0 ? Number(new Big(o.qty).times(o.price)) : 0);
+        if (o.exchange === 'bitget') {
+          const rawQuoteVol = o.raw?.quoteVolume ? parseFloat(o.raw.quoteVolume) : 0;
+          valUsd = rawQuoteVol > 0 ? rawQuoteVol : (o.value && o.value > 0 && o.value !== o.qty * o.price ? o.value : o.qty);
         } else {
-          valUsd = o.qty;
+          const qtyIsCoin = detectQtyIsCoin({ exchange: o.exchange, qty: o.qty, price: o.price, value: o.value });
+
+          if (qtyIsCoin) {
+            valUsd = o.value || (o.price > 0 ? Number(new Big(o.qty).times(o.price)) : 0);
+          } else {
+            valUsd = o.qty;
+          }
         }
       } else {
         valUsd = o.value || (o.price > 0 ? Number(new Big(o.qty).times(o.price)) : 0);
@@ -69,14 +76,14 @@ export function OpenOrders() {
   }, [orders]);
 
   const SIDE_DONUT = [
-    { name: 'Buy', value: stats.buyCount, color: '#00C853' },
-    { name: 'Sell', value: stats.sellCount, color: '#FF4444' }
+    { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: '#00C853' },
+    { name: t('orders.sell', 'Sell'), value: stats.sellCount, color: '#FF4444' }
   ];
 
   const TYPE_DONUT = [
-    { name: 'Limit', value: stats.limitCount, color: '#2F6BFF' },
-    { name: 'Market', value: stats.marketCount, color: '#FFB300' },
-    { name: 'Conditional', value: stats.conditionalCount, color: '#9C27B0' }
+    { name: t('orders.types.limit', 'Limit'), value: stats.limitCount, color: '#2F6BFF' },
+    { name: t('orders.types.market', 'Market'), value: stats.marketCount, color: '#FFB300' },
+    { name: t('orders.types.conditional', 'Conditional'), value: stats.conditionalCount, color: '#9C27B0' }
   ];
 
   return (
@@ -84,9 +91,9 @@ export function OpenOrders() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-              <ArrowLeftRight className="w-5 h-5 text-[#2F6BFF]" />
-              Open Orders
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-fg">
+              <ArrowLeftRight className="w-5 h-5 text-accent" />
+              {t('orders.openOrdersTitle', 'Open Orders')}
             </h2>
             <SimulationModeBadge />
           </div>
@@ -100,17 +107,17 @@ export function OpenOrders() {
       {orders.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           {/* Total Orders / Sides */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
             <div className='flex flex-col'>
               <div className="flex items-center gap-2">
-                <span className="text-2xl text-[#8E9299]">Total Orders: </span>
-                <span className="text-xl font-medium text-white">{orders.length}</span>
+                <span className="text-2xl text-fg-muted">{t('orders.stats.totalOrders', 'Total Orders')}: </span>
+                <span className="text-xl font-medium text-fg">{orders.length}</span>
               </div>
               <div className="flex items-baseline gap-2">
                 <div className="flex text-[15px] gap-2 font-mono mt-1">
-                  <span className="text-[#00C853]">{stats.buyCount} Buys ({((stats.buyCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
-                  <span className="text-[#8E9299]"> | </span>
-                  <span className="text-[#FF4444]">{stats.sellCount} Sells ({((stats.sellCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
+                  <span className="text-success">{stats.buyCount} {t('orders.stats.buyCount', 'Buy')} ({((stats.buyCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
+                  <span className="text-fg-muted"> | </span>
+                  <span className="text-danger">{stats.sellCount} {t('orders.stats.sellCount', 'Sell')} ({((stats.sellCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
                 </div>
               </div>
             </div>
@@ -130,13 +137,13 @@ export function OpenOrders() {
           </div>
 
           {/* Order Types */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
             <div className='flex flex-col'>
-              <span className="text-2xl text-[#8E9299]">Order Types</span>
+              <span className="text-2xl text-fg-muted">{t('orders.allTypes', 'Order Types')}</span>
               <div className="flex flex-col text-[13px] gap-0.5 font-mono mt-1">
-                <span className="text-[#2F6BFF]">Limit: {stats.limitCount}</span>
-                <span className="text-[#FFB300]">Market: {stats.marketCount}</span>
-                <span className="text-[#9C27B0]">Conditional: {stats.conditionalCount}</span>
+                <span className="text-accent">{t('orders.stats.limitCount', 'Limit')}: {stats.limitCount}</span>
+                <span className="text-[#FFB300]">{t('orders.stats.marketCount', 'Market')}: {stats.marketCount}</span>
+                <span className="text-[#9C27B0]">{t('orders.stats.conditionalCount', 'Conditional')}: {stats.conditionalCount}</span>
               </div>
             </div>
             <div className="w-24 h-24">
@@ -155,15 +162,12 @@ export function OpenOrders() {
           </div>
 
           {/* Total Value */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
             <AppTooltip description="The total estimated USD value of all open orders, calculated based on their limit trigger prices.">
-              <span className="text-2xl text-[#8E9299] w-max cursor-help border-b border-dashed border-[#8E9299]/50">Total Est. Value</span>
+              <span className="text-2xl text-fg-muted w-max cursor-help border-b border-dashed border-fg-muted/50">{t('orders.stats.totalVolume', 'Est. Total Volume')}</span>
             </AppTooltip>
-            <span className="text-xl font-medium text-white mt-1">
+            <span className="text-xl font-medium text-fg mt-1">
               {formatCurrency(stats.totalVolume, 'usd')}
-            </span>
-            <span className="text-xs text-[#8E9299] mt-2">
-              Based on execution at limit trigger price
             </span>
           </div>
         </div>

@@ -118,6 +118,7 @@ export default defineConfig(({ mode }) => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg}'], // Cacheia os assets básicos
           maximumFileSizeToCacheInBytes: 5000000,
+          navigateFallbackDenylist: [/^\/api/, /^\/health/],
         },
         manifest: {
           name: 'Cripto Dashboard',
@@ -145,7 +146,9 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.AI_CHAT_BOT_ENABLED': JSON.stringify(env.AI_CHAT_BOT_ENABLED ?? env.VITE_AI_CHAT_BOT_ENABLED ?? 'true'),
+      'import.meta.env.VITE_AI_CHAT_BOT_ENABLED': JSON.stringify(env.VITE_AI_CHAT_BOT_ENABLED ?? env.AI_CHAT_BOT_ENABLED ?? 'true'),
+      'import.meta.env.AI_CHAT_BOT_ENABLED': JSON.stringify(env.AI_CHAT_BOT_ENABLED ?? env.VITE_AI_CHAT_BOT_ENABLED ?? 'true'),
       '__APP_VERSION__': JSON.stringify(packageJson.version),
       '__APP_RELEASE_INFO__': JSON.stringify(releaseInfo),
     },
@@ -153,6 +156,17 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-charts': ['recharts'],
+            'vendor-icons': ['lucide-react'],
+          },
+        },
+      },
+      chunkSizeWarningLimit: 1200,
     },
     // https://vitest.dev/config/
     test: {

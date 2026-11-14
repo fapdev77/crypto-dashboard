@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Power, Edit2, Trash2, Shield } from 'lucide-react';
 import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
 import { useConnectionStore } from '../store/connectionStore';
@@ -7,6 +8,8 @@ import { useSettingsStore } from '../store/settingsStore';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import { ApiKeyModal } from './ApiKeyModal';
+import { VaultSetupModal } from './VaultSetupModal';
+import { isVaultConfigured } from '../utils/vaultHelpers';
 import { AppTooltip } from './ui/Tooltip';
 import { LogManager } from '../services/LogManager';
 
@@ -17,14 +20,27 @@ const EXCHANGES: { id: Exchange; name: string }[] = [
 ];
 
 export function ApiKeys() {
-  const { keys, toggleKey, removeKey } = useApiKeysStore();
+  const { t } = useTranslation();
+  const { keys, toggleKey, removeKey, isInitialized, encryptedData } = useApiKeysStore();
   const { statuses } = useConnectionStore();
   const useMockData = useSettingsStore(state => state.useMockData);
 
+  const isConfigured = isVaultConfigured({ isInitialized, encryptedData });
   const [modalOpen, setModalOpen] = useState(false);
+  const [vaultSetupOpen, setVaultSetupOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedKey, setSelectedKey] = useState<ApiCredentials | undefined>();
   const [keyToDelete, setKeyToDelete] = useState<string | null>(null);
+
+  const handleNewKeyClick = () => {
+    if (!isConfigured) {
+      setVaultSetupOpen(true);
+    } else {
+      setSelectedKey(undefined);
+      setModalMode('create');
+      setModalOpen(true);
+    }
+  };
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     bitget: false,
@@ -59,47 +75,65 @@ export function ApiKeys() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#111216] overflow-hidden rounded-xl border border-[#2a2b30]">
+    <div className="flex flex-col h-full bg-canvas overflow-hidden rounded-xl border border-line">
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6">
         <div className="w-full">
           {/* Header */}
           <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-            <h2 className="text-xl font-medium text-white">API Connections and status:</h2>
+            <h2 className="text-xl font-medium text-fg">{t('apiKeys.title', 'API Connections and status:')}</h2>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'settings' }))}
-                className="flex items-center gap-2 py-2 px-3 bg-[#1a1b1e] border border-[#2a2b30] hover:bg-[#202125] text-white text-sm font-medium rounded-lg transition-colors shrink-0"
+                className="flex items-center gap-2 py-2 px-3 bg-elevated border border-line hover:bg-line text-fg text-sm font-medium rounded-lg transition-colors shrink-0"
               >
-                <Shield className="w-4 h-4 text-[#2F6BFF]" />
-                <span className="hidden sm:inline">API Key Import/Export</span>
+                <Shield className="w-4 h-4 text-accent" />
+                <span className="hidden sm:inline">{t('apiKeys.importExportBtn', 'API Key Import/Export')}</span>
               </button>
-              <div className="flex items-center gap-2 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-1">
+              <div className="flex items-center gap-2 bg-elevated border border-line rounded-lg p-1">
                 <button
                   onClick={expandAll}
-                  className="px-4 py-2 text-xs text-[#8E9299] hover:text-white hover:bg-[#2a2b30] rounded-md transition-colors"
+                  className="px-4 py-2 text-xs text-fg-muted hover:text-fg hover:bg-line rounded-md transition-colors"
                 >
-                  Expand All
+                  {t('apiKeys.expandAll', 'Expand All')}
                 </button>
                 <button
                   onClick={collapseAll}
-                  className="px-4 py-2 text-xs text-[#8E9299] hover:text-white hover:bg-[#2a2b30] rounded-md transition-colors"
+                  className="px-4 py-2 text-xs text-fg-muted hover:text-fg hover:bg-line rounded-md transition-colors"
                 >
-                  Collapse All
+                  {t('apiKeys.collapseAll', 'Collapse All')}
                 </button>
               </div>
               <button
-                onClick={() => {
-                  setSelectedKey(undefined);
-                  setModalMode('create');
-                  setModalOpen(true);
-                }}
-                className="flex items-center gap-2 py-2 px-4 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white text-sm font-medium rounded-lg transition-colors shrink-0"
+                onClick={handleNewKeyClick}
+                className="flex items-center gap-2 py-2 px-4 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors shrink-0 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                New API Key
+                {t('apiKeys.newKeyBtn', 'New API Key')}
               </button>
             </div>
           </div>
+
+          {/* Empty state when no keys configured */}
+          {keys.length === 0 && (
+            <div className="bg-surface border border-line rounded-xl p-8 sm:p-10 text-center max-w-md mx-auto my-12 flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/25 flex items-center justify-center text-accent mb-4">
+                <Shield className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-bold text-fg mb-1.5">{t('apiKeys.noKeys', 'No API Connections')}</h3>
+              <p className="text-xs text-fg-muted max-w-sm mb-6 leading-relaxed">
+                {!isConfigured
+                  ? t('apiKeys.vaultRequired', 'Before adding exchange API keys, the Zero-Trust Security Vault must be activated to ensure all your credentials are encrypted locally.')
+                  : t('apiKeys.noKeysDesc', 'Connect your Bitget, Bybit, or OKX read-only API keys to monitor consolidated balances, open positions, and risk metrics.')}
+              </p>
+              <button
+                onClick={handleNewKeyClick}
+                className="flex items-center gap-2 py-2.5 px-5 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-accent/25 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                {!isConfigured ? t('apiKeys.activateVaultBtn', 'Activate Vault & Add Key') : t('apiKeys.addFirstKeyBtn', 'Add First API Key')}
+              </button>
+            </div>
+          )}
 
           {/* Groups */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -110,20 +144,20 @@ export function ApiKeys() {
               const isExpanded = expandedGroups[ex.id];
 
               return (
-                <div key={ex.id} className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden flex flex-col h-fit">
+                <div key={ex.id} className="bg-surface border border-line rounded-xl overflow-hidden flex flex-col h-fit">
                   {/* Group Header */}
                   <button
                     onClick={() => toggleGroup(ex.id)}
-                    className="w-full flex items-center justify-between p-4 bg-[#1a1b1e] hover:bg-[#202125] transition-colors border-b border-[#2a2b30]/50"
+                    className="w-full flex items-center justify-between p-4 bg-elevated hover:bg-line transition-colors border-b border-line/50"
                   >
                     <div className="flex items-center gap-3">
-                      <svg className={`h-4 w-4 text-[#8E9299] transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`h-4 w-4 text-fg-muted transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                       <ExchangeIcon exchange={ex.id as Exchange} className="w-6 h-6" />
-                      <span className="font-medium text-white">{ex.name}</span>
-                      <span className="ml-2 px-2 py-0.5 rounded-full bg-[#2a2b30] text-[#8E9299] text-xs font-mono">
-                        {groupKeys.filter(k => k.isActive).length} Active
+                      <span className="font-medium text-fg">{ex.name}</span>
+                      <span className="ml-2 px-2 py-0.5 rounded-full bg-line text-fg-muted text-xs font-mono">
+                        {groupKeys.filter(k => k.isActive).length} {t('apiKeys.activeKeys', 'Active')}
                       </span>
                     </div>
                   </button>
@@ -137,51 +171,58 @@ export function ApiKeys() {
                         const status = statuses[apiKey.id] || 'disconnected';
 
                         return (
-                          <div key={apiKey.id} className={`p-4 ${idx > 0 ? 'border-t border-[#2a2b30]/50' : ''} hover:bg-[#202125]/50 transition-colors flex flex-col gap-3`}>
+                          <div key={apiKey.id} className={`p-4 ${idx > 0 ? 'border-t border-line/50' : ''} hover:bg-line/50 transition-colors flex flex-col gap-3`}>
 
                             {/* Label & Status */}
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex items-center gap-2 min-w-0">
                                 <ExchangeIcon exchange={apiKey.exchange} className="w-4 h-4 opacity-50 shrink-0" />
-                                <span className="text-sm font-medium text-white truncate" title={apiKey.label}>
+                                <span className="text-sm font-medium text-fg truncate" title={apiKey.label}>
                                   {apiKey.label}
                                 </span>
                                 <AccountTypeBadge
                                   exchange={apiKey.exchange}
                                   accountType={apiKey.accountType}
+                                  environment={apiKey.environment}
+                                  bybitRegion={apiKey.bybitRegion}
+                                  isSubAccount={apiKey.isSubAccount}
                                 />
+                                {apiKey.includeFunding === false && (
+                                  <span className="text-[9px] font-mono px-1 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400" title="Funding account excluded">
+                                    {t('apiKeys.noFundingBadge', 'No Funding')}
+                                  </span>
+                                )}
                               </div>
-                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono leading-none border uppercase tracking-wider shrink-0 ${!apiKey.isActive ? 'bg-[#8E9299]/10 text-[#8E9299] border-[#8E9299]/20' :
-                                status === 'connected' ? 'bg-[#00C853]/10 text-[#00C853] border-[#00C853]/30' :
+                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono leading-none border uppercase tracking-wider shrink-0 ${!apiKey.isActive ? 'bg-fg-muted/10 text-fg-muted border-fg-muted/20' :
+                                status === 'connected' ? 'bg-success/10 text-success border-success/30' :
                                   status === 'connecting' ? 'bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/30 animate-pulse' :
-                                    status === 'error' ? 'bg-[#FF4444]/10 text-[#FF4444] border-[#FF4444]/30' :
-                                      'bg-[#8E9299]/10 text-[#8E9299] border-[#8E9299]/20'
+                                    status === 'error' ? 'bg-danger/10 text-danger border-danger/30' :
+                                      'bg-fg-muted/10 text-fg-muted border-fg-muted/20'
                                 }`}>
-                                {!apiKey.isActive ? 'Inactive' : status}
+                                {!apiKey.isActive ? t('apiKeys.status.disabled', 'Inactive') : t(`apiKeys.status.${status}`, status)}
                               </span>
                             </div>
 
                             {/* Actions bar */}
                             <div className="flex items-center justify-end gap-2.5 pt-1">
                               {keyToDelete === apiKey.id ? (
-                                <div className="flex items-center gap-1 bg-[#FF4444]/10 border border-[#FF4444]/20 p-0.5 rounded">
-                                  <span className="text-[15px] font-medium text-[#FF4444] px-15">Deletar a chave?</span>
+                                <div className="flex items-center gap-1 bg-danger/10 border border-danger/20 p-0.5 rounded">
+                                  <span className="text-[13px] font-medium text-danger px-2">{t('apiKeys.deleteConfirmPrompt', 'Delete key?')}</span>
                                   <button
                                     onClick={() => {
                                       clearConnectionData(apiKey.id);
                                       removeKey(apiKey.id);
                                       setKeyToDelete(null);
                                     }}
-                                    className="text-[15px] px-4 py-0.5 bg-[#FF4444] hover:bg-[#CC0000] text-white rounded transition-colors"
+                                    className="text-[12px] px-2.5 py-0.5 bg-danger hover:bg-[#CC0000] text-white rounded transition-colors"
                                   >
-                                    Sim
+                                    {t('common.yes', 'Yes')}
                                   </button>
-                                  |
                                   <button
                                     onClick={() => setKeyToDelete(null)}
-                                    className="text-[15px] px-4 py-0.5 bg-[#2a2b30] hover:bg-[#323339] text-[#8E9299] rounded transition-colors"
+                                    className="text-[12px] px-2.5 py-0.5 bg-line hover:bg-line text-fg-muted rounded transition-colors"
                                   >
-                                    Não
+                                    {t('common.no', 'No')}
                                   </button>
                                 </div>
                               ) : (
@@ -189,7 +230,7 @@ export function ApiKeys() {
                                   <AppTooltip description="Edit connection label">
                                     <button
                                       onClick={() => handleEdit(apiKey)}
-                                      className="text-[#8E9299] hover:text-[#2F6BFF] p-1 rounded hover:bg-[#202125] transition-all hover:scale-105"
+                                      className="text-fg-muted hover:text-accent p-1 rounded hover:bg-line transition-all hover:scale-105"
                                     >
                                       <Edit2 className="w-3.5 h-3.5" />
                                     </button>
@@ -203,7 +244,7 @@ export function ApiKeys() {
                                         toggleKey(apiKey.id);
                                         LogManager.info('ApiKeys', `Key ${apiKey.label} ${apiKey.isActive ? 'disabled' : 'enabled'}`);
                                       }}
-                                      className={`p-1 rounded hover:bg-[#202125] transition-all hover:scale-105 ${apiKey.isActive ? 'text-[#00C853] hover:text-[#FF4444]' : 'text-[#8E9299] hover:text-[#00C853]'}`}
+                                      className={`p-1 rounded hover:bg-line transition-all hover:scale-105 ${apiKey.isActive ? 'text-success hover:text-danger' : 'text-fg-muted hover:text-success'}`}
                                     >
                                       <Power className="w-3.5 h-3.5" />
                                     </button>
@@ -211,7 +252,7 @@ export function ApiKeys() {
                                   <AppTooltip description="Delete connection">
                                     <button
                                       onClick={() => setKeyToDelete(apiKey.id)}
-                                      className="text-[#8E9299] hover:text-[#FF4444] p-1 rounded hover:bg-[#202125] transition-all hover:scale-105"
+                                      className="text-fg-muted hover:text-danger p-1 rounded hover:bg-line transition-all hover:scale-105"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -232,6 +273,17 @@ export function ApiKeys() {
           </div>
         </div>
       </div>
+
+      <VaultSetupModal
+        isOpen={vaultSetupOpen}
+        onClose={() => setVaultSetupOpen(false)}
+        reason={t('apiKeys.vault.setupSubtitle', 'Enter a master passphrase to encrypt your credentials locally in the browser with zero-trust AES-256.')}
+        onSuccess={() => {
+          setSelectedKey(undefined);
+          setModalMode('create');
+          setModalOpen(true);
+        }}
+      />
 
       <ApiKeyModal
         isOpen={modalOpen}

@@ -1,11 +1,14 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
-import { EXCHANGE_COLORS } from './MacroCapitalChart';
+import { EXCHANGE_COLORS, EXCHANGE_COLORS_LIGHT } from './MacroCapitalChart';
 import { ExchangeIcon } from '../ui/ExchangeIcon';
 import { CoinIcon } from '../ui/CoinIcon';
 import { MoreHorizontal } from 'lucide-react';
 import { formatCompactUSD } from '../../utils/formatters';
 import { useFormatCurrency } from '../../hooks/useFormatCurrency';
+import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../../store/settingsStore';
+import { isHexColorLight } from '../../utils/themeMode';
 
 const CustomBarShape = (props: any) => {
   const { fill, x, y, width, height, payload, dataKey, fillOpacity, value } = props;
@@ -35,6 +38,7 @@ const CustomBarShape = (props: any) => {
   const isLightBackground = fill === '#ffffff';
   const textColor = isLightBackground ? '#4b5563' : '#ffffff';
   const textShadow = isLightBackground ? 'none' : '0px 1px 3px rgba(0,0,0,0.8), 0px 0px 1px rgba(0,0,0,0.5)';
+  const isOthersSegment = meta && (meta.isOthers || meta.name === 'Outros' || meta.name === 'Others' || meta.name?.toLowerCase() === 'outros' || meta.name?.toLowerCase() === 'others');
 
   return (
     <g>
@@ -44,12 +48,12 @@ const CustomBarShape = (props: any) => {
         <foreignObject x={x} y={y} width={width} height={height}>
           <div className="flex flex-col items-center justify-center w-full h-full pointer-events-none px-1 overflow-hidden">
             <div className="flex items-center gap-1.5 opacity-100 overflow-hidden bg-transparent">
-               {meta.name !== 'Outros' && width >= 55 && (
+               {!isOthersSegment && width >= 55 && (
                  <div className="w-[18px] h-[18px] flex-shrink-0" style={{ filter: isLightBackground ? 'none' : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
                    <CoinIcon symbol={meta.name} className="w-full h-full" />
                  </div>
                )}
-               {meta.name === 'Outros' && width >= 45 && (
+               {isOthersSegment && width >= 45 && (
                  <div className="w-[18px] h-[18px] flex-shrink-0 flex items-center justify-center" style={{ filter: isLightBackground ? 'none' : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
                    <MoreHorizontal size={16} color={textColor} strokeWidth={3} />
                  </div>
@@ -69,18 +73,20 @@ const CustomBarShape = (props: any) => {
 };
 
 
-const CustomTooltip = ({ active, payload, formatCurrency }: any) => {
+const CustomTooltip = ({ active, payload, formatCurrency, t }: any) => {
   if (active && payload && payload.length) {
     const row = payload[0].payload;
     const assets = row.rawAssets || [];
     
     return (
-      <div data-theme={row.exchange.toLowerCase()} className="bg-[#1a1b1e] border border-[#2a2b30] rounded-lg p-4 shadow-xl z-50 min-w-[220px]">
-        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[#2a2b30]">
-          <div className="w-5 h-5 grayscale opacity-80 mix-blend-screen">
+      <div data-theme={row.exchange.toLowerCase()} className="bg-elevated border border-line rounded-lg p-4 shadow-xl z-50 min-w-[220px]">
+        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-line">
+          <div className="w-5 h-5 opacity-90 flex-shrink-0">
              <ExchangeIcon exchange={row.exchange} />
           </div>
-          <span className="text-brand-normal font-bold capitalize">{row.exchange} Composition</span>
+          <span className="text-brand-normal font-bold capitalize">
+            {row.exchange} {t ? t('dashboardExtra.composition', 'Composition') : 'Composition'}
+          </span>
         </div>
         <div className="space-y-2">
           {assets.map((asset: any, idx: number) => {
@@ -90,13 +96,13 @@ const CustomTooltip = ({ active, payload, formatCurrency }: any) => {
                   <div className="w-5 h-5 flex-shrink-0">
                     <CoinIcon symbol={asset.name} className="w-full h-full" />
                   </div>
-                  <span className="text-[#8E9299] font-semibold text-xs tracking-wider uppercase">{asset.name}</span>
+                  <span className="text-fg-muted font-semibold text-xs tracking-wider uppercase">{asset.name}</span>
                 </div>
                 <div className="text-right flex items-center justify-end gap-3 min-w-[100px]">
-                  <span className="text-white font-mono">
+                  <span className="text-fg font-mono">
                     {formatCurrency ? formatCurrency(asset.value, 'usd') : `$${asset.value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}`}
                   </span>
-                  <span className="text-[#8E9299] opacity-80 font-mono text-xs w-10 text-right">{asset.percent.toFixed(1)}%</span>
+                  <span className="text-fg-muted opacity-80 font-mono text-xs w-10 text-right">{asset.percent.toFixed(1)}%</span>
                 </div>
               </div>
             );
@@ -133,13 +139,24 @@ interface CrossExchangeAssetsChartProps {
 export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAssetsChartProps) {
   if (!data || data.length === 0) return null;
 
+  const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
+  const themeMode = useSettingsStore(state => state.themeMode);
+  const customTokens = useSettingsStore(state => state.customThemeTokens);
+  const isLight =
+    themeMode === 'light' ||
+    themeMode === 'wise-light' ||
+    (themeMode === 'custom' && isHexColorLight(customTokens.canvas));
+  const palette = isLight ? EXCHANGE_COLORS_LIGHT : EXCHANGE_COLORS;
+
   const segments = Array.from({ length: maxSegments }).map((_, i) => `segment${i}`);
   const maxTotal = Math.max(...data.map(d => d.total));
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] p-5 rounded-xl flex flex-col h-[300px]">
-      <h3 className="text-sm font-semibold text-white mb-4">Cross-Exchange Asset Composition</h3>
+    <div className="bg-surface border border-line p-5 rounded-xl flex flex-col h-[300px]">
+      <h3 className="text-sm font-semibold text-fg mb-4">
+        {t('dashboardExtra.crossExchangeAssetComposition', 'Cross-Exchange Asset Composition')}
+      </h3>
       <div className="flex-1 min-h-0 min-w-0 w-full relative">
         <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
           <BarChart
@@ -150,7 +167,7 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
           >
             <XAxis type="number" domain={[0, maxTotal]} hide />
             <YAxis dataKey="exchange" type="category" axisLine={false} tickLine={false} tick={customYAxisTick} width={80} />
-            <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.03)' }} content={<CustomTooltip formatCurrency={formatCurrency} />} isAnimationActive={false} />
+            <RechartsTooltip cursor={{ fill: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)' }} content={<CustomTooltip formatCurrency={formatCurrency} t={t} />} isAnimationActive={false} />
             
             {segments.map((key, i) => (
               <Bar
@@ -161,7 +178,7 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
                 shape={<CustomBarShape />}
               >
                 {data.map((entry, index) => {
-                  const color = EXCHANGE_COLORS[entry.exchange] || '#8E9299';
+                  const color = palette[entry.exchange] || '#8E9299';
                   // Opaque progression 1.0 -> 0.75 -> 0.50 ... clamped to 0.20
                   const opacity = Math.max(0.20, 1 - (i * 0.25));
                   return <Cell key={`cell-${index}`} fill={color} fillOpacity={opacity} />;

@@ -15,8 +15,22 @@ export class LogManager {
       return arg.stack || arg.message || String(arg);
     }
     if (typeof arg === 'object' && arg !== null) {
+      // Check if it is a DOM Event
+      if ('target' in arg && 'type' in arg && typeof (arg as any).type === 'string') {
+        const evt = arg as any;
+        const targetTag = evt.target?.tagName ? `<${evt.target.tagName.toLowerCase()}>` : 'unknown target';
+        return `[Event: ${evt.type} on ${targetTag}]`;
+      }
       try {
-        return JSON.stringify(arg);
+        const json = JSON.stringify(arg);
+        if (json === '{}') {
+          // If all keys had undefined values (like { filename: undefined, ... }), do not output {}
+          const nonNullEntries = Object.entries(arg).filter(([_, v]) => v !== undefined && v !== null);
+          if (nonNullEntries.length === 0) {
+            return '';
+          }
+        }
+        return json;
       } catch {
         return String(arg);
       }
@@ -26,8 +40,11 @@ export class LogManager {
 
   private static formatMessage(message: string, args: unknown[]): string {
     if (args.length === 0) return message;
-    const extra = args.map(a => LogManager.serializeArg(a)).join(' ');
-    return message ? `${message} ${extra}` : extra;
+    const extraParts = args
+      .map(a => LogManager.serializeArg(a))
+      .filter(s => s && s.trim().length > 0 && s !== '{}');
+    const extra = extraParts.join(' ');
+    return message ? (extra ? `${message} ${extra}` : message) : extra;
   }
 
   static info(source: string, message: string, ...args: unknown[]): void {

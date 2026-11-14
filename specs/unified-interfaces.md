@@ -1,6 +1,6 @@
 # Unified Interfaces Specification (`unified-interfaces.md`)
 
-This document defines the unified interfaces (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, `UnifiedBillRecord`, `SymbolPnLRecord`, `UnifiedOrder`, `FundingFeeAggregated`, `FundingRateSummary`, and `BybitTransactionLogEntry`) to serve as the single source of truth for the frontend UI. It maps exchange-specific API payloads to normalized fields as defined in `src/types.ts`.
+This document defines the unified interfaces (`UnifiedBalance`, `UnifiedPosition`, `UnifiedHistoryPosition`, `UnifiedBillRecord`, `SymbolPnLRecord`, `UnifiedOrder`, `FundingFeeAggregated`, `FundingRateSummary`, `BybitTransactionLogEntry`, `BitgetTransactionLogEntry`, `OkxTransactionLogEntry`, and `UniversalTxType`) to serve as the single source of truth for the frontend UI. It maps exchange-specific API payloads to normalized fields as defined in `src/types.ts`.
 
 ---
 
@@ -16,7 +16,8 @@ export type UnifiedPositionMode = 'hedge' | 'one_way' | 'unknown';
 export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
 export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
 export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
-export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL' | 'TRAILING_STOP' | 'OCO';
+export type OrderExecutionScope = 'FULL_POSITION' | 'PARTIAL';
 export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
 ```
 
@@ -29,7 +30,8 @@ export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer'
 | `UnifiedInstrumentType` | UnifiedPosition, UnifiedHistoryPosition, UnifiedOrder | Instrument class (spot, perp, inverse, futures, option) |
 | `UnifiedAssetCategory` | AssetClassifierAggregator | High-level asset classification (crypto, stock, unknown) |
 | `UnifiedOrderStatus` | UnifiedOrder | Order lifecycle state |
-| `UnifiedOrderType` | UnifiedOrder | Order type (limit, market, TP, SL, conditional) |
+| `UnifiedOrderType` | UnifiedOrder | Order type (limit, market, TP, SL, conditional, trailing stop, OCO) |
+| `OrderExecutionScope` | UnifiedOrder | Full position vs partial execution scope |
 | `BillType` | UnifiedBillRecord | Wallet flow classification |
 
 ---
@@ -43,6 +45,9 @@ export interface UnifiedBalance {
   id: string; // e.g., 'connId-ccy'
   connectionId: string;
   exchange: ExchangeName; // 'bybit' | 'bitget' | 'okx'
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   ccy: string;
   amount: number;
@@ -84,6 +89,9 @@ export interface UnifiedPosition {
   id: string; // Ex: 'connId-okx-BTC-USDT-long'
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string; // Account label/name
   symbol: string;
   baseCoin: string; // E.g., 'BTC'
@@ -108,6 +116,8 @@ export interface UnifiedPosition {
   roe?: number; // Return on Equity (%)
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
+  tpMode?: 'full' | 'partial';
+  slMode?: 'full' | 'partial';
   instrumentType?: UnifiedInstrumentType; // 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN'
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
@@ -155,6 +165,9 @@ export interface UnifiedHistoryPosition {
   id: string;
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   symbol: string;
   baseCoin: string;
@@ -238,6 +251,9 @@ export interface UnifiedBillRecord {
   id: string;
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   type: BillType;
   amount: number;
@@ -280,13 +296,17 @@ Captures exchange orders (open and historical) with normalized fields for unifor
 
 ```typescript
 export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
-export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL' | 'TRAILING_STOP' | 'OCO';
+export type OrderExecutionScope = 'FULL_POSITION' | 'PARTIAL';
 
 export interface UnifiedOrder {
   id: string;
   exchangeOrderId: string;
   connectionId: string;
   exchange: ExchangeName;
+  accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
@@ -300,6 +320,14 @@ export interface UnifiedOrder {
   filledQty: number;
   value?: number;
   triggerPrice?: number;
+  executionScope?: OrderExecutionScope;
+  closeFraction?: number;
+  tpTriggerPrice?: number;
+  slTriggerPrice?: number;
+  tpOrderPrice?: number;
+  slOrderPrice?: number;
+  isPositionTpsl?: boolean;
+  parentOrderId?: string;
   reduceOnly?: boolean;
   timeInForce?: string;
   createdTime: number;
@@ -599,7 +627,7 @@ Transient fields (`currentRates`, `isSyncing`, etc.) are NOT persisted to localS
 
 ## 12. Funding Cache Stores (IndexedDB via `historyCache.ts`)
 
-### 12.1 Object Stores (DB_VERSION 10)
+### 12.1 Object Stores (DB_VERSION 12)
 
 | Store Name | Key Path | Indexes | Description |
 |-----------|----------|---------|-------------|
@@ -618,13 +646,14 @@ Transient fields (`currentRates`, `isSyncing`, etc.) are NOT persisted to localS
 | `getFundingMeta(exchange, symbol)` | `funding-meta` | Read coverage metadata |
 | `updateFundingMeta(exchange, symbol, oldest, latest)` | `funding-meta` | Upsert coverage metadata |
 
-### 12.3 Migration (v9 → v10)
+### 12.3 Migration (v9 → v10 → v12)
 
 | Action | Details |
 |--------|---------|
 | Delete `funding-fees` store | Removes all raw individual settlement records |
 | Create `funding-summaries` store | New store with `by-exchange` and `by-symbol` indexes |
 | Preserve `funding-meta` store | Unchanged, all metadata entries retained |
+| Add Bitget & OKX tx logs (v11/v12) | Dedicated stores for transaction logs and metadata |
 
 ### 12.4 Metadata Schema (unchanged)
 
@@ -640,7 +669,7 @@ export interface FundingMeta {
 }
 ```
 
-### 12.5 Global IndexedDB Cache Database Architecture (`crypto-dashboard-cache` - DB_VERSION 10)
+### 12.5 Global IndexedDB Cache Database Architecture (`crypto-dashboard-cache` - DB_VERSION 12)
 
 | Store Name | Key Path | Indexes | Associated Unified Interface |
 |---|---|---|---|
@@ -652,14 +681,20 @@ export interface FundingMeta {
 | `bybitRealPnL` | `id` | — | `{ id, connectionId, period, pnlData, updatedAt }` |
 | `bybit-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | `BybitTransactionLogEntry` |
 | `bybit-transaction-meta` | `connectionId` | — | `{ connectionId, oldestTransactionTime, latestTransactionTime, totalRecords, updatedAt }` |
+| `bitget-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | `BitgetTransactionLogEntry` |
+| `bitget-transaction-meta` | `connectionId` | — | `{ connectionId, oldestTransactionTime, latestTransactionTime, totalRecords, updatedAt }` |
+| `okx-transaction-log` | `id` | `by-connectionId`, `by-transactionTime`, `by-symbol`, `by-type`, `by-currency`, `by-category` | `OkxTransactionLogEntry` |
+| `okx-transaction-meta` | `connectionId` | — | `{ connectionId, oldestTransactionTime, latestTransactionTime, totalRecords, updatedAt }` |
 | `funding-summaries` | `id` | `by-exchange`, `by-symbol` | `FundingRateSummary` |
 | `funding-meta` | `id` | `by-exchange` | `FundingMeta` |
 
 ---
 
-## 13. Bybit Transaction Log Entry (`BybitTransactionLogEntry`)
+## 13. Transaction Log Interfaces (Bybit, Bitget, OKX)
 
-Captures the full raw payload from Bybit's `/v5/account/transaction-log` endpoint after normalization. Unlike other unified interfaces which normalize into abstract fields, `BybitTransactionLogEntry` preserves the complete Bybit schema because its fields are used directly by the transaction log filtering, computation, and display components.
+### 13.1. Bybit Transaction Log Entry (`BybitTransactionLogEntry`)
+
+Captures the full raw payload from Bybit's `/v5/account/transaction-log` endpoint after normalization.
 
 ```typescript
 export interface BybitTransactionLogEntry {
@@ -696,38 +731,165 @@ export interface BybitTransactionLogEntry {
 }
 ```
 
-### Key Fields for Funding Analysis
+### 13.2. Bitget Transaction Log Entry (`BitgetTransactionLogEntry`)
+
+Captures transaction logs and bills across Bitget Classic (`/api/v2/mix/account/bill`, `/api/v2/spot/account/bills`) and UTA (`/api/v2/user/bills-record`).
+
+```typescript
+export interface BitgetTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'bitget';
+  accountType?: 'classic' | 'uta';
+  label: string;
+
+  rawId: string;
+  symbol: string;
+  category: string;        // SPOT, MARGIN, USDT-FUTURES, COIN-FUTURES, USDC-FUTURES, OTHER
+  side: 'Buy' | 'Sell' | 'None' | string;
+  transactionTime: number; // ms timestamp
+  type: string;            // TRANSFER_IN, ORDER_DEALT_IN, ORDER_DEALT_OUT, FUNDING_FEE_IN, etc.
+  transSubType?: string;
+  groupType?: string;
+  positionType?: string;
+  qty?: string;
+  size?: string;
+  amount?: string;
+  currency: string;
+  tradePrice?: string;
+  funding?: string;
+  fee: string;
+  feeCurrency?: string;
+  cashFlow: string;
+  change: string;          // net change
+  cashBalance: string;
+  balance?: string;
+  positionAmount?: string;
+  positionBalance?: string;
+  feeRate?: string;
+  bonusChange?: string;
+  tradeId?: string;
+  orderId?: string;
+  orderLinkId?: string;
+  extra?: string;
+
+  raw: Record<string, unknown>;
+}
+```
+
+### 13.3. OKX Transaction Log Entry (`OkxTransactionLogEntry`)
+
+Captures financial and account bills from OKX (`/api/v5/account/bills` e `/api/v5/account/bills-archive`).
+
+```typescript
+export interface OkxTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'okx';
+  label: string;
+
+  rawId: string;
+  billId?: string;
+  symbol: string;
+  category: string;        // SPOT, MARGIN, SWAP, FUTURES, OPTION
+  side: 'Buy' | 'Sell' | 'None' | string;
+  transactionTime: number; // ms timestamp
+  type: string;            // Type display (Trade, Funding fee, Transfer, etc.)
+  transSubType?: string;   // SubType display (Buy, Sell, Funding expense, etc.)
+  subType?: string;
+  typeCode?: string;
+  subTypeCode?: string;
+  qty?: string;
+  size?: string;
+  contracts?: string;
+  contractVal?: string;
+  cryptoQty?: string;
+  totalValueUsd?: string;
+  amount?: string;
+  currency: string;
+  tradePrice?: string;
+  funding?: string;
+  fee: string;
+  feeCurrency?: string;
+  cashFlow: string;
+  change: string;          // balChg
+  cashBalance: string;     // bal
+  balance?: string;
+  positionBalance?: string;
+  feeRate?: string;
+  bonusChange?: string;
+  tradeId?: string;
+  orderId?: string;
+  orderLinkId?: string;
+  pnl?: string;
+  extra?: string;
+
+  raw: Record<string, unknown>;
+}
+```
+
+### 13.4. Universal Transaction Mapper (`UniversalTxType` & `transactionTypeMapper.ts`)
+
+To provide consistent visualization, badge coloring, and cross-exchange transaction analysis across Bybit, Bitget, and OKX, CPM normalizes hundreds of exchange-specific event codes into 10 universal categories:
+
+```typescript
+export type UniversalTxType =
+  | 'ALL'
+  | 'TRADE'
+  | 'FUNDING_FEE'
+  | 'TRANSFER_IN'
+  | 'TRANSFER_OUT'
+  | 'LIQUIDATION'
+  | 'INTEREST'
+  | 'REWARDS'
+  | 'DELIVERY'
+  | 'OTHERS';
+```
+
+| Universal Type | Badge Label | Bybit Source Types | Bitget Source Types | OKX Source Codes / Subtypes | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `TRADE` | Trade | `TRADE` | `ORDER_DEALT_IN`, `ORDER_DEALT_OUT`, `TRANSACTION_FEE` | `2` (Trade), buy/sell executions, close PnL | Trades and order executions |
+| `FUNDING_FEE` | Funding Fee | `SETTLEMENT` | `FUNDING_FEE_IN`, `FUNDING_FEE_OUT` | `14` (Funding Fee), funding expense/income | Periodic swap funding payments and receipts |
+| `TRANSFER_IN` | Transfer In | `TRANSFER` (cashFlow > 0) | `TRANSFER_IN`, `DEPOSIT` | `1` (Transfer), `20` (Deposit), incoming subaccount | Deposits and incoming transfers |
+| `TRANSFER_OUT` | Transfer Out | `TRANSFER` (cashFlow < 0) | `TRANSFER_OUT`, `WITHDRAW` | `1` (Transfer), `21` (Withdrawal), outgoing subaccount | Withdrawals and outgoing transfers |
+| `LIQUIDATION` | Liquidation | `LIQUIDATION`, `ADL` | `LIQUIDATION`, `FORCE_CLOSE` | `3` (Delivery), forced close, auto-deleveraging | Forced liquidations and ADL events |
+| `INTEREST` | Interest | `INTEREST` | `INTEREST`, `BORROW_FEE` | `7` (Interest), borrow charges and loan deductions | Margin interest and borrowing fees |
+| `REWARDS` | Rewards | `BONUS`, `AIRDROP` | `REWARD_BONUS`, `COUPON` | `13` (Claim), trial funds, vouchers, fee rebates | Bonuses, trial funds, and fee rebates |
+| `DELIVERY` | Delivery | `DELIVERY` | `SETTLE_DELIVERY` | `3` (Delivery), futures delivery and option exercises | Contract expirations and settlements |
+| `OTHERS` | Others | `CONVERT`, `OTHER` | `OTHER`, `SYSTEM_ADJUST` | `8` (Fee deduction), conversions, misc. entries | Miscellaneous system adjustments |
+
+### Key Fields for Financial Auditing
 
 | Field | Description | Used By |
 |-------|-------------|---------|
 | `transactionTime` | Timestamp of the event | Sorting, grouping, period filtering |
-| `type` | Event type (`SETTLEMENT` = funding settlement) | `filterEntries()` for funding-specific aggregation |
-| `funding` | Funding fee amount (positive = received, negative = paid) | PnL computation, `computeRealPnL()` |
-| `fee` | Trading fee amount | PnL computation |
+| `type` | Native or standardized event type | Filtering and universal category classification |
+| `funding` | Funding fee amount (positive = received, negative = paid) | KPI cards, PnL computation, `computeRealPnL()` |
+| `fee` | Trading fee amount | Net fee auditing, PnL computation |
 | `cashFlow` | Cash flow component of the transaction | `computeRealPnL()` — `cashFlow + funding - fee` |
-| `change` | Net change to cash balance (`cashFlow + funding - fee`) | Verification, reconciliation |
+| `change` | Net change to wallet balance (`cashFlow + funding - fee`) | Reconciliation with exchange wallet balance |
 
-### Sync & Cache
+### Sync & Cache Services
 
-| Function | Location | Description |
-|----------|----------|-------------|
-| `syncWithCache(key)` | BybitTransactionService | Initial full sync: fetches all pages from Bybit, deduplicates, writes to IndexedDB |
-| `syncIncremental(key, latestTime)` | BybitTransactionService | Incremental sync: fetches only records since `latestTime`, deduplicates, appends to cache |
-| `getBybitTxLogCache(connectionId)` | historyCache.ts | Read all entries for a connection from IndexedDB |
-| `getAllBybitTxLogCache()` | historyCache.ts | Read ALL entries across all connections |
-| `saveBybitTxLogCache(entries)` | historyCache.ts | Bulk upsert to IndexedDB `bybitTxLog` store |
+| Service | IndexedDB Store | Functions |
+|---------|-----------------|-----------|
+| `BybitTransactionService` | `bybit-transaction-log`, `bybit-transaction-meta` | `syncWithCache()`, `syncIncremental()`, `computeStats()`, `filterEntries()` |
+| `BitgetTransactionService` | `bitget-transaction-log`, `bitget-transaction-meta` | `syncWithCache()`, `syncIncremental()`, `computeStats()`, `filterEntries()` |
+| `OkxTransactionService` | `okx-transaction-log`, `okx-transaction-meta` | `syncWithCache()`, `syncIncremental()`, `computeStats()`, `filterEntries()` |
 
-### Computed Statistics (`BybitTransactionService.computeStats`)
+### Computed Statistics (`computeStats`)
 
-Returns derived metrics from filtered entries:
+Returns derived metrics from filtered entries for each exchange:
 
 ```typescript
 {
-  totalFunding: number;      // Sum of `funding` field
-  totalFees: number;         // Sum of `fee` field
-  totalRealized: number;     // Sum of `change` field (cashFlow + funding - fee)
-  tradeCount: number;        // Count of `TRADE` type entries
-  fundingCount: number;      // Count of `SETTLEMENT` type entries
+  totalCount: number;
+  typeBreakdown: Record<string, number>;
+  stable: CurrencyStats;
+  perCurrency: Record<string, CurrencyStats>;
+  aggregatedUsd: CurrencyStats;
 }
 ```
 
@@ -810,3 +972,276 @@ A barra global de exposição consolida o capital do portfólio usando como base
 *   `Protected % = (Total Protected / Total Equity) * 100`
 *   `Exposed % = (max(0, Total Equity - Total Protected) / Total Equity) * 100`
 *   `Leveraged % = (Total Leveraged / Total Equity) * 100` (estende além dos 100% da barra para indicar risco de alavancagem direcional).
+
+---
+
+## 16. API Credentials & Configuration Interface (`ApiCredentials`)
+
+Localizada em `src/store/apiKeysStore.ts`, define a estrutura canônica das credenciais de conexão do usuário com suporte a roteamento regional, subcontas e carteiras de funding:
+
+```typescript
+export type Exchange = 'bybit' | 'bitget' | 'okx';
+export type AccountType = 'classic' | 'uta';
+export type ApiEnvironment = 'mainnet' | 'testnet';
+export type BybitRegion =
+  | 'global'
+  | 'global_bytick'
+  | 'brazil'
+  | 'brazil_int'
+  | 'argentina'
+  | 'argentina_int'
+  | 'netherlands'
+  | 'turkey'
+  | 'kazakhstan'
+  | 'georgia'
+  | 'uae'
+  | 'eea'
+  | 'indonesia'
+  | 'japan'
+  | 'hongkong';
+
+export interface ApiCredentials {
+  id: string;
+  label: string;
+  exchange: Exchange;
+  apiKey: string;
+  apiSecret: string;
+  passphrase?: string;
+  isActive: boolean;
+  accountType?: AccountType; // Bitget: 'classic' vs 'uta'
+  environment?: ApiEnvironment; // Bybit: 'mainnet' vs 'testnet'
+  bybitRegion?: BybitRegion; // Bybit: regional domain / origin header
+  includeFunding?: boolean; // Seletor para ler saldo de funding/spot
+  isSubAccount?: boolean; // Marcação visual de subconta subordinada
+}
+```
+
+---
+
+## 17. Market Analytics & Quantitative Derivatives Interfaces (`src/types/marketAnalytics.ts`)
+
+Define as estruturas normalizadas para o terminal quantitativo cross-exchange:
+
+```typescript
+export type MarketType = 'ALL' | 'PERP' | 'INVERSE' | 'SPOT';
+export type MarketAnalyticsTimeframe = '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
+
+export type MarketRegime =
+  | 'LONG_ACCUMULATION'
+  | 'SHORT_SQUEEZE'
+  | 'AGGRESSIVE_SHORTING'
+  | 'LONG_LIQUIDATION'
+  | 'NEUTRAL_CONSOLIDATION';
+
+export interface FundingArbitrageOpportunity {
+  symbol: string;
+  highestExchange: ExchangeName;
+  highestRate: number;
+  lowestExchange: ExchangeName;
+  lowestRate: number;
+  spread8h: number;
+  spreadApr: number; // spread8h * 3 * 365
+  longExchange: ExchangeName;
+  shortExchange: ExchangeName;
+  nextFundingTime: number;
+}
+
+export type CvdDivergenceType = 'BULLISH_ABSORPTION' | 'BEARISH_ABSORPTION' | 'NONE';
+
+export interface MarketAnalyticsSnapshot {
+  symbol: string;
+  timestamp: number;
+  currentPrice: number;
+  priceChange24h: number;
+  volume24h: number;
+  openInterestUsd: number;
+  openInterestChange24h: number;
+  benchmarkFundingRate8h: number;
+  benchmarkFundingApr: number;
+  netTakerCvd: number;
+  sentimentIndex: number; // 0 to 100 (Fear & Greed)
+  regime: MarketRegime;
+  arbitrage: FundingArbitrageOpportunity[];
+  cvdDivergence: CvdDivergenceType;
+  smartMoneySentiment: {
+    retailRatio: number;
+    topTraderRatio: number;
+    divergenceAlert: boolean;
+  };
+}
+```
+
+---
+
+## 18. PIKA AI Subsystem Interfaces (`src/types/aiTypes.ts` & `src/services/ai/aiToolRegistry.ts`)
+
+Define as estruturas de dados para o subsistema de inteligência quantitativa e auditoria:
+
+```typescript
+export type AiProviderType = 'gemini' | 'ollama' | 'openrouter' | 'openai' | 'anthropic' | 'custom';
+
+// 7 ferramentas registradas em AI_TOOL_DEFINITIONS (src/services/ai/aiToolRegistry.ts)
+export type RegisteredAiToolName =
+  | 'aiGetPortfolioBalances'
+  | 'aiGetOpenPositions'
+  | 'aiGetHedgeCorrelationSummary'
+  | 'aiGetFundingFeesHistory'
+  | 'aiGetMarketFundingRates'
+  | 'aiGetTradingFeesHistory'
+  | 'aiGetClosedPositionsSummary';
+
+export interface AiModelConfig {
+  id: string;
+  name: string;
+  provider: AiProviderType;
+  modelId: string;
+  baseUrl?: string;
+  apiKey?: string;
+  isActive: boolean;
+  isPrimary: boolean;
+  isFallback: boolean;
+  fallbackOrder?: number;
+  temperature: number;
+  topP: number;
+  maxTokens: number;
+  systemInstruction?: string;
+  maxRpm: number; // 0 = unlimited
+  maxRpd: number; // 0 = unlimited
+  currentRpmCount?: number;
+  currentRpdCount?: number;
+  lastUsedTimestamp?: number;
+  lastPingStatus?: 'healthy' | 'unreachable' | 'deprecated' | 'quota_exceeded' | 'unknown';
+  lastPingLatencyMs?: number;
+  lastPingMessage?: string;
+  lastPingAt?: number;
+  supportsTools?: boolean;
+}
+
+export interface AiAuditToolInvocation {
+  name: string;
+  args: Record<string, any>;
+  executionTimeMs: number;
+  resultSummary: string;
+}
+
+export interface AiChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: number;
+  status?: 'sending' | 'thinking' | 'streaming' | 'complete' | 'error' | 'cancelled';
+  toolsInvoked?: AiAuditToolInvocation[];
+  usedModelName?: string;
+  wasFallback?: boolean;
+  errorMessage?: string;
+  auditLogId?: string;
+  rawDebug?: AiRawDebugData;
+  unverifiedData?: boolean;
+  auditWarning?: string;
+  incompatibleToolModel?: boolean;
+  recommendedModelSuggestion?: string;
+}
+
+export interface AiAuditLogEntry {
+  id: string;
+  timestamp: number;
+  modelId: string;
+  modelName: string;
+  provider: AiProviderType;
+  wasFallback: boolean;
+  fallbackReason?: string;
+  type: 'chat_query' | 'diagnostic_chip' | 'tool_execution';
+  userMessage: string;
+  assistantResponse: string;
+  toolsInvoked: AiAuditToolInvocation[];
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  durationMs: number;
+  latencyFirstTokenMs?: number;
+  status: 'success' | 'rate_limited' | 'error' | 'refused_out_of_scope' | 'cancelled';
+  errorMessage?: string;
+  fullPayloadSnapshot?: {
+    sentPrompt?: string;
+    rawToolResults?: any;
+    requestPayload?: any;
+    rawResponse?: any;
+    rawDebug?: AiRawDebugData;
+  };
+  rawDebug?: AiRawDebugData;
+}
+
+export interface AiTelemetryStats {
+  totalCalls: number;
+  totalPromptTokens: number;
+  totalCompletionTokens: number;
+  totalTokens: number;
+  totalDurationMs: number;
+  averageLatencyMs: number;
+  estimatedCostUsd: number;
+  lastActivityTimestamp: number | null;
+}
+```
+
+---
+
+## 19. Theme Engine & Currency Diagnostics Interfaces
+
+### 19.1 Multi-Theme & Custom Palette Interfaces (`src/utils/themeMode.ts`)
+
+Define os 5 modos visuais suportados (`dark`, `light`, `wise-dark`, `wise-light`, `custom`), os 10 tokens editáveis (+ 3 tokens derivados) e os temas salvos no `useSettingsStore`:
+
+```typescript
+export const THEME_MODES = ['dark', 'light', 'wise-dark', 'wise-light', 'custom'] as const;
+export type ThemeMode = (typeof THEME_MODES)[number];
+
+export interface CustomThemeTokens {
+  canvas: string;
+  surface: string;
+  elevated: string;
+  elevatedHover?: string;
+  line: string;
+  lineStrong?: string;
+  fg: string;
+  fgMuted: string;
+  accent: string;
+  accentHover?: string;
+  success?: string;
+  danger?: string;
+  warning?: string;
+}
+
+export interface SavedCustomTheme {
+  id: string;
+  name: string;
+  palette: CustomThemeTokens;
+  updatedAt: number;
+}
+
+export interface ThemePreset {
+  id: string;
+  nameKey: string;
+  palette: CustomThemeTokens;
+}
+```
+
+### 19.2 Currency & Stablecoin API Diagnostics (`src/services/currency/currencyTypes.ts`)
+
+```typescript
+export type SupportedLocale = 'en-US' | 'en-GB' | 'it-IT' | 'es-419' | 'pt-BR' | 'pt-PT';
+export type SupportedFiatCurrency = 'USD' | 'EUR' | 'GBP' | 'BRL';
+
+export interface ApiProviderDiagnostic {
+  status: 'connected' | 'cached' | 'error';
+  lastUpdated: number | null;
+  latencyMs?: number;
+  error?: string | null;
+  endpoint: string;
+}
+
+export interface CurrencyApiDiagnostics {
+  frankfurter: ApiProviderDiagnostic; // https://api.frankfurter.dev/v2/rates
+  coingecko: ApiProviderDiagnostic;   // https://api.coingecko.com/api/v3/simple/price
+}
+```
+

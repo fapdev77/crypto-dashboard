@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLogStore, LogLevel } from '../store/logStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { useSettingsStore } from '../store/settingsStore';
@@ -6,6 +7,7 @@ import { Search, ChevronDown, ArrowDownToLine } from 'lucide-react';
 import { formatIsoDateTime } from '../utils/formatters';
 
 export function ConnectionLogTerminal() {
+  const { t } = useTranslation();
   const { entries, maxEntries, clearLogs } = useLogStore();
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
@@ -93,12 +95,12 @@ export function ConnectionLogTerminal() {
 
   const getLevelColor = (level: LogLevel) => {
     switch (level) {
-      case 'INFO': return 'text-[#00C853]';
+      case 'INFO': return 'text-success';
       case 'WARN': return 'text-[#F2C94C]';
-      case 'ERROR': return 'text-[#FF4444]';
-      case 'DATA': return 'text-[#2F6BFF]';
-      case 'SYSTEM': return 'text-[#8E9299]';
-      default: return 'text-white';
+      case 'ERROR': return 'text-danger';
+      case 'DATA': return 'text-accent';
+      case 'SYSTEM': return 'text-fg-muted';
+      default: return 'text-fg';
     }
   };
 
@@ -126,11 +128,11 @@ export function ConnectionLogTerminal() {
   });
 
   return (
-    <div className="flex flex-col h-full bg-[#111216] overflow-hidden rounded-xl border border-[#2a2b30]">
+    <div className="flex flex-col h-full bg-canvas overflow-hidden rounded-xl border border-line">
       {/* Toolbar */}
-      <div className="min-h-10 py-2 bg-[#111216] border-b border-[#2a2b30] flex flex-wrap items-center px-4 justify-between shrink-0 gap-y-3 z-20">
+      <div className="min-h-10 py-2 bg-canvas border-b border-line flex flex-wrap items-center px-4 justify-between shrink-0 gap-y-3 z-20">
         <div className="flex flex-wrap items-center gap-2">
-           <span className="text-xs font-mono text-[#8E9299]">Live Connection Log</span>
+           <span className="text-xs font-mono text-fg-muted">{t('logs.title', 'Live Connection Log')}</span>
            
            {/* Auto-scroll indicator */}
            <button
@@ -142,23 +144,23 @@ export function ConnectionLogTerminal() {
              }}
              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-medium border transition-all duration-200 ${
                autoScrollEnabled
-                 ? 'bg-[#00C853]/10 text-[#00C853] border-[#00C853]/30 hover:bg-[#00C853]/20'
+                 ? 'bg-success/10 text-success border-success/30 hover:bg-success/20'
                  : 'bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/30 hover:bg-[#F2C94C]/20'
              }`}
-             title={autoScrollEnabled ? 'Auto-scroll is ON — follows new entries' : 'Auto-scroll is paused — click to resume'}
+             title={autoScrollEnabled ? t('logs.autoScrollOn', 'Auto-scroll is ON — follows new entries') : t('logs.autoScrollPaused', 'Auto-scroll is paused — click to resume')}
            >
              <ArrowDownToLine className={`w-3 h-3 transition-transform ${autoScrollEnabled ? '' : 'animate-bounce'}`} />
-             <span>{autoScrollEnabled ? 'Auto' : 'Paused'}</span>
+             <span>{autoScrollEnabled ? t('logs.auto', 'Auto') : t('logs.paused', 'Paused')}</span>
            </button>
            
-           <div className="hidden sm:block h-4 w-px bg-[#2a2b30] mx-2" />
+           <div className="hidden sm:block h-4 w-px bg-line mx-2" />
            
            {/* Quick filter presets */}
            <div className="flex items-center gap-1">
              {[
-               { label: 'All', levels: ['INFO', 'WARN', 'ERROR', 'DATA', 'SYSTEM'] as LogLevel[] },
-               { label: 'Important', levels: ['ERROR', 'WARN', 'SYSTEM'] as LogLevel[] },
-               { label: 'Errors', levels: ['ERROR'] as LogLevel[] },
+               { label: t('logs.presets.all', 'All'), levels: ['INFO', 'WARN', 'ERROR', 'DATA', 'SYSTEM'] as LogLevel[] },
+               { label: t('logs.presets.important', 'Important'), levels: ['ERROR', 'WARN', 'SYSTEM'] as LogLevel[] },
+               { label: t('logs.presets.errors', 'Errors'), levels: ['ERROR'] as LogLevel[] },
              ].map(preset => {
                const isActive = selectedLevels.length === preset.levels.length &&
                  preset.levels.every(l => selectedLevels.includes(l));
@@ -169,8 +171,8 @@ export function ConnectionLogTerminal() {
                    onClick={() => setLevelPreset(preset.levels)}
                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded transition-all duration-200 ${
                      isActive
-                       ? 'bg-[#2F6BFF]/20 text-[#2F6BFF] border border-[#2F6BFF]/40'
-                       : 'text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50 border border-transparent'
+                       ? 'bg-accent/20 text-accent border border-accent/40'
+                       : 'text-fg-muted hover:text-fg hover:bg-line/50 border border-transparent'
                    }`}
                  >
                    {preset.label}
@@ -189,12 +191,12 @@ export function ConnectionLogTerminal() {
              <button
                type="button"
                onClick={() => setIsLevelDropdownOpen(!isLevelDropdownOpen)}
-               className="bg-[#1a1b1e] text-xs font-mono text-[#8E9299] border border-[#2a2b30] rounded px-3 py-1 flex items-center justify-between min-w-[120px] focus:border-[#2F6BFF] outline-none"
+               className="bg-elevated text-xs font-mono text-fg-muted border border-line rounded px-3 py-1 flex items-center justify-between min-w-[120px] focus:border-accent outline-none"
              >
                <span>
                  {selectedLevels.length > 0 
-                   ? `${selectedLevels.length} Level${selectedLevels.length > 1 ? 's' : ''}`
-                   : 'None selected'}
+                   ? t('logs.levelsCount', '{{count}} Levels', { count: selectedLevels.length })
+                   : t('logs.noneSelected', 'None selected')}
                </span>
                <ChevronDown className={`w-3 h-3 ml-2 transition-transform duration-200 ${isLevelDropdownOpen ? 'rotate-180' : ''}`} />
              </button>
@@ -202,11 +204,11 @@ export function ConnectionLogTerminal() {
              {isLevelDropdownOpen && (
                <>
                  <div className="fixed inset-0 z-10" onClick={() => setIsLevelDropdownOpen(false)} />
-                 <div className="absolute z-20 top-full mt-1 left-0 bg-[#1a1b1e] border border-[#2a2b30] rounded shadow-lg overflow-hidden flex flex-col p-2 space-y-1 min-w-[140px]">
+                 <div className="absolute z-20 top-full mt-1 left-0 bg-elevated border border-line rounded shadow-lg overflow-hidden flex flex-col p-2 space-y-1 min-w-[140px]">
                    {(['INFO', 'WARN', 'ERROR', 'DATA', 'SYSTEM'] as LogLevel[]).map(level => {
                      const isChecked = selectedLevels.includes(level);
                      return (
-                       <label key={level} className="flex items-center gap-2 cursor-pointer hover:bg-[#2a2b30]/50 px-2 py-1 rounded">
+                       <label key={level} className="flex items-center gap-2 cursor-pointer hover:bg-line/50 px-2 py-1 rounded">
                          <input
                            type="checkbox"
                            checked={isChecked}
@@ -215,7 +217,7 @@ export function ConnectionLogTerminal() {
                                isChecked ? prev.filter(l => l !== level) : [...prev, level]
                              );
                            }}
-                           className="w-3 h-3 cursor-pointer rounded border-[#2a2b30] bg-[#111216] text-[#2F6BFF] focus:ring-[#2F6BFF] focus:ring-offset-0"
+                           className="w-3 h-3 cursor-pointer rounded border-line bg-canvas text-accent focus:ring-accent focus:ring-offset-0"
                          />
                          <span className={`text-xs font-mono ${getLevelColor(level)}`}>{level}</span>
                        </label>
@@ -229,31 +231,31 @@ export function ConnectionLogTerminal() {
            <select 
              value={selectedConnection} 
              onChange={(e) => setSelectedConnection(e.target.value)}
-             className="bg-[#1a1b1e] text-xs font-mono text-[#8E9299] border border-[#2a2b30] rounded px-2 py-0.5"
+             className="bg-elevated text-xs font-mono text-fg-muted border border-line rounded px-2 py-0.5"
            >
-             <option value="ALL">ALL CONNECTIONS</option>
+             <option value="ALL">{t('logs.allConnections', 'ALL CONNECTIONS')}</option>
              {activeKeys.map(k => (
                <option key={k.id} value={k.label}>{k.label} ({k.exchange.toUpperCase()})</option>
              ))}
            </select>
            
            <div className="relative">
-             <Search className="w-3 h-3 absolute left-2 top-1.5 text-[#8E9299]" />
+             <Search className="w-3 h-3 absolute left-2 top-1.5 text-fg-muted" />
              <input 
                type="text" 
-               placeholder="Search logs..." 
+               placeholder={t('logs.searchPlaceholder', 'Search logs...')} 
                value={searchText}
                onChange={(e) => setSearchText(e.target.value)}
-               className="bg-[#1a1b1e] text-xs font-mono text-white border border-[#2a2b30] rounded pl-6 pr-2 py-0.5 w-40 focus:border-[#2F6BFF] outline-none"
+               className="bg-elevated text-xs font-mono text-fg border border-line rounded pl-6 pr-2 py-0.5 w-40 focus:border-accent outline-none"
              />
            </div>
         </div>
 
         <button 
           onClick={clearLogs}
-          className="text-xs font-mono text-[#8E9299] hover:text-[#FF4444] transition-colors ml-4 min-w-max"
+          className="text-xs font-mono text-fg-muted hover:text-danger transition-colors ml-4 min-w-max"
         >
-          [Clear]
+          [{t('logs.clear', 'Clear')}]
         </button>
       </div>
 
@@ -265,15 +267,15 @@ export function ConnectionLogTerminal() {
       >
         {filteredEntries.map(entry => (
           <div key={entry.id} className="mb-1">
-            <span className="text-[#8E9299]">[{formatDate(entry.timestamp)}]</span>{' '}
+            <span className="text-fg-muted">[{formatDate(entry.timestamp)}]</span>{' '}
             <span className="text-[#FFFFFF]">[{entry.source}]</span>{' '}
             <span className={getLevelColor(entry.level)}>[{entry.level}]</span>{' '}
             <span className="text-[#cccccc] break-words whitespace-pre-wrap">{entry.message}</span>
           </div>
         ))}
         <div className="flex items-center gap-2 mt-2">
-          <span className="text-[#00C853] font-bold">&gt;</span>
-          <span className="w-2 h-4 bg-[#00C853] animate-pulse" />
+          <span className="text-success font-bold">&gt;</span>
+          <span className="w-2 h-4 bg-success animate-pulse" />
         </div>
         <div ref={endRef} />
 
@@ -283,12 +285,12 @@ export function ConnectionLogTerminal() {
             <button
               type="button"
               onClick={scrollToEnd}
-              className="pointer-events-auto relative flex items-center gap-1.5 bg-[#2F6BFF] hover:bg-[#1a5ae6] text-white text-[11px] font-mono px-3 py-1.5 rounded-full shadow-lg shadow-black/40 transition-all duration-200 hover:scale-105 active:scale-95"
+              className="pointer-events-auto relative flex items-center gap-1.5 bg-accent hover:bg-[#1a5ae6] text-white text-[11px] font-mono px-3 py-1.5 rounded-full shadow-lg shadow-black/40 transition-all duration-200 hover:scale-105 active:scale-95"
             >
               <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
-              <span>Go to end</span>
+              <span>{t('logs.goToEnd', 'Go to end')}</span>
               {newEntriesCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-[#FF4444] text-white text-[10px] font-bold rounded-full px-1 shadow-lg animate-in zoom-in duration-200">
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-danger text-white text-[10px] font-bold rounded-full px-1 shadow-lg animate-in zoom-in duration-200">
                   {newEntriesCount > 99 ? '99+' : newEntriesCount}
                 </span>
               )}
@@ -297,9 +299,9 @@ export function ConnectionLogTerminal() {
         )}
       </div>
 
-      <div className="h-6 bg-[#000000] border-t border-[#1a1b1e] flex items-center px-4 justify-between shrink-0">
-         <span className="text-[10px] font-mono text-[#8E9299]">
-            History: <span className="text-[#FFFFFF]">{entries.length} / {maxEntries} lines</span>
+      <div className="h-6 bg-[#000000] border-t border-elevated flex items-center px-4 justify-between shrink-0">
+         <span className="text-[10px] font-mono text-fg-muted">
+            {t('logs.history', 'History:')} <span className="text-[#FFFFFF]">{t('logs.historyCount', '{{current}} / {{max}} lines', { current: entries.length, max: maxEntries })}</span>
          </span>
       </div>
     </div>

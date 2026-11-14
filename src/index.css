@@ -4,16 +4,134 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
+
   /* Definir as propriedades para o Tailwind v4 criar as classes text-brand-*, bg-brand-* */
   --color-brand-normal: var(--brand-normal);
   --color-brand-hover: var(--brand-hover);
   --color-brand-pressed: var(--brand-pressed);
   --color-brand-focus: var(--brand-focus);
-  
+
   --color-bitget: #03aac7;
   --color-okx: #fafafa;
   --color-bybit: #ff9c2e;
+
+  /* Superfícies e tipografia: resolvidas em runtime pelo tema (dark/light) */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-elevated-hover: var(--elevated-hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+
+  /* Cores de ação e semânticas */
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+}
+
+/* ------------------------------------------------------------------
+   Terminal Dark (padrão) - valores idênticos aos usados até aqui
+   ------------------------------------------------------------------ */
+:root {
+  --canvas: #0b0c10;
+  --surface: #151619;
+  --elevated: #1a1b1e;
+  --elevated-hover: #22242a;
+  --line: #2a2b30;
+  --line-strong: #3a3b40;
+  --fg: #f8f9fa;
+  --fg-muted: #8e9299;
+  --accent: #2f6bff;
+  --accent-hover: #1e56df;
+  --success: #00c853;
+  --danger: #ff4444;
+  --warning: #f59e0b;
+
+  /* Aliases históricos consumidos pelo CSS global */
+  --bg-color: var(--canvas);
+  --panel-bg: var(--surface);
+  --text-primary: var(--fg);
+  --text-secondary: var(--fg-muted);
+  --accent-color: var(--accent);
+  --border-color: var(--line);
+  --danger-color: var(--danger);
+  --success-color: var(--success);
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------
+   Terminal Light - fundo claro mantendo a leitura densa de dados.
+   Pares texto/fundo medidos: todos >= 4.5:1 (WCAG AA).
+   ------------------------------------------------------------------ */
+[data-mode="light"] {
+  --canvas: #f3f4f7;
+  --surface: #ffffff;
+  --elevated: #f8f9fc;
+  --elevated-hover: #eef1f6;
+  --line: #d9dce3;
+  --line-strong: #c2c7d1;
+  --fg: #101420; /* 18.37:1 sobre surface */
+  --fg-muted: #5a6270; /* 6.15:1 sobre surface */
+  --accent: #1e56df; /* 6.08:1 sobre surface */
+  --accent-hover: #1642b8;
+  --success: #0a7f45; /* 5.08:1 */
+  --danger: #cc2b2b; /* 5.32:1 */
+  --warning: #b45309; /* 5.02:1 */
+
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------------
+   Wise Dark - Wise Figma Design System Theme (Dark)
+   Extraído com precisão do Figma: #0A0A0A canvas, #171717 cards,
+   #262626 bordas/tabs, #FAFAFA texto, #A1A1A1 muted, #2B7FFF accent
+   ------------------------------------------------------------------ */
+[data-theme-palette="wise-dark"],
+[data-mode="wise-dark"] {
+  --canvas: #0a0a0a;
+  --surface: #171717;
+  --elevated: #262626;
+  --elevated-hover: #2e2e2e;
+  --line: #262626;
+  --line-strong: #3a3a3a;
+  --fg: #fafafa;
+  --fg-muted: #a1a1a1;
+  --accent: #2b7fff;
+  --accent-hover: #1a6ae6;
+  --success: #00c950;
+  --danger: #d53436;
+  --warning: #f0b100;
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------
+   Wise Light - WisePay Figma Design System Theme (Light)
+   Extraído com precisão do Figma: #FFFFFF canvas/cards, #F3F3F5 inputs,
+   #E5E7EB bordas, #0A0A0A texto, #717182 muted, #2B7FFF / #030213
+   ------------------------------------------------------------------ */
+[data-theme-palette="wise-light"],
+[data-mode="wise-light"] {
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --elevated: #f3f3f5;
+  --elevated-hover: #eaecef;
+  --line: #e5e7eb;
+  --line-strong: #d1d5db;
+  --fg: #0a0a0a;
+  --fg-muted: #717182;
+  --accent: #2b7fff;
+  --accent-hover: #1a6ae6;
+  --success: #00a63e;
+  --danger: #d4183d;
+  --warning: #fdc700;
+
+  color-scheme: light;
 }
 
 /* Tema Padrão / Bitget */
@@ -22,7 +140,7 @@
   --brand-hover: #35ccfa;
   --brand-pressed: #0293ad;
   --brand-focus: #02869e;
-  
+
   --color-brand-normal: #03aac7;
   --color-brand-hover: #35ccfa;
   --color-brand-pressed: #0293ad;
@@ -35,7 +153,7 @@
   --brand-hover: #ffffff;
   --brand-pressed: #e5e5e5;
   --brand-focus: #dbdbdb;
-  
+
   --color-brand-normal: #fafafa;
   --color-brand-hover: #ffffff;
   --color-brand-pressed: #e5e5e5;
@@ -48,11 +166,57 @@
   --brand-hover: #ffc35c;
   --brand-pressed: #f0960e;
   --brand-focus: #eb8d13;
-  
+
   --color-brand-normal: #ff9c2e;
   --color-brand-hover: #ffc35c;
   --color-brand-pressed: #f0960e;
   --color-brand-focus: #eb8d13;
+}
+
+/* Temas de corretora no modo claro: as cores de marca originais foram
+   desenhadas para fundo escuro e perdem contraste sobre superfície clara.
+   A identidade de cada corretora é preservada, só o tom é ajustado. */
+[data-mode="light"] [data-theme="bitget"] {
+  --brand-normal: #007e94;
+  --brand-hover: #009cb8;
+  --brand-pressed: #006b7f;
+  --brand-focus: #005e70;
+
+  --color-brand-normal: #007e94;
+  --color-brand-hover: #009cb8;
+  --color-brand-pressed: #006b7f;
+  --color-brand-focus: #005e70;
+}
+
+[data-mode="light"] [data-theme="okx"] {
+  --brand-normal: #0f1115;
+  --brand-hover: #272b34;
+  --brand-pressed: #000000;
+  --brand-focus: #3a3f4b;
+
+  --color-brand-normal: #0f1115;
+  --color-brand-hover: #272b34;
+  --color-brand-pressed: #000000;
+  --color-brand-focus: #3a3f4b;
+}
+
+[data-mode="light"] [data-theme="bybit"] {
+  --brand-normal: #b25e00;
+  --brand-hover: #d17000;
+  --brand-pressed: #965000;
+  --brand-focus: #824600;
+
+  --color-brand-normal: #b25e00;
+  --color-brand-hover: #d17000;
+  --color-brand-pressed: #965000;
+  --color-brand-focus: #824600;
+}
+
+/* Rede de segurança do modo claro: texto que ainda use text-fg em cima de
+   superfícies saturadas (acento, sucesso, erro, marca) precisa seguir branco. */
+:is([data-mode="light"], [data-mode="wise-light"]) :is(.bg-accent, .bg-accent-hover, .bg-success, .bg-danger, .bg-warning, .bg-brand-normal, .bg-brand-hover, .bg-brand-pressed) .text-fg,
+:is([data-mode="light"], [data-mode="wise-light"]) :is(.bg-accent, .bg-accent-hover, .bg-success, .bg-danger, .bg-warning, .bg-brand-normal, .bg-brand-hover, .bg-brand-pressed).text-fg {
+  color: #ffffff;
 }
 
 @keyframes refresh-pop {
@@ -98,48 +262,191 @@
   animation-play-state: paused;
 }
 
-:root {
-  --bg-color: #0b0c10;
-  --panel-bg: #151619;
-  --text-primary: #f8f9fa;
-  --text-secondary: #8E9299;
-  --accent-color: #2F6BFF;
-  --border-color: #2a2b30;
-  --danger-color: #FF4444;
-  --success-color: #00C853;
+@keyframes subtle-beer-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 10px 0 color-mix(in srgb, var(--warning) 18%, transparent);
+  }
+}
+
+@keyframes subtle-beer-icon-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.donation-beer-btn {
+  background-color: var(--surface);
+  border-color: color-mix(in srgb, var(--warning) 24%, var(--line));
+  color: color-mix(in srgb, var(--warning) 72%, var(--fg-muted));
+  animation: subtle-beer-pulse 3.4s ease-in-out infinite;
+}
+
+.donation-beer-btn:hover {
+  background-color: color-mix(in srgb, var(--warning) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--warning) 44%, var(--line));
+  color: color-mix(in srgb, var(--warning) 88%, var(--fg));
+  animation-play-state: paused;
+}
+
+.donation-beer-btn[data-open="true"] {
+  background-color: color-mix(in srgb, var(--warning) 14%, var(--surface));
+  border-color: color-mix(in srgb, var(--warning) 50%, var(--line));
+  color: color-mix(in srgb, var(--warning) 92%, var(--fg));
+  animation: none;
+}
+
+.donation-beer-btn .donation-beer-icon {
+  animation: subtle-beer-icon-pulse 3.4s ease-in-out infinite;
+}
+
+.donation-beer-btn:hover .donation-beer-icon,
+.donation-beer-btn[data-open="true"] .donation-beer-icon {
+  animation: none;
+  opacity: 1;
+}
+
+:is([data-mode="light"], [data-theme-palette="wise-light"]) .donation-beer-btn {
+  border-color: color-mix(in srgb, #d97706 28%, var(--line));
+  color: color-mix(in srgb, #b45309 82%, var(--fg-muted));
+}
+
+:is([data-mode="light"], [data-theme-palette="wise-light"]) .donation-beer-btn:hover,
+:is([data-mode="light"], [data-theme-palette="wise-light"]) .donation-beer-btn[data-open="true"] {
+  background-color: color-mix(in srgb, #f59e0b 12%, var(--surface));
+  border-color: color-mix(in srgb, #d97706 48%, var(--line));
+  color: #b45309;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .donation-beer-btn,
+  .donation-beer-btn .donation-beer-icon {
+    animation: none;
+  }
+}
+
+.donation-beer-badge {
+  background-color: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.28);
+  color: #fbbf24;
+}
+
+.donation-chip-solana {
+  background-color: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.28);
+  color: #6ee7b7;
+}
+
+.donation-chip-eth {
+  background-color: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.30);
+  color: #a5b4fc;
+}
+
+.donation-chip-polygon {
+  background-color: rgba(168, 85, 247, 0.14);
+  border-color: rgba(168, 85, 247, 0.30);
+  color: #d8b4fe;
+}
+
+.donation-chip-arbitrum {
+  background-color: rgba(14, 165, 233, 0.14);
+  border-color: rgba(14, 165, 233, 0.30);
+  color: #7dd3fc;
+}
+
+.donation-chip-btc {
+  background-color: rgba(249, 115, 22, 0.14);
+  border-color: rgba(249, 115, 22, 0.30);
+  color: #fdba74;
+}
+
+.donation-btc-alert {
+  background-color: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #fcd34d;
+}
+
+[data-mode="light"] .donation-beer-badge {
+  background-color: rgba(245, 158, 11, 0.14);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #b45309;
+}
+
+[data-mode="light"] .donation-chip-solana {
+  background-color: rgba(16, 185, 129, 0.12);
+  border-color: rgba(5, 150, 105, 0.28);
+  color: #047857;
+}
+
+[data-mode="light"] .donation-chip-eth {
+  background-color: rgba(99, 102, 241, 0.10);
+  border-color: rgba(79, 70, 229, 0.26);
+  color: #4338ca;
+}
+
+[data-mode="light"] .donation-chip-polygon {
+  background-color: rgba(168, 85, 247, 0.10);
+  border-color: rgba(147, 51, 234, 0.26);
+  color: #7e22ce;
+}
+
+[data-mode="light"] .donation-chip-arbitrum {
+  background-color: rgba(14, 165, 233, 0.10);
+  border-color: rgba(2, 132, 199, 0.26);
+  color: #0369a1;
+}
+
+[data-mode="light"] .donation-chip-btc {
+  background-color: rgba(249, 115, 22, 0.10);
+  border-color: rgba(234, 88, 12, 0.26);
+  color: #c2410c;
+}
+
+[data-mode="light"] .donation-btc-alert {
+  background-color: rgba(245, 158, 11, 0.10);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #92400e;
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--text-primary);
+  background-color: var(--canvas);
+  color: var(--fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbar Global - Estilos Dark Mode */
+/* Custom Scrollbar Global */
 ::-webkit-scrollbar {
   width: 8px; /* Largura da barra vertical, se houver noutros componentes */
   height: 8px; /* Altura da barra horizontal */
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--panel-bg); 
+  background: var(--surface);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--border-color);
+  background-color: var(--line);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-secondary);
+  background-color: var(--fg-muted);
 }
 
 /* Estilo global para Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--border-color) var(--panel-bg);
+  scrollbar-color: var(--line) var(--surface);
 }
 
 /* Remove a barra vertical visualmente mantendo o funcionamento do scroll */
@@ -149,7 +456,7 @@ body {
 }
 
 .hide-scrollbar {
-  /* Firefox e Edge/IE - Nota: isso oculta ambas as barras nestes browsers. 
+  /* Firefox e Edge/IE - Nota: isso oculta ambas as barras nestes browsers.
      Para Firefox exibir apenas a horizontal não é possível via CSS puro com scrollbar-width, então priorizamos a beleza. */
   scrollbar-width: none;
   -ms-overflow-style: none;

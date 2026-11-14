@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFundingData } from '../../../hooks/useFundingData';
 import { useFundingSync } from '../../../hooks/useFundingSync';
 import { useFundingStore } from '../../../store/fundingStore';
@@ -26,10 +27,10 @@ const formatPercent = (val: number) => (val * 100).toFixed(4) + '%';
 /** Return a Tailwind text-color class based on whether the value is positive, negative, or zero. */
 const INCOMPLETE_NOTE = 'OKX and Bitget APIs limit historical data to ~3 months. Values beyond 3 months are from our local cache and may be partial until sufficient data accumulates.';
 const fundingColor = (val: number | undefined): string => {
-  if (val === undefined) return 'text-[#8E9299]';
+  if (val === undefined) return 'text-fg-muted';
   if (val > 0) return 'text-green-400';
   if (val < 0) return 'text-red-400';
-  return 'text-white';
+  return 'text-fg';
 };
 
 /** Text shared across tooltips explaining what each time-based column means. */
@@ -52,11 +53,12 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
 };
 
 const ThTooltip = ({ columnKey, children }: { columnKey: string; children: React.ReactNode }) => {
-  const description = COLUMN_TOOLTIPS[columnKey];
+  const { t } = useTranslation();
+  const description = t(`analytics.fundingTooltips.${columnKey}`, COLUMN_TOOLTIPS[columnKey] || '');
   if (!description) return <>{children}</>;
   return (
     <AppTooltip description={description}>
-      <span className="cursor-help border-b border-dashed border-[#8E9299]/40 hover:border-[#8E9299]/80 transition-colors">
+      <span className="cursor-help border-b border-dashed border-fg-muted/40 hover:border-fg-muted/80 transition-colors">
         {children}
       </span>
     </AppTooltip>
@@ -89,7 +91,7 @@ const RateTooltip = ({
           side="top"
           align="center"
         >
-          <span className="cursor-help text-[#8E9299]">{children}</span>
+          <span className="cursor-help text-fg-muted">{children}</span>
         </AppTooltip>
       );
     }
@@ -131,6 +133,7 @@ const FundingTable = ({
   defaultExpanded?: boolean,
   isSyncing?: boolean
 }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [expandedCoins, setExpandedCoins] = useState<Record<string, boolean>>({});
   const { favorites, toggleFavorite } = useFundingStore();
@@ -164,14 +167,14 @@ const FundingTable = ({
   if (data.length === 0) return null;
 
   return (
-    <div className="bg-[#151619] border border-[#2a2b30] rounded-xl overflow-hidden mb-6">
+    <div className="bg-surface border border-line rounded-xl overflow-hidden mb-6">
       <div 
-        className="relative px-6 py-4 flex items-center justify-between cursor-pointer bg-[#1A1C20] hover:bg-[#202226] transition-colors overflow-hidden"
+        className="relative px-6 py-4 flex items-center justify-between cursor-pointer bg-elevated hover:bg-elevated transition-colors overflow-hidden"
         onClick={() => setExpanded(!expanded)}
       >
-        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-          {expanded ? <ChevronDown className="w-4 h-4 text-[#8E9299]" /> : <ChevronRight className="w-4 h-4 text-[#8E9299]" />}
-          {title} <span className="text-[#8E9299] text-xs font-normal">({groupedByCoin.length} Coins)</span>
+        <h3 className="text-sm font-semibold text-fg flex items-center gap-2">
+          {expanded ? <ChevronDown className="w-4 h-4 text-fg-muted" /> : <ChevronRight className="w-4 h-4 text-fg-muted" />}
+          {title} <span className="text-fg-muted text-xs font-normal">({groupedByCoin.length} Coins)</span>
         </h3>
         {isSyncing && (
            <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-xs font-medium animate-pulse">
@@ -185,7 +188,7 @@ const FundingTable = ({
         <div className="overflow-x-auto">
           {/* Top Pagination */}
           {groupsTotal > COINS_PER_PAGE && (
-            <div className="px-6 py-3 border-b border-[#2a2b30]/50">
+            <div className="px-6 py-3 border-b border-line/50">
               <Pagination
                 id={`${paginationId}-top`}
                 currentPage={page}
@@ -199,37 +202,37 @@ const FundingTable = ({
           )}
 
           <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="text-[#8E9299] bg-[#1A1C20]/50 border-y border-[#2a2b30]">
+            <thead className="text-fg-muted bg-elevated/50 border-y border-line">
               <tr>
                 <th className="px-6 py-3 font-medium w-10"></th>
-                <th className="px-6 py-3 font-medium">Asset / Exchange</th>
+                <th className="px-6 py-3 font-medium">{t('analytics.funding.columns.coin', 'Coin / Contract')}</th>
                 <th className="px-6 py-3 font-medium text-right">
-                  <ThTooltip columnKey="next">Next (Rate / Time)</ThTooltip>
-                </th>
-                <th className="px-6 py-3 font-medium text-right">
-                  <ThTooltip columnKey="last">Last</ThTooltip>
+                  <ThTooltip columnKey="next">{t('analytics.funding.columns.next', 'Next Rate')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right">
-                  <ThTooltip columnKey="today">Today</ThTooltip>
+                  <ThTooltip columnKey="last">{t('analytics.funding.columns.last', 'Last Settled')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right">
-                  <ThTooltip columnKey="currentMonth">Current Month</ThTooltip>
+                  <ThTooltip columnKey="today">{t('analytics.funding.columns.today', 'Today')}</ThTooltip>
+                </th>
+                <th className="px-6 py-3 font-medium text-right">
+                  <ThTooltip columnKey="currentMonth">{t('analytics.funding.columns.currentMonth', 'Current Month')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
-                  <ThTooltip columnKey="lastMonth">Last Month</ThTooltip>
+                  <ThTooltip columnKey="lastMonth">{t('analytics.funding.columns.lastMonth', 'Last Month')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
-                  <ThTooltip columnKey="last3Months">Last 3 Months</ThTooltip>
+                  <ThTooltip columnKey="last3Months">{t('analytics.funding.columns.last3Months', 'Last 3 Months')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
-                  <ThTooltip columnKey="last6Months">Last 6 Months</ThTooltip>
+                  <ThTooltip columnKey="last6Months">{t('analytics.funding.columns.last6Months', 'Last 6 Months')}</ThTooltip>
                 </th>
                 <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
-                  <ThTooltip columnKey="oneYear">1 Year</ThTooltip>
+                  <ThTooltip columnKey="oneYear">{t('analytics.funding.columns.oneYear', '1 Year')}</ThTooltip>
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#2a2b30]/50">
+            <tbody className="divide-y divide-line/50">
               {paginatedGroups.map(([coin, rows]) => {
                 const isExpanded = expandedCoins[coin];
                 const instType = rows[0]?.instrumentType || 'USDT-M';
@@ -255,93 +258,93 @@ const FundingTable = ({
                 return (
                   <React.Fragment key={coin}>
                     <tr 
-                      className="hover:bg-[#1A1C20]/30 transition-colors cursor-pointer"
+                      className="hover:bg-elevated/30 transition-colors cursor-pointer"
                       onClick={() => toggleCoin(coin)}
                     >
                       <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
                         <button 
                           onClick={() => toggleFavorite(rowId)}
-                          className="text-[#8E9299] hover:text-yellow-500 transition-colors"
+                          className="text-fg-muted hover:text-yellow-500 transition-colors"
                         >
                           <Star className={clsx("w-4 h-4", isFav && "fill-yellow-500 text-yellow-500")} />
                         </button>
                       </td>
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-3">
-                          {isExpanded ? <ChevronDown className="w-4 h-4 text-[#8E9299]" /> : <ChevronRight className="w-4 h-4 text-[#8E9299]" />}
+                          {isExpanded ? <ChevronDown className="w-4 h-4 text-fg-muted" /> : <ChevronRight className="w-4 h-4 text-fg-muted" />}
                           <CoinIcon symbol={coin} className="w-6 h-6" />
-                          <span className="text-white font-bold text-sm">{coin}</span>
-                          <span className="text-[10px] text-[#8E9299] bg-[#2a2b30] px-1.5 py-0.5 rounded">Max</span>
+                          <span className="text-fg font-bold text-sm">{coin}</span>
+                          <span className="text-[10px] text-fg-muted bg-line px-1.5 py-0.5 rounded">Max</span>
                         </div>
                       </td>
                       <td className="px-6 py-3 text-right">
                         <RateTooltip rate={maxNext} label="Max next funding rate">
                           
                             {maxNext !== undefined ? (
-                              <span className={maxNext > 0 ? "text-green-400 font-medium" : maxNext < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
+                              <span className={maxNext > 0 ? "text-green-400 font-medium" : maxNext < 0 ? "text-red-400 font-medium" : "text-fg font-medium"}>
                                 {formatPercent(maxNext)}
                               </span>
-                            ) : <span className="text-[#8E9299]">---</span>}
+                            ) : <span className="text-fg-muted">---</span>}
                           
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right">
                         <RateTooltip rate={maxLast} label="Max last funding rate">
                           {maxLast !== undefined ? (
-                            <span className={maxLast > 0 ? "text-green-400 font-medium" : maxLast < 0 ? "text-red-400 font-medium" : "text-white font-medium"}>
+                            <span className={maxLast > 0 ? "text-green-400 font-medium" : maxLast < 0 ? "text-red-400 font-medium" : "text-fg font-medium"}>
                               {formatPercent(maxLast)}
                             </span>
-                          ) : <span className="text-[#8E9299]">---</span>}
+                          ) : <span className="text-fg-muted">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={maxToday} label="Today cumulative">
                           {maxToday !== undefined ? (
                             <span className={fundingColor(maxToday)}>{formatPercent(maxToday)}</span>
-                          ) : <span className="text-[#8E9299]">---</span>}
+                          ) : <span className="text-fg-muted">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={maxMonth} label="Current month cumulative">
                           {maxMonth !== undefined ? (
                             <span className={fundingColor(maxMonth)}>{formatPercent(maxMonth)}</span>
-                          ) : <span className="text-[#8E9299]">---</span>}
+                          ) : <span className="text-fg-muted">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={maxLastMonth} label="Last month cumulative">
                           {maxLastMonth !== undefined ? (
                             <span className={fundingColor(maxLastMonth)}>{formatPercent(maxLastMonth)}</span>
-                          ) : <span className="text-[#8E9299]">---</span>}
+                          ) : <span className="text-fg-muted">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={max3M} label="3-month cumulative">
                           {max3M !== undefined ? (
                             <span className={fundingColor(max3M)}>{formatPercent(max3M)}</span>
-                          ) : <span className="text-[#8E9299]">---</span>}
+                          ) : <span className="text-fg-muted">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={max6M} label="6-month cumulative">
                           {max6M !== undefined ? (
                             <span className={fundingColor(max6M)}>{formatPercent(max6M)}</span>
-                          ) : <span className="text-[#8E9299]">---</span>}
+                          ) : <span className="text-fg-muted">---</span>}
                         </RateTooltip>
                       </td>
                       <td className="px-6 py-3 text-right font-mono">
                         <RateTooltip rate={maxYear} label="1-year cumulative">
                           {maxYear !== undefined ? (
                             <span className={fundingColor(maxYear)}>{formatPercent(maxYear)}</span>
-                          ) : <span className="text-[#8E9299]">---</span>}
+                          ) : <span className="text-fg-muted">---</span>}
                         </RateTooltip>
                       </td>
                     </tr>
                     
                     {isExpanded && rows.map((row) => {
                       return (
-                        <tr key={`${row.exchange}-${row.symbol}`} className="bg-[#1A1C20]/40 hover:bg-[#1A1C20]/70 transition-colors">
-                          <td className="px-6 py-2 border-l-2 border-l-[#2F6BFF]/30">
+                        <tr key={`${row.exchange}-${row.symbol}`} className="bg-elevated/40 hover:bg-elevated/70 transition-colors">
+                          <td className="px-6 py-2 border-l-2 border-l-accent/30">
                           </td>
                           <td className="px-6 py-2 pl-12">
                             <div className="flex items-center gap-2">
@@ -350,12 +353,12 @@ const FundingTable = ({
                                 row.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
                                 row.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
                                 row.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
-                                "bg-[#2a2b30] text-[#8E9299] border-[#2a2b30]"
+                                "bg-line text-fg-muted border-line"
                               )}>
                                 <ExchangeIcon exchange={row.exchange} className="w-3 h-3" />
                                 {row.exchange}
                               </span>
-                              <span className="text-white/80 font-medium text-[11px]">{row.symbol}</span>
+                              <span className="text-fg/80 font-medium text-[11px]">{row.symbol}</span>
                             </div>
                           </td>
                           <td className="px-6 py-2 text-right">
@@ -363,7 +366,7 @@ const FundingTable = ({
                               <div className="flex flex-col items-end">
                                 <RateTooltip rate={row.nextFundingRate} label="Next funding rate">
                                   
-                                    <span className={row.nextFundingRate > 0 ? "text-green-400" : row.nextFundingRate < 0 ? "text-red-400" : "text-white"}>
+                                    <span className={row.nextFundingRate > 0 ? "text-green-400" : row.nextFundingRate < 0 ? "text-red-400" : "text-fg"}>
                                       {formatPercent(row.nextFundingRate)}
                                     </span>
                                   
@@ -376,23 +379,23 @@ const FundingTable = ({
                                       value: formatDateTime(row.nextFundingTime, { monthFormat: "long" }).fullStr,
                                     }]}
                                   >
-                                    <span className="inline-flex items-center gap-1 text-[10px] text-[#8E9299] cursor-help border-b border-dashed border-[#8E9299]/30">
+                                    <span className="inline-flex items-center gap-1 text-[10px] text-fg-muted cursor-help border-b border-dashed border-fg-muted/30">
                                       <Clock className="w-3 h-3" />
                                       {formatDateTime(row.nextFundingTime, { includeYear: false, includeSeconds: false }).fullStr}
                                     </span>
                                   </AppTooltip>
                                 )}
                               </div>
-                            ) : <span className="text-[#8E9299]">---</span>}
+                            ) : <span className="text-fg-muted">---</span>}
                           </td>
                           <td className="px-6 py-2 text-right">
                             {row.lastFundingRate !== undefined ? (
                               <RateTooltip rate={row.lastFundingRate} label="Last settled funding rate">
-                                <span className={row.lastFundingRate > 0 ? "text-green-400" : row.lastFundingRate < 0 ? "text-red-400" : "text-white"}>
+                                <span className={row.lastFundingRate > 0 ? "text-green-400" : row.lastFundingRate < 0 ? "text-red-400" : "text-fg"}>
                                   {formatPercent(row.lastFundingRate)}
                                 </span>
                               </RateTooltip>
-                            ) : <span className="text-[#8E9299]">---</span>}
+                            ) : <span className="text-fg-muted">---</span>}
                           </td>
                           <td className="px-6 py-2 text-right font-mono">
                             <RateTooltip rate={row.todaySum} label="Today cumulative">
@@ -418,14 +421,14 @@ const FundingTable = ({
                             <RateTooltip rate={row.last6MonthsSum} label="6-month cumulative" missingReason={row.last6MonthsSum === undefined ? (row.exchange === 'okx' || row.exchange === 'bitget' ? `The ${row.exchange.toUpperCase()} API limits historical data to ~3 months. Data will accumulate locally over time.` : undefined) : undefined}>
                               {row.last6MonthsSum !== undefined ? (
                                 <span className={fundingColor(row.last6MonthsSum)}>{formatPercent(row.last6MonthsSum)}</span>
-                              ) : <span className="text-[#8E9299]">---</span>}
+                              ) : <span className="text-fg-muted">---</span>}
                             </RateTooltip>
                           </td>
                           <td className="px-6 py-2 text-right font-mono">
                             <RateTooltip rate={row.yearSum} label="Year cumulative" missingReason={row.yearSum === undefined ? (row.exchange === 'okx' || row.exchange === 'bitget' ? `The ${row.exchange.toUpperCase()} API limits historical data to ~3 months. Data will accumulate locally over time.` : undefined) : undefined}>
                               {row.yearSum !== undefined ? (
                                 <span className={fundingColor(row.yearSum)}>{formatPercent(row.yearSum)}</span>
-                              ) : <span className="text-[#8E9299]">---</span>}
+                              ) : <span className="text-fg-muted">---</span>}
                             </RateTooltip>
                           </td>
                         </tr>
@@ -439,7 +442,7 @@ const FundingTable = ({
 
           {/* Bottom Pagination */}
           {groupsTotal > COINS_PER_PAGE && (
-            <div className="px-6 py-3 border-t border-[#2a2b30]/50">
+            <div className="px-6 py-3 border-t border-line/50">
               <Pagination
                 id={`${paginationId}-bottom`}
                 currentPage={page}
@@ -452,7 +455,7 @@ const FundingTable = ({
             </div>
           )}
 
-          <div className="px-6 py-3 bg-[#1A1C20]/20 text-[10px] text-[#8E9299] flex items-center justify-end gap-2 border-t border-[#2a2b30]/50">
+          <div className="px-6 py-3 bg-elevated/20 text-[10px] text-fg-muted flex items-center justify-end gap-2 border-t border-line/50">
             <AlertTriangle className="w-3 h-3 text-yellow-500" />
             Historical columns (Last Month, 3M, 6M, 1Y) do not include the current month. OKX API limits historical data to the last 3 months.
           </div>
@@ -463,6 +466,7 @@ const FundingTable = ({
 };
 
 export const FundingDashboard = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'overview' | 'comparison'>('overview');
   const { forceSync } = useFundingSync();
   const { aggregatedData, isLoading } = useFundingData();
@@ -541,9 +545,9 @@ export const FundingDashboard = () => {
     <div className="w-full h-full flex flex-col space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-white">Funding Fees Dashboard</h2>
-          <p className="text-xs text-[#8E9299] mt-1">
-            Real-time and historical funding rates aggregated across exchanges.
+          <h2 className="text-xl font-semibold text-fg">{t('analytics.funding.title', 'Funding Fees Dashboard')}</h2>
+          <p className="text-xs text-fg-muted mt-1">
+            {t('analytics.funding.subtitle', 'Real-time and historical funding rates aggregated across exchanges.')}
           </p>
           <StatusAndSyncBadge
             isSyncing={isSyncing}
@@ -556,24 +560,24 @@ export const FundingDashboard = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 border-b border-[#2a2b30] pb-2">
+      <div className="flex items-center gap-2 border-b border-line pb-2">
         <button
           onClick={() => setActiveTab('overview')}
           className={clsx(
             "px-4 py-2 text-sm font-medium transition-colors border-b-2",
-            activeTab === 'overview' ? "border-[#2F6BFF] text-white" : "border-transparent text-[#8E9299] hover:text-white"
+            activeTab === 'overview' ? "border-accent text-fg" : "border-transparent text-fg-muted hover:text-fg"
           )}
         >
-          Historical Overview
+          {t('analytics.funding.tabs.overview', 'Historical Overview')}
         </button>
         <button
           onClick={() => setActiveTab('comparison')}
           className={clsx(
             "px-4 py-2 text-sm font-medium transition-colors border-b-2",
-            activeTab === 'comparison' ? "border-[#2F6BFF] text-white" : "border-transparent text-[#8E9299] hover:text-white"
+            activeTab === 'comparison' ? "border-accent text-fg" : "border-transparent text-fg-muted hover:text-fg"
           )}
         >
-          Funding Rate Comparison
+          {t('analytics.funding.tabs.comparison', 'Funding Rate Comparison')}
         </button>
       </div>
 
@@ -589,7 +593,7 @@ export const FundingDashboard = () => {
                   "relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap overflow-hidden",
                   showFavoritesOnly 
                     ? "border-yellow-500/30 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
-                    : "bg-[#1a1b1e] border-[#2a2b30] text-[#8E9299] hover:text-white"
+                    : "bg-elevated border-line text-fg-muted hover:text-fg"
                 )}
               >
                 {showFavoritesOnly && (
@@ -604,12 +608,12 @@ export const FundingDashboard = () => {
                   className={clsx(
                     "relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap overflow-hidden",
                     showOpenPositionsOnly 
-                      ? "border-[#2F6BFF]/30 text-[#2F6BFF] shadow-[0_0_10px_rgba(47,107,255,0.1)]" 
-                      : "bg-[#1a1b1e] border-[#2a2b30] text-[#8E9299] hover:text-white"
+                      ? "border-accent/30 text-accent shadow-[0_0_10px_rgba(47,107,255,0.1)]" 
+                      : "bg-elevated border-line text-fg-muted hover:text-fg"
                   )}
                 >
                   {showOpenPositionsOnly && (
-                    <div className="absolute inset-0 bg-[#2F6BFF]/10 animate-pulse pointer-events-none" />
+                    <div className="absolute inset-0 bg-accent/10 animate-pulse pointer-events-none" />
                   )}
                   <Briefcase className="w-4 h-4 relative z-10" />
                   <span className="relative z-10">Open Positions</span>
@@ -625,7 +629,7 @@ export const FundingDashboard = () => {
           exchange={{
             value: exchangeFilter,
             onChange: setExchangeFilter,
-            labelAll: 'All Exchanges',
+            labelAll: t('analytics.common.allExchanges', 'All Exchanges'),
             options: ['bybit', 'bitget', 'okx']
           }}
           instrument={{
@@ -646,8 +650,8 @@ export const FundingDashboard = () => {
 
       {isLoading && aggregatedData.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-12 opacity-50">
-          <Loader2 className="w-8 h-8 text-[#2F6BFF] animate-spin mb-4" />
-          <p className="text-sm text-[#8E9299]">Loading funding data...</p>
+          <Loader2 className="w-8 h-8 text-accent animate-spin mb-4" />
+          <p className="text-sm text-fg-muted">Loading funding data...</p>
         </div>
       ) : (
         <div className="flex-1 flex flex-col gap-2">
@@ -662,12 +666,12 @@ export const FundingDashboard = () => {
             />
           ))}
           {filteredData.length === 0 && (
-             <div className="bg-[#151619] border border-[#2a2b30] rounded-xl p-12 flex flex-col items-center justify-center text-center">
-               <div className="w-12 h-12 bg-[#2a2b30] rounded-full flex items-center justify-center mb-4">
-                 <Search className="w-6 h-6 text-[#8E9299]" />
+             <div className="bg-surface border border-line rounded-xl p-12 flex flex-col items-center justify-center text-center">
+               <div className="w-12 h-12 bg-line rounded-full flex items-center justify-center mb-4">
+                 <Search className="w-6 h-6 text-fg-muted" />
                </div>
-               <h3 className="text-lg font-medium text-white mb-2">No results found</h3>
-               <p className="text-sm text-[#8E9299]">Try adjusting your filters or search term.</p>
+               <h3 className="text-lg font-medium text-fg mb-2">No results found</h3>
+               <p className="text-sm text-fg-muted">Try adjusting your filters or search term.</p>
              </div>
           )}
         </div>
