@@ -21,8 +21,14 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
   const { t } = useTranslation();
   const series = propSeries || evolutionSeries || [];
 
-  const customTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: EvolutionPoint }> }) => {
-    if (!active || !payload || !payload.length) return null;
+  const customTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: readonly { payload?: EvolutionPoint }[];
+  }) => {
+    if (!active || !payload || !payload.length || !payload[0].payload) return null;
     const data = payload[0].payload;
     const otherOpGain = data.otherOpGain ?? 0;
     return (

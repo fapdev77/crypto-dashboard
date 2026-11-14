@@ -195,8 +195,8 @@ describe('portfolioPerformanceEngine', () => {
       }),
     ];
     const okxEntries = [
-      makeOkx({ transactionTime: t0 + 6000, type: 'Interest deduction', side: 'None', change: '-2', cashFlow: '-2', cashBalance: '298' }),
-      makeOkx({ transactionTime: t0 + 7000, type: 'FEE_DEDUCTION', side: 'None', change: '-3', cashFlow: '-3', cashBalance: '295' }),
+      makeOkx({ transactionTime: t0 + 6000, typeCode: '18', type: 'Interest deduction', side: 'None', change: '-2', cashFlow: '-2', cashBalance: '298' }),
+      makeOkx({ transactionTime: t0 + 7000, typeCode: '1', type: 'FEE_DEDUCTION', side: 'None', change: '-3', cashFlow: '-3', cashBalance: '295' }),
     ];
 
     const unified = normalizeAllPerformanceEntries({ bybitEntries, bitgetEntries: [], okxEntries });
@@ -274,6 +274,7 @@ describe('portfolioPerformanceEngine', () => {
     const okxEntries = [
       makeOkx({
         transactionTime: t0,
+        typeCode: '2',
         type: 'Trade',
         side: 'Sell',
         fee: '-5',
