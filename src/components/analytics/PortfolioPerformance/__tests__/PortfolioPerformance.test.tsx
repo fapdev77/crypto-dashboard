@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, fireEvent, render } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { PrimaryResultSection } from '../PrimaryResultSection';
 import { OperationsAndFeesSection } from '../OperationsAndFeesSection';
 import { AdvancedPerformanceSection } from '../AdvancedPerformanceSection';
@@ -16,6 +16,9 @@ import {
   defaultPerformanceFilters,
   PortfolioPerformanceFilters as FilterType,
 } from '../../../../hooks/usePortfolioPerformance';
+import { useSettingsStore } from '../../../../store/settingsStore';
+import { useSyncCoordinatorStore } from '../../../../store/syncCoordinatorStore';
+import { useApiKeysStore } from '../../../../store/apiKeysStore';
 import { renderTransactionUi, setPrivacyMode } from '../../../transactions/__tests__/transactionTestFixtures';
 
 // Mock Recharts ResponsiveContainer to avoid 0x0 container size issues in JSDOM
@@ -31,6 +34,13 @@ describe('PortfolioPerformance Suite', () => {
   beforeEach(() => {
     localStorage.clear();
     setPrivacyMode(false);
+    useSettingsStore.setState({ useMockData: false });
+    useApiKeysStore.setState({ keys: [] });
+    useSyncCoordinatorStore.setState({
+      cachedTxLog: [],
+      cachedBitgetTxLog: [],
+      cachedOkxTxLog: [],
+    });
   });
 
   const samplePrimaryMetrics: PrimaryResultMetrics = {
@@ -41,6 +51,7 @@ describe('PortfolioPerformance Suite', () => {
     finalBalance: '0.2915',
     dailyAverageRoi: 0.629,
     depositsInPeriod: '0.0000',
+    withdrawalsInPeriod: '0.0000',
     durationDays: 29,
     earliestDate: '2024-01-01',
     latestDate: '2024-01-29',
@@ -143,6 +154,7 @@ describe('PortfolioPerformance Suite', () => {
     expect(screen.getByText('0.2465')).toBeInTheDocument();
     expect(screen.getByText('0.2915')).toBeInTheDocument();
     expect(screen.getByText('per operating day')).toBeInTheDocument();
+    expect(screen.getByText(/Period \(UTC\):/)).toBeInTheDocument();
   });
 
   it('masks PrimaryResultSection values when isPrivateMode is true', () => {
@@ -157,7 +169,7 @@ describe('PortfolioPerformance Suite', () => {
     expect(screen.getAllByText('****').length).toBeGreaterThanOrEqual(4);
   });
 
-  it('renders OperationsAndFeesSection with trade breakdown, funding, and fee diagnostics', () => {
+  it('renders OperationsAndFeesSection with trade breakdown, funding, other operational events, and fee diagnostics', () => {
     renderTransactionUi(
       <OperationsAndFeesSection
         operations={sampleOperationsMetrics}
@@ -174,9 +186,35 @@ describe('PortfolioPerformance Suite', () => {
     expect(screen.getByText('Fee Analysis')).toBeInTheDocument();
     expect(screen.getByText('6.73%')).toBeInTheDocument();
     expect(screen.getByText('Excellent')).toBeInTheDocument();
+
+    // Also renders Other Operational sub-breakdown when count > 0
+    renderTransactionUi(
+      <OperationsAndFeesSection
+        operations={{
+          ...sampleOperationsMetrics,
+          feesPaid: '-0.50',
+          otherOperational: {
+            net: '-15.00',
+            liquidationNet: '-20.00',
+            deliveryNet: '0.00',
+            interestNet: '0.00',
+            rewardsNet: '5.00',
+            otherFeesNet: '0.00',
+            count: 2,
+          },
+        }}
+        denomination="USD"
+        isPrivateMode={false}
+      />
+    );
+
+    expect(screen.getByText('Other Operational (2)')).toBeInTheDocument();
+    expect(screen.getByText('+0.50 USD')).toBeInTheDocument();
+    expect(screen.getByText('Liq: -20.00')).toBeInTheDocument();
+    expect(screen.getByText('Rew: 5.00')).toBeInTheDocument();
   });
 
-  it('renders AdvancedPerformanceSection with Win Rate, Profit Factor, and Consistency CV', () => {
+  it('renders AdvancedPerformanceSection with Win Rate, Profit Factor (including Marginal & High Dispersion), and Consistency CV', () => {
     renderTransactionUi(
       <AdvancedPerformanceSection
         metrics={sampleAdvancedMetrics}
@@ -191,9 +229,27 @@ describe('PortfolioPerformance Suite', () => {
     expect(screen.getByText('2.30')).toBeInTheDocument();
     expect(screen.getByText('42.5%')).toBeInTheDocument();
     expect(screen.getByText('Highly Consistent')).toBeInTheDocument();
+
+    renderTransactionUi(
+      <AdvancedPerformanceSection
+        metrics={{
+          ...sampleAdvancedMetrics,
+          profitFactor: 1.25,
+          profitFactorRating: 'Marginal',
+          consistencyIndexCv: 140.2,
+          consistencyRating: 'High Dispersion',
+        }}
+        denomination="USD"
+        isPrivateMode={false}
+      />
+    );
+
+    expect(screen.getByText('Marginal')).toBeInTheDocument();
+    expect(screen.getByText('High Dispersion')).toBeInTheDocument();
+    expect(screen.getByText(/High return variance across days/)).toBeInTheDocument();
   });
 
-  it('renders TemporalPerformanceSection and toggles between Day of Week and Time of Day', () => {
+  it('renders TemporalPerformanceSection with UTC labels and 8-decimal precision for crypto', () => {
     renderTransactionUi(
       <TemporalPerformanceSection
         dayOfWeek={sampleDayOfWeek}
@@ -204,19 +260,21 @@ describe('PortfolioPerformance Suite', () => {
     );
 
     expect(screen.getByText('Temporal Performance Analysis')).toBeInTheDocument();
-    expect(screen.getAllByText('Tuesday').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Sunday').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Day of Week (UTC)')).toBeInTheDocument();
+    expect(screen.getByText('+0.01300000 BTC')).toBeInTheDocument();
 
     // Toggle to Time of Day tab
     const timeTab = screen.getByRole('button', { name: /Time of Day/i });
     fireEvent.click(timeTab);
 
+    expect(screen.getByText('Time Window (UTC)')).toBeInTheDocument();
     expect(screen.getAllByText('12h - 16h').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('20h - 24h').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders PriceMilestoneSection with passages and custom step inputs', () => {
+  it('renders PriceMilestoneSection with reference asset selector, passages, and custom step inputs', () => {
     const handleStepChange = vi.fn();
+    const handleAssetChange = vi.fn();
 
     renderTransactionUi(
       <PriceMilestoneSection
@@ -224,6 +282,9 @@ describe('PortfolioPerformance Suite', () => {
         denomination="BTC"
         milestoneStep={2500}
         onStepChange={handleStepChange}
+        resolvedMilestoneAsset="BTC"
+        availableMilestoneAssets={['BTC', 'ETH', 'SOL']}
+        onAssetChange={handleAssetChange}
         isPrivateMode={false}
       />
     );
@@ -234,13 +295,19 @@ describe('PortfolioPerformance Suite', () => {
     expect(screen.getByText('$67,500')).toBeInTheDocument();
     expect(screen.getByText('4x')).toBeInTheDocument();
 
+    const assetSelect = screen.getByLabelText('Reference Asset');
+    fireEvent.change(assetSelect, { target: { value: 'ETH' } });
+    expect(handleAssetChange).toHaveBeenCalledWith('ETH');
+
     // Click preset button
     const presetBtn = screen.getByRole('button', { name: '$5k' });
     fireEvent.click(presetBtn);
     expect(handleStepChange).toHaveBeenCalledWith(5000);
   });
 
-  it('renders PortfolioPerformanceFilters and updates selections', () => {
+  it('renders PortfolioPerformanceFilters and exposes valid mock account ids when useMockData is enabled', () => {
+    useSettingsStore.setState({ useMockData: true });
+
     const TestFilterWrapper = () => {
       const [f, setF] = useState<FilterType>(defaultPerformanceFilters);
       return (
@@ -260,6 +327,60 @@ describe('PortfolioPerformance Suite', () => {
     expect(screen.getByText('BTC Native')).toBeInTheDocument();
   });
 
+  it('defaults denomination to USD when BTC is absent from available currencies', () => {
+    useSettingsStore.setState({ useMockData: false });
+    useApiKeysStore.setState({
+      keys: [
+        {
+          id: 'bybit-usdt',
+          exchange: 'bybit',
+          label: 'Bybit USDT',
+          apiKey: 'k',
+          apiSecret: 's',
+          isActive: true,
+        } as any,
+      ],
+    });
+    useSyncCoordinatorStore.setState({
+      cachedTxLog: [
+        {
+          id: 't1',
+          connectionId: 'bybit-usdt',
+          exchange: 'bybit',
+          label: 'Bybit USDT',
+          rawId: '1',
+          symbol: 'ETHUSDT',
+          category: 'linear',
+          side: 'Buy',
+          transactionTime: Date.now() - 1000,
+          type: 'TRADE',
+          transSubType: '',
+          qty: '1',
+          size: '1',
+          currency: 'USDT',
+          tradePrice: '3000',
+          funding: '0',
+          fee: '1',
+          cashFlow: '50',
+          change: '49',
+          cashBalance: '1049',
+          feeRate: '0',
+          bonusChange: '0',
+          tradeId: '',
+          orderId: '',
+          orderLinkId: '',
+          raw: {},
+        },
+      ],
+    });
+
+    renderTransactionUi(<PortfolioPerformance />);
+
+    expect(screen.getByText('Portfolio Performance')).toBeInTheDocument();
+    expect(screen.getByText('Consolidated (USD)')).toBeInTheDocument();
+    expect(screen.getByText('+49.00 USD')).toBeInTheDocument();
+  });
+
   it('renders main PortfolioPerformance view with export button', () => {
     renderTransactionUi(<PortfolioPerformance />);
 
@@ -267,3 +388,4 @@ describe('PortfolioPerformance Suite', () => {
     expect(screen.getByText('Export Report')).toBeInTheDocument();
   });
 });
+

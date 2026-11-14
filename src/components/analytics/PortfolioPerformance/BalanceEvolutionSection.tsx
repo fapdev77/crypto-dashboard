@@ -20,28 +20,21 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
 }: Props) {
   const { t } = useTranslation();
   const series = propSeries || evolutionSeries || [];
-  // Sample series to avoid rendering excessive SVG nodes (max 80 points)
-  const sampledSeries = React.useMemo(() => {
-    if (series.length <= 80) return series;
-    const step = Math.ceil(series.length / 80);
-    const result: EvolutionPoint[] = [];
-    for (let i = 0; i < series.length; i += step) {
-      result.push(series[i]);
-    }
-    // Always include the last point
-    if (result[result.length - 1] !== series[series.length - 1]) {
-      result.push(series[series.length - 1]);
-    }
-    return result;
-  }, [series]);
 
-  const customTooltip = ({ active, payload, label }: any) => {
+  const customTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: EvolutionPoint }> }) => {
     if (!active || !payload || !payload.length) return null;
-    const data = payload[0].payload as EvolutionPoint;
+    const data = payload[0].payload;
+    const otherOpGain = data.otherOpGain ?? 0;
     return (
-      <div className="bg-elevated border border-line p-3 rounded-lg shadow-xl text-xs space-y-1.5 font-mono">
+      <div className="bg-elevated border border-line p-3 rounded-lg shadow-xl text-xs space-y-1.5 font-mono tabular-nums">
         <div className="font-semibold text-fg border-b border-line pb-1">
-          {new Date(data.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+          {new Date(data.timestamp).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            timeZone: 'UTC',
+          })}{' '}
+          <span className="text-[10px] text-fg-muted">(UTC)</span>
         </div>
         <div className="flex justify-between gap-4 text-amber-400">
           <span>Trading Gain:</span>
@@ -51,6 +44,12 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
           <span>Funding Gain:</span>
           <span>{isPrivateMode ? '****' : `${data.fundingGain > 0 ? '+' : ''}${data.fundingGain} ${denomination}`}</span>
         </div>
+        {otherOpGain !== 0 && (
+          <div className="flex justify-between gap-4 text-cyan-400">
+            <span>Other Ops:</span>
+            <span>{isPrivateMode ? '****' : `${otherOpGain > 0 ? '+' : ''}${otherOpGain} ${denomination}`}</span>
+          </div>
+        )}
         <div className="flex justify-between gap-4 text-fg font-bold pt-1 border-t border-line/60">
           <span>Total Combined:</span>
           <span>{isPrivateMode ? '****' : `${data.totalGain > 0 ? '+' : ''}${data.totalGain} ${denomination}`}</span>
@@ -67,7 +66,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
           <TrendingUp className="w-4 h-4 text-accent" />
           {t('analytics.portfolio.evolution.title', 'Balance Evolution')}
         </h3>
-        <span className="text-xs text-fg-muted">Cumulative Progression</span>
+        <span className="text-xs text-fg-muted">Cumulative Progression (UTC)</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -82,7 +81,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
 
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={sampledSeries} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="tradingGainGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.4} />
@@ -118,7 +117,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
 
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={sampledSeries} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="fundingGainGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />

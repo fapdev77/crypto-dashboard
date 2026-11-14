@@ -420,3 +420,136 @@ export function resolvePeriodDateRange(
 
   return { startTime: null, endTime: null };
 }
+
+/**
+ * Returns the Unix timestamp (ms) for 00:00:00.000 UTC of the reference day.
+ */
+export function getStartOfTodayUtcMs(refDate?: Date): number {
+  const now = refDate || new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0);
+}
+
+/**
+ * Returns the Unix timestamp (ms) for 23:59:59.999 UTC of the reference day.
+ */
+export function getEndOfTodayUtcMs(refDate?: Date): number {
+  const now = refDate || new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999);
+}
+
+/**
+ * Returns the Unix timestamp (ms) for 00:00:00.000 UTC on the 1st of the current UTC month.
+ */
+export function getStartOfMonthUtcMs(refDate?: Date): number {
+  const now = refDate || new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0);
+}
+
+/**
+ * Returns the Unix timestamp (ms) for 00:00:00.000 UTC on Jan 1st of the current UTC year.
+ */
+export function getStartOfYearUtcMs(refDate?: Date): number {
+  const now = refDate || new Date();
+  return Date.UTC(now.getUTCFullYear(), 0, 1, 0, 0, 0, 0);
+}
+
+/**
+ * Parses a 'YYYY-MM-DD' or ISO string into 00:00:00.000 UTC.
+ */
+export function parseDateStartOfDayUtc(dateStr: string | undefined | null): number | null {
+  if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') return null;
+  const parts = dateStr.trim().split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      const ms = Date.UTC(year, month, day, 0, 0, 0, 0);
+      if (!isNaN(ms)) return ms;
+    }
+  }
+  const fallback = new Date(dateStr);
+  if (!isNaN(fallback.getTime())) {
+    return Date.UTC(fallback.getUTCFullYear(), fallback.getUTCMonth(), fallback.getUTCDate(), 0, 0, 0, 0);
+  }
+  return null;
+}
+
+/**
+ * Parses a 'YYYY-MM-DD' or ISO string into 23:59:59.999 UTC.
+ */
+export function parseDateEndOfDayUtc(dateStr: string | undefined | null): number | null {
+  if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') return null;
+  const parts = dateStr.trim().split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      const ms = Date.UTC(year, month, day, 23, 59, 59, 999);
+      if (!isNaN(ms)) return ms;
+    }
+  }
+  const fallback = new Date(dateStr);
+  if (!isNaN(fallback.getTime())) {
+    return Date.UTC(fallback.getUTCFullYear(), fallback.getUTCMonth(), fallback.getUTCDate(), 23, 59, 59, 999);
+  }
+  return null;
+}
+
+/**
+ * Resolves a time period selection into UTC { startTime, endTime } bounds.
+ */
+export function resolveUtcPeriodDateRange(
+  timePeriod: number | string | undefined | null,
+  customStartDate?: string,
+  customEndDate?: string,
+  refDate?: Date
+): ResolvedDateRange {
+  const periodStr = String(timePeriod ?? '0').toLowerCase().trim();
+
+  if (periodStr === '0' || periodStr === 'all' || periodStr === '') {
+    return { startTime: null, endTime: null };
+  }
+
+  if (periodStr === 'mtd') {
+    return {
+      startTime: getStartOfMonthUtcMs(refDate),
+      endTime: getEndOfTodayUtcMs(refDate),
+    };
+  }
+
+  if (periodStr === 'ytd') {
+    return {
+      startTime: getStartOfYearUtcMs(refDate),
+      endTime: getEndOfTodayUtcMs(refDate),
+    };
+  }
+
+  if (periodStr === 'custom' || ((periodStr === '' || periodStr === 'undefined') && (customStartDate || customEndDate))) {
+    let startMs = parseDateStartOfDayUtc(customStartDate);
+    let endMs = parseDateEndOfDayUtc(customEndDate);
+
+    if (startMs !== null && endMs !== null && startMs > endMs) {
+      startMs = parseDateStartOfDayUtc(customEndDate);
+      endMs = parseDateEndOfDayUtc(customStartDate);
+    }
+
+    return { startTime: startMs, endTime: endMs };
+  }
+
+  const numericMs = Number(periodStr);
+  if (!isNaN(numericMs) && numericMs > 0) {
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const days = Math.round(numericMs / ONE_DAY_MS);
+    const startTodayUtc = getStartOfTodayUtcMs(refDate);
+    const startMs = days <= 1 ? startTodayUtc : startTodayUtc - (days - 1) * ONE_DAY_MS;
+    return {
+      startTime: startMs,
+      endTime: getEndOfTodayUtcMs(refDate),
+    };
+  }
+
+  return { startTime: null, endTime: null };
+}
+
