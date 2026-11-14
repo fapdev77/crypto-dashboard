@@ -24,6 +24,27 @@ export async function hmacSha256(prehash: string, secret: string, format: 'hex' 
 
 export const DEFAULT_PBKDF2_ITERATIONS = 600000;
 
+/**
+ * Test-only override for the PBKDF2 cost. Production always runs at
+ * DEFAULT_PBKDF2_ITERATIONS; automation (jsdom) cannot afford 600.000 rounds per
+ * key derivation, which is what made the vault UI tests time out at random.
+ * Setting a value here never touches the real default: callers read it through
+ * getPbkdf2Iterations(), and the value is written into every envelope so the
+ * ciphertext stays self-describing.
+ */
+let pbkdf2IterationsOverride: number | null = null;
+
+export function setPbkdf2IterationsForTesting(iterations: number | null): void {
+  if (iterations !== null && (!Number.isInteger(iterations) || iterations <= 0)) {
+    throw new Error(`Invalid PBKDF2 iteration override: ${iterations}`);
+  }
+  pbkdf2IterationsOverride = iterations;
+}
+
+export function getPbkdf2Iterations(): number {
+  return pbkdf2IterationsOverride ?? DEFAULT_PBKDF2_ITERATIONS;
+}
+
 export interface EncryptedPayloadEnvelope {
   v?: number;
   iter?: number;
@@ -38,7 +59,7 @@ export interface EncryptedPayloadEnvelope {
 export async function deriveVaultKey(
   passphrase: string,
   salt: Uint8Array,
-  iterations = DEFAULT_PBKDF2_ITERATIONS
+  iterations = getPbkdf2Iterations()
 ): Promise<CryptoKey> {
   const encoder = new TextEncoder();
   const keyMaterial = await window.crypto.subtle.importKey(
@@ -70,7 +91,7 @@ export async function encryptWithDerivedKey(
   data: string,
   key: CryptoKey,
   salt: Uint8Array,
-  iterations = DEFAULT_PBKDF2_ITERATIONS
+  iterations = getPbkdf2Iterations()
 ): Promise<string> {
   const encoder = new TextEncoder();
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
@@ -94,7 +115,7 @@ export async function encryptWithDerivedKey(
 export async function encryptData(
   data: string,
   passphrase: string,
-  iterations = DEFAULT_PBKDF2_ITERATIONS
+  iterations = getPbkdf2Iterations()
 ): Promise<string> {
   const salt = window.crypto.getRandomValues(new Uint8Array(16));
   const key = await deriveVaultKey(passphrase, salt, iterations);

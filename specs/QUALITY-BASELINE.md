@@ -1,6 +1,6 @@
-# Quality Baseline — v2.38.0
+# Quality Baseline — v2.39.0
 
-> **Snapshot de medição, não de promessa.** Números coletados em 2026-11-14 a partir do commit `7c9de34`.
+> **Snapshot de medição, não de promessa.** Build e primeiras execuções medidos em 2026-11-14 no commit `7c9de34` (v2.38.0); contagens e durações finais atualizadas no commit `77690c7` (v2.39.0).
 > Este arquivo é histórico, no mesmo espírito do `CHANGELOG.md`: `npm run verify:docs` não o valida nem o reescreve.
 > Atualize-o ao fechar cada fase do plano de qualidade, nunca para "fazer o número bater".
 
@@ -11,13 +11,13 @@
 | Métrica | Valor |
 |---|---|
 | Arquivos de teste | **104** (103 em `src/` + 1 em `tools/__tests__/`) |
-| Casos de teste | **868** |
+| Casos de teste | **872** |
 | Resultado | 868 passando, 0 falhando, 0 pendentes |
-| Duração da última execução | **155,29 s** (transform 92,84 s · import 368,61 s · tests 89,63 s · environment 1.445,36 s) |
-| Variação observada entre execuções | 155 s – 200 s no mesmo commit |
+| Duração da última execução | **178,07 s** (transform 114,83 s · import 442,15 s · tests 106,19 s · environment 1.579,50 s) |
+| Variação observada entre execuções | 155 s – 200 s no mesmo commit, antes da F2 |
 | Suítes (arquivos + describes) | 355 |
 
-O gargalo não é a execução dos casos (89 s): é a soma de tempo de ambiente entre workers (1.445 s). A afirmação anterior de "100% verde" era verdadeira nesta execução, mas houve uma falha em `src/components/__tests__/VaultModalScreens.test.tsx` em execução anterior — ver §4.
+O gargalo não é a execução dos casos (106 s): é a soma de tempo de ambiente entre workers (1.579 s). A falha intermitente de `src/components/__tests__/VaultModalScreens.test.tsx`, que motivou a F2, foi corrigida e está registrada em §6.
 
 ## 2. Build de produção (`npm run build`, vite 6)
 
@@ -58,7 +58,7 @@ O CI executa o guard **apenas em pull requests**: o semantic-release altera a ve
 ## 4. Limitações conhecidas nesta baseline
 
 - **Cobertura global ainda não medida.** `vite.config.ts` mantém `coverage.include` restrito a `src/store/fundingStore.ts` e `src/services/funding/**`. O script `npm run test:coverage` já existe; a medição real de toda a `src/` é a fase F3.
-- **Flake não corrigido.** `VaultModalScreens.test.tsx` falhou uma vez e passou nas execuções seguintes. A hipótese principal é o custo real de PBKDF2 (600.000 iterações) dentro do `waitFor` de 1 s; correção prevista na fase F2, com injeção de iterações em ambiente de teste.
+- **Flake do cofre corrigido na F2** (§6). As demais limitações abaixo continuam válidas.
 - **Sem ESLint.** `npm run lint` continua sendo apenas `tsc --noEmit`; nenhuma regra de hooks, complexidade ou aritmética é aplicada (fases F4 e F5).
 - **Contagem de testes é sensível a novas suítes.** Qualquer teste novo muda `.quality/test-suite.json` e exige atualizar os documentos no mesmo PR. É o comportamento desejado do ratchet, não um defeito.
 
@@ -73,3 +73,20 @@ npm run test:vault    # arquivo do cofre isolado, usado para investigar o flake
 npm run lint          # tsc --noEmit
 npm run build         # build de produção + precache do PWA
 ```
+
+## 6. F2 — estabilização do teste do cofre
+
+**Causa medida.** Uma única derivação PBKDF2-SHA-256 custa, no Node/jsdom desta máquina:
+
+| Iterações | Tempo por derivação |
+|---|---|
+| 1.000 | 2,6 ms – 7,2 ms |
+| 600.000 (produção) | 271 ms – 362 ms |
+
+Cada fluxo de cofre exercitado pelos testes deriva a chave duas vezes (cifrar e decifrar), consumindo 540–720 ms dos 1.000 ms de orçamento do `waitFor` padrão do Testing Library. A falha dependia da carga da máquina, não da lógica do cofre.
+
+**Correção.** `src/utils/cryptoLib.ts` passou a expor `getPbkdf2Iterations()` e `setPbkdf2IterationsForTesting(n)`. Os quatro pontos do `apiKeysStore` (`syncEncryption`, `initializeVault`, `changePassphrase`, `migrateUnencryptedKeys`) leem a iteração de `getPbkdf2Iterations()` em vez de usarem a constante diretamente, de modo que a chave derivada e o envelope gravado sempre concordam. O valor continua sendo gravado no envelope (`iter`), então o texto cifrado segue autodescritivo e a decifragem não depende do override estar ativo.
+
+**Por que não um setup global.** `cryptoLib.test.ts` afirma que o envelope de produção grava `iter: 600000`. Um setup global reduzindo iterações para toda a suíte esconderia exatamente essa regressão. A injeção é explícita nos arquivos que exercitam o cofre (`VaultModalScreens.test.tsx`, `apiKeysStore.test.ts`), com `afterAll` restaurando `null`.
+
+**Prova.** 10 execuções consecutivas de `src/components/__tests__/VaultModalScreens.test.tsx`: 10/10 com exit 0, zero falhas. Suíte completa após a mudança: 104 arquivos, 872 testes, 0 falhas em 178,07 s (antes: 155–190 s, com falha intermitente). `cryptoLib.test.ts` ganhou 4 casos cobrindo o default de 600.000, o `iter` injetado, o round-trip após remover o override e a rejeição de valores inválidos.

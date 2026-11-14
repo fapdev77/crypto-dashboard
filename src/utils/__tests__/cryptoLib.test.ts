@@ -1,5 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { encryptData, decryptData, hmacSha256 } from '../cryptoLib';
+import { describe, it, expect, afterEach } from 'vitest';
+import {
+  encryptData,
+  decryptData,
+  hmacSha256,
+  DEFAULT_PBKDF2_ITERATIONS,
+  getPbkdf2Iterations,
+  setPbkdf2IterationsForTesting,
+} from '../cryptoLib';
 
 describe('cryptoLib', () => {
   describe('hmacSha256', () => {
@@ -108,6 +115,39 @@ describe('cryptoLib', () => {
       // Must be able to decrypt legacy payload seamlessly
       const decrypted = await decryptData(legacyEncodedPayload, testSecret);
       expect(decrypted).toBe(testPayload);
+    });
+  });
+
+  describe('PBKDF2 iteration injection (test seam)', () => {
+    afterEach(() => setPbkdf2IterationsForTesting(null));
+
+    it('defaults to the production cost of 600.000 iterations', () => {
+      expect(DEFAULT_PBKDF2_ITERATIONS).toBe(600000);
+      expect(getPbkdf2Iterations()).toBe(600000);
+    });
+
+    it('honours an injected cost and records it in the envelope', async () => {
+      setPbkdf2IterationsForTesting(1000);
+
+      expect(getPbkdf2Iterations()).toBe(1000);
+      const envelope = JSON.parse(atob(await encryptData('payload', 'passphrase')));
+      expect(envelope.iter).toBe(1000);
+    });
+
+    it('round-trips data encrypted under the injected cost', async () => {
+      setPbkdf2IterationsForTesting(1000);
+      const encrypted = await encryptData('secret-envelope', 'passphrase');
+
+      // The envelope carries its own cost, so decryption does not depend on the
+      // override still being installed.
+      setPbkdf2IterationsForTesting(null);
+      await expect(decryptData(encrypted, 'passphrase')).resolves.toBe('secret-envelope');
+    });
+
+    it('rejects an invalid iteration override', () => {
+      expect(() => setPbkdf2IterationsForTesting(0)).toThrow(/Invalid PBKDF2 iteration override/);
+      expect(() => setPbkdf2IterationsForTesting(-1)).toThrow(/Invalid PBKDF2 iteration override/);
+      expect(() => setPbkdf2IterationsForTesting(1.5)).toThrow(/Invalid PBKDF2 iteration override/);
     });
   });
 });

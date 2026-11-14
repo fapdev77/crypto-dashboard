@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -7,6 +7,17 @@ import { VaultSetupModal } from '../VaultSetupModal';
 import { useApiKeysStore, ApiCredentials } from '../../store/apiKeysStore';
 
 import i18n from '../../i18n/config';
+import { setPbkdf2IterationsForTesting } from '../../utils/cryptoLib';
+
+/**
+ * The vault derives its key with PBKDF2 at 600.000 iterations. Inside jsdom each
+ * derivation costs hundreds of milliseconds, so these two flows intermittently
+ * blew the 1s `waitFor` budget - the historical flake in this file. Injecting a
+ * cheap cost keeps the full derive -> encrypt -> persist -> decrypt path under
+ * test while removing the timing dependence.
+ */
+beforeAll(() => setPbkdf2IterationsForTesting(1000));
+afterAll(() => setPbkdf2IterationsForTesting(null));
 
 describe('MandatoryVaultMigrationScreen', () => {
   const onMigrated = vi.fn();
@@ -81,6 +92,11 @@ describe('MandatoryVaultMigrationScreen', () => {
     expect(storeState.isUnlocked).toBe(true);
     expect(storeState.encryptedData).toBeDefined();
     expect(storeState.keys).toHaveLength(2);
+
+    // Proves the injected cost reached the store: the envelope records the
+    // iterations actually used, so this test cannot silently fall back to 600k.
+    const envelope = JSON.parse(atob(storeState.encryptedData as string));
+    expect(envelope.iter).toBe(1000);
   });
 
   it('supports discarding legacy credentials if user chooses fresh start', () => {
