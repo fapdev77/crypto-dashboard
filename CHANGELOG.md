@@ -1,3 +1,15 @@
+# [2.38.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.37.0...v2.38.0) (2026-11-14)
+
+
+### Bug Fixes
+
+* **analytics:** improve tooltip robustness and update tests ([e5b1880](https://github.com/fapdev77/crypto-dashboard/commit/e5b18808bcdcf347cb2e22dc949f3024a853972e))
+
+
+### Features
+
+* implement UTC date helpers and improve performance analytics UI ([8a6c6de](https://github.com/fapdev77/crypto-dashboard/commit/8a6c6de63a83196c92c9cc5f8b1dcb150f08eaaa))
+
 # [2.37.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.36.0...v2.37.0) (2026-11-13)
 
 
