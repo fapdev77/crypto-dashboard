@@ -451,7 +451,7 @@ Para garantir que ativos na carteira de financiamento (Spot/Funding) ou moedas a
 - **Backoff Exponencial com Jitter para Falhas de Rede**: Em instabilidades transitórias de conexão, o sistema re-tenta com intervalos progressivos (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) adicionados de variação aleatória (jitter), limitado a 5 tentativas antes de acionar o circuit breaker.
 - **Global Error Boundary**: Se ocorrer uma falha inesperada na árvore do React, a aplicação não quebra em tela branca. Uma tela de proteção graciosa (**Safe Recovery**) oferece diagnóstico do incidente e dois botões de restauração em um clique: **Reload Dashboard** e **Clear Cache & Reload**.
 - **Reset Automático de Scroll**: Ao navegar entre abas no menu lateral, o leitor de layout do React reseta instantaneamente a rolagem para o topo da página, garantindo foco imediato nas informações principais.
-- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **104 arquivos de teste com 872 testes unitários e de integração**.
+- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **110 arquivos de teste com 921 testes unitários e de integração**.
 
 ---
 

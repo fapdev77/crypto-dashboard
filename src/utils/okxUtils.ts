@@ -103,8 +103,8 @@ export function calculateOkxTradeDetails(params: {
   qty?: string | number;
   tradePrice?: string | number;
   currency?: string;
-  raw?: any;
-  cachedInsts?: Record<string, any>;
+  raw?: Record<string, unknown>;
+  cachedInsts?: Record<string, unknown>;
 }) {
   const { symbol = '', category = '', currency = '', raw, cachedInsts } = params;
   

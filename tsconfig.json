@@ -25,7 +25,7 @@
 
     /* Strict mode — enabled for safety with explicit overrides for practical API usage */
     "strict": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "strictPropertyInitialization": false
   },
   "include": ["src"]

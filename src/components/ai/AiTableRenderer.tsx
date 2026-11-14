@@ -18,16 +18,17 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
     const headers: string[] = [];
     const rows: string[][] = [];
 
-    const recurseFind = (node: any) => {
+    const recurseFind = (node: React.ReactNode): string | undefined => {
       if (!node) return;
       if (typeof node === 'string' || typeof node === 'number') {
         return String(node);
       }
       if (Array.isArray(node)) {
-        return node.map(recurseFind).filter(Boolean).join(' ');
+        return node.map(child => recurseFind(child)).filter(Boolean).join(' ');
       }
-      if (node.props && node.props.children) {
-        return recurseFind(node.props.children);
+      if (typeof node === 'object' && 'props' in node) {
+        const children = (node as { props: { children?: React.ReactNode } }).props.children;
+        if (children) return recurseFind(children);
       }
       return '';
     };
@@ -45,7 +46,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
             if (tr?.props?.children) {
               const ths = React.Children.toArray(tr.props.children);
               ths.forEach((th: any) => {
-                const text = recurseFind(th).trim();
+                const text = (recurseFind(th) ?? '').trim();
                 if (text) headers.push(text);
               });
             }
@@ -63,7 +64,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
               const tds = React.Children.toArray(tr.props.children);
               const rowData: string[] = [];
               tds.forEach((td: any) => {
-                const text = recurseFind(td).trim();
+                const text = (recurseFind(td) ?? '').trim();
                 rowData.push(text);
               });
               if (rowData.length > 0) rows.push(rowData);

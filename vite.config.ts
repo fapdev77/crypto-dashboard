@@ -197,17 +197,17 @@ export default defineConfig(({ mode }) => {
           'src/main.tsx',
         ],
         thresholds: {
-          statements: 38,
-          branches: 28,
-          functions: 33,
-          lines: 40,
+          statements: 42,
+          branches: 31,
+          functions: 37,
+          lines: 43,
           // Per-directory ratchets, ~5 points below the F3 measurement in
           // specs/QUALITY-BASELINE.md §7. Raise them when coverage rises.
           'src/utils/**': { statements: 74, branches: 61, functions: 81, lines: 76 },
           'src/store/**': { statements: 48, branches: 35, functions: 46, lines: 50 },
           'src/services/**': { statements: 44, branches: 31, functions: 47, lines: 45 },
-          'src/hooks/**': { statements: 26, branches: 17, functions: 34, lines: 26 },
-          'src/components/**': { statements: 26, branches: 17, functions: 22, lines: 27 },
+          'src/hooks/**': { statements: 37, branches: 23, functions: 39, lines: 38 },
+          'src/components/**': { statements: 34, branches: 24, functions: 28, lines: 34 },
           'src/config/**': { statements: 12, branches: 10, lines: 12 },
         },
       },

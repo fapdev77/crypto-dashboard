@@ -1,11 +1,21 @@
 import { LogManager } from '../services/LogManager';
 
+/** Reads a property off an unknown value without assuming a shape. */
+const get = (value: unknown, key: string): unknown =>
+  typeof value === 'object' && value !== null ? (value as Record<string, unknown>)[key] : undefined;
+
+/** Error/response payloads from five exchanges disagree on the message key. */
+const messageOf = (value: unknown): string => {
+  const raw = get(value, 'message') ?? get(value, 'retMsg') ?? get(value, 'msg') ?? (typeof value === 'string' ? value : '');
+  return String(raw ?? '').toLowerCase();
+};
+
 export interface RetryOptions {
   maxRetries?: number;
   baseDelayMs?: number;
   maxDelayMs?: number;
   context?: string;
-  onRetry?: (attempt: number, error: any, delayMs: number) => void;
+  onRetry?: (attempt: number, error: unknown, delayMs: number) => void;
 }
 
 export class ApiRateLimitError extends Error {
@@ -30,23 +40,25 @@ export class ApiRateLimitError extends Error {
  * - Bitget: code "30006" ("request too many")
  * - HTTP 429 (Too Many Requests) or proxy 429 response
  */
-export function isRateLimited(target: any): boolean {
+export function isRateLimited(target: unknown): boolean {
   if (!target) return false;
 
   if (target instanceof ApiRateLimitError) return true;
 
   // Check HTTP status property
-  if (target._httpStatus === 429 || target.status === 429 || target.statusCode === 429) {
+  const status = get(target, '_httpStatus') ?? get(target, 'status') ?? get(target, 'statusCode');
+  if (status === 429) {
     return true;
   }
 
   // Check exchange-specific error codes
-  if (target.retCode === 10006 || target.retCode === '10006') return true;
-  if (target.code === '50011' || target.code === 50011) return true;
-  if (target.code === '30006' || target.code === 30006) return true;
+  const code = get(target, 'retCode') ?? get(target, 'code');
+  if (code === 10006 || code === '10006') return true;
+  if (code === '50011' || code === 50011) return true;
+  if (code === '30006' || code === 30006) return true;
 
   // Check error message strings
-  const message = (target.message || target.retMsg || target.msg || (typeof target === 'string' ? target : '')).toLowerCase();
+  const message = messageOf(target);
   if (
     message.includes('10006') ||
     message.includes('50011') ||
@@ -71,20 +83,20 @@ export function isRateLimited(target: any): boolean {
  * - OKX: 50111 (Invalid API key), 50105 (Access key invalid), 50113 (IP not whitelisted), 50100 (User does not exist)
  * - Bitget: 40001 (Access key not found), 40005 (Sign failed), 40006 (Invalid IP), 40014 (Key expired), 40017 (Key frozen)
  */
-export function isAuthError(error: any): boolean {
+export function isAuthError(error: unknown): boolean {
   if (!error) return false;
 
-  const status = error._httpStatus || error.status || error.statusCode;
+  const status = get(error, '_httpStatus') ?? get(error, 'status') ?? get(error, 'statusCode');
   if (status === 401 || status === 403) {
     return true;
   }
 
-  const code = String(error.retCode || error.code || '');
+  const code = String(get(error, 'retCode') ?? get(error, 'code') ?? '');
   if (['10003', '10004', '10005', '33004', '10024'].includes(code)) return true;
   if (['50100', '50105', '50111', '50113', '50102'].includes(code)) return true;
   if (['40001', '40005', '40006', '40014', '40017'].includes(code)) return true;
 
-  const message = (error.message || error.retMsg || error.msg || (typeof error === 'string' ? error : '')).toLowerCase();
+  const message = messageOf(error);
   return (
     message.includes('api key') ||
     message.includes('apikey') ||
@@ -108,24 +120,24 @@ export function isAuthError(error: any): boolean {
  * Checks whether an error is transient (temporary network/server glitch or rate limit)
  * and therefore safe and recommended to retry.
  */
-export function isTransientError(error: any): boolean {
+export function isTransientError(error: unknown): boolean {
   if (!error) return false;
   // Auth and credential errors are NEVER transient
   if (isAuthError(error)) return false;
   if (isRateLimited(error)) return true;
 
   // Check HTTP 5xx transient server codes
-  const status = error._httpStatus || error.status || error.statusCode;
+  const status = get(error, '_httpStatus') ?? get(error, 'status') ?? get(error, 'statusCode');
   if (status === 502 || status === 503 || status === 504) {
     return true;
   }
 
-  const name = (error.name || '').toLowerCase();
+  const name = String(get(error, 'name') ?? '').toLowerCase();
   if (name === 'timeouterror' || name === 'aborterror') {
     return true;
   }
 
-  const message = (error.message || (typeof error === 'string' ? error : '')).toLowerCase();
+  const message = messageOf(error);
   return (
     message.includes('network') ||
     message.includes('fetch failed') ||
@@ -147,18 +159,19 @@ export function isTransientError(error: any): boolean {
  * Classifies an error into a human-readable diagnosis category
  * for inclusion in user-facing warning messages and logs.
  */
-export function classifyError(error: any): string {
+export function classifyError(error: unknown): string {
   if (!error) return 'Unknown error';
   if (isAuthError(error)) return 'Invalid credentials or permission denied';
   if (isRateLimited(error)) return 'Rate limit exhausted';
-  const status = error._httpStatus || error.status || error.statusCode;
+  const status = get(error, '_httpStatus') ?? get(error, 'status') ?? get(error, 'statusCode');
   if (status === 502 || status === 503 || status === 504) return `Server unavailable (HTTP ${status})`;
-  const name = (error.name || '').toLowerCase();
-  const msg = (error.message || '').toLowerCase();
+  const name = String(get(error, 'name') ?? '').toLowerCase();
+  const msg = String(get(error, 'message') ?? '').toLowerCase();
   if (name.includes('timeout') || msg.includes('timeout') || msg.includes('timed out')) return 'Request timed out';
   if (name.includes('abort') || msg.includes('abort')) return 'Request aborted';
   if (msg.includes('network') || msg.includes('fetch failed')) return 'Network connection error';
-  return error.message || String(error);
+  const message = get(error, 'message');
+  return typeof message === 'string' && message ? message : String(error);
 }
 
 /**
@@ -176,7 +189,7 @@ export async function executeWithRetry<T>(
   const maxDelayMs = options.maxDelayMs ?? 10000;
   const context = options.context ?? 'RetryHelper';
 
-  let lastError: any;
+  let lastError: unknown;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -184,14 +197,15 @@ export async function executeWithRetry<T>(
 
       // If the function returned a raw exchange payload with a rate-limit code instead of throwing
       if (isRateLimited(result)) {
+        const rateLimitCode = get(result, 'retCode') ?? get(result, 'code');
         throw new ApiRateLimitError(
           `Exchange returned rate limit payload: ${JSON.stringify(result)}`,
-          (result as any).retCode || (result as any).code
+          typeof rateLimitCode === 'string' || typeof rateLimitCode === 'number' ? rateLimitCode : undefined
         );
       }
 
       return result;
-    } catch (err: any) {
+    } catch (err) {
       lastError = err;
 
       if (attempt >= maxRetries) {
@@ -200,7 +214,7 @@ export async function executeWithRetry<T>(
 
       // If the error is not transient or rate-limited, do not retry (e.g. auth failed, invalid param)
       if (!isTransientError(err)) {
-        LogManager.warn(context, `Non-transient error encountered, aborting retry:`, err?.message || err);
+        LogManager.warn(context, `Non-transient error encountered, aborting retry:`, err instanceof Error ? err.message : err);
         throw err;
       }
 
@@ -215,7 +229,7 @@ export async function executeWithRetry<T>(
       LogManager.warn(
         context,
         `${isRateLimit ? 'Rate limit hit' : 'Transient error'} (attempt ${attempt + 1}/${maxRetries}). Retrying in ${delayMs}ms...`,
-        err?.message || err
+        err instanceof Error ? err.message : err
       );
 
       if (options.onRetry) {

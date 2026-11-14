@@ -9,7 +9,7 @@
  */
 export function isAiChatbotFeatureEnabled(): boolean {
   try {
-    const vals: any[] = [];
+    const vals: unknown[] = [];
 
     // Check process.env (Node.js runtime or define variables)
     if (typeof process !== 'undefined' && process.env) {

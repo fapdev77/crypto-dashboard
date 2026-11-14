@@ -137,8 +137,6 @@ interface CrossExchangeAssetsChartProps {
 }
 
 export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAssetsChartProps) {
-  if (!data || data.length === 0) return null;
-
   const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
   const themeMode = useSettingsStore(state => state.themeMode);
@@ -148,6 +146,10 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
     themeMode === 'wise-light' ||
     (themeMode === 'custom' && isHexColorLight(customTokens.canvas));
   const palette = isLight ? EXCHANGE_COLORS_LIGHT : EXCHANGE_COLORS;
+
+  // Early return must stay below every hook: the component re-renders with the
+  // same hook count when `data` becomes empty.
+  if (!data || data.length === 0) return null;
 
   const segments = Array.from({ length: maxSegments }).map((_, i) => `segment${i}`);
   const maxTotal = Math.max(...data.map(d => d.total));

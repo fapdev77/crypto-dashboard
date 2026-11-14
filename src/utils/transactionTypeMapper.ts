@@ -504,11 +504,27 @@ export function getOkxUniversalType(entry: string | {
 }
 
 /**
+ * Minimal shape the universal-type matchers inspect. Raw exchange payloads
+ * satisfy it structurally, so no `any` is needed at the call sites.
+ */
+export interface TxEntryLike {
+  type?: string;
+  typeCode?: string;
+  subType?: string;
+  subTypeCode?: string;
+  transType?: string;
+  transSubType?: string;
+  businessType?: string;
+  funding?: string | number;
+  fundingFee?: string | number;
+}
+
+/**
  * Universal matcher for filtering transactions
  */
 export function matchUniversalTxType(
   exchange: 'bybit' | 'bitget' | 'okx',
-  entry: any,
+  entry: TxEntryLike,
   filterType: string
 ): boolean {
   if (!filterType || filterType.toUpperCase() === 'ALL') return true;
@@ -542,7 +558,7 @@ export function matchUniversalTxType(
  */
 export function getUniversalBadge(
   exchange: 'bybit' | 'bitget' | 'okx',
-  entry: any
+  entry: TxEntryLike
 ): UniversalBadgeConfig & { universalType: UniversalTxType } {
   let universalType: UniversalTxType;
 

@@ -2,7 +2,7 @@
 
 > **Document Version:** 2.40.0  
 > **Status:** Production-Ready & Verified  
-> **Test Coverage:** 104 test files, 872 passing tests (Vitest v8)
+> **Test Coverage:** 110 test files, 921 passing tests (Vitest v8)
 
 ---
 
@@ -77,7 +77,7 @@ O CPM adota uma arquitetura em duas camadas (2-Tier Local Hybrid-Proxy) projetad
 - **Precision Math:** Big.js para cálculos financeiros de alta sensibilidade (evita perdas de precisão por ponto flutuante em taxas de funding e ratios de hedge).
 - **AI Subsystem:** `@google/genai` (v1.29.0) para integração direta com Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm` para formatação rica de respostas.
 - **Reporting & Charts:** Recharts 3.8 (gráficos interativos de Open Interest, CVD, Hedge Pro e Telemetria de IA), jsPDF + jsPDF-AutoTable (exportação visual de PDFs), SheetJS `xlsx` (exportação de planilhas).
-- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **104 arquivos de teste e 872 testes unitários e de integração automatizados** 100% verdes.
+- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **110 arquivos de teste e 921 testes unitários e de integração automatizados** 100% verdes.
 
 ---
 
@@ -304,7 +304,7 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 Qualquer alteração em interfaces unificadas (`src/types.ts`) ou schemas de banco de dados deve obedecer ao protocolo rigoroso de sincronização:
 1. **Mock Generators:** Atualizar `src/mock/generateMocks.js` (para os 10 fixtures JSON em `src/mock/`) e `src/mock/marketAnalyticsMock.ts` (para simulações quantitativas do Market Analytics e Coin-M).
 2. **IndexedDB Versioning:** Incrementar `DB_VERSION` em `historyCache.ts` e registrar funções de migração para novos índices.
-3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (104 arquivos de teste, 872 testes passando).
+3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (110 arquivos de teste, 921 testes passando).
 4. **Validação em Modo Simulação:** Ativar temporariamente `useMockData = true` para verificar visualmente todos os painéis e gráficos antes do deploy.
 
 ---

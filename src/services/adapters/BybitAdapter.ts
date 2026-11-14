@@ -255,8 +255,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       if (response.retCode !== 0) throw new Error(response.retMsg);
 
       // Bybit category value came in the result object so we need to inject it in the list object to be returned
-      const list = response.result?.list || [];
-      return list.map(position => ({
+      const list: Array<Record<string, unknown>> = response.result?.list || [];
+      return list.map((position): Record<string, unknown> & { category: string } => ({
         ...position,
         category: category
       }));
@@ -267,7 +267,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
 
     const mappedPositions = await Promise.all(
       rawList
-        .filter(pos => parseFloat(pos.size || '0') > 0)
+        .filter(pos => parseFloat(String(pos.size ?? '0')) > 0)
         .map(pos => this.mapPosition(pos, key, accountMarginMode))
     );
 

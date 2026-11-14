@@ -6,7 +6,7 @@ export interface ProxyRequest {
   targetUrl: string;
   method: string;
   headers: Record<string, string>;
-  body?: any;
+  body?: unknown;
   signal?: AbortSignal;
   timeoutMs?: number;
 }
@@ -119,7 +119,7 @@ export const hybridFetch = async (
       }
       return data;
     }
-  } catch (err: any) {
+  } catch (err) {
     // If caller explicitly aborted via options.signal, do not fall back to proxy
     if (options?.signal?.aborted) {
       throw err;

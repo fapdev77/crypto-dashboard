@@ -10,12 +10,12 @@
 
 | Métrica | Valor |
 |---|---|
-| Arquivos de teste | **104** (103 em `src/` + 1 em `tools/__tests__/`) |
-| Casos de teste | **872** |
-| Resultado | 872 passando, 0 falhando, 0 pendentes |
-| Duração da última execução | **178,07 s** (transform 114,83 s · import 442,15 s · tests 106,19 s · environment 1.579,50 s) |
-| Variação observada entre execuções | 155 s – 200 s no mesmo commit, antes da F2 |
-| Suítes (arquivos + describes) | 355 |
+| Arquivos de teste | **110** (109 em `src/` + 1 em `tools/__tests__/`) |
+| Casos de teste | **921** |
+| Resultado | 921 passando, 0 falhando, 0 pendentes |
+| Duração da última execução | **160,46 s** (transform 110,37 s · import 440,04 s · tests 116,44 s · environment 1.398,60 s) |
+| Variação observada entre execuções | 155 s – 210 s no mesmo commit, antes da F2 |
+| Suítes (arquivos + describes) | 358 |
 
 O gargalo não é a execução dos casos (106 s): é a soma de tempo de ambiente entre workers (1.579 s). A falha intermitente de `src/components/__tests__/VaultModalScreens.test.tsx`, que motivou a F2, foi corrigida e está registrada em §6.
 
@@ -57,16 +57,16 @@ O CI executa o guard **apenas em pull requests**: o semantic-release altera a ve
 
 ## 4. Limitações conhecidas nesta baseline
 
-- **Cobertura global medida na F3** (§7): 43,62% das linhas de `src/`, com thresholds por diretório aplicados em `vite.config.ts`. Os pontos fracos são `src/components` (31,5%) e `src/hooks` (30,3%).
+- **Cobertura global** (§7 e §9): 48,44% das linhas de `src/`, com thresholds por diretório em `vite.config.ts`. Os pontos fracos restantes são `src/components` (39,3%) e `src/hooks` (43,9%).
 - **Flake do cofre corrigido na F2** (§6). As demais limitações abaixo continuam válidas.
-- **Sem ESLint.** `npm run lint` continua sendo apenas `tsc --noEmit`; nenhuma regra de hooks, complexidade ou aritmética é aplicada (fases F4 e F5).
+- **ESLint bloqueia no CI, com teto ratchetado.** `npm run lint` continua sendo apenas `tsc --noEmit`; `npm run lint:eslint` roda também no job `validate` com `--max-warnings` fixado no medido (§9). Regras de aritmética/financeiras continuam ausentes.
 - **Contagem de testes é sensível a novas suítes.** Qualquer teste novo muda `.quality/test-suite.json` e exige atualizar os documentos no mesmo PR. É o comportamento desejado do ratchet, não um defeito.
 
 ## 5. Como reproduzir
 
 ```bash
 npm ci
-npm test              # 104 arquivos / 872 testes; grava .quality/test-suite.json
+npm test              # 105 arquivos / 882 testes; grava .quality/test-suite.json
 npm run verify:docs   # confere a documentação contra o código
 npm run test:coverage # cobertura de toda a src/ + thresholds por diretório
 npm run test:vault    # arquivo do cofre isolado, usado para investigar o flake
@@ -139,4 +139,100 @@ O threshold é um **ratchet, não uma meta**: suba os números quando a cobertur
 
 **Cuidado operacional.** Como o denominador inclui arquivos que a execução não carregou, rodar `vitest run <arquivo> --coverage` falha todos os thresholds (medido: 0% de linhas, exit 1). Cobertura só faz sentido com a suíte inteira; é para isso que existe o script dedicado.
 
-**Fora de escopo (F3).** O CI ainda **não** roda `npm run test:coverage`; adicioná-lo soma ~3 min ao job e precisa de decisão própria. Nenhum teste novo foi escrito para elevar os números — a fase foi de medição honesta, não de maquiagem.
+**CI.** `npm run test:coverage` passou a rodar em **pull requests**, num job separado (`coverage`) que não alonga o caminho crítico do job de validação. Em `main` não roda: todo commit chega por PR e os commits de release não tocam `src/`. Enquanto isso, nenhum teste novo foi escrito apenas para elevar os números — a fase foi de medição honesta, não de maquiagem.
+
+### 7.1 F4 — `useFundingSync` e o novo patamar de `src/hooks`
+
+**O que foi testado.** `src/hooks/__tests__/useFundingSync.test.tsx`, 10 casos sobre os 304 linhas que estavam em 0%. O hook orquestra três fontes de I/O (rede, IndexedDB, stores) e timers, então os testes mockam `FundingService`, `historyCache` e `LogManager` e usam os stores reais, resetando o estado em `beforeEach`. Casos cobertos:
+
+- modo mock: nenhuma chamada de rede, apenas o log `Mock mode active`;
+- caminho feliz: 2 símbolos obsoletos de uma exchange → `saveFundingSummariesBatch` chamado **uma vez** com o lote, `syncMessage`, `lastHistoryFetch`, `lastSyncTime` e `lastSyncPerformance` atualizados;
+- símbolos cujo último funding é `'0'` contados como pulados, sem gravar lote;
+- cache fresco (`latestTimestamp` recente) pula o fetch de histórico inteiro;
+- falha de uma exchange preserva as demais; falha de todas preserva o snapshot anterior e registra 3 erros;
+- gate de `fundingHistoryInterval`: sem `getFundingMeta` quando o último fetch está dentro da janela;
+- agendamento em `nextFundingTime + 60 s`, disparo do auto-sync e do evento `funding-cache-cleared`;
+- pedido manual durante sync em voo vira restart, não descarte (verifica as duas mensagens de log e a segunda passada);
+- `unmount` limpa interval/timeout e nenhuma busca acontece depois.
+
+**Nova medição.** 105 arquivos / 882 testes verdes, 271,20 s, com os thresholds antigos ativos:
+
+| Escopo | Lines | Statements | Branches | Functions |
+|---|---|---|---|---|
+| `src/hooks` | **43,86%** (940/2.143) | 42,03% (1.052/2.503) | 28,02% | 44,85% |
+| global | 45,30% | 43,89% | 32,74% | 38,68% |
+
+`src/hooks` subiu de 30,3% para 43,86% de linhas; o global foi de 43,62% para 45,30%. Os demais diretórios praticamente não se moveram, então só o threshold de `src/hooks` mudou: **38 / 37 / 23 / 39** (lines/statements/branches/functions), seguindo a mesma folga de ~5 pontos. O global continua em 40/38/28/33, ainda abaixo do medido.
+
+**Timeout do job de cobertura.** A primeira execução completa com cobertura falhou por timeout: `src/components/__tests__/Settings.test.tsx` estourou os 5.000 ms padrão do Vitest sob instrumentação (o mesmo arquivo passa isolado em 2,48 s de testes e a suíte sem cobertura fechou verde duas vezes). Não é uma asserção afrouxada: o script `test:coverage` passou a usar `--testTimeout=15000`, porque a instrumentação multiplica a avaliação de módulos e os runners de CI são mais lentos que a máquina local. O `npm test` mantém os 5 s, que continuam valendo como detector de travamento na execução normal.
+
+## 8. F5 — ESLint: hooks, complexidade e `any`
+
+**Por que só agora.** `npm run lint` é `tsc --noEmit`, e o TypeScript não expressa três classes de defeito que já apareceram no projeto: hooks chamados fora de ordem (erro em tempo de execução, não de compilação), funções grandes demais para revisar e `any` explícito desligando a checagem justamente onde o dado vem de fora. Até esta fase nada disso era medido.
+
+**Configuração.** ESLint 9 em flat config (`eslint.config.js`), com `typescript-eslint` 8.72.2 como parser e `eslint-plugin-react-hooks` 6.1.1. Escopo `src/**/*.{ts,tsx}`, quatro regras, nenhum preset "recommended" — um preset completo geraria centenas de achados de estilo e afogaria os que importam:
+
+| Regra | Severidade | O que pega |
+|---|---|---|
+| `react-hooks/rules-of-hooks` | **error** | hook condicional, em loop ou depois de `return` antecipado |
+| `react-hooks/exhaustive-deps` | warn | dependência ausente/instável em efeito |
+| `complexity` (máx. 15) | warn | caminhos independentes por função |
+| `@typescript-eslint/no-explicit-any` | warn | `any` escrito à mão |
+
+O script `npm run lint:eslint` é separado de `npm run lint` de propósito: trocar o `lint` existente quebraria o job de CI que roda `tsc --noEmit`.
+
+**Medição** (`npx eslint src -f json`, 363 arquivos analisados, 2026-11-14):
+
+| Regra | Achados | Arquivos | Concentração |
+|---|---|---|---|
+| `@typescript-eslint/no-explicit-any` | **537** | 103 | `src/services` 315, `src/hooks` 93, `src/components` 80 |
+| `complexity` | **194** | 106 | 34 funções acima de 50; `src/services` 78, `src/components` 72 |
+| `react-hooks/exhaustive-deps` | **31** | 24 | `src/hooks` 21 |
+| `react-hooks/rules-of-hooks` | **4** | 1 | corrigido nesta fase, ver abaixo |
+| diretivas `eslint-disable` órfãs | **3** | 3 | supressão que não suprime mais nada |
+
+Total: **765 avisos e 0 erros** em 161 dos 363 arquivos — 44% da base tem ao menos um achado, o que diz menos sobre o estilo e mais sobre onde a base concentra risco: os adaptadores de exchange e os executores de ferramentas de IA.
+
+As dez funções mais complexas, que são o alvo natural da próxima fase de refatoração:
+
+| Complexidade | Local |
+|---|---|
+| 181 | `InverseMarketService.fetchInverseMarketOverview` |
+| 154 | `AiAuditDetailsModal` (componente) |
+| 149 | `BitgetClassicAdapter.normalizeTxLogEntry` |
+| 140 | `PositionCard` (componente) |
+| 133 | `BitgetUTAAdapter.normalizeTxLogEntry` |
+| 132 | `aiToolExecutors.aiGetFundingFeesHistory` |
+| 118 | `OrderRow` (componente) |
+| 104 | `MarketAnalyticsService.buildLiveSnapshot` |
+| 97 | `transactionTypeMapper.getOkxUniversalType` |
+| 92 | `OkxTransactionRow` (componente) |
+
+**O bug que a regra encontrou.** `CrossExchangeAssetsChart` retornava `null` para lista vazia **antes** de chamar `useTranslation`, `useFormatCurrency` e dois seletores de `useSettingsStore` (linhas 142–145). Enquanto `data` fosse sempre não vazio o defeito ficava invisível; no primeiro render em que os dados chegassem vazios depois de um render com dados, o React lançaria "Rendered fewer hooks than expected" e a árvore cairia. A correção move o `return null` para abaixo dos hooks — quatro linhas, sem mudança de saída. Verificado com `npx eslint` no arquivo (0 erros restantes) e `npm run lint` (exit 0); não há teste de render cobrindo a transição de dados, então a garantia é estática, não comportamental.
+
+As três diretivas órfãs (`OrderHistory.tsx:50`, `TradeHistory.tsx:48`, `Pagination.tsx:85`) suprimem `exhaustive-deps` sem que a regra dispare ali. Não indicam bug: indicam que a dependência foi corrigida e o comentário ficou. Ficaram como estão para não misturar limpeza com medição.
+
+**Por que ainda não é gate.** Todas as regras restantes são avisos, então `npm run lint:eslint` sai com exit 0 e não bloqueia nada. Ligar isso no CI como está só adicionaria ruído. O passo seguinte, quando os achados caírem, é o mesmo ratchet da cobertura: `--max-warnings` um pouco acima do medido, baixando a cada fase, e só então o job no CI.
+
+## 9. Fechamento de F3/F4 — gate de ESLint, `noImplicitAny` e cobertura de componentes
+
+**Contexto.** §7.1 e §8 mediram; esta seção registra o que virou regra. Três frentes, todas verificadas por execução.
+
+**1. ESLint como gate.** `npm run lint:eslint` passou a rodar no job `validate` do CI com `--max-warnings 747`, o número medido depois do lote de tipagem abaixo. É ratchet: o teto só desce. Qualquer aviso novo falha o PR antes de chegar ao `main`. O comando continua separado de `npm run lint` (`tsc --noEmit`), então nada mudou para quem depende do script antigo.
+
+**2. `noImplicitAny: true`.** A suposição de que ligar a flag abriria centenas de erros estava errada: a base já anotava quase tudo, e só **4** erros apareceram — um `any` implícito de retorno recursivo (`AiTableRenderer`), um index de `CurrencyStats` escondido por `as any`, um parâmetro de `list.map` no `BybitAdapter` e a ausência de `@types/react-dom` (adicionado como devDependency). Os quatro foram corrigidos sem cast novo, e `npm run lint` segue exit 0 com a flag ligada.
+
+**3. Primeiro lote de `any` — `src/utils/`.** 13 sites removidos, zero restantes no diretório (excluindo testes). O padrão que substituiu o `any` foi `unknown` + leitura segura de propriedade, não `as`. `retryHelper.ts` foi o caso central: `isRateLimited`, `isAuthError`, `isTransientError`, `classifyError` e `executeWithRetry` agora aceitam `unknown` e leem status/código/mensagem por uma função `get()`, porque as cinco exchanges discordam sobre a chave da mensagem de erro. `transactionTypeMapper` ganhou a interface `TxEntryLike` que os payloads crus satisfazem estruturalmente. Os 59 testes de `utils` continuam verdes.
+
+Contagem de `no-explicit-any` no ESLint: **537 → 519** (o lote de `utils` mais os `as any` removidos). `: any` literal: **329 → 316**, ainda concentrado em `src/services` (172), `src/components` (70) e `src/hooks` (55). Esses três diretórios são os próximos lotes, na ordem do plano.
+
+**4. Cobertura de `src/components`.** Cinco arquivos de caracterização novos atacaram os maiores buracos: `PositionCard` (98,2%), `OpenPositions` (93,3%), `ClosedPositions` (86,9%), `Dashboard` (83,4%) e `SecurityBackupCard` (48,7%). Resultado no diretório: **31,5% → 39,34%** de linhas, e o global foi de 45,30% para **48,44%**.
+
+| Escopo | Antes | Depois | Novo threshold |
+|---|---|---|---|
+| `src/components` | 31,5% | **39,34%** | 34/24/28/34 (stmts/branches/funcs/lines) |
+| global | 45,30% | **48,44%** | 42/31/37/43 (stmts/branches/funcs/lines) |
+
+Ainda restam **50 arquivos de `components` em 0%**, somando ~2.200 linhas — o maior deles é `AiChatDrawer` (186 linhas), seguido de `TradeHistory` (172) e `OrderHistory` (128). A cobertura subiu nos arquivos que mais importam para o produto, não por igual.
+
+**Estado:** 110 arquivos / 921 testes, exit 0; `npm run lint` exit 0 com `noImplicitAny: true`; `npm run lint:eslint` exit 0 com 747 avisos; `npm run test:coverage` exit 0 com os thresholds acima; `verify:docs` OK.

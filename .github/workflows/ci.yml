@@ -26,6 +26,11 @@ jobs:
       - name: TypeScript Check (tsc --noEmit)
         run: npm run lint
 
+      # Ratchet: the ceiling is the measured count in specs/QUALITY-BASELINE.md §8.
+      # Lower it as findings are fixed; never raise it to make a change pass.
+      - name: ESLint (hooks, complexity, explicit any)
+        run: npm run lint:eslint
+
       - name: Unit & Integration Tests (vitest)
         run: npm test
 
@@ -37,3 +42,28 @@ jobs:
 
       - name: Production Build Check (vite build)
         run: npm run build
+
+  # Coverage thresholds are a merge gate, so they run on pull requests only:
+  # every commit on main arrived through a PR, and release commits do not touch
+  # src/. A separate job keeps the ~3 min of instrumentation off the critical
+  # path of the validation job. Thresholds live in vite.config.ts and are
+  # documented in specs/QUALITY-BASELINE.md §7.
+  coverage:
+    name: Coverage Thresholds (PR only)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Coverage Thresholds (vitest --coverage)
+        run: npm run test:coverage
