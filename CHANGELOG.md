@@ -1,3 +1,10 @@
+# [2.40.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.39.0...v2.40.0) (2026-11-14)
+
+
+### Features
+
+* upgrade to v2.39.0 with expanded test suite, documentation, and API keys vault implementation ([bd9b22f](https://github.com/fapdev77/crypto-dashboard/commit/bd9b22f1a92066622f3a28d09b70d2c70b57cb8f))
+
 # [2.39.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.38.0...v2.39.0) (2026-11-14)
 
 
