@@ -1,3 +1,10 @@
+# [2.39.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.38.0...v2.39.0) (2026-11-14)
+
+
+### Features
+
+* add CI workflow, documentation validation tools, specs, and user manuals ([652ceeb](https://github.com/fapdev77/crypto-dashboard/commit/652ceebdf8ec74e56b04cc5dc438d6410cab03b4))
+
 # [2.38.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.37.0...v2.38.0) (2026-11-14)
 
 
