@@ -1,6 +1,6 @@
 # Technical Specifications & Architecture Design
 
-> **Document Version:** 2.39.0  
+> **Document Version:** 2.40.0  
 > **Status:** Production-Ready & Verified  
 > **Test Coverage:** 104 test files, 872 passing tests (Vitest v8)
 
@@ -309,4 +309,4 @@ Qualquer alteração em interfaces unificadas (`src/types.ts`) ou schemas de ban
 
 ---
 
-*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.39.0).*
+*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.40.0).*
