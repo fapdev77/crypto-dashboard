@@ -1,8 +1,8 @@
 # Technical Specifications & Architecture Design
 
-> **Document Version:** 2.35.0  
+> **Document Version:** 2.38.0  
 > **Status:** Production-Ready & Verified  
-> **Test Coverage:** 99 test files, 835 passing tests (Vitest v8)
+> **Test Coverage:** 104 test files, 868 passing tests (Vitest v8)
 
 ---
 
@@ -70,14 +70,14 @@ O CPM adota uma arquitetura em duas camadas (2-Tier Local Hybrid-Proxy) projetad
 
 - **Core Framework & Runtime:** React 19, TypeScript ~5.8, Vite 6, Node.js LTS (engines `>=24`).
 - **Styling & UI Engine:** Tailwind CSS v4 (`@theme` CSS variables), sistema multi-temas (`themeMode.ts`), Lucide React (ícones), Radix UI (Tooltips acessíveis).
-- **Internationalization (i18n):** `i18next` e `react-i18next` com 6 idiomas suportados (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.624 chaves cada).
+- **Internationalization (i18n):** `i18next` e `react-i18next` com 6 idiomas suportados (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.656 chaves cada).
 - **Multi-Currency System:** `CurrencyService.ts` integrado concorrentemente à **Frankfurter API v2** (`api.frankfurter.dev`) e à **CoinGecko API** (`api.coingecko.com` para USDT/USD), com TTL configurável (5–60 min), cache offline e diagnósticos (`CurrencyApiDiagnostics`).
 - **State Management:** Zustand 5.0 (arquitetura desacoplada de **14 micro-stores** com persistência local).
 - **Data Caching & Persistence:** IndexedDB nativo via biblioteca `idb` 8.0, com SWR (Stale-While-Revalidate) e versionamento de banco (`DB_VERSION 12`).
 - **Precision Math:** Big.js para cálculos financeiros de alta sensibilidade (evita perdas de precisão por ponto flutuante em taxas de funding e ratios de hedge).
 - **AI Subsystem:** `@google/genai` (v1.29.0) para integração direta com Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm` para formatação rica de respostas.
 - **Reporting & Charts:** Recharts 3.8 (gráficos interativos de Open Interest, CVD, Hedge Pro e Telemetria de IA), jsPDF + jsPDF-AutoTable (exportação visual de PDFs), SheetJS `xlsx` (exportação de planilhas).
-- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **99 arquivos de teste e 835 testes unitários e de integração automatizados** 100% verdes.
+- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **104 arquivos de teste e 868 testes unitários e de integração automatizados** 100% verdes.
 
 ---
 
@@ -304,9 +304,9 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 Qualquer alteração em interfaces unificadas (`src/types.ts`) ou schemas de banco de dados deve obedecer ao protocolo rigoroso de sincronização:
 1. **Mock Generators:** Atualizar `src/mock/generateMocks.js` (para os 10 fixtures JSON em `src/mock/`) e `src/mock/marketAnalyticsMock.ts` (para simulações quantitativas do Market Analytics e Coin-M).
 2. **IndexedDB Versioning:** Incrementar `DB_VERSION` em `historyCache.ts` e registrar funções de migração para novos índices.
-3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (99 arquivos de teste, 835 testes passando).
+3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (104 arquivos de teste, 868 testes passando).
 4. **Validação em Modo Simulação:** Ativar temporariamente `useMockData = true` para verificar visualmente todos os painéis e gráficos antes do deploy.
 
 ---
 
-*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.35.0).*
+*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.38.0).*

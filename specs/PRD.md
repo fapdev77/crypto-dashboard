@@ -1,9 +1,9 @@
 # Crypto Portfolio Manager — Product Requirements Document (PRD)
 
-> **Versão do Documento:** 2.35.0  
+> **Versão do Documento:** 2.38.0  
 > **Status:** Aprovado & Em Produção  
 > **Produto:** Crypto Portfolio Manager (CPM) — Multi-Exchange Terminal  
-> **Testes Automatizados:** 99 arquivos de teste, 835 testes passando (Vitest v8)
+> **Testes Automatizados:** 104 arquivos de teste, 868 testes passando (Vitest v8)
 
 ---
 
@@ -71,7 +71,7 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
   - PIKA Assistant com **7 ferramentas de leitura** (`aiGet*`), 6 provedores (`ollama`, `gemini`, `openrouter`, `openai`, `anthropic`, `custom`), auditoria de compatibilidade de modelos, telemetria de tokens, exportação de logs e kill-switch via `AI_CHAT_BOT_ENABLED`.
   - Progressive Web App (PWA) instalável com Service Worker e cache offline.
   - Migração Obrigatória de Vault para formatos de criptografia PBKDF2/AES-GCM (600.000 iterações) e backups `.enc`.
-  - Internacionalização Completa (i18n) em 6 idiomas (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.624 chaves cada) com preservação de termos de mercado.
+  - Internacionalização Completa (i18n) em 6 idiomas (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.656 chaves cada) com preservação de termos de mercado.
   - Sistema Multi-Temas (`Terminal Dark`, `Terminal Light`, `Wise Dark`, `Wise Light`, `Customizado`) com 4 predefinições, editor de 10 tokens CSS, gerenciamento de temas salvos nomeados e seletor no cabeçalho (`ThemeModeButton`).
   - Conversão e exibição multi-moedas fiat (USD, BRL, EUR, GBP) via **Frankfurter API v2** e paridade **USDT/USD** via **CoinGecko**, com cache offline resiliente e painel `CurrencyApiDiagnostics`.
   - Governança de Configurações em **10 cards modulares** (`Settings.tsx`) com TTL de cotações (5–60m), catálogo de símbolos (1–24h), refresh de histórico/funding e expurgo de histórico.
@@ -156,7 +156,7 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 | **FR-28** | Portfolio Performance Dashboard com curvas de saldo/resultado, análise temporal (mês/dia), marcos de preço, resultados primários e métricas avançadas (Profit Factor, Win Rate, Consistency Index) | Portfolio Performance |
 | **FR-29** | Tela e fluxo de migração mandatória de vault para credenciais legadas em texto plano e backups `.enc` | Security & Vault |
 | **FR-30** | Otimização de renderização com downsampling a 80 pontos, animations desativadas e seletores atômicos no Zustand | Performance Optimization |
-| **FR-31** | Internacionalização completa em 6 idiomas (pt-BR, pt-PT, en-US, en-GB, es-419, it-IT; 1.624 chaves cada) com seleção dinâmica, tooltips e toasts | Internationalization (i18n) |
+| **FR-31** | Internacionalização completa em 6 idiomas (pt-BR, pt-PT, en-US, en-GB, es-419, it-IT; 1.656 chaves cada) com seleção dinâmica, tooltips e toasts | Internationalization (i18n) |
 | **FR-32** | Conversão cambial multi-moedas fiat (USD, BRL, EUR, GBP) via Frankfurter API v2 + paridade USDT/USD via CoinGecko, com TTL configurável e cache offline | Multi-Currency Engine |
 | **FR-33** | Painel de governança em 10 cards modulares com TTL de catálogo de símbolos (1–24h), refresh de funding/polling, auto-lock e expurgo seletivo | Settings & Storage |
 | **FR-34** | Motor Multi-Temas (Terminal Dark/Light, Wise Dark/Light, Customizado) com 4 presets, 10 tokens CSS editáveis, temas salvos nomeados e atalho "Custom design" no cabeçalho | Multi-Theme Engine |
@@ -167,11 +167,11 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 ## 8. Requisitos Não-Funcionais
 
 - **Segurança:** Postura Zero-Trust; chaves nunca saem do navegador; Web Crypto nativo (PBKDF2 600.000 iterações + AES-GCM-256); proxy inerte com allowlist anti-SSRF.
-- **Confiabilidade:** Suíte abrangente de 99 arquivos de teste e 835 testes unitários e de integração 100% verdes; tolerância a clock skew das exchanges.
+- **Confiabilidade:** Suíte abrangente de 104 arquivos de teste e 868 testes unitários e de integração 100% verdes; tolerância a clock skew das exchanges.
 - **Performance:** Latência zero no carregamento inicial de telas analíticas via IndexedDB; período padrão inicial de 7 dias, downsampling de séries e memoização rigorosa para prevenir renderizações desnecessárias.
 - **Precisão Matemática:** Uso universal de Big.js para aritmética de funding, hedge e saldos.
 - **Compatibilidade:** Suporte nativo a navegadores Desktop e Mobile (PWA); compatibilidade com ambientes serverless (Vercel) e instâncias Node.js (engines `>=24`).
 
 ---
 
-*Crypto Portfolio Manager — Product Requirements Document (PRD v2.35.0).*
+*Crypto Portfolio Manager — Product Requirements Document (PRD v2.38.0).*

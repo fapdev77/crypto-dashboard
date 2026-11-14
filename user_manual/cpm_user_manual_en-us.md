@@ -1,6 +1,6 @@
 # 📘 User Manual - Crypto Portfolio Manager (CPM)
 
-> **Application Version:** 2.35.0  
+> **Application Version:** 2.38.0  
 > **Supported Exchanges:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Security Architecture:** Zero-Trust Client-Side (Web Crypto PBKDF2 + AES-GCM 256-bit Encryption)
 
@@ -175,7 +175,7 @@ The **Settings** screen organizes configuration across **10 modular cards**: *La
 - **Quick Presets & Saved Themes**: Load 4 curated presets (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) or save, load, and delete named custom themes (shown beside *Custom* in the header theme selector).
 
 ### 🌐 Language, Fiat Currency & API Diagnostics
-- **6 Locales & 4 Fiat Currencies**: Full coverage across `en-US`, `en-GB`, `pt-BR`, `pt-PT`, `es-419`, and `it-IT` (1,624 translation keys per locale) with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
+- **6 Locales & 4 Fiat Currencies**: Full coverage across `en-US`, `en-GB`, `pt-BR`, `pt-PT`, `es-419`, and `it-IT` (1,656 translation keys per locale) with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
 - **Dual-Provider Engine & Diagnostics (`CurrencyApiDiagnostics`)**: Concurrently queries **Frankfurter API v2** (`api.frankfurter.dev`) for FX rates and **CoinGecko** (`api.coingecko.com`) for the **USDT/USD** parity rate, with configurable cache TTL (5–60m), offline cache fallback, and live latency/status monitoring.
 
 ### 🔄 Synchronization, Retention & Cache Settings (IndexedDB)
@@ -450,7 +450,7 @@ To ensure non-USDT funding balances and smaller cap tokens on Bitget and OKX are
 - **Exponential Backoff with Jitter for Network Drops**: Transient connectivity drops retry on an exponential delay schedule (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) with random jitter, stopping after 5 attempts via circuit breaker.
 - **Global Error Boundary**: Unhandled React rendering errors trigger an intuitive **Safe Recovery** screen with error stack diagnostics and single-click recovery buttons: **Reload Dashboard** and **Clear Cache & Reload**.
 - **Instant Scroll Position Reset**: Tab transitions automatically reset scroll positions to top-left (`useLayoutEffect`), ensuring optimal viewing upon switching views.
-- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **99 test files with 835 unit and integration tests**.
+- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **104 test files with 868 unit and integration tests**.
 
 ---
 

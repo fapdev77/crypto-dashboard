@@ -13,7 +13,11 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "vitest run"
+    "pretest": "node -e \"require('node:fs').mkdirSync('.quality', { recursive: true })\"",
+    "test": "vitest run --reporter=default --reporter=json --outputFile=.quality/test-suite.json",
+    "test:coverage": "vitest run --coverage",
+    "test:vault": "vitest run src/components/__tests__/VaultModalScreens.test.tsx",
+    "verify:docs": "node tools/verify-docs.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

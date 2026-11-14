@@ -25,3 +25,5 @@ fable-method/
 .vercel/
 .aistudio/
 tmp
+# Artefatos de medicao gerados por npm test (contagem real da suite)
+.quality/
