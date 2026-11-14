@@ -1,3 +1,10 @@
+# [2.41.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.40.0...v2.41.0) (2026-11-14)
+
+
+### Features
+
+* add CI pipeline, ESLint config, test suite expansions, and Bybit adapter enhancements ([d6f954c](https://github.com/fapdev77/crypto-dashboard/commit/d6f954c52843407f65184a1fa52e7b920210c61f))
+
 # [2.40.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.39.0...v2.40.0) (2026-11-14)
 
 
