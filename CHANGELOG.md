@@ -1,3 +1,10 @@
+# [2.43.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.42.0...v2.43.0) (2026-11-15)
+
+
+### Features
+
+* **positions:** add Detailed and Lite view modes ([0139e7c](https://github.com/fapdev77/crypto-dashboard/commit/0139e7c63a9ff6e1dca07dc38317bc0639ec16ac))
+
 # [2.42.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.41.0...v2.42.0) (2026-11-15)
 
 
