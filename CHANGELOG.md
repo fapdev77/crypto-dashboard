@@ -1,3 +1,10 @@
+# [2.42.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.41.0...v2.42.0) (2026-11-15)
+
+
+### Features
+
+* bump version to 2.41.0, add technical specifications, architecture docs, and user manuals ([62f4bef](https://github.com/fapdev77/crypto-dashboard/commit/62f4befc9bd648f9bced8d767f99912a4fe1bc05))
+
 # [2.41.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.40.0...v2.41.0) (2026-11-14)
 
 
