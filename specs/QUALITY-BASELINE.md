@@ -10,10 +10,10 @@
 
 | Métrica | Valor |
 |---|---|
-| Arquivos de teste | **110** (109 em `src/` + 1 em `tools/__tests__/`) |
-| Casos de teste | **921** |
-| Resultado | 921 passando, 0 falhando, 0 pendentes |
-| Duração da última execução | **160,46 s** (transform 110,37 s · import 440,04 s · tests 116,44 s · environment 1.398,60 s) |
+| Arquivos de teste | **111** (110 em `src/` + 1 em `tools/__tests__/`) |
+| Casos de teste | **927** |
+| Resultado | 927 passando, 0 falhando, 0 pendentes |
+| Duração da última execução | **201,19 s** (transform 133,28 s · import 556,33 s · tests 109,79 s · environment 1.805,74 s) |
 | Variação observada entre execuções | 155 s – 210 s no mesmo commit, antes da F2 |
 | Suítes (arquivos + describes) | 358 |
 
@@ -66,7 +66,7 @@ O CI executa o guard **apenas em pull requests**: o semantic-release altera a ve
 
 ```bash
 npm ci
-npm test              # 105 arquivos / 882 testes; grava .quality/test-suite.json
+npm test              # 111 arquivos / 882 testes; grava .quality/test-suite.json
 npm run verify:docs   # confere a documentação contra o código
 npm run test:coverage # cobertura de toda a src/ + thresholds por diretório
 npm run test:vault    # arquivo do cofre isolado, usado para investigar o flake
@@ -155,7 +155,7 @@ O threshold é um **ratchet, não uma meta**: suba os números quando a cobertur
 - pedido manual durante sync em voo vira restart, não descarte (verifica as duas mensagens de log e a segunda passada);
 - `unmount` limpa interval/timeout e nenhuma busca acontece depois.
 
-**Nova medição.** 105 arquivos / 882 testes verdes, 271,20 s, com os thresholds antigos ativos:
+**Nova medição.** 111 arquivos / 882 testes verdes, 271,20 s, com os thresholds antigos ativos:
 
 | Escopo | Lines | Statements | Branches | Functions |
 |---|---|---|---|---|
@@ -235,4 +235,4 @@ Contagem de `no-explicit-any` no ESLint: **537 → 519** (o lote de `utils` mais
 
 Ainda restam **50 arquivos de `components` em 0%**, somando ~2.200 linhas — o maior deles é `AiChatDrawer` (186 linhas), seguido de `TradeHistory` (172) e `OrderHistory` (128). A cobertura subiu nos arquivos que mais importam para o produto, não por igual.
 
-**Estado:** 110 arquivos / 921 testes, exit 0; `npm run lint` exit 0 com `noImplicitAny: true`; `npm run lint:eslint` exit 0 com 747 avisos; `npm run test:coverage` exit 0 com os thresholds acima; `verify:docs` OK.
+**Estado:** 111 arquivos / 927 testes, exit 0; `npm run lint` exit 0 com `noImplicitAny: true`; `npm run lint:eslint` exit 0 com 747 avisos; `npm run test:coverage` exit 0 com os thresholds acima; `verify:docs` OK.

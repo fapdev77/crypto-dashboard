@@ -1,7 +1,7 @@
 # Crypto Portfolio Manager: Multi-Exchange
 
-[![Version](https://img.shields.io/badge/version-2.40.0-blue.svg)](package.json)
-[![Tests](https://img.shields.io/badge/tests-921%20passed-success.svg)](specs/PRD.md)
+[![Version](https://img.shields.io/badge/version-2.41.0-blue.svg)](package.json)
+[![Tests](https://img.shields.io/badge/tests-927%20passed-success.svg)](specs/PRD.md)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/security-Zero--Trust%20Client-orange.svg)](user_manual/cpm_user_manual_pt-br.md)
 
@@ -42,7 +42,7 @@ O **Crypto Portfolio Manager (CPM)** foi construído com a premissa fundamental 
 - **Aritmética Financeira**: **Big.js** para cálculos de alta precisão em taxas de funding, ratios de hedge e fluxo de caixa contábil.
 - **Subsistema de IA**: `@google/genai` (SDK 1.29.0) para Google Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm`.
 - **Relatórios & Gráficos**: **Recharts 3.8** (curvas de Open Interest, CVD, Hedge Pro e gráficos de tokens), **jsPDF** com **jsPDF-AutoTable** e **SheetJS (xlsx)**.
-- **Testes Automatizados**: **Vitest 4.1** com jsdom e `@testing-library/react`. Suíte abrangente com **110 arquivos de teste e 921 testes unitários e de integração automatizados** 100% verdes.
+- **Testes Automatizados**: **Vitest 4.1** com jsdom e `@testing-library/react`. Suíte abrangente com **111 arquivos de teste e 927 testes unitários e de integração automatizados** 100% verdes.
 
 ---
 
@@ -79,7 +79,7 @@ npm start
 # Validação estrita de tipagem TypeScript (zero erros)
 npm run lint
 
-# Execução completa da suíte de 921 testes automatizados
+# Execução completa da suíte de 927 testes automatizados
 npm test
 ```
 

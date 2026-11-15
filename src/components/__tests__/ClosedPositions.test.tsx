@@ -122,6 +122,25 @@ describe('ClosedPositions', () => {
     expect(vi.mocked(usePositionHistory).mock.calls.at(-1)?.[0]).toBe('30d');
   });
 
+  it('accumulates total PnL as a float and still shows the exact cent at a half-cent boundary', () => {
+    // 0.35 + 0.35 + 0.305 = 1.005 in decimal; the float sum holds 1.0049999999999999.
+    vi.mocked(usePositionHistory).mockReturnValue(hookResult({
+      positions: [
+        closed({ id: 'h1', symbol: 'BTCUSDT', realizedPnl: 0.35 }),
+        closed({ id: 'h2', symbol: 'ETHUSDT', realizedPnl: 0.35 }),
+        closed({ id: 'h3', symbol: 'SOLUSDT', realizedPnl: 0.305 }),
+      ],
+    }) as never);
+
+    renderPage();
+
+    // The component's `totalPnl += pnlInUsd` is float math, but the display goes
+    // through Intl, which rounds the shortest decimal form — so the cent is kept.
+    expect([0.35, 0.35, 0.305].reduce((a, b) => a + b, 0)).toBe(1.005);
+    expect([0.35, 0.35, 0.305].reduce((a, b) => a + b, 0).toFixed(2)).toBe('1.00');
+    expect(screen.getByText('+$1.01')).toBeInTheDocument();
+  });
+
   it('opens the export menu and calls the CSV exporter with the filtered rows', () => {
     renderPage();
 

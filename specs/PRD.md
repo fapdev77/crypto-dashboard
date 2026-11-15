@@ -1,9 +1,9 @@
 # Crypto Portfolio Manager — Product Requirements Document (PRD)
 
-> **Versão do Documento:** 2.40.0  
+> **Versão do Documento:** 2.41.0  
 > **Status:** Aprovado & Em Produção  
 > **Produto:** Crypto Portfolio Manager (CPM) — Multi-Exchange Terminal  
-> **Testes Automatizados:** 110 arquivos de teste, 921 testes passando (Vitest v8)
+> **Testes Automatizados:** 111 arquivos de teste, 927 testes passando (Vitest v8)
 
 ---
 
@@ -167,11 +167,11 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 ## 8. Requisitos Não-Funcionais
 
 - **Segurança:** Postura Zero-Trust; chaves nunca saem do navegador; Web Crypto nativo (PBKDF2 600.000 iterações + AES-GCM-256); proxy inerte com allowlist anti-SSRF.
-- **Confiabilidade:** Suíte abrangente de 110 arquivos de teste e 921 testes unitários e de integração 100% verdes; tolerância a clock skew das exchanges.
+- **Confiabilidade:** Suíte abrangente de 111 arquivos de teste e 927 testes unitários e de integração 100% verdes; tolerância a clock skew das exchanges.
 - **Performance:** Latência zero no carregamento inicial de telas analíticas via IndexedDB; período padrão inicial de 7 dias, downsampling de séries e memoização rigorosa para prevenir renderizações desnecessárias.
 - **Precisão Matemática:** Uso universal de Big.js para aritmética de funding, hedge e saldos.
 - **Compatibilidade:** Suporte nativo a navegadores Desktop e Mobile (PWA); compatibilidade com ambientes serverless (Vercel) e instâncias Node.js (engines `>=24`).
 
 ---
 
-*Crypto Portfolio Manager — Product Requirements Document (PRD v2.40.0).*
+*Crypto Portfolio Manager — Product Requirements Document (PRD v2.41.0).*
