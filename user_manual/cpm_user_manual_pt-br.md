@@ -1,6 +1,6 @@
 # 📘 Manual do Usuário - Crypto Portfolio Manager (CPM)
 
-> **Versão da Aplicação:** 2.41.0  
+> **Versão da Aplicação:** 2.42.0  
 > **Plataformas Suportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitetura de Segurança:** Zero-Trust Client-Side (Criptografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -175,7 +175,7 @@ A tela **Settings** é organizada em **10 cards modulares**: *Language & Currenc
 - **Predefinições & Gerenciamento de Temas Salvos**: Carregue 4 paletas prontas (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) ou salve, carregue e exclua múltiplos temas personalizados com nome próprio (exibido ao lado de *Customizado* no seletor do cabeçalho).
 
 ### 🌐 Idioma, Moedas Fiat & Diagnóstico de Câmbio
-- **6 Idiomas & 4 Moedas Fiat**: Cobertura completa em `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419` e `it-IT` (1.656 chaves por idioma) e exibição em **USD**, **BRL**, **EUR** e **GBP**.
+- **6 Idiomas & 4 Moedas Fiat**: Cobertura completa em `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419` e `it-IT` (1.661 chaves por idioma) e exibição em **USD**, **BRL**, **EUR** e **GBP**.
 - **Cotações Duplas & Diagnóstico (`CurrencyApiDiagnostics`)**: Consulta concorrentemente a **Frankfurter API v2** (`api.frankfurter.dev`) para taxas fiat e a **CoinGecko** (`api.coingecko.com`) para paridade **USDT/USD**, com TTL configurável (5 a 60 min), fallback em cache offline e monitoramento de latência/status em tempo real.
 
 ### 🔄 Sincronização, Retenção e Configurações de Cache (IndexedDB)
@@ -451,7 +451,7 @@ Para garantir que ativos na carteira de financiamento (Spot/Funding) ou moedas a
 - **Backoff Exponencial com Jitter para Falhas de Rede**: Em instabilidades transitórias de conexão, o sistema re-tenta com intervalos progressivos (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) adicionados de variação aleatória (jitter), limitado a 5 tentativas antes de acionar o circuit breaker.
 - **Global Error Boundary**: Se ocorrer uma falha inesperada na árvore do React, a aplicação não quebra em tela branca. Uma tela de proteção graciosa (**Safe Recovery**) oferece diagnóstico do incidente e dois botões de restauração em um clique: **Reload Dashboard** e **Clear Cache & Reload**.
 - **Reset Automático de Scroll**: Ao navegar entre abas no menu lateral, o leitor de layout do React reseta instantaneamente a rolagem para o topo da página, garantindo foco imediato nas informações principais.
-- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **111 arquivos de teste com 927 testes unitários e de integração**.
+- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **112 arquivos de teste com 945 testes unitários e de integração**.
 
 ---
 
