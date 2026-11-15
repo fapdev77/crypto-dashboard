@@ -1,3 +1,10 @@
+## [2.43.1](https://github.com/fapdev77/crypto-dashboard/compare/v2.43.0...v2.43.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **i18n:** remove Spanish wording from the pt-BR gross-mode tooltip ([eba690f](https://github.com/fapdev77/crypto-dashboard/commit/eba690f530afa64ff5eebc932e3e0b7a905079ff))
+
 # [2.43.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.42.0...v2.43.0) (2026-11-15)
 
 
