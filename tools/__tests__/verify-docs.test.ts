@@ -1,6 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
-import { countI18nKeys, findViolations, normalizeCount } from '../verify-docs.mjs';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import {
+  checkReleaseWiring,
+  countI18nKeys,
+  findViolations,
+  normalizeCount,
+  SYNC_PLUGIN,
+} from '../verify-docs.mjs';
 
 const CURRENT = {
   version: '2.38.0',
@@ -84,5 +94,53 @@ describe('findViolations', () => {
     const text = '### Motor de Temas (`v2.33.0`–`v2.35.0`)';
 
     expect(findViolations(text, 'doc.md', CURRENT)).toEqual([]);
+  });
+});
+
+describe('checkReleaseWiring', () => {
+  let root: string;
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'cpm-release-wiring-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  function writeConfig(plugins: unknown) {
+    fs.writeFileSync(path.join(root, '.releaserc.json'), JSON.stringify({ plugins }));
+  }
+
+  it('aceita um pipeline que carrega o plugin de sync', () => {
+    writeConfig(['@semantic-release/npm', SYNC_PLUGIN, '@semantic-release/git']);
+
+    expect(checkReleaseWiring(root)).toEqual([]);
+  });
+
+  it('aceita o plugin declarado com configuração, na forma de tupla', () => {
+    writeConfig([['@semantic-release/npm', {}], [SYNC_PLUGIN, {}]]);
+
+    expect(checkReleaseWiring(root)).toEqual([]);
+  });
+
+  it('sinaliza o pipeline em que o plugin de sync sumiu', () => {
+    writeConfig(['@semantic-release/npm', '@semantic-release/git']);
+
+    const violations = checkReleaseWiring(root);
+
+    expect(violations).toHaveLength(1);
+    expect(violations[0].file).toBe('.releaserc.json');
+    expect(violations[0].message).toContain(SYNC_PLUGIN);
+  });
+
+  it('sinaliza configuração de release ilegível', () => {
+    fs.writeFileSync(path.join(root, '.releaserc.json'), '{ plugins: [ }');
+
+    expect(checkReleaseWiring(root)).toHaveLength(1);
+  });
+
+  it('não opina quando o projeto não tem configuração de release', () => {
+    expect(checkReleaseWiring(root)).toEqual([]);
   });
 });

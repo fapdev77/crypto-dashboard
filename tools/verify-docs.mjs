@@ -25,19 +25,24 @@ const SUITE_REPORT = '.quality/test-suite.json';
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
 
 /** Documentation that states facts about the codebase. History files such as
- *  CHANGELOG.md are intentionally excluded: they describe past releases. */
-const DOC_FILES = [
-  'README.md',
-  'index.html',
-  'metadata.json',
-  'specs/ARCHITECTURE.md',
-  'specs/PRD.md',
-  ...fs
-    .readdirSync(path.join(ROOT, 'user_manual'))
-    .filter((file) => file.endsWith('.md'))
-    .sort()
-    .map((file) => `user_manual/${file}`),
-];
+ *  CHANGELOG.md are intentionally excluded: they describe past releases.
+ *  Exported so the release-time sync rewrites exactly the files guarded here. */
+export function listDocFiles(root = ROOT) {
+  return [
+    'README.md',
+    'index.html',
+    'metadata.json',
+    'specs/ARCHITECTURE.md',
+    'specs/PRD.md',
+    ...fs
+      .readdirSync(path.join(root, 'user_manual'))
+      .filter((file) => file.endsWith('.md'))
+      .sort()
+      .map((file) => `user_manual/${file}`),
+  ];
+}
+
+const DOC_FILES = listDocFiles();
 
 /**
  * Claim patterns. Each match must agree with the measured value of its metric.
@@ -100,6 +105,11 @@ const RULES = [
   },
 ];
 
+/** The subset of rules that assert the application version. The release-time
+ *  sync (`tools/sync-release-docs.mjs`) rewrites these exact claims, so the
+ *  guard and the fixer cannot drift apart. */
+export const VERSION_RULES = RULES.filter((rule) => rule.metric === 'version');
+
 /** Leaf count of a locale dictionary. Arrays count as one key, matching how
  *  i18next exposes them (`t('key.0')` is unusual). */
 export function countI18nKeys(node) {
@@ -138,6 +148,7 @@ export function findViolations(text, file, metrics) {
           rule.metric === 'version' ? raw : normalizeCount(raw);
         if (String(actual) !== String(expected)) {
           violations.push({
+            metric: rule.metric,
             file,
             line: index + 1,
             message: `${rule.source} afirma ${raw}, esperado ${expected}`,
@@ -181,6 +192,46 @@ function readSuiteReport() {
   }
 }
 
+const RELEASE_CONFIG = '.releaserc.json';
+export const SYNC_PLUGIN = './tools/sync-release-docs.mjs';
+
+/** The release commit is what keeps the version in the documents current on
+ *  `main`; without the sync plugin in the release pipeline the next release
+ *  silently reintroduces the drift. Checked here so removing the plugin fails a
+ *  pull request instead of surfacing a release later. */
+export function checkReleaseWiring(root = ROOT) {
+  const abs = path.join(root, RELEASE_CONFIG);
+  if (!fs.existsSync(abs)) return [];
+
+  let config;
+  try {
+    config = JSON.parse(fs.readFileSync(abs, 'utf8'));
+  } catch (error) {
+    return [
+      {
+        metric: 'releaseWiring',
+        file: RELEASE_CONFIG,
+        line: 0,
+        message: `não é JSON válido: ${error.message}`,
+      },
+    ];
+  }
+
+  const plugins = (config.plugins ?? []).map((plugin) =>
+    Array.isArray(plugin) ? plugin[0] : plugin,
+  );
+  if (plugins.includes(SYNC_PLUGIN)) return [];
+
+  return [
+    {
+      metric: 'releaseWiring',
+      file: RELEASE_CONFIG,
+      line: 0,
+      message: `plugin ${SYNC_PLUGIN} ausente: o release voltaria a deixar a documentação na versão anterior`,
+    },
+  ];
+}
+
 export function measure() {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 
@@ -211,16 +262,24 @@ function main() {
 
   if (!metrics.localeParity) {
     violations.push({
+      metric: 'i18nKeys',
       file: LOCALES_DIR,
       line: 0,
       message: `locales com contagens de chaves divergentes: ${JSON.stringify(metrics.localeKeyCounts)}`,
     });
   }
 
+  violations.push(...checkReleaseWiring());
+
   for (const doc of DOC_FILES) {
     const abs = path.join(ROOT, doc);
     if (!fs.existsSync(abs)) {
-      violations.push({ file: doc, line: 0, message: 'arquivo de documentação ausente' });
+      violations.push({
+        metric: 'file',
+        file: doc,
+        line: 0,
+        message: 'arquivo de documentação ausente',
+      });
       continue;
     }
     violations.push(...findViolations(fs.readFileSync(abs, 'utf8'), doc, metrics));
@@ -253,7 +312,7 @@ function main() {
     const where = violation.line ? `${violation.file}:${violation.line}` : violation.file;
     console.error(`  ${where} — ${violation.message}`);
   }
-  console.error('\nAtualize os documentos acima e rode novamente: npm run verify:docs');
+  console.error('\nAtualize os itens acima e rode novamente: npm run verify:docs');
   process.exitCode = 1;
 }
 

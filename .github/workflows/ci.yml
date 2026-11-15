@@ -34,8 +34,10 @@ jobs:
       - name: Unit & Integration Tests (vitest)
         run: npm test
 
-      # Runs on pull requests only: semantic-release bumps the version on main
-      # before the docs are synced, so gating main pushes would block releases.
+      # Runs on pull requests only: counts change with the code, so the PR is where
+      # they are measured. The release commit on main is produced by
+      # semantic-release, which syncs the version into the docs itself
+      # (tools/sync-release-docs.mjs) and carries [skip ci].
       - name: Documentation Sync Check (PR only)
         if: github.event_name == 'pull_request'
         run: npm run verify:docs
