@@ -22,9 +22,12 @@ interface PositionCardProps {
   pos: UnifiedPosition;
   isExpanded: boolean;
   onToggle: () => void;
+  /** 'detailed' renders every metric plus the expandable grid; 'lite' keeps only symbol, size, prices and unrealized PnL. */
+  variant?: 'detailed' | 'lite';
 }
 
-export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
+export function PositionCard({ pos, isExpanded, onToggle, variant = 'detailed' }: PositionCardProps) {
+  const isLite = variant === 'lite';
   const { t } = useTranslation();
   const balances = useBalancesStore(state => state.balances);
   const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
@@ -219,11 +222,11 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   return (
     <div
       id={`pos-card-${pos.id}`}
-      className="bg-surface border border-line rounded-xl flex flex-col cursor-pointer transition-colors hover:border-line-strong"
-      onClick={onToggle}
+      className={`bg-surface border border-line rounded-xl flex flex-col transition-colors hover:border-line-strong ${isLite ? 'cursor-default' : 'cursor-pointer'}`}
+      onClick={isLite ? undefined : onToggle}
     >
       {/* Main Row / Lite Info */}
-      <div className="p-4 grid grid-cols-2 lg:grid-cols-7 gap-4">
+      <div className={`p-4 grid grid-cols-2 gap-4 ${isLite ? 'lg:grid-cols-4' : 'lg:grid-cols-7'}`}>
 
         {/* Asset info */}
         <div className="flex items-center gap-3 w-full border-b border-line md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
@@ -316,6 +319,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         </div>
 
         {/* Margin & Liq Price */}
+        {!isLite && (
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
           <div className="flex items-center gap-1">
             <AppTooltip {...liqPriceTooltipProps}>
@@ -331,6 +335,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-fg-muted">{posCcy}</span>
           </span>
         </div>
+        )}
 
         {/* Unrealized PnL (ROE) */}
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
@@ -349,6 +354,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         </div>
 
         {/* Realized PnL */}
+        {!isLite && (
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
           <AppTooltip
             side="top"
@@ -394,8 +400,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             <span className="text-[10px] opacity-0">-</span>
           )}
         </div>
+        )}
 
         {/* Inverse - Protected / Exposed */}
+        {!isLite && (
         <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
           {pos.instrumentType === 'INVERSE' ? (
             <div className="flex items-center gap-1">
@@ -470,11 +478,12 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             </div>
           )}
         </div>
+        )}
 
       </div>
 
       {/* Detalhes Expandidos: Grid de 5 colunas x 3 linhas */}
-      {isExpanded && (
+      {isExpanded && !isLite && (
         <div className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-line animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-y-5 gap-x-4 text-sm mt-4">
 

@@ -46,11 +46,16 @@ const makePosition = (overrides: Partial<UnifiedPosition> = {}): UnifiedPosition
   ...overrides,
 });
 
-const renderCard = (pos: UnifiedPosition, isExpanded = false, onToggle = vi.fn()) =>
+const renderCard = (
+  pos: UnifiedPosition,
+  isExpanded = false,
+  onToggle = vi.fn(),
+  variant: 'detailed' | 'lite' = 'detailed'
+) =>
   render(
     <PrivacyProvider>
       <TooltipProvider>
-        <PositionCard pos={pos} isExpanded={isExpanded} onToggle={onToggle} />
+        <PositionCard pos={pos} variant={variant} isExpanded={isExpanded} onToggle={onToggle} />
       </TooltipProvider>
     </PrivacyProvider>
   );
@@ -78,6 +83,7 @@ describe('PositionCard', () => {
     expect(screen.getByText(/Cross/)).toBeInTheDocument();
     expect(screen.getByText('Main Account')).toBeInTheDocument();
     expect(screen.getByText('PERP')).toBeInTheDocument();
+    expect(screen.getByText('Liq. Price')).toBeInTheDocument();
   });
 
   it('shows TP and SL badges, marking a partial TP when tpMode is partial', () => {
@@ -151,6 +157,25 @@ describe('PositionCard', () => {
     expect(detail.targetId).toBe('hedge-row-conn-1:BTC');
 
     window.removeEventListener('navigate-to-tab', listener);
+  });
+
+  it('renders the lite variant with only the essential cells and no detail grid', () => {
+    renderCard(makePosition(), true, vi.fn(), 'lite');
+
+    expect(screen.getByText('BTCUSDT')).toBeInTheDocument();
+    expect(screen.getByText(/Unrealized PnL/)).toBeInTheDocument();
+    expect(screen.queryByText('Liq. Price')).not.toBeInTheDocument();
+    expect(screen.queryByText('Hedge / Exposure')).not.toBeInTheDocument();
+    expect(screen.queryByText('Breakeven price')).not.toBeInTheDocument();
+  });
+
+  it('does not toggle when a lite card is clicked', () => {
+    const onToggle = vi.fn();
+    renderCard(makePosition(), false, onToggle, 'lite');
+
+    fireEvent.click(screen.getByText('BTCUSDT'));
+
+    expect(onToggle).not.toHaveBeenCalled();
   });
 
   it('marks non-inverse positions as plain hedge/exposure without the mode toggle', () => {

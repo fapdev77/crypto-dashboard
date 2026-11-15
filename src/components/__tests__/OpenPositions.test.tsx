@@ -67,6 +67,7 @@ describe('OpenPositions', () => {
       fiatRates: { USD: 1, EUR: 0.9, GBP: 0.8, BRL: 5 },
       useMockData: false,
       hedgeExposedMode: 'gross',
+      positionsViewMode: 'detailed',
     });
     useBalancesStore.setState({ balances: {} });
     useApiKeysStore.setState({ keys: [] });
@@ -154,6 +155,37 @@ describe('OpenPositions', () => {
     expect(screen.queryByText('Breakeven price')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('BTCUSDT'));
     expect(screen.getByText('Breakeven price')).toBeInTheDocument();
+  });
+
+  it('defaults to the detailed view and hides secondary cells in lite mode', () => {
+    useApiKeysStore.setState({ keys: [activeKey] });
+    usePositionsStore.setState({ positions: { a: position({ id: 'a' }) } });
+
+    renderPage();
+
+    expect(useSettingsStore.getState().positionsViewMode).toBe('detailed');
+    expect(screen.getByText('Liq. Price')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Lite'));
+
+    expect(useSettingsStore.getState().positionsViewMode).toBe('lite');
+    expect(screen.queryByText('Liq. Price')).not.toBeInTheDocument();
+    expect(screen.getByText('BTCUSDT')).toBeInTheDocument();
+  });
+
+  it('drops expanded rows when switching to lite so they stay collapsed on return', () => {
+    useApiKeysStore.setState({ keys: [activeKey] });
+    usePositionsStore.setState({ positions: { a: position({ id: 'a' }) } });
+
+    renderPage();
+
+    fireEvent.click(screen.getByText('BTCUSDT'));
+    expect(screen.getByText('Breakeven price')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Lite'));
+    fireEvent.click(screen.getByText('Detailed'));
+
+    expect(screen.queryByText('Breakeven price')).not.toBeInTheDocument();
   });
 
   it('switches the hedge exposed mode from the header controls', () => {
