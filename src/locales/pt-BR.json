@@ -652,7 +652,7 @@
     "leverage": "Alavancagem",
     "hedgeExposedModeLabel": "Para posições Hedge Pro, exibir saldo exposto por:",
     "grossMode": "Bruto",
-    "grossModeTooltip": "Bruto: Utiliza o Saldo de Billetera fixo (sem PnL não realizado)",
+    "grossModeTooltip": "Bruto: Utiliza o Saldo de Carteira fixo (sem PnL não realizado)",
     "netMode": "Líquido",
     "netModeTooltip": "Líquido: Utiliza o Saldo Líquido / Patrimônio da conta (incluindo PnL não realizado)",
     "viewModeLabel": "Exibição das posições:",
