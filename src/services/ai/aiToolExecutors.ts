@@ -3,8 +3,12 @@ import { usePositionsStore } from '../../store/positionsStore';
 import { useFundingStore } from '../../store/fundingStore';
 import { useSyncCoordinatorStore } from '../../store/syncCoordinatorStore';
 import { useAiSettingsStore } from '../../store/aiSettingsStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import { openDB } from 'idb';
 import { DB_NAME, DB_VERSION } from '../historyCache';
+import { getUsdPricesForVenues, type PriceExchange } from '../pricing/usdPrice';
+import { toFeeCost, type FeeSource } from '../../utils/feeSign';
+import { needsTokenRate, resolveUsdRate } from '../../utils/usdAggregation';
 import Big from 'big.js';
 import {
   FundingRateSummary,
@@ -1233,14 +1237,21 @@ export const aiToolExecutors = {
   /**
    * Retrieves trading fees paid in recent operations.
    * Preserves full numerical precision without arbitrary rounding.
+   *
+   * Each bill charges its fee in the coin it settles in (USDT/USDC on linear
+   * contracts, the base coin on inverse, BGB/MNT when paying in exchange
+   * tokens), so fees are grouped per coin and converted to USD afterwards.
+   * Summing them as if every amount were already dollars is what made the
+   * total wrong.
    */
   async aiGetTradingFeesHistory(args: { days: number; exchange?: string }) {
     const { days = 7, exchange } = args;
     const cutoffTime = Date.now() - days * 24 * 60 * 60 * 1000;
     const privacyActive = isPrivacyModeActive();
 
-    let totalFeesUsd = Big(0);
     let totalTransactionsCount = 0;
+    // Same key as the transaction stats: the coin the bill settled in.
+    const feeBuckets = new Map<string, { currency: string; amount: Big; venues: FeeSource[] }>();
 
     try {
       if (typeof window !== 'undefined' && window.indexedDB) {
@@ -1251,13 +1262,21 @@ export const aiToolExecutors = {
           if (exchange && !storeName.includes(exchange.toLowerCase())) {
             continue;
           }
+          const source = storeName.split('-')[0] as FeeSource;
           if (db.objectStoreNames.contains(storeName as any)) {
             const logs: any[] = await db.getAll(storeName as any);
             for (const log of logs) {
               const time = log.timestamp || log.uTime || log.cTime || log.execTime || log.transactionTime || 0;
               if (time >= cutoffTime) {
                 const fee = log.fee || log.feeUsd || log.execFee || 0;
-                totalFeesUsd = totalFeesUsd.plus(Math.abs(Number(fee)));
+                // Canonical sign from the venue, then the absolute cost: rebates
+                // are still counted as a cost here, same as the fee cards.
+                const cost = toFeeCost(source, fee).abs();
+                const currency = String(log.currency || '').toUpperCase();
+                const bucket = feeBuckets.get(currency) ?? { currency, amount: new Big(0), venues: [] };
+                bucket.amount = bucket.amount.plus(cost);
+                if (!bucket.venues.includes(source)) bucket.venues.push(source);
+                feeBuckets.set(currency, bucket);
                 totalTransactionsCount++;
               }
             }
@@ -1266,6 +1285,34 @@ export const aiToolExecutors = {
       }
     } catch {
       // IndexedDB query error handled gracefully
+    }
+
+    // Only coins that need a quote are fetched, and each through the exchange
+    // that charged the fee (MNT and BGB are not listed on the OKX fallback).
+    const fiatRates = useSettingsStore.getState().fiatRates;
+    const buckets = Array.from(feeBuckets.values());
+    const currenciesByVenue: Partial<Record<PriceExchange, string[]>> = {};
+    for (const bucket of buckets) {
+      if (!bucket.currency || !needsTokenRate(bucket.currency, fiatRates)) continue;
+      const venue = bucket.venues[0] as PriceExchange | undefined;
+      if (!venue) continue;
+      (currenciesByVenue[venue] ||= []).push(bucket.currency);
+    }
+    const { rates } = Object.keys(currenciesByVenue).length > 0
+      ? await getUsdPricesForVenues(currenciesByVenue, fiatRates)
+      : { rates: {} as Record<string, number> };
+
+    let totalFeesUsd = new Big(0);
+    const feeCurrenciesWithoutUsdPrice: string[] = [];
+    for (const bucket of buckets) {
+      const rate = resolveUsdRate(bucket.currency, rates, fiatRates);
+      if (rate === null) {
+        // Reported instead of counted as dollars, so the AI cannot quote a
+        // total that silently left a coin out.
+        feeCurrenciesWithoutUsdPrice.push(bucket.currency || 'UNKNOWN');
+        continue;
+      }
+      totalFeesUsd = totalFeesUsd.plus(bucket.amount.times(rate));
     }
 
     const hasData = totalTransactionsCount > 0;
@@ -1281,6 +1328,8 @@ export const aiToolExecutors = {
       totalFeesPaidUsd: privacyActive ? '[OBFUSCATED - Privacy Mode Active]' : Number(totalFeesUsd.toString()),
       totalFeesPaidUsdRaw: privacyActive ? '[OBFUSCATED]' : totalFeesUsd.toString(),
       totalTransactionsAnalyzed: totalTransactionsCount,
+      // Empty when every coin had a USD price; otherwise the total above is partial.
+      feeCurrenciesWithoutUsdPrice,
     };
   },
 

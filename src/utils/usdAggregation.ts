@@ -23,6 +23,46 @@ const FIAT_PROXIES: Record<string, string> = {
   EURT: 'EUR',
 };
 
+export interface FeeCurrencyTotal {
+  /** Currency the fee was charged in, as reported by the exchange. */
+  currency: string;
+  /** Amount charged, always positive. */
+  amount: number;
+}
+
+export interface FeeUsdResult {
+  totalUsd: number;
+  /** Currencies excluded from `totalUsd` because no USD price was available. */
+  missing: string[];
+}
+
+/**
+ * USD value of fees that were charged in different currencies.
+ *
+ * Each amount is converted with `resolveUsdRate`, so USD-pegged fees need no
+ * network price and anything unpriced is reported instead of being counted as
+ * if it were denominated in dollars.
+ */
+export function feesToUsd(
+  totals: FeeCurrencyTotal[],
+  tokenRates: Record<string, number> | undefined,
+  fiatRates?: FiatRatesLike
+): FeeUsdResult {
+  let totalUsd = 0;
+  const missing: string[] = [];
+
+  for (const { currency, amount } of totals) {
+    const rate = resolveUsdRate(currency, tokenRates, fiatRates);
+    if (rate === null) {
+      missing.push(currency);
+      continue;
+    }
+    totalUsd += amount * rate;
+  }
+
+  return { totalUsd, missing };
+}
+
 export interface CurrencyStatsValues {
   totalFunding: string;
   totalFees: string;

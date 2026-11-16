@@ -19,6 +19,7 @@ import { resolvePeriodDateRange } from '../../../utils/dateTimeHelper';
 import { useTranslation } from 'react-i18next';
 import { getUsdPrice, PriceExchange } from '../../../services/pricing/usdPrice';
 import { MissingRatesNotice, missingRatesNote } from '../../transactions/MissingRatesNotice';
+import { useFeeUsdTotals, FeeCurrencyBucket } from '../../../hooks/useFeeUsdTotals';
 
 export function OrderHistory() {
   const { t } = useTranslation();
@@ -47,7 +48,6 @@ export function OrderHistory() {
   // Busca inicial
   useEffect(() => {
     fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchOrders]);
 
   // Polling silencioso
@@ -155,7 +155,8 @@ export function OrderHistory() {
     let rejectedCount = 0;
 
     let totalTradedVolume = 0;
-    let totalFees = 0;
+    let inverseFeesUsd = 0;
+    const feeBuckets = new Map<string, FeeCurrencyBucket>();
 
     orders.forEach(o => {
       if (o.side === 'buy') buyCount++;
@@ -194,15 +195,34 @@ export function OrderHistory() {
       if (o.fees && o.filledQty > 0) {
         if (o.category === 'INVERSE') {
           const p = o.avgPrice > 0 ? o.avgPrice : o.price || 0;
-          totalFees += Math.abs(o.fees) * p;
+          inverseFeesUsd += Math.abs(o.fees) * p;
         } else {
-          totalFees += Math.abs(o.fees);
+          // Fees stay in the currency the exchange charged; see useFeeUsdTotals.
+          const currency = o.feeCurrency || 'USDT';
+          const bucket = feeBuckets.get(currency) ?? { currency, amount: 0, venues: [] };
+          bucket.amount += Math.abs(o.fees);
+          if (!bucket.venues.includes(o.exchange)) bucket.venues.push(o.exchange);
+          feeBuckets.set(currency, bucket);
         }
       }
     });
 
-    return { buyCount, sellCount, filledCount, cancelledCount, rejectedCount, totalTradedVolume, totalFees };
+    return {
+      buyCount,
+      sellCount,
+      filledCount,
+      cancelledCount,
+      rejectedCount,
+      totalTradedVolume,
+      inverseFeesUsd,
+      feeBuckets: Array.from(feeBuckets.values())
+    };
   }, [orders]);
+
+  const { totalFeesUsd, missingCurrencies: missingFeeCurrencies } = useFeeUsdTotals(stats.feeBuckets, stats.inverseFeesUsd);
+
+  // Both gaps break the same promise: a USD total that silently left part of it out.
+  const missingUsdCurrencies = Array.from(new Set([...missingFundingRates, ...missingFeeCurrencies]));
 
   const SIDE_DONUT = [
     { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: '#00C853' },
@@ -277,8 +297,8 @@ export function OrderHistory() {
         <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} showStatusFilter={true} />
       </div>
 
-      {missingFundingRates.length > 0 && (
-        <MissingRatesNotice currencies={missingFundingRates} />
+      {missingUsdCurrencies.length > 0 && (
+        <MissingRatesNotice currencies={missingUsdCurrencies} />
       )}
 
       {orders.length > 0 && (
@@ -351,7 +371,7 @@ export function OrderHistory() {
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('positions.tradingFee', 'Trading Fees')}</span>
               </AppTooltip>
               <span className="text-[13px] font-medium text-danger mt-1 font-mono">
-                {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
+                {totalFeesUsd > 0 ? '-' + formatCurrency(totalFeesUsd, 'usd') : '0.00 USD'}
               </span>
             </div>
           </div>

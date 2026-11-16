@@ -20,6 +20,8 @@ import { formatIsoDateTime, formatDateTime } from '../../utils/formatters';
 import { Pagination } from '../ui/Pagination';
 import { usePagination } from '../../hooks/usePagination';
 import { useTranslation } from 'react-i18next';
+import { useFeeUsdTotals, FeeCurrencyBucket } from '../../hooks/useFeeUsdTotals';
+import { MissingRatesNotice } from '../transactions/MissingRatesNotice';
 
 export function TradeHistory() {
   const { t } = useTranslation();
@@ -45,7 +47,6 @@ export function TradeHistory() {
   // Initial Fetch
   useEffect(() => {
     fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchOrders]);
 
   // Silent polling
@@ -72,7 +73,8 @@ export function TradeHistory() {
     let buyCount = 0;
     let sellCount = 0;
     let totalTradedVolume = 0;
-    let totalFees = 0;
+    let inverseFeesUsd = 0;
+    const feeBuckets = new Map<string, FeeCurrencyBucket>();
 
     trades.forEach(t => {
       if (t.side === 'buy') buyCount++;
@@ -111,15 +113,29 @@ export function TradeHistory() {
 
       if (t.fees) {
         if (isInverse) {
-          totalFees += Math.abs(t.fees) * p;
+          inverseFeesUsd += Math.abs(t.fees) * p;
         } else {
-          totalFees += Math.abs(t.fees);
+          // Keep fees in the currency the exchange charged; converting them here
+          // as if they were dollars is what made the total wrong.
+          const currency = t.feeCurrency || 'USDT';
+          const bucket = feeBuckets.get(currency) ?? { currency, amount: 0, venues: [] };
+          bucket.amount += Math.abs(t.fees);
+          if (!bucket.venues.includes(t.exchange)) bucket.venues.push(t.exchange);
+          feeBuckets.set(currency, bucket);
         }
       }
     });
 
-    return { buyCount, sellCount, totalTradedVolume, totalFees };
+    return {
+      buyCount,
+      sellCount,
+      totalTradedVolume,
+      inverseFeesUsd,
+      feeBuckets: Array.from(feeBuckets.values())
+    };
   }, [trades]);
+
+  const { totalFeesUsd, missingCurrencies: missingFeeCurrencies } = useFeeUsdTotals(stats.feeBuckets, stats.inverseFeesUsd);
 
   const SIDE_DONUT = [
     { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: '#00C853' },
@@ -317,14 +333,18 @@ export function TradeHistory() {
               <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.estTradingFees', 'Est. Trading Fees')}</span>
             </AppTooltip>
             <span className="text-2xl font-medium text-danger mt-1">
-              {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
+              {totalFeesUsd > 0 ? '-' + formatCurrency(totalFeesUsd, 'usd') : '0.00 USD'}
             </span>
             <span className="text-xs text-fg-muted mt-1">
               {t('trade.paidFeesConverted', 'Paid fees converted to USD')}
-              {stats.totalTradedVolume > 0 && ` (${((stats.totalFees / stats.totalTradedVolume) * 100).toFixed(3)}% of volume)`}
+              {stats.totalTradedVolume > 0 && ` (${((totalFeesUsd / stats.totalTradedVolume) * 100).toFixed(3)}% of volume)`}
             </span>
           </div>
         </div>
+      )}
+
+      {missingFeeCurrencies.length > 0 && (
+        <MissingRatesNotice currencies={missingFeeCurrencies} className="mb-2" />
       )}
 
       {error && (

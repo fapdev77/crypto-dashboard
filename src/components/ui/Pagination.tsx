@@ -82,7 +82,6 @@ export function Pagination({
     return () => {
       if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshAnim, refreshDataReady, deferredTick]);
 
   // ─── Effect 3: done → fading → idle (auto-advance) ───

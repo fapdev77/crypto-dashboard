@@ -4,6 +4,7 @@ import {
   resolveUsdRate,
   needsTokenRate,
   aggregateStatsToUsd,
+  feesToUsd,
 } from '../usdAggregation';
 import { isStablecoin } from '../formatters';
 
@@ -39,6 +40,30 @@ describe('resolveUsdRate', () => {
     expect(resolveUsdRate('BTC', { BTC: 50000 }, {})).toBe(50000);
     expect(resolveUsdRate('BTC', {}, {})).toBeNull();
     expect(resolveUsdRate('', {}, {})).toBeNull();
+  });
+});
+
+describe('feesToUsd', () => {
+  it('converts each fee with the rate of its own currency', () => {
+    const { totalUsd, missing } = feesToUsd(
+      [{ currency: 'USDT', amount: 1 }, { currency: 'BNB', amount: 0.001 }],
+      { BNB: 600 },
+      {}
+    );
+    expect(totalUsd).toBeCloseTo(1.6);
+    expect(missing).toEqual([]);
+  });
+
+  it('reports an unpriced currency instead of counting it as USD', () => {
+    const { totalUsd, missing } = feesToUsd([{ currency: 'MNT', amount: 0.05 }], {}, {});
+    expect(totalUsd).toBe(0);
+    expect(missing).toEqual(['MNT']);
+  });
+
+  it('needs no network price for USD-pegged fees', () => {
+    const { totalUsd, missing } = feesToUsd([{ currency: 'USDC', amount: 2.5 }], undefined, undefined);
+    expect(totalUsd).toBe(2.5);
+    expect(missing).toEqual([]);
   });
 });
 
