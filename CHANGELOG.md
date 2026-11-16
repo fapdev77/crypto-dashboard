@@ -1,3 +1,10 @@
+# [2.44.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.43.2...v2.44.0) (2026-11-16)
+
+
+### Features
+
+* add feeCurrency support across multiple adapters and update TradeHistory for order ID display ([20a4843](https://github.com/fapdev77/crypto-dashboard/commit/20a4843daaf875e8716b2dce146f74cff5a797bf))
+
 ## [2.43.2](https://github.com/fapdev77/crypto-dashboard/compare/v2.43.1...v2.43.2) (2026-11-16)
 
 
