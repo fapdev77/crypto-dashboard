@@ -234,7 +234,7 @@ Promovido a um **módulo de navegação de primeiro nível** no menu lateral, pr
 - **Order History**: Histórico consolidado de ordens executadas, expiradas ou canceladas com suporte a busca avançada por expressão regular.
 
 ### 🔄 Trade History (Histórico de Execuções)
-- Acompanhe cada execução de ordem preenchida (fills) com registro do preço executado, tamanho na moeda base e a moeda exata utilizada para cobrança de taxas.
+- Acompanhe cada ordem executada com registro do preço executado, tamanho na moeda base e a moeda exata utilizada para cobrança de taxas.
 
 ### 📜 Histórico de Transações e Variação Líquida Consolidada (Consolidated Net Change & Transactions)
 

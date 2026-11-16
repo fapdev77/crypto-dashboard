@@ -141,7 +141,7 @@ export function TradeHistory() {
       'Filled Type',
       'Trading Fees',
       'Transaction Time',
-      'Transaction ID'
+      'Order ID'
     ];
 
     const rows = trades.map(t => {
@@ -207,8 +207,9 @@ export function TradeHistory() {
       filledValueStr = `${filledValUsd.toFixed(2)} USD`;
 
       // Fees
+      const feeCurrency = t.feeCurrency || (isInverse ? symbolSuffix : 'USDT');
       const feeStr = t.fees
-        ? (isInverse ? `${Math.abs(t.fees).toFixed(8)} ${symbolSuffix}` : `${Math.abs(t.fees).toFixed(6)} USDT`)
+        ? `${Math.abs(t.fees).toFixed(isInverse ? 8 : 6)} ${feeCurrency}`
         : '0.00';
 
       const timeStr = formatIsoDateTime(t.updatedTime || t.createdTime);
@@ -523,13 +524,14 @@ export function TradeHistory() {
                         isFeeNegative = isCost;
 
                         const absFee = Math.abs(rawFee);
+                        const feeCurrency = trade.feeCurrency || (isInverse ? symbolSuffix : 'USDT');
 
                         if (isInverse) {
-                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 8)} ${symbolSuffix}`;
+                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 8)} ${feeCurrency}`;
                           const feeUsd = absFee * filledPrice;
                           subFeeStr = `≈ ${isCost ? '-' : ''}${formatCurrency(feeUsd, 'usd')} USD`;
                         } else {
-                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 6)} USDT`;
+                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 6)} ${feeCurrency}`;
                         }
                       }
 
@@ -550,15 +552,15 @@ export function TradeHistory() {
 
                   {/* Col 6: Transaction Time & ID */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-2">
-                    <AppTooltip description="The timestamp when this transaction took place and its unique transaction ID.">
-                      <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.time', 'Transaction Time')} & {t('trade.tradeId', 'ID')}</span>
+                    <AppTooltip description="The timestamp when this transaction took place and the exchange order ID it belongs to.">
+                      <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.time', 'Transaction Time')} & {t('transactions.details.orderId', 'Order ID')}</span>
                     </AppTooltip>
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                       <span className="text-fg text-sm font-sans">{dateStr}</span>
                       <span className="text-xs text-fg-muted font-mono">{timeStr}</span>
                     </div>
                     <span className="text-[10px] text-fg-muted font-mono select-all mt-1 truncate max-w-xs" title={trade.exchangeOrderId || trade.id}>
-                      ID: {trade.exchangeOrderId || trade.id}
+                      {trade.exchangeOrderId || trade.id}
                     </span>
                   </div>
                 </div>

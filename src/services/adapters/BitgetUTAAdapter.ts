@@ -717,8 +717,10 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
       const orderId = String(o.orderId || o.strategyId || o.clientOid || '');
 
       let fee = 0;
+      let feeCurrency: string | undefined;
       if (Array.isArray(o.feeDetail) && o.feeDetail.length > 0) {
         fee = o.feeDetail.reduce((acc: number, f: any) => acc + (parseFloat(f.fee || '0') * -1), 0);
+        feeCurrency = o.feeDetail.find((f: any) => !!f?.feeCoin)?.feeCoin || undefined;
       }
 
       return {
@@ -755,6 +757,7 @@ export class BitgetUTAAdapter extends BaseExchangeAdapter implements IExchangeAd
         createdTime: parseInt(o.createdTime || o.cTime || '0', 10),
         updatedTime: parseInt(o.updatedTime || o.uTime || o.createdTime || '0', 10),
         fees: fee,
+        feeCurrency,
         leverage: o.leverage ? parseFloat(o.leverage) : undefined,
         marginMode: o.marginMode ? mapMarginMode('bitget', o.marginMode) : undefined,
         raw: o

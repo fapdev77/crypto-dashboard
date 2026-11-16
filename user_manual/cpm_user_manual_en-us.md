@@ -28,7 +28,7 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [💼 Open Positions (Active Positions — Detailed & Lite Modes)](#-open-positions-active-positions--detailed--lite-modes)
    - [📂 Closed Positions (Historical Positions & Analytics)](#-closed-positions-historical-positions--analytics)
    - [📝 Order Reports (Open Orders & Order History)](#-order-reports-open-orders--order-history)
-   - [🔄 Trade History (Fill Executions & Fee Auditing)](#-trade-history-fill-executions--fee-auditing)
+   - [🔄 Trade History (Order Executions & Fee Auditing)](#-trade-history-order-executions--fee-auditing)
    - [📜 Consolidated Net Change & Multi-Exchange Transactions](#-consolidated-net-change--multi-exchange-transactions)
    - [📊 Portfolio Performance (Evolution Analytics & Institutional Metrics)](#-portfolio-performance-evolution-analytics--institutional-metrics)
    - [📈 Market Analytics (Quantitative Intelligence & Derivatives Flow)](#-market-analytics-quantitative-intelligence--derivatives-flow)
@@ -233,8 +233,8 @@ Promoted to a **dedicated top-level module** in the sidebar, tailored for fundin
 - **Open Orders**: Monitor active Limit, Market, Stop Loss, and Take Profit orders with conditional trigger visualization.
 - **Order History**: Historical log of executed, cancelled, and expired orders with regex search and expandable details.
 
-### 🔄 Trade History (Fill Executions & Fee Auditing)
-- Detailed trade execution log with fill price, contract size, and exact fee currency deducted.
+### 🔄 Trade History (Order Executions & Fee Auditing)
+- Detailed log of executed orders with fill price and exact fee currency deducted.
 
 ### 📜 Consolidated Net Change & Multi-Exchange Transactions
 
