@@ -1,3 +1,10 @@
+# [2.45.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.44.0...v2.45.0) (2026-11-16)
+
+
+### Features
+
+* implement fee currency handling and USD conversion for trading fees ([db1883e](https://github.com/fapdev77/crypto-dashboard/commit/db1883e94ea55d44a9f7581b84fd5c0867beea32))
+
 # [2.44.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.43.2...v2.44.0) (2026-11-16)
 
 
