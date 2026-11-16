@@ -1,3 +1,10 @@
+## [2.43.2](https://github.com/fapdev77/crypto-dashboard/compare/v2.43.1...v2.43.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* **i18n:** update internationalization key count to 1,656 across multiple locales- i18n: sai o bloco  role / maker / makerTooltip / taker / takerTooltip  (linhas 826-830 → 820-824 originais) dos 6 arquivos;  trade.syncing  fica porque é usado em  TradeHistory.tsx:252 . Contagem medida: 1656 em cada um dos 6, paridade intacta. ([58c1af0](https://github.com/fapdev77/crypto-dashboard/commit/58c1af082c88bcc8e9628530c31feb8558a7342f))
+
 ## [2.43.1](https://github.com/fapdev77/crypto-dashboard/compare/v2.43.0...v2.43.1) (2026-11-15)
 
 
