@@ -28,7 +28,6 @@ Nuestra prioridad fundamental es la **seguridad zero-trust** y la **preservació
    - [💼 Open Positions (Posiciones Activas — Detailed & Lite)](#-open-positions-posiciones-activas--detailed--lite)
    - [📂 Closed Positions (Historial de Posições y Análisis)](#-closed-positions-historial-de-posições-y-análisis)
    - [📝 Reportes de Órdenes (Órdenes Abiertas e Historial de Órdenes)](#-reportes-de-órdenes-órdenes-abiertas-e-historial-de-órdenes)
-   - [🔄 Historial de Ejecuciones (Trade History)](#-historial-de-ejecuciones-trade-history)
    - [📜 Historial de Transacciones y Variación Neta Consolidada](#-historial-de-transacciones-y-variación-neta-consolidada)
    - [📊 Rendimiento del Portafolio (Portfolio Performance)](#-rendimiento-del-portafolio-portfolio-performance)
    - [📈 Análisis de Mercado (Market Analytics)](#-análisis-de-mercado-market-analytics)

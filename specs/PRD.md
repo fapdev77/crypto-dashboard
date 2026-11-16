@@ -62,7 +62,7 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
   - Open Positions com modos de exibição Detailed e Lite.
   - Closed Positions com análise estatística (Win Rate, Profit Factor, avg trade).
   - Order Reports (Open Orders e Order History com busca regex).
-  - Trade History com discriminação de liquidez Maker/Taker e fees.
+  - Trade History com taxas cobradas por ordem executada.
   - Histórico de Transações Multi-Corretora com 10 categorias universais e modais com Total Stats Summary.
   - **Consolidated Net Change Dashboard**: Painel posicionado como primeiro item de Transactions History com 4 macro KPI cards, agrupamento hierárquico por exchange e moeda, e exportação multiformato.
   - **Portfolio Performance Dashboard**: Painel posicionado no topo de Analytics com evolução patrimonial (duplo gráfico de saldo e resultado acumulado), análise temporal por mês e dia da semana, marcos de preço, resultados primários, análise de taxas/arrasto e métricas avançadas (Profit Factor, Win Rate, Índice de Consistência).
@@ -71,7 +71,7 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
   - PIKA Assistant com **7 ferramentas de leitura** (`aiGet*`), 6 provedores (`ollama`, `gemini`, `openrouter`, `openai`, `anthropic`, `custom`), auditoria de compatibilidade de modelos, telemetria de tokens, exportação de logs e kill-switch via `AI_CHAT_BOT_ENABLED`.
   - Progressive Web App (PWA) instalável com Service Worker e cache offline.
   - Migração Obrigatória de Vault para formatos de criptografia PBKDF2/AES-GCM (600.000 iterações) e backups `.enc`.
-  - Internacionalização Completa (i18n) em 6 idiomas (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.661 chaves cada) com preservação de termos de mercado.
+  - Internacionalização Completa (i18n) em 6 idiomas (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.656 chaves cada) com preservação de termos de mercado.
   - Sistema Multi-Temas (`Terminal Dark`, `Terminal Light`, `Wise Dark`, `Wise Light`, `Customizado`) com 4 predefinições, editor de 10 tokens CSS, gerenciamento de temas salvos nomeados e seletor no cabeçalho (`ThemeModeButton`).
   - Conversão e exibição multi-moedas fiat (USD, BRL, EUR, GBP) via **Frankfurter API v2** e paridade **USDT/USD** via **CoinGecko**, com cache offline resiliente e painel `CurrencyApiDiagnostics`.
   - Governança de Configurações em **10 cards modulares** (`Settings.tsx`) com TTL de cotações (5–60m), catálogo de símbolos (1–24h), refresh de histórico/funding e expurgo de histórico.
@@ -130,7 +130,7 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 | **FR-2** | Monitorar posições ativas com mark price em tempo real, ROE%, alavancagem, margem e views Detailed/Lite | Open Positions |
 | **FR-3** | Registrar histórico de posições fechadas com métricas analíticas (Win Rate, Profit Factor) e exportação | Closed Positions |
 | **FR-4** | Exibir ordens abertas e histórico de ordens com filtros multicritério e busca regex | Order Reports |
-| **FR-5** | Auditar execuções de ordens (trades) com identificação Maker/Taker e taxa cobrada | Trade History |
+| **FR-5** | Auditar execuções de ordens (trades) com preço executado, tamanho e taxa cobrada | Trade History |
 | **FR-6** | Calcular e exibir distribuição de PnL fechado por ativo (Long vs Short) | PnL by Symbol |
 | **FR-7** | Auditar transaction log da Bybit UTA (até 2 anos) com conciliação contábil e Total Stats Summary | Bybit Transactions |
 | **FR-8** | Auditar extrato transacional da Bitget (Classic e UTA) com Total Stats Summary | Bitget Transactions |
@@ -156,7 +156,7 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 | **FR-28** | Portfolio Performance Dashboard com curvas de saldo/resultado, análise temporal (mês/dia), marcos de preço, resultados primários e métricas avançadas (Profit Factor, Win Rate, Consistency Index) | Portfolio Performance |
 | **FR-29** | Tela e fluxo de migração mandatória de vault para credenciais legadas em texto plano e backups `.enc` | Security & Vault |
 | **FR-30** | Otimização de renderização com downsampling a 80 pontos, animations desativadas e seletores atômicos no Zustand | Performance Optimization |
-| **FR-31** | Internacionalização completa em 6 idiomas (pt-BR, pt-PT, en-US, en-GB, es-419, it-IT; 1.661 chaves cada) com seleção dinâmica, tooltips e toasts | Internationalization (i18n) |
+| **FR-31** | Internacionalização completa em 6 idiomas (pt-BR, pt-PT, en-US, en-GB, es-419, it-IT; 1.656 chaves cada) com seleção dinâmica, tooltips e toasts | Internationalization (i18n) |
 | **FR-32** | Conversão cambial multi-moedas fiat (USD, BRL, EUR, GBP) via Frankfurter API v2 + paridade USDT/USD via CoinGecko, com TTL configurável e cache offline | Multi-Currency Engine |
 | **FR-33** | Painel de governança em 10 cards modulares com TTL de catálogo de símbolos (1–24h), refresh de funding/polling, auto-lock e expurgo seletivo | Settings & Storage |
 | **FR-34** | Motor Multi-Temas (Terminal Dark/Light, Wise Dark/Light, Customizado) com 4 presets, 10 tokens CSS editáveis, temas salvos nomeados e atalho "Custom design" no cabeçalho | Multi-Theme Engine |

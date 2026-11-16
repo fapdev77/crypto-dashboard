@@ -817,11 +817,6 @@
     "fee": "Fee",
     "time": "Time",
     "tradeId": "Trade ID",
-    "role": "Role",
-    "maker": "Maker",
-    "makerTooltip": "Provided passive liquidity to the order book.",
-    "taker": "Taker",
-    "takerTooltip": "Removed immediate liquidity by executing against order book.",
     "syncing": "Syncing trade history..."
   },
   "manual": {

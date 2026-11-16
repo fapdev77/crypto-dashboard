@@ -70,7 +70,7 @@ O CPM adota uma arquitetura em duas camadas (2-Tier Local Hybrid-Proxy) projetad
 
 - **Core Framework & Runtime:** React 19, TypeScript ~5.8, Vite 6, Node.js LTS (engines `>=24`).
 - **Styling & UI Engine:** Tailwind CSS v4 (`@theme` CSS variables), sistema multi-temas (`themeMode.ts`), Lucide React (ícones), Radix UI (Tooltips acessíveis).
-- **Internationalization (i18n):** `i18next` e `react-i18next` com 6 idiomas suportados (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.661 chaves cada).
+- **Internationalization (i18n):** `i18next` e `react-i18next` com 6 idiomas suportados (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.656 chaves cada).
 - **Multi-Currency System:** `CurrencyService.ts` integrado concorrentemente à **Frankfurter API v2** (`api.frankfurter.dev`) e à **CoinGecko API** (`api.coingecko.com` para USDT/USD), com TTL configurável (5–60 min), cache offline e diagnósticos (`CurrencyApiDiagnostics`).
 - **State Management:** Zustand 5.0 (arquitetura desacoplada de **14 micro-stores** com persistência local).
 - **Data Caching & Persistence:** IndexedDB nativo via biblioteca `idb` 8.0, com SWR (Stale-While-Revalidate) e versionamento de banco (`DB_VERSION 12`).

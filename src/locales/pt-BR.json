@@ -817,11 +817,6 @@
     "fee": "Taxa",
     "time": "Horário",
     "tradeId": "ID da Negociação",
-    "role": "Papel",
-    "maker": "Maker",
-    "makerTooltip": "Forneceu liquidez passiva ao livro de ofertas.",
-    "taker": "Taker",
-    "takerTooltip": "Removeu liquidez imediata executando a mercado.",
     "syncing": "Sincronizando histórico de trades..."
   },
   "manual": {

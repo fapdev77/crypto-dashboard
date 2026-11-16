@@ -817,11 +817,6 @@
     "fee": "Commissione",
     "time": "Orario",
     "tradeId": "ID Operazione",
-    "role": "Ruolo",
-    "maker": "Maker",
-    "makerTooltip": "Ha fornito liquidità passiva all'order book.",
-    "taker": "Taker",
-    "takerTooltip": "Ha rimosso liquidità immediata eseguendo a mercato.",
     "syncing": "Sincronizzazione storico trade in corso..."
   },
   "manual": {

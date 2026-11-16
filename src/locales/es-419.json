@@ -817,11 +817,6 @@
     "fee": "Comisión",
     "time": "Hora",
     "tradeId": "ID de Operación",
-    "role": "Rol",
-    "maker": "Maker",
-    "makerTooltip": "Aportó liquidez pasiva al libro de órdenes.",
-    "taker": "Taker",
-    "takerTooltip": "Tomó liquidez inmediata ejecutando contra el libro.",
     "syncing": "Sincronizando historial de trades..."
   },
   "manual": {

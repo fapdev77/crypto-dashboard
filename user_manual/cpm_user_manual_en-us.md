@@ -175,7 +175,7 @@ The **Settings** screen organizes configuration across **10 modular cards**: *La
 - **Quick Presets & Saved Themes**: Load 4 curated presets (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) or save, load, and delete named custom themes (shown beside *Custom* in the header theme selector).
 
 ### 🌐 Language, Fiat Currency & API Diagnostics
-- **6 Locales & 4 Fiat Currencies**: Full coverage across `en-US`, `en-GB`, `pt-BR`, `pt-PT`, `es-419`, and `it-IT` (1,661 translation keys per locale) with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
+- **6 Locales & 4 Fiat Currencies**: Full coverage across `en-US`, `en-GB`, `pt-BR`, `pt-PT`, `es-419`, and `it-IT` (1,656 translation keys per locale) with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
 - **Dual-Provider Engine & Diagnostics (`CurrencyApiDiagnostics`)**: Concurrently queries **Frankfurter API v2** (`api.frankfurter.dev`) for FX rates and **CoinGecko** (`api.coingecko.com`) for the **USDT/USD** parity rate, with configurable cache TTL (5–60m), offline cache fallback, and live latency/status monitoring.
 
 ### 🔄 Synchronization, Retention & Cache Settings (IndexedDB)
@@ -234,7 +234,7 @@ Promoted to a **dedicated top-level module** in the sidebar, tailored for fundin
 - **Order History**: Historical log of executed, cancelled, and expired orders with regex search and expandable details.
 
 ### 🔄 Trade History (Fill Executions & Fee Auditing)
-- Detailed trade execution log with fill price, contract size, Maker vs Taker liquidity flag, and exact fee currency deducted.
+- Detailed trade execution log with fill price, contract size, and exact fee currency deducted.
 
 ### 📜 Consolidated Net Change & Multi-Exchange Transactions
 

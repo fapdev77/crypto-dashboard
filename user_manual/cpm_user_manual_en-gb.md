@@ -28,7 +28,6 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [💼 Open Positions (Active Positions — Detailed & Lite Modes)](#-open-positions-active-positions--detailed--lite-modes)
    - [📂 Closed Positions (Historical Positions & Analytics)](#-closed-positions-historical-positions--analytics)
    - [📝 Order Reports (Open Orders & Order History)](#-order-reports-open-orders--order-history)
-   - [🔄 Trade History (Fill Executions & Fee Auditing)](#-trade-history-fill-executions--fee-auditing)
    - [📜 Consolidated Net Change & Multi-Exchange Transactions](#-consolidated-net-change--multi-exchange-transactions)
    - [📊 Portfolio Performance (Evolution Analytics & Institutional Metrics)](#-portfolio-performance-evolution-analytics--institutional-metrics)
    - [📈 Market Analytics (Quantitative Intelligence & Derivatives Flow)](#-market-analytics-quantitative-intelligence--derivatives-flow)
