@@ -371,7 +371,7 @@ export function OrderHistory() {
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('positions.tradingFee', 'Trading Fees')}</span>
               </AppTooltip>
               <span className="text-[13px] font-medium text-danger mt-1 font-mono">
-                {totalFeesUsd > 0 ? '-' + formatCurrency(totalFeesUsd, 'usd') : '0.00 USD'}
+                {totalFeesUsd > 0 ? '-' + formatCurrency(totalFeesUsd, 'usd') : formatCurrency(0, 'usd')}
               </span>
             </div>
           </div>

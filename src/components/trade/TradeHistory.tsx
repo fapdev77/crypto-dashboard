@@ -333,7 +333,7 @@ export function TradeHistory() {
               <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.estTradingFees', 'Est. Trading Fees')}</span>
             </AppTooltip>
             <span className="text-2xl font-medium text-danger mt-1">
-              {totalFeesUsd > 0 ? '-' + formatCurrency(totalFeesUsd, 'usd') : '0.00 USD'}
+              {totalFeesUsd > 0 ? '-' + formatCurrency(totalFeesUsd, 'usd') : formatCurrency(0, 'usd')}
             </span>
             <span className="text-xs text-fg-muted mt-1">
               {t('trade.paidFeesConverted', 'Paid fees converted to USD')}
@@ -448,7 +448,7 @@ export function TradeHistory() {
             }
 
             filledQtyStr = `${formatCurrency(actualFilledCoinSize, 'crypto')} ${symbolSuffix}`;
-            filledValueStr = `${formatCurrency(filledValUsd, 'usd')} USD`;
+            filledValueStr = `${formatCurrency(filledValUsd, 'usd')}`;
             const dtFormatted = formatDateTime(trade.updatedTime || trade.createdTime);
             const timeStr = dtFormatted.timeStr;
             const dateStr = dtFormatted.dateStr;
@@ -549,7 +549,7 @@ export function TradeHistory() {
                         if (isInverse) {
                           mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 8)} ${feeCurrency}`;
                           const feeUsd = absFee * filledPrice;
-                          subFeeStr = `≈ ${isCost ? '-' : ''}${formatCurrency(feeUsd, 'usd')} USD`;
+                          subFeeStr = `≈ ${isCost ? '-' : ''}${formatCurrency(feeUsd, 'usd')}`;
                         } else {
                           mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 6)} ${feeCurrency}`;
                         }

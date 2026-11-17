@@ -222,7 +222,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
             <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('orders.amount', 'Order Qty')} / {t('orders.orderValue', 'Value')}</span>
           </AppTooltip>
           <span className="font-mono text-fg text-sm">{formatCurrency(actualCoinSize, 'crypto')} {symbolSuffix}</span>
-          <span className="text-xs text-fg-muted font-mono">≈ {formatCurrency(valUsd, 'crypto', 2)} USD</span>
+          <span className="text-xs text-fg-muted font-mono">≈ {formatCurrency(valUsd, 'usd', 2)}</span>
         </div>
 
         {/* Col 4: Price & Trigger */}
@@ -354,7 +354,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
               <AppTooltip description="The total executed value of the order in USD.">
                 <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max cursor-help">{t('orders.orderValue', 'Total Value')}</span>
               </AppTooltip>
-              <span className="text-fg font-mono text-sm">{valUsd > 0 ? formatCurrency(valUsd, 'usd') + ' USD' : '--'}</span>
+              <span className="text-fg font-mono text-sm">{valUsd > 0 ? formatCurrency(valUsd, 'usd') : '--'}</span>
             </div>
 
             <div className="flex flex-col gap-1">
@@ -378,9 +378,9 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
                     mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 8)} ${symbolSuffix}`;
                     const price = order.avgPrice || order.price || 0;
                     const feeUsd = absFee * price;
-                    subFeeStr = `≈ ${isCost ? '-' : ''}${formatCurrency(feeUsd, 'usd')} USD`;
+                    subFeeStr = `≈ ${isCost ? '-' : ''}${formatCurrency(feeUsd, 'usd')}`;
                   } else {
-                    mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'usd')} USD`;
+                    mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'usd')}`;
                   }
                 }
 

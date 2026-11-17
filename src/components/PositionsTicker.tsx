@@ -3,13 +3,15 @@ import { usePositionsStore } from '../store/positionsStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { formatValue, formatCrypto, formatPrice } from '../utils/formatters';
+import { formatValue, formatCrypto } from '../utils/formatters';
+import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { AppTooltip } from './ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 
 export function PositionsTicker() {
   const { t } = useTranslation();
   const positions = usePositionsStore(state => state.positions);
+  const formatCurrency = useFormatCurrency();
   const useMockData = useSettingsStore(state => state.useMockData);
   const keys = useApiKeysStore(state => state.keys);
 
@@ -72,8 +74,8 @@ export function PositionsTicker() {
         }
         side="bottom"
         rows={[
-          { label: t('positions.markPrice', 'Current Price'), value: `$${formatPrice(pos.markPrice, isFiatPair)}`, labelClassName: 'text-[13px] text-fg-muted', valueClassName: 'text-[13px] text-fg font-mono' },
-          { label: t('positions.entryPrice', 'Entry Price'), value: pos.entryPrice ? `$${formatPrice(pos.entryPrice, isFiatPair)}` : 'N/A', labelClassName: 'text-[13px] text-fg-muted', valueClassName: 'text-[13px] text-fg font-mono' },
+          { label: t('positions.markPrice', 'Current Price'), value: formatCurrency(pos.markPrice, 'priceFiat', isFiatPair), labelClassName: 'text-[13px] text-fg-muted', valueClassName: 'text-[13px] text-fg font-mono' },
+          { label: t('positions.entryPrice', 'Entry Price'), value: pos.entryPrice ? formatCurrency(pos.entryPrice, 'priceFiat', isFiatPair) : 'N/A', labelClassName: 'text-[13px] text-fg-muted', valueClassName: 'text-[13px] text-fg font-mono' },
           { label: t('dashboard.variation', 'Price Variation'), value: `${priceVariation > 0 ? '+' : ''}${formatValue(priceVariation, 2)}%`, labelClassName: 'text-[13px] text-fg-muted', valueClassName: `text-[13px] font-mono font-bold ${priceVariation >= 0 ? 'text-success' : 'text-danger'}` },
           { label: t('positions.roe', 'ROE'), value: `${variation > 0 ? '+' : ''}${formatValue(variation, 2)}%`, labelClassName: 'text-[13px] text-fg-muted', valueClassName: `text-[13px] font-mono font-bold ${variation >= 0 ? 'text-success' : 'text-danger'}` }
         ]}
@@ -94,7 +96,7 @@ export function PositionsTicker() {
             </div>
 
             <span className={`font-mono text-sm ml-1 ${priceColor}`}>
-              ${formatPrice(pos.markPrice, isFiatPair)}
+              {formatCurrency(pos.markPrice, 'priceFiat', isFiatPair)}
             </span>
 
             <span className="text-xs ml-2 px-1.5 py-0.5 rounded uppercase font-medium bg-elevated text-fg-muted">

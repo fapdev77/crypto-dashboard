@@ -2,7 +2,7 @@
 
 > **Document Version:** 2.47.0  
 > **Status:** Production-Ready & Verified  
-> **Test Coverage:** 112 test files, 951 passing tests (Vitest 4.1)
+> **Test Coverage:** 113 test files, 953 passing tests (Vitest 4.1)
 
 ---
 
@@ -77,7 +77,22 @@ O CPM adota uma arquitetura em duas camadas (2-Tier Local Hybrid-Proxy) projetad
 - **Precision Math:** Big.js para cálculos financeiros de alta sensibilidade (evita perdas de precisão por ponto flutuante em taxas de funding e ratios de hedge).
 - **AI Subsystem:** `@google/genai` (v1.29.0) para integração direta com Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm` para formatação rica de respostas.
 - **Reporting & Charts:** Recharts 3.8 (gráficos interativos de Open Interest, CVD, Hedge Pro e Telemetria de IA), jsPDF + jsPDF-AutoTable (exportação visual de PDFs), SheetJS `xlsx` (exportação de planilhas).
-- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **112 arquivos de teste e 951 testes unitários e de integração automatizados** 100% verdes.
+- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **113 arquivos de teste e 953 testes unitários e de integração automatizados** 100% verdes.
+
+### 3.1. Terminologia de Mercado Mantida em Inglês
+
+Decisão de produto, não pendência de tradução: o jargão técnico abaixo permanece **em inglês nos 6 locales** (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`), inclusive quando aparece dentro de uma frase traduzida (ex.: "`PnL` realizado", "posição `Long`").
+
+| Termo | Uso no app |
+|---|---|
+| **Long** / **Short** | Lado da posição (`Long`, `Short`, `Open Long`, `Close Short`, `Longs`/`Shorts` nas estatísticas). |
+| **Hedge** | Conceito de proteção do capital e rótulos de cobertura. |
+| **Hedge Pro** | Nome do painel Delta-Neutral da sidebar. |
+| **PnL** | Resultado financeiro (`PnL`, `Unrealized PnL`, `Realized PnL`, `Total PnL`). |
+| **ROE** | Retorno sobre a margem, exibido ao lado do PnL. |
+| **Funding** / **Funding Fee** | Taxas de financiamento de contratos perpétuos. |
+
+Regra de revisão: esses termos **não devem ser traduzidos nem apontados como texto faltante de i18n**; alterá-los é decisão de produto. O que continua sujeito à tradução é todo o texto ao redor (rótulos, tooltips, mensagens, vazios e confirmações) e a formatação de valores, que sempre segue a moeda fiat ativa e o locale selecionado.
 
 ---
 
@@ -304,7 +319,7 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 Qualquer alteração em interfaces unificadas (`src/types.ts`) ou schemas de banco de dados deve obedecer ao protocolo rigoroso de sincronização:
 1. **Mock Generators:** Atualizar `src/mock/generateMocks.js` (para os 10 fixtures JSON em `src/mock/`) e `src/mock/marketAnalyticsMock.ts` (para simulações quantitativas do Market Analytics e Coin-M).
 2. **IndexedDB Versioning:** Incrementar `DB_VERSION` em `historyCache.ts` e registrar funções de migração para novos índices.
-3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (112 arquivos de teste, 951 testes passando).
+3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (113 arquivos de teste, 953 testes passando).
 4. **Validação em Modo Simulação:** Ativar temporariamente `useMockData = true` para verificar visualmente todos os painéis e gráficos antes do deploy.
 
 ---

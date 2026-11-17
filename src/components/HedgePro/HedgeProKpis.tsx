@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { KpiMetricCard } from '../analytics/FundingFees/KpiMetricCard';
 import { HedgeTotals } from '../../utils/hedgeUtils';
 import { useSettingsStore } from '../../store/settingsStore';
+import type { CurrencyFormatType } from '../../hooks/useFormatCurrency';
 
 interface HedgeProKpisProps {
   totals: HedgeTotals;
-  formatCurrency: (value: number | undefined | null, type?: 'usd' | 'crypto' | 'price' | 'compact', decimalsOrSymbol?: number | string) => string;
+  formatCurrency: (value: number | undefined | null, type?: CurrencyFormatType, decimalsOrSymbol?: number | string | boolean) => string;
 }
 
 /**

@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { formatValue, formatCrypto, formatPrice, formatDateTime, formatIsoDateTime } from '../utils/formatters';
+import { formatValue, formatCrypto, formatDateTime, formatIsoDateTime } from '../utils/formatters';
 import { usePositionHistory } from '../hooks/usePositionHistory';
 import { usePagination } from '../hooks/usePagination';
 import { Loader2, History, Download, ChevronDown } from 'lucide-react';
@@ -12,7 +12,6 @@ import { extractBaseCoin } from '../utils/unifiers';
 import { AppTooltip } from './ui/Tooltip';
 import { HistoryLimitWarning } from './ui/HistoryLimitWarning';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
-import { usePrivacy } from '../context/PrivacyContext';
 import { StatusAndSyncBadge } from './ui/StatusAndSyncBadge';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
 import { getHistoryInverseUsdValues, getHistoryPositionSizeAndValue } from '../utils/inverseUtils';
@@ -25,7 +24,6 @@ export function ClosedPositions() {
   const { t } = useTranslation();
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
-  const { isPrivateMode } = usePrivacy();
 
   const [filterText, setFilterText] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('All');
@@ -270,20 +268,20 @@ export function ClosedPositions() {
             <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
               <span className="text-2xl text-fg-muted mb-1">{t('positionsHistory.totalPnl', 'Total PnL')}</span>
               <span className={`text-xl font-medium ${closedStats.totalPnl >= 0 ? 'text-success' : 'text-danger'}`}>
-                {isPrivateMode ? '$••••' : `${closedStats.totalPnl >= 0 ? '+' : ''}${formatCurrency(closedStats.totalPnl, 'usd')}`}
+                {`${closedStats.totalPnl >= 0 ? '+' : ''}${formatCurrency(closedStats.totalPnl, 'usd')}`}
               </span>
               <div className="w-full border-t border-dashed border-line my-3"></div>
               <div className="flex flex-col gap-1">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-fg-muted">{t('positionsHistory.tradeFees', 'Trade Fees:')}</span>
                   <span className={`${closedStats.totalTradeFees < 0 ? 'text-danger' : (closedStats.totalTradeFees > 0 ? 'text-success' : 'text-fg-muted')}`}>
-                    {isPrivateMode ? '$••••' : `${closedStats.totalTradeFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalTradeFees, 'usd')}`}
+                    {`${closedStats.totalTradeFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalTradeFees, 'usd')}`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-fg-muted">{t('positionsHistory.fundingFees', 'Funding Fees:')}</span>
                   <span className={`${closedStats.totalFundingFees < 0 ? 'text-danger' : (closedStats.totalFundingFees > 0 ? 'text-success' : 'text-fg-muted')}`}>
-                    {isPrivateMode ? '$••••' : `${closedStats.totalFundingFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalFundingFees, 'usd')}`}
+                    {`${closedStats.totalFundingFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalFundingFees, 'usd')}`}
                   </span>
                 </div>
               </div>
@@ -339,17 +337,17 @@ export function ClosedPositions() {
                 <div className="flex flex-col bg-canvas p-2 rounded justify-center items-center">
                   <span className="text-xl text-fg-muted">Avg W/L</span>
                   <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
-                    <span className="text-success">+{formatCurrency(closedStats.avgWin, 'crypto', 2)}</span>
+                    <span className="text-success">+{formatCurrency(closedStats.avgWin, 'usd', 2)}</span>
                     <span className="text-[#3f4046] mx-0.5">/</span>
-                    <span className="text-danger">{formatCurrency(closedStats.avgLoss, 'crypto', 2)}</span>
+                    <span className="text-danger">{formatCurrency(closedStats.avgLoss, 'usd', 2)}</span>
                   </div>
                 </div>
                 <div className="flex flex-col bg-canvas p-2 rounded justify-center items-center">
                   <span className="text-xl text-fg-muted">Largest W/L</span>
                   <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
-                    <span className="text-success">+{formatCurrency(closedStats.largestWin, 'crypto', 2)}</span>
+                    <span className="text-success">+{formatCurrency(closedStats.largestWin, 'usd', 2)}</span>
                     <span className="text-[#3f4046] mx-0.5">/</span>
-                    <span className="text-danger">{formatCurrency(closedStats.largestLoss, 'crypto', 2)}</span>
+                    <span className="text-danger">{formatCurrency(closedStats.largestLoss, 'usd', 2)}</span>
                   </div>
                 </div>
               </div>
@@ -425,9 +423,8 @@ export function ClosedPositions() {
               : '--';
             const displayUnit = symbolSuffix;
             const displaySecondaryQuantity = (positionValueUsd !== undefined && positionValueUsd !== null)
-              ? formatCurrency(positionValueUsd, 'crypto', 2)
+              ? formatCurrency(positionValueUsd, 'usd', 2)
               : '--';
-            const displaySecondaryUnit = 'USD';
 
             if (hasRoi && isFinite(roiValue)) {
               roiStr = `${roiValue > 0 ? '+' : ''}${formatCurrency(roiValue, 'crypto', 2)}%`;
@@ -492,7 +489,7 @@ export function ClosedPositions() {
                     </AppTooltip>
                     <span className="font-mono text-fg text-sm">{displayQuantity} <span className="font-sans text-[10px] text-fg-muted">{displayUnit}</span></span>
                     {displaySecondaryQuantity !== '--' && (
-                      <span className="text-xs text-fg-muted font-mono">≈ {displaySecondaryQuantity} <span className="font-sans text-[10px] text-fg-muted">{displaySecondaryUnit}</span></span>
+                      <span className="text-xs text-fg-muted font-mono">≈ {displaySecondaryQuantity}</span>
                     )}
                   </div>
 
@@ -501,8 +498,8 @@ export function ClosedPositions() {
                     <AppTooltip description="Average entry price and average exit price of the position.">
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('positions.entryPrice', 'Entry Price')} / {t('positionsHistory.closePrice', 'Exit Price')}</span>
                     </AppTooltip>
-                    <span className="font-mono text-fg text-sm truncate">{formatPrice(pos.entryPrice, isFiatPair)}</span>
-                    <span className="font-mono text-fg text-xs truncate">{formatPrice(pos.closePrice, isFiatPair)}</span>
+                    <span className="font-mono text-fg text-sm truncate">{formatCurrency(pos.entryPrice, 'priceFiat', isFiatPair)}</span>
+                    <span className="font-mono text-fg text-xs truncate">{formatCurrency(pos.closePrice, 'priceFiat', isFiatPair)}</span>
                   </div>
 
                   {/* Realized PnL (ROE) */}
@@ -547,7 +544,7 @@ export function ClosedPositions() {
                       <span className={`font-mono text-xs ${roiClass}`}>{roiStr}</span>
                       {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
                         <span className={`font-mono text-[10px] ${pnlClass} opacity-80`}>
-                          ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)}
+                          ≈ {inverseVals.realizedPnl > 0 ? '+' : ''}{formatCurrency(inverseVals.realizedPnl, 'usd', 2)}
                         </span>
                       ) : null}
                     </div>

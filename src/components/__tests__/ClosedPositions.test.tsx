@@ -141,6 +141,22 @@ describe('ClosedPositions', () => {
     expect(screen.getByText('+$1.01')).toBeInTheDocument();
   });
 
+  it('renders the position value and the entry/exit prices in the active currency', () => {
+    useSettingsStore.setState({ fiatCurrency: 'BRL', locale: 'pt-BR' });
+    vi.mocked(usePositionHistory).mockReturnValue(hookResult({
+      // Bybit linear: position value = size × entry price = 60,000 USD → 300,000 BRL.
+      positions: [closed({ id: 'h1', symbol: 'BTCUSDT', size: 1, entryPrice: 60000, closePrice: 61000 })],
+    }) as never);
+
+    const { container } = renderPage();
+
+    // Value column carries the active symbol instead of a fixed "USD" suffix,
+    // and the entry price is converted too (BRL rate 5).
+    expect(screen.getAllByText(/R\$\s*300\.000,00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/R\$\s*305\.000,00/).length).toBeGreaterThan(0);
+    expect(container.textContent).not.toMatch(/\bUSD\b/);
+  });
+
   it('opens the export menu and calls the CSV exporter with the filtered rows', () => {
     renderPage();
 

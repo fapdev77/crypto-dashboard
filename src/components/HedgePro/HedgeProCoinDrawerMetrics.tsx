@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { HedgeCoinSummary } from '../../utils/hedgeUtils';
 import { AppTooltip } from '../ui/Tooltip';
 import { HedgePnlConceptMode } from './HedgeProDashboard';
+import type { CurrencyFormatType } from '../../hooks/useFormatCurrency';
 
 interface HedgeProCoinDrawerMetricsProps {
   coin: HedgeCoinSummary;
   formatCurrency: (
     value: number | undefined | null,
-    type?: 'usd' | 'crypto' | 'price' | 'compact',
-    decimalsOrSymbol?: number | string,
+    type?: CurrencyFormatType,
+    decimalsOrSymbol?: number | string | boolean,
   ) => string;
   pnlConceptMode?: HedgePnlConceptMode;
 }
