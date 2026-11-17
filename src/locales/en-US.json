@@ -659,7 +659,7 @@
     "detailedMode": "Detailed",
     "detailedModeTooltip": "Detailed: shows all metrics, Hedge/Exposure and the expandable detail grid",
     "liteMode": "Lite",
-    "liteModeTooltip": "Lite: shows only symbol, size, prices and unrealized PnL",
+    "liteModeTooltip": "Lite: one row per position — account/symbol, side/leverage, size/value, PnL and prices",
     "longCount": "{{count}} Longs",
     "shortCount": "{{count}} Shorts",
     "entryPriceTooltip": "Average entry price calculated for this position.",
@@ -681,7 +681,18 @@
     "positionValue": "Position Value",
     "roe": "ROE",
     "isolated": "Isolated",
-    "cross": "Cross"
+    "cross": "Cross",
+    "lite": {
+      "accountSymbol": "Broker/Account/Symbol",
+      "sideLeverage": "Side/Leverage/Mode",
+      "sizeValue": "Position Size/Value",
+      "realized": "PnL Realized",
+      "unrealized": "PnL Unrealized",
+      "prices": "Entry/Mark/Liquidation"
+    },
+    "long": "Long",
+    "short": "Short",
+    "net": "Net"
   },
   "positionsHistory": {
     "title": "Positions History",

@@ -126,7 +126,7 @@ La pagina **Settings** organizza la configurazione in **10 schede modulari**:
 - **Indicatore di Esposizione**: Barra grafica tricolore (% Protetto, % Esposto, % Leva).
 
 ### 💼 Open Positions (Posizioni Attive — Detailed & Lite)
-- Visualizzazione dettagliata o compatta con prezzo di ingresso, mark price, prezzo di liquidazione e avvisi di rischio.
+- Visualizzazione dettagliata (tutte le metriche e pannello espandibile) o **Lite**, che mostra ogni posizione in un'unica riga con sei colonne: exchange/conto/simbolo, lato/leva/modalità, dimensione/valore, PnL realizzato e non realizzato, entrata/mark/liquidazione. Su mobile ogni colonna diventa una riga.
 
 ### 📂 Closed Positions (Storico Posizioni e Analisi)
 - Riepilogo delle posizioni chiuse con **Win Rate %**, **Profit Factor** ed esportazione in **CSV**, **Excel** e **PDF**.

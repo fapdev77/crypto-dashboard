@@ -659,7 +659,7 @@
     "detailedMode": "Detallado",
     "detailedModeTooltip": "Detallado: muestra todas las métricas, Hedge/Exposición y el panel expandible de detalles",
     "liteMode": "Lite",
-    "liteModeTooltip": "Lite: muestra solo símbolo, tamaño, precios y PnL no realizado",
+    "liteModeTooltip": "Lite: una fila por posición — cuenta/símbolo, lado/apalancamiento, tamaño/valor, PnL y precios",
     "longCount": "{{count}} Longs",
     "shortCount": "{{count}} Shorts",
     "entryPriceTooltip": "Precio promedio de entrada calculado para esta posición.",
@@ -681,7 +681,18 @@
     "positionValue": "Valor de Posición",
     "roe": "ROE",
     "isolated": "Isolated",
-    "cross": "Cross"
+    "cross": "Cross",
+    "lite": {
+      "accountSymbol": "Exchange/Cuenta/Símbolo",
+      "sideLeverage": "Lado/Apalancamiento/Modo",
+      "sizeValue": "Tamaño/Valor",
+      "realized": "PnL Realizado",
+      "unrealized": "PnL No Realizado",
+      "prices": "Entrada/Marca/Liquidación"
+    },
+    "long": "Long",
+    "short": "Short",
+    "net": "Net"
   },
   "positionsHistory": {
     "title": "Historial de Posiciones",

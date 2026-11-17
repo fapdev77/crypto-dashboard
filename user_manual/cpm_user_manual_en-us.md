@@ -219,7 +219,7 @@ Promoted to a **dedicated top-level module** in the sidebar, tailored for fundin
 - **Coin Drawer Metrics (`HedgeProCoinDrawerMetrics`)**: Expand any coin row to inspect individual position levels, entry prices, and margin details.
 
 ### 💼 Open Positions (Active Positions — Detailed & Lite Modes)
-- **View Density Modes**: Switch between **Detailed** view (comprehensive cards) and **Lite** view (compact high-density tabular layout).
+- **View Density Modes**: Switch between **Detailed** view (comprehensive cards with Hedge/Exposure and the expandable detail grid) and **Lite** view, which shows each position as a single row with six columns: broker/account/symbol, side/leverage/mode, size/value, realized and unrealized PnL, entry/mark/liquidation price. On mobile each column becomes its own line.
 - **Core Indicators**: Live mark price via short-polling, entry price, ROE%, unrealized PnL, margin mode (Cross/Isolated), effective leverage, and Liquidation Price with warning color alerts.
 - **Dynamic Coin Logos (`CoinIcon`)**: Multi-tiered fallback logic ensuring crisp visual logos for all traded instruments.
 
@@ -450,7 +450,7 @@ To ensure non-USDT funding balances and smaller cap tokens on Bitget and OKX are
 - **Exponential Backoff with Jitter for Network Drops**: Transient connectivity drops retry on an exponential delay schedule (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) with random jitter, stopping after 5 attempts via circuit breaker.
 - **Global Error Boundary**: Unhandled React rendering errors trigger an intuitive **Safe Recovery** screen with error stack diagnostics and single-click recovery buttons: **Reload Dashboard** and **Clear Cache & Reload**.
 - **Instant Scroll Position Reset**: Tab transitions automatically reset scroll positions to top-left (`useLayoutEffect`), ensuring optimal viewing upon switching views.
-- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **112 test files with 945 unit and integration tests**.
+- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **112 test files with 950 unit and integration tests**.
 
 ---
 

@@ -173,8 +173,8 @@ Módulo dedicado na barra lateral concebido para arbitragem de taxas de financia
 - **Medidor de Exposição do Portefólio**: Barra gráfica tricolor (% Protegido, % Exposto, % Alavancagem).
 
 ### 💼 Open Positions (Posições Ativas — Detailed & Lite)
-- Alternância entre visualização detalhada em cartões e formato de tabela compacta.
-- Apresentação de Preço de Entrada, Preço Mark, Preço de Liquidação, ROE% e alavancagem efetiva.
+- Alternância entre visualização detalhada em cartões (com Hedge/Exposição e painel expansível) e formato **Lite**, que apresenta cada posição numa única linha com seis colunas (corretora/conta/símbolo, lado/alavancagem/modo, tamanho/valor, PnL realizado e não realizado, entrada/marcação/liquidação), empilhadas uma por linha no mobile.
+- Apresentação de conta/ativo, lado/alavancagem, tamanho/valor, PnL realizado e não realizado, Preço de Entrada, Preço Mark, Preço de Liquidação e TP/SL.
 
 ### 📂 Closed Positions (Histórico de Posições e Analytics)
 - Registo completo de posições encerradas com métricas de **Win Rate %**, **Profit Factor** e exportação para **CSV**, **Excel (.xlsx)** e **PDF**.

@@ -10,6 +10,7 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 import { PositionCard } from './PositionCard';
+import { PositionCardLite, PositionsLiteHeader } from './PositionCardLite';
 import { usePagination } from '../hooks/usePagination';
 import { Pagination } from './ui/Pagination';
 import { SimulationModeBadge } from './ui/SimulationModeBadge';
@@ -151,41 +152,43 @@ export function OpenPositions() {
                       ? 'bg-line text-fg shadow-sm font-semibold'
                       : 'text-fg-muted hover:text-fg'
                   }`}
-                  title={t('positions.liteModeTooltip', 'Lite: shows only symbol, size, prices and unrealized PnL')}
+                  title={t('positions.liteModeTooltip', 'Lite: one row per position — account/symbol, side/leverage, size/value, PnL and prices')}
                 >
                   {t('positions.liteMode', 'Lite')}
                 </button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-fg-muted whitespace-nowrap">{t('positions.hedgeExposedModeLabel', 'For Hedge Pro positions, show exposed balance by:')}</span>
-              <div className="flex bg-canvas p-1 rounded-lg border border-line w-max">
-                <button
-                  type="button"
-                  onClick={() => setHedgeExposedMode('gross')}
-                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
-                    hedgeExposedMode === 'gross'
-                      ? 'bg-line text-fg shadow-sm font-semibold'
-                      : 'text-fg-muted hover:text-fg'
-                  }`}
-                  title={t('positions.grossModeTooltip', 'Gross: Uses fixed Wallet Balance (without unrealized PnL)')}
-                >
-                  {t('positions.grossMode', 'Gross')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHedgeExposedMode('net')}
-                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
-                    hedgeExposedMode === 'net'
-                      ? 'bg-line text-fg shadow-sm font-semibold'
-                      : 'text-fg-muted hover:text-fg'
-                  }`}
-                  title={t('positions.netModeTooltip', 'Net: Uses Net Balance / Account Equity (including unrealized PnL)')}
-                >
-                  {t('positions.netMode', 'Net')}
-                </button>
+            {positionsViewMode === 'detailed' && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-fg-muted whitespace-nowrap">{t('positions.hedgeExposedModeLabel', 'For Hedge Pro positions, show exposed balance by:')}</span>
+                <div className="flex bg-canvas p-1 rounded-lg border border-line w-max">
+                  <button
+                    type="button"
+                    onClick={() => setHedgeExposedMode('gross')}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                      hedgeExposedMode === 'gross'
+                        ? 'bg-line text-fg shadow-sm font-semibold'
+                        : 'text-fg-muted hover:text-fg'
+                    }`}
+                    title={t('positions.grossModeTooltip', 'Gross: Uses fixed Wallet Balance (without unrealized PnL)')}
+                  >
+                    {t('positions.grossMode', 'Gross')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHedgeExposedMode('net')}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                      hedgeExposedMode === 'net'
+                        ? 'bg-line text-fg shadow-sm font-semibold'
+                        : 'text-fg-muted hover:text-fg'
+                    }`}
+                    title={t('positions.netModeTooltip', 'Net: Uses Net Balance / Account Equity (including unrealized PnL)')}
+                  >
+                    {t('positions.netMode', 'Net')}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         }
         exchange={{
@@ -274,15 +277,19 @@ export function OpenPositions() {
           )}
 
           <div className="flex flex-col gap-3 mt-4">
-            {paginatedPositions.map((pos) => (
-              <PositionCard
-                key={pos.id}
-                pos={pos}
-                variant={positionsViewMode}
-                isExpanded={!!expandedRows[pos.id]}
-                onToggle={() => toggleRow(pos.id)}
-              />
-            ))}
+            {positionsViewMode === 'lite' && <PositionsLiteHeader />}
+            {paginatedPositions.map((pos) =>
+              positionsViewMode === 'lite' ? (
+                <PositionCardLite key={pos.id} pos={pos} />
+              ) : (
+                <PositionCard
+                  key={pos.id}
+                  pos={pos}
+                  isExpanded={!!expandedRows[pos.id]}
+                  onToggle={() => toggleRow(pos.id)}
+                />
+              )
+            )}
           </div>
 
           {totalItems > 0 && (

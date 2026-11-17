@@ -182,7 +182,7 @@ Dedicated module for funding arbitrage and delta-neutral risk management in COIN
 - **Portfolio Exposure Bar**: Visual tri-colour gauge showing % Protected Capital (green), % Exposed Capital (yellow), and Leverage Extent (orange/red).
 
 ### 💼 Open Positions (Active Positions — Detailed & Lite Modes)
-- Switch between **Detailed** view and **Lite** view with live mark prices, entry prices, ROE%, and liquidation warnings.
+- Switch between **Detailed** view and **Lite** view: Lite shows each position as a single row with six columns (broker/account/symbol, side/leverage/mode, size/value, realized and unrealized PnL, entry/mark/liquidation price) with live mark prices and liquidation warnings, stacking one column per line on mobile.
 
 ### 📂 Closed Positions (Historical Positions & Analytics)
 - Auditable ledger of closed positions with **Win Rate %**, **Profit Factor**, and export to **CSV**, **Excel (.xlsx)**, and **PDF**.

@@ -157,7 +157,7 @@ describe('OpenPositions', () => {
     expect(screen.getByText('Breakeven price')).toBeInTheDocument();
   });
 
-  it('defaults to the detailed view and hides secondary cells in lite mode', () => {
+  it('defaults to the detailed view and switches to the compact lite card', () => {
     useApiKeysStore.setState({ keys: [activeKey] });
     usePositionsStore.setState({ positions: { a: position({ id: 'a' }) } });
 
@@ -165,11 +165,17 @@ describe('OpenPositions', () => {
 
     expect(useSettingsStore.getState().positionsViewMode).toBe('detailed');
     expect(screen.getByText('Liq. Price')).toBeInTheDocument();
+    expect(screen.queryByText('Side/Leverage/Mode')).not.toBeInTheDocument();
+    expect(screen.getByText(/For Hedge Pro positions/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Lite'));
 
     expect(useSettingsStore.getState().positionsViewMode).toBe('lite');
+    expect(screen.getAllByText('Side/Leverage/Mode').length).toBeGreaterThan(0);
     expect(screen.queryByText('Liq. Price')).not.toBeInTheDocument();
+    expect(screen.queryByText(/For Hedge Pro positions/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Gross')).not.toBeInTheDocument();
+    expect(screen.queryByText('Net')).not.toBeInTheDocument();
     expect(screen.getByText('BTCUSDT')).toBeInTheDocument();
   });
 

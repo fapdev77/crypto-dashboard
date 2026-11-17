@@ -126,7 +126,7 @@ La pantalla **Settings** agrupa la gobernanza en **10 tarjetas modulares**:
 - **Barra de Exposición**: Indicador tricolor (% Protegido, % Expuesto, % Apalancamiento).
 
 ### 💼 Open Positions (Posiciones Activas — Detailed & Lite)
-- Modos detallado y compacto con precio de entrada, precio mark, precio de liquidación, ROE% y apalancamiento.
+- Modo detallado (todas las métricas y panel expandible) y modo **Lite**, que muestra cada posición en una sola fila con seis columnas: exchange/cuenta/símbolo, lado/apalancamiento/modo, tamaño/valor, PnL realizado y no realizado, entrada/mark/liquidación. En móvil cada columna pasa a una línea propia.
 
 ### 📂 Closed Positions (Historial de Posiciones y Análisis)
 - Resumen estadístico de operaciones cerradas (**Win Rate %**, **Profit Factor**) con exportación a **CSV**, **Excel** y **PDF**.

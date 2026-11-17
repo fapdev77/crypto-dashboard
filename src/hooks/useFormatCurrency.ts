@@ -5,7 +5,7 @@ import { SUPPORTED_FIAT_CURRENCIES, SUPPORTED_LOCALES, DEFAULT_FIAT_RATES } from
 import Big from 'big.js';
 
 /** Currency/mask type for formatting values via useFormatCurrency. */
-export type CurrencyFormatType = 'usd' | 'fiat' | 'crypto' | 'price' | 'compact';
+export type CurrencyFormatType = 'usd' | 'fiat' | 'crypto' | 'price' | 'priceFiat' | 'compact';
 
 /**
  * Hook returning a formatCurrency function that respects the global privacy mode,
@@ -29,14 +29,15 @@ export function useFormatCurrency() {
   const formatCurrency = (
     value: number | Big | undefined | null,
     type: CurrencyFormatType = 'usd',
-    decimalsOrSymbol?: number | string
+    decimalsOrSymbol?: number | string | boolean
   ): string => {
-    // If privacy mode is active, mask the numeric values with the active currency symbol
+    // If privacy mode is active, mask the numeric values with the active currency symbol.
+    // 'priceFiat' stays visible: market prices are public and the position cards always showed them.
     if (isPrivateMode) {
       if (type === 'usd' || type === 'fiat' || type === 'compact') {
         return fiatCurrency === 'BRL' ? `${symbol} ••••` : `${symbol}••••`;
       }
-      return '••••';
+      if (type !== 'priceFiat') return '••••';
     }
 
     // Convert Big.js instances safely to numbers for the base formatters
@@ -51,6 +52,7 @@ export function useFormatCurrency() {
 
     // Safety fallback for non-numeric, null, or undefined values
     if (numericValue === null || numericValue === undefined || isNaN(numericValue)) {
+      if (type === 'priceFiat') return '--';
       return type === 'crypto' ? '0.00000000' : '0.00';
     }
 
@@ -72,11 +74,33 @@ export function useFormatCurrency() {
       }
 
       case 'crypto':
-        return formatCrypto(numericValue, decimalsOrSymbol ?? 8, numberLocale);
+        return formatCrypto(
+          numericValue,
+          typeof decimalsOrSymbol === 'string' || typeof decimalsOrSymbol === 'number' ? decimalsOrSymbol : 8,
+          numberLocale
+        );
 
       case 'price': {
-        const isFiat = decimalsOrSymbol === undefined ? true : decimalsOrSymbol === 'true';
+        const isFiat = typeof decimalsOrSymbol === 'boolean'
+          ? decimalsOrSymbol
+          : decimalsOrSymbol === undefined
+            ? true
+            : decimalsOrSymbol === 'true';
         return formatPrice(numericValue, isFiat, numberLocale);
+      }
+
+      // Exchange prices (quoted in the contract's own currency) converted to the active display
+      // currency, with the matching symbol and locale-aware precision.
+      case 'priceFiat': {
+        const isFiatPair = typeof decimalsOrSymbol === 'boolean' ? decimalsOrSymbol : true;
+        const converted = fiatCurrency === 'USD' ? numericValue : numericValue * currentRate;
+        const formatted = formatPrice(converted, isFiatPair, numberLocale);
+        if (formatted === '--') return '--';
+
+        const spacing = fiatCurrency === 'BRL' ? ' ' : '';
+        const isNegative = formatted.startsWith('-');
+        const magnitude = isNegative ? formatted.slice(1) : formatted;
+        return `${isNegative ? '-' : ''}${symbol}${spacing}${magnitude}`;
       }
 
       case 'compact': {

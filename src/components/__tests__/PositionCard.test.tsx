@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { PositionCard } from '../PositionCard';
+import { PositionCardLite } from '../PositionCardLite';
 import { TooltipProvider } from '../ui/Tooltip';
 import { PrivacyProvider } from '../../context/PrivacyContext';
 import { useSettingsStore } from '../../store/settingsStore';
@@ -49,13 +50,21 @@ const makePosition = (overrides: Partial<UnifiedPosition> = {}): UnifiedPosition
 const renderCard = (
   pos: UnifiedPosition,
   isExpanded = false,
-  onToggle = vi.fn(),
-  variant: 'detailed' | 'lite' = 'detailed'
+  onToggle = vi.fn()
 ) =>
   render(
     <PrivacyProvider>
       <TooltipProvider>
-        <PositionCard pos={pos} variant={variant} isExpanded={isExpanded} onToggle={onToggle} />
+        <PositionCard pos={pos} isExpanded={isExpanded} onToggle={onToggle} />
+      </TooltipProvider>
+    </PrivacyProvider>
+  );
+
+const renderLite = (pos: UnifiedPosition) =>
+  render(
+    <PrivacyProvider>
+      <TooltipProvider>
+        <PositionCardLite pos={pos} />
       </TooltipProvider>
     </PrivacyProvider>
   );
@@ -159,23 +168,50 @@ describe('PositionCard', () => {
     window.removeEventListener('navigate-to-tab', listener);
   });
 
-  it('renders the lite variant with only the essential cells and no detail grid', () => {
-    renderCard(makePosition(), true, vi.fn(), 'lite');
+  it('renders the lite card as one row covering the six lite columns', () => {
+    renderLite(makePosition({ instrumentType: 'INVERSE', symbol: 'BTCUSD', liquidationPrice: 55000, realizedPnl: 12 }));
 
-    expect(screen.getByText('BTCUSDT')).toBeInTheDocument();
-    expect(screen.getByText(/Unrealized PnL/)).toBeInTheDocument();
-    expect(screen.queryByText('Liq. Price')).not.toBeInTheDocument();
-    expect(screen.queryByText('Hedge / Exposure')).not.toBeInTheDocument();
-    expect(screen.queryByText('Breakeven price')).not.toBeInTheDocument();
+    expect(screen.getByText('BTCUSD')).toBeInTheDocument();
+    expect(screen.getByText('Side/Leverage/Mode')).toBeInTheDocument();
+    expect(screen.getByText('Position Size/Value')).toBeInTheDocument();
+    expect(screen.getByText('PnL Realized')).toBeInTheDocument();
+    expect(screen.getByText('PnL Unrealized')).toBeInTheDocument();
+    expect(screen.getByText('Entry/Mark/Liquidation')).toBeInTheDocument();
+    expect(screen.getByText('INVERSE')).toBeInTheDocument();
+    expect(screen.getByText(/55,000/)).toBeInTheDocument();
   });
 
-  it('does not toggle when a lite card is clicked', () => {
-    const onToggle = vi.fn();
-    renderCard(makePosition(), false, onToggle, 'lite');
+  it('shows entry, mark and liquidation prices in the active display currency in both views', () => {
+    useSettingsStore.setState({ fiatCurrency: 'BRL', locale: 'pt-BR' });
+    const pos = makePosition({ entryPrice: 60000, markPrice: 62000, liquidationPrice: 55000 });
+
+    const detailed = renderCard(pos);
+    expect(screen.getByText('R$ 300.000,00')).toBeInTheDocument();
+    expect(screen.getByText('R$ 310.000,00')).toBeInTheDocument();
+    expect(screen.getByText('R$ 275.000,00')).toBeInTheDocument();
+    detailed.unmount();
+
+    renderLite(pos);
+    expect(screen.getByText('R$ 300.000,00')).toBeInTheDocument();
+    expect(screen.getByText('R$ 310.000,00')).toBeInTheDocument();
+    expect(screen.getByText('R$ 275.000,00')).toBeInTheDocument();
+  });
+
+  it('reports ROE in the lite unrealized column and keeps the realized column to realized PnL', () => {
+    const { container } = renderLite(makePosition({ unrealizedPnl: 1000, realizedPnl: 50, roe: 33.3 }));
+
+    expect(container.querySelector('[data-lite-column="unrealized"]')).toHaveTextContent('33.30%');
+    expect(container.querySelector('[data-lite-column="realized"]')).not.toHaveTextContent('33.30%');
+  });
+
+  it('keeps the lite card collapsed and non-interactive', () => {
+    renderLite(makePosition());
 
     fireEvent.click(screen.getByText('BTCUSDT'));
 
-    expect(onToggle).not.toHaveBeenCalled();
+    expect(screen.getByText('Side/Leverage/Mode')).toBeInTheDocument();
+    expect(screen.queryByText('Hedge / Exposure')).not.toBeInTheDocument();
+    expect(screen.queryByText('Breakeven price')).not.toBeInTheDocument();
   });
 
   it('marks non-inverse positions as plain hedge/exposure without the mode toggle', () => {
