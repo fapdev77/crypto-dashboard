@@ -1,3 +1,10 @@
+# [2.50.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.49.0...v2.50.0) (2026-11-17)
+
+
+### Features
+
+* update internationalization keys count to 1,831 across all languages and enhance time period options with localization support ([3279db4](https://github.com/fapdev77/crypto-dashboard/commit/3279db43bd0f093715ec9a7f293340e080b88268))
+
 # [2.49.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.48.0...v2.49.0) (2026-11-17)
 
 

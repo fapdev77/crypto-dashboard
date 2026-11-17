@@ -1,6 +1,6 @@
 # Technical Specifications & Architecture Design
 
-> **Document Version:** 2.49.0  
+> **Document Version:** 2.50.0  
 > **Status:** Production-Ready & Verified  
 > **Test Coverage:** 113 test files, 953 passing tests (Vitest 4.1)
 
@@ -339,4 +339,4 @@ Contagens de testes e de chaves i18n **não** são propagadas pelo release: elas
 
 ---
 
-*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.49.0).*
+*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.50.0).*
