@@ -1,3 +1,10 @@
+# [2.46.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.45.0...v2.46.0) (2026-11-17)
+
+
+### Features
+
+* add PositionCardLite component for compact position display ([3dfdcb6](https://github.com/fapdev77/crypto-dashboard/commit/3dfdcb673aca194b189c1e7d8cc3fcd04954c7d7))
+
 # [2.45.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.44.0...v2.45.0) (2026-11-16)
 
 

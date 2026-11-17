@@ -1,6 +1,6 @@
 # Crypto Portfolio Manager: Multi-Exchange
 
-[![Version](https://img.shields.io/badge/version-2.45.0-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-2.46.0-blue.svg)](package.json)
 [![Tests](https://img.shields.io/badge/tests-950%20passed-success.svg)](specs/PRD.md)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/security-Zero--Trust%20Client-orange.svg)](user_manual/cpm_user_manual_pt-br.md)
