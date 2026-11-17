@@ -440,7 +440,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
           {/* Zone 2: Direct Primary Actions + 3-Dots Kebab Menu + Close */}
           <div className="flex items-center gap-1 shrink-0">
             {/* Direct New Conversation Button */}
-            <AppTooltip description="New conversation" side="bottom">
+            <AppTooltip description={t('ai.chat.tooltips.newConversation', 'New conversation')} side="bottom">
               <button
                 type="button"
                 onClick={handleNewConversation}
@@ -469,7 +469,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
 
             {/* 3-Dots Kebab Menu Dropdown */}
             <div className="relative" ref={menuRef}>
-              <AppTooltip description="More options" side="bottom">
+              <AppTooltip description={t('ai.chat.tooltips.moreOptions', 'More options')} side="bottom">
                 <button
                   type="button"
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -604,7 +604,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
             </div>
 
             {/* Close Drawer Button */}
-            <AppTooltip description="Close Assistant (Ctrl+J)" side="bottom">
+            <AppTooltip description={t('ai.chat.tooltips.close', 'Close Assistant (Ctrl+J)')} side="bottom">
               <button
                 type="button"
                 onClick={closeDrawer}
@@ -935,7 +935,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                                   })
                                 }
                                 className="text-fg-muted hover:text-fg cursor-pointer flex items-center gap-1 font-mono text-[10px] transition"
-                                title="Download complete analysis as PDF report"
+                                title={t('ai.chat.tooltips.downloadPdf', 'Download complete analysis as PDF report')}
                               >
                                 <FileText className="w-3 h-3 text-accent" />
                                 <span>Export PDF</span>
@@ -1004,7 +1004,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
               />
 
               {isThinking ? (
-                <AppTooltip description="Stop request (Esc)" side="top">
+                <AppTooltip description={t('ai.chat.tooltips.stop', 'Stop request (Esc)')} side="top">
                   <button
                     type="button"
                     onClick={handleCancelRequest}
@@ -1015,7 +1015,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                   </button>
                 </AppTooltip>
               ) : (
-                <AppTooltip description="Send message (Enter)" side="top">
+                <AppTooltip description={t('ai.chat.tooltips.send', 'Send message (Enter)')} side="top">
                   <button
                     type="button"
                     onClick={() => handleSendMessage()}

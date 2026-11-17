@@ -365,7 +365,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
           <span className={`font-mono text-sm ${uplColor}`}>
             {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
           </span>
-          <AppTooltip description="Return on Equity (ROE) based on Unrealized PnL.">
+          <AppTooltip description={t('positions.tooltips.roe')}>
             <span className={`font-mono text-xs w-max cursor-help border-b border-dashed border-fg-muted/50 ${roeColor}`}>
               {inverseVals.isInverse && pos.unrealizedPnl !== undefined ? (pos.unrealizedPnl > 0 ? '+' : '') + formatCurrency(inverseVals.unrealizedPnl, 'usd', 2) + ' / ' : ''}
               {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
@@ -453,7 +453,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               </button>
             </div>
           ) : (
-            <AppTooltip description="Position hedge/exposure level">
+            <AppTooltip description={t('positions.tooltips.hedgeExposure')}>
               <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">
                 Hedge / Exposure
               </span>
@@ -463,14 +463,14 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             <div
               onClick={handleNavigateToHedgePro}
               className="cursor-pointer group/hedge hover:opacity-90 transition-opacity"
-              title="Click to view in Hedge Pro"
+              title={t('positions.tooltips.viewInHedgePro')}
             >
               <div className="flex items-center justify-between text-[10px] font-mono leading-none">
                 <span className="text-success">{hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
                 <div className="flex items-center gap-1">
                   <span className="text-fg">{hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
                   {hedgeLevels.barMetrics.leveragedWidthPct > 0 && (
-                    <span className="text-amber-400 font-semibold" title="Leveraged long exposure">
+                    <span className="text-amber-400 font-semibold" title={t('positions.tooltips.leveragedLong')}>
                       +{((hedgeLevels.barMetrics.leveragedOfBalancePct || 0)).toFixed(0)}%
                     </span>
                   )}
@@ -577,7 +577,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             {pos.instrumentType === 'INVERSE' ? (
               <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
-                  <AppTooltip description="Click to view details in Hedge Pro Dashboard">
+                  <AppTooltip description={t('positions.tooltips.viewDetailsHedgePro')}>
                     <button
                       type="button"
                       onClick={handleNavigateToHedgePro}

@@ -129,7 +129,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
             {t('ai.settings.models.totalModels', 'Total Models:')} <strong className="text-fg font-bold">{models.length}</strong>
           </span>
 
-          <AppTooltip description="Configure a new local (Ollama) or cloud AI model" side="left">
+          <AppTooltip description={t('ai.models.tooltips.add', 'Configure a new local (Ollama) or cloud AI model')} side="left">
             <button
               onClick={onAddModel}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-accent hover:bg-accent/80 text-white rounded-lg text-xs font-semibold shadow-md transition cursor-pointer"
@@ -164,7 +164,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                 <div className="flex items-start gap-4 flex-1 min-w-0">
                   {/* Rank & Reorder Arrows */}
                   <div className="flex flex-col items-center justify-center shrink-0 text-fg-muted pt-0.5">
-                    <AppTooltip description="Move up in execution priority" side="top">
+                    <AppTooltip description={t('ai.models.tooltips.moveUp', 'Move up in execution priority')} side="top">
                       <button
                         onClick={() => onReorderModel(model.id, 'up')}
                         disabled={isFirst}
@@ -177,7 +177,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                     <span className="font-mono text-xs font-bold text-fg px-1.5 py-0.5 rounded bg-elevated border border-line my-0.5">
                       #{index + 1}
                     </span>
-                    <AppTooltip description="Move down in execution priority" side="bottom">
+                    <AppTooltip description={t('ai.models.tooltips.moveDown', 'Move down in execution priority')} side="bottom">
                       <button
                         onClick={() => onReorderModel(model.id, 'down')}
                         disabled={isLast}
@@ -232,7 +232,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                             model.modelId.toLowerCase().includes('deepseek-coder'))) ? (
                         <span
                           className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-300 border border-amber-500/40"
-                          title="Models without tool support will have live portfolio queries blocked to prevent hallucinations."
+                          title={t('ai.models.tooltips.noToolSupport', 'Models without tool support will have live portfolio queries blocked to prevent hallucinations.')}
                         >
                           <AlertCircle className="w-3 h-3 text-amber-400" />
                           NO TOOLS (STRICT AUDIT)
@@ -286,7 +286,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                 {/* Right Side: Action Buttons matching reference image */}
                 <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-line/50">
                   {/* 1. Test Connection Button */}
-                  <AppTooltip description="Test latency and connectivity with the AI model" side="top">
+                  <AppTooltip description={t('ai.models.tooltips.test', 'Test latency and connectivity with the AI model')} side="top">
                     <button
                       onClick={() => handleTestConnection(model)}
                       disabled={isTesting}
@@ -348,7 +348,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   </AppTooltip>
 
                   {/* 4. Clone / Duplicate Model Button */}
-                  <AppTooltip description="Clone / duplicate this model" side="top">
+                  <AppTooltip description={t('ai.models.tooltips.clone', 'Clone / duplicate this model')} side="top">
                     <button
                       onClick={() => onCloneModel(model.id)}
                       className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/30 transition cursor-pointer flex items-center justify-center"
@@ -359,7 +359,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   </AppTooltip>
 
                   {/* 5. Edit Model Button */}
-                  <AppTooltip description="Edit parameters and credentials of this model" side="top">
+                  <AppTooltip description={t('ai.models.tooltips.edit', 'Edit parameters and credentials of this model')} side="top">
                     <button
                       onClick={() => onEditModel(model)}
                       className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30 transition cursor-pointer flex items-center justify-center"
@@ -370,7 +370,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   </AppTooltip>
 
                   {/* 6. Delete Model Button */}
-                  <AppTooltip description="Delete this model" side="top">
+                  <AppTooltip description={t('ai.models.tooltips.delete', 'Delete this model')} side="top">
                     <button
                       onClick={() => onDeleteModel(model.id)}
                       className="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 transition cursor-pointer flex items-center justify-center"

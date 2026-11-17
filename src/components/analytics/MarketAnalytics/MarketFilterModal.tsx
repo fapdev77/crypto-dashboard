@@ -253,7 +253,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
               <p className="text-[11px] text-fg-muted">Configure active instrument, markets and exchange data feeds</p>
               <div className="mt-1">
                 <AppTooltip
-                  description="If you notice data inconsistencies or outdated pairs, open the cache and polling settings to force a refresh or adjust the symbol catalog cache expiration time."
+                  description={t('analytics.market.filterModal.cacheHint', 'If you notice data inconsistencies or outdated pairs, open the cache and polling settings to force a refresh or adjust the symbol catalog cache expiration time.')}
                   side="bottom"
                   align="start"
                 >
@@ -286,7 +286,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
             type="button"
             onClick={onClose}
             className="p-1.5 text-fg-muted hover:text-fg rounded-lg hover:bg-elevated transition-colors"
-            title="Close (Esc)"
+            title={t('analytics.market.filterModal.close', 'Close (Esc)')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -496,7 +496,7 @@ export const MarketFilterModal: React.FC<MarketFilterModalProps> = ({ isOpen, on
               {!assetAvailability.isVerified && (
                 <div
                   className="flex items-center gap-1 text-[10px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded"
-                  title="Asset availability not verified in exchange listings catalog; fallback to standard feeds"
+                  title={t('analytics.market.filterModal.unverifiedBadge', 'Asset availability not verified in exchange listings catalog; fallback to standard feeds')}
                 >
                   <AlertTriangle className="w-3 h-3" />
                   <span>Unverified</span>

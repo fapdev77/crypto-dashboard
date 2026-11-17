@@ -25,6 +25,7 @@ import { MissingRatesNotice } from '../transactions/MissingRatesNotice';
 
 export function TradeHistory() {
   const { t } = useTranslation();
+  const fiatCurrency = useSettingsStore(state => state.fiatCurrency) || 'USD';
   const [filters, setFilters] = useState<OrderFilters>({
     exchange: 'All',
     instrument: 'All',
@@ -318,7 +319,7 @@ export function TradeHistory() {
 
           {/* Trade Volume */}
           <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
-            <AppTooltip description={t('trade.tradedVolumeTooltip', 'The estimated USD value of all trades executed within the selected period.')}>
+            <AppTooltip description={t('trade.tradedVolumeTooltip', { currency: fiatCurrency })}>
               <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.tradedVolume', 'Traded Volume')}</span>
             </AppTooltip>
             <span className="text-2xl font-medium text-success mt-1">
@@ -329,14 +330,14 @@ export function TradeHistory() {
 
           {/* Est. Trading Fees */}
           <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
-            <AppTooltip description={t('trade.estTradingFeesTooltip', 'The total estimated USD value of trading fees paid for these trades.')}>
+            <AppTooltip description={t('trade.estTradingFeesTooltip', { currency: fiatCurrency })}>
               <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.estTradingFees', 'Est. Trading Fees')}</span>
             </AppTooltip>
             <span className="text-2xl font-medium text-danger mt-1">
               {totalFeesUsd > 0 ? '-' + formatCurrency(totalFeesUsd, 'usd') : formatCurrency(0, 'usd')}
             </span>
             <span className="text-xs text-fg-muted mt-1">
-              {t('trade.paidFeesConverted', 'Paid fees converted to USD')}
+              {t('trade.paidFeesConverted', { currency: fiatCurrency })}
               {stats.totalTradedVolume > 0 && ` (${((totalFeesUsd / stats.totalTradedVolume) * 100).toFixed(3)}% of volume)`}
             </span>
           </div>
@@ -499,7 +500,7 @@ export function TradeHistory() {
 
                   {/* Col 2: Direction & Type */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="Indicates trade direction, margin mode and order type.">
+                    <AppTooltip description={t('trade.tooltips.directionType')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.direction', 'Direction')} / {t('orders.type', 'Type')}</span>
                     </AppTooltip>
                     <span className={`font-mono text-sm ${isBuy ? 'text-success' : 'text-danger'}`}>
@@ -510,7 +511,7 @@ export function TradeHistory() {
 
                   {/* Col 3: Filled Qty / Value */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="Quantity filled and total USD value of this trade.">
+                    <AppTooltip description={t('trade.tooltips.filledQtyValue', { currency: fiatCurrency })}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.filledQty', 'Filled Qty')} / {t('trade.filledValue', 'Value')}</span>
                     </AppTooltip>
                     <span className="font-mono text-fg text-sm">{filledQtyStr}</span>
@@ -519,7 +520,7 @@ export function TradeHistory() {
 
                   {/* Col 4: Filled Price */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="The price at which the trade was executed.">
+                    <AppTooltip description={t('trade.tooltips.filledPrice')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.filledPrice', 'Filled Price')}</span>
                     </AppTooltip>
                     <span className="font-mono text-fg text-sm">
@@ -529,7 +530,7 @@ export function TradeHistory() {
 
                   {/* Col 5: Trading Fees */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="Trading fees charged for this trade.">
+                    <AppTooltip description={t('trade.tooltips.fee')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.fee', 'Trading Fees')}</span>
                     </AppTooltip>
                     {(() => {
@@ -572,7 +573,7 @@ export function TradeHistory() {
 
                   {/* Col 6: Transaction Time & ID */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-2">
-                    <AppTooltip description="The timestamp when this transaction took place and the exchange order ID it belongs to.">
+                    <AppTooltip description={t('trade.tooltips.timeAndOrderId')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.time', 'Transaction Time')} & {t('transactions.details.orderId', 'Order ID')}</span>
                     </AppTooltip>
                     <div className="flex items-baseline gap-1.5 mt-0.5">

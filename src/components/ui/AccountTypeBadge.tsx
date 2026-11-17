@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccountType, ApiEnvironment, BybitRegion, Exchange } from '../../store/apiKeysStore';
 import { getBybitRegionOption } from '../../utils/bybitEndpoints';
 
@@ -21,6 +22,7 @@ export function AccountTypeBadge({
   className = '',
   size = 'xs'
 }: AccountTypeBadgeProps) {
+  const { t } = useTranslation();
   const sizeClasses = size === 'xs' 
     ? 'text-[9px] px-1.5 py-0.5 leading-tight' 
     : 'text-[10px] px-2 py-0.5';
@@ -28,7 +30,7 @@ export function AccountTypeBadge({
   const subBadge = isSubAccount ? (
     <span
       className={`inline-flex items-center font-mono uppercase tracking-wider rounded border font-medium bg-[#A855F7]/15 text-[#C084FC] border-[#A855F7]/30 select-none ${sizeClasses}`}
-      title="Sub-account"
+      title={t('apiKeys.card.subAccount', 'Sub-Account')}
     >
       SUB
     </span>

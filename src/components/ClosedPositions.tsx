@@ -19,9 +19,11 @@ import { FilterBar } from './ui/FilterBar';
 import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../utils/exportUtils';
 import { Pagination } from './ui/Pagination';
 import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../store/settingsStore';
 
 export function ClosedPositions() {
   const { t } = useTranslation();
+  const fiatCurrency = useSettingsStore(state => state.fiatCurrency) || 'USD';
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
 
@@ -484,7 +486,7 @@ export function ClosedPositions() {
 
                   {/* Size / Value */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="The peak size and USD value of this position before it was closed.">
+                    <AppTooltip description={t('positions.tooltips.peakSizeValue', { currency: fiatCurrency })}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('positions.positionSize', 'Pos Size')} / {t('positions.positionValue', 'Value')}</span>
                     </AppTooltip>
                     <span className="font-mono text-fg text-sm">{displayQuantity} <span className="font-sans text-[10px] text-fg-muted">{displayUnit}</span></span>
@@ -495,7 +497,7 @@ export function ClosedPositions() {
 
                   {/* Entry / Exit Price */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="Average entry price and average exit price of the position.">
+                    <AppTooltip description={t('positions.tooltips.entryExitPrice')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('positions.entryPrice', 'Entry Price')} / {t('positionsHistory.closePrice', 'Exit Price')}</span>
                     </AppTooltip>
                     <span className="font-mono text-fg text-sm truncate">{formatCurrency(pos.entryPrice, 'priceFiat', isFiatPair)}</span>
@@ -552,7 +554,7 @@ export function ClosedPositions() {
 
                   {/* Open Time */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="When the position was first opened.">
+                    <AppTooltip description={t('positions.tooltips.openTime')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('positionsHistory.openTime', 'Open Time')}</span>
                     </AppTooltip>
                     <span className="font-mono text-fg text-sm">
@@ -565,7 +567,7 @@ export function ClosedPositions() {
 
                   {/* Close Time */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="When the position was completely closed.">
+                    <AppTooltip description={t('positions.tooltips.closeTime')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('positionsHistory.closeTime', 'Closed Time')}</span>
                     </AppTooltip>
                     <span className="font-mono text-fg text-sm">

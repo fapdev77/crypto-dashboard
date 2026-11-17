@@ -232,7 +232,7 @@ export function FilterBar({
 
           {activeDropdown === 'exchange' && (
             <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[160px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
-              <AppTooltip description="View all connected exchanges" side="right">
+              <AppTooltip description={t('common.filters.allExchangesTooltip', 'View all connected exchanges')} side="right">
                 <div>
                   <button
                     type="button"
@@ -251,7 +251,7 @@ export function FilterBar({
                 </div>
               </AppTooltip>
               {activeExchanges.map(ex => (
-                <AppTooltip key={ex} description={`Filter by ${ex.toUpperCase()}`} side="right">
+                <AppTooltip key={ex} description={t('common.filters.exchangeTooltip', { exchange: ex.toUpperCase() })} side="right">
                   <div>
                     <button
                       type="button"
@@ -329,7 +329,7 @@ export function FilterBar({
 
           {activeDropdown === 'account' && (
             <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[180px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
-              <AppTooltip description="Show data across all connected accounts" side="right">
+              <AppTooltip description={t('common.filters.allAccountsTooltip', 'Show data across all connected accounts')} side="right">
                 <div>
                   <button
                     type="button"
@@ -420,7 +420,7 @@ export function FilterBar({
           
           {activeDropdown === 'instrument' && (
             <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[140px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
-              <AppTooltip description="Show all instruments and markets" side="right">
+              <AppTooltip description={t('common.filters.allInstrumentsTooltip', 'Show all instruments and markets')} side="right">
                 <div>
                   <button
                     type="button"
@@ -510,7 +510,7 @@ export function FilterBar({
           
           {activeDropdown === 'side' && (
             <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[140px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
-              <AppTooltip description="Show all trade sides" side="right">
+              <AppTooltip description={t('common.filters.allSidesTooltip', 'Show all trade sides')} side="right">
                 <div>
                   <button
                     type="button"
@@ -583,7 +583,7 @@ export function FilterBar({
           
           {activeDropdown === 'type' && (
             <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[140px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
-              <AppTooltip description="Show all order / trade types" side="right">
+              <AppTooltip description={t('common.filters.allTypesTooltip', 'Show all order / trade types')} side="right">
                 <div>
                   <button
                     type="button"
@@ -676,7 +676,7 @@ export function FilterBar({
 
           {activeDropdown === 'status' && (
             <div className="absolute z-50 left-0 right-0 sm:right-auto sm:w-full min-w-full sm:min-w-[160px] mt-1 bg-elevated border border-line rounded-lg shadow-xl overflow-hidden max-h-[300px] overflow-y-auto custom-scrollbar">
-              <AppTooltip description="Show records across all statuses" side="right">
+              <AppTooltip description={t('common.filters.allStatusesTooltip', 'Show records across all statuses')} side="right">
                 <div>
                   <button
                     type="button"
@@ -856,7 +856,7 @@ export function FilterBar({
             onFocus={() => setActiveDropdown(null)}
           />
           {search.value && (
-            <AppTooltip description="Clear search">
+            <AppTooltip description={t('common.filters.clearSearch', 'Clear search')}>
               <button
                 type="button"
                 onClick={() => search.onChange('')}

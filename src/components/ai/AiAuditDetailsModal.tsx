@@ -140,7 +140,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
             <button
               onClick={handleDownloadFullBundle}
               className="p-1.5 bg-line hover:bg-[#282931] text-fg-muted hover:text-fg rounded-lg border border-line transition cursor-pointer"
-              title="Download Complete Log"
+              title={t('ai.audit.tooltips.downloadLog', 'Download Complete Log')}
             >
               <Download className="w-4 h-4" />
             </button>
@@ -418,7 +418,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   Complete Request Raw JSON
                 </span>
                 <AiRawJsonViewer
-                  title="Request Payload JSON"
+                  title={t('ai.audit.tooltips.requestPayload', 'Request Payload JSON')}
                   data={debugData?.request?.rawPayload || debugData?.request || log?.fullPayloadSnapshot?.requestPayload || {}}
                 />
               </div>
@@ -558,7 +558,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
                   Raw Provider Response JSON Object
                 </span>
                 <AiRawJsonViewer
-                  title="Raw Provider Response JSON"
+                  title={t('ai.audit.tooltips.rawResponse', 'Raw Provider Response JSON')}
                   data={
                     debugData?.response?.rawResponse ||
                     debugData?.response ||
@@ -588,7 +588,7 @@ export const AiAuditDetailsModal: React.FC<AiAuditDetailsModalProps> = ({
               </div>
 
               <AiRawJsonViewer
-                title="Full Execution Audit Record"
+                title={t('ai.audit.tooltips.fullRecord', 'Full Execution Audit Record')}
                 data={{
                   auditLog: log,
                   rawDebug: debugData,

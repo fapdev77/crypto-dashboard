@@ -298,7 +298,7 @@ export function LanguageCurrencyModal({
             onClick={handleRefreshRates}
             disabled={isRefreshingRates}
             className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors ml-2 shrink-0 disabled:opacity-50"
-            title="Atualizar cotações cambiais"
+            title={t('common.refreshExchangeRates', 'Refresh exchange rates')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingRates ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">{t('common.refresh', 'Refresh')}</span>

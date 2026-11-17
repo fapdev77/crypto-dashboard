@@ -162,7 +162,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
             type="button"
             onClick={handleCopyForSheets}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1d1f27] hover:bg-[#262833] text-fg hover:text-fg border border-[#2e303c] transition cursor-pointer text-[10px]"
-            title="Copy as Tab-Separated Values to paste directly in Google Sheets or Excel"
+            title={t('ai.table.tooltips.copyTsv', 'Copy as Tab-Separated Values to paste directly in Google Sheets or Excel')}
           >
             {copied ? (
               <>
@@ -182,7 +182,7 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
             type="button"
             onClick={handleExportExcel}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition cursor-pointer text-[10px] font-medium"
-            title="Download formatted Excel spreadsheet (.xlsx)"
+            title={t('ai.table.tooltips.downloadXlsx', 'Download formatted Excel spreadsheet (.xlsx)')}
           >
             <Download className="w-3 h-3 text-emerald-400" />
             <span>Export Excel</span>

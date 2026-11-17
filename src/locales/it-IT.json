@@ -155,7 +155,19 @@
     "syncing": "Sincronizzazione...",
     "synced": "Sincronizzato!",
     "clearing": "Pulizia in corso...",
-    "cleared": "Pulito!"
+    "cleared": "Pulito!",
+    "filters": {
+      "allExchangesTooltip": "Visualizza tutti gli exchange collegati",
+      "exchangeTooltip": "Filtra per {{exchange}}",
+      "allAccountsTooltip": "Mostra i dati di tutti gli account collegati",
+      "allInstrumentsTooltip": "Mostra tutti gli strumenti e i mercati",
+      "allSidesTooltip": "Mostra tutti i lati dell'operazione",
+      "allTypesTooltip": "Mostra tutti i tipi di ordine / operazione",
+      "allStatusesTooltip": "Mostra i record di tutti gli stati",
+      "clearSearch": "Cancella ricerca"
+    },
+    "changeRefreshInterval": "Cambia l'intervallo di aggiornamento automatico",
+    "refreshExchangeRates": "Aggiorna i tassi di cambio"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -477,7 +489,8 @@
       "clearCache": "Svuota Cache",
       "highlights": "Novità dell'Ultima Versione (v{{version}})",
       "viewPrevious": "Visualizza Versioni Precedenti",
-      "fullChangelog": "CHANGELOG.md Completo"
+      "fullChangelog": "CHANGELOG.md Completo",
+      "clearCacheTooltip": "Svuota la cache e ricostruisci il database"
     },
     "preferencesTesting": "Preferenze & Test",
     "preferencesDesc": "Preferenze utente e strumenti di test",
@@ -523,7 +536,8 @@
       "syncStartToast": "Avvio sincronizzazione tassi di funding...",
       "clearSyncToast": "Cancellazione cache di funding e avvio sincronizzazione pulita...",
       "imminentWarningToast": "🔔 Liquidazione di funding tra meno di 1 minuto! L'auto-sync verrà attivata a breve alle {{time}}."
-    }
+    },
+    "currencyCacheTooltip": "Definisce per quanto tempo i tassi di cambio restano in cache nel browser prima di interrogare di nuovo api.frankfurter.dev (da 5 a 60 minuti)."
   },
   "dashboardExtra": {
     "simulationBanner": "Modalità di Simulazione Attiva - Visualizzazione Dati Simulati",
@@ -692,7 +706,18 @@
     },
     "long": "Long",
     "short": "Short",
-    "net": "Net"
+    "net": "Net",
+    "tooltips": {
+      "peakSizeValue": "La dimensione massima e il valore in {{currency}} di questa posizione prima della chiusura.",
+      "entryExitPrice": "Prezzo medio di entrata e prezzo medio di uscita della posizione.",
+      "openTime": "Quando è stata aperta la posizione.",
+      "closeTime": "Quando la posizione è stata chiusa completamente.",
+      "roe": "Rendimento sul patrimonio (ROE) basato sul PnL non realizzato.",
+      "hedgeExposure": "Livello di copertura/esposizione della posizione",
+      "viewInHedgePro": "Clicca per vedere in Hedge Pro",
+      "leveragedLong": "Esposizione long a leva",
+      "viewDetailsHedgePro": "Clicca per vedere i dettagli nella Hedge Pro Dashboard"
+    }
   },
   "positionsHistory": {
     "title": "Storico Posizioni",
@@ -804,6 +829,24 @@
       "message": "Sei sicuro di voler annullare l'ordine {{symbol}} su {{exchange}}?",
       "confirm": "Sì, Annulla",
       "cancel": "Indietro"
+    },
+    "tooltips": {
+      "sideType": "Indica se l'ordine è di acquisto o vendita e il suo tipo (es. limite, mercato, condizionale).",
+      "reduceOnly": "Questo ordine riduce solo la dimensione della posizione.",
+      "timeInForce": "Validità dell'ordine",
+      "originalQuantity": "La quantità originale e il valore totale stimato dell'ordine.",
+      "limitTrigger": "Il prezzo limite dell'ordine e il prezzo di attivazione (se condizionale).",
+      "progress": "Mostra quanto dell'ordine è stato eseguito dall'exchange finora.",
+      "createdAt": "Quando l'ordine è stato creato sull'exchange.",
+      "exchangeOrderId": "ID originale dell'ordine sull'exchange",
+      "avgFillPrice": "Il prezzo medio effettivo a cui è stato eseguito l'ordine.",
+      "executedValue": "Il valore totale eseguito dell'ordine in {{currency}}.",
+      "fees": "Commissioni di negoziazione addebitate dall'exchange per questa esecuzione.",
+      "fullPositionScope": "Ambito dell'intera posizione",
+      "partialClose": "Chiusura parziale",
+      "linkedTpSl": "TP/SL collegato alla posizione",
+      "totalVolume": "Il valore totale stimato di tutti gli ordini aperti in {{currency}}, calcolato dai prezzi limite e di attivazione.",
+      "tradingFeesTotal": "Il totale stimato delle commissioni di negoziazione pagate in {{currency}} per questi ordini."
     }
   },
   "trade": {
@@ -811,11 +854,11 @@
     "noTrades": "Nessuna operazione trovata per i filtri selezionati.",
     "totalTrades": "Totale Operazioni",
     "tradedVolume": "Volume Operato",
-    "tradedVolumeTooltip": "Il valore stimato in USD di tutte le operazioni eseguite nel periodo selezionato.",
+    "tradedVolumeTooltip": "Il valore stimato di tutte le operazioni eseguite nel periodo selezionato, in {{currency}}.",
     "totalTradedAcross": "Totale negoziato su conti attivi",
     "estTradingFees": "Commissioni Stimate",
-    "estTradingFeesTooltip": "Il valore stimato in USD delle commissioni di trading pagate per queste operazioni.",
-    "paidFeesConverted": "Commissioni pagate convertite in USD",
+    "estTradingFeesTooltip": "Il totale stimato delle commissioni di negoziazione pagate per queste operazioni, in {{currency}}.",
+    "paidFeesConverted": "Commissioni pagate convertite in {{currency}}",
     "export": "Esporta",
     "exportCsv": "Esporta CSV",
     "exportExcel": "Esporta Excel",
@@ -828,7 +871,14 @@
     "fee": "Commissione",
     "time": "Orario",
     "tradeId": "ID Operazione",
-    "syncing": "Sincronizzazione storico trade in corso..."
+    "syncing": "Sincronizzazione storico trade in corso...",
+    "tooltips": {
+      "directionType": "Indica la direzione dell'operazione, la modalità di margine e il tipo di ordine.",
+      "filledQtyValue": "Quantità eseguita e valore totale dell'operazione in {{currency}}.",
+      "filledPrice": "Il prezzo a cui è stata eseguita l'operazione.",
+      "fee": "Commissioni di negoziazione addebitate per questa operazione.",
+      "timeAndOrderId": "Il momento in cui è avvenuta questa transazione e l'ID dell'ordine dell'exchange a cui appartiene."
+    }
   },
   "manual": {
     "title": "MANUALE UTENTE",
@@ -1285,7 +1335,8 @@
         "title": "Analisi dei Livelli di Prezzo e Passaggi di Fascia",
         "intervalStep": "Passo Intervallo Livello",
         "passages": "passaggi",
-        "return": "Rendimento"
+        "return": "Rendimento",
+        "referenceAsset": "Asset"
       },
       "evolution": {
         "title": "Evoluzione del Saldo e Traiettoria del Capitale",
@@ -1319,14 +1370,30 @@
         "volume": "Volume nozionale aggregato scambiato nelle ultime 24 ore su tutti gli exchange monitorati.",
         "openInterest": "Valore nominale totale di tutti i contratti derivati aperti non ancora liquidati.",
         "fundingRate": "Tasso di funding medio ponderato tra gli exchange, indicante il costo di mantenimento delle posizioni long vs short.",
-        "spread": "La differenza massima annualizzata tra i tassi di funding più alti e più bassi tra gli exchange monitorati."
+        "spread": "La differenza massima annualizzata tra i tassi di funding più alti e più bassi tra gli exchange monitorati.",
+        "cvd": "Il Cumulative Volume Delta (CVD) rappresenta la differenza netta tra i volumi di acquisto e vendita aggressivi (taker).",
+        "periodTakerDelta": "Delta netto totale degli ordini di mercato aggressivi (Taker Buy - Taker Sell) accumulato su tutte le candele del periodo attivo del grafico.",
+        "cvdNetBalance": "Valore attuale del Cumulative Volume Delta (CVD) sull'ultima candela, che traccia il saldo cumulativo degli ordini aggressivi dall'inizio del periodo.",
+        "assetSelector": "Cerca e seleziona la criptovaluta da analizzare sul mercato.",
+        "marketTypeSelector": "Filtra le analisi per tipo di mercato: Spot, Futures Perpetui o Contratti Inverse.",
+        "exchangeSelector": "Filtra le analisi su un exchange specifico o visualizza i dati aggregati cross-exchange.",
+        "timeframeSelector": "Seleziona la risoluzione temporale dei grafici e dei calcoli storici.",
+        "autoRefresh": "Tempo alla prossima sincronizzazione automatica dei dati con il server.",
+        "sentimentTitle": "Confronta il posizionamento degli account retail standard con quello dei top trader ad alto volume e alto win rate (Smart Money).",
+        "fearGreed": "Indice Crypto Fear & Greed, sintetizzato da metriche di momentum, volatilità e flusso di ordini.",
+        "sentimentDivergence": "Avviso attivato quando i trader retail sono fortemente posizionati in una direzione (es. >65% Long) mentre i Top Trader sono posizionati nella direzione opposta.",
+        "retailRatio": "Rapporto long/short calcolato sul numero assoluto di account retail con posizioni aperte.",
+        "topTraderRatio": "Rapporto long/short dei trader d'élite, ponderato per il volume nozionale aperto (dimensione della posizione)."
       },
       "filterModal": {
         "title": "Filtri di Mercato e Selezione degli Exchange",
         "exchanges": "Exchange",
         "contractTypes": "Tipi di Contratto",
         "apply": "Applica Filtri",
-        "reset": "Ripristina Predefiniti"
+        "reset": "Ripristina Predefiniti",
+        "cacheHint": "Se noti incongruenze nei dati o coppie non aggiornate, apri le impostazioni di cache e polling per forzare un aggiornamento o modificare la scadenza della cache del catalogo simboli.",
+        "close": "Chiudi (Esc)",
+        "unverifiedBadge": "Disponibilità dell'asset non verificata nel catalogo dei listing dell'exchange; fallback ai feed standard"
       }
     },
     "inverseMarket": {
@@ -1339,6 +1406,22 @@
         "shareOfOi": "Quota dell'OI Totale",
         "fundingInterval": "Intervallo di Funding",
         "contractUnit": "Valore Unitario del Contratto"
+      },
+      "headers": {
+        "coinM": "Asset Coin-M",
+        "price": "Prezzo e variazione",
+        "range": "Range 24h",
+        "volume": "Volume 24h",
+        "openInterest": "Open Interest",
+        "cvd": "Flusso CVD"
+      },
+      "headerTooltips": {
+        "coinM": "Criptovaluta sottostante e exchange attivi che offrono margine Coin-M nativo.",
+        "price": "Prezzo di riferimento composito tra gli exchange attivi e variazione percentuale a 24h.",
+        "range": "Canale di negoziazione dal minimo al massimo nelle 24 ore, con indicatore di direzione del mercato e momentum intraday.",
+        "volume": "Volume totale a 24h mostrato in USD nozionale e in unità della moneta nativa.",
+        "openInterest": "Open Interest aggregato di tutti i contratti Coin-M attivi.",
+        "cvd": "Cumulative Volume Delta stimato (flusso netto tra acquirenti e venditori taker in USD)."
       }
     },
     "pnlSymbol": {
@@ -1409,7 +1492,24 @@
       "tabs": {
         "overview": "Panoramica Storica",
         "comparison": "Confronto Tassi di Funding"
-      }
+      },
+      "overview": {
+        "usdtm": "Contratti perpetui lineari regolati in USDT.",
+        "coinm": "Contratti perpetui inversi regolati nella moneta base (es. BTC, ETH).",
+        "netSpread": "Spread netto positivo: la differenza tra la % di simboli positivi e negativi. Un valore positivo significa che più simboli hanno Long che pagano Short rispetto al contrario.",
+        "positiveShare": "Percentuale di simboli con funding cumulativo positivo oggi (i Long pagano gli Short).",
+        "zeroShare": "Percentuale di simboli con funding cumulativo zero oggi (nessun pagamento scambiato).",
+        "negativeShare": "Percentuale di simboli con funding cumulativo negativo oggi (gli Short pagano i Long).",
+        "avgRate": "Tasso di funding cumulativo medio di tutti i simboli per oggi (UTC). Un valore positivo significa che i Long pagano generalmente gli Short.",
+        "stdDev": "Deviazione standard dei tassi di funding di oggi. Valori più alti indicano maggiore dispersione tra le monete: alcune costano molto più di altre da mantenere.",
+        "topPayers": "Maggiori pagatori",
+        "bottomPayers": "Minori pagatori",
+        "highestVolatility": "Volatilità più alta",
+        "topPayersTooltip": "I 5 simboli in cui le posizioni Long stanno pagando più funding oggi (tasso cumulativo positivo più alto).",
+        "bottomPayersTooltip": "I 5 simboli in cui le posizioni Short stanno pagando più funding oggi (tasso cumulativo più negativo).",
+        "highestVolatilityTooltip": "I 5 simboli con il tasso di funding assoluto più alto oggi, indipendentemente dalla direzione. Costo più alto per mantenere qualsiasi lato."
+      },
+      "nextSettlement": "Orario stimato del prossimo regolamento del funding."
     },
     "reports": {
       "title": "Report ed Esportazioni",
@@ -1523,7 +1623,17 @@
       "labelLabel": "Etichetta Connessione",
       "apiSecretPlaceholder": "Inserisci Segreto API",
       "passphrasePlaceholder": "Inserisci Passphrase",
-      "saveChangesBtn": "Salva Modifiche"
+      "saveChangesBtn": "Salva Modifiche",
+      "tooltips": {
+        "label": "Un nome descrittivo per identificare questa connessione API nella dashboard.",
+        "exchange": "Seleziona la piattaforma exchange di criptovalute a cui ti stai collegando.",
+        "accountType": "Seleziona se questa API Key è per un account Bitget Classic (v2) o un Unified Trading Account (UTA / v3).",
+        "environment": "Seleziona Mainnet per il trading reale o Testnet per un ambiente simulato.",
+        "region": "Seleziona l'origine o la regione del tuo account Bybit. Per gli account internazionali da Brasile o Argentina, l'header X-Site-Id appropriato viene applicato automaticamente. Per le regioni con domini normativi dedicati (NL, TR, KZ, ecc.), viene utilizzato l'endpoint locale ufficiale.",
+        "apiKey": "La tua API key dell'exchange. Viene salvata in modo sicuro nel browser locale e non viene mai inviata ai nostri server.",
+        "apiSecret": "La tua API Secret dell'exchange. Conservala al sicuro.",
+        "passphrase": "Richiesta da alcuni exchange (come Bitget e OKX) come password di sicurezza aggiuntiva per la tua API key."
+      }
     },
     "vault": {
       "setupTitle": "Configura Cassaforte di Sicurezza",
@@ -1656,7 +1766,18 @@
       "systemPromptLabel": "Istruzioni di Base del Sistema (System Prompt)",
       "systemPromptDesc": "Le direttive rigide garantiscono sicurezza di sola lettura, ambito analitico chiuso e calcoli accurati.",
       "telemetrySubtitle": "Metriche consolidate di prestazioni, latenza media e statistiche sul consumo di token",
-      "resetMetrics": "Reimposta Metriche"
+      "resetMetrics": "Reimposta Metriche",
+      "tooltips": {
+        "masterSwitch": "Interruttore principale: attiva o disattiva l'assistente PIKA in tutta l'applicazione.",
+        "zeroTrust": "Architettura Zero-Trust: le credenziali API dell'exchange, le chiavi e le passphrase private non vengono mai inviate ai modelli di IA.",
+        "openPanel": "Apri il pannello scorrevole dell'Assistente PIKA (Scorciatoia: Ctrl+J)",
+        "restoreDefaults": "Ripristina il prompt di sistema e i parametri di inferenza ai valori predefiniti",
+        "fallback": "Se attivato, l'assistente instrada automaticamente le query verso modelli cloud/locali di fallback se il modello principale va in timeout o raggiunge i limiti di frequenza.",
+        "privacy": "Converte i saldi nominali in dollari in allocazioni percentuali e oscura la dimensione totale degli asset prima di consultare modelli cloud esterni.",
+        "temperature": "Temperatura: valori più bassi (es. 0,10) garantiscono risposte deterministiche e matematicamente accurate. Altamente consigliato per l'audit quantitativo.",
+        "systemPrompt": "Istruzioni imperative iniettate nella sessione di IA che limitano l'Assistente PIKA all'analisi di portafogli crypto e impongono rifiuti fuori ambito.",
+        "resetTelemetry": "Azzera tutte le metriche di telemetria e le statistiche di consumo dei token"
+      }
     },
     "cancelled": {
       "defaultMsg": "La generazione della risposta è stata annullata dall'utente.",
@@ -1695,6 +1816,77 @@
       "tradingFees": "Scansione della cronologia di commissioni e costi di negoziazione...",
       "closedPositions": "Analisi della cronologia delle posizioni chiuse...",
       "default": "Esecuzione strumento locale: {{name}}..."
+    },
+    "audit": {
+      "tooltips": {
+        "refresh": "Aggiorna l'elenco dei log",
+        "exportJson": "Esporta la cronologia come JSON",
+        "exportCsv": "Esporta la cronologia come CSV",
+        "clear": "Cancella tutte le voci del registro di audit",
+        "details": "Visualizza i dettagli completi dell'esecuzione",
+        "downloadLog": "Scarica il log completo",
+        "requestPayload": "JSON del payload della richiesta",
+        "rawResponse": "JSON della risposta grezza del provider",
+        "fullRecord": "Record di audit completo dell'esecuzione"
+      }
+    },
+    "chat": {
+      "tooltips": {
+        "stop": "Interrompi richiesta (Esc)",
+        "send": "Invia messaggio (Invio)",
+        "newConversation": "Nuova conversazione",
+        "moreOptions": "Altre opzioni",
+        "close": "Chiudi l'assistente (Ctrl+J)",
+        "downloadPdf": "Scarica l'analisi completa come report PDF",
+        "exportMarkdown": "Esporta come Markdown",
+        "rename": "Rinomina",
+        "delete": "Elimina conversazione"
+      }
+    },
+    "markdown": {
+      "tooltips": {
+        "copyCode": "Copia codice",
+        "downloadImage": "Scarica immagine",
+        "closePreview": "Chiudi anteprima",
+        "expandImage": "Espandi immagine"
+      }
+    },
+    "models": {
+      "tooltips": {
+        "add": "Configura un nuovo modello di IA locale (Ollama) o cloud",
+        "moveUp": "Sposta in alto nella priorità di esecuzione",
+        "moveDown": "Sposta in basso nella priorità di esecuzione",
+        "noToolSupport": "I modelli senza supporto per i tool avranno le query live del portafoglio bloccate per evitare allucinazioni.",
+        "test": "Verifica latenza e connettività con il modello di IA",
+        "clone": "Clona / duplica questo modello",
+        "edit": "Modifica i parametri e le credenziali di questo modello",
+        "delete": "Elimina questo modello"
+      }
+    },
+    "modelModal": {
+      "tooltips": {
+        "quickSaveUrl": "Salva rapidamente l'URL dell'endpoint senza reinviare tutti i campi del modulo"
+      }
+    },
+    "rawJson": {
+      "tooltips": {
+        "copy": "Copia JSON",
+        "download": "Scarica file JSON"
+      }
+    },
+    "table": {
+      "tooltips": {
+        "copyTsv": "Copia come valori separati da tabulazione per incollarli direttamente in Google Sheets o Excel",
+        "downloadXlsx": "Scarica foglio di calcolo Excel formattato (.xlsx)"
+      }
+    },
+    "telemetry": {
+      "tooltips": {
+        "totalRequests": "Numero totale di richieste IA, query e interazioni con l'assistente elaborate dal motore.",
+        "totalTokens": "Conteggio consolidato dei token di prompt inviati e dei token di completamento generati in tutti i modelli attivi.",
+        "avgLatency": "Tempo medio di risposta (andata e ritorno), dall'invio della query alla generazione della completion, tra tutti i modelli.",
+        "theoreticalCost": "Costo teorico in USD basato sui prezzi di riferimento dei token. Le istanze locali di Ollama costano sempre 0,00 USD."
+      }
     }
   },
   "toasts": {

@@ -23,6 +23,7 @@ import { useFeeUsdTotals, FeeCurrencyBucket } from '../../../hooks/useFeeUsdTota
 
 export function OrderHistory() {
   const { t } = useTranslation();
+  const fiatCurrency = useSettingsStore(state => state.fiatCurrency) || 'USD';
   const [filters, setFilters] = useState<OrderFilters>({
     exchange: 'All',
     instrument: 'All',
@@ -359,7 +360,7 @@ export function OrderHistory() {
           {/* Volume and Fees */}
           <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center gap-3">
             <div className="flex flex-col">
-              <AppTooltip description="The total estimated USD value of all executed trades in the selected period.">
+              <AppTooltip description={t('trade.tradedVolumeTooltip', { currency: fiatCurrency })}>
                 <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.tradedVolume', 'Traded Volume')}</span>
               </AppTooltip>
               <span className="text-xl font-medium text-fg mt-1">
@@ -367,7 +368,7 @@ export function OrderHistory() {
               </span>
             </div>
             <div className="border-t border-line pt-3 flex flex-col">
-              <AppTooltip description="The total estimated USD value of trading fees paid for these orders.">
+              <AppTooltip description={t('orders.tooltips.tradingFeesTotal', { currency: fiatCurrency })}>
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('positions.tradingFee', 'Trading Fees')}</span>
               </AppTooltip>
               <span className="text-[13px] font-medium text-danger mt-1 font-mono">

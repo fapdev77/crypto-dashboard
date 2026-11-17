@@ -636,7 +636,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                         }
                       }}
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-elevated hover:bg-elevated text-fg hover:text-fg border border-line hover:border-line-strong transition cursor-pointer"
-                      title="Quick save endpoint URL without re-saving all form fields"
+                      title={t('ai.modelModal.tooltips.quickSaveUrl', 'Quick save endpoint URL without re-saving all form fields')}
                     >
                       <Save className="w-3 h-3 text-accent" />
                       <span>Save Endpoint</span>

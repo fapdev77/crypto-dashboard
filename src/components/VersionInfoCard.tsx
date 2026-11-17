@@ -167,7 +167,7 @@ export function VersionInfoCard() {
                 onClick={handleClearAndRecover}
                 disabled={isRecoveringDb}
                 className="px-2.5 py-1 text-xs bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-50 text-white rounded font-medium transition-colors flex items-center gap-1 cursor-pointer shrink-0"
-                title="Clear Cache & Rebuild Database"
+                title={t('settings.version.clearCacheTooltip', 'Clear Cache & Rebuild Database')}
               >
                 {isRecoveringDb && <RefreshCw className="w-3 h-3 animate-spin" />}
                 {t('settings.version.clearCache', 'Clear Cache')}

@@ -86,9 +86,11 @@ export const MaxFundingSpreadTooltip: React.FC<{ children: React.ReactNode }> = 
   );
 };
 
-export const TakerFlowMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const TakerFlowMetricTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="Cumulative Volume Delta (CVD) represents the net difference between aggressive (taker) buying and selling volumes."
+    description={t("analytics.market.tooltips.cvd", "Cumulative Volume Delta (CVD) represents the net difference between aggressive (taker) buying and selling volumes.")}
     rows={[
       { label: "Net Delta", value: "Taker Buy Vol - Taker Sell Vol", valueClassName: "font-mono text-[10px] text-fg-muted" },
       { label: "Positive CVD", value: "Aggressive buying pressure" },
@@ -97,11 +99,14 @@ export const TakerFlowMetricTooltip: React.FC<{ children: React.ReactNode }> = (
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const PeriodTakerDeltaTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const PeriodTakerDeltaTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="Total net delta of aggressive market orders (Taker Buy - Taker Sell) accumulated across all candles in the active chart period."
+    description={t("analytics.market.tooltips.periodTakerDelta", "Total net delta of aggressive market orders (Taker Buy - Taker Sell) accumulated across all candles in the active chart period.")}
     rows={[
       { label: "Formula", value: "Σ (Taker Buy - Taker Sell)", valueClassName: "font-mono text-[10px] text-fg-muted" },
       { label: "Interpretation", value: "Sum of taker aggression across the selected window" }
@@ -109,11 +114,14 @@ export const PeriodTakerDeltaTooltip: React.FC<{ children: React.ReactNode }> = 
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const CvdNetBalanceTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const CvdNetBalanceTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="Current Cumulative Volume Delta (CVD) value at the most recent candle, tracking cumulative aggressive order balance starting from the beginning of the period."
+    description={t("analytics.market.tooltips.cvdNetBalance", "Current Cumulative Volume Delta (CVD) value at the most recent candle, tracking cumulative aggressive order balance starting from the beginning of the period.")}
     rows={[
       { label: "Formula", value: "Running sum of candle deltas at t(latest)", valueClassName: "font-mono text-[10px] text-fg-muted" },
       { label: "Alignment", value: "Matches the final data point of the blue CVD line on the chart" }
@@ -121,11 +129,14 @@ export const CvdNetBalanceTooltip: React.FC<{ children: React.ReactNode }> = ({ 
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const AssetSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const AssetSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <AppTooltip 
-    description="Search and select the cryptocurrency to analyze across the market."
+    description={t("analytics.market.tooltips.assetSelector", "Search and select the cryptocurrency to analyze across the market.")}
     rows={[
       { label: "Action", value: "Type to search (e.g. BTC, ETH)" }
     ]}
@@ -134,11 +145,14 @@ export const AssetSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ 
       {children}
     </div>
   </AppTooltip>
-);
+  );
+};
 
-export const MarketTypeSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const MarketTypeSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <AppTooltip 
-    description="Filter analytics by market type: Spot, Perpetual Futures, or Inverse Contracts."
+    description={t("analytics.market.tooltips.marketTypeSelector", "Filter analytics by market type: Spot, Perpetual Futures, or Inverse Contracts.")}
     rows={[
       { label: "Spot", value: "Base assets only (No OI/Funding)" },
       { label: "Perp", value: "USDT/USDC margined futures" },
@@ -149,11 +163,14 @@ export const MarketTypeSelectorTooltip: React.FC<{ children: React.ReactNode }> 
       {children}
     </div>
   </AppTooltip>
-);
+  );
+};
 
-export const ExchangeSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const ExchangeSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <AppTooltip 
-    description="Filter analytics to a specific exchange or view aggregated cross-exchange data."
+    description={t("analytics.market.tooltips.exchangeSelector", "Filter analytics to a specific exchange or view aggregated cross-exchange data.")}
     rows={[
       { label: "Aggregated", value: "Blends data from all venues" },
       { label: "Specific", value: "Isolates flow to one venue" }
@@ -163,11 +180,14 @@ export const ExchangeSelectorTooltip: React.FC<{ children: React.ReactNode }> = 
       {children}
     </div>
   </AppTooltip>
-);
+  );
+};
 
-export const TimeframeSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const TimeframeSelectorTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <AppTooltip 
-    description="Select the time resolution for charts and historical calculations."
+    description={t("analytics.market.tooltips.timeframeSelector", "Select the time resolution for charts and historical calculations.")}
     rows={[
       { label: "Short Term", value: "5m, 15m, 30m, 1h" },
       { label: "Swing/Macro", value: "4h, 1d" }
@@ -177,11 +197,14 @@ export const TimeframeSelectorTooltip: React.FC<{ children: React.ReactNode }> =
       {children}
     </div>
   </AppTooltip>
-);
+  );
+};
 
-export const AutoRefreshTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const AutoRefreshTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <AppTooltip 
-    description="Time until the next automatic data synchronization with the server."
+    description={t("analytics.market.tooltips.autoRefresh", "Time until the next automatic data synchronization with the server.")}
     rows={[
       { label: "Action", value: "Click to refresh manually" },
       { label: "Frequency", value: "Every 60 seconds" }
@@ -191,7 +214,8 @@ export const AutoRefreshTooltip: React.FC<{ children: React.ReactNode }> = ({ ch
       {children}
     </div>
   </AppTooltip>
-);
+  );
+};
 
 export const MarketRegimeTooltip: React.FC<{ regime: string, sentiment: string, description: string, children: React.ReactNode }> = ({ regime, sentiment, description, children }) => {
   return (
@@ -228,9 +252,11 @@ export const CvdDivergenceTooltip: React.FC<{ type: string, desc: string, childr
   </AppTooltip>
 );
 
-export const SentimentTitleTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const SentimentTitleTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="Compares the positioning of standard retail accounts against high-volume, high-winrate top traders (Smart Money)."
+    description={t("analytics.market.tooltips.sentimentTitle", "Compares the positioning of standard retail accounts against high-volume, high-winrate top traders (Smart Money).")}
     rows={[
       { label: "Smart Money", value: "Top 20% by Volume/Profit" },
       { label: "Retail", value: "All other active accounts" }
@@ -238,11 +264,14 @@ export const SentimentTitleTooltip: React.FC<{ children: React.ReactNode }> = ({
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const FearAndGreedTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const FearAndGreedTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper 
-    description="Crypto Fear & Greed Index, synthesized from momentum, volatility, and order flow metrics."
+    description={t("analytics.market.tooltips.fearGreed", "Crypto Fear & Greed Index, synthesized from momentum, volatility, and order flow metrics.")}
     rows={[
       { label: "Extreme Fear", value: "0 - 24", valueClassName: "text-rose-400 font-mono" },
       { label: "Fear", value: "25 - 44", valueClassName: "text-amber-400 font-mono" },
@@ -253,21 +282,27 @@ export const FearAndGreedTooltip: React.FC<{ children: React.ReactNode }> = ({ c
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const SentimentDivergenceTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const SentimentDivergenceTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <AppTooltip 
-    description="Alert triggered when Retail traders are heavily positioned in one direction (e.g., >65% Long) while Top Traders are positioned in the opposite direction."
+    description={t("analytics.market.tooltips.sentimentDivergence", "Alert triggered when Retail traders are heavily positioned in one direction (e.g., >65% Long) while Top Traders are positioned in the opposite direction.")}
   >
     <div className="cursor-help transition-opacity hover:opacity-90">
       {children}
     </div>
   </AppTooltip>
-);
+  );
+};
 
-export const RetailRatioTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const RetailRatioTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="The long/short ratio calculated based on the absolute number of retail trader accounts holding open positions."
+    description={t("analytics.market.tooltips.retailRatio", "The long/short ratio calculated based on the absolute number of retail trader accounts holding open positions.")}
     rows={[
       { label: "Weighting", value: "By Account Count (Not Volume)" },
       { label: "Usage", value: "Useful as a contrarian indicator" }
@@ -275,11 +310,14 @@ export const RetailRatioTooltip: React.FC<{ children: React.ReactNode }> = ({ ch
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 
-export const TopTraderRatioTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+export const TopTraderRatioTooltip: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
+  return (
   <TooltipWrapper
-    description="The long/short ratio of elite traders, weighted by their open notional volume (position size)."
+    description={t("analytics.market.tooltips.topTraderRatio", "The long/short ratio of elite traders, weighted by their open notional volume (position size).")}
     rows={[
       { label: "Weighting", value: "By Notional Volume (USD)" },
       { label: "Usage", value: "Useful for tracking institutional flow" }
@@ -287,5 +325,6 @@ export const TopTraderRatioTooltip: React.FC<{ children: React.ReactNode }> = ({
   >
     {children}
   </TooltipWrapper>
-);
+  );
+};
 

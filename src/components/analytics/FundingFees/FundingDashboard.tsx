@@ -373,7 +373,7 @@ const FundingTable = ({
                                 </RateTooltip>
                                 {row.nextFundingTime && (
                                   <AppTooltip
-                                    description="Estimated time of the next funding settlement."
+                                    description={t('analytics.funding.nextSettlement', 'Estimated time of the next funding settlement.')}
                                     rows={[{
                                       label: 'Full Date',
                                       value: formatDateTime(row.nextFundingTime, { monthFormat: "long" }).fullStr,

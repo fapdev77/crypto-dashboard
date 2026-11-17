@@ -111,7 +111,7 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
 
           <button
             onClick={handleCopy}
-            title="Copiar JSON"
+            title={t('ai.rawJson.tooltips.copy', 'Copy JSON')}
             className="flex items-center gap-1 px-2 py-1 bg-elevated hover:bg-line text-fg hover:text-fg rounded-md text-[10px] font-sans font-medium transition cursor-pointer border border-line"
           >
             {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-accent" />}
@@ -120,7 +120,7 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
 
           <button
             onClick={handleDownload}
-            title="Baixar arquivo JSON"
+            title={t('ai.rawJson.tooltips.download', 'Download JSON file')}
             className="p-1 bg-elevated hover:bg-line text-fg-muted hover:text-fg rounded-md text-[10px] transition cursor-pointer border border-line"
           >
             <Download className="w-3 h-3 text-fg-muted" />
