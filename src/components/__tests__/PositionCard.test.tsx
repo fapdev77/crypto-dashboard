@@ -197,6 +197,20 @@ describe('PositionCard', () => {
     expect(screen.getByText('R$ 275.000,00')).toBeInTheDocument();
   });
 
+  it('converts position value, margin and unrealized PnL to the active currency in the expanded details', () => {
+    useSettingsStore.setState({ fiatCurrency: 'BRL', locale: 'pt-BR' });
+    const { container } = renderCard(
+      makePosition({ notionalUsd: 31000, unrealizedPnl: 1000, margin: 3000 }),
+      true
+    );
+
+    // Position value 31,000 USD, margin 3,000 USDT and unrealized 1,000 USDT, all shown in BRL.
+    expect(screen.getAllByText(/R\$ 155\.000,00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/R\$ 15\.000,00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\+R\$ 5\.000,00/).length).toBeGreaterThan(0);
+    expect(container.textContent).not.toMatch(/\bUSD\b/);
+  });
+
   it('reports ROE in the lite unrealized column and keeps the realized column to realized PnL', () => {
     const { container } = renderLite(makePosition({ unrealizedPnl: 1000, realizedPnl: 50, roe: 33.3 }));
 
