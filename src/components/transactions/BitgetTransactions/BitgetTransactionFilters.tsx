@@ -99,7 +99,7 @@ const CATEGORIES = [
   { value: 'other', label: 'Other', tooltip: 'Other account activities.' }
 ];
 
-import { TIME_PERIOD_OPTIONS } from '../../../utils/dateTimeHelper';
+import { getLocalizedTimePeriodOptions } from '../../../utils/dateTimeHelper';
 
 interface Props {
   filters: BitgetTxFilters;
@@ -167,7 +167,7 @@ export function BitgetTransactionFilters({ filters, setFilters, availableCurrenc
           customStartDate: v === 'custom' ? prev.customStartDate : undefined,
           customEndDate: v === 'custom' ? prev.customEndDate : undefined,
         })),
-        options: TIME_PERIOD_OPTIONS.map(p => ({ value: p.value, label: p.label, tooltip: p.tooltip, isCustom: p.isCustom })),
+        options: getLocalizedTimePeriodOptions(t).map(p => ({ value: p.value, label: p.label, tooltip: p.tooltip, isCustom: p.isCustom })),
         customStartDate: filters.customStartDate,
         customEndDate: filters.customEndDate,
         onCustomDateChange: (start, end) => setFilters(prev => ({

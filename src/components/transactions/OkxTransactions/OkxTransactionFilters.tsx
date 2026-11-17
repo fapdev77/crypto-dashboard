@@ -65,7 +65,7 @@ const CATEGORIES = [
   { value: 'other', label: 'Other', tooltip: 'Other account bills.' }
 ];
 
-import { TIME_PERIOD_OPTIONS } from '../../../utils/dateTimeHelper';
+import { getLocalizedTimePeriodOptions } from '../../../utils/dateTimeHelper';
 
 interface Props {
   filters: OkxTxFilters;
@@ -133,7 +133,7 @@ export function OkxTransactionFilters({ filters, setFilters, availableCurrencies
           customStartDate: v === 'custom' ? prev.customStartDate : undefined,
           customEndDate: v === 'custom' ? prev.customEndDate : undefined,
         })),
-        options: TIME_PERIOD_OPTIONS.map(p => ({ value: p.value, label: p.label, tooltip: p.tooltip, isCustom: p.isCustom })),
+        options: getLocalizedTimePeriodOptions(t).map(p => ({ value: p.value, label: p.label, tooltip: p.tooltip, isCustom: p.isCustom })),
         customStartDate: filters.customStartDate,
         customEndDate: filters.customEndDate,
         onCustomDateChange: (start, end) => setFilters(prev => ({

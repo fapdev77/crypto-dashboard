@@ -167,6 +167,56 @@
       "clearSearch": "Clear search"
     },
     "changeRefreshInterval": "Change auto-refresh interval",
+    "timePeriod": {
+      "today": {
+        "label": "Today",
+        "tooltip": "Current calendar day (from 00:00:00 today)"
+      },
+      "7d": {
+        "label": "7 Days",
+        "tooltip": "Last 7 calendar days"
+      },
+      "14d": {
+        "label": "14 Days",
+        "tooltip": "Last 14 calendar days"
+      },
+      "30d": {
+        "label": "30 Days",
+        "tooltip": "Last 30 calendar days"
+      },
+      "90d": {
+        "label": "90 Days",
+        "tooltip": "Last 90 calendar days"
+      },
+      "120d": {
+        "label": "120 Days",
+        "tooltip": "Last 120 calendar days"
+      },
+      "6m": {
+        "label": "6 Months",
+        "tooltip": "Last 6 calendar months (~180 days)"
+      },
+      "1y": {
+        "label": "1 Year",
+        "tooltip": "Last 1 calendar year (365 days)"
+      },
+      "mtd": {
+        "label": "MTD",
+        "tooltip": "Month-to-Date: from the 1st of the current month to today"
+      },
+      "ytd": {
+        "label": "YTD",
+        "tooltip": "Year-to-Date: from January 1st of the current year to today"
+      },
+      "custom": {
+        "label": "Custom Range...",
+        "tooltip": "Choose specific start and end calendar dates"
+      },
+      "all": {
+        "label": "All Time",
+        "tooltip": "Entire transaction and performance history"
+      }
+    },
     "refreshExchangeRates": "Refresh exchange rates"
   },
   "nav": {

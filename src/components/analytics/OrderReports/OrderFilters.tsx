@@ -12,7 +12,7 @@ interface Props {
 
 const ORDER_TYPES = ['All', 'LIMIT', 'MARKET', 'TP', 'SL', 'CONDITIONAL'];
 const STATUS_OPTIONS = ['All', 'FILLED', 'CANCELLED', 'PARTIALLY_FILLED', 'REJECTED'];
-import { TIME_PERIOD_OPTIONS } from '../../../utils/dateTimeHelper';
+import { getLocalizedTimePeriodOptions } from '../../../utils/dateTimeHelper';
 import { useTranslation } from 'react-i18next';
 
 export function OrderFilters({ filters, setFilters, showPeriod = false, showStatusFilter = false }: Props) {
@@ -101,7 +101,7 @@ export function OrderFilters({ filters, setFilters, showPeriod = false, showStat
           customStartDate: val === 'custom' ? p.customStartDate : undefined,
           customEndDate: val === 'custom' ? p.customEndDate : undefined,
         })),
-        options: TIME_PERIOD_OPTIONS.map(tp => ({ value: tp.value, label: tp.label, tooltip: tp.tooltip, isCustom: tp.isCustom })),
+        options: getLocalizedTimePeriodOptions(t).map(tp => ({ value: tp.value, label: tp.label, tooltip: tp.tooltip, isCustom: tp.isCustom })),
         customStartDate: filters.customStartDate,
         customEndDate: filters.customEndDate,
         onCustomDateChange: (start: string, end: string) => setFilters(p => ({

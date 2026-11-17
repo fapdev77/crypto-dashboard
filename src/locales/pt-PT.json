@@ -167,6 +167,56 @@
       "clearSearch": "Limpar pesquisa"
     },
     "changeRefreshInterval": "Alterar o intervalo de atualização automática",
+    "timePeriod": {
+      "today": {
+        "label": "Hoje",
+        "tooltip": "Dia de calendário atual (a partir das 00:00:00 de hoje)"
+      },
+      "7d": {
+        "label": "7 Dias",
+        "tooltip": "Últimos 7 dias de calendário"
+      },
+      "14d": {
+        "label": "14 Dias",
+        "tooltip": "Últimos 14 dias de calendário"
+      },
+      "30d": {
+        "label": "30 Dias",
+        "tooltip": "Últimos 30 dias de calendário"
+      },
+      "90d": {
+        "label": "90 Dias",
+        "tooltip": "Últimos 90 dias de calendário"
+      },
+      "120d": {
+        "label": "120 Dias",
+        "tooltip": "Últimos 120 dias de calendário"
+      },
+      "6m": {
+        "label": "6 Meses",
+        "tooltip": "Últimos 6 meses de calendário (~180 dias)"
+      },
+      "1y": {
+        "label": "1 Ano",
+        "tooltip": "Último ano de calendário (365 dias)"
+      },
+      "mtd": {
+        "label": "MTD",
+        "tooltip": "Mês em curso: do dia 1 do mês atual até hoje"
+      },
+      "ytd": {
+        "label": "YTD",
+        "tooltip": "Ano em curso: de 1 de janeiro do ano atual até hoje"
+      },
+      "custom": {
+        "label": "Intervalo personalizado...",
+        "tooltip": "Escolha datas de início e fim específicas"
+      },
+      "all": {
+        "label": "Todo o período",
+        "tooltip": "Todo o histórico de transações e desempenho"
+      }
+    },
     "refreshExchangeRates": "Atualizar cotações cambiais"
   },
   "nav": {

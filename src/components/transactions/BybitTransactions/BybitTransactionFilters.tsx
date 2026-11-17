@@ -73,7 +73,7 @@ const CATEGORIES = [
   { value: 'inverse', label: 'Inverse', tooltip: 'Inverse contracts including Inverse perpetual and Inverse futures.' },
   { value: 'option', label: 'Options', tooltip: 'Options contracts.' }
 ];
-import { TIME_PERIOD_OPTIONS } from '../../../utils/dateTimeHelper';
+import { getLocalizedTimePeriodOptions } from '../../../utils/dateTimeHelper';
 
 interface Props {
   filters: TxFilters;
@@ -144,7 +144,7 @@ export function BybitTransactionFilters({ filters, setFilters, availableCurrenci
           customStartDate: val === 'custom' ? p.customStartDate : undefined,
           customEndDate: val === 'custom' ? p.customEndDate : undefined,
         })),
-        options: TIME_PERIOD_OPTIONS.map(tp => ({ value: tp.value, label: tp.label, tooltip: tp.tooltip, isCustom: tp.isCustom })),
+        options: getLocalizedTimePeriodOptions(t).map(tp => ({ value: tp.value, label: tp.label, tooltip: tp.tooltip, isCustom: tp.isCustom })),
         customStartDate: filters.customStartDate,
         customEndDate: filters.customEndDate,
         onCustomDateChange: (start, end) => setFilters(p => ({

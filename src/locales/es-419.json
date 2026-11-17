@@ -167,6 +167,56 @@
       "clearSearch": "Limpiar búsqueda"
     },
     "changeRefreshInterval": "Cambiar el intervalo de actualización automática",
+    "timePeriod": {
+      "today": {
+        "label": "Hoy",
+        "tooltip": "Día de calendario actual (desde las 00:00:00 de hoy)"
+      },
+      "7d": {
+        "label": "7 Días",
+        "tooltip": "Últimos 7 días de calendario"
+      },
+      "14d": {
+        "label": "14 Días",
+        "tooltip": "Últimos 14 días de calendario"
+      },
+      "30d": {
+        "label": "30 Días",
+        "tooltip": "Últimos 30 días de calendario"
+      },
+      "90d": {
+        "label": "90 Días",
+        "tooltip": "Últimos 90 días de calendario"
+      },
+      "120d": {
+        "label": "120 Días",
+        "tooltip": "Últimos 120 días de calendario"
+      },
+      "6m": {
+        "label": "6 Meses",
+        "tooltip": "Últimos 6 meses de calendario (~180 días)"
+      },
+      "1y": {
+        "label": "1 Año",
+        "tooltip": "Último año de calendario (365 días)"
+      },
+      "mtd": {
+        "label": "MTD",
+        "tooltip": "Mes en curso: desde el día 1 del mes actual hasta hoy"
+      },
+      "ytd": {
+        "label": "YTD",
+        "tooltip": "Año en curso: desde el 1 de enero del año actual hasta hoy"
+      },
+      "custom": {
+        "label": "Rango personalizado...",
+        "tooltip": "Elige fechas de inicio y fin específicas"
+      },
+      "all": {
+        "label": "Todo el periodo",
+        "tooltip": "Todo el historial de transacciones y rendimiento"
+      }
+    },
     "refreshExchangeRates": "Actualizar tasas de cambio"
   },
   "nav": {

@@ -3,7 +3,7 @@ import { AppTooltip } from './Tooltip';
 import { Search, X, ChevronDown, Calendar, Users } from 'lucide-react';
 import { useApiKeysStore } from '../../store/apiKeysStore';
 import { ExchangeIcon } from './ExchangeIcon';
-import { TIME_PERIOD_OPTIONS } from '../../utils/dateTimeHelper';
+import { getLocalizedTimePeriodOptions } from '../../utils/dateTimeHelper';
 import { CustomDateRangeModal } from './CustomDateRangeModal';
 import { useTranslation } from 'react-i18next';
 
@@ -145,13 +145,13 @@ export function FilterBar({
     if (period?.options && period.options.length > 0) {
       return period.options;
     }
-    return TIME_PERIOD_OPTIONS.map(opt => ({
+    return getLocalizedTimePeriodOptions(t).map(opt => ({
       value: opt.value,
       label: opt.label,
       tooltip: opt.tooltip,
       isCustom: opt.isCustom,
     }));
-  }, [period?.options]);
+  }, [period?.options, t]);
 
   const toggleDropdown = (key: DropdownKey) => {
     setActiveDropdown(current => (current === key ? null : key));

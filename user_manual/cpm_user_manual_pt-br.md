@@ -175,7 +175,7 @@ A tela **Settings** é organizada em **10 cards modulares**: *Language & Currenc
 - **Predefinições & Gerenciamento de Temas Salvos**: Carregue 4 paletas prontas (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) ou salve, carregue e exclua múltiplos temas personalizados com nome próprio (exibido ao lado de *Customizado* no seletor do cabeçalho).
 
 ### 🌐 Idioma, Moedas Fiat & Diagnóstico de Câmbio
-- **6 Idiomas & 4 Moedas Fiat**: Cobertura completa em `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419` e `it-IT` (1.807 chaves por idioma) e exibição em **USD**, **BRL**, **EUR** e **GBP**.
+- **6 Idiomas & 4 Moedas Fiat**: Cobertura completa em `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419` e `it-IT` (1.831 chaves por idioma) e exibição em **USD**, **BRL**, **EUR** e **GBP**.
 - **Cotações Duplas & Diagnóstico (`CurrencyApiDiagnostics`)**: Consulta concorrentemente a **Frankfurter API v2** (`api.frankfurter.dev`) para taxas fiat e a **CoinGecko** (`api.coingecko.com`) para paridade **USDT/USD**, com TTL configurável (5 a 60 min), fallback em cache offline e monitoramento de latência/status em tempo real.
 
 ### 🔄 Sincronização, Retenção e Configurações de Cache (IndexedDB)

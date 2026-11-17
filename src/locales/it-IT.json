@@ -167,6 +167,56 @@
       "clearSearch": "Cancella ricerca"
     },
     "changeRefreshInterval": "Cambia l'intervallo di aggiornamento automatico",
+    "timePeriod": {
+      "today": {
+        "label": "Oggi",
+        "tooltip": "Giorno di calendario corrente (dalle 00:00:00 di oggi)"
+      },
+      "7d": {
+        "label": "7 Giorni",
+        "tooltip": "Ultimi 7 giorni di calendario"
+      },
+      "14d": {
+        "label": "14 Giorni",
+        "tooltip": "Ultimi 14 giorni di calendario"
+      },
+      "30d": {
+        "label": "30 Giorni",
+        "tooltip": "Ultimi 30 giorni di calendario"
+      },
+      "90d": {
+        "label": "90 Giorni",
+        "tooltip": "Ultimi 90 giorni di calendario"
+      },
+      "120d": {
+        "label": "120 Giorni",
+        "tooltip": "Ultimi 120 giorni di calendario"
+      },
+      "6m": {
+        "label": "6 Mesi",
+        "tooltip": "Ultimi 6 mesi di calendario (~180 giorni)"
+      },
+      "1y": {
+        "label": "1 Anno",
+        "tooltip": "Ultimo anno di calendario (365 giorni)"
+      },
+      "mtd": {
+        "label": "MTD",
+        "tooltip": "Mese in corso: dal 1° del mese corrente a oggi"
+      },
+      "ytd": {
+        "label": "YTD",
+        "tooltip": "Anno in corso: dal 1° gennaio dell'anno corrente a oggi"
+      },
+      "custom": {
+        "label": "Intervallo personalizzato...",
+        "tooltip": "Scegli date di inizio e fine specifiche"
+      },
+      "all": {
+        "label": "Tutto il periodo",
+        "tooltip": "Intera cronologia di transazioni e performance"
+      }
+    },
     "refreshExchangeRates": "Aggiorna i tassi di cambio"
   },
   "nav": {

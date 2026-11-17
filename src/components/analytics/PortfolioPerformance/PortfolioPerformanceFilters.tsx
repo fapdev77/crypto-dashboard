@@ -6,7 +6,7 @@ import { useApiKeysStore } from '../../../store/apiKeysStore';
 import { useSettingsStore } from '../../../store/settingsStore';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { DollarSign } from 'lucide-react';
-import { TIME_PERIOD_OPTIONS } from '../../../utils/dateTimeHelper';
+import { getLocalizedTimePeriodOptions } from '../../../utils/dateTimeHelper';
 import { getDefaultMilestoneStepForAsset } from '../../../utils/portfolioPerformanceEngine';
 import mockAccounts from '../../../mock/accounts.json';
 
@@ -134,7 +134,7 @@ export function PortfolioPerformanceFilters({
               customStartDate: val === 'custom' ? p.customStartDate : undefined,
               customEndDate: val === 'custom' ? p.customEndDate : undefined,
             })),
-          options: TIME_PERIOD_OPTIONS.map((tp) => ({
+          options: getLocalizedTimePeriodOptions(t).map((tp) => ({
             value: tp.value,
             label: tp.label,
             tooltip: tp.tooltip,
