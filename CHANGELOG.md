@@ -1,3 +1,10 @@
+# [2.49.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.48.0...v2.49.0) (2026-11-17)
+
+
+### Features
+
+* **locales:** update Portuguese translations for pt-BR and pt-PT, adding new tooltips and improving existing phrases ([ecc8a7e](https://github.com/fapdev77/crypto-dashboard/commit/ecc8a7e14096796338ba011c7aa44d14bb944d1e))
+
 # [2.48.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.47.0...v2.48.0) (2026-11-17)
 
 
