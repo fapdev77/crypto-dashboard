@@ -1,3 +1,10 @@
+# [2.48.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.47.0...v2.48.0) (2026-11-17)
+
+
+### Features
+
+* update various components to utilize the updated currency formatting logic update test coverage and descriptions in documentation ([7cd92b7](https://github.com/fapdev77/crypto-dashboard/commit/7cd92b7100ce73474b7da53fade59eae73e35cad))
+
 # [2.47.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.46.0...v2.47.0) (2026-11-17)
 
 
