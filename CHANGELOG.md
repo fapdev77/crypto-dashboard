@@ -1,3 +1,10 @@
+# [2.47.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.46.0...v2.47.0) (2026-11-17)
+
+
+### Features
+
+* update test coverage to reflect 951 passing tests across documentation and components ([c1dca81](https://github.com/fapdev77/crypto-dashboard/commit/c1dca8186a67f89ad6d307b02ecbac0775f893d5))
+
 # [2.46.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.45.0...v2.46.0) (2026-11-17)
 
 
