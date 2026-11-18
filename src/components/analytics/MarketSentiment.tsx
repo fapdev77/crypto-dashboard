@@ -384,7 +384,11 @@ export const MarketSentiment: React.FC = () => {
             <span className="font-semibold text-accent mr-1.5">
               {t('sentiment.tacticalOutlook', 'Tactical Market Outlook:')}
             </span>
-            {i18n.language.startsWith('pt') ? trendSummary.traderAdvice.pt : trendSummary.traderAdvice.en}
+            {trendSummary.adviceKey
+              ? t(`sentiment.advice.${trendSummary.adviceKey}`, trendSummary.traderAdvice.en)
+              : i18n.language.startsWith('pt')
+              ? trendSummary.traderAdvice.pt
+              : trendSummary.traderAdvice.en}
           </div>
         </div>
       </div>

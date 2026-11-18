@@ -155,20 +155,26 @@ export function useMarketSentiment() {
 
     let adviceEn = '';
     let advicePt = '';
+    let adviceKey: MarketTrendSummary['adviceKey'] = 'neutral';
 
     if (current.value >= 75) {
+      adviceKey = 'extremeGreed';
       adviceEn = 'Extreme Greed: Market is overheated with high leverage. Watch for sharp liquidation cascades and protect stop-loss levels.';
       advicePt = 'Ganância Extrema: Mercado sobrecomprado com alta alavancagem. Cuidado com correções abruptas (long squeeze) e proteja seus stops.';
     } else if (current.value >= 56) {
+      adviceKey = 'greed';
       adviceEn = 'Greed: Bullish momentum in control. Favor trend-following pullbacks while monitoring funding rates on perpetual contracts.';
       advicePt = 'Ganância: Momentum altista predominante. Favorece operações a favor da tendência em pullbacks, com atenção aos custos de funding.';
     } else if (current.value <= 24) {
+      adviceKey = 'extremeFear';
       adviceEn = 'Extreme Fear: Capitulation levels and panic selling. Historically favorable for spot accumulation and delta-neutral hedging.';
       advicePt = 'Medo Extremo: Níveis de capitulação e pânico vendedor. Historicamente propício para acumulação em spot e hedge delta-neutro.';
     } else if (current.value <= 44) {
+      adviceKey = 'fear';
       adviceEn = 'Fear: Market sentiment is defensive. Risk-off bias suggests tighter position sizing and disciplined risk parameters.';
       advicePt = 'Medo: Sentimento defensivo. Postura cautelosa sugere posições mais enxutas e parâmetros de risco estritos.';
     } else {
+      adviceKey = 'neutral';
       adviceEn = 'Neutral: Sideways chop and consolidation. Ideal environment for range trading, funding fee collection, and mean reversion.';
       advicePt = 'Neutro: Lateralização e consolidação. Cenário propício para operações em amplitude (range) e coleta de taxas de funding.';
     }
@@ -182,6 +188,7 @@ export function useMarketSentiment() {
         en: adviceEn,
         pt: advicePt,
       },
+      adviceKey,
     };
   }, [current.value, fundingBias]);
 

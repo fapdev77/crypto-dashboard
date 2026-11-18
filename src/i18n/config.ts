@@ -17,6 +17,22 @@ export const resources = {
   'it-IT': { translation: itIT },
 } as const;
 
+export function detectSystemLocale(): SupportedLocale {
+  if (typeof navigator !== 'undefined') {
+    const rawLang =
+      (Array.isArray(navigator.languages) && navigator.languages.length > 0
+        ? navigator.languages[0]
+        : navigator.language) || '';
+    const navLang = rawLang.trim().toLowerCase().replace('_', '-');
+    if (navLang === 'pt-pt') return 'pt-PT';
+    if (navLang.startsWith('pt')) return 'pt-BR';
+    if (navLang.startsWith('es')) return 'es-419';
+    if (navLang.startsWith('it')) return 'it-IT';
+    if (navLang === 'en-gb') return 'en-GB';
+  }
+  return 'en-US';
+}
+
 export function getInitialLocale(): SupportedLocale {
   try {
     const raw = localStorage.getItem('terminal-settings');
@@ -31,18 +47,7 @@ export function getInitialLocale(): SupportedLocale {
     // Fallback if localStorage is inaccessible
   }
 
-  // Detect browser language if possible
-  if (typeof navigator !== 'undefined') {
-    const navLang = navigator.language;
-    if (navLang.startsWith('pt')) {
-      return navLang.toLowerCase().includes('pt') && !navLang.toLowerCase().includes('br') ? 'pt-PT' : 'pt-BR';
-    }
-    if (navLang.startsWith('es')) return 'es-419';
-    if (navLang.startsWith('it')) return 'it-IT';
-    if (navLang === 'en-GB') return 'en-GB';
-  }
-
-  return 'en-US';
+  return detectSystemLocale();
 }
 
 i18n

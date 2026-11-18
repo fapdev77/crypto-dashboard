@@ -694,7 +694,14 @@
       "btcDominance": "Estimated Bitcoin Market Dominance: ~{{dominance}}%. Reflects capital allocation share in top crypto benchmark.",
       "tacticalAdvice": "Contextual tactical recommendation calculated from market regime, sentiment momentum, and leverage risk."
     },
-    "sourceTitle": "Data Source: Alternative.me Crypto Fear & Greed Index API"
+    "sourceTitle": "Data Source: Alternative.me Crypto Fear & Greed Index API",
+    "advice": {
+      "extremeGreed": "Extreme Greed: Market is overheated with high leverage. Watch for sharp liquidation cascades and protect stop-loss levels.",
+      "greed": "Greed: Bullish momentum in control. Favor trend-following pullbacks while monitoring funding rates on perpetual contracts.",
+      "extremeFear": "Extreme Fear: Capitulation levels and panic selling. Historically favorable for spot accumulation and delta-neutral hedging.",
+      "fear": "Fear: Market sentiment is defensive. Risk-off bias suggests tighter position sizing and disciplined risk parameters.",
+      "neutral": "Neutral: Sideways chop and consolidation. Ideal environment for range trading, funding fee collection, and mean reversion."
+    }
   },
   "positions": {
     "title": "Open Positions",
@@ -2165,5 +2172,182 @@
     "notNow": "Not Now",
     "updating": "Updating...",
     "updateNow": "Update Now"
+  },
+  "onboarding": {
+    "wizardTitle": "Crypto Portfolio Manager",
+    "wizardSubtitle": "Interactive Onboarding & Quick Tour",
+    "stepCounter": "Step {{current}} of {{total}}",
+    "skipGuide": "Skip guide",
+    "prev": "Previous",
+    "next": "Next",
+    "finish": "Finish",
+    "openManual": "User Manual",
+    "openModule": "Open {{module}}",
+    "autoCycleActive": "Auto-cycling every 3s · Click to inspect",
+    "autoCyclePaused": "Auto-cycle paused",
+    "steps": {
+      "welcome": "Welcome",
+      "preferences": "Preferences",
+      "dashboard": "Dashboard",
+      "navigation": "Sidebar",
+      "operations": "Logs & Settings",
+      "start": "Get Started"
+    },
+    "step1": {
+      "kicker": "Unified Multi-Exchange Terminal",
+      "title": "Your crypto portfolio in one local command center",
+      "desc": "Monitor spot balances, perpetual futures, inverse hedge positions, funding fees, and execution logs across Bitget, Bybit, and OKX directly from your browser.",
+      "pillar1Title": "Consolidated Multi-Exchange View",
+      "pillar1Desc": "Unify equity, open PnL, orders, and historical net-change reports across all accounts.",
+      "pillar2Title": "Zero-Trust Client-Side Vault",
+      "pillar2Desc": "API keys stay encrypted in your browser (PBKDF2 + AES-GCM-256). No intermediate server stores your credentials.",
+      "pillar3Title": "Privacy Mode & Offline-Ready PWA",
+      "pillar3Desc": "Mask sensitive balances with one click for screen sharing and install as a native-like desktop or mobile app.",
+      "previewHeader": "Local-First Architecture",
+      "previewSub": "Direct browser-to-exchange communication",
+      "previewEncrypted": "Local AES-256 Vault",
+      "previewReadOnly": "Read-Only API Keys",
+      "previewExchanges": "Supported Exchanges",
+      "previewNote": "Test freely with built-in Simulation Mode before connecting live keys."
+    },
+    "step2": {
+      "kicker": "Personalization",
+      "title": "Choose your language, currency, and theme",
+      "desc": "Changes apply immediately across the entire terminal. You can also build custom palettes anytime in Settings.",
+      "languageLabel": "Interface Language",
+      "currencyLabel": "Display Currency",
+      "refreshRates": "Refresh rates",
+      "themeLabel": "Visual Theme",
+      "customThemeHint": "Custom theme studio in Settings",
+      "previewLabel": "Live Terminal Preview",
+      "previewEquityLabel": "Total Portfolio Equity",
+      "previewPnlLabel": "Open Positions P&L",
+      "previewRateNote": "1 USD ≈ {{rate}} {{currency}}",
+      "previewActiveTheme": "Active theme: {{theme}}"
+    },
+    "step3": {
+      "kicker": "Main Workspace",
+      "title": "Understand the Main Dashboard at a glance",
+      "desc": "Select any region below to inspect how capital, risk, and global toolbar controls are organized.",
+      "previewBadge": "Interactive Dashboard Map",
+      "previewHint": "Select a block to inspect",
+      "zones": {
+        "kpis": {
+          "title": "Top 4 KPI Cards",
+          "desc": "Real-time Total Equity, Open Positions P&L (Unrealized + Realized), Long vs. Short ratio, and Inverse Hedge coverage (Protected vs. Exposed capital).",
+          "metric": "4 Core Metrics · Auto-polled"
+        },
+        "charts": {
+          "title": "Macro & Cross-Exchange Charts",
+          "desc": "Visual breakdown of capital distribution per exchange alongside asset concentration across Bitget, Bybit, and OKX.",
+          "metric": "Capital & Asset Composition"
+        },
+        "hierarchy": {
+          "title": "Hierarchical Balance Table",
+          "desc": "Drill down by Exchange → Account → Asset with dust filtering (< $1) and instant text search.",
+          "metric": "Exchange → Account → Coin"
+        },
+        "controls": {
+          "title": "Top Toolbar & Status Bar",
+          "desc": "Quick-switch Language, Currency, Theme, PIKA AI, Help, and Privacy Eye (masks all numbers), plus live connection status in the footer bar.",
+          "metric": "Privacy Eye · Status Bar"
+        }
+      }
+    },
+    "step4": {
+      "kicker": "Navigation Architecture",
+      "title": "Explore Sidebar modules by workflow",
+      "desc": "The sidebar separates daily trading and analytics tools at the top from technical infrastructure at the bottom.",
+      "groupPrimary": "Trading & Analytics",
+      "groupSystem": "Infrastructure & Controls",
+      "previewReqKeys": "Works with API keys or Simulation Mode",
+      "previewReqConfig": "System configuration & diagnostics",
+      "modules": {
+        "dashboard": {
+          "title": "Dashboard",
+          "desc": "Consolidated equity KPIs, capital charts, hierarchical balances, market sentiment, and live FX rates."
+        },
+        "hedgePro": {
+          "title": "Hedge Pro",
+          "desc": "Delta-neutral and inverse contract risk engine measuring protected vs. exposed capital per coin."
+        },
+        "positions": {
+          "title": "Positions",
+          "desc": "Monitor active Open Positions with live mark prices or audit Closed Positions history."
+        },
+        "orders": {
+          "title": "Orders",
+          "desc": "Inspect active Open Orders and filter historical filled or cancelled orders across accounts."
+        },
+        "trade": {
+          "title": "Trade History",
+          "desc": "Detailed execution fills, fees, and trade-by-trade reconciliation."
+        },
+        "transactions": {
+          "title": "Transactions History",
+          "desc": "Consolidated Net Change ledger plus exchange-specific logs (visible when keys or simulation are active)."
+        },
+        "analytics": {
+          "title": "Analytics",
+          "desc": "Portfolio Performance, Market Analytics, PnL by Symbol, and Funding Fees optimization."
+        },
+        "reports": {
+          "title": "Reports",
+          "desc": "Exportable portfolio evolution summaries and multi-period performance reporting."
+        },
+        "apiKeys": {
+          "title": "API Keys",
+          "desc": "Add, edit, toggle, or remove exchange credentials inside your encrypted Zero-Trust Vault."
+        },
+        "logs": {
+          "title": "Live Connection Logs",
+          "desc": "Real-time diagnostic terminal tracking WebSocket, REST polling, sync, and error events."
+        },
+        "apiTester": {
+          "title": "API Tester",
+          "desc": "Test signed exchange endpoints directly to verify permissions and raw payloads."
+        },
+        "aiSettings": {
+          "title": "AI Settings",
+          "desc": "Configure the PIKA quantitative assistant, models, rate limits, and audit trail."
+        },
+        "settings": {
+          "title": "Settings",
+          "desc": "Control polling intervals, IndexedDB caches, custom themes, .enc backups, and Simulation Mode."
+        }
+      }
+    },
+    "step5": {
+      "kicker": "Operations & Reliability",
+      "title": "Diagnostics, Logs, and Fine-Tuning",
+      "desc": "Verify every connection in real time and tune refresh rates, caches, and encrypted backups.",
+      "logsTitle": "Live Connection Logs",
+      "logsDesc": "Filter by severity (INFO, WARN, ERROR, DATA, SYSTEM), search messages, isolate specific accounts, and pause auto-scroll while inspecting payloads.",
+      "settingsTitle": "Settings & Encrypted Backups",
+      "settingsDesc": "Adjust REST polling (1s–60s), manage IndexedDB history caches, export or import .enc key backups, or run a Factory Reset.",
+      "betaTitle": "Beta Data Precision Notice",
+      "betaDesc": "Each exchange uses specific rounding and margin formulas; minor differences may occur compared to exchange web portals.",
+      "tabLogs": "Logs Preview",
+      "tabSettings": "Settings Preview",
+      "openLogsBtn": "Open Logs",
+      "openSettingsBtn": "Open Settings"
+    },
+    "step6": {
+      "kicker": "First Steps",
+      "title": "Choose how you want to start",
+      "desc": "Explore immediately with realistic mock data or secure your local vault to connect your Read-Only exchange keys.",
+      "readOnlyTitle": "Read-Only Key Checklist",
+      "readOnlyRule": "Enable ONLY Read-Only permissions on your exchange. Never enable Withdrawal or Trade permissions.",
+      "bitgetRule": "Bitget & OKX require API Key, Secret, and Passphrase.",
+      "bybitRule": "Bybit requires API Key, Secret, and Account Region.",
+      "vaultStatusConfigured": "Security Vault is active ({{count}} key(s) saved)",
+      "vaultStatusPending": "Security Vault not configured yet",
+      "simulationActiveTag": "Simulation Mode is currently ON",
+      "ctaVaultAndKey": "Activate Vault & Add API Key",
+      "ctaManageKeys": "Go to API Keys Manager",
+      "ctaSimulation": "Explore with Simulation Mode",
+      "ctaSimulationActive": "Continue in Simulation Mode",
+      "ctaDashboard": "Go to Dashboard"
+    }
   }
 }

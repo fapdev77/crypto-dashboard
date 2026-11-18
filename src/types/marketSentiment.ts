@@ -21,6 +21,7 @@ export interface MarketTrendSummary {
     en: string;
     pt: string;
   };
+  adviceKey?: 'extremeGreed' | 'greed' | 'extremeFear' | 'fear' | 'neutral';
 }
 
 export interface MarketSentimentData {
