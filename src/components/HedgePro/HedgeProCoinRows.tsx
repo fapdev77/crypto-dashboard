@@ -5,10 +5,11 @@ import { HedgeProCoinRow } from './HedgeProCoinRow';
 import { usePagination } from '../../hooks/usePagination';
 import { Pagination } from '../ui/Pagination';
 import { HedgePnlConceptMode } from './HedgeProDashboard';
+import type { CurrencyFormatType } from '../../hooks/useFormatCurrency';
 
 interface HedgeProCoinRowsProps {
   summaries: HedgeCoinSummary[];
-  formatCurrency: (value: number | undefined | null, type?: 'usd' | 'crypto' | 'price' | 'compact', decimalsOrSymbol?: number | string) => string;
+  formatCurrency: (value: number | undefined | null, type?: CurrencyFormatType, decimalsOrSymbol?: number | string | boolean) => string;
   itemsPerPage?: number;
   pnlConceptMode?: HedgePnlConceptMode;
 }

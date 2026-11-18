@@ -209,7 +209,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
           )}
 
           <div>
-            <AppTooltip description="A friendly name to identify this API connection across the dashboard.">
+            <AppTooltip description={t('apiKeys.modal.tooltips.label', 'A friendly name to identify this API connection across the dashboard.')}>
               <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('apiKeys.modal.labelLabel', 'Connection Label')}</label>
             </AppTooltip>
             <input
@@ -223,7 +223,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
           </div>
 
           <div>
-            <AppTooltip description="Select the cryptocurrency exchange platform you are connecting to.">
+            <AppTooltip description={t('apiKeys.modal.tooltips.exchange', 'Select the cryptocurrency exchange platform you are connecting to.')}>
               <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('apiKeys.modal.exchangeLabel', 'Exchange')}</label>
             </AppTooltip>
             {mode === 'edit' ? (
@@ -278,7 +278,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
           {exchange === 'bitget' && (
             <div className="bg-elevated/80 border border-line rounded-lg p-3 space-y-2">
               <div className="flex items-center justify-between">
-                <AppTooltip description="Select whether this API Key is for a Bitget Classic account (v2) or Unified Trading Account (UTA / v3).">
+                <AppTooltip description={t('apiKeys.modal.tooltips.accountType', 'Select whether this API Key is for a Bitget Classic account (v2) or Unified Trading Account (UTA / v3).')}>
                   <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                     {t('apiKeys.modal.accountTypeLabel', 'Account Type / Mode')}
                   </label>
@@ -328,7 +328,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
               {/* Environment Selector */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <AppTooltip description="Select Mainnet for live trading or Testnet for simulated environment.">
+                  <AppTooltip description={t('apiKeys.modal.tooltips.environment', 'Select Mainnet for live trading or Testnet for simulated environment.')}>
                     <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                       {t('apiKeys.modal.environmentLabel', 'Network / Environment')}
                     </label>
@@ -379,7 +379,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
               {/* Region / Origin Selector */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <AppTooltip description="Select the origin or region for your Bybit account. For international accounts from Brazil or Argentina, the appropriate X-Site-Id header is automatically applied. For regions with dedicated regulatory domains (NL, TR, KZ, etc.), the official local endpoint is used.">
+                  <AppTooltip description={t('apiKeys.modal.tooltips.region', 'Select the origin or region for your Bybit account. For international accounts from Brazil or Argentina, the appropriate X-Site-Id header is automatically applied. For regions with dedicated regulatory domains (NL, TR, KZ, etc.), the official local endpoint is used.')}>
                     <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                       {t('apiKeys.modal.regionLabel', 'Account Region / Origin')}
                     </label>
@@ -473,7 +473,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
           )}
 
           <div>
-            <AppTooltip description="Your exchange API key. It is stored securely in your local browser and never sent to our servers.">
+            <AppTooltip description={t('apiKeys.modal.tooltips.apiKey', 'Your exchange API key. It is stored securely in your local browser and never sent to our servers.')}>
               <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-fg-muted/50">API Key</label>
             </AppTooltip>
             {mode === 'edit' ? (
@@ -495,7 +495,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
           {mode === 'create' && (
              <>
                <div>
-                 <AppTooltip description="Your exchange API Secret key. Keep it safe.">
+                 <AppTooltip description={t('apiKeys.modal.tooltips.apiSecret', 'Your exchange API Secret key. Keep it safe.')}>
                    <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-fg-muted/50">API Secret</label>
                  </AppTooltip>
                  <div className="relative">
@@ -519,7 +519,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
 
                {activeEx.requiresPassphrase && (
                  <div>
-                   <AppTooltip description="Required by some exchanges (like Bitget and OKX) as an extra security password for your API key.">
+                   <AppTooltip description={t('apiKeys.modal.tooltips.passphrase', 'Required by some exchanges (like Bitget and OKX) as an extra security password for your API key.')}>
                      <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider mb-2 w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('apiKeys.modal.passphraseLabel', 'Passphrase')}</label>
                    </AppTooltip>
                    <input

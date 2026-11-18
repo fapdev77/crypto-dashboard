@@ -6,7 +6,7 @@ import { useSettingsStore } from '../../../store/settingsStore';
 import { FilterBar } from '../../ui/FilterBar';
 import { UNIVERSAL_TX_FILTER_OPTIONS } from '../../../utils/transactionTypeMapper';
 import { CoinIcon } from '../../ui/CoinIcon';
-import { TIME_PERIOD_OPTIONS } from '../../../utils/dateTimeHelper';
+import { getLocalizedTimePeriodOptions } from '../../../utils/dateTimeHelper';
 
 export const TX_TYPES = UNIVERSAL_TX_FILTER_OPTIONS.map(opt => ({
   value: opt.value,
@@ -136,7 +136,7 @@ export function ConsolidatedTransactionFilters({ filters, setFilters, availableC
           customStartDate: val === 'custom' ? p.customStartDate : undefined,
           customEndDate: val === 'custom' ? p.customEndDate : undefined,
         })),
-        options: TIME_PERIOD_OPTIONS.map(tp => ({ value: tp.value, label: tp.label, tooltip: tp.tooltip, isCustom: tp.isCustom })),
+        options: getLocalizedTimePeriodOptions(t).map(tp => ({ value: tp.value, label: tp.label, tooltip: tp.tooltip, isCustom: tp.isCustom })),
         customStartDate: filters.customStartDate,
         customEndDate: filters.customEndDate,
         onCustomDateChange: (start, end) => setFilters(p => ({

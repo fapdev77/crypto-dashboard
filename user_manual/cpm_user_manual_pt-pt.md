@@ -1,6 +1,6 @@
 # 📘 Manual do Utilizador - Crypto Portfolio Manager (CPM)
 
-> **Versão da Aplicação:** 2.35.0  
+> **Versão da Aplicação:** 2.50.0  
 > **Plataformas Suportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitetura de Segurança:** Zero-Trust Client-Side (Criptografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -28,7 +28,6 @@ A nossa prioridade absoluta é a **segurança de nível zero-trust** e a **prese
    - [💼 Open Positions (Posições Ativas — Detailed & Lite)](#-open-positions-posições-ativas--detailed--lite)
    - [📂 Closed Positions (Histórico de Posições e Analytics)](#-closed-positions-histórico-de-posições-e-analytics)
    - [📝 Relatórios de Ordens (Ordens Abertas e Histórico de Ordens)](#-relatórios-de-ordens-ordens-abertas-e-histórico-de-ordens)
-   - [🔄 Histórico de Execuções (Trade History)](#-histórico-de-execuções-trade-history)
    - [📜 Histórico de Transações e Variação Líquida Consolidada](#-histórico-de-transações-e-variação-líquida-consolidada)
    - [📊 Desempenho do Portefólio (Portfolio Performance)](#-desempenho-do-portefólio-portfolio-performance)
    - [📈 Análise de Mercado (Market Analytics)](#-análise-de-mercado-market-analytics)
@@ -174,8 +173,8 @@ Módulo dedicado na barra lateral concebido para arbitragem de taxas de financia
 - **Medidor de Exposição do Portefólio**: Barra gráfica tricolor (% Protegido, % Exposto, % Alavancagem).
 
 ### 💼 Open Positions (Posições Ativas — Detailed & Lite)
-- Alternância entre visualização detalhada em cartões e formato de tabela compacta.
-- Apresentação de Preço de Entrada, Preço Mark, Preço de Liquidação, ROE% e alavancagem efetiva.
+- Alternância entre visualização detalhada em cartões (com Hedge/Exposição e painel expansível) e formato **Lite**, que apresenta cada posição numa única linha com seis colunas (corretora/conta/símbolo, lado/alavancagem/modo, tamanho/valor, PnL realizado e não realizado, entrada/marcação/liquidação), empilhadas uma por linha no mobile.
+- Apresentação de conta/ativo, lado/alavancagem, tamanho/valor, PnL realizado e não realizado, Preço de Entrada, Preço Mark, Preço de Liquidação e TP/SL.
 
 ### 📂 Closed Positions (Histórico de Posições e Analytics)
 - Registo completo de posições encerradas com métricas de **Win Rate %**, **Profit Factor** e exportação para **CSV**, **Excel (.xlsx)** e **PDF**.

@@ -3,6 +3,7 @@
  * Supports locale-aware user display formatting (24-hour clock) as well as standardized ISO date representations.
  */
 
+import type { TFunction } from 'i18next';
 import { useSettingsStore } from '../store/settingsStore';
 
 export interface FormatDateTimeOptions {
@@ -282,6 +283,8 @@ export interface TimePeriodOption {
   ms?: number;
   tooltip?: string;
   isCustom?: boolean;
+  /** i18n preset id under `common.timePeriod` (today, 7d, ... custom, all). */
+  i18nKey?: string;
 }
 
 /**
@@ -289,19 +292,35 @@ export interface TimePeriodOption {
  * Today, 7D, 14D, 30D, 90D, 120D, 6M, 1Y, MTD, YTD, Custom Range, All Time.
  */
 export const TIME_PERIOD_OPTIONS: TimePeriodOption[] = [
-  { value: String(24 * 60 * 60 * 1000), label: 'Today', ms: 24 * 60 * 60 * 1000, tooltip: 'Current calendar day (from 00:00:00 today)' },
-  { value: String(7 * 24 * 60 * 60 * 1000), label: '7 Days', ms: 7 * 24 * 60 * 60 * 1000, tooltip: 'Last 7 calendar days' },
-  { value: String(14 * 24 * 60 * 60 * 1000), label: '14 Days', ms: 14 * 24 * 60 * 60 * 1000, tooltip: 'Last 14 calendar days' },
-  { value: String(30 * 24 * 60 * 60 * 1000), label: '30 Days', ms: 30 * 24 * 60 * 60 * 1000, tooltip: 'Last 30 calendar days' },
-  { value: String(90 * 24 * 60 * 60 * 1000), label: '90 Days', ms: 90 * 24 * 60 * 60 * 1000, tooltip: 'Last 90 calendar days' },
-  { value: String(120 * 24 * 60 * 60 * 1000), label: '120 Days', ms: 120 * 24 * 60 * 60 * 1000, tooltip: 'Last 120 calendar days' },
-  { value: String(180 * 24 * 60 * 60 * 1000), label: '6 Months', ms: 180 * 24 * 60 * 60 * 1000, tooltip: 'Last 6 calendar months (~180 days)' },
-  { value: String(365 * 24 * 60 * 60 * 1000), label: '1 Year', ms: 365 * 24 * 60 * 60 * 1000, tooltip: 'Last 1 calendar year (365 days)' },
-  { value: 'mtd', label: 'MTD', tooltip: 'Month-to-Date: from the 1st of the current month to today' },
-  { value: 'ytd', label: 'YTD', tooltip: 'Year-to-Date: from January 1st of the current year to today' },
-  { value: 'custom', label: 'Custom Range...', isCustom: true, tooltip: 'Choose specific start and end calendar dates' },
-  { value: '0', label: 'All Time', ms: 0, tooltip: 'Entire transaction and performance history' },
+  { value: String(24 * 60 * 60 * 1000), label: 'Today', ms: 24 * 60 * 60 * 1000, tooltip: 'Current calendar day (from 00:00:00 today)', i18nKey: 'today' },
+  { value: String(7 * 24 * 60 * 60 * 1000), label: '7 Days', ms: 7 * 24 * 60 * 60 * 1000, tooltip: 'Last 7 calendar days', i18nKey: '7d' },
+  { value: String(14 * 24 * 60 * 60 * 1000), label: '14 Days', ms: 14 * 24 * 60 * 60 * 1000, tooltip: 'Last 14 calendar days', i18nKey: '14d' },
+  { value: String(30 * 24 * 60 * 60 * 1000), label: '30 Days', ms: 30 * 24 * 60 * 60 * 1000, tooltip: 'Last 30 calendar days', i18nKey: '30d' },
+  { value: String(90 * 24 * 60 * 60 * 1000), label: '90 Days', ms: 90 * 24 * 60 * 60 * 1000, tooltip: 'Last 90 calendar days', i18nKey: '90d' },
+  { value: String(120 * 24 * 60 * 60 * 1000), label: '120 Days', ms: 120 * 24 * 60 * 60 * 1000, tooltip: 'Last 120 calendar days', i18nKey: '120d' },
+  { value: String(180 * 24 * 60 * 60 * 1000), label: '6 Months', ms: 180 * 24 * 60 * 60 * 1000, tooltip: 'Last 6 calendar months (~180 days)', i18nKey: '6m' },
+  { value: String(365 * 24 * 60 * 60 * 1000), label: '1 Year', ms: 365 * 24 * 60 * 60 * 1000, tooltip: 'Last 1 calendar year (365 days)', i18nKey: '1y' },
+  { value: 'mtd', label: 'MTD', tooltip: 'Month-to-Date: from the 1st of the current month to today', i18nKey: 'mtd' },
+  { value: 'ytd', label: 'YTD', tooltip: 'Year-to-Date: from January 1st of the current year to today', i18nKey: 'ytd' },
+  { value: 'custom', label: 'Custom Range...', isCustom: true, tooltip: 'Choose specific start and end calendar dates', i18nKey: 'custom' },
+  { value: '0', label: 'All Time', ms: 0, tooltip: 'Entire transaction and performance history', i18nKey: 'all' },
 ];
+
+/**
+ * Returns the time period presets with `label` and `tooltip` translated through the
+ * active i18n locale, falling back to the English defaults declared above.
+ */
+export function getLocalizedTimePeriodOptions(t: TFunction): TimePeriodOption[] {
+  return TIME_PERIOD_OPTIONS.map((option) => {
+    if (!option.i18nKey) return option;
+    const base = `common.timePeriod.${option.i18nKey}`;
+    return {
+      ...option,
+      label: t(`${base}.label`, option.label),
+      tooltip: option.tooltip ? t(`${base}.tooltip`, option.tooltip) : undefined,
+    };
+  });
+}
 
 export interface ResolvedDateRange {
   startTime: number | null;
@@ -420,3 +439,136 @@ export function resolvePeriodDateRange(
 
   return { startTime: null, endTime: null };
 }
+
+/**
+ * Returns the Unix timestamp (ms) for 00:00:00.000 UTC of the reference day.
+ */
+export function getStartOfTodayUtcMs(refDate?: Date): number {
+  const now = refDate || new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0);
+}
+
+/**
+ * Returns the Unix timestamp (ms) for 23:59:59.999 UTC of the reference day.
+ */
+export function getEndOfTodayUtcMs(refDate?: Date): number {
+  const now = refDate || new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999);
+}
+
+/**
+ * Returns the Unix timestamp (ms) for 00:00:00.000 UTC on the 1st of the current UTC month.
+ */
+export function getStartOfMonthUtcMs(refDate?: Date): number {
+  const now = refDate || new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0);
+}
+
+/**
+ * Returns the Unix timestamp (ms) for 00:00:00.000 UTC on Jan 1st of the current UTC year.
+ */
+export function getStartOfYearUtcMs(refDate?: Date): number {
+  const now = refDate || new Date();
+  return Date.UTC(now.getUTCFullYear(), 0, 1, 0, 0, 0, 0);
+}
+
+/**
+ * Parses a 'YYYY-MM-DD' or ISO string into 00:00:00.000 UTC.
+ */
+export function parseDateStartOfDayUtc(dateStr: string | undefined | null): number | null {
+  if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') return null;
+  const parts = dateStr.trim().split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      const ms = Date.UTC(year, month, day, 0, 0, 0, 0);
+      if (!isNaN(ms)) return ms;
+    }
+  }
+  const fallback = new Date(dateStr);
+  if (!isNaN(fallback.getTime())) {
+    return Date.UTC(fallback.getUTCFullYear(), fallback.getUTCMonth(), fallback.getUTCDate(), 0, 0, 0, 0);
+  }
+  return null;
+}
+
+/**
+ * Parses a 'YYYY-MM-DD' or ISO string into 23:59:59.999 UTC.
+ */
+export function parseDateEndOfDayUtc(dateStr: string | undefined | null): number | null {
+  if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') return null;
+  const parts = dateStr.trim().split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      const ms = Date.UTC(year, month, day, 23, 59, 59, 999);
+      if (!isNaN(ms)) return ms;
+    }
+  }
+  const fallback = new Date(dateStr);
+  if (!isNaN(fallback.getTime())) {
+    return Date.UTC(fallback.getUTCFullYear(), fallback.getUTCMonth(), fallback.getUTCDate(), 23, 59, 59, 999);
+  }
+  return null;
+}
+
+/**
+ * Resolves a time period selection into UTC { startTime, endTime } bounds.
+ */
+export function resolveUtcPeriodDateRange(
+  timePeriod: number | string | undefined | null,
+  customStartDate?: string,
+  customEndDate?: string,
+  refDate?: Date
+): ResolvedDateRange {
+  const periodStr = String(timePeriod ?? '0').toLowerCase().trim();
+
+  if (periodStr === '0' || periodStr === 'all' || periodStr === '') {
+    return { startTime: null, endTime: null };
+  }
+
+  if (periodStr === 'mtd') {
+    return {
+      startTime: getStartOfMonthUtcMs(refDate),
+      endTime: getEndOfTodayUtcMs(refDate),
+    };
+  }
+
+  if (periodStr === 'ytd') {
+    return {
+      startTime: getStartOfYearUtcMs(refDate),
+      endTime: getEndOfTodayUtcMs(refDate),
+    };
+  }
+
+  if (periodStr === 'custom' || ((periodStr === '' || periodStr === 'undefined') && (customStartDate || customEndDate))) {
+    let startMs = parseDateStartOfDayUtc(customStartDate);
+    let endMs = parseDateEndOfDayUtc(customEndDate);
+
+    if (startMs !== null && endMs !== null && startMs > endMs) {
+      startMs = parseDateStartOfDayUtc(customEndDate);
+      endMs = parseDateEndOfDayUtc(customStartDate);
+    }
+
+    return { startTime: startMs, endTime: endMs };
+  }
+
+  const numericMs = Number(periodStr);
+  if (!isNaN(numericMs) && numericMs > 0) {
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const days = Math.round(numericMs / ONE_DAY_MS);
+    const startTodayUtc = getStartOfTodayUtcMs(refDate);
+    const startMs = days <= 1 ? startTodayUtc : startTodayUtc - (days - 1) * ONE_DAY_MS;
+    return {
+      startTime: startMs,
+      endTime: getEndOfTodayUtcMs(refDate),
+    };
+  }
+
+  return { startTime: null, endTime: null };
+}
+

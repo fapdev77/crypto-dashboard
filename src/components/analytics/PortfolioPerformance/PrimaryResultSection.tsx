@@ -27,10 +27,10 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
           <Target className="w-4 h-4 text-accent" />
           {t('analytics.portfolio.primary.title', 'Primary Result')}
         </h3>
-        <div className="flex items-center gap-2 text-xs text-fg-muted">
+        <div className="flex items-center gap-2 text-xs text-fg-muted font-mono tabular-nums">
           <Calendar className="w-3.5 h-3.5" />
           <span>
-            Period: {metrics.earliestDate} to {metrics.latestDate} ({metrics.durationDays} {metrics.durationDays === 1 ? 'day' : 'days'})
+            Period (UTC): {metrics.earliestDate} to {metrics.latestDate} ({metrics.durationDays} {metrics.durationDays === 1 ? 'day' : 'days'})
           </span>
         </div>
       </div>
@@ -42,10 +42,10 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
           <span className="text-[11px] font-semibold tracking-wider text-fg-muted uppercase mb-1">
             {t('analytics.portfolio.primary.roi', 'Percentage Gain in Period (ROI)')}
           </span>
-          <div className={`text-4xl sm:text-5xl font-extrabold font-mono tracking-tight ${isPositive ? 'text-success' : 'text-danger'}`}>
+          <div className={`text-4xl sm:text-5xl font-extrabold font-mono tabular-nums tracking-tight ${isPositive ? 'text-success' : 'text-danger'}`}>
             {isPositive ? '+' : ''}{metrics.percentageGain.toFixed(2)}%
           </div>
-          <div className="flex items-center gap-2 mt-2 text-sm text-fg-muted font-mono">
+          <div className="flex items-center gap-2 mt-2 text-sm text-fg-muted font-mono tabular-nums">
             <span>{t('analytics.portfolio.primary.absoluteGain', 'Absolute Gain')}:</span>
             <span className={`font-bold ${isPositive ? 'text-success' : 'text-danger'}`}>
               {maskVal(`${isPositive ? '+' : ''}${metrics.absoluteGain} ${denomination}`)}
@@ -63,14 +63,14 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
           {/* 1. Initial Balance */}
           <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
-              <AppTooltip description="Portfolio wallet balance at the time of the first trading operation (excluding subsequent deposits).">
+              <AppTooltip description="Portfolio wallet balance at the start of the analyzed window across all selected accounts (excluding subsequent deposits).">
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.primary.initialBalance', 'Initial Balance')}
                 </span>
               </AppTooltip>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-fg">
+              <div className="text-xl font-bold font-mono tabular-nums text-fg">
                 {maskVal(metrics.initialBalance)}
               </div>
               <span className="text-xs text-fg-muted">{denomination}</span>
@@ -80,14 +80,14 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
           {/* 2. Final Balance */}
           <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
-              <AppTooltip description="Total portfolio wallet balance at the end of the analyzed timeframe.">
+              <AppTooltip description="Consolidated portfolio wallet balance across all active selected accounts at the end of the analyzed timeframe.">
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.primary.finalBalance', 'Final Balance')}
                 </span>
               </AppTooltip>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-fg">
+              <div className="text-xl font-bold font-mono tabular-nums text-fg">
                 {maskVal(metrics.finalBalance)}
               </div>
               <span className="text-xs text-fg-muted">{denomination}</span>
@@ -104,7 +104,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
               </AppTooltip>
             </div>
             <div>
-              <div className={`text-xl font-bold font-mono ${metrics.dailyAverageRoi >= 0 ? 'text-success' : 'text-danger'}`}>
+              <div className={`text-xl font-bold font-mono tabular-nums ${metrics.dailyAverageRoi >= 0 ? 'text-success' : 'text-danger'}`}>
                 {metrics.dailyAverageRoi >= 0 ? '+' : ''}{metrics.dailyAverageRoi.toFixed(4)}%
               </div>
               <span className="text-xs text-fg-muted">{t('analytics.portfolio.primary.perOperatingDay', 'per operating day')}</span>
@@ -114,14 +114,14 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
           {/* 4. Deposits in Period */}
           <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
-              <AppTooltip description="Total deposits during the period. Excluded from ROI calculations to measure genuine strategy alpha.">
+              <AppTooltip description="Total deposits during the period. Separated from operational gain to measure genuine strategy performance.">
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50 flex items-center gap-1">
                   {t('analytics.portfolio.primary.depositsInPeriod', 'Deposits in Period')} <Info className="w-3 h-3 text-accent" />
                 </span>
               </AppTooltip>
             </div>
             <div>
-              <div className="text-xl font-bold font-mono text-fg">
+              <div className="text-xl font-bold font-mono tabular-nums text-fg">
                 {maskVal(metrics.depositsInPeriod)}
               </div>
               <span className="text-[10px] text-fg-muted block mt-0.5">

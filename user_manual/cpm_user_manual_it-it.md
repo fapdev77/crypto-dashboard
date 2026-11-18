@@ -1,6 +1,6 @@
 # 📘 Manuale Utente - Crypto Portfolio Manager (CPM)
 
-> **Versione dell'Applicazione:** 2.35.0  
+> **Versione dell'Applicazione:** 2.50.0  
 > **Piattaforme Supportate:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Architettura di Sicurezza:** Zero-Trust Client-Side (Crittografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -28,7 +28,6 @@ La nostra priorità fondamentale è la **sicurezza zero-trust** e la **tutela as
    - [💼 Open Positions (Posizioni Attive — Detailed & Lite)](#-open-positions-posizioni-attive--detailed--lite)
    - [📂 Closed Positions (Storico Posizioni e Analisi)](#-closed-positions-storico-posizioni-e-analisi)
    - [📝 Report Ordini (Ordini Aperti e Storico Ordini)](#-report-ordini-ordini-aperti-e-storico-ordini)
-   - [🔄 Storico Esecuzioni (Trade History)](#-storico-esecuzioni-trade-history)
    - [📜 Storico Transazioni e Variazione Netta Consolidata](#-storico-transazioni-e-variazione-netta-consolidata)
    - [📊 Performance del Portafoglio (Portfolio Performance)](#-performance-del-portafoglio-portfolio-performance)
    - [📈 Analisi di Mercato (Market Analytics)](#-analisi-di-mercato-market-analytics)
@@ -127,7 +126,7 @@ La pagina **Settings** organizza la configurazione in **10 schede modulari**:
 - **Indicatore di Esposizione**: Barra grafica tricolore (% Protetto, % Esposto, % Leva).
 
 ### 💼 Open Positions (Posizioni Attive — Detailed & Lite)
-- Visualizzazione dettagliata o compatta con prezzo di ingresso, mark price, prezzo di liquidazione e avvisi di rischio.
+- Visualizzazione dettagliata (tutte le metriche e pannello espandibile) o **Lite**, che mostra ogni posizione in un'unica riga con sei colonne: exchange/conto/simbolo, lato/leva/modalità, dimensione/valore, PnL realizzato e non realizzato, entrata/mark/liquidazione. Su mobile ogni colonna diventa una riga.
 
 ### 📂 Closed Positions (Storico Posizioni e Analisi)
 - Riepilogo delle posizioni chiuse con **Win Rate %**, **Profit Factor** ed esportazione in **CSV**, **Excel** e **PDF**.

@@ -201,7 +201,7 @@ export function Settings() {
             {/* TTL Cache Configuration Slider */}
             <div className="pt-2">
               <div className="flex items-center justify-between mb-1.5">
-                <AppTooltip description="Defines how long exchange rates remain cached in the browser before querying api.frankfurter.dev again (5 to 60 minutes).">
+                <AppTooltip description={t('settings.currencyCacheTooltip', 'Defines how long exchange rates remain cached in the browser before querying api.frankfurter.dev again (5 to 60 minutes).')}>
                   <label className="text-fg font-medium text-xs cursor-help border-b border-dashed border-fg-muted/50">
                     {t('settings.ttlLabel', 'Exchange Rates Cache TTL')}
                   </label>

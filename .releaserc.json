@@ -41,6 +41,7 @@
         "npmPublish": false
       }
     ],
+    "./tools/sync-release-docs.mjs",
     "@semantic-release/github",
     [
       "@semantic-release/git",
@@ -48,7 +49,13 @@
         "assets": [
           "package.json",
           "package-lock.json",
-          "CHANGELOG.md"
+          "CHANGELOG.md",
+          "README.md",
+          "index.html",
+          "metadata.json",
+          "specs/ARCHITECTURE.md",
+          "specs/PRD.md",
+          "user_manual/*.md"
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }

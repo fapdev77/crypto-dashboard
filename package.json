@@ -1,7 +1,7 @@
 {
   "name": "crypto-portfolio-manager",
   "private": true,
-  "version": "2.37.0",
+  "version": "2.50.0",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -13,7 +13,13 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "vitest run"
+    "lint:eslint": "eslint src --max-warnings 748",
+    "lint:eslint-fix": "eslint src --max-warnings 748 --fix",
+    "pretest": "node -e \"require('node:fs').mkdirSync('.quality', { recursive: true })\"",
+    "test": "vitest run --reporter=default --reporter=json --outputFile=.quality/test-suite.json",
+    "test:coverage": "vitest run --coverage --testTimeout=15000",
+    "test:vault": "vitest run src/components/__tests__/VaultModalScreens.test.tsx",
+    "verify:docs": "node tools/verify-docs.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
@@ -58,12 +64,16 @@
     "@types/express": "^4.17.21",
     "@types/http-proxy-middleware": "^0.19.3",
     "@types/node": "^22.14.0",
+    "@types/react-dom": "^19.3.0",
     "@vercel/node": "^5.8.22",
     "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.4.21",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^6.1.1",
     "jsdom": "^29.1.1",
     "semantic-release": "^25.0.8",
     "tailwindcss": "^4.1.14",
+    "typescript-eslint": "^8.72.2",
     "vite": "^6.2.3",
     "vitest": "^4.1.7"
   },

@@ -72,6 +72,8 @@ export interface UnifiedOrder {
   createdTime: number;
   updatedTime: number;
   fees?: number;
+  /** Currency the trading fee was charged in (e.g. 'USDT', 'MNT', 'BTC'). */
+  feeCurrency?: string;
   leverage?: number;
   marginMode?: UnifiedMarginMode;
   raw?: RawOrderData;

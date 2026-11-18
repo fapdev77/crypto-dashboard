@@ -255,8 +255,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
       if (response.retCode !== 0) throw new Error(response.retMsg);
 
       // Bybit category value came in the result object so we need to inject it in the list object to be returned
-      const list = response.result?.list || [];
-      return list.map(position => ({
+      const list: Array<Record<string, unknown>> = response.result?.list || [];
+      return list.map((position): Record<string, unknown> & { category: string } => ({
         ...position,
         category: category
       }));
@@ -267,7 +267,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
 
     const mappedPositions = await Promise.all(
       rawList
-        .filter(pos => parseFloat(pos.size || '0') > 0)
+        .filter(pos => parseFloat(String(pos.size ?? '0')) > 0)
         .map(pos => this.mapPosition(pos, key, accountMarginMode))
     );
 
@@ -710,6 +710,27 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
     return this.normalizeOrders(allOrders, key);
   }
 
+  /**
+   * Bybit deprecated `cumExecFee` for `linear`/`spot` in favour of `cumFeeDetail`
+   * (a per-currency map, e.g. `{ "MNT": "0.0024" }`). Inverse/option orders still
+   * report `cumExecFee` only, so that stays as the fallback.
+   */
+  private static extractFee(o: any): { fee: number; feeCurrency?: string } {
+    const detail = o?.cumFeeDetail;
+    if (detail && typeof detail === 'object' && !Array.isArray(detail)) {
+      const entries = Object.entries(detail as Record<string, unknown>)
+        .map(([currency, value]) => ({ currency, amount: parseFloat(String(value ?? '0')) }))
+        .filter(e => Number.isFinite(e.amount) && e.amount !== 0)
+        .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+      if (entries.length > 0) {
+        // Total paid across currencies; the label follows the dominant one.
+        const fee = entries.reduce((sum, e) => sum + e.amount, 0);
+        return { fee, feeCurrency: entries[0].currency };
+      }
+    }
+    return { fee: parseFloat(o?.cumExecFee || '0') };
+  }
+
   private normalizeOrders(rawOrders: any[], key: ApiCredentials): import('../../types').UnifiedOrder[] {
     return rawOrders.map(o => {
       let status: import('../../types').UnifiedOrderStatus = 'NEW';
@@ -779,6 +800,7 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
 
       const pSize = parseFloat(o.qty || '0');
       const pFil = parseFloat(o.cumExecQty || '0');
+      const { fee: orderFee, feeCurrency: orderFeeCurrency } = BybitAdapter.extractFee(o);
 
       return {
         id: `${key.id}-${o.orderId}`,
@@ -807,7 +829,8 @@ export class BybitAdapter extends BaseExchangeAdapter implements IExchangeAdapte
         timeInForce: o.timeInForce,
         createdTime: parseInt(o.createdTime, 10),
         updatedTime: parseInt(o.updatedTime, 10),
-        fees: parseFloat(o.cumExecFee || '0'),
+        fees: orderFee,
+        feeCurrency: orderFeeCurrency,
         raw: o
       };
     });

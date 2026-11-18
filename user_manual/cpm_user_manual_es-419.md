@@ -1,6 +1,6 @@
 # 📘 Manual de Usuario - Crypto Portfolio Manager (CPM)
 
-> **Versión de la Aplicación:** 2.35.0  
+> **Versión de la Aplicación:** 2.50.0  
 > **Plataformas Soportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitectura de Seguridad:** Zero-Trust Client-Side (Cifrado Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -28,7 +28,6 @@ Nuestra prioridad fundamental es la **seguridad zero-trust** y la **preservació
    - [💼 Open Positions (Posiciones Activas — Detailed & Lite)](#-open-positions-posiciones-activas--detailed--lite)
    - [📂 Closed Positions (Historial de Posições y Análisis)](#-closed-positions-historial-de-posições-y-análisis)
    - [📝 Reportes de Órdenes (Órdenes Abiertas e Historial de Órdenes)](#-reportes-de-órdenes-órdenes-abiertas-e-historial-de-órdenes)
-   - [🔄 Historial de Ejecuciones (Trade History)](#-historial-de-ejecuciones-trade-history)
    - [📜 Historial de Transacciones y Variación Neta Consolidada](#-historial-de-transacciones-y-variación-neta-consolidada)
    - [📊 Rendimiento del Portafolio (Portfolio Performance)](#-rendimiento-del-portafolio-portfolio-performance)
    - [📈 Análisis de Mercado (Market Analytics)](#-análisis-de-mercado-market-analytics)
@@ -127,7 +126,7 @@ La pantalla **Settings** agrupa la gobernanza en **10 tarjetas modulares**:
 - **Barra de Exposición**: Indicador tricolor (% Protegido, % Expuesto, % Apalancamiento).
 
 ### 💼 Open Positions (Posiciones Activas — Detailed & Lite)
-- Modos detallado y compacto con precio de entrada, precio mark, precio de liquidación, ROE% y apalancamiento.
+- Modo detallado (todas las métricas y panel expandible) y modo **Lite**, que muestra cada posición en una sola fila con seis columnas: exchange/cuenta/símbolo, lado/apalancamiento/modo, tamaño/valor, PnL realizado y no realizado, entrada/mark/liquidación. En móvil cada columna pasa a una línea propia.
 
 ### 📂 Closed Positions (Historial de Posiciones y Análisis)
 - Resumen estadístico de operaciones cerradas (**Win Rate %**, **Profit Factor**) con exportación a **CSV**, **Excel** y **PDF**.

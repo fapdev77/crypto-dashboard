@@ -16,6 +16,8 @@ import {
   Cell,
 } from 'recharts';
 
+import { getDenominationDecimals } from '../../../utils/portfolioPerformanceEngine';
+
 interface Props {
   dayOfWeek: {
     list: DayOfWeekItem[];
@@ -32,7 +34,6 @@ interface Props {
 }
 
 export const TemporalPerformanceSection = React.memo(function TemporalPerformanceSection({
-  
   dayOfWeek,
   timeOfDay,
   denomination,
@@ -40,6 +41,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
 }: Props) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'dayOfWeek' | 'timeOfDay'>('dayOfWeek');
+  const decimals = getDenominationDecimals(denomination);
 
   const maskVal = (val: string | number) => {
     if (isPrivateMode) return '****';
@@ -49,7 +51,6 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
   const formatGain = (val: number) => {
     if (isPrivateMode) return '****';
     const sign = val > 0 ? '+' : '';
-    const decimals = denomination === 'USD' ? 2 : 4;
     return `${sign}${val.toFixed(decimals)} ${denomination}`;
   };
 
@@ -102,7 +103,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                   <div className="text-lg font-bold text-fg">
                     {dayOfWeek.bestDay.name}
                   </div>
-                  <div className="text-xs font-mono font-bold text-emerald-400 mt-1">
+                  <div className="text-xs font-mono tabular-nums font-bold text-emerald-400 mt-1">
                     {formatGain(dayOfWeek.bestDay.gain)}
                   </div>
                 </div>
@@ -119,7 +120,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                   <div className="text-lg font-bold text-fg">
                     {dayOfWeek.worstDay.name}
                   </div>
-                  <div className="text-xs font-mono font-bold text-rose-400 mt-1">
+                  <div className="text-xs font-mono tabular-nums font-bold text-rose-400 mt-1">
                     {formatGain(dayOfWeek.worstDay.gain)}
                   </div>
                 </div>
@@ -133,7 +134,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             <div className="bg-elevated/50 border border-line/60 rounded-xl p-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted mb-3 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-accent" />
-                Total Return by Day (Trading + Funding)
+                Total Return by Day (UTC)
               </h4>
               <div className="h-56 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -157,29 +158,29 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                         if (active && payload && payload.length) {
                           const data = payload[0].payload as DayOfWeekItem;
                           return (
-                            <div className="bg-[#1b1c20] border border-line p-3 rounded-lg shadow-xl text-xs space-y-1">
-                              <p className="font-bold text-fg border-b border-line pb-1">
-                                {data.dayName}
+                            <div className="bg-[#1b1c20] border border-line p-3 rounded-lg shadow-xl text-xs space-y-1 font-mono tabular-nums">
+                              <p className="font-bold font-sans text-fg border-b border-line pb-1">
+                                {data.dayName} (UTC)
                               </p>
                               <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Operations:</span>
-                                <span className="font-mono text-fg">{maskVal(data.trades)}</span>
+                                <span className="text-fg">{maskVal(data.trades)}</span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Trading Result:</span>
-                                <span className={`font-mono ${data.tradingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                <span className={data.tradingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
                                   {formatGain(data.tradingGain)}
                                 </span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted">
                                 <span>Funding Result:</span>
-                                <span className={`font-mono ${data.fundingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                <span className={data.fundingGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
                                   {formatGain(data.fundingGain)}
                                 </span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted pt-1 border-t border-line">
                                 <span className="font-bold text-fg">Total Result:</span>
-                                <span className={`font-mono font-bold ${data.totalGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                <span className={`font-bold ${data.totalGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                   {formatGain(data.totalGain)}
                                 </span>
                               </div>
@@ -207,14 +208,14 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
               <table className="w-full text-left text-xs border border-line rounded-lg overflow-hidden">
                 <thead className="bg-[#1b1c20] text-fg-muted uppercase text-[10px] tracking-wider border-b border-line">
                   <tr>
-                    <th className="py-2.5 px-4 font-semibold">Day of Week</th>
+                    <th className="py-2.5 px-4 font-semibold">Day of Week (UTC)</th>
                     <th className="py-2.5 px-4 font-semibold text-right">Trades / Ops</th>
                     <th className="py-2.5 px-4 font-semibold text-right">Trading Result</th>
                     <th className="py-2.5 px-4 font-semibold text-right">Funding Result</th>
                     <th className="py-2.5 px-4 font-semibold text-right">Total Result</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line/60 font-mono">
+                <tbody className="divide-y divide-line/60 font-mono tabular-nums">
                   {dayOfWeek.list.map((d) => (
                     <tr key={d.dayName} className="hover:bg-elevated transition-colors">
                       <td className="py-2.5 px-4 font-sans font-medium text-fg flex items-center gap-2">
@@ -371,7 +372,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                     <th className="py-2.5 px-4 font-semibold text-right">Total Result</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line/60 font-mono">
+                <tbody className="divide-y divide-line/60 font-mono tabular-nums">
                   {timeOfDay.list.map((t) => (
                     <tr key={t.periodLabel} className="hover:bg-elevated transition-colors">
                       <td className="py-2.5 px-4 font-sans font-medium text-fg flex items-center gap-2">

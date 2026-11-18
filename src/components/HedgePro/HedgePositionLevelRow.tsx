@@ -3,7 +3,7 @@ import { AlertTriangle, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { HedgePositionLevels } from '../../utils/hedgeUtils';
 import { AppTooltip } from '../ui/Tooltip';
-import { formatPrice } from '../../utils/formatters';
+import type { CurrencyFormatType } from '../../hooks/useFormatCurrency';
 import { HedgeExposureBar } from './HedgeExposureBar';
 import { HedgePnlConceptMode } from './HedgeProDashboard';
 
@@ -11,8 +11,8 @@ interface RowProps {
   level: HedgePositionLevels;
   formatCurrency: (
     value: number | undefined | null,
-    type?: 'usd' | 'crypto' | 'price' | 'compact',
-    decimalsOrSymbol?: number | string
+    type?: CurrencyFormatType,
+    decimalsOrSymbol?: number | string | boolean
   ) => string;
   /**
    * 'table' (default): full row with the Protected/Exposed/Leveraged bar.
@@ -119,11 +119,11 @@ export function HedgePositionLevelRow({
         <div className="flex items-center gap-3 text-xs font-mono">
           <span className="text-fg-muted">
             {t('hedgePro.positions.entry')}{' '}
-            <span className="text-fg font-medium">{formatPrice(level.entryPrice, isFiatPair)}</span>
+            <span className="text-fg font-medium">{formatCurrency(level.entryPrice, 'priceFiat', isFiatPair)}</span>
           </span>
           <span className="text-fg-muted">
             {t('hedgePro.positions.mark')}{' '}
-            <span className="text-fg font-medium">{formatPrice(level.markPrice, isFiatPair)}</span>
+            <span className="text-fg font-medium">{formatCurrency(level.markPrice, 'priceFiat', isFiatPair)}</span>
           </span>
           <span className="text-fg-muted">
             {t('hedgePro.positions.size')}{' '}

@@ -104,6 +104,9 @@ interface SettingsState {
   /** Exposed balance calculation mode for hedge positions ('gross' or 'net'). */
   hedgeExposedMode: 'gross' | 'net';
   setHedgeExposedMode: (mode: 'gross' | 'net') => void;
+  /** Display mode for the Open Positions list: 'detailed' (all metrics + expandable grid) or 'lite' (essential columns only). */
+  positionsViewMode: 'detailed' | 'lite';
+  setPositionsViewMode: (mode: 'detailed' | 'lite') => void;
   /** Whether the encrypted vault automatically locks on user inactivity. Default true. */
   vaultAutoLockEnabled: boolean;
   setVaultAutoLockEnabled: (enabled: boolean) => void;
@@ -258,6 +261,8 @@ export const useSettingsStore = create<SettingsState>()(
       setFundingHistoryInterval: (val: number) => set({ fundingHistoryInterval: Math.max(4, Math.min(8, val)) }),
       hedgeExposedMode: 'gross',
       setHedgeExposedMode: (hedgeExposedMode: 'gross' | 'net') => set({ hedgeExposedMode }),
+      positionsViewMode: 'detailed',
+      setPositionsViewMode: (positionsViewMode: 'detailed' | 'lite') => set({ positionsViewMode }),
       vaultAutoLockEnabled: true,
       setVaultAutoLockEnabled: (vaultAutoLockEnabled: boolean) => set({ vaultAutoLockEnabled }),
       vaultAutoLockMinutes: 15,

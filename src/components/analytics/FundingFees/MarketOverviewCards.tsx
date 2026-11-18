@@ -99,13 +99,13 @@ export const MarketOverviewCards = ({
                 {marketMetrics.totalSymbols}
               </span>
               <div className="flex flex-col gap-0.5 text-[11px]">
-                <AppTooltip description="Linear perpetual contracts settled in USDT." side="top" align="center">
+                <AppTooltip description={t('analytics.funding.overview.usdtm', 'Linear perpetual contracts settled in USDT.')} side="top" align="center">
                   <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-fg-muted">
                     <span>USDT-M</span>
                     <span className="font-mono text-fg">{marketMetrics.usdtmSymbols}</span>
                   </span>
                 </AppTooltip>
-                <AppTooltip description="Inverse perpetual contracts settled in the base coin (e.g. BTC, ETH)." side="top" align="center">
+                <AppTooltip description={t('analytics.funding.overview.coinm', 'Inverse perpetual contracts settled in the base coin (e.g. BTC, ETH).')} side="top" align="center">
                   <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-fg-muted">
                     <span>COIN-M</span>
                     <span className="font-mono text-fg">{marketMetrics.coinmSymbols}</span>
@@ -121,7 +121,7 @@ export const MarketOverviewCards = ({
                   <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">Distribution Today</span>
                 </div>
                 <AppTooltip
-                  description="Net positive spread: the difference between the % of positive and negative symbols. A positive value means more symbols have Longs paying Shorts than vice versa."
+                  description={t('analytics.funding.overview.netSpread', 'Net positive spread: the difference between the % of positive and negative symbols. A positive value means more symbols have Longs paying Shorts than vice versa.')}
                   side="top"
                   align="center"
                 >
@@ -137,7 +137,7 @@ export const MarketOverviewCards = ({
 
               {/* Distribution rows */}
               <div className="flex flex-col gap-1 text-[11px]">
-                <AppTooltip description="Percentage of symbols with positive cumulative funding today (Longs pay Shorts)." side="top" align="center">
+                <AppTooltip description={t('analytics.funding.overview.positiveShare', 'Percentage of symbols with positive cumulative funding today (Longs pay Shorts).')} side="top" align="center">
                   <span className="flex items-center justify-between cursor-help border-b border-dashed border-green-400/30 text-green-400">
                     <span className="flex items-center gap-1.5">
                       <TrendingUp className="w-3 h-3" />
@@ -146,7 +146,7 @@ export const MarketOverviewCards = ({
                     <span className="font-mono font-medium">{formatPercentShort(marketMetrics.positiveRatePct)}</span>
                   </span>
                 </AppTooltip>
-                <AppTooltip description="Percentage of symbols with zero cumulative funding today (no payment exchanged)." side="top" align="center">
+                <AppTooltip description={t('analytics.funding.overview.zeroShare', 'Percentage of symbols with zero cumulative funding today (no payment exchanged).')} side="top" align="center">
                   <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-fg-muted">
                     <span className="flex items-center gap-1.5">
                       <span className="w-3 h-3 flex items-center justify-center text-[10px]">—</span>
@@ -155,7 +155,7 @@ export const MarketOverviewCards = ({
                     <span className="font-mono font-medium">{formatPercentShort(marketMetrics.neutralRatePct)}</span>
                   </span>
                 </AppTooltip>
-                <AppTooltip description="Percentage of symbols with negative cumulative funding today (Shorts pay Longs)." side="top" align="center">
+                <AppTooltip description={t('analytics.funding.overview.negativeShare', 'Percentage of symbols with negative cumulative funding today (Shorts pay Longs).')} side="top" align="center">
                   <span className="flex items-center justify-between cursor-help border-b border-dashed border-red-400/30 text-red-400">
                     <span className="flex items-center gap-1.5">
                       <TrendingDown className="w-3 h-3" />
@@ -172,7 +172,7 @@ export const MarketOverviewCards = ({
                 <BarChart3 className="w-4 h-4 text-fg-muted" />
                 <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">Rate Stats</span>
               </div>
-              <AppTooltip description="Average cumulative funding rate across all symbols for today (UTC). A positive value means Longs are generally paying Shorts." side="top" align="center">
+              <AppTooltip description={t('analytics.funding.overview.avgRate', 'Average cumulative funding rate across all symbols for today (UTC). A positive value means Longs are generally paying Shorts.')} side="top" align="center">
                 <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-[11px]">
                   <span className="text-fg-muted">Avg Rate</span>
                   <span className={`font-mono font-medium ${
@@ -182,7 +182,7 @@ export const MarketOverviewCards = ({
                   </span>
                 </span>
               </AppTooltip>
-              <AppTooltip description="Standard deviation of today's funding rates. Higher values indicate greater dispersion between coins — some cost much more to hold than others." side="top" align="center">
+              <AppTooltip description={t('analytics.funding.overview.stdDev', "Standard deviation of today's funding rates. Higher values indicate greater dispersion between coins — some cost much more to hold than others.")} side="top" align="center">
                 <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-[11px]">
                   <span className="text-fg-muted">Std Dev</span>
                   <span className="font-mono font-medium text-fg">
@@ -196,25 +196,25 @@ export const MarketOverviewCards = ({
           {/* Row 2: Rankings */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <KpiRankingList
-              title="Top Payers"
+              title={t('analytics.funding.overview.topPayers', 'Top Payers')}
               icon={<Flame className="w-4 h-4" />}
               items={rankings.topPayers}
               color="green"
-              tooltip="Top 5 symbols where Long positions are paying the most in funding today (highest positive cumulative rate)."
+              tooltip={t('analytics.funding.overview.topPayersTooltip', 'Top 5 symbols where Long positions are paying the most in funding today (highest positive cumulative rate).')}
             />
             <KpiRankingList
-              title="Bottom Payers"
+              title={t('analytics.funding.overview.bottomPayers', 'Bottom Payers')}
               icon={<Snowflake className="w-4 h-4" />}
               items={rankings.bottomPayers}
               color="red"
-              tooltip="Top 5 symbols where Short positions are paying the most in funding today (most negative cumulative rate)."
+              tooltip={t('analytics.funding.overview.bottomPayersTooltip', 'Top 5 symbols where Short positions are paying the most in funding today (most negative cumulative rate).')}
             />
             <KpiRankingList
-              title="Highest Volatility"
+              title={t('analytics.funding.overview.highestVolatility', 'Highest Volatility')}
               icon={<Activity className="w-4 h-4" />}
               items={rankings.highestVolatility}
               color="green"
-              tooltip="Top 5 symbols with the highest absolute funding rate today, regardless of direction. Highest cost to hold either side."
+              tooltip={t('analytics.funding.overview.highestVolatilityTooltip', 'Top 5 symbols with the highest absolute funding rate today, regardless of direction. Highest cost to hold either side.')}
             />
           </div>
         </div>

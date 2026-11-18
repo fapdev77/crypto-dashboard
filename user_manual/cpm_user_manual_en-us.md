@@ -1,6 +1,6 @@
 # 📘 User Manual - Crypto Portfolio Manager (CPM)
 
-> **Application Version:** 2.35.0  
+> **Application Version:** 2.50.0  
 > **Supported Exchanges:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Security Architecture:** Zero-Trust Client-Side (Web Crypto PBKDF2 + AES-GCM 256-bit Encryption)
 
@@ -28,7 +28,7 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [💼 Open Positions (Active Positions — Detailed & Lite Modes)](#-open-positions-active-positions--detailed--lite-modes)
    - [📂 Closed Positions (Historical Positions & Analytics)](#-closed-positions-historical-positions--analytics)
    - [📝 Order Reports (Open Orders & Order History)](#-order-reports-open-orders--order-history)
-   - [🔄 Trade History (Fill Executions & Fee Auditing)](#-trade-history-fill-executions--fee-auditing)
+   - [🔄 Trade History (Order Executions & Fee Auditing)](#-trade-history-order-executions--fee-auditing)
    - [📜 Consolidated Net Change & Multi-Exchange Transactions](#-consolidated-net-change--multi-exchange-transactions)
    - [📊 Portfolio Performance (Evolution Analytics & Institutional Metrics)](#-portfolio-performance-evolution-analytics--institutional-metrics)
    - [📈 Market Analytics (Quantitative Intelligence & Derivatives Flow)](#-market-analytics-quantitative-intelligence--derivatives-flow)
@@ -175,7 +175,7 @@ The **Settings** screen organizes configuration across **10 modular cards**: *La
 - **Quick Presets & Saved Themes**: Load 4 curated presets (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) or save, load, and delete named custom themes (shown beside *Custom* in the header theme selector).
 
 ### 🌐 Language, Fiat Currency & API Diagnostics
-- **6 Locales & 4 Fiat Currencies**: Full coverage across `en-US`, `en-GB`, `pt-BR`, `pt-PT`, `es-419`, and `it-IT` (1,624 translation keys per locale) with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
+- **6 Locales & 4 Fiat Currencies**: Full coverage across `en-US`, `en-GB`, `pt-BR`, `pt-PT`, `es-419`, and `it-IT` (1,656 translation keys per locale) with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
 - **Dual-Provider Engine & Diagnostics (`CurrencyApiDiagnostics`)**: Concurrently queries **Frankfurter API v2** (`api.frankfurter.dev`) for FX rates and **CoinGecko** (`api.coingecko.com`) for the **USDT/USD** parity rate, with configurable cache TTL (5–60m), offline cache fallback, and live latency/status monitoring.
 
 ### 🔄 Synchronization, Retention & Cache Settings (IndexedDB)
@@ -219,7 +219,7 @@ Promoted to a **dedicated top-level module** in the sidebar, tailored for fundin
 - **Coin Drawer Metrics (`HedgeProCoinDrawerMetrics`)**: Expand any coin row to inspect individual position levels, entry prices, and margin details.
 
 ### 💼 Open Positions (Active Positions — Detailed & Lite Modes)
-- **View Density Modes**: Switch between **Detailed** view (comprehensive cards) and **Lite** view (compact high-density tabular layout).
+- **View Density Modes**: Switch between **Detailed** view (comprehensive cards with Hedge/Exposure and the expandable detail grid) and **Lite** view, which shows each position as a single row with six columns: broker/account/symbol, side/leverage/mode, size/value, realized and unrealized PnL, entry/mark/liquidation price. On mobile each column becomes its own line.
 - **Core Indicators**: Live mark price via short-polling, entry price, ROE%, unrealized PnL, margin mode (Cross/Isolated), effective leverage, and Liquidation Price with warning color alerts.
 - **Dynamic Coin Logos (`CoinIcon`)**: Multi-tiered fallback logic ensuring crisp visual logos for all traded instruments.
 
@@ -233,8 +233,8 @@ Promoted to a **dedicated top-level module** in the sidebar, tailored for fundin
 - **Open Orders**: Monitor active Limit, Market, Stop Loss, and Take Profit orders with conditional trigger visualization.
 - **Order History**: Historical log of executed, cancelled, and expired orders with regex search and expandable details.
 
-### 🔄 Trade History (Fill Executions & Fee Auditing)
-- Detailed trade execution log with fill price, contract size, Maker vs Taker liquidity flag, and exact fee currency deducted.
+### 🔄 Trade History (Order Executions & Fee Auditing)
+- Detailed log of executed orders with fill price and exact fee currency deducted.
 
 ### 📜 Consolidated Net Change & Multi-Exchange Transactions
 
@@ -450,7 +450,7 @@ To ensure non-USDT funding balances and smaller cap tokens on Bitget and OKX are
 - **Exponential Backoff with Jitter for Network Drops**: Transient connectivity drops retry on an exponential delay schedule (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) with random jitter, stopping after 5 attempts via circuit breaker.
 - **Global Error Boundary**: Unhandled React rendering errors trigger an intuitive **Safe Recovery** screen with error stack diagnostics and single-click recovery buttons: **Reload Dashboard** and **Clear Cache & Reload**.
 - **Instant Scroll Position Reset**: Tab transitions automatically reset scroll positions to top-left (`useLayoutEffect`), ensuring optimal viewing upon switching views.
-- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **99 test files with 835 unit and integration tests**.
+- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **113 test files with 953 unit and integration tests**.
 
 ---
 

@@ -8,6 +8,13 @@ import {
   parseDateStartOfDay,
   parseDateEndOfDay,
   resolvePeriodDateRange,
+  getStartOfTodayUtcMs,
+  getEndOfTodayUtcMs,
+  getStartOfMonthUtcMs,
+  getStartOfYearUtcMs,
+  parseDateStartOfDayUtc,
+  parseDateEndOfDayUtc,
+  resolveUtcPeriodDateRange,
   TIME_PERIOD_OPTIONS,
 } from '../utils/dateTimeHelper';
 
@@ -167,6 +174,33 @@ describe('dateTimeHelper - Period & Calendar Date Functions', () => {
       const resAll = resolvePeriodDateRange(0, '2026-01-01', '2026-01-10', refDate);
       expect(resAll.startTime).toBeNull();
       expect(resAll.endTime).toBeNull();
+    });
+  });
+
+  describe('resolveUtcPeriodDateRange & UTC Helpers', () => {
+    const utcRef = new Date(Date.UTC(2026, 9, 15, 23, 45, 0, 0));
+
+    it('calculates strict UTC boundaries for Today, MTD, YTD, and 7 Days', () => {
+      expect(getStartOfTodayUtcMs(utcRef)).toBe(Date.UTC(2026, 9, 15, 0, 0, 0, 0));
+      expect(getEndOfTodayUtcMs(utcRef)).toBe(Date.UTC(2026, 9, 15, 23, 59, 59, 999));
+      expect(getStartOfMonthUtcMs(utcRef)).toBe(Date.UTC(2026, 9, 1, 0, 0, 0, 0));
+      expect(getStartOfYearUtcMs(utcRef)).toBe(Date.UTC(2026, 0, 1, 0, 0, 0, 0));
+
+      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+      expect(resolveUtcPeriodDateRange(7 * ONE_DAY_MS, undefined, undefined, utcRef)).toEqual({
+        startTime: Date.UTC(2026, 9, 9, 0, 0, 0, 0),
+        endTime: Date.UTC(2026, 9, 15, 23, 59, 59, 999),
+      });
+    });
+
+    it('parses custom YYYY-MM-DD in strict UTC and swaps inverted bounds', () => {
+      expect(parseDateStartOfDayUtc('2026-05-10')).toBe(Date.UTC(2026, 4, 10, 0, 0, 0, 0));
+      expect(parseDateEndOfDayUtc('2026-05-10')).toBe(Date.UTC(2026, 4, 10, 23, 59, 59, 999));
+
+      expect(resolveUtcPeriodDateRange('custom', '2026-10-20', '2026-10-05', utcRef)).toEqual({
+        startTime: Date.UTC(2026, 9, 5, 0, 0, 0, 0),
+        endTime: Date.UTC(2026, 9, 20, 23, 59, 59, 999),
+      });
     });
   });
 

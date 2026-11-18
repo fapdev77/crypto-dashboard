@@ -1,6 +1,6 @@
 import React from 'react';
 import { UnifiedPosition } from '../types';
-import { formatValue, formatPrice } from '../utils/formatters';
+import { formatValue } from '../utils/formatters';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
@@ -24,10 +24,12 @@ interface PositionCardProps {
   onToggle: () => void;
 }
 
+/** Detailed position card: every metric plus the expandable detail grid. */
 export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const { t } = useTranslation();
   const balances = useBalancesStore(state => state.balances);
   const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
+  const fiatCurrency = useSettingsStore(state => state.fiatCurrency) || 'USD';
   const setHedgeExposedMode = useSettingsStore(state => state.setHedgeExposedMode);
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
@@ -57,6 +59,29 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const isFiatPair = pos.symbol.toUpperCase().includes('USD') || pos.symbol.toUpperCase().includes('EUR') || pos.symbol.toUpperCase().includes('BRL');
   const isFiatCcy = posCcy.toUpperCase().includes('USD') || posCcy.toUpperCase() === 'EUR' || posCcy.toUpperCase() === 'BRL';
   const formatCcy = (v: number | undefined | null) => formatCurrency(v, 'crypto', isFiatCcy ? 2 : 8);
+  // Prices are quoted in the contract currency; show them in the active display currency.
+  const formatPrice = (v: number | undefined | null, fiatPair: boolean = isFiatPair) =>
+    formatCurrency(v, 'priceFiat', fiatPair);
+
+  // Position amounts are reported in the position currency: USDT/USDC for linear contracts,
+  // the base coin for inverse ones.
+  const nativeIsUsdPegged = /^(USD|USDT|USDC|BUSD|FDUSD|TUSD|USDE|USDD|PYUSD|USDP|GUSD)$/i.test(posCcy);
+  /**
+   * Fiat equivalent of a position amount in the active display currency (e.g. "R$ 1.234,56").
+   * Coin-margined amounts are converted through the mark price first; USD-pegged ones are 1:1.
+   * Returns null when there is nothing to add (USD already active) or no price to convert with.
+   */
+  const fiatEquivalent = (value: number | undefined | null, signed = false): string | null => {
+    if (!value) return null;
+    if (!nativeIsUsdPegged && !pos.markPrice) return null;
+    if (nativeIsUsdPegged && fiatCurrency === 'USD') return null;
+    const usdValue = nativeIsUsdPegged ? value : value * (pos.markPrice || 0);
+    const formatted = formatCurrency(Math.abs(usdValue), 'usd', 2);
+    return signed ? `${value > 0 ? '+' : '-'}${formatted}` : formatted;
+  };
+  const marginFiat = fiatEquivalent(pos.margin);
+  const unrealizedFiat = fiatEquivalent(pos.unrealizedPnl, true);
+  const maintMarginFiat = fiatEquivalent(pos.maintenanceMargin);
 
   const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
@@ -209,7 +234,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
       },
       {
         label: t('positions.totalValue', 'Total value'),
-        value: `${formatCurrency(sizeValUsd, 'usd', 2)} USD`,
+        value: formatCurrency(sizeValUsd, 'usd', 2),
         labelClassName: 'text-[12px] text-fg-muted',
         valueClassName: 'text-[12px] font-mono text-fg'
       }
@@ -219,11 +244,11 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   return (
     <div
       id={`pos-card-${pos.id}`}
-      className="bg-surface border border-line rounded-xl flex flex-col cursor-pointer transition-colors hover:border-line-strong"
+      className="bg-surface border border-line rounded-xl flex flex-col transition-colors hover:border-line-strong cursor-pointer"
       onClick={onToggle}
     >
-      {/* Main Row / Lite Info */}
-      <div className="p-4 grid grid-cols-2 lg:grid-cols-7 gap-4">
+      {/* Main Row */}
+      <div className="p-4 grid grid-cols-2 gap-4 lg:grid-cols-7">
 
         {/* Asset info */}
         <div className="flex items-center gap-3 w-full border-b border-line md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
@@ -295,7 +320,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             <div className="flex flex-col gap-0.5 cursor-help w-max focus:outline-none">
               <span className="text-[10px] text-fg-muted uppercase border-b border-dashed border-fg-muted/50 w-max">{t('positions.positionSize', 'Pos Size')} / {t('positions.positionValue', 'Value')}</span>
               <span className="font-mono text-fg text-sm">{formatCurrency(pos.size, 'crypto')} {baseCoinClean}</span>
-              <span className="text-xs text-fg-muted font-mono">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
+              <span className="text-xs text-fg-muted font-mono">≈ {formatCurrency(sizeValUsd, 'usd', 2)}</span>
             </div>
           </AppTooltip>
         </div>
@@ -340,9 +365,9 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
           <span className={`font-mono text-sm ${uplColor}`}>
             {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
           </span>
-          <AppTooltip description="Return on Equity (ROE) based on Unrealized PnL.">
+          <AppTooltip description={t('positions.tooltips.roe')}>
             <span className={`font-mono text-xs w-max cursor-help border-b border-dashed border-fg-muted/50 ${roeColor}`}>
-              {inverseVals.isInverse && pos.unrealizedPnl !== undefined ? (pos.unrealizedPnl > 0 ? '+' : '') + formatCurrency(Math.abs(inverseVals.unrealizedPnl), 'usd', 2) + ' / ' : ''}
+              {inverseVals.isInverse && pos.unrealizedPnl !== undefined ? (pos.unrealizedPnl > 0 ? '+' : '') + formatCurrency(inverseVals.unrealizedPnl, 'usd', 2) + ' / ' : ''}
               {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
             </span>
           </AppTooltip>
@@ -388,7 +413,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
           </span>
           {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
             <span className={`font-mono text-xs ${realizedPnlColor} opacity-80`}>
-              ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)} USD
+              ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(inverseVals.realizedPnl, 'usd', 2)}
             </span>
           ) : (
             <span className="text-[10px] opacity-0">-</span>
@@ -428,7 +453,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               </button>
             </div>
           ) : (
-            <AppTooltip description="Position hedge/exposure level">
+            <AppTooltip description={t('positions.tooltips.hedgeExposure')}>
               <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">
                 Hedge / Exposure
               </span>
@@ -438,14 +463,14 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             <div
               onClick={handleNavigateToHedgePro}
               className="cursor-pointer group/hedge hover:opacity-90 transition-opacity"
-              title="Click to view in Hedge Pro"
+              title={t('positions.tooltips.viewInHedgePro')}
             >
               <div className="flex items-center justify-between text-[10px] font-mono leading-none">
                 <span className="text-success">{hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
                 <div className="flex items-center gap-1">
                   <span className="text-fg">{hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
                   {hedgeLevels.barMetrics.leveragedWidthPct > 0 && (
-                    <span className="text-amber-400 font-semibold" title="Leveraged long exposure">
+                    <span className="text-amber-400 font-semibold" title={t('positions.tooltips.leveragedLong')}>
                       +{((hedgeLevels.barMetrics.leveragedOfBalancePct || 0)).toFixed(0)}%
                     </span>
                   )}
@@ -485,7 +510,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                   <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('positions.positionSize', 'Position')}</span>
                   <div className="flex items-baseline gap-1">
                     <span className="font-mono text-fg">{formatCurrency(pos.size, 'crypto')}</span>
-                    <span className="text-fg-muted text-xs">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
+                    <span className="text-fg-muted text-xs">≈ {formatCurrency(sizeValUsd, 'usd', 2)}</span>
                   </div>
                 </div>
               </AppTooltip>
@@ -502,9 +527,9 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               </AppTooltip>
               <span className="font-mono text-fg">
                 {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-fg-muted">{posCcy}</span>
-                {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
-                  <span className="text-fg-muted text-[10px] ml-1">≈ {formatCurrency(pos.margin * pos.markPrice, 'crypto', 2)} USD</span>
-                ) : null}
+                {marginFiat && (
+                  <span className="text-fg-muted text-[10px] ml-1">≈ {marginFiat}</span>
+                )}
               </span>
             </div>
             <AppTooltip
@@ -543,7 +568,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                 <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-success' : 'text-danger'}`}>
                   {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                   {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
-                    <span className="text-fg-muted text-[10px] ml-1">≈ {formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)}</span>
+                    <span className="text-fg-muted text-[10px] ml-1">≈ {formatCurrency(inverseVals.realizedPnl, 'usd', 2)}</span>
                   ) : null}
                 </span>
               </div>
@@ -552,7 +577,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             {pos.instrumentType === 'INVERSE' ? (
               <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
-                  <AppTooltip description="Click to view details in Hedge Pro Dashboard">
+                  <AppTooltip description={t('positions.tooltips.viewDetailsHedgePro')}>
                     <button
                       type="button"
                       onClick={handleNavigateToHedgePro}
@@ -569,21 +594,21 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                         {hedgeExposedMode === 'net' ? 'Net Balance (Equity):' : 'Wallet Balance (Gross):'}
                       </span>
                       <span className="font-mono text-fg text-[13px]">
-                        {formatCcy(hedgeLevels.balanceAmount)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.balanceUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.balanceAmount)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.balanceUsd, 'usd', 2)}</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
                       <span className="text-[10px] text-emerald-400 font-medium">Protected: {hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
                       <span className="font-mono text-fg text-[13px]">
-                        {formatCcy(hedgeLevels.protectedAmount)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.protectedUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.protectedAmount)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.protectedUsd, 'usd', 2)}</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
                       <span className="text-[10px] text-fg font-medium">Exposed (Base): {hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
                       <span className="font-mono text-fg text-[13px]">
-                        {formatCcy(hedgeLevels.markPrice > 0 ? hedgeLevels.exposedBaseUsd / hedgeLevels.markPrice : 0)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.exposedBaseUsd, 'usd', 2)} USD</span>
+                        {formatCcy(hedgeLevels.markPrice > 0 ? hedgeLevels.exposedBaseUsd / hedgeLevels.markPrice : 0)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.exposedBaseUsd, 'usd', 2)}</span>
                       </span>
                     </div>
 
@@ -593,7 +618,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                           Leveraged (Long): +{(hedgeLevels.barMetrics.leveragedOfBalancePct || 0).toFixed(1)}%
                         </span>
                         <span className="font-mono text-fg text-[13px]">
-                          {formatCcy(hedgeLevels.openPosSize)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.leveragedUsd, 'usd', 2)} USD</span>
+                          {formatCcy(hedgeLevels.openPosSize)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.leveragedUsd, 'usd', 2)}</span>
                         </span>
                       </div>
                     )}
@@ -640,9 +665,9 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               </AppTooltip>
               <span className={`font-mono ${uplColor}`}>
                 {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="text-fg-muted text-[10px] font-sans ml-1">{posCcy}</span>
-                {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
-                  <span className="text-fg-muted text-[10px] ml-1">≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(pos.unrealizedPnl) * pos.markPrice, 'crypto', 2)} USD</span>
-                ) : null}
+                {unrealizedFiat && (
+                  <span className="text-fg-muted text-[10px] ml-1">≈ {unrealizedFiat}</span>
+                )}
               </span>
             </div>
             <div className="flex flex-col gap-1">
@@ -659,9 +684,9 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                 {pos.maintenanceMargin !== undefined ? (
                   <>
                     {formatCcy(pos.maintenanceMargin)} <span className="font-sans text-[10px] text-fg-muted">{posCcy}</span>
-                    {posCcy && !posCcy.includes('USD') && pos.maintenanceMargin && pos.markPrice ? (
-                      <span className="text-fg-muted text-[10px] ml-1">≈ {formatCurrency(pos.maintenanceMargin * pos.markPrice, 'crypto', 2)} USD</span>
-                    ) : null}
+                    {maintMarginFiat && (
+                      <span className="text-fg-muted text-[10px] ml-1">≈ {maintMarginFiat}</span>
+                    )}
                     {pos.marginRatio !== undefined && (
                       <span className="text-orange-400 text-[10px] ml-1">({formatValue(pos.marginRatio, 2)}%)</span>
                     )}

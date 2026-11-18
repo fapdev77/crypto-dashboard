@@ -220,6 +220,9 @@ export interface RawOrderData {
 
   // Fees / leverage
   cumExecFee?: string;
+  cumFeeDetail?: Record<string, string>;
+  feeCcy?: string;
+  feeCoin?: string;
   deductedFee?: string;
   fee?: string;
   leverage?: string;

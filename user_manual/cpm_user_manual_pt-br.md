@@ -1,6 +1,6 @@
 # 📘 Manual do Usuário - Crypto Portfolio Manager (CPM)
 
-> **Versão da Aplicação:** 2.35.0  
+> **Versão da Aplicação:** 2.50.0  
 > **Plataformas Suportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitetura de Segurança:** Zero-Trust Client-Side (Criptografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -175,7 +175,7 @@ A tela **Settings** é organizada em **10 cards modulares**: *Language & Currenc
 - **Predefinições & Gerenciamento de Temas Salvos**: Carregue 4 paletas prontas (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) ou salve, carregue e exclua múltiplos temas personalizados com nome próprio (exibido ao lado de *Customizado* no seletor do cabeçalho).
 
 ### 🌐 Idioma, Moedas Fiat & Diagnóstico de Câmbio
-- **6 Idiomas & 4 Moedas Fiat**: Cobertura completa em `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419` e `it-IT` (1.624 chaves por idioma) e exibição em **USD**, **BRL**, **EUR** e **GBP**.
+- **6 Idiomas & 4 Moedas Fiat**: Cobertura completa em `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419` e `it-IT` (1.831 chaves por idioma) e exibição em **USD**, **BRL**, **EUR** e **GBP**.
 - **Cotações Duplas & Diagnóstico (`CurrencyApiDiagnostics`)**: Consulta concorrentemente a **Frankfurter API v2** (`api.frankfurter.dev`) para taxas fiat e a **CoinGecko** (`api.coingecko.com`) para paridade **USDT/USD**, com TTL configurável (5 a 60 min), fallback em cache offline e monitoramento de latência/status em tempo real.
 
 ### 🔄 Sincronização, Retenção e Configurações de Cache (IndexedDB)
@@ -219,7 +219,7 @@ Promovido a um **módulo de navegação de primeiro nível** no menu lateral, pr
 - **Gaveta de Métricas por Moeda (`HedgeProCoinDrawerMetrics`)**: Permite expandir qualquer criptomoeda para inspecionar posições individuais, margens e taxas aplicadas.
 
 ### 💼 Open Positions (Posições Ativas — Detailed & Lite)
-- **Modos de Exibição**: Alterne entre a visão **Detailed** (com cartões informativos completos) e a visão **Lite** (tabela densa compacta para alta frequência).
+- **Modos de Exibição**: Alterne entre a visão **Detailed** (com cartões informativos completos, Hedge/Exposição e painel expansível) e a visão **Lite**, que exibe cada posição em uma única linha com seis colunas: corretora/conta/símbolo, lado/alavancagem/modo, tamanho/valor, PnL realizado e não realizado, entrada/marcação/liquidação. No mobile cada coluna vira uma linha própria.
 - **Métricas Chave**: Preço de entrada, Mark Price atualizado via polling rápido, ROE%, PnL flutuante, modo de margem (Cross/Isolated), alavancagem efetiva e Preço de Liquidação com alertas visuais de proximidade.
 - **Logotipos Inteligentes (`CoinIcon`)**: Resolução automática com fallbacks em cascata para garantir que qualquer par possua representação visual nítida.
 
@@ -234,7 +234,7 @@ Promovido a um **módulo de navegação de primeiro nível** no menu lateral, pr
 - **Order History**: Histórico consolidado de ordens executadas, expiradas ou canceladas com suporte a busca avançada por expressão regular.
 
 ### 🔄 Trade History (Histórico de Execuções)
-- Acompanhe cada execução de ordem preenchida (fills) com registro do preço executado, tamanho na moeda base, papel na liquidez (Maker vs Taker) e moeda exata utilizada para cobrança de taxas.
+- Acompanhe cada ordem executada com registro do preço executado, tamanho na moeda base e a moeda exata utilizada para cobrança de taxas.
 
 ### 📜 Histórico de Transações e Variação Líquida Consolidada (Consolidated Net Change & Transactions)
 
@@ -451,7 +451,7 @@ Para garantir que ativos na carteira de financiamento (Spot/Funding) ou moedas a
 - **Backoff Exponencial com Jitter para Falhas de Rede**: Em instabilidades transitórias de conexão, o sistema re-tenta com intervalos progressivos (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) adicionados de variação aleatória (jitter), limitado a 5 tentativas antes de acionar o circuit breaker.
 - **Global Error Boundary**: Se ocorrer uma falha inesperada na árvore do React, a aplicação não quebra em tela branca. Uma tela de proteção graciosa (**Safe Recovery**) oferece diagnóstico do incidente e dois botões de restauração em um clique: **Reload Dashboard** e **Clear Cache & Reload**.
 - **Reset Automático de Scroll**: Ao navegar entre abas no menu lateral, o leitor de layout do React reseta instantaneamente a rolagem para o topo da página, garantindo foco imediato nas informações principais.
-- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **99 arquivos de teste com 835 testes unitários e de integração**.
+- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **113 arquivos de teste com 953 testes unitários e de integração**.
 
 ---
 

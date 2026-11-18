@@ -12,9 +12,11 @@ import { usePagination } from '../../../hooks/usePagination';
 import { Pagination } from '../../ui/Pagination';
 import { SimulationModeBadge } from '../../ui/SimulationModeBadge';
 import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../../../store/settingsStore';
 
 export function OpenOrders() {
   const { t } = useTranslation();
+  const fiatCurrency = useSettingsStore(state => state.fiatCurrency) || 'USD';
   const [filters, setFilters] = useState<OrderFilters>({
     exchange: 'All',
     instrument: 'All',
@@ -163,7 +165,7 @@ export function OpenOrders() {
 
           {/* Total Value */}
           <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
-            <AppTooltip description="The total estimated USD value of all open orders, calculated based on their limit trigger prices.">
+            <AppTooltip description={t('orders.tooltips.totalVolume', { currency: fiatCurrency })}>
               <span className="text-2xl text-fg-muted w-max cursor-help border-b border-dashed border-fg-muted/50">{t('orders.stats.totalVolume', 'Est. Total Volume')}</span>
             </AppTooltip>
             <span className="text-xl font-medium text-fg mt-1">

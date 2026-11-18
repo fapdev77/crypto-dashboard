@@ -11,6 +11,7 @@ import { HedgeExposureBar } from './HedgeExposureBar';
 import { HedgePositionLevelRow } from './HedgePositionLevelRow';
 import { HedgeProCoinDrawerMetrics } from './HedgeProCoinDrawerMetrics';
 import { HedgePnlConceptMode } from './HedgeProDashboard';
+import type { CurrencyFormatType } from '../../hooks/useFormatCurrency';
 
 interface HedgeProCoinRowProps {
   coin: HedgeCoinSummary;
@@ -18,8 +19,8 @@ interface HedgeProCoinRowProps {
   onToggle: () => void;
   formatCurrency: (
     value: number | undefined | null,
-    type?: 'usd' | 'crypto' | 'price' | 'compact',
-    decimalsOrSymbol?: number | string,
+    type?: CurrencyFormatType,
+    decimalsOrSymbol?: number | string | boolean,
   ) => string;
   pnlConceptMode?: HedgePnlConceptMode;
 }

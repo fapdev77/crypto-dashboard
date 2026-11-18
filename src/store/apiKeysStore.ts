@@ -6,7 +6,7 @@ import {
   decryptData,
   deriveVaultKey,
   encryptWithDerivedKey,
-  DEFAULT_PBKDF2_ITERATIONS,
+  getPbkdf2Iterations,
   type EncryptedPayloadEnvelope,
 } from '../utils/cryptoLib';
 import { ApiEnvironment, BybitRegion } from '../utils/bybitEndpoints';
@@ -164,7 +164,7 @@ export const useApiKeysStore = create<ApiKeysState>()(
             JSON.stringify(keys),
             currentCryptoKey,
             currentSalt,
-            DEFAULT_PBKDF2_ITERATIONS
+            getPbkdf2Iterations()
           );
         } else {
           encrypted = await encryptData(JSON.stringify(keys), passphrase);
@@ -174,13 +174,14 @@ export const useApiKeysStore = create<ApiKeysState>()(
 
       initializeVault: async (passphrase: string) => {
         const { keys } = get();
+        const iterations = getPbkdf2Iterations();
         const salt = window.crypto.getRandomValues(new Uint8Array(16));
-        const derivedKey = await deriveVaultKey(passphrase, salt, DEFAULT_PBKDF2_ITERATIONS);
+        const derivedKey = await deriveVaultKey(passphrase, salt, iterations);
         const encrypted = await encryptWithDerivedKey(
           JSON.stringify(keys),
           derivedKey,
           salt,
-          DEFAULT_PBKDF2_ITERATIONS
+          iterations
         );
         currentPassphrase = passphrase;
         currentCryptoKey = derivedKey;
@@ -203,13 +204,14 @@ export const useApiKeysStore = create<ApiKeysState>()(
             return false;
           }
         }
+        const iterations = getPbkdf2Iterations();
         const salt = window.crypto.getRandomValues(new Uint8Array(16));
-        const derivedKey = await deriveVaultKey(newPassphrase, salt, DEFAULT_PBKDF2_ITERATIONS);
+        const derivedKey = await deriveVaultKey(newPassphrase, salt, iterations);
         const encrypted = await encryptWithDerivedKey(
           JSON.stringify(keys),
           derivedKey,
           salt,
-          DEFAULT_PBKDF2_ITERATIONS
+          iterations
         );
         currentPassphrase = newPassphrase;
         currentCryptoKey = derivedKey;
@@ -277,13 +279,14 @@ export const useApiKeysStore = create<ApiKeysState>()(
       },
 
       migrateUnencryptedKeys: async (passphrase: string, legacyKeys: ApiCredentials[]) => {
+        const iterations = getPbkdf2Iterations();
         const salt = window.crypto.getRandomValues(new Uint8Array(16));
-        const derivedKey = await deriveVaultKey(passphrase, salt, DEFAULT_PBKDF2_ITERATIONS);
+        const derivedKey = await deriveVaultKey(passphrase, salt, iterations);
         const encrypted = await encryptWithDerivedKey(
           JSON.stringify(legacyKeys),
           derivedKey,
           salt,
-          DEFAULT_PBKDF2_ITERATIONS
+          iterations
         );
         currentPassphrase = passphrase;
         currentCryptoKey = derivedKey;

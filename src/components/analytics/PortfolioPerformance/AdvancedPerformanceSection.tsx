@@ -23,6 +23,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
         return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
       case 'Good':
         return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+      case 'Marginal':
       case 'Acceptable':
         return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
       default:

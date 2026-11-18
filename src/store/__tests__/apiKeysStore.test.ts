@@ -1,5 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import { useApiKeysStore } from '../apiKeysStore';
+import { setPbkdf2IterationsForTesting } from '../../utils/cryptoLib';
+
+// Same seam as the vault UI tests: production keeps 600.000 PBKDF2 rounds, the
+// suite derives with a cheap cost so these assertions are about vault behaviour
+// rather than CPU time.
+beforeAll(() => setPbkdf2IterationsForTesting(1000));
+afterAll(() => setPbkdf2IterationsForTesting(null));
 
 describe('apiKeysStore (Mandatory Encrypted Vault & Memory Hygiene)', () => {
   const masterPassphrase = 'VaultPassword2026!#';

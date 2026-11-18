@@ -116,7 +116,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
         <button
           onClick={handleCopy}
           className="flex items-center gap-1.5 px-2 py-0.5 rounded-md hover:bg-line text-fg-muted hover:text-fg transition cursor-pointer text-[11px]"
-          title="Copy code"
+          title={t('ai.markdown.tooltips.copyCode', 'Copy code')}
           type="button"
         >
           {copied ? (
@@ -148,6 +148,7 @@ interface ImageModalProps {
 }
 
 const ImageLightboxModal: React.FC<ImageModalProps> = ({ src, alt, onClose }) => {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="relative max-w-4xl max-h-[90vh] bg-canvas border border-line rounded-2xl overflow-hidden shadow-2xl flex flex-col">
@@ -160,14 +161,14 @@ const ImageLightboxModal: React.FC<ImageModalProps> = ({ src, alt, onClose }) =>
               target="_blank"
               rel="noopener noreferrer"
               className="p-1.5 rounded-lg hover:bg-[#252733] text-fg-muted hover:text-fg transition cursor-pointer"
-              title="Download Image"
+              title={t('ai.markdown.tooltips.downloadImage', 'Download Image')}
             >
               <Download className="w-4 h-4" />
             </a>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg hover:bg-rose-500/20 text-fg-muted hover:text-rose-400 transition cursor-pointer"
-              title="Close Preview"
+              title={t('ai.markdown.tooltips.closePreview', 'Close Preview')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -188,6 +189,7 @@ interface AiMarkdownRendererProps {
 
 export const AiMarkdownRenderer: React.FC<AiMarkdownRendererProps> = ({ content, className = '' }) => {
   const [activeImage, setActiveImage] = useState<{ src: string; alt?: string } | null>(null);
+  const { t } = useTranslation();
 
   return (
     <>
@@ -234,7 +236,7 @@ export const AiMarkdownRenderer: React.FC<AiMarkdownRendererProps> = ({ content,
                     type="button"
                     onClick={() => setActiveImage({ src, alt })}
                     className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition shadow"
-                    title="Expand Image"
+                    title={t('ai.markdown.tooltips.expandImage', 'Expand Image')}
                   >
                     <Maximize2 className="w-3.5 h-3.5" />
                   </button>

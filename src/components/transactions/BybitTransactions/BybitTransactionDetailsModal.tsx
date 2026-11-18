@@ -115,7 +115,7 @@ export function BybitTransactionDetailsModal({
               })()}
 
               {/* Per-currency segment */}
-              {otherCurrencies.length === 0 && new Big(stats.stable[detailsModalType === 'funding' ? 'totalFunding' : detailsModalType === 'fees' ? 'totalFees' : 'finalBalance' as any]).eq(0) && (
+              {otherCurrencies.length === 0 && new Big(stats.stable[detailsModalType === 'funding' ? 'totalFunding' : detailsModalType === 'fees' ? 'totalFees' : 'finalBalance']).eq(0) && (
                 <div className="text-fg-muted text-sm text-center py-4">{t('transactions.common.noDataAvailable', 'No data available')}</div>
               )}
               

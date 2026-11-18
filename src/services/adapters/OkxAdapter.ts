@@ -717,6 +717,7 @@ export class OkxAdapter extends BaseExchangeAdapter implements IExchangeAdapter 
         createdTime: parseInt(o.cTime || '0', 10),
         updatedTime: parseInt(o.uTime || o.cTime || '0', 10),
         fees: parseFloat(o.fee || '0'),
+        feeCurrency: o.feeCcy || undefined,
         leverage: parseFloat(o.lever || '0'),
         raw: o
       };

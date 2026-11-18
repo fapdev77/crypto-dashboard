@@ -118,7 +118,7 @@ export const AiAuditLogTable: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <AppTooltip description="Refresh log list" side="top">
+          <AppTooltip description={t('ai.audit.tooltips.refresh', 'Refresh log list')} side="top">
             <button
               onClick={fetchLogs}
               disabled={isLoading}
@@ -129,7 +129,7 @@ export const AiAuditLogTable: React.FC = () => {
             </button>
           </AppTooltip>
 
-          <AppTooltip description="Export history as JSON" side="top">
+          <AppTooltip description={t('ai.audit.tooltips.exportJson', 'Export history as JSON')} side="top">
             <button
               onClick={handleExportJson}
               className="flex items-center gap-1 px-2.5 py-1.5 bg-elevated hover:bg-line text-fg border border-line rounded-lg text-xs font-medium transition cursor-pointer"
@@ -139,7 +139,7 @@ export const AiAuditLogTable: React.FC = () => {
             </button>
           </AppTooltip>
 
-          <AppTooltip description="Export history as CSV" side="top">
+          <AppTooltip description={t('ai.audit.tooltips.exportCsv', 'Export history as CSV')} side="top">
             <button
               onClick={handleExportCsv}
               className="flex items-center gap-1 px-2.5 py-1.5 bg-elevated hover:bg-line text-fg border border-line rounded-lg text-xs font-medium transition cursor-pointer"
@@ -150,7 +150,7 @@ export const AiAuditLogTable: React.FC = () => {
           </AppTooltip>
 
           {logs.length > 0 && (
-            <AppTooltip description="Clear all audit log entries" side="top">
+            <AppTooltip description={t('ai.audit.tooltips.clear', 'Clear all audit log entries')} side="top">
               <button
                 onClick={() => setShowClearConfirm(true)}
                 className="p-1.5 bg-elevated hover:bg-rose-900/40 text-fg-muted hover:text-rose-400 border border-line rounded-lg text-xs transition cursor-pointer"
@@ -222,7 +222,7 @@ export const AiAuditLogTable: React.FC = () => {
                     )}
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <AppTooltip description="View complete execution details" side="left">
+                    <AppTooltip description={t('ai.audit.tooltips.details', 'View complete execution details')} side="left">
                       <button
                         onClick={() => setSelectedLog(log)}
                         className="p-1.5 text-fg-muted hover:text-accent rounded-lg hover:bg-elevated transition cursor-pointer"

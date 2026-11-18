@@ -20,9 +20,12 @@ import { formatIsoDateTime, formatDateTime } from '../../utils/formatters';
 import { Pagination } from '../ui/Pagination';
 import { usePagination } from '../../hooks/usePagination';
 import { useTranslation } from 'react-i18next';
+import { useFeeUsdTotals, FeeCurrencyBucket } from '../../hooks/useFeeUsdTotals';
+import { MissingRatesNotice } from '../transactions/MissingRatesNotice';
 
 export function TradeHistory() {
   const { t } = useTranslation();
+  const fiatCurrency = useSettingsStore(state => state.fiatCurrency) || 'USD';
   const [filters, setFilters] = useState<OrderFilters>({
     exchange: 'All',
     instrument: 'All',
@@ -45,7 +48,6 @@ export function TradeHistory() {
   // Initial Fetch
   useEffect(() => {
     fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchOrders]);
 
   // Silent polling
@@ -72,7 +74,8 @@ export function TradeHistory() {
     let buyCount = 0;
     let sellCount = 0;
     let totalTradedVolume = 0;
-    let totalFees = 0;
+    let inverseFeesUsd = 0;
+    const feeBuckets = new Map<string, FeeCurrencyBucket>();
 
     trades.forEach(t => {
       if (t.side === 'buy') buyCount++;
@@ -111,15 +114,29 @@ export function TradeHistory() {
 
       if (t.fees) {
         if (isInverse) {
-          totalFees += Math.abs(t.fees) * p;
+          inverseFeesUsd += Math.abs(t.fees) * p;
         } else {
-          totalFees += Math.abs(t.fees);
+          // Keep fees in the currency the exchange charged; converting them here
+          // as if they were dollars is what made the total wrong.
+          const currency = t.feeCurrency || 'USDT';
+          const bucket = feeBuckets.get(currency) ?? { currency, amount: 0, venues: [] };
+          bucket.amount += Math.abs(t.fees);
+          if (!bucket.venues.includes(t.exchange)) bucket.venues.push(t.exchange);
+          feeBuckets.set(currency, bucket);
         }
       }
     });
 
-    return { buyCount, sellCount, totalTradedVolume, totalFees };
+    return {
+      buyCount,
+      sellCount,
+      totalTradedVolume,
+      inverseFeesUsd,
+      feeBuckets: Array.from(feeBuckets.values())
+    };
   }, [trades]);
+
+  const { totalFeesUsd, missingCurrencies: missingFeeCurrencies } = useFeeUsdTotals(stats.feeBuckets, stats.inverseFeesUsd);
 
   const SIDE_DONUT = [
     { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: '#00C853' },
@@ -141,7 +158,7 @@ export function TradeHistory() {
       'Filled Type',
       'Trading Fees',
       'Transaction Time',
-      'Transaction ID'
+      'Order ID'
     ];
 
     const rows = trades.map(t => {
@@ -207,8 +224,9 @@ export function TradeHistory() {
       filledValueStr = `${filledValUsd.toFixed(2)} USD`;
 
       // Fees
+      const feeCurrency = t.feeCurrency || (isInverse ? symbolSuffix : 'USDT');
       const feeStr = t.fees
-        ? (isInverse ? `${Math.abs(t.fees).toFixed(8)} ${symbolSuffix}` : `${Math.abs(t.fees).toFixed(6)} USDT`)
+        ? `${Math.abs(t.fees).toFixed(isInverse ? 8 : 6)} ${feeCurrency}`
         : '0.00';
 
       const timeStr = formatIsoDateTime(t.updatedTime || t.createdTime);
@@ -301,7 +319,7 @@ export function TradeHistory() {
 
           {/* Trade Volume */}
           <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
-            <AppTooltip description={t('trade.tradedVolumeTooltip', 'The estimated USD value of all trades executed within the selected period.')}>
+            <AppTooltip description={t('trade.tradedVolumeTooltip', { currency: fiatCurrency })}>
               <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.tradedVolume', 'Traded Volume')}</span>
             </AppTooltip>
             <span className="text-2xl font-medium text-success mt-1">
@@ -312,18 +330,22 @@ export function TradeHistory() {
 
           {/* Est. Trading Fees */}
           <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
-            <AppTooltip description={t('trade.estTradingFeesTooltip', 'The total estimated USD value of trading fees paid for these trades.')}>
+            <AppTooltip description={t('trade.estTradingFeesTooltip', { currency: fiatCurrency })}>
               <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.estTradingFees', 'Est. Trading Fees')}</span>
             </AppTooltip>
             <span className="text-2xl font-medium text-danger mt-1">
-              {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
+              {totalFeesUsd > 0 ? '-' + formatCurrency(totalFeesUsd, 'usd') : formatCurrency(0, 'usd')}
             </span>
             <span className="text-xs text-fg-muted mt-1">
-              {t('trade.paidFeesConverted', 'Paid fees converted to USD')}
-              {stats.totalTradedVolume > 0 && ` (${((stats.totalFees / stats.totalTradedVolume) * 100).toFixed(3)}% of volume)`}
+              {t('trade.paidFeesConverted', { currency: fiatCurrency })}
+              {stats.totalTradedVolume > 0 && ` (${((totalFeesUsd / stats.totalTradedVolume) * 100).toFixed(3)}% of volume)`}
             </span>
           </div>
         </div>
+      )}
+
+      {missingFeeCurrencies.length > 0 && (
+        <MissingRatesNotice currencies={missingFeeCurrencies} className="mb-2" />
       )}
 
       {error && (
@@ -427,7 +449,7 @@ export function TradeHistory() {
             }
 
             filledQtyStr = `${formatCurrency(actualFilledCoinSize, 'crypto')} ${symbolSuffix}`;
-            filledValueStr = `${formatCurrency(filledValUsd, 'usd')} USD`;
+            filledValueStr = `${formatCurrency(filledValUsd, 'usd')}`;
             const dtFormatted = formatDateTime(trade.updatedTime || trade.createdTime);
             const timeStr = dtFormatted.timeStr;
             const dateStr = dtFormatted.dateStr;
@@ -478,7 +500,7 @@ export function TradeHistory() {
 
                   {/* Col 2: Direction & Type */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="Indicates trade direction, margin mode and order type.">
+                    <AppTooltip description={t('trade.tooltips.directionType')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.direction', 'Direction')} / {t('orders.type', 'Type')}</span>
                     </AppTooltip>
                     <span className={`font-mono text-sm ${isBuy ? 'text-success' : 'text-danger'}`}>
@@ -489,7 +511,7 @@ export function TradeHistory() {
 
                   {/* Col 3: Filled Qty / Value */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="Quantity filled and total USD value of this trade.">
+                    <AppTooltip description={t('trade.tooltips.filledQtyValue', { currency: fiatCurrency })}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.filledQty', 'Filled Qty')} / {t('trade.filledValue', 'Value')}</span>
                     </AppTooltip>
                     <span className="font-mono text-fg text-sm">{filledQtyStr}</span>
@@ -498,7 +520,7 @@ export function TradeHistory() {
 
                   {/* Col 4: Filled Price */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="The price at which the trade was executed.">
+                    <AppTooltip description={t('trade.tooltips.filledPrice')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.filledPrice', 'Filled Price')}</span>
                     </AppTooltip>
                     <span className="font-mono text-fg text-sm">
@@ -508,7 +530,7 @@ export function TradeHistory() {
 
                   {/* Col 5: Trading Fees */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
-                    <AppTooltip description="Trading fees charged for this trade.">
+                    <AppTooltip description={t('trade.tooltips.fee')}>
                       <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.fee', 'Trading Fees')}</span>
                     </AppTooltip>
                     {(() => {
@@ -523,13 +545,14 @@ export function TradeHistory() {
                         isFeeNegative = isCost;
 
                         const absFee = Math.abs(rawFee);
+                        const feeCurrency = trade.feeCurrency || (isInverse ? symbolSuffix : 'USDT');
 
                         if (isInverse) {
-                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 8)} ${symbolSuffix}`;
+                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 8)} ${feeCurrency}`;
                           const feeUsd = absFee * filledPrice;
-                          subFeeStr = `≈ ${isCost ? '-' : ''}${formatCurrency(feeUsd, 'usd')} USD`;
+                          subFeeStr = `≈ ${isCost ? '-' : ''}${formatCurrency(feeUsd, 'usd')}`;
                         } else {
-                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 6)} USDT`;
+                          mainFeeStr = `${isCost ? '-' : ''}${formatCurrency(absFee, 'crypto', 6)} ${feeCurrency}`;
                         }
                       }
 
@@ -550,15 +573,15 @@ export function TradeHistory() {
 
                   {/* Col 6: Transaction Time & ID */}
                   <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-2">
-                    <AppTooltip description="The timestamp when this transaction took place and its unique transaction ID.">
-                      <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.time', 'Transaction Time')} & {t('trade.tradeId', 'ID')}</span>
+                    <AppTooltip description={t('trade.tooltips.timeAndOrderId')}>
+                      <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('trade.time', 'Transaction Time')} & {t('transactions.details.orderId', 'Order ID')}</span>
                     </AppTooltip>
                     <div className="flex items-baseline gap-1.5 mt-0.5">
                       <span className="text-fg text-sm font-sans">{dateStr}</span>
                       <span className="text-xs text-fg-muted font-mono">{timeStr}</span>
                     </div>
                     <span className="text-[10px] text-fg-muted font-mono select-all mt-1 truncate max-w-xs" title={trade.exchangeOrderId || trade.id}>
-                      ID: {trade.exchangeOrderId || trade.id}
+                      {trade.exchangeOrderId || trade.id}
                     </span>
                   </div>
                 </div>

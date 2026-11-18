@@ -725,6 +725,10 @@ export class BitgetClassicAdapter extends BaseExchangeAdapter implements IExchan
           const rawFee = parseFloat(o.fee || '0');
           return rawFee > 0 ? -rawFee : rawFee;
         })(),
+        feeCurrency:
+          (Array.isArray(o.feeDetail) ? o.feeDetail.find((f: any) => !!f?.feeCoin)?.feeCoin : undefined) ||
+          o.feeCoin ||
+          undefined,
         leverage: o.leverage ? parseFloat(o.leverage) : undefined,
         marginMode: o.marginMode ? mapMarginMode('bitget', o.marginMode) : undefined,
         raw: o

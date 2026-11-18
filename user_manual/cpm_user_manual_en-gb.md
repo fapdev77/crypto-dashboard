@@ -1,6 +1,6 @@
 # 📘 User Manual - Crypto Portfolio Manager (CPM)
 
-> **Application Version:** 2.35.0  
+> **Application Version:** 2.50.0  
 > **Supported Exchanges:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Security Architecture:** Zero-Trust Client-Side (Web Crypto PBKDF2 + AES-GCM 256-bit Encryption)
 
@@ -28,7 +28,6 @@ Our highest foundational priority is **zero-trust client security** and **uncomp
    - [💼 Open Positions (Active Positions — Detailed & Lite Modes)](#-open-positions-active-positions--detailed--lite-modes)
    - [📂 Closed Positions (Historical Positions & Analytics)](#-closed-positions-historical-positions--analytics)
    - [📝 Order Reports (Open Orders & Order History)](#-order-reports-open-orders--order-history)
-   - [🔄 Trade History (Fill Executions & Fee Auditing)](#-trade-history-fill-executions--fee-auditing)
    - [📜 Consolidated Net Change & Multi-Exchange Transactions](#-consolidated-net-change--multi-exchange-transactions)
    - [📊 Portfolio Performance (Evolution Analytics & Institutional Metrics)](#-portfolio-performance-evolution-analytics--institutional-metrics)
    - [📈 Market Analytics (Quantitative Intelligence & Derivatives Flow)](#-market-analytics-quantitative-intelligence--derivatives-flow)
@@ -183,7 +182,7 @@ Dedicated module for funding arbitrage and delta-neutral risk management in COIN
 - **Portfolio Exposure Bar**: Visual tri-colour gauge showing % Protected Capital (green), % Exposed Capital (yellow), and Leverage Extent (orange/red).
 
 ### 💼 Open Positions (Active Positions — Detailed & Lite Modes)
-- Switch between **Detailed** view and **Lite** view with live mark prices, entry prices, ROE%, and liquidation warnings.
+- Switch between **Detailed** view and **Lite** view: Lite shows each position as a single row with six columns (broker/account/symbol, side/leverage/mode, size/value, realized and unrealized PnL, entry/mark/liquidation price) with live mark prices and liquidation warnings, stacking one column per line on mobile.
 
 ### 📂 Closed Positions (Historical Positions & Analytics)
 - Auditable ledger of closed positions with **Win Rate %**, **Profit Factor**, and export to **CSV**, **Excel (.xlsx)**, and **PDF**.

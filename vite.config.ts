@@ -183,8 +183,33 @@ export default defineConfig(({ mode }) => {
       ],
       coverage: {
         provider: 'v8',
-        reporter: ['text', 'text-summary'],
-        include: ['src/store/fundingStore.ts', 'src/services/funding/**'],
+        // json-summary feeds the per-directory audit in specs/QUALITY-BASELINE.md.
+        reporter: ['text-summary', 'json-summary'],
+        reportsDirectory: '.quality/coverage',
+        // Every source file counts, including ones no test imports: measuring
+        // only the imported subset hides exactly the untested areas that matter.
+        include: ['src/**/*.{ts,tsx}'],
+        exclude: [
+          'src/**/__tests__/**',
+          'src/**/*.test.{ts,tsx}',
+          'src/**/*.d.ts',
+          // React bootstrap: mounts the app and registers the service worker.
+          'src/main.tsx',
+        ],
+        thresholds: {
+          statements: 42,
+          branches: 31,
+          functions: 37,
+          lines: 43,
+          // Per-directory ratchets, ~5 points below the F3 measurement in
+          // specs/QUALITY-BASELINE.md §7. Raise them when coverage rises.
+          'src/utils/**': { statements: 74, branches: 61, functions: 81, lines: 76 },
+          'src/store/**': { statements: 48, branches: 35, functions: 46, lines: 50 },
+          'src/services/**': { statements: 44, branches: 31, functions: 47, lines: 45 },
+          'src/hooks/**': { statements: 37, branches: 23, functions: 39, lines: 38 },
+          'src/components/**': { statements: 34, branches: 24, functions: 28, lines: 34 },
+          'src/config/**': { statements: 12, branches: 10, lines: 12 },
+        },
       },
     },
     server: {

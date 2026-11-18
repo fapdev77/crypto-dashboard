@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RefreshCw, Pause, ChevronDown, Check, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
 import { PollingIntervalSeconds } from '../../../types/marketAnalytics';
 
@@ -13,6 +14,7 @@ const POLLING_OPTIONS: { val: PollingIntervalSeconds; label: string }[] = [
 ];
 
 export const CircularCountdownRefresh: React.FC = () => {
+  const { t } = useTranslation();
   const {
     pollingIntervalSeconds,
     setPollingIntervalSeconds,
@@ -160,7 +162,7 @@ export const CircularCountdownRefresh: React.FC = () => {
           type="button"
           onClick={() => setIsMenuOpen((prev) => !prev)}
           className="px-1 py-1.5 text-fg-muted hover:text-fg transition-colors focus:outline-none flex items-center"
-          title="Change auto-refresh interval"
+          title={t('common.changeRefreshInterval', 'Change auto-refresh interval')}
         >
           <ChevronDown
             className={`w-3 h-3 transition-transform duration-200 ${

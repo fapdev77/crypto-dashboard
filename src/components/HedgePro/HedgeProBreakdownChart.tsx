@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { HedgeCoinSummary, getHedgeCoinChartRows, getExchangeDisplayName } from '../../utils/hedgeUtils';
 import { CoinIcon } from '../ui/CoinIcon';
 import { AppTooltip } from '../ui/Tooltip';
+import type { CurrencyFormatType } from '../../hooks/useFormatCurrency';
 
 interface HedgeProBreakdownChartProps {
   summaries: HedgeCoinSummary[];
-  formatCurrency: (value: number | undefined | null, type?: 'usd' | 'crypto' | 'price' | 'compact', decimalsOrSymbol?: number | string) => string;
+  formatCurrency: (value: number | undefined | null, type?: CurrencyFormatType, decimalsOrSymbol?: number | string | boolean) => string;
 }
 
 /**

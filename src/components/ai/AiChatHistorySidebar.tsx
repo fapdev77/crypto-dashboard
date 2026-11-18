@@ -265,7 +265,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
               </button>
             </AppTooltip>
 
-            <AppTooltip description="Export as Markdown" side="top">
+            <AppTooltip description={t('ai.chat.tooltips.exportMarkdown', 'Export as Markdown')} side="top">
               <button
                 onClick={(e) => handleExportSession(session, e)}
                 className="p-1 text-fg-muted hover:text-fg rounded hover:bg-line transition cursor-pointer"
@@ -274,7 +274,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
               </button>
             </AppTooltip>
 
-            <AppTooltip description="Rename" side="top">
+            <AppTooltip description={t('ai.chat.tooltips.rename', 'Rename')} side="top">
               <button
                 onClick={(e) => handleStartRename(session, e)}
                 className="p-1 text-fg-muted hover:text-fg rounded hover:bg-line transition cursor-pointer"
@@ -283,7 +283,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
               </button>
             </AppTooltip>
 
-            <AppTooltip description="Delete conversation" side="top">
+            <AppTooltip description={t('ai.chat.tooltips.delete', 'Delete conversation')} side="top">
               <button
                 onClick={(e) => {
                   e.stopPropagation();

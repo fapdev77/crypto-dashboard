@@ -139,7 +139,7 @@ export const AiSettings: React.FC = () => {
               </div>
             </div>
             <AppTooltip
-              description="Master Switch: Activates or deactivates the PIKA assistant across the entire application."
+              description={t('ai.settings.tooltips.masterSwitch', 'Master Switch: Activates or deactivates the PIKA assistant across the entire application.')}
               side="left"
             >
               <button
@@ -164,7 +164,7 @@ export const AiSettings: React.FC = () => {
         {globalSettings.isEnabled && (
           <div className="mt-4 pt-4 border-t border-line flex items-center justify-between text-xs text-fg-muted">
             <AppTooltip
-              description="Zero-Trust Architecture: Your exchange API credentials, keys, and private passphrases are never sent to AI models."
+              description={t('ai.settings.tooltips.zeroTrust', 'Zero-Trust Architecture: Your exchange API credentials, keys, and private passphrases are never sent to AI models.')}
               side="bottom"
             >
               <div className="flex items-center gap-2 text-emerald-400 cursor-default">
@@ -173,7 +173,7 @@ export const AiSettings: React.FC = () => {
               </div>
             </AppTooltip>
 
-            <AppTooltip description="Open the sliding PIKA Assistant panel (Shortcut: Ctrl+J)" side="left">
+            <AppTooltip description={t('ai.settings.tooltips.openPanel', 'Open the sliding PIKA Assistant panel (Shortcut: Ctrl+J)')} side="left">
               <button
                 onClick={openChatDrawer}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 rounded-lg text-xs font-semibold transition cursor-pointer"
@@ -198,7 +198,7 @@ export const AiSettings: React.FC = () => {
               {t('ai.settings.globalInferenceSubtitle', 'Adjust fallback contingency logic, temperature parameters, and assistant system guidelines')}
             </p>
           </div>
-          <AppTooltip description="Restore system prompt and inference parameters to default values" side="left">
+          <AppTooltip description={t('ai.settings.tooltips.restoreDefaults', 'Restore system prompt and inference parameters to default values')} side="left">
             <button
               onClick={() => {
                 resetToDefaults();
@@ -216,7 +216,7 @@ export const AiSettings: React.FC = () => {
           <div className="space-y-4">
             <div className="p-4 bg-canvas border border-line rounded-xl space-y-3">
               <AppTooltip
-                description="If enabled, the assistant automatically routes queries to fallback cloud/local models if the primary model times out or encounters rate limits."
+                description={t('ai.settings.tooltips.fallback', 'If enabled, the assistant automatically routes queries to fallback cloud/local models if the primary model times out or encounters rate limits.')}
                 side="top"
               >
                 <label className="flex items-center justify-between cursor-pointer">
@@ -239,7 +239,7 @@ export const AiSettings: React.FC = () => {
               </AppTooltip>
 
               <AppTooltip
-                description="Converts nominal dollar balances into percentage allocations and obfuscates total asset sizes before consulting external cloud models."
+                description={t('ai.settings.tooltips.privacy', 'Converts nominal dollar balances into percentage allocations and obfuscates total asset sizes before consulting external cloud models.')}
                 side="top"
               >
                 <label className="flex items-center justify-between cursor-pointer pt-3 border-t border-line">
@@ -264,7 +264,7 @@ export const AiSettings: React.FC = () => {
 
             <div>
               <AppTooltip
-                description="Temperature: Lower values (e.g. 0.10) guarantee deterministic, mathematically accurate responses. Highly recommended for quantitative auditing."
+                description={t('ai.settings.tooltips.temperature', 'Temperature: Lower values (e.g. 0.10) guarantee deterministic, mathematically accurate responses. Highly recommended for quantitative auditing.')}
                 side="top"
               >
                 <div className="flex justify-between text-xs text-fg mb-1 cursor-default">
@@ -293,7 +293,7 @@ export const AiSettings: React.FC = () => {
           {/* Base System Prompt */}
           <div>
             <AppTooltip
-              description="Imperative instructions injected into the AI session that restrict the PIKA assistant to crypto portfolio analytics and enforce out-of-scope refusals."
+              description={t('ai.settings.tooltips.systemPrompt', 'Imperative instructions injected into the AI session that restrict the PIKA assistant to crypto portfolio analytics and enforce out-of-scope refusals.')}
               side="top"
             >
               <label className="block text-xs font-semibold text-fg mb-1.5 cursor-default flex items-center gap-1.5">
@@ -340,7 +340,7 @@ export const AiSettings: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <AppTooltip description="Reset all telemetry metrics and token consumption statistics to zero" side="left">
+            <AppTooltip description={t('ai.settings.tooltips.resetTelemetry', 'Reset all telemetry metrics and token consumption statistics to zero')} side="left">
               <button
                 onClick={() => {
                   useAiTelemetryStore.getState().resetTelemetry();

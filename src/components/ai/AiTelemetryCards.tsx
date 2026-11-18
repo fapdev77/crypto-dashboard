@@ -33,7 +33,7 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Total Calls */}
       <AppTooltip
-        description="Total number of AI requests, queries, and assistant interactions processed by the engine."
+        description={t('ai.telemetry.tooltips.totalRequests', 'Total number of AI requests, queries, and assistant interactions processed by the engine.')}
         side="top"
       >
         <div className="bg-surface border border-line rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-line-strong transition">
@@ -56,7 +56,7 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
 
       {/* Total Tokens */}
       <AppTooltip
-        description="Consolidated count of prompt tokens sent and completion tokens generated across all active models."
+        description={t('ai.telemetry.tooltips.totalTokens', 'Consolidated count of prompt tokens sent and completion tokens generated across all active models.')}
         side="top"
       >
         <div className="bg-surface border border-line rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-line-strong transition">
@@ -79,7 +79,7 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
 
       {/* {t('ai.settings.telemetry.avgLatency', 'Average Latency')} */}
       <AppTooltip
-        description="Average round-trip response time from query submission to completion generation across models."
+        description={t('ai.telemetry.tooltips.avgLatency', 'Average round-trip response time from query submission to completion generation across models.')}
         side="top"
       >
         <div className="bg-surface border border-line rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-line-strong transition">
@@ -102,7 +102,7 @@ export const AiTelemetryCards: React.FC<AiTelemetryCardsProps> = ({ stats }) => 
 
       {/* Estimated Cost */}
       <AppTooltip
-        description="Theoretical USD cost based on token pricing benchmarks. Local Ollama instances always incur $0.00."
+        description={t('ai.telemetry.tooltips.theoreticalCost', 'Theoretical USD cost based on token pricing benchmarks. Local Ollama instances always incur $0.00.')}
         side="top"
       >
         <div className="bg-surface border border-line rounded-xl p-4 shadow-lg flex items-center justify-between cursor-default hover:border-line-strong transition">

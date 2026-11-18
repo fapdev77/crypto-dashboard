@@ -1,8 +1,8 @@
 # Technical Specifications & Architecture Design
 
-> **Document Version:** 2.35.0  
+> **Document Version:** 2.50.0  
 > **Status:** Production-Ready & Verified  
-> **Test Coverage:** 99 test files, 835 passing tests (Vitest v8)
+> **Test Coverage:** 113 test files, 953 passing tests (Vitest 4.1)
 
 ---
 
@@ -70,14 +70,29 @@ O CPM adota uma arquitetura em duas camadas (2-Tier Local Hybrid-Proxy) projetad
 
 - **Core Framework & Runtime:** React 19, TypeScript ~5.8, Vite 6, Node.js LTS (engines `>=24`).
 - **Styling & UI Engine:** Tailwind CSS v4 (`@theme` CSS variables), sistema multi-temas (`themeMode.ts`), Lucide React (ícones), Radix UI (Tooltips acessíveis).
-- **Internationalization (i18n):** `i18next` e `react-i18next` com 6 idiomas suportados (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.624 chaves cada).
+- **Internationalization (i18n):** `i18next` e `react-i18next` com 6 idiomas suportados (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.831 chaves cada).
 - **Multi-Currency System:** `CurrencyService.ts` integrado concorrentemente à **Frankfurter API v2** (`api.frankfurter.dev`) e à **CoinGecko API** (`api.coingecko.com` para USDT/USD), com TTL configurável (5–60 min), cache offline e diagnósticos (`CurrencyApiDiagnostics`).
 - **State Management:** Zustand 5.0 (arquitetura desacoplada de **14 micro-stores** com persistência local).
 - **Data Caching & Persistence:** IndexedDB nativo via biblioteca `idb` 8.0, com SWR (Stale-While-Revalidate) e versionamento de banco (`DB_VERSION 12`).
 - **Precision Math:** Big.js para cálculos financeiros de alta sensibilidade (evita perdas de precisão por ponto flutuante em taxas de funding e ratios de hedge).
 - **AI Subsystem:** `@google/genai` (v1.29.0) para integração direta com Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm` para formatação rica de respostas.
 - **Reporting & Charts:** Recharts 3.8 (gráficos interativos de Open Interest, CVD, Hedge Pro e Telemetria de IA), jsPDF + jsPDF-AutoTable (exportação visual de PDFs), SheetJS `xlsx` (exportação de planilhas).
-- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **99 arquivos de teste e 835 testes unitários e de integração automatizados** 100% verdes.
+- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **113 arquivos de teste e 953 testes unitários e de integração automatizados** 100% verdes.
+
+### 3.1. Terminologia de Mercado Mantida em Inglês
+
+Decisão de produto, não pendência de tradução: o jargão técnico abaixo permanece **em inglês nos 6 locales** (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`), inclusive quando aparece dentro de uma frase traduzida (ex.: "`PnL` realizado", "posição `Long`").
+
+| Termo | Uso no app |
+|---|---|
+| **Long** / **Short** | Lado da posição (`Long`, `Short`, `Open Long`, `Close Short`, `Longs`/`Shorts` nas estatísticas). |
+| **Hedge** | Conceito de proteção do capital e rótulos de cobertura. |
+| **Hedge Pro** | Nome do painel Delta-Neutral da sidebar. |
+| **PnL** | Resultado financeiro (`PnL`, `Unrealized PnL`, `Realized PnL`, `Total PnL`). |
+| **ROE** | Retorno sobre a margem, exibido ao lado do PnL. |
+| **Funding** / **Funding Fee** | Taxas de financiamento de contratos perpétuos. |
+
+Regra de revisão: esses termos **não devem ser traduzidos nem apontados como texto faltante de i18n**; alterá-los é decisão de produto. O que continua sujeito à tradução é todo o texto ao redor (rótulos, tooltips, mensagens, vazios e confirmações) e a formatação de valores, que sempre segue a moeda fiat ativa e o locale selecionado.
 
 ---
 
@@ -283,13 +298,13 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 - **Dashboard Principal (`Dashboard.tsx`):** Visão executiva de patrimônio, alocação e tabela hierárquica de carteiras.
 - **Positions Ticker (`PositionsTicker.tsx`):** Marquee superior contínuo com cotações e PnL flutuante das posições abertas.
 - **Hedge Pro (`HedgeProDashboard.tsx`):** Localizado no nível raiz da sidebar, monitora proteção e exposição Delta-Neutral em contratos inversos (COIN-M).
-- **Positions (`OpenPositions.tsx` & `ClosedPositions.tsx`):** Posições abertas (Detailed & Lite) e histórico contábil de posições fechadas com estatísticas completas e exportações.
+- **Positions (`OpenPositions.tsx` & `ClosedPositions.tsx`):** Posições abertas em dois modos — **Detailed** (`PositionCard.tsx`: todas as métricas, Hedge/Exposição e grid expansível) e **Lite** (`PositionCardLite.tsx`: uma linha de seis colunas — corretora/conta/símbolo, lado/alavancagem/modo, tamanho/valor, PnL realizado, PnL não realizado e entrada/marcação/liquidação — com cabeçalho compartilhado (`PositionsLiteHeader`) e empilhamento de uma coluna por linha no mobile) — e histórico contábil de posições fechadas com estatísticas completas e exportações.
 - **Orders (`OpenOrders.tsx` & `OrderHistory.tsx`):** Ordens abertas com visualização de gatilhos e histórico de ordens com regex.
 - **Transactions History:**
   - **Consolidated Net Change (`ConsolidatedNetChangeReport.tsx`):** Painel executivo consolidado com 4 macro KPI cards, agrupamento hierárquico por Corretora e Moeda, e exportação multiformato.
   - **Corretoras Específicas (`BybitTransactions.tsx`, `BitgetTransactions.tsx`, `OkxTransactions.tsx`):** Extratos contábeis normalizados em 10 categorias universais e modais com Total Stats Summary.
 - **Analytics:**
-  - **Portfolio Performance (`PortfolioPerformanceDashboard.tsx`):** Painel no topo do submenu Analytics com evolução de balanço/resultado, análise temporal mensal e dia-a-dia, marcos de preço, resultados primários, análise de taxas e métricas de risco (Profit Factor, Win Rate, Consistency Index).
+  - **Portfolio Performance (`PortfolioPerformance.tsx`):** Painel no topo do submenu Analytics com evolução de balanço/resultado, análise temporal mensal e dia-a-dia, marcos de preço, resultados primários, análise de taxas e métricas de risco (Profit Factor, Win Rate, Consistency Index).
   - **Market Analytics (`MarketAnalyticsDashboard.tsx`):** Terminal quantitativo cross-exchange com regimes de mercado, arbitragem de funding, CVD e Inverse Coin-M Dashboard.
   - **PnL by Symbol (`PnLBySymbol.tsx`):** Distribuição de lucros e prejuízos por ativo com segregação Long vs Short.
   - **Funding Fees (`FundingDashboard.tsx`):** Monitoramento e comparação de taxas de financiamento multi-período.
@@ -304,9 +319,24 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 Qualquer alteração em interfaces unificadas (`src/types.ts`) ou schemas de banco de dados deve obedecer ao protocolo rigoroso de sincronização:
 1. **Mock Generators:** Atualizar `src/mock/generateMocks.js` (para os 10 fixtures JSON em `src/mock/`) e `src/mock/marketAnalyticsMock.ts` (para simulações quantitativas do Market Analytics e Coin-M).
 2. **IndexedDB Versioning:** Incrementar `DB_VERSION` em `historyCache.ts` e registrar funções de migração para novos índices.
-3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (99 arquivos de teste, 835 testes passando).
+3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (113 arquivos de teste, 953 testes passando).
 4. **Validação em Modo Simulação:** Ativar temporariamente `useMockData = true` para verificar visualmente todos os painéis e gráficos antes do deploy.
 
 ---
 
-*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.35.0).*
+## 10. Release & Documentation Contract
+
+O versionamento é automático (`semantic-release`) e a documentação viaja no mesmo commit de release — ela não espera o PR seguinte:
+
+1. **Análise e notas:** `@semantic-release/commit-analyzer`, `release-notes-generator` e `changelog` calculam a próxima versão a partir das mensagens de commit.
+2. **Bump:** `@semantic-release/npm` (`npmPublish: false`) grava a versão em `package.json`.
+3. **Sync da documentação:** `tools/sync-release-docs.mjs` roda no hook `prepare` e reescreve as declarações de versão de `README.md`, `index.html`, `metadata.json`, specs e manuais. Ele reutiliza `VERSION_RULES` e `listDocFiles` exportados por `tools/verify-docs.mjs`, então guarda e corretor não podem divergir. Apenas a versão é reescrita: faixas históricas entre crases e versões de dependência citadas no meio da linha permanecem intactas, e o EOL de cada arquivo é preservado.
+4. **Publicação:** `@semantic-release/github` cria a release e `@semantic-release/git` commita `package.json`, `package-lock.json`, `CHANGELOG.md` e os documentos sincronizados, com a mensagem `chore(release): X [skip ci]`.
+
+Contagens de testes e de chaves i18n **não** são propagadas pelo release: elas só mudam com o código, então continuam responsabilidade do PR que altera o código, onde `npm run verify:docs` mede a suíte. Por isso o passo "Documentation Sync Check" do CI roda apenas em PR — o commit de release carrega `[skip ci]`.
+
+`npm run verify:docs` também falha se `.releaserc.json` deixar de carregar `./tools/sync-release-docs.mjs`: sem esse plugin, o release volta a publicar com a documentação na versão anterior.
+
+---
+
+*Crypto Portfolio Manager — Institutional Multi-Exchange Architecture & Zero-Trust Engineering (v2.50.0).*

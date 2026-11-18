@@ -12,13 +12,14 @@ import { ShieldCheck, Activity, TrendingUp, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AppTooltip } from '../ui/Tooltip';
 import { HedgeTotals } from '../../utils/hedgeUtils';
+import type { CurrencyFormatType } from '../../hooks/useFormatCurrency';
 
 interface HedgeProCapitalExposureChartProps {
   totals: HedgeTotals;
   formatCurrency: (
     value: number | undefined | null,
-    type?: 'usd' | 'crypto' | 'price' | 'compact',
-    decimalsOrSymbol?: number | string,
+    type?: CurrencyFormatType,
+    decimalsOrSymbol?: number | string | boolean,
   ) => string;
 }
 
@@ -38,7 +39,7 @@ interface ExposureDataPoint {
 interface CustomTooltipProps {
   active?: boolean;
   payload?: any[];
-  formatCurrency: (value: number | undefined | null, type?: 'usd' | 'crypto' | 'price' | 'compact', decimalsOrSymbol?: number | string) => string;
+  formatCurrency: (value: number | undefined | null, type?: CurrencyFormatType, decimalsOrSymbol?: number | string | boolean) => string;
   totals: HedgeTotals;
   t: (key: string, options?: any) => string;
 }

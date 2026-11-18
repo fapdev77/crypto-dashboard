@@ -298,48 +298,48 @@ export const InverseMarketDashboard: React.FC = () => {
                   </th>
                   <th className="py-3 px-3">
                     <ThHeaderTooltip
-                      title="Coin-M Asset"
-                      description="Underlying cryptocurrency and active exchanges offering native Coin-M margin."
+                      title={t('analytics.inverseMarket.headers.coinM', 'Coin-M Asset')}
+                      description={t('analytics.inverseMarket.headerTooltips.coinM', 'Underlying cryptocurrency and active exchanges offering native Coin-M margin.')}
                     >
                       Coin-M Asset
                     </ThHeaderTooltip>
                   </th>
                   <th className="py-3 px-3 text-right">
                     <ThHeaderTooltip
-                      title="Price & Change"
-                      description="Composite benchmark price across active exchanges and 24h percentage change."
+                      title={t('analytics.inverseMarket.headers.price', 'Price & Change')}
+                      description={t('analytics.inverseMarket.headerTooltips.price', 'Composite benchmark price across active exchanges and 24h percentage change.')}
                     >
                       Price / 24h Δ
                     </ThHeaderTooltip>
                   </th>
                   <th className="py-3 px-3 text-right">
                     <ThHeaderTooltip
-                      title="24h Range"
-                      description="24-hour Low to High trading channel with market direction indicator and intraday momentum."
+                      title={t('analytics.inverseMarket.headers.range', '24h Range')}
+                      description={t('analytics.inverseMarket.headerTooltips.range', '24-hour Low to High trading channel with market direction indicator and intraday momentum.')}
                     >
                       24h Range (L / H)
                     </ThHeaderTooltip>
                   </th>
                   <th className="py-3 px-3 text-right">
                     <ThHeaderTooltip
-                      title="24h Volume"
-                      description="Total 24h volume displayed in notional USD and in native coin units."
+                      title={t('analytics.inverseMarket.headers.volume', '24h Volume')}
+                      description={t('analytics.inverseMarket.headerTooltips.volume', 'Total 24h volume displayed in notional USD and in native coin units.')}
                     >
                       24h Volume (USD / Coin)
                     </ThHeaderTooltip>
                   </th>
                   <th className="py-3 px-3 text-right">
                     <ThHeaderTooltip
-                      title="Open Interest"
-                      description="Aggregated Open Interest across all active Coin-M contracts."
+                      title={t('analytics.inverseMarket.headers.openInterest', 'Open Interest')}
+                      description={t('analytics.inverseMarket.headerTooltips.openInterest', 'Aggregated Open Interest across all active Coin-M contracts.')}
                     >
                       Open Interest (USD)
                     </ThHeaderTooltip>
                   </th>
                   <th className="py-3 px-3 text-right">
                     <ThHeaderTooltip
-                      title="CVD Flow"
-                      description="Estimated Cumulative Volume Delta (net taker buyer vs seller flow in USD)."
+                      title={t('analytics.inverseMarket.headers.cvd', 'CVD Flow')}
+                      description={t('analytics.inverseMarket.headerTooltips.cvd', 'Estimated Cumulative Volume Delta (net taker buyer vs seller flow in USD).')}
                     >
                       CVD Flow (Taker)
                     </ThHeaderTooltip>

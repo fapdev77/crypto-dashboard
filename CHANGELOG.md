@@ -1,3 +1,113 @@
+# [2.50.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.49.0...v2.50.0) (2026-11-17)
+
+
+### Features
+
+* update internationalization keys count to 1,831 across all languages and enhance time period options with localization support ([3279db4](https://github.com/fapdev77/crypto-dashboard/commit/3279db43bd0f093715ec9a7f293340e080b88268))
+
+# [2.49.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.48.0...v2.49.0) (2026-11-17)
+
+
+### Features
+
+* **locales:** update Portuguese translations for pt-BR and pt-PT, adding new tooltips and improving existing phrases ([ecc8a7e](https://github.com/fapdev77/crypto-dashboard/commit/ecc8a7e14096796338ba011c7aa44d14bb944d1e))
+
+# [2.48.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.47.0...v2.48.0) (2026-11-17)
+
+
+### Features
+
+* update various components to utilize the updated currency formatting logic update test coverage and descriptions in documentation ([7cd92b7](https://github.com/fapdev77/crypto-dashboard/commit/7cd92b7100ce73474b7da53fade59eae73e35cad))
+
+# [2.47.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.46.0...v2.47.0) (2026-11-17)
+
+
+### Features
+
+* update test coverage to reflect 951 passing tests across documentation and components ([c1dca81](https://github.com/fapdev77/crypto-dashboard/commit/c1dca8186a67f89ad6d307b02ecbac0775f893d5))
+
+# [2.46.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.45.0...v2.46.0) (2026-11-17)
+
+
+### Features
+
+* add PositionCardLite component for compact position display ([3dfdcb6](https://github.com/fapdev77/crypto-dashboard/commit/3dfdcb673aca194b189c1e7d8cc3fcd04954c7d7))
+
+# [2.45.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.44.0...v2.45.0) (2026-11-16)
+
+
+### Features
+
+* implement fee currency handling and USD conversion for trading fees ([db1883e](https://github.com/fapdev77/crypto-dashboard/commit/db1883e94ea55d44a9f7581b84fd5c0867beea32))
+
+# [2.44.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.43.2...v2.44.0) (2026-11-16)
+
+
+### Features
+
+* add feeCurrency support across multiple adapters and update TradeHistory for order ID display ([20a4843](https://github.com/fapdev77/crypto-dashboard/commit/20a4843daaf875e8716b2dce146f74cff5a797bf))
+
+## [2.43.2](https://github.com/fapdev77/crypto-dashboard/compare/v2.43.1...v2.43.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* **i18n:** update internationalization key count to 1,656 across multiple locales- i18n: sai o bloco  role / maker / makerTooltip / taker / takerTooltip  (linhas 826-830 → 820-824 originais) dos 6 arquivos;  trade.syncing  fica porque é usado em  TradeHistory.tsx:252 . Contagem medida: 1656 em cada um dos 6, paridade intacta. ([58c1af0](https://github.com/fapdev77/crypto-dashboard/commit/58c1af082c88bcc8e9628530c31feb8558a7342f))
+
+## [2.43.1](https://github.com/fapdev77/crypto-dashboard/compare/v2.43.0...v2.43.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **i18n:** remove Spanish wording from the pt-BR gross-mode tooltip ([eba690f](https://github.com/fapdev77/crypto-dashboard/commit/eba690f530afa64ff5eebc932e3e0b7a905079ff))
+
+# [2.43.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.42.0...v2.43.0) (2026-11-15)
+
+
+### Features
+
+* **positions:** add Detailed and Lite view modes ([0139e7c](https://github.com/fapdev77/crypto-dashboard/commit/0139e7c63a9ff6e1dca07dc38317bc0639ec16ac))
+
+# [2.42.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.41.0...v2.42.0) (2026-11-15)
+
+
+### Features
+
+* bump version to 2.41.0, add technical specifications, architecture docs, and user manuals ([62f4bef](https://github.com/fapdev77/crypto-dashboard/commit/62f4befc9bd648f9bced8d767f99912a4fe1bc05))
+
+# [2.41.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.40.0...v2.41.0) (2026-11-14)
+
+
+### Features
+
+* add CI pipeline, ESLint config, test suite expansions, and Bybit adapter enhancements ([d6f954c](https://github.com/fapdev77/crypto-dashboard/commit/d6f954c52843407f65184a1fa52e7b920210c61f))
+
+# [2.40.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.39.0...v2.40.0) (2026-11-14)
+
+
+### Features
+
+* upgrade to v2.39.0 with expanded test suite, documentation, and API keys vault implementation ([bd9b22f](https://github.com/fapdev77/crypto-dashboard/commit/bd9b22f1a92066622f3a28d09b70d2c70b57cb8f))
+
+# [2.39.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.38.0...v2.39.0) (2026-11-14)
+
+
+### Features
+
+* add CI workflow, documentation validation tools, specs, and user manuals ([652ceeb](https://github.com/fapdev77/crypto-dashboard/commit/652ceebdf8ec74e56b04cc5dc438d6410cab03b4))
+
+# [2.38.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.37.0...v2.38.0) (2026-11-14)
+
+
+### Bug Fixes
+
+* **analytics:** improve tooltip robustness and update tests ([e5b1880](https://github.com/fapdev77/crypto-dashboard/commit/e5b18808bcdcf347cb2e22dc949f3024a853972e))
+
+
+### Features
+
+* implement UTC date helpers and improve performance analytics UI ([8a6c6de](https://github.com/fapdev77/crypto-dashboard/commit/8a6c6de63a83196c92c9cc5f8b1dcb150f08eaaa))
+
 # [2.37.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.36.0...v2.37.0) (2026-11-13)
 
 
