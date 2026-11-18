@@ -1,2 +1,2 @@
 Anotações para futuras implementações de Ideias e melhorias
-- Planejar o wizard da tela inicial de onboarding.
+- Testar manualmente o novo onboarding.
