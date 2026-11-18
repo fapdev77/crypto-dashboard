@@ -1,3 +1,10 @@
+# [2.51.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.50.0...v2.51.0) (2026-11-18)
+
+
+### Features
+
+* **onboarding:** redesign interactive 6-step onboarding wizard with system locale sync ([014b75a](https://github.com/fapdev77/crypto-dashboard/commit/014b75a7274f6a9a94d539d31fe72aa653108521))
+
 # [2.50.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.49.0...v2.50.0) (2026-11-17)
 
 
