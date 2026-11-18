@@ -13,7 +13,7 @@ import { Dashboard } from './components/Dashboard';
 import { OpenPositions } from './components/OpenPositions';
 import { StatusBar } from './components/StatusBar';
 import { PositionsTicker } from './components/PositionsTicker';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { PrivacyProvider } from './context/PrivacyContext';
 import { PrivacyToggleButton } from './components/PrivacyToggleButton';
 import { TooltipProvider } from './components/ui/Tooltip';
@@ -36,7 +36,7 @@ import { TabLoadingSkeleton } from './components/ui/TabLoadingSkeleton';
 import { VaultSetupNoticeModal } from './components/VaultSetupNoticeModal';
 import { VaultSetupModal } from './components/VaultSetupModal';
 import { MandatoryVaultMigrationScreen } from './components/MandatoryVaultMigrationScreen';
-import { detectLegacyUnencryptedKeys } from './utils/vaultHelpers';
+import { detectLegacyUnencryptedKeys, isVaultConfigured } from './utils/vaultHelpers';
 import { ApiCredentials } from './store/apiKeysStore';
 import { LanguageCurrencyButton } from './components/ui/LanguageCurrencyButton';
 import { ThemeModeButton } from './components/ui/ThemeModeButton';
@@ -71,6 +71,7 @@ export default function App() {
   const [isDonationOpen, setIsDonationOpen] = useState(false);
   const [isVaultNoticeOpen, setIsVaultNoticeOpen] = useState(false);
   const [isVaultSetupModalOpen, setIsVaultSetupModalOpen] = useState(false);
+  const [navigateToApiKeysAfterVault, setNavigateToApiKeysAfterVault] = useState(false);
   const [legacyKeys, setLegacyKeys] = useState<ApiCredentials[]>(() => detectLegacyUnencryptedKeys());
 
   // Activate Zero-Trust Inactivity Auto-Lock hook
@@ -176,8 +177,8 @@ export default function App() {
 
   const checkAndTriggerVaultNotice = () => {
     const { isInitialized: initialized, encryptedData: data } = useApiKeysStore.getState();
-    const shouldShowNotice = useSettingsStore.getState().showVaultSetupNoticeOnStartup;
-    if ((!initialized || !data) && shouldShowNotice) {
+    const { showVaultSetupNoticeOnStartup: shouldShowNotice, useMockData: isSimulating } = useSettingsStore.getState();
+    if ((!initialized || !data) && shouldShowNotice && !isSimulating) {
       setTimeout(() => {
         setIsVaultNoticeOpen(true);
       }, 300);
@@ -196,7 +197,24 @@ export default function App() {
 
   const handleCloseWelcome = () => {
     setIsWelcomeOpen(false);
-    checkAndTriggerVaultNotice();
+  };
+
+  const handleConfigureVaultFromOnboarding = () => {
+    setIsWelcomeOpen(false);
+    const { isInitialized: initialized, encryptedData: data } = useApiKeysStore.getState();
+    if (isVaultConfigured({ isInitialized: initialized, encryptedData: data })) {
+      setActiveTab('api-keys');
+    } else {
+      setNavigateToApiKeysAfterVault(true);
+      setIsVaultSetupModalOpen(true);
+    }
+  };
+
+  const handleActivateSimulationFromOnboarding = () => {
+    useSettingsStore.getState().setUseMockData(true);
+    setIsWelcomeOpen(false);
+    setActiveTab('dashboard');
+    toast.success(t('settings.simulationMode.enabledToast', 'Mock Data Enabled'), { id: 'onboarding-mock-toggle' });
   };
 
   const handleConfigureVaultNow = () => {
@@ -338,7 +356,13 @@ export default function App() {
             </div>
             <StatusBar />
           </div>
-          <WelcomeHelpModal isOpen={isWelcomeOpen} onClose={handleCloseWelcome} />
+          <WelcomeHelpModal
+            isOpen={isWelcomeOpen}
+            onClose={handleCloseWelcome}
+            onNavigateToTab={(tab) => setActiveTab(tab)}
+            onConfigureVaultAndKey={handleConfigureVaultFromOnboarding}
+            onActivateSimulation={handleActivateSimulationFromOnboarding}
+          />
           <DonationModal isOpen={isDonationOpen} onClose={() => setIsDonationOpen(false)} />
           <VaultSetupNoticeModal
             isOpen={isVaultNoticeOpen}
@@ -347,7 +371,16 @@ export default function App() {
           />
           <VaultSetupModal
             isOpen={isVaultSetupModalOpen}
-            onClose={() => setIsVaultSetupModalOpen(false)}
+            onClose={() => {
+              setIsVaultSetupModalOpen(false);
+              setNavigateToApiKeysAfterVault(false);
+            }}
+            onSuccess={() => {
+              if (navigateToApiKeysAfterVault) {
+                setNavigateToApiKeysAfterVault(false);
+                setActiveTab('api-keys');
+              }
+            }}
             reason="Activate client-side vault protection to securely store your exchange credentials."
           />
           <UpdateNotification />

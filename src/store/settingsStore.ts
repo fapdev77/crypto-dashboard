@@ -7,7 +7,7 @@ import {
   DEFAULT_USDT_RATE,
   CurrencyApiDiagnostics,
 } from '../services/currency/currencyTypes';
-import i18n from '../i18n/config';
+import i18n, { getInitialLocale } from '../i18n/config';
 import {
   applyThemeMode,
   type ThemeMode,
@@ -127,7 +127,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
-      locale: 'en-US',
+      locale: getInitialLocale(),
       setLocale: (locale: SupportedLocale) => {
         i18n.changeLanguage(locale);
         set({ locale });
@@ -277,6 +277,11 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'terminal-settings',
+      onRehydrateStorage: () => (state) => {
+        if (state?.locale && state.locale !== i18n.language) {
+          i18n.changeLanguage(state.locale);
+        }
+      },
     }
   )
 );

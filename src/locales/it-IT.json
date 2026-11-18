@@ -95,8 +95,8 @@
       "desc": "Alcuni dei tuoi exchange attivi hanno restrizioni API per il recupero dei dati storici. I record più vecchi di questi limiti non possono essere recuperati:",
       "max": "Massimo di {{limit}}",
       "limits": {
-        "okx": "3 mesi (90 dias)",
-        "bitget": "3 mesi (90 dias)",
+        "okx": "3 mesi (90 giorni)",
+        "bitget": "3 mesi (90 giorni)",
         "bybit": "2 anni"
       }
     },
@@ -338,7 +338,7 @@
       "subtitle": "Passa da una modalità ufficiale all'altra o personalizza completamente la tua tavolozza di colori.",
       "selectTheme": "Temi di Sistema",
       "presetsTitle": "Predefiniti Pronti (Carica in Personalizzato)",
-      "presetsDesc": "Carica rapidamente combinaciones di colori curate per la tua interfaccia.",
+      "presetsDesc": "Carica rapidamente combinazioni di colori curate per la tua interfaccia.",
       "customTokensTitle": "Personalizzazione dei Colori",
       "customTokensDesc": "Regola i valori esadecimali per adattare la dashboard alle tue preferenze visive.",
       "notCustomWarning": "Il tema attuale è ufficiale. Modificando qualsiasi colore passerai al tema Personalizzato.",
@@ -573,7 +573,7 @@
       "syncTo": "Sincronizzazione",
       "imminentSettlement": "Liquidazione di funding imminente! L'auto-sync verrà attivata circa 1 minuto dopo il completamento della liquidazione.",
       "autoSyncExplanation": "Sincronizza automaticamente 1 minuto dopo ogni liquidazione di funding (ogni 8h) in modo che tutti gli exchange abbiano dati aggiornati.",
-      "fundingIn": "Funding in",
+      "fundingIn": "Funding tra",
       "noData": "Nessun dato di sincronizzazione ancora presente. Esegui una sincronizzazione di Funding per visualizzare le metriche sulle prestazioni.",
       "totalTimeTooltip": "Tempo totale impiegato per l'intero processo di sincronizzazione, compreso il recupero da tutti gli exchange e il salvataggio nel database locale.",
       "totalTime": "Tempo Totale",
@@ -612,7 +612,7 @@
     "prot": "Prot:",
     "exp": "Exp:",
     "macroCapitalDistribution": "Distribuzione Macro del Capitale",
-    "crossExchangeAssetComposition": "Composição Asset tra Exchange",
+    "crossExchangeAssetComposition": "Composizione Asset tra Exchange",
     "composition": "Composizione",
     "others": "Altri",
     "totalPositions": "Totale Posizioni",
@@ -694,7 +694,14 @@
       "btcDominance": "Stima della Dominanza di Mercato del Bitcoin: ~{{dominance}}%. Riflette la quota di capitale allocata nella principale criptovaluta.",
       "tacticalAdvice": "Raccomandazione tattica contestuale calcolata dal regime di mercato, dal momentum del sentimento e dal rischio di leva."
     },
-    "sourceTitle": "Fonte Dati: API Alternative.me Crypto Fear & Greed Index"
+    "sourceTitle": "Fonte Dati: API Alternative.me Crypto Fear & Greed Index",
+    "advice": {
+      "extremeGreed": "Avidità Estrema: Il mercato è surriscaldato con leva elevata. Attenzione a brusche cascate di liquidazioni e proteggi i livelli di stop-loss.",
+      "greed": "Avidità: Momentum rialzista prevalente. Favorisce i pullback a favore di trend monitorando i tassi di funding sui contratti perpetui.",
+      "extremeFear": "Paura Estrema: Livelli di capitolazione e vendite dettate dal panico. Storicamente favorevole per accumulo spot e coperture delta-neutrali.",
+      "fear": "Paura: Il sentiment di mercato è difensivo. L'avversione al rischio suggerisce dimensioni di posizione più contenute e parametri rigorosi.",
+      "neutral": "Neutrale: Fase laterale e consolidamento. Contesto ideale per trading in range, raccolta dei tassi di funding e mean reversion."
+    }
   },
   "positions": {
     "title": "Posizioni Aperte",
@@ -1116,7 +1123,7 @@
       "rec": "rec"
     },
     "table": {
-      "time": "Data e Hora",
+      "time": "Data e Ora",
       "timeTooltip": "Timestamp della transazione (UTC)",
       "currencyAndSymbol": "Valuta e Simbolo",
       "currencySymbolTooltip": "Valuta ({{currency}}) e simbolo del contratto",
@@ -1246,7 +1253,7 @@
     "bitget": {
       "title": "Transazioni Bitget",
       "syncingMessage": "Sincronizzazione transazioni Bitget...",
-      "noData": "Nessuna transazione Bitget trovata. Aggiungi chiavi API Bitget para sincronizzare.",
+      "noData": "Nessuna transazione Bitget trovata. Aggiungi chiavi API Bitget per sincronizzare.",
       "reportTitle": "Report Transazioni Bitget",
       "progressTooltip": "Avanzamento del backfill delle transazioni Bitget. Sincronizza progressivamente fino a 90 giorni di dati."
     },
@@ -2165,5 +2172,182 @@
     "notNow": "Non Ora",
     "updating": "Aggiornamento...",
     "updateNow": "Aggiorna Ora"
+  },
+  "onboarding": {
+    "wizardTitle": "Crypto Portfolio Manager",
+    "wizardSubtitle": "Onboarding Interattivo e Guida Rapida",
+    "stepCounter": "Passo {{current}} di {{total}}",
+    "skipGuide": "Salta guida",
+    "prev": "Indietro",
+    "next": "Avanti",
+    "finish": "Fine",
+    "openManual": "Manuale Utente",
+    "openModule": "Apri {{module}}",
+    "autoCycleActive": "Ciclo automatico ogni 3s · Clicca per fissare",
+    "autoCyclePaused": "Ciclo automatico in pausa",
+    "steps": {
+      "welcome": "Benvenuto",
+      "preferences": "Preferenze",
+      "dashboard": "Dashboard",
+      "navigation": "Menu Laterale",
+      "operations": "Log e Impostazioni",
+      "start": "Inizia"
+    },
+    "step1": {
+      "kicker": "Terminale Unificato Multi-Exchange",
+      "title": "Il tuo portafoglio crypto in un centro di comando locale",
+      "desc": "Monitora saldi spot, futures perpetui, posizioni inverse di hedge, funding fee e log di esecuzione su Bitget, Bybit e OKX direttamente dal browser.",
+      "pillar1Title": "Vista Consolidata Multi-Exchange",
+      "pillar1Desc": "Unifica patrimonio, P&L aperto, ordini e report storici di variazione netta su tutti gli account.",
+      "pillar2Title": "Vault Zero-Trust sul Browser",
+      "pillar2Desc": "Le chiavi API restano crittografate localmente (PBKDF2 + AES-GCM-256). Nessun server intermedio conserva credenziali.",
+      "pillar3Title": "Modalità Privacy e PWA Installabile",
+      "pillar3Desc": "Nascondi i saldi sensibili con un clic per la condivisione schermo e installa l'app su desktop o mobile.",
+      "previewHeader": "Architettura Local-First",
+      "previewSub": "Comunicazione diretta browser → exchange",
+      "previewEncrypted": "Vault Locale AES-256",
+      "previewReadOnly": "Chiavi Sola Lettura",
+      "previewExchanges": "Exchange Supportati",
+      "previewNote": "Prova liberamente con la Modalità Simulazione prima di collegare chiavi reali."
+    },
+    "step2": {
+      "kicker": "Personalizzazione Iniziale",
+      "title": "Scegli lingua, valuta e tema",
+      "desc": "Le modifiche vengono applicate subito in tutto il terminale. Puoi anche creare palette personalizzate in Impostazioni.",
+      "languageLabel": "Lingua dell'Interfaccia",
+      "currencyLabel": "Valuta di Visualizzazione",
+      "refreshRates": "Aggiorna tassi",
+      "themeLabel": "Tema Visivo",
+      "customThemeHint": "Studio temi personalizzati in Impostazioni",
+      "previewLabel": "Anteprima Live del Terminale",
+      "previewEquityLabel": "Patrimonio Totale del Portafoglio",
+      "previewPnlLabel": "P&L Posizioni Aperte",
+      "previewRateNote": "1 USD ≈ {{rate}} {{currency}}",
+      "previewActiveTheme": "Tema attivo: {{theme}}"
+    },
+    "step3": {
+      "kicker": "Spazio Principale",
+      "title": "Comprendi la Dashboard Principale a colpo d'occhio",
+      "desc": "Seleziona qualsiasi area qui sotto per scoprire come sono organizzati capitale, rischio e controlli globali.",
+      "previewBadge": "Mappa Interattiva Dashboard",
+      "previewHint": "Clicca su un blocco per ispezionarlo",
+      "zones": {
+        "kpis": {
+          "title": "4 Schede KPI Superiori",
+          "desc": "Patrimonio Totale in tempo reale, P&L Posizioni Aperte (Non Realizzato + Realizzato), rapporto Long vs. Short e copertura Hedge Inverso (Protetto vs. Esposto).",
+          "metric": "4 Metriche Principali · Aggiornamento automatico"
+        },
+        "charts": {
+          "title": "Grafici Macro e Cross-Exchange",
+          "desc": "Suddivisione visiva del capitale per exchange insieme alla concentrazione degli asset su Bitget, Bybit e OKX.",
+          "metric": "Composizione Capitale e Asset"
+        },
+        "hierarchy": {
+          "title": "Tabella Gerarchica dei Saldi",
+          "desc": "Dettaglio per Exchange → Account → Asset con filtro residui (< $1) e ricerca istantanea.",
+          "metric": "Exchange → Account → Valuta"
+        },
+        "controls": {
+          "title": "Barra Superiore e Barra di Stato",
+          "desc": "Cambio rapido di Lingua, Valuta, Tema, PIKA AI, Aiuto e Occhio Privacy (maschera i valori), più stato connessioni nel footer.",
+          "metric": "Modalità Privacy · Barra di Stato"
+        }
+      }
+    },
+    "step4": {
+      "kicker": "Architettura di Navigazione",
+      "title": "Esplora i moduli del Menu Laterale",
+      "desc": "La barra laterale separa gli strumenti operativi e analitici in alto dall'infrastruttura tecnica in basso.",
+      "groupPrimary": "Operatività e Analisi",
+      "groupSystem": "Infrastruttura e Controllo",
+      "previewReqKeys": "Funziona con chiavi API o Modalità Simulazione",
+      "previewReqConfig": "Configurazione e diagnostica di sistema",
+      "modules": {
+        "dashboard": {
+          "title": "Dashboard",
+          "desc": "KPI consolidati, grafici di capitale, saldi gerarchici, sentiment di mercato e tassi di cambio live."
+        },
+        "hedgePro": {
+          "title": "Hedge Pro",
+          "desc": "Motore di rischio delta-neutrale e contratti inversi per misurare capitale protetto vs. esposto per moneta."
+        },
+        "positions": {
+          "title": "Posizioni",
+          "desc": "Monitora le Posizioni Aperte con Mark Price live o verifica lo Storico Posizioni Chiuse."
+        },
+        "orders": {
+          "title": "Ordini",
+          "desc": "Controlla gli Ordini Aperti e filtra lo storico degli ordini eseguiti o annullati tra gli account."
+        },
+        "trade": {
+          "title": "Storico Trade",
+          "desc": "Dettaglio di esecuzioni, commissioni pagate e riconciliazione operazione per operazione."
+        },
+        "transactions": {
+          "title": "Storico Transazioni",
+          "desc": "Registro Variazione Netta Consolidata e log per exchange (visibile con chiavi attive o simulazione)."
+        },
+        "analytics": {
+          "title": "Analitica",
+          "desc": "Performance del Portafoglio, Analisi di Mercato, PnL per Simbolo e ottimizzazione Funding Fee."
+        },
+        "reports": {
+          "title": "Report",
+          "desc": "Riepiloghi esportabili sull'evoluzione del portafoglio e reportistica multi-periodo."
+        },
+        "apiKeys": {
+          "title": "Chiavi API",
+          "desc": "Aggiungi, modifica, attiva o rimuovi le credenziali degli exchange nel Vault Zero-Trust crittografato."
+        },
+        "logs": {
+          "title": "Log di Connessione",
+          "desc": "Terminale diagnostico in tempo reale per eventi WebSocket, polling REST, sincronizzazione ed errori."
+        },
+        "apiTester": {
+          "title": "Tester API",
+          "desc": "Testa direttamente gli endpoint firmati per verificare permessi e payload grezzi."
+        },
+        "aiSettings": {
+          "title": "Impostazioni IA",
+          "desc": "Configura l'assistente quantitativo PIKA, modelli, limiti di frequenza e registro di audit."
+        },
+        "settings": {
+          "title": "Impostazioni",
+          "desc": "Gestisci intervalli di polling, cache IndexedDB, temi personalizzati, backup .enc e Modalità Simulazione."
+        }
+      }
+    },
+    "step5": {
+      "kicker": "Operatività e Affidabilità",
+      "title": "Diagnostica nei Log e Regolazioni in Impostazioni",
+      "desc": "Verifica ogni connessione in tempo reale e regola frequenza di polling, cache locale e backup crittografati.",
+      "logsTitle": "Terminale Log in Tempo Reale",
+      "logsDesc": "Filtra per livello (INFO, WARN, ERROR, DATA, SYSTEM), cerca messaggi, isola singoli account e metti in pausa l'auto-scroll.",
+      "settingsTitle": "Impostazioni e Backup Crittografati",
+      "settingsDesc": "Regola il polling REST (1s–60s), gestisci la cache IndexedDB, esporta/importa backup .enc o esegui un Factory Reset.",
+      "betaTitle": "Fase Beta e Precisione dei Dati",
+      "betaDesc": "Ogni exchange utilizza formule proprie di margine e arrotondamento; possono verificarsi lievi differenze rispetto ai portali ufficiali.",
+      "tabLogs": "Anteprima Log",
+      "tabSettings": "Anteprima Impostazioni",
+      "openLogsBtn": "Apri Log",
+      "openSettingsBtn": "Apri Impostazioni"
+    },
+    "step6": {
+      "kicker": "Primi Passi",
+      "title": "Scegli come iniziare",
+      "desc": "Esplora subito con dati simulati realistici oppure attiva il vault locale per collegare le chiavi di sola lettura.",
+      "readOnlyTitle": "Lista di Controllo Sola Lettura",
+      "readOnlyRule": "Abilita SOLO permessi di Sola Lettura (Read-Only) sull'exchange. Non abilitare mai Prelievi o Trading.",
+      "bitgetRule": "Bitget e OKX richiedono API Key, Secret e Passphrase.",
+      "bybitRule": "Bybit richiede API Key, Secret e Regione dell'account.",
+      "vaultStatusConfigured": "Vault di Sicurezza attivo ({{count}} chiave/i salvata/e)",
+      "vaultStatusPending": "Vault di Sicurezza non ancora configurato",
+      "simulationActiveTag": "La Modalità Simulazione è attualmente ATTIVA",
+      "ctaVaultAndKey": "Attiva Vault e Aggiungi Chiave API",
+      "ctaManageKeys": "Vai a Gestione Chiavi API",
+      "ctaSimulation": "Esplora in Modalità Simulazione",
+      "ctaSimulationActive": "Continua in Modalità Simulazione",
+      "ctaDashboard": "Vai alla Dashboard"
+    }
   }
 }

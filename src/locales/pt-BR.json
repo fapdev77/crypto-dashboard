@@ -694,10 +694,17 @@
       "btcDominance": "Estimativa de Dominância de Mercado do Bitcoin: ~{{dominance}}%. Reflete a fatia de alocação de capital na principal referência de cripto.",
       "tacticalAdvice": "Recomendação tática contextual calculada a partir do regime de mercado, momentum do sentimento e risco de alavancagem."
     },
-    "sourceTitle": "Fonte de Dados: API Alternative.me Crypto Fear & Greed Index"
+    "sourceTitle": "Fonte de Dados: API Alternative.me Crypto Fear & Greed Index",
+    "advice": {
+      "extremeGreed": "Ganância Extrema: Mercado sobrecomprado com alta alavancagem. Cuidado com correções abruptas (long squeeze) e proteja seus stops.",
+      "greed": "Ganância: Momentum altista predominante. Favorece operações a favor da tendência em pullbacks, com atenção aos custos de funding.",
+      "extremeFear": "Medo Extremo: Níveis de capitulação e pânico vendedor. Historicamente propício para acumulação em spot e hedge delta-neutro.",
+      "fear": "Medo: Sentimento defensivo. Postura cautelosa sugere posições mais enxutas e parâmetros de risco estritos.",
+      "neutral": "Neutro: Lateralização e consolidação. Cenário propício para operações em amplitude (range) e coleta de taxas de funding."
+    }
   },
   "positions": {
-    "title": "Open Positions",
+    "title": "Posições Abertas",
     "totalPositions": "Total de Posições",
     "unrealizedPnl": "PnL Não Realizado",
     "realizedPnl": "PnL Realizado",
@@ -2165,5 +2172,182 @@
     "notNow": "Agora Não",
     "updating": "Atualizando...",
     "updateNow": "Atualizar Agora"
+  },
+  "onboarding": {
+    "wizardTitle": "Crypto Portfolio Manager",
+    "wizardSubtitle": "Onboarding Interativo e Guia Rápido",
+    "stepCounter": "Etapa {{current}} de {{total}}",
+    "skipGuide": "Pular guia",
+    "prev": "Anterior",
+    "next": "Próximo",
+    "finish": "Concluir",
+    "openManual": "Manual do Usuário",
+    "openModule": "Abrir {{module}}",
+    "autoCycleActive": "Ciclo automático a cada 3s · Clique para fixar",
+    "autoCyclePaused": "Ciclo automático pausado",
+    "steps": {
+      "welcome": "Boas-vindas",
+      "preferences": "Preferências",
+      "dashboard": "Dashboard",
+      "navigation": "Menu Lateral",
+      "operations": "Logs e Config.",
+      "start": "Começar"
+    },
+    "step1": {
+      "kicker": "Terminal Unificado Multi-Corretora",
+      "title": "Seu portfólio cripto em um centro de comando local",
+      "desc": "Monitore saldos spot, futuros perpétuos, posições inversas de hedge, funding fees e logs de execução na Bitget, Bybit e OKX diretamente do seu navegador.",
+      "pillar1Title": "Visão Consolidada Multi-Corretora",
+      "pillar1Desc": "Unifique patrimônio, P&L aberto, ordens e relatórios históricos de variação líquida entre todas as contas.",
+      "pillar2Title": "Cofre Zero-Trust no Navegador",
+      "pillar2Desc": "Suas chaves de API ficam criptografadas localmente (PBKDF2 + AES-GCM-256). Nenhum servidor intermediário armazena credenciais.",
+      "pillar3Title": "Modo Privacidade e PWA Instalável",
+      "pillar3Desc": "Oculte saldos sensíveis com um clique para compartilhar tela e instale o app no desktop ou celular.",
+      "previewHeader": "Arquitetura Local-First",
+      "previewSub": "Comunicação direta navegador → corretoras",
+      "previewEncrypted": "Cofre Local AES-256",
+      "previewReadOnly": "Chaves Somente Leitura",
+      "previewExchanges": "Corretoras Suportadas",
+      "previewNote": "Teste livremente no Modo Simulação antes de conectar chaves reais."
+    },
+    "step2": {
+      "kicker": "Personalização Inicial",
+      "title": "Defina idioma, moeda e aparência",
+      "desc": "As alterações são aplicadas em tempo real em todo o terminal. Você também pode criar paletas personalizadas em Configurações.",
+      "languageLabel": "Idioma da Interface",
+      "currencyLabel": "Moeda de Exibição",
+      "refreshRates": "Atualizar taxas",
+      "themeLabel": "Tema Visual",
+      "customThemeHint": "Estúdio de tema customizado em Configurações",
+      "previewLabel": "Prévia Viva do Terminal",
+      "previewEquityLabel": "Patrimônio Total do Portfólio",
+      "previewPnlLabel": "P&L de Posições Abertas",
+      "previewRateNote": "1 USD ≈ {{rate}} {{currency}}",
+      "previewActiveTheme": "Tema ativo: {{theme}}"
+    },
+    "step3": {
+      "kicker": "Área Principal",
+      "title": "Entenda o Dashboard Principal em segundos",
+      "desc": "Selecione qualquer bloco abaixo para explorar como o capital, o risco e os controles globais são organizados.",
+      "previewBadge": "Mapa Interativo do Dashboard",
+      "previewHint": "Clique em um bloco para inspecionar",
+      "zones": {
+        "kpis": {
+          "title": "4 Cartões de KPI no Topo",
+          "desc": "Patrimônio Total em tempo real, P&L de Posições Abertas (Não Realizado + Realizado), proporção Long vs. Short e cobertura Hedge Inverso (Protegido vs. Exposto).",
+          "metric": "4 Métricas Centrais · Atualização automática"
+        },
+        "charts": {
+          "title": "Gráficos Macro e Cross-Exchange",
+          "desc": "Distribuição visual do capital por corretora e composição de ativos entre Bitget, Bybit e OKX.",
+          "metric": "Composição de Capital e Ativos"
+        },
+        "hierarchy": {
+          "title": "Tabela Hierárquica de Saldos",
+          "desc": "Detalhamento por Corretora → Conta → Ativo com filtro de saldos residuais (< $1) e busca instantânea.",
+          "metric": "Corretora → Conta → Moeda"
+        },
+        "controls": {
+          "title": "Barra Superior e Barra de Status",
+          "desc": "Troca rápida de Idioma, Moeda, Tema, PIKA AI, Ajuda e Olho de Privacidade (oculta valores), além do status ao vivo no rodapé.",
+          "metric": "Modo Privacidade · Barra de Status"
+        }
+      }
+    },
+    "step4": {
+      "kicker": "Arquitetura de Navegação",
+      "title": "Explore os módulos do Menu Lateral",
+      "desc": "O menu lateral separa as ferramentas diárias de operação e análise no topo da infraestrutura técnica no rodapé.",
+      "groupPrimary": "Operação e Análise",
+      "groupSystem": "Infraestrutura e Controle",
+      "previewReqKeys": "Funciona com chaves API ou Modo Simulação",
+      "previewReqConfig": "Configuração e diagnóstico do sistema",
+      "modules": {
+        "dashboard": {
+          "title": "Dashboard",
+          "desc": "KPIs consolidados, gráficos de capital, saldos hierárquicos, sentimento de mercado e cotações em tempo real."
+        },
+        "hedgePro": {
+          "title": "Hedge Pro",
+          "desc": "Motor de risco delta-neutro e contratos inversos medindo capital protegido vs. exposto por moeda."
+        },
+        "positions": {
+          "title": "Posições",
+          "desc": "Acompanhe Posições Abertas com Mark Price ao vivo ou audite o Histórico de Posições Fechadas."
+        },
+        "orders": {
+          "title": "Ordens",
+          "desc": "Inspecione Ordens Abertas e filtre o histórico de ordens executadas ou canceladas entre contas."
+        },
+        "trade": {
+          "title": "Histórico de Trades",
+          "desc": "Detalhamento de execuções, taxas pagas e conciliação trade a trade."
+        },
+        "transactions": {
+          "title": "Histórico de Transações",
+          "desc": "Relatório de Variação Líquida Consolidada e logs por corretora (exibido quando há chaves ativas ou simulação)."
+        },
+        "analytics": {
+          "title": "Analytics",
+          "desc": "Performance de Portfólio, Análise de Mercado, PnL por Símbolo e otimização de Funding Fees."
+        },
+        "reports": {
+          "title": "Relatórios",
+          "desc": "Resumos exportáveis de evolução patrimonial e relatórios de desempenho por período."
+        },
+        "apiKeys": {
+          "title": "API Keys",
+          "desc": "Adicione, edite, ative ou remova credenciais de corretoras protegidas no Cofre Zero-Trust."
+        },
+        "logs": {
+          "title": "Logs de Conexão",
+          "desc": "Terminal de diagnóstico em tempo real com eventos de WebSocket, polling REST, sincronização e erros."
+        },
+        "apiTester": {
+          "title": "API Tester",
+          "desc": "Teste endpoints assinados diretamente para validar permissões de chave e payloads brutos."
+        },
+        "aiSettings": {
+          "title": "Configurações de IA",
+          "desc": "Configure o assistente quantitativo PIKA, modelos, limites de uso e log de auditoria."
+        },
+        "settings": {
+          "title": "Configurações",
+          "desc": "Ajuste intervalos de atualização, cache IndexedDB, temas customizados, backups .enc e Modo Simulação."
+        }
+      }
+    },
+    "step5": {
+      "kicker": "Operação e Confiabilidade",
+      "title": "Diagnóstico em Logs e Ajustes em Settings",
+      "desc": "Valide a saúde das suas conexões em tempo real e ajuste frequência de polling, cache local e backups.",
+      "logsTitle": "Terminal de Logs ao Vivo",
+      "logsDesc": "Filtre por nível (INFO, WARN, ERROR, DATA, SYSTEM), pesquise mensagens, isole contas específicas e pause a rolagem automática para inspecionar detalhes.",
+      "settingsTitle": "Configurações e Backups Criptografados",
+      "settingsDesc": "Defina o intervalo de polling REST (1s–60s), gerencie o cache no IndexedDB, exporte/importe backups .enc ou execute um Factory Reset.",
+      "betaTitle": "Fase Beta e Precisão dos Dados",
+      "betaDesc": "Cada corretora aplica fórmulas próprias de margem e arredondamento; pequenas diferenças podem ocorrer em relação aos portais oficiais.",
+      "tabLogs": "Prévia de Logs",
+      "tabSettings": "Prévia de Settings",
+      "openLogsBtn": "Abrir Logs",
+      "openSettingsBtn": "Abrir Configurações"
+    },
+    "step6": {
+      "kicker": "Primeiros Passos",
+      "title": "Escolha como deseja iniciar",
+      "desc": "Explore agora mesmo com dados simulados realistas ou ative o cofre local para conectar suas chaves Read-Only.",
+      "readOnlyTitle": "Checklist de Segurança Read-Only",
+      "readOnlyRule": "Ative APENAS permissão de Leitura (Read-Only) na corretora. Nunca habilite Saque ou Trade.",
+      "bitgetRule": "Bitget e OKX exigem API Key, Secret e Passphrase.",
+      "bybitRule": "Bybit exige API Key, Secret e Região da conta.",
+      "vaultStatusConfigured": "Cofre de Segurança ativo ({{count}} chave(s) salva(s))",
+      "vaultStatusPending": "Cofre de Segurança ainda não configurado",
+      "simulationActiveTag": "Modo Simulação está ATIVO no momento",
+      "ctaVaultAndKey": "Ativar Cofre e Adicionar API Key",
+      "ctaManageKeys": "Ir para Gerenciador de API Keys",
+      "ctaSimulation": "Explorar em Modo Simulação",
+      "ctaSimulationActive": "Continuar em Modo Simulação",
+      "ctaDashboard": "Ir para o Dashboard"
+    }
   }
 }
