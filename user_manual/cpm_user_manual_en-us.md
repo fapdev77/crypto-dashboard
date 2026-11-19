@@ -450,7 +450,7 @@ To ensure non-USDT funding balances and smaller cap tokens on Bitget and OKX are
 - **Exponential Backoff with Jitter for Network Drops**: Transient connectivity drops retry on an exponential delay schedule (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) with random jitter, stopping after 5 attempts via circuit breaker.
 - **Global Error Boundary**: Unhandled React rendering errors trigger an intuitive **Safe Recovery** screen with error stack diagnostics and single-click recovery buttons: **Reload Dashboard** and **Clear Cache & Reload**.
 - **Instant Scroll Position Reset**: Tab transitions automatically reset scroll positions to top-left (`useLayoutEffect`), ensuring optimal viewing upon switching views.
-- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **113 test files with 953 unit and integration tests**.
+- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **114 test files with 966 unit and integration tests**.
 
 ---
 
