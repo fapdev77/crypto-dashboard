@@ -175,7 +175,7 @@ A tela **Settings** é organizada em **10 cards modulares**: *Language & Currenc
 - **Predefinições & Gerenciamento de Temas Salvos**: Carregue 4 paletas prontas (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) ou salve, carregue e exclua múltiplos temas personalizados com nome próprio (exibido ao lado de *Customizado* no seletor do cabeçalho).
 
 ### 🌐 Idioma, Moedas Fiat & Diagnóstico de Câmbio
-- **6 Idiomas & 4 Moedas Fiat**: Cobertura completa em `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419` e `it-IT` (1.959 chaves por idioma) e exibição em **USD**, **BRL**, **EUR** e **GBP**.
+- **6 Idiomas & 4 Moedas Fiat**: Cobertura completa em `pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419` e `it-IT` (1.961 chaves por idioma) e exibição em **USD**, **BRL**, **EUR** e **GBP**.
 - **Cotações Duplas & Diagnóstico (`CurrencyApiDiagnostics`)**: Consulta concorrentemente a **Frankfurter API v2** (`api.frankfurter.dev`) para taxas fiat e a **CoinGecko** (`api.coingecko.com`) para paridade **USDT/USD**, com TTL configurável (5 a 60 min), fallback em cache offline e monitoramento de latência/status em tempo real.
 
 ### 🔄 Sincronização, Retenção e Configurações de Cache (IndexedDB)
@@ -226,15 +226,15 @@ Promovido a um **módulo de navegação de primeiro nível** no menu lateral, pr
 ### 📂 Closed Positions (Histórico de Posições e Analytics)
 - **Livro Contábil Completo**: Posições encerradas nas três corretoras com dados de entrada, saída, PnL fechado líquido e taxas pagas.
 - **Quadro Estatístico de Performance**: **Win Rate %**, **Profit Factor**, Razão Ganho/Perda, Média de Lucro por Trade Vencedor e Maior Operação Histórica.
-- **Filtros Temporais e Busca**: Janelas rápidas (7D, 30D, 90D, customizado) e busca instantânea por ativo.
+- **Filtros Temporais e Busca**: Seletor padronizado com **12 opções** em ordem cronológica e padrão inicial de **7 Dias** (`Today`, `7D`, `14D`, `30D`, `90D`, `120D`, `6M`, `1Y`, `MTD`, `YTD`, modal `Custom Range...` e `All Time`), alerta `HistoryLimitWarning` para contas OKX/Bitget acima de 90 dias e busca instantânea por ativo.
 - **Exportação Multiformato**: Gere arquivos em **CSV**, **Excel (.xlsx)** ou relatórios em **PDF** formatados para auditoria fiscal.
 
 ### 📝 Order Reports (Ordens Abertas e Histórico de Ordens)
 - **Open Orders**: Monitore ordens Limit, Market, Stop Loss e Take Profit ativas em qualquer exchange com indicação de gatilhos e preenchimentos parciais.
-- **Order History**: Histórico consolidado de ordens executadas, expiradas ou canceladas com suporte a busca avançada por expressão regular.
+- **Order History**: Histórico consolidado de ordens executadas, expiradas ou canceladas com o filtro padronizado de 12 opções (padrão **7 Dias**, recálculo de funding em `Custom Range...` e `HistoryLimitWarning`), busca avançada por expressão regular e detalhes expansíveis.
 
 ### 🔄 Trade History (Histórico de Execuções)
-- Acompanhe cada ordem executada com registro do preço executado, tamanho na moeda base e a moeda exata utilizada para cobrança de taxas.
+- Acompanhe cada ordem executada com registro do preço executado, tamanho na moeda base, moeda exata da taxa e o filtro padronizado de 12 opções (padrão **7 Dias**, modal `Custom Range...` e `HistoryLimitWarning`).
 
 ### 📜 Histórico de Transações e Variação Líquida Consolidada (Consolidated Net Change & Transactions)
 
@@ -248,7 +248,8 @@ Posicionado estrategicamente como o **primeiro item do submenu Transactions Hist
 - **Agrupamento Hierárquico em Cascata 100% Internacionalizado**:
   - **1º Nível (Corretora)**: Consolida Bybit, Bitget e OKX com seus respectivos totais de transações, taxas, funding e Net Change na moeda selecionada pelo usuário. Permite expandir e recolher cada exchange individualmente com os botões "Expand All" / "Collapse All" totalmente traduzidos.
   - **2º Nível (Ativo/Moeda)**: Dentro de cada corretora, os ativos (BTC, ETH, SOL, USDT, etc.) são desdobrados com métricas completas: contagem de operações, volume de trades, depósitos, saques, taxas pagas, funding e a variação líquida tanto na **moeda nativa** quanto convertida e formatada na **moeda fiduciária ativa (BRL, USD, EUR, GBP)** sem sobreposições ou sufixos monetários conflitantes.
-- **Controles de Sincronismo e Privacidade**:
+- **Filtro de Período Padronizado, Sincronismo e Privacidade**:
+  - Seletor cronológico unificado com **12 opções** e padrão inicial de **7 Dias** (compartilhado entre Consolidated Net Change, abas de transações por corretora, Closed Positions, Order/Trade History, PnL by Symbol e Reports), incluindo modal `Custom Range` adaptável a todos os temas e banner `HistoryLimitWarning`.
   - Botão de sincronização manual com feedback de progresso e respeito aos dados cacheados via SWR.
   - Compatibilidade nativa com o **Modo Privacidade**, ofuscando montantes nominais sem prejudicar a usabilidade.
 - **Exportação Multiformato (Export Action)**:
@@ -352,7 +353,7 @@ Terminal analítico cross-exchange que consolida dados de derivativos em tempo r
   - Sub-painel 100% dedicado a contratos COIN-M com desdobramento expansível por corretora (Funding 8h, Volume 24h, Open Interest e Spread), além de botões para expandir e recolher todos os pares em bloco.
 
 ### 📊 PnL by Symbol (Lucros e Perdas por Símbolo)
-- Relatório de desempenho isolado por criptoativo operado, com separação de ganhos e perdas em operações Long vs Short, fator de lucro por moeda e barras visuais de intensidade financeira.
+- Relatório de desempenho isolado por criptoativo operado, com separação de ganhos e perdas em operações Long vs Short, fator de lucro por moeda, barras visuais de intensidade financeira e o seletor padronizado de 12 opções (padrão **7 Dias**, `Custom Range...` e `HistoryLimitWarning` acima de 90 dias para OKX/Bitget).
 
 ### 💸 Dashboard de Taxas de Financiamento (Funding Fees)
 - **Pipeline de Agregação no Serviço**: Cálculos de alta precisão com biblioteca Big.js armazenados em formato condensado (`FundingRateSummary`) no IndexedDB.
@@ -361,7 +362,7 @@ Terminal analítico cross-exchange que consolida dados de derivativos em tempo r
 - **Auto-Sync Inteligente**: Agendamento automático calculado para `próximo acerto de funding + 60s`.
 
 ### 📑 Reports (Exportação de Relatórios Gerenciais)
-- Central de exportação de dados auditáveis em formato PDF (com diagramação limpa de tabelas), Excel e CSV, prontos para comprovação contábil e declarações de rendimentos.
+- Central de exportação de dados auditáveis em formato PDF (com diagramação limpa de tabelas), Excel e CSV, prontos para comprovação contábil e declarações de rendimentos, com o seletor padronizado de 12 opções (padrão **7 Dias**, `Custom Range...` e `HistoryLimitWarning`).
 
 ### ⚡ API Tester (Testador de Conexões e Endpoints)
 - Ambiente de diagnóstico técnico isolado: efetue chamadas REST diretas para testar rotas públicas e privadas, verifique handshakes de WebSockets em tempo real e meça a latência exata da rede.
@@ -451,7 +452,7 @@ Para garantir que ativos na carteira de financiamento (Spot/Funding) ou moedas a
 - **Backoff Exponencial com Jitter para Falhas de Rede**: Em instabilidades transitórias de conexão, o sistema re-tenta com intervalos progressivos (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) adicionados de variação aleatória (jitter), limitado a 5 tentativas antes de acionar o circuit breaker.
 - **Global Error Boundary**: Se ocorrer uma falha inesperada na árvore do React, a aplicação não quebra em tela branca. Uma tela de proteção graciosa (**Safe Recovery**) oferece diagnóstico do incidente e dois botões de restauração em um clique: **Reload Dashboard** e **Clear Cache & Reload**.
 - **Reset Automático de Scroll**: Ao navegar entre abas no menu lateral, o leitor de layout do React reseta instantaneamente a rolagem para o topo da página, garantindo foco imediato nas informações principais.
-- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **114 arquivos de teste com 966 testes unitários e de integração**.
+- **Quality Gate no CI**: Pipeline automatizado no GitHub Actions executando checagem estrita de tipos TypeScript, compilação de produção e a suíte completa de **118 arquivos de teste com 993 testes unitários e de integração**.
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **Document Version:** 2.51.0  
 > **Status:** Production-Ready & Verified  
-> **Test Coverage:** 114 test files, 966 passing tests (Vitest 4.1)
+> **Test Coverage:** 118 test files, 993 passing tests (Vitest 4.1)
 
 ---
 
@@ -70,14 +70,14 @@ O CPM adota uma arquitetura em duas camadas (2-Tier Local Hybrid-Proxy) projetad
 
 - **Core Framework & Runtime:** React 19, TypeScript ~5.8, Vite 6, Node.js LTS (engines `>=24`).
 - **Styling & UI Engine:** Tailwind CSS v4 (`@theme` CSS variables), sistema multi-temas (`themeMode.ts`), Lucide React (ícones), Radix UI (Tooltips acessíveis).
-- **Internationalization (i18n):** `i18next` e `react-i18next` com 6 idiomas suportados (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.959 chaves cada).
+- **Internationalization (i18n):** `i18next` e `react-i18next` com 6 idiomas suportados (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.961 chaves cada).
 - **Multi-Currency System:** `CurrencyService.ts` integrado concorrentemente à **Frankfurter API v2** (`api.frankfurter.dev`) e à **CoinGecko API** (`api.coingecko.com` para USDT/USD), com TTL configurável (5–60 min), cache offline e diagnósticos (`CurrencyApiDiagnostics`).
 - **State Management:** Zustand 5.0 (arquitetura desacoplada de **14 micro-stores** com persistência local).
 - **Data Caching & Persistence:** IndexedDB nativo via biblioteca `idb` 8.0, com SWR (Stale-While-Revalidate) e versionamento de banco (`DB_VERSION 12`).
 - **Precision Math:** Big.js para cálculos financeiros de alta sensibilidade (evita perdas de precisão por ponto flutuante em taxas de funding e ratios de hedge).
 - **AI Subsystem:** `@google/genai` (v1.29.0) para integração direta com Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm` para formatação rica de respostas.
 - **Reporting & Charts:** Recharts 3.8 (gráficos interativos de Open Interest, CVD, Hedge Pro e Telemetria de IA), jsPDF + jsPDF-AutoTable (exportação visual de PDFs), SheetJS `xlsx` (exportação de planilhas).
-- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **114 arquivos de teste e 966 testes unitários e de integração automatizados** 100% verdes.
+- **Test Automation:** Vitest 4.1 com jsdom e `@testing-library/react`. Cobertura contínua com **118 arquivos de teste e 993 testes unitários e de integração automatizados** 100% verdes.
 
 ### 3.1. Terminologia de Mercado Mantida em Inglês
 
@@ -163,6 +163,7 @@ O CPM opera múltiplos mecanismos especializados de sincronização em segundo p
 - **SWR (Stale-While-Revalidate):** Na montagem das abas de histórico, os hooks (`usePositionHistory`, `useOrderReports`) leem instantaneamente o cache local do IndexedDB e iniciam requisições em segundo plano para capturar novos deltas.
 - **Global Sync Coordination (`lastSyncTime`):** A navegação entre abas de histórico consulta o timestamp global de sincronização. Se uma sincronização foi concluída recentemente, fetches externos concorrentes são bloqueados.
 - **Scroll Position Reset (`useLayoutEffect`):** Ao alternar de aba, o sistema reseta imediatamente a rolagem para o topo do documento, garantindo visualização ergonômica sem saltos visuais.
+- **Padronização Temporal (`dateTimeHelper.ts`, `FilterBar.tsx`, `HistoryLimitWarning.tsx`):** Todas as telas de histórico e análise compartilham `DEFAULT_TIME_PERIOD_MS` (7 dias), o catálogo localizado de 12 predefinições (`getLocalizedTimePeriodOptions`, incluindo `MTD`, `YTD` e `CustomDateRangeModal`), resolução estrita de limites em `resolvePeriodDateRange` e estimativa de alcance em `estimateRequestedPeriodDays` para alertar sobre o limite de 90 dias das APIs da OKX e Bitget.
 
 ### 5.2. Transaction Log Sync Engines (Bybit, Bitget, OKX)
 - **Progressive Deep Sync:** Cada exchange possui uma engine dedicada (`useBybitTransactionSync`, `useBitgetTransactionSync`, `useOkxTransactionSync`) que realiza o backfill estruturado do histórico em blocos de 7 dias, salvando checkpoints de progresso (`meta-stores`).
@@ -319,7 +320,7 @@ O CPM implementa uma malha de micro-stores especializadas com Zustand 5.0:
 Qualquer alteração em interfaces unificadas (`src/types.ts`) ou schemas de banco de dados deve obedecer ao protocolo rigoroso de sincronização:
 1. **Mock Generators:** Atualizar `src/mock/generateMocks.js` (para os 10 fixtures JSON em `src/mock/`) e `src/mock/marketAnalyticsMock.ts` (para simulações quantitativas do Market Analytics e Coin-M).
 2. **IndexedDB Versioning:** Incrementar `DB_VERSION` em `historyCache.ts` e registrar funções de migração para novos índices.
-3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (114 arquivos de teste, 966 testes passando).
+3. **TypeScript & Testes:** Executar `npm run lint` (`tsc --noEmit`) e `npm test` para assegurar que toda a suíte de testes unitários e de integração permaneça 100% verde (118 arquivos de teste, 993 testes passando).
 4. **Validação em Modo Simulação:** Ativar temporariamente `useMockData = true` para verificar visualmente todos os painéis e gráficos antes do deploy.
 
 ---

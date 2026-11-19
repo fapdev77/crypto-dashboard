@@ -175,7 +175,7 @@ The **Settings** screen organizes configuration across **10 modular cards**: *La
 - **Quick Presets & Saved Themes**: Load 4 curated presets (*Wise Dark*, *Wise Light*, *Midnight Navy*, *Dracula*) or save, load, and delete named custom themes (shown beside *Custom* in the header theme selector).
 
 ### 🌐 Language, Fiat Currency & API Diagnostics
-- **6 Locales & 4 Fiat Currencies**: Full coverage across `en-US`, `en-GB`, `pt-BR`, `pt-PT`, `es-419`, and `it-IT` (1,656 translation keys per locale) with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
+- **6 Locales & 4 Fiat Currencies**: Full coverage across `en-US`, `en-GB`, `pt-BR`, `pt-PT`, `es-419`, and `it-IT` (1,961 translation keys per locale) with live conversion to **USD**, **BRL**, **EUR**, and **GBP**.
 - **Dual-Provider Engine & Diagnostics (`CurrencyApiDiagnostics`)**: Concurrently queries **Frankfurter API v2** (`api.frankfurter.dev`) for FX rates and **CoinGecko** (`api.coingecko.com`) for the **USDT/USD** parity rate, with configurable cache TTL (5–60m), offline cache fallback, and live latency/status monitoring.
 
 ### 🔄 Synchronization, Retention & Cache Settings (IndexedDB)
@@ -226,15 +226,15 @@ Promoted to a **dedicated top-level module** in the sidebar, tailored for fundin
 ### 📂 Closed Positions (Historical Positions & Analytics)
 - **Auditable Ledger**: Comprehensive history of closed positions across all three exchanges.
 - **Statistical Performance Summary**: **Win Rate %**, **Profit Factor**, Average Win vs Loss, and Largest Closed Trade.
-- **Timeframe Filtering**: Presets (7D, 30D, 90D, custom range) and real-time text/symbol search.
+- **Timeframe Filtering**: Standardized **12-option** period selector defaulting to **7 Days** (`Today`, `7D`, `14D`, `30D`, `90D`, `120D`, `6M`, `1Y`, `MTD`, `YTD`, `Custom Range...` calendar modal, and `All Time`), paired with `HistoryLimitWarning` for active OKX/Bitget accounts above 90 days and real-time text/symbol search.
 - **Multi-Format Export**: One-click download in **CSV**, **Excel (.xlsx)**, or formatted **PDF**.
 
 ### 📝 Order Reports (Open Orders & Order History)
 - **Open Orders**: Monitor active Limit, Market, Stop Loss, and Take Profit orders with conditional trigger visualization.
-- **Order History**: Historical log of executed, cancelled, and expired orders with regex search and expandable details.
+- **Order History**: Historical log of executed, cancelled, and expired orders with the standardized 12-option period selector (default **7 Days**, `Custom Range...` funding recalculation, and `HistoryLimitWarning`), regex search, and expandable details.
 
 ### 🔄 Trade History (Order Executions & Fee Auditing)
-- Detailed log of executed orders with fill price and exact fee currency deducted.
+- Detailed log of executed orders with fill price, exact fee currency deducted, and the standardized 12-option period filter (default **7 Days**, `Custom Range...` modal, and `HistoryLimitWarning`).
 
 ### 📜 Consolidated Net Change & Multi-Exchange Transactions
 
@@ -248,7 +248,8 @@ Positioned as the **first item at the top of the Transactions History submenu**,
 - **Hierarchical Two-Tier Grouping**:
   - **Tier 1 (By Exchange)**: Bybit, Bitget, and OKX summaries with total transactions, total fees, total funding, and USD Net Change. Each exchange group can be individually collapsed or expanded.
   - **Tier 2 (By Currency/Asset)**: Under each exchange, individual assets (BTC, ETH, SOL, USDT, etc.) are itemized with trade volume, deposit and withdrawal counts, fees paid, funding received, and net change in both the **base currency** and equivalent **USD**.
-- **Sync Coordination & Privacy Controls**:
+- **Standardized Period Filter & Sync Coordination**:
+  - Unified **12-option** chronological period dropdown defaulting to **7 Days** (shared across Consolidated Net Change, exchange transaction tabs, Closed Positions, Order/Trade History, PnL by Symbol, and Reports), with a theme-aware `Custom Range` date modal and `HistoryLimitWarning` alerts.
   - Integrated sync controls with real-time feedback and SWR cache invalidation.
   - Full **Privacy Mode** compatibility, replacing nominal values with secure masks.
 - **Comprehensive Multi-Format Export**:
@@ -351,7 +352,7 @@ Cross-exchange derivatives intelligence terminal:
   - Dedicated view for inverse contracts with exchange breakdowns (8h funding, 24h volume, OI, and arbitrage spread) plus batch Expand/Collapse All controls.
 
 ### 📊 PnL by Symbol (Profit & Loss Distribution)
-- Net profit/loss breakdown per coin, separating Long versus Short results with profit factor metrics and financial intensity bars.
+- Net profit/loss breakdown per coin, separating Long versus Short results with profit factor metrics, financial intensity bars, and the standardized 12-option period selector (default **7 Days**, `Custom Range...`, and `HistoryLimitWarning` above 90 days for OKX/Bitget).
 
 ### 💸 Funding Fees Dashboard (Cross-Exchange Analytics)
 - **Aggregation-First Pipeline**: High-precision math using Big.js stored as compact summaries (`FundingRateSummary`) in IndexedDB.
@@ -360,7 +361,7 @@ Cross-exchange derivatives intelligence terminal:
 - **Smart Auto-Sync**: Scheduled automatically for `nearestFundingTime + 60s`.
 
 ### 📑 Reports (Operational & Executive Export)
-- Generate branded PDF, Excel, and CSV export packages containing current balances, top closed positions, and aggregated trading metrics for accounting and tax records.
+- Generate branded PDF, Excel, and CSV export packages containing current balances, top closed positions, and aggregated trading metrics for accounting and tax records, using the standardized 12-option period filter (default **7 Days**, `Custom Range...`, and `HistoryLimitWarning`).
 
 ### ⚡ API Tester (REST & WebSocket Diagnostics)
 - Technical diagnostic sandbox: perform authenticated REST requests, test WebSocket handshakes in isolation, and audit roundtrip network latencies.
@@ -450,7 +451,7 @@ To ensure non-USDT funding balances and smaller cap tokens on Bitget and OKX are
 - **Exponential Backoff with Jitter for Network Drops**: Transient connectivity drops retry on an exponential delay schedule (5s $\to$ 10s $\to$ 20s $\to$ 40s $\to$ 60s) with random jitter, stopping after 5 attempts via circuit breaker.
 - **Global Error Boundary**: Unhandled React rendering errors trigger an intuitive **Safe Recovery** screen with error stack diagnostics and single-click recovery buttons: **Reload Dashboard** and **Clear Cache & Reload**.
 - **Instant Scroll Position Reset**: Tab transitions automatically reset scroll positions to top-left (`useLayoutEffect`), ensuring optimal viewing upon switching views.
-- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **114 test files with 966 unit and integration tests**.
+- **CI Quality Gate**: Automated GitHub Actions workflow enforcing strict TypeScript checks, production builds, and our full suite of **118 test files with 993 unit and integration tests**.
 
 ---
 

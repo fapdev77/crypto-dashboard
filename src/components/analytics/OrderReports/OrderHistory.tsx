@@ -15,11 +15,12 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { Pagination } from '../../ui/Pagination';
 import { usePagination } from '../../../hooks/usePagination';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
-import { resolvePeriodDateRange } from '../../../utils/dateTimeHelper';
+import { DEFAULT_TIME_PERIOD_MS, resolvePeriodDateRange } from '../../../utils/dateTimeHelper';
 import { useTranslation } from 'react-i18next';
 import { getUsdPrice, PriceExchange } from '../../../services/pricing/usdPrice';
 import { MissingRatesNotice, missingRatesNote } from '../../transactions/MissingRatesNotice';
 import { useFeeUsdTotals, FeeCurrencyBucket } from '../../../hooks/useFeeUsdTotals';
+import { HistoryLimitWarning } from '../../ui/HistoryLimitWarning';
 
 export function OrderHistory() {
   const { t } = useTranslation();
@@ -31,7 +32,7 @@ export function OrderHistory() {
     type: 'All',
     side: 'All',
     status: 'CLOSED',
-    timePeriod: 7 * 24 * 60 * 60 * 1000, // default 7 days
+    timePeriod: DEFAULT_TIME_PERIOD_MS, // default 7 days
     accountId: 'All',
     historyStatus: 'All'
   });
@@ -68,14 +69,11 @@ export function OrderHistory() {
     let isMounted = true;
     const fetchFunding = async () => {
       let total = 0;
-      const now = Date.now();
       const { startTime, endTime } = resolvePeriodDateRange(
         filters.timePeriod,
         filters.customStartDate,
         filters.customEndDate
       );
-      const start = startTime ?? (now - 7 * 24 * 60 * 60 * 1000);
-      const end = endTime ?? now;
 
       // Shared price cascade (exchange ticker -> OKX). Unpriced currencies are
       // reported instead of being converted with an invented 1:1 rate.
@@ -90,7 +88,9 @@ export function OrderHistory() {
         import('../../../mock/bills.json').then(async mod => {
           const mockBills = mod.default as any[];
           for (const b of mockBills) {
-             if (b.type === 'funding' && b.timestamp >= start && b.timestamp <= end) {
+             if (b.type === 'funding') {
+                if (startTime !== null && b.timestamp < startTime) continue;
+                if (endTime !== null && b.timestamp > endTime) continue;
                 if (filters.exchange !== 'All' && b.exchange !== filters.exchange.toLowerCase()) continue;
                 const ccyStr = b.ccy ? b.ccy.toUpperCase() : 'USDT';
                 const p = await getPrice(ccyStr, b.exchange as PriceExchange | undefined);
@@ -123,9 +123,12 @@ export function OrderHistory() {
            if (filters.accountId !== 'All' && key.id !== filters.accountId) continue;
            
            try {
-             const bills = await service.fetchBills(key, start, end);
+             const bills = await service.fetchBills(key, startTime ?? undefined, endTime ?? undefined);
              for (const b of bills) {
                if (b.type === 'funding') {
+                 const billTs = Number(b.timestamp ?? 0);
+                 if (startTime !== null && billTs > 0 && billTs < startTime) continue;
+                 if (endTime !== null && billTs > 0 && billTs > endTime) continue;
                  const ccyStr = b.ccy ? b.ccy.toUpperCase() : 'USDT';
                  // Bills come per API key, so the venue is known even when the
                  // record itself does not carry it.
@@ -145,7 +148,7 @@ export function OrderHistory() {
     };
     fetchFunding();
     return () => { isMounted = false; };
-  }, [filters.timePeriod, filters.exchange, filters.accountId, keys, useMockData]);
+  }, [filters.timePeriod, filters.customStartDate, filters.customEndDate, filters.exchange, filters.accountId, keys, useMockData]);
 
   const stats = useMemo(() => {
     let buyCount = 0;
@@ -298,6 +301,13 @@ export function OrderHistory() {
         <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} showStatusFilter={true} />
       </div>
 
+      <HistoryLimitWarning
+        period={filters.timePeriod}
+        customStartDate={filters.customStartDate}
+        customEndDate={filters.customEndDate}
+        exchangeFilter={filters.exchange}
+      />
+
       {missingUsdCurrencies.length > 0 && (
         <MissingRatesNotice currencies={missingUsdCurrencies} />
       )}
@@ -392,7 +402,7 @@ export function OrderHistory() {
               currentPage={currentPage}
               totalItems={ordersTotal}
               itemsPerPage={50}
-              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
                 refreshLabel="Updating"
                 refreshDataReady={!loading}
               />
@@ -406,7 +416,7 @@ export function OrderHistory() {
               currentPage={currentPage}
               totalItems={ordersTotal}
               itemsPerPage={50}
-              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
                 refreshLabel="Updating"
                 refreshDataReady={!loading}
               />

@@ -185,10 +185,10 @@ Dedicated module for funding arbitrage and delta-neutral risk management in COIN
 - Switch between **Detailed** view and **Lite** view: Lite shows each position as a single row with six columns (broker/account/symbol, side/leverage/mode, size/value, realized and unrealized PnL, entry/mark/liquidation price) with live mark prices and liquidation warnings, stacking one column per line on mobile.
 
 ### 📂 Closed Positions (Historical Positions & Analytics)
-- Auditable ledger of closed positions with **Win Rate %**, **Profit Factor**, and export to **CSV**, **Excel (.xlsx)**, and **PDF**.
+- Auditable ledger of closed positions with **Win Rate %**, **Profit Factor**, standardised **12-option** period selector (default **7 Days**, `Today` to `All Time`, `MTD`, `YTD`, `Custom Range...` modal, and `HistoryLimitWarning` for OKX/Bitget above 90 days), and export to **CSV**, **Excel (.xlsx)**, and **PDF**.
 
 ### 📜 Consolidated Net Change & Multi-Exchange Transactions
-- Unified cross-exchange dashboard tracking cash flow, funding payments, trading fees, and net change in USD.
+- Unified cross-exchange dashboard tracking cash flow, funding payments, trading fees, and net change in USD. Shares the standardised 12-option period filter defaulting to **7 Days** (alongside Transaction Logs, Order/Trade History, PnL by Symbol, and Reports) with theme-aware `Custom Range` selection and `HistoryLimitWarning`.
 
 ---
 

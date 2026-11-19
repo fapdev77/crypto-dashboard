@@ -370,7 +370,9 @@ describe('ConsolidatedTransactionComponents', () => {
     expect(screen.getByText(/exchange net change/i)).toBeInTheDocument();
   });
 
-  it('renders ConsolidatedTransactions macro cards with BRL and without duplicate text', () => {
+  it('defaults to 7 Days and renders ConsolidatedTransactions macro cards with BRL when switching to All Time', () => {
+    expect(defaultConsolidatedFilters.timePeriod).toBe(7 * 24 * 60 * 60 * 1000);
+
     useSettingsStore.setState({
       fiatCurrency: 'BRL',
       locale: 'pt-BR',
@@ -379,6 +381,12 @@ describe('ConsolidatedTransactionComponents', () => {
     });
 
     renderTransactionUi(<ConsolidatedTransactions />);
+
+    // Default period is 7 Days; switch to All Time to include static historical mock entries
+    const periodTrigger = screen.getByRole('button', { name: /7 days|7 dias/i });
+    expect(periodTrigger).toBeInTheDocument();
+    fireEvent.click(periodTrigger);
+    fireEvent.click(screen.getByRole('button', { name: /all time|todo o período/i }));
 
     const textContent = document.body.textContent || '';
     // Must contain R$
