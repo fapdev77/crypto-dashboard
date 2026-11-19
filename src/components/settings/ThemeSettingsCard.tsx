@@ -1,0 +1,645 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
+import {
+  Palette,
+  Moon,
+  Sun,
+  Sparkles,
+  Sliders,
+  Check,
+  RotateCcw,
+  Eye,
+  TrendingUp,
+  Save,
+  Trash2,
+  FolderOpen,
+} from 'lucide-react';
+import { useSettingsStore } from '../../store/settingsStore';
+import {
+  THEME_MODES,
+  THEME_PRESETS,
+  DEFAULT_CUSTOM_TOKENS,
+  isHexColorLight,
+  type ThemeMode,
+  type CustomThemeTokens,
+} from '../../utils/themeMode';
+
+const THEME_OPTIONS: Array<{
+  id: ThemeMode;
+  icon: React.ElementType;
+  labelKey: string;
+  descKey: string;
+  defaultLabel: string;
+  defaultDesc: string;
+  swatches: [string, string, string]; // [canvas, surface, accent]
+}> = [
+  {
+    id: 'dark',
+    icon: Moon,
+    labelKey: 'theme.terminalDark',
+    descKey: 'theme.terminalDarkDesc',
+    defaultLabel: 'Terminal Dark',
+    defaultDesc: 'Interface escura de alto contraste para longas sessões',
+    swatches: ['#0b0c10', '#161922', '#22c55e'],
+  },
+  {
+    id: 'light',
+    icon: Sun,
+    labelKey: 'theme.terminalLight',
+    descKey: 'theme.terminalLightDesc',
+    defaultLabel: 'Terminal Light',
+    defaultDesc: 'Interface clara e nítida para luz diurna',
+    swatches: ['#f3f4f7', '#ffffff', '#15803d'],
+  },
+  {
+    id: 'wise-dark',
+    icon: Moon,
+    labelKey: 'theme.wiseDark',
+    descKey: 'theme.wiseDarkDesc',
+    defaultLabel: 'Wise Dark',
+    defaultDesc: 'Wise — Obsidian profundo com acentos de foco',
+    swatches: ['#0a0a0a', '#171717', '#2b7fff'],
+  },
+  {
+    id: 'wise-light',
+    icon: Sun,
+    labelKey: 'theme.wiseLight',
+    descKey: 'theme.wiseLightDesc',
+    defaultLabel: 'Wise Light',
+    defaultDesc: 'Wise — Branco puro com bordas suaves e obsidian',
+    swatches: ['#ffffff', '#ffffff', '#2b7fff'],
+  },
+  {
+    id: 'custom',
+    icon: Sliders,
+    labelKey: 'theme.custom',
+    descKey: 'theme.customDesc',
+    defaultLabel: 'Customizado',
+    defaultDesc: 'Paleta personalizada configurável por token de cor',
+    swatches: ['#0a0a0a', '#171717', '#2b7fff'],
+  },
+];
+
+interface TokenField {
+  key: keyof CustomThemeTokens;
+  labelKey: string;
+  defaultLabel: string;
+}
+
+const TOKEN_FIELDS: TokenField[] = [
+  { key: 'canvas', labelKey: 'settings.theme.canvas', defaultLabel: 'Fundo da Aplicação (Canvas)' },
+  { key: 'surface', labelKey: 'settings.theme.surface', defaultLabel: 'Cards e Painéis (Surface)' },
+  { key: 'elevated', labelKey: 'settings.theme.elevated', defaultLabel: 'Entradas e Camadas (Elevated)' },
+  { key: 'line', labelKey: 'settings.theme.line', defaultLabel: 'Bordas e Linhas (Line)' },
+  { key: 'fg', labelKey: 'settings.theme.fg', defaultLabel: 'Tipografia Principal' },
+  { key: 'fgMuted', labelKey: 'settings.theme.fgMuted', defaultLabel: 'Tipografia Secundária / Rótulos' },
+  { key: 'accent', labelKey: 'settings.theme.accent', defaultLabel: 'Destaque e Ações (Accent)' },
+  { key: 'success', labelKey: 'settings.theme.success', defaultLabel: 'Indicador Positivo (Lucro)' },
+  { key: 'danger', labelKey: 'settings.theme.danger', defaultLabel: 'Indicador Negativo (Alerta / Prejuízo)' },
+  { key: 'warning', labelKey: 'settings.theme.warning', defaultLabel: 'Indicador de Aviso' },
+];
+
+export function ThemeSettingsCard() {
+  const { t } = useTranslation();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const themeMode = useSettingsStore((s) => s.themeMode);
+  const setThemeMode = useSettingsStore((s) => s.setThemeMode);
+  const customThemeTokens = useSettingsStore((s) => s.customThemeTokens);
+  const setCustomThemeTokens = useSettingsStore((s) => s.setCustomThemeTokens);
+  const resetCustomThemeTokens = useSettingsStore((s) => s.resetCustomThemeTokens);
+
+  const customThemeName = useSettingsStore((s) => s.customThemeName);
+  const setCustomThemeName = useSettingsStore((s) => s.setCustomThemeName);
+  const savedCustomThemes = useSettingsStore((s) => s.savedCustomThemes);
+  const saveCurrentCustomTheme = useSettingsStore((s) => s.saveCurrentCustomTheme);
+  const loadSavedCustomTheme = useSettingsStore((s) => s.loadSavedCustomTheme);
+  const deleteSavedCustomTheme = useSettingsStore((s) => s.deleteSavedCustomTheme);
+
+  const [activeTab, setActiveTab] = useState<'themes' | 'customizer'>('themes');
+  const [themeNameInput, setThemeNameInput] = useState(customThemeName || 'Meu Tema');
+
+  // Keep input in sync when customThemeName updates
+  useEffect(() => {
+    if (customThemeName) {
+      setThemeNameInput(customThemeName);
+    }
+  }, [customThemeName]);
+
+  // Listen for navigation event from header or anywhere in the app
+  useEffect(() => {
+    const handleOpenCustomizer = () => {
+      setActiveTab('customizer');
+      setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    };
+
+    window.addEventListener('open-theme-customizer', handleOpenCustomizer);
+    return () => window.removeEventListener('open-theme-customizer', handleOpenCustomizer);
+  }, []);
+
+  const handleSelectMode = (mode: ThemeMode) => {
+    setThemeMode(mode);
+    const option = THEME_OPTIONS.find((o) => o.id === mode);
+    toast.success(
+      t('toasts.themeSet', 'Tema alterado para {{theme}}', {
+        theme: option ? t(option.labelKey, option.defaultLabel) : mode,
+      }),
+      { id: 'theme-mode-change' }
+    );
+  };
+
+  const handleApplyPreset = (presetId: string, palette: CustomThemeTokens, nameKey: string) => {
+    setCustomThemeTokens(palette);
+    const presetName = t(nameKey, presetId);
+    setCustomThemeName(presetName);
+    if (themeMode !== 'custom') {
+      setThemeMode('custom');
+    }
+    toast.success(
+      t('settings.theme.presetApplied', 'Predefinição {{name}} aplicada ao tema customizado.', {
+        name: presetName,
+      }),
+      { id: 'theme-preset-applied' }
+    );
+  };
+
+  const handleUpdateToken = (tokenKey: keyof CustomThemeTokens, value: string) => {
+    setCustomThemeTokens({ [tokenKey]: value });
+  };
+
+  const handleResetTokens = () => {
+    resetCustomThemeTokens();
+    setCustomThemeName('Meu Tema');
+    toast.success(
+      t('settings.theme.resetConfirm', 'Paleta customizada restaurada para o padrão com sucesso.'),
+      { id: 'theme-reset-tokens' }
+    );
+  };
+
+  const handleSaveTheme = (e: React.FormEvent) => {
+    e.preventDefault();
+    const finalName = themeNameInput.trim() || 'Meu Tema';
+    saveCurrentCustomTheme(finalName);
+    if (themeMode !== 'custom') {
+      setThemeMode('custom');
+    }
+    toast.success(
+      t('settings.theme.themeSavedSuccess', "Tema '{{name}}' salvo com sucesso!", {
+        name: finalName,
+      }),
+      { id: 'theme-save-success' }
+    );
+  };
+
+  const handleLoadSavedTheme = (id: string, name: string) => {
+    loadSavedCustomTheme(id);
+    toast.success(
+      t('settings.theme.themeLoadedSuccess', "Tema '{{name}}' carregado!", {
+        name,
+      }),
+      { id: 'theme-load-success' }
+    );
+  };
+
+  const handleDeleteSavedTheme = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteSavedCustomTheme(id);
+    toast.success(t('settings.theme.themeDeletedSuccess', 'Tema excluído.'), {
+      id: 'theme-delete-success',
+    });
+  };
+
+  // Determine button text color on accent preview
+  const accentIsLight = isHexColorLight(customThemeTokens.accent || '#2b7fff');
+  const accentTextColor = accentIsLight ? '#0a0a0a' : '#ffffff';
+
+  return (
+    <div
+      ref={cardRef}
+      id="theme-settings-card"
+      className="bg-surface border border-line rounded-xl p-6 flex flex-col h-full scroll-mt-6 transition-all"
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-base font-semibold text-fg flex items-center gap-2">
+            <Palette className="w-4 h-4 text-accent" />
+            {t('settings.theme.title', 'Aparência e Temas')}
+          </h3>
+          <p className="text-fg-muted text-xs mt-1">
+            {t(
+              'settings.theme.subtitle',
+              'Alterne entre os modos oficiais ou personalize completamente a sua própria paleta de cores.'
+            )}
+          </p>
+        </div>
+      </div>
+
+      {/* Tabs / Sub-nav */}
+      <div className="flex border-b border-line mb-4 gap-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab('themes')}
+          className={`pb-2 px-1 text-xs font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'themes'
+              ? 'border-accent text-accent'
+              : 'border-transparent text-fg-muted hover:text-fg'
+          }`}
+        >
+          <Palette className="w-3.5 h-3.5" />
+          {t('settings.theme.selectTheme', 'Temas do Sistema')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('customizer')}
+          className={`pb-2 px-1 text-xs font-medium border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'customizer'
+              ? 'border-accent text-accent'
+              : 'border-transparent text-fg-muted hover:text-fg'
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5" />
+          {t('settings.theme.customTokensTitle', 'Personalização de Cores')}
+          {themeMode === 'custom' && (
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+          )}
+        </button>
+      </div>
+
+      {/* Content based on tab */}
+      {activeTab === 'themes' ? (
+        <div className="space-y-4 flex-1 flex flex-col">
+          {/* Theme selection grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {THEME_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const isSelected = themeMode === opt.id;
+              const label =
+                opt.id === 'custom' && customThemeName
+                  ? `${t(opt.labelKey, opt.defaultLabel)} (${customThemeName})`
+                  : t(opt.labelKey, opt.defaultLabel);
+
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => handleSelectMode(opt.id)}
+                  className={`text-left p-3 rounded-lg border transition-all relative flex flex-col justify-between cursor-pointer ${
+                    isSelected
+                      ? 'border-accent bg-accent/10 shadow-xs'
+                      : 'border-line bg-elevated/40 hover:bg-elevated hover:border-line-strong'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 min-w-0 pr-2">
+                      <div
+                        className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${
+                          isSelected ? 'bg-accent text-white' : 'bg-surface text-fg-muted'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-medium text-fg truncate">
+                        {label}
+                      </span>
+                    </div>
+
+                    {/* Swatch mini preview */}
+                    <div className="flex items-center gap-1 bg-surface/80 px-1.5 py-1 rounded border border-line shrink-0">
+                      {opt.swatches.map((color, idx) => (
+                        <span
+                          key={idx}
+                          className="w-2.5 h-2.5 rounded-full border border-black/10 shadow-xs"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-fg-muted line-clamp-2 leading-relaxed">
+                    {t(opt.descKey, opt.defaultDesc)}
+                  </p>
+
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-accent text-white flex items-center justify-center">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick Presets Section */}
+          <div className="pt-2 border-t border-line">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-fg flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-accent" />
+                {t('settings.theme.presetsTitle', 'Predefinições Prontas (Carregar no Custom)')}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {THEME_PRESETS.map((preset) => {
+                const label = t(preset.nameKey, preset.id);
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleApplyPreset(preset.id, preset.palette, preset.nameKey)}
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-elevated border border-line hover:border-accent/50 text-left transition-colors cursor-pointer"
+                  >
+                    <span className="text-xs text-fg font-medium truncate">{label}</span>
+                    <div className="flex items-center gap-1 ml-2 shrink-0">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full border border-line"
+                        style={{ backgroundColor: preset.palette.canvas }}
+                      />
+                      <span
+                        className="w-2.5 h-2.5 rounded-full border border-line"
+                        style={{ backgroundColor: preset.palette.surface }}
+                      />
+                      <span
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: preset.palette.accent }}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Customizer Tab */
+        <div className="space-y-4 flex-1 flex flex-col">
+          {themeMode !== 'custom' && (
+            <div className="p-2.5 rounded-lg bg-accent/10 border border-accent/20 text-xs text-fg flex items-center justify-between">
+              <span className="text-[11px] text-fg leading-snug">
+                {t(
+                  'settings.theme.notCustomWarning',
+                  'O tema atual é oficial. Ao ajustar qualquer cor, a aplicação mudará para o tema Customizado.'
+                )}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleSelectMode('custom')}
+                className="shrink-0 px-2 py-1 text-[11px] font-medium bg-accent text-white rounded hover:bg-accent-hover transition-colors ml-2 cursor-pointer"
+              >
+                {t('settings.theme.activateCustom', 'Ativar Custom')}
+              </button>
+            </div>
+          )}
+
+          {/* Save Theme Section */}
+          <form
+            onSubmit={handleSaveTheme}
+            className="p-3 rounded-lg bg-elevated/40 border border-line space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-fg flex items-center gap-1.5">
+                <Save className="w-3.5 h-3.5 text-accent" />
+                {t('settings.theme.saveThemeTitle', 'Salvar Tema Personalizado')}
+              </span>
+              <span className="text-[10px] text-fg-muted font-mono">
+                {savedCustomThemes.length} {t('settings.theme.savedCount', 'salvo(s)')}
+              </span>
+            </div>
+            <p className="text-[11px] text-fg-muted leading-tight">
+              {t(
+                'settings.theme.saveThemeDesc',
+                'Dê um nome para a sua paleta atual e salve para reutilizar a qualquer momento.'
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={themeNameInput}
+                onChange={(e) => setThemeNameInput(e.target.value)}
+                placeholder={t('settings.theme.themeNamePlaceholder', 'Ex: Meu Tema Escuro')}
+                className="flex-1 px-3 py-1.5 text-xs text-fg bg-surface border border-line rounded-lg focus:outline-hidden focus:border-accent"
+                maxLength={30}
+              />
+              <button
+                type="submit"
+                className="px-3 py-1.5 text-xs font-medium bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>{t('settings.theme.saveThemeBtn', 'Salvar Tema')}</span>
+              </button>
+            </div>
+          </form>
+
+          {/* Saved Themes Carousel / List */}
+          {savedCustomThemes.length > 0 && (
+            <div className="p-3 rounded-lg bg-elevated/30 border border-line space-y-2">
+              <span className="text-[11px] font-semibold text-fg block">
+                {t('settings.theme.savedThemesTitle', 'Seus Temas Salvos')}
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+                {savedCustomThemes.map((saved) => {
+                  const isActive =
+                    themeMode === 'custom' && customThemeName === saved.name;
+                  return (
+                    <div
+                      key={saved.id}
+                      onClick={() => handleLoadSavedTheme(saved.id, saved.name)}
+                      className={`flex items-center justify-between p-2 rounded-lg border text-left cursor-pointer transition-colors ${
+                        isActive
+                          ? 'border-accent bg-accent/10'
+                          : 'border-line bg-surface hover:border-line-strong'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <span className="text-xs font-medium text-fg block truncate">
+                          {saved.name}
+                        </span>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-black/10"
+                            style={{ backgroundColor: saved.palette.canvas }}
+                          />
+                          <span
+                            className="w-2.5 h-2.5 rounded-full border border-black/10"
+                            style={{ backgroundColor: saved.palette.surface }}
+                          />
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: saved.palette.accent }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLoadSavedTheme(saved.id, saved.name);
+                          }}
+                          title={t('settings.theme.loadTheme', 'Carregar')}
+                          className="p-1 rounded text-fg-muted hover:text-accent hover:bg-elevated transition-colors"
+                        >
+                          <FolderOpen className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteSavedTheme(saved.id, e)}
+                          title={t('settings.theme.deleteTheme', 'Excluir')}
+                          className="p-1 rounded text-fg-muted hover:text-danger hover:bg-elevated transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Color Tokens Grid - Fixed layout so color swatch never overlaps label */}
+          <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+            {TOKEN_FIELDS.map((f) => {
+              const val = (customThemeTokens[f.key] as string) || '#000000';
+              return (
+                <div
+                  key={f.key}
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-elevated/50 border border-line hover:border-line-strong transition-colors gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-medium text-fg block truncate">
+                      {t(f.labelKey, f.defaultLabel)}
+                    </span>
+                    <span className="text-[10px] font-mono text-fg-muted uppercase tracking-wider block">
+                      {f.key}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <label className="relative flex items-center justify-center cursor-pointer shrink-0">
+                      <span
+                        className="w-8 h-8 rounded-lg border border-line shadow-xs block transition-transform hover:scale-105"
+                        style={{ backgroundColor: val }}
+                      />
+                      <input
+                        type="color"
+                        value={val}
+                        onChange={(e) => {
+                          handleUpdateToken(f.key, e.target.value);
+                          if (themeMode !== 'custom') setThemeMode('custom');
+                        }}
+                        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                        aria-label={t(f.labelKey, f.defaultLabel)}
+                      />
+                    </label>
+                    <input
+                      type="text"
+                      value={val}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        handleUpdateToken(f.key, next);
+                        if (themeMode !== 'custom') setThemeMode('custom');
+                      }}
+                      className="w-22 px-2 py-1 text-xs font-mono text-fg bg-surface border border-line rounded-lg focus:outline-hidden focus:border-accent text-center uppercase"
+                      maxLength={7}
+                      placeholder="#000000"
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Live Mini Preview Box */}
+          <div className="pt-2 border-t border-line">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-fg flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5 text-accent" />
+                {t('settings.theme.previewTitle', 'Prévia em Tempo Real da Paleta')}
+              </span>
+              <button
+                type="button"
+                onClick={handleResetTokens}
+                className="text-[11px] text-fg-muted hover:text-accent flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                {t('settings.theme.resetBtn', 'Restaurar Padrão')}
+              </button>
+            </div>
+
+            {/* Simulated mini card */}
+            <div
+              className="p-3 rounded-xl border transition-colors shadow-xs"
+              style={{
+                backgroundColor: customThemeTokens.surface || '#171717',
+                borderColor: customThemeTokens.line || '#262626',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: customThemeTokens.success || '#00c950' }}
+                  />
+                  <span
+                    className="text-xs font-semibold"
+                    style={{ color: customThemeTokens.fg || '#fafafa' }}
+                  >
+                    BTC / USDT Hedge
+                  </span>
+                </div>
+                <span
+                  className="text-[10px] font-medium px-1.5 py-0.5 rounded border"
+                  style={{
+                    backgroundColor: customThemeTokens.elevated || '#262626',
+                    borderColor: customThemeTokens.line || '#262626',
+                    color: customThemeTokens.fgMuted || '#a1a1a1',
+                  }}
+                >
+                  OKX Perp
+                </span>
+              </div>
+
+              <div
+                className="flex items-end justify-between mt-2 pt-2 border-t"
+                style={{ borderColor: customThemeTokens.line || '#262626' }}
+              >
+                <div>
+                  <span
+                    className="text-[10px] block"
+                    style={{ color: customThemeTokens.fgMuted || '#a1a1a1' }}
+                  >
+                    {t('settings.theme.previewMetricLabel', 'Retorno Estimado (24h)')}
+                  </span>
+                  <div className="flex items-center gap-1 font-mono text-xs font-semibold">
+                    <TrendingUp
+                      className="w-3 h-3"
+                      style={{ color: customThemeTokens.success || '#00c950' }}
+                    />
+                    <span style={{ color: customThemeTokens.success || '#00c950' }}>
+                      +4.82% ($1,248.50)
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="px-2.5 py-1 text-[11px] font-medium rounded-md shadow-xs transition-opacity cursor-pointer"
+                  style={{
+                    backgroundColor: customThemeTokens.accent || '#2b7fff',
+                    color: accentTextColor,
+                  }}
+                >
+                  {t('settings.theme.previewActionButton', 'Executar')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -10,13 +10,20 @@ import { usePrivacy } from '../context/PrivacyContext';
 import { getInverseUsdValues } from '../utils/inverseUtils';
 import { FilterBar } from './ui/FilterBar';
 import { PositionCard } from './PositionCard';
+import { PositionCardLite, PositionsLiteHeader } from './PositionCardLite';
 import { usePagination } from '../hooks/usePagination';
 import { Pagination } from './ui/Pagination';
 import { SimulationModeBadge } from './ui/SimulationModeBadge';
+import { useTranslation } from 'react-i18next';
 
 export function OpenPositions() {
+  const { t } = useTranslation();
   const positions = usePositionsStore(state => state.positions);
   const useMockData = useSettingsStore(state => state.useMockData);
+  const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
+  const setHedgeExposedMode = useSettingsStore(state => state.setHedgeExposedMode);
+  const positionsViewMode = useSettingsStore(state => state.positionsViewMode);
+  const setPositionsViewMode = useSettingsStore(state => state.setPositionsViewMode);
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
@@ -27,6 +34,12 @@ export function OpenPositions() {
 
   const toggleRow = (id: string) => {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const changeViewMode = (mode: 'detailed' | 'lite') => {
+    setPositionsViewMode(mode);
+    // Lite has no expandable panel, so drop any expanded state to avoid it reappearing on switch back.
+    if (mode === 'lite') setExpandedRows({});
   };
 
   const positionsList = Object.values(positions);
@@ -103,9 +116,9 @@ export function OpenPositions() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-              <Activity className="w-5 h-5 text-[#2F6BFF]" />
-              Open Positions
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-fg">
+              <Activity className="w-5 h-5 text-accent" />
+              {t('positions.title', 'Open Positions')}
             </h2>
             <SimulationModeBadge />
           </div>
@@ -114,21 +127,85 @@ export function OpenPositions() {
 
       {/* Header Controls */}
       <FilterBar
+        prepend={
+          <div className="flex items-center gap-4 flex-wrap mr-auto sm:mr-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-fg-muted whitespace-nowrap">{t('positions.viewModeLabel', 'Positions view:')}</span>
+              <div className="flex bg-canvas p-1 rounded-lg border border-line w-max">
+                <button
+                  type="button"
+                  onClick={() => changeViewMode('detailed')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                    positionsViewMode === 'detailed'
+                      ? 'bg-line text-fg shadow-sm font-semibold'
+                      : 'text-fg-muted hover:text-fg'
+                  }`}
+                  title={t('positions.detailedModeTooltip', 'Detailed: shows all metrics, Hedge/Exposure and the expandable detail grid')}
+                >
+                  {t('positions.detailedMode', 'Detailed')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => changeViewMode('lite')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                    positionsViewMode === 'lite'
+                      ? 'bg-line text-fg shadow-sm font-semibold'
+                      : 'text-fg-muted hover:text-fg'
+                  }`}
+                  title={t('positions.liteModeTooltip', 'Lite: one row per position — account/symbol, side/leverage, size/value, PnL and prices')}
+                >
+                  {t('positions.liteMode', 'Lite')}
+                </button>
+              </div>
+            </div>
+            {positionsViewMode === 'detailed' && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-fg-muted whitespace-nowrap">{t('positions.hedgeExposedModeLabel', 'For Hedge Pro positions, show exposed balance by:')}</span>
+                <div className="flex bg-canvas p-1 rounded-lg border border-line w-max">
+                  <button
+                    type="button"
+                    onClick={() => setHedgeExposedMode('gross')}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                      hedgeExposedMode === 'gross'
+                        ? 'bg-line text-fg shadow-sm font-semibold'
+                        : 'text-fg-muted hover:text-fg'
+                    }`}
+                    title={t('positions.grossModeTooltip', 'Gross: Uses fixed Wallet Balance (without unrealized PnL)')}
+                  >
+                    {t('positions.grossMode', 'Gross')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHedgeExposedMode('net')}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                      hedgeExposedMode === 'net'
+                        ? 'bg-line text-fg shadow-sm font-semibold'
+                        : 'text-fg-muted hover:text-fg'
+                    }`}
+                    title={t('positions.netModeTooltip', 'Net: Uses Net Balance / Account Equity (including unrealized PnL)')}
+                  >
+                    {t('positions.netMode', 'Net')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        }
         exchange={{
           value: exchangeFilter,
           onChange: setExchangeFilter,
-          labelAll: 'All Exchanges',
+          labelAll: t('positions.allExchanges', 'All Exchanges'),
         }}
         search={{
           value: filterText,
           onChange: setFilterText,
-          placeholder: 'Search...',
+          placeholder: t('common.search', 'Search...'),
         }}
       />
 
       {activePositions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl">
-          <p className="text-[#8E9299]">No open positions found.</p>
+        <div className="flex flex-col items-center justify-center p-12 bg-surface border border-line rounded-xl">
+          <p className="text-fg-muted">{t('positions.noOpenPositions', 'No open positions found.')}</p>
         </div>
       ) : (
         <>
@@ -139,19 +216,19 @@ export function OpenPositions() {
             ];
             return (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-                <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+                <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
                   <div className='flex flex-col'>
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl text-[#8E9299]">Total Positions: </span>
-                      <span className="text-xl font-medium text-white">{activePositions.length}</span>
+                      <span className="text-2xl text-fg-muted">{t('positions.totalPositions', 'Total Positions')}: </span>
+                      <span className="text-xl font-medium text-fg">{activePositions.length}</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-xl font-medium text-white"></span>
+                      <span className="text-xl font-medium text-fg"></span>
                       {activePositions.length > 0 && (
                         <div className="flex text-xl gap-2 font-mono">
-                          <span className="text-[#00C853]">{longs} Longs ({((longs / activePositions.length) * 100).toFixed(0)}%)</span>
-                          <span className="text-[#00C853]"> | </span>
-                          <span className="text-[#FF4444]">{shorts} Shorts ({((shorts / activePositions.length) * 100).toFixed(0)}%)</span>
+                          <span className="text-success">{t('positions.longCount', { count: longs, defaultValue: `${longs} Longs` })} ({((longs / activePositions.length) * 100).toFixed(0)}%)</span>
+                          <span className="text-success"> | </span>
+                          <span className="text-danger">{t('positions.shortCount', { count: shorts, defaultValue: `${shorts} Shorts` })} ({((shorts / activePositions.length) * 100).toFixed(0)}%)</span>
                         </div>
                       )}
                     </div>
@@ -171,16 +248,16 @@ export function OpenPositions() {
                   </div>
                 </div>
 
-                <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-                  <span className="text-2xl text-[#8E9299] mb-1">Unrealized PnL</span>
-                  <span className={`text-xl font-medium ${totalUnrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
+                  <span className="text-2xl text-fg-muted mb-1">{t('positions.unrealizedPnl', 'Unrealized PnL')}</span>
+                  <span className={`text-xl font-medium ${totalUnrealizedPnl >= 0 ? 'text-success' : 'text-danger'}`}>
                     {isPrivateMode ? '$••••' : `${totalUnrealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalUnrealizedPnl, 'usd')}`}
                   </span>
                 </div>
 
-                <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center">
-                  <span className="text-2xl text-[#8E9299] mb-1">Realized PnL</span>
-                  <span className={`text-xl font-medium ${totalRealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
+                  <span className="text-2xl text-fg-muted mb-1">{t('positions.realizedPnl', 'Realized PnL')}</span>
+                  <span className={`text-xl font-medium ${totalRealizedPnl >= 0 ? 'text-success' : 'text-danger'}`}>
                     {isPrivateMode ? '$••••' : `${totalRealizedPnl >= 0 ? '+' : ''}${formatCurrency(totalRealizedPnl, 'usd')}`}
                   </span>
                 </div>
@@ -200,14 +277,19 @@ export function OpenPositions() {
           )}
 
           <div className="flex flex-col gap-3 mt-4">
-            {paginatedPositions.map((pos) => (
-              <PositionCard
-                key={pos.id}
-                pos={pos}
-                isExpanded={!!expandedRows[pos.id]}
-                onToggle={() => toggleRow(pos.id)}
-              />
-            ))}
+            {positionsViewMode === 'lite' && <PositionsLiteHeader />}
+            {paginatedPositions.map((pos) =>
+              positionsViewMode === 'lite' ? (
+                <PositionCardLite key={pos.id} pos={pos} />
+              ) : (
+                <PositionCard
+                  key={pos.id}
+                  pos={pos}
+                  isExpanded={!!expandedRows[pos.id]}
+                  onToggle={() => toggleRow(pos.id)}
+                />
+              )
+            )}
           </div>
 
           {totalItems > 0 && (

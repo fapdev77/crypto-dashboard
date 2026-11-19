@@ -1,259 +1,254 @@
-import React, { useState } from 'react';
-import { X, LayoutDashboard, KeyRound, EyeOff, RefreshCw, HelpCircle, Globe, ShieldAlert, Compass, AlertTriangle, BookOpen, Smartphone } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, BookOpen, ChevronLeft, ChevronRight, Compass } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { useSettingsStore } from '../store/settingsStore';
 import { UserManualModal } from './UserManualModal';
+import { ONBOARDING_STEPS } from './onboarding/onboardingData';
+import { StepWelcome } from './onboarding/StepWelcome';
+import { StepPreferences } from './onboarding/StepPreferences';
+import { StepDashboardExplorer } from './onboarding/StepDashboardExplorer';
+import { StepSidebarExplorer } from './onboarding/StepSidebarExplorer';
+import { StepOpsAndSettings } from './onboarding/StepOpsAndSettings';
+import { StepQuickStart } from './onboarding/StepQuickStart';
 
-interface WelcomeHelpModalProps {
+export interface WelcomeHelpModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigateToTab?: (tab: string) => void;
+  onConfigureVaultAndKey?: () => void;
+  onActivateSimulation?: () => void;
 }
 
-export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
-  const { showWelcomeOnStartup, setShowWelcomeOnStartup } = useSettingsStore();
-  const [lang, setLang] = useState<'en' | 'pt'>('pt');
+export function WelcomeHelpModal({
+  isOpen,
+  onClose,
+  onNavigateToTab,
+  onConfigureVaultAndKey,
+  onActivateSimulation,
+}: WelcomeHelpModalProps) {
+  const { t } = useTranslation();
+  const { showWelcomeOnStartup, setShowWelcomeOnStartup, setUseMockData, locale } = useSettingsStore();
+  const [currentStep, setCurrentStep] = useState(0);
   const [isManualOpen, setIsManualOpen] = useState(false);
+
+  const releaseInfo = typeof __APP_RELEASE_INFO__ !== 'undefined' ? __APP_RELEASE_INFO__ : null;
+  const version = releaseInfo?.version || (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '2.50.0');
+
+  const totalSteps = ONBOARDING_STEPS.length;
+  const isFirstStep = currentStep === 0;
+  const isLastStep = currentStep === totalSteps - 1;
+
+  const navigateTab = useCallback(
+    (tab: string) => {
+      onClose();
+      if (onNavigateToTab) {
+        onNavigateToTab(tab);
+      } else {
+        window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: tab }));
+      }
+    },
+    [onClose, onNavigateToTab]
+  );
+
+  const handleOpenThemeCustomizer = useCallback(() => {
+    onClose();
+    window.dispatchEvent(
+      new CustomEvent('navigate-to-tab', {
+        detail: { tab: 'settings', targetId: 'theme-settings-card' },
+      })
+    );
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('open-theme-customizer'));
+    }, 100);
+  }, [onClose]);
+
+  const handleConfigureVaultAndKey = useCallback(() => {
+    if (onConfigureVaultAndKey) {
+      onConfigureVaultAndKey();
+      return;
+    }
+    onClose();
+    window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'api-keys' }));
+  }, [onClose, onConfigureVaultAndKey]);
+
+  const handleActivateSimulation = useCallback(() => {
+    if (onActivateSimulation) {
+      onActivateSimulation();
+      return;
+    }
+    setUseMockData(true);
+    toast.success(t('settings.simulationMode.enabledToast', 'Mock Data Enabled'), {
+      id: 'onboarding-mock-toggle',
+    });
+    navigateTab('dashboard');
+  }, [onActivateSimulation, setUseMockData, t, navigateTab]);
+
+  // Keyboard navigation (Escape to close, Left/Right arrows between steps)
+  useEffect(() => {
+    if (!isOpen || isManualOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isFormElement =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable);
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (isFormElement) return;
+
+      if (e.key === 'ArrowRight') {
+        setCurrentStep((prev) => Math.min(totalSteps - 1, prev + 1));
+      } else if (e.key === 'ArrowLeft') {
+        setCurrentStep((prev) => Math.max(0, prev - 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isManualOpen, totalSteps, onClose]);
 
   if (!isOpen) return null;
 
-  const texts = {
-    en: {
-      title: "Welcome to Crypto Portfolio Manager",
-      subtitle: "Onboarding & Quick Start Guide",
-      intro: "Monitor trading performance, balances, active positions, funding fees, order history, and transaction logs across Bitget, Bybit, and OKX in one unified terminal.",
-      privacyWarning: "Your API credentials are saved strictly in your browser's localStorage. Communication with the exchanges occurs directly from your browser (no intermediate servers). Always use READ-ONLY API keys. NEVER use keys that allow trading or withdrawals. You can erase all data instantly using the 'Wipe All Local Client Data' option under Settings.",
-      feature0Title: "Getting Started / Try Mock Mode",
-      feature0Desc: <>Create <strong>read-only</strong> API keys on Bitget, Bybit, or OKX to load your real account data. To test-drive the application without any credentials first, navigate to the <strong>Settings</strong> tab and toggle on the <strong>Use Mock Data</strong> option.</>,
-      feature1Title: "Overview & Analytics",
-      feature1Desc: "Track unified balances, positions, margin ratios, and view advanced analytics like Funding Fees, Order Reports, and realized/unrealized PnL charts.",
-      feature2Title: "Secure API Connections",
-      feature2Desc: <>Connect exchanges via the <strong>API Keys</strong> page. All credentials are saved strictly in your local browser storage using a zero-trust model.</>,
-      feature3Title: "Privacy Mode",
-      feature3Desc: <>Click the <strong>Eye Icon</strong> in the header to toggle Privacy Mode. This hides balance, size, and PnL values for safe public sharing or streaming.</>,
-      feature4Title: "Automatic Syncing & Cache",
-      feature4Desc: <>Position, Order, and Funding histories run on a background cache. Customize update intervals or trigger a manual sync under the <strong>Settings</strong> page.</>,
-      feature5Title: "PWA Support",
-      feature5Desc: <>Install the application as a Progressive Web App (PWA) on your mobile or desktop device for a native experience.</>,
-      showOnStartup: "Show on startup",
-      getStarted: "Get Started",
-      disclaimerTitle: "Beta Phase & Data Accuracy Disclaimer",
-      disclaimerDesc: "This application is currently in its testing phase. The focus is to simplify the lives of traders by unifying balances from various exchanges in one place to facilitate asset and trade tracking. However, each exchange has different calculation methods and data availability, so the presented data may contain errors or inconsistencies and might not be exactly equal to what is displayed directly by the exchange. If you do not agree with this, we do not recommend using the application."
-    },
-    pt: {
-      title: "Bem-vindo ao Crypto Portfolio Manager",
-      subtitle: "Guia de Integração e Início Rápido",
-      intro: "Monitore seu desempenho de trading, saldos, posições ativas, taxas de financiamento, histórico de ordens e logs de transações na Bitget, Bybit e OKX em um único terminal unificado.",
-      privacyWarning: "Suas chaves de API são salvas estritamente no localStorage do seu navegador. Toda comunicação com as corretoras ocorre de forma direta (sem servidores intermediários). Use apenas chaves de API com permissão de LEITURA (Read-Only). NUNCA use chaves que permitam negociação (Trade) ou saques. Você pode apagar todos os dados do cliente instantaneamente usando a opção 'Wipe All Local Client Data' nas configurações.",
-      feature0Title: "Primeiros Passos / Modo Testes",
-      feature0Desc: <>Crie chaves de API <strong>apenas leitura (Read-only)</strong> na Bitget, Bybit ou OKX para carregar seus dados reais. Caso queira experimentar a plataforma sem fornecer credenciais primeiro, acesse a aba <strong>Settings</strong> e ative a opção <strong>Use Mock Data</strong>.</>,
-      feature1Title: "Visão Geral e Analytics",
-      feature1Desc: "Acompanhe saldos unificados, posições, taxas de margem e visualize análises avançadas como Taxas de Financiamento (Funding), Relatórios de Ordens e gráficos de PnL realizado/não realizado.",
-      feature2Title: "Conexões Seguras de API",
-      feature2Desc: <>Conecte as corretoras através da página <strong>API Keys</strong>. Todas as credenciais são salvas estritamente no armazenamento local do seu navegador usando um modelo zero-trust.</>,
-      feature3Title: "Modo Privacidade",
-      feature3Desc: <>Clique no <strong>Ícone de Olho</strong> no cabeçalho para alternar o Modo Privacidade. Isso oculta os valores de saldo, tamanho e PnL para compartilhamento público ou transmissões seguras.</>,
-      feature4Title: "Sincronização Automática e Cache",
-      feature4Desc: <>O histórico de posições, ordens e funding é executado em um cache em segundo plano. Personalize os intervalos de atualização ou acione uma sincronização manual na página <strong>Settings</strong>.</>,
-      feature5Title: "Suporte a PWA",
-      feature5Desc: <>Instale o aplicativo como um Progressive Web App (PWA) em seu dispositivo móvel ou desktop para uma experiência nativa e rápida.</>,
-      showOnStartup: "Mostrar ao iniciar",
-      getStarted: "Começar",
-      disclaimerTitle: "Fase Beta e Aviso sobre Precisão de Dados",
-      disclaimerDesc: "Este aplicativo ainda está em fase de testes. O foco é facilitar a vida dos traders unificando os saldos de várias corretoras no mesmo local para facilitar o controle dos ativos e trades. No entanto, cada corretora tem formas diferentes de cálculos e disponibilização dos dados, então os dados apresentados podem conter erros ou inconsistências e não ser exatos aos que são exibidos diretamente pela corretora. Se você não concordar com isso, não recomendamos que use o aplicativo."
-    }
-  };
-
-  const t = texts[lang];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-wizard-title"
+    >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity duration-300"
+        className="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity duration-200"
         onClick={onClose}
       />
 
-      {/* Modal Content */}
-      <div className="relative bg-[#151619] border border-[#2a2b30] rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col p-6 animate-in fade-in zoom-in-95 duration-250 max-h-[90vh] overflow-hidden">
-
-        {/* Header Area */}
-        <div className="flex flex-col gap-4 mb-6">
-          {/* Top Row: Language Selector and Close Button */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* Premium Language Selector with Globe Icon */}
-              <div className="flex items-center gap-2 bg-[#1c1d21] border border-[#2d2f34] rounded-xl p-1 pl-2.5 pr-1 shadow-sm">
-                <Globe className="w-3.5 h-3.5 text-[#2F6BFF] animate-pulse" style={{ animationDuration: '3s' }} />
-                <div className="flex items-center bg-[#111215] border border-[#222327] rounded-lg p-0.5 shadow-inner">
-                  <button
-                    onClick={() => setLang('pt')}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'pt'
-                      ? 'bg-[#2F6BFF] text-white shadow-sm'
-                      : 'text-[#8E9299] hover:text-white'
-                      }`}
-                  >
-                    PT-BR
-                  </button>
-                  <button
-                    onClick={() => setLang('en')}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all ${lang === 'en'
-                      ? 'bg-[#2F6BFF] text-white shadow-sm'
-                      : 'text-[#8E9299] hover:text-white'
-                      }`}
-                  >
-                    EN-US
-                  </button>
-                </div>
+      {/* Split-View Wizard Shell */}
+      <div
+        className="relative bg-surface border border-line rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header Bar */}
+        <div className="px-5 sm:px-6 pt-4 pb-3 border-b border-line bg-surface shrink-0 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            {/* Brand + Title */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-accent/10 border border-accent/25 flex items-center justify-center shrink-0 text-accent">
+                <Compass className="w-5 h-5" />
               </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 id="onboarding-wizard-title" className="text-base font-semibold text-fg truncate">
+                    {t('onboarding.wizardTitle', 'Crypto Portfolio Manager')}
+                  </h2>
+                  <span className="text-[11px] font-mono text-fg-muted shrink-0">
+                    v{version}
+                  </span>
+                </div>
+                <p className="text-xs text-fg-muted truncate">
+                  {t('onboarding.wizardSubtitle', 'Interactive Onboarding & Quick Tour')}
+                  <span className="mx-1.5" aria-hidden="true">·</span>
+                  <span className="font-mono">
+                    {t('onboarding.stepCounter', 'Step {{current}} of {{total}}', {
+                      current: currentStep + 1,
+                      total: totalSteps,
+                    })}
+                  </span>
+                </p>
+              </div>
+            </div>
 
-              {/* User Manual Button */}
+            {/* Right Actions: Manual & Close */}
+            <div className="flex items-center gap-2 shrink-0">
               <button
+                type="button"
                 onClick={() => setIsManualOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1 bg-[#1c1d21] border border-[#2d2f34] hover:bg-[#2F6BFF]/10 hover:border-[#2F6BFF]/30 text-[#2F6BFF] rounded-lg text-[10px] font-semibold transition-all shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-elevated border border-line hover:border-accent/40 hover:bg-elevated-hover text-xs font-medium text-fg transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>{lang === 'pt' ? 'MANUAL DO USUÁRIO' : 'USER MANUAL'}</span>
+                <BookOpen className="w-3.5 h-3.5 text-accent" />
+                <span className="hidden sm:inline">{t('onboarding.openManual', 'User Manual')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-9 h-9 inline-flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-elevated-hover transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                aria-label={t('common.close', 'Close')}
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-[#8E9299] hover:text-white hover:bg-[#2a2b30]/50 transition-colors"
-              aria-label="Close modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
           </div>
 
-          {/* Main Title Row with Icon */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 flex items-center justify-center shrink-0">
-              <HelpCircle className="w-6 h-6 text-[#2F6BFF]" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-white">{t.title}</h3>
-              <p className="text-xs text-[#8E9299] mt-0.5">{t.subtitle}</p>
-            </div>
-          </div>
+          {/* Clickable 6-Step Navigation Bar (Freely Jumpable) */}
+          <nav
+            aria-label={t('onboarding.wizardSubtitle', 'Interactive Onboarding & Quick Tour')}
+            className="grid grid-cols-3 sm:grid-cols-6 gap-1.5"
+          >
+            {ONBOARDING_STEPS.map((step) => {
+              const isActive = currentStep === step.index;
+              const isVisited = step.index < currentStep;
+              return (
+                <button
+                  key={step.id}
+                  type="button"
+                  onClick={() => setCurrentStep(step.index)}
+                  aria-current={isActive ? 'step' : undefined}
+                  className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border text-left transition-colors cursor-pointer min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                    isActive
+                      ? 'bg-accent/10 border-accent text-fg'
+                      : isVisited
+                      ? 'bg-elevated border-line text-fg hover:border-line-strong'
+                      : 'bg-canvas border-line text-fg-muted hover:text-fg hover:border-line-strong'
+                  }`}
+                >
+                  <span
+                    className={`w-5 h-5 rounded-md text-[11px] font-mono font-semibold flex items-center justify-center shrink-0 ${
+                      isActive
+                        ? 'bg-accent text-white'
+                        : isVisited
+                        ? 'bg-success/15 text-success'
+                        : 'bg-elevated text-fg-muted'
+                    }`}
+                  >
+                    {step.index + 1}
+                  </span>
+                  <span className="text-xs font-medium truncate">
+                    {t(step.labelKey, step.defaultLabel)}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* Body content (scrollable) */}
-        <div className="flex-1 overflow-y-auto pr-1 space-y-4 mb-6 custom-scrollbar">
-          <p className="text-gray-300 text-sm leading-relaxed">
-            {t.intro}
-          </p>
-
-          {/* Privacy & Security Warning Banner */}
-          <div className="flex gap-3.5 items-start bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-xl text-amber-500">
-            <div className="w-8 h-8 rounded-lg bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 flex items-center justify-center shrink-0 mt-0.5">
-              <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5 text-amber-400" />
-            </div>
-            <div className="text-xs leading-relaxed text-gray-300">
-              <strong className="text-amber-400 block mb-0.5">{lang === 'pt' ? 'Aviso de Segurança & Privacidade' : 'Security & Privacy Notice'}</strong>
-              {t.privacyWarning}
-            </div>
-          </div>
-
-          {/* Disclaimer Banner */}
-          <div className="flex gap-3.5 items-start bg-rose-500/10 border border-rose-500/20 p-3.5 rounded-xl text-rose-500">
-            <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0 mt-0.5">
-              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-rose-400" />
-            </div>
-            <div className="text-xs leading-relaxed text-gray-300">
-              <strong className="text-rose-400 block mb-0.5">{t.disclaimerTitle}</strong>
-              {t.disclaimerDesc}
-            </div>
-          </div>
-
-          <div className="border-t border-[#2a2b30]/50 my-2" />
-
-          {/* Features Checklist */}
-          <div className="grid grid-cols-1 gap-4">
-
-            {/* Feature 0 (Getting Started) */}
-            <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-[#2F6BFF]/10 border border-[#2F6BFF]/20 flex items-center justify-center shrink-0 mt-0.5">
-                <Compass className="w-4 h-4 text-[#2F6BFF]" />
-              </div>
-              <div>
-                <h4 className="text-white font-medium text-sm">{t.feature0Title}</h4>
-                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature0Desc}
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 1 */}
-            <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-[#00C853]/10 border border-[#00C853]/20 flex items-center justify-center shrink-0 mt-0.5">
-                <LayoutDashboard className="w-4 h-4 text-[#00C853]" />
-              </div>
-              <div>
-                <h4 className="text-white font-medium text-sm">{t.feature1Title}</h4>
-                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature1Desc}
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-purple-400/10 border border-purple-400/20 flex items-center justify-center shrink-0 mt-0.5">
-                <KeyRound className="w-4 h-4 text-purple-400" />
-              </div>
-              <div>
-                <h4 className="text-white font-medium text-sm">{t.feature2Title}</h4>
-                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature2Desc}
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                <EyeOff className="w-4 h-4 text-amber-500" />
-              </div>
-              <div>
-                <h4 className="text-white font-medium text-sm">{t.feature3Title}</h4>
-                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature3Desc}
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-blue-400/10 border border-blue-400/20 flex items-center justify-center shrink-0 mt-0.5">
-                <RefreshCw className="w-4 h-4 text-blue-400" />
-              </div>
-              <div>
-                <h4 className="text-white font-medium text-sm">{t.feature4Title}</h4>
-                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature4Desc}
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 5 */}
-            <div className="flex gap-3.5 items-start bg-[#1a1b1e] border border-[#2a2b30]/50 p-3.5 rounded-xl">
-              <div className="w-8 h-8 rounded-lg bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center shrink-0 mt-0.5">
-                <Smartphone className="w-4 h-4 text-emerald-400" />
-              </div>
-              <div>
-                <h4 className="text-white font-medium text-sm">{t.feature5Title}</h4>
-                <p className="text-[#8E9299] text-xs mt-1 leading-relaxed">
-                  {t.feature5Desc}
-                </p>
-              </div>
-            </div>
-
-          </div>
+        {/* Scrollable Step Body */}
+        <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 custom-scrollbar">
+          {currentStep === 0 && <StepWelcome />}
+          {currentStep === 1 && <StepPreferences onOpenThemeCustomizer={handleOpenThemeCustomizer} />}
+          {currentStep === 2 && <StepDashboardExplorer />}
+          {currentStep === 3 && <StepSidebarExplorer onNavigateToTab={navigateTab} />}
+          {currentStep === 4 && <StepOpsAndSettings onNavigateToTab={navigateTab} />}
+          {currentStep === 5 && (
+            <StepQuickStart
+              onConfigureVaultAndKey={handleConfigureVaultAndKey}
+              onActivateSimulation={handleActivateSimulation}
+              onGoToDashboard={() => navigateTab('dashboard')}
+            />
+          )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between border-t border-[#2a2b30] pt-4 mt-auto">
-          {/* Startup Toggle Slider */}
+        {/* Persistent Footer */}
+        <div className="px-5 sm:px-6 py-3.5 border-t border-line bg-surface flex flex-wrap items-center justify-between gap-3 shrink-0">
+          {/* Show on Startup Toggle */}
           <div className="flex items-center gap-2.5 select-none">
             <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
               <input
@@ -261,23 +256,58 @@ export function WelcomeHelpModal({ isOpen, onClose }: WelcomeHelpModalProps) {
                 className="sr-only peer"
                 checked={showWelcomeOnStartup}
                 onChange={(e) => setShowWelcomeOnStartup(e.target.checked)}
+                aria-label={t('welcome.showOnStartup', 'Show on startup')}
               />
-              <div className="w-9 h-5 bg-[#2a2b30] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#00C853]" />
+              <div className="w-9 h-5 bg-line peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-success" />
             </label>
-            <span className="text-xs text-[#8E9299]">{t.showOnStartup}</span>
+            <span className="text-xs text-fg-muted">{t('welcome.showOnStartup', 'Show on startup')}</span>
           </div>
 
-          {/* Close Action */}
-          <button
-            onClick={onClose}
-            className="px-5 py-2 bg-[#2F6BFF] hover:bg-[#1E56DF] text-white rounded-lg text-sm font-medium transition-colors shadow-lg hover:shadow-xl"
-          >
-            {t.getStarted}
-          </button>
-        </div>
+          {/* Stepper Actions */}
+          <div className="flex items-center gap-2 ml-auto">
+            {!isLastStep && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-3 py-2 text-xs font-medium text-fg-muted hover:text-fg rounded-lg hover:bg-elevated transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              >
+                {t('onboarding.skipGuide', 'Skip guide')}
+              </button>
+            )}
 
+            <button
+              type="button"
+              onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
+              disabled={isFirstStep}
+              className="inline-flex items-center gap-1 px-3.5 py-2 rounded-lg bg-elevated border border-line hover:border-line-strong text-xs font-medium text-fg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>{t('onboarding.prev', 'Previous')}</span>
+            </button>
+
+            {!isLastStep ? (
+              <button
+                type="button"
+                onClick={() => setCurrentStep((prev) => Math.min(totalSteps - 1, prev + 1))}
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <span>{t('onboarding.next', 'Next')}</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <span>{t('onboarding.finish', 'Finish')}</span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-      <UserManualModal isOpen={isManualOpen} onClose={() => setIsManualOpen(false)} initialLang={lang} />
+
+      <UserManualModal isOpen={isManualOpen} onClose={() => setIsManualOpen(false)} initialLang={locale} />
     </div>
   );
 }

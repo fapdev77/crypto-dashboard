@@ -52,16 +52,16 @@ export function ExchangeIcon({ exchange, className = "w-4 h-4" }: ExchangeIconPr
 
   if (ex.includes('okx')) {
     return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16.5 12c0 2.485-2.015 4.5-4.5 4.5s-4.5-2.015-4.5-4.5 2.015-4.5 4.5-4.5 4.5 2.015 4.5 4.5zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 17.5c-4.142 0-7.5-3.358-7.5-7.5S7.858 4.5 12 4.5s7.5 3.358 7.5 7.5-3.358 7.5-7.5 7.5z" fill="#ffffff"/>
+      <svg className={`${className} text-fg`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16.5 12c0 2.485-2.015 4.5-4.5 4.5s-4.5-2.015-4.5-4.5 2.015-4.5 4.5-4.5 4.5 2.015 4.5 4.5zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 17.5c-4.142 0-7.5-3.358-7.5-7.5S7.858 4.5 12 4.5s7.5 3.358 7.5 7.5-3.358 7.5-7.5 7.5z" fill="currentColor"/>
       </svg>
     );
   }
 
   // Falback genérico em caso de não ter SVG mapeado e falhar o logo.dev
   return (
-    <div className={`rounded-full bg-gray-700 flex justify-center items-center ${className}`}>
-      <span className="text-[8px] font-bold text-white">{exchange.substring(0, 1).toUpperCase()}</span>
+    <div className={`rounded-full bg-elevated border border-line flex justify-center items-center ${className}`}>
+      <span className="text-[8px] font-bold text-fg">{exchange.substring(0, 1).toUpperCase()}</span>
     </div>
   );
 }

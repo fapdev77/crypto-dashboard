@@ -16,6 +16,11 @@ export interface BalanceItem {
   amount: number;
   /** Estimated USD value. */
   usdValue: number;
+  totalEquity?: number;
+  walletBalance?: number;
+  availableMargin?: number;
+  unrealizedPnl?: number;
+  raw?: any;
 }
 
 interface BalancesState {

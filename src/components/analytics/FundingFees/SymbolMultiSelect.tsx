@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, ChevronDown, Search, X } from 'lucide-react';
 import clsx from 'clsx';
 import { CoinIcon } from '../../ui/CoinIcon';
@@ -26,6 +27,7 @@ export const SymbolMultiSelect: React.FC<Props> = ({
   onChange, 
   maxSelections = 30 
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -64,11 +66,13 @@ export const SymbolMultiSelect: React.FC<Props> = ({
   return (
     <div className="relative w-full" ref={containerRef}>
       <div 
-        className="min-h-[42px] bg-[#0e0f11] border border-[#2a2b30] rounded-lg p-2 flex flex-wrap gap-2 items-center cursor-text"
+        className="min-h-[42px] bg-canvas border border-line rounded-lg p-2 flex flex-wrap gap-2 items-center cursor-text"
         onClick={() => setIsOpen(true)}
       >
         {selectedSymbols.length === 0 && !isOpen && (
-          <span className="text-[#8E9299] text-sm pl-2">Select symbols...</span>
+          <span className="text-fg-muted text-sm pl-2">
+            {t('analytics.funding.comparison.selectSymbols', 'Select symbols...')}
+          </span>
         )}
         
         {selectedSymbols.map(id => {
@@ -77,15 +81,20 @@ export const SymbolMultiSelect: React.FC<Props> = ({
           return (
             <span 
               key={id} 
-              className="flex items-center gap-1.5 bg-[#1A1C20] border border-[#2a2b30] px-2 py-1 rounded text-xs font-medium text-white max-w-full overflow-hidden"
+              className="flex items-center gap-1.5 bg-elevated border border-line px-2 py-1 rounded text-xs font-medium text-fg max-w-full overflow-hidden"
             >
               <CoinIcon symbol={sym.coin} className="w-3.5 h-3.5 shrink-0" />
               <ExchangeIcon exchange={sym.exchange as ExchangeName} className="w-3 h-3 shrink-0" />
               <span className="truncate">{sym.symbol}</span>
-              <span className="text-[10px] text-[#8E9299]">{sym.type === 'USDT-M' ? 'U' : 'C'}</span>
+              <span className={clsx(
+                "text-[10px] px-1 py-0.2 rounded font-mono shrink-0", 
+                sym.type === 'COIN-M' ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" : "text-fg-muted"
+              )}>
+                {sym.type === 'USDT-M' ? 'U' : 'C'}
+              </span>
               <button 
                 onClick={(e) => removeSymbol(id, e)}
-                className="text-[#8E9299] hover:text-white ml-1 focus:outline-none shrink-0"
+                className="text-fg-muted hover:text-fg ml-1 focus:outline-none shrink-0"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -100,8 +109,8 @@ export const SymbolMultiSelect: React.FC<Props> = ({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-transparent border-none focus:outline-none text-sm text-white pl-2 pr-7 py-1"
-                placeholder="Search..."
+                className="w-full bg-transparent border-none focus:outline-none text-sm text-fg pl-2 pr-7 py-1"
+                placeholder={t('common.search', 'Search...')}
                 autoFocus
               />
               {searchTerm && (
@@ -111,8 +120,8 @@ export const SymbolMultiSelect: React.FC<Props> = ({
                     e.stopPropagation();
                     setSearchTerm('');
                   }}
-                  className="absolute right-1.5 text-[#8E9299] hover:text-white bg-[#2a2b30] rounded-full p-0.5 focus:outline-none transition-colors"
-                  title="Clear search"
+                  className="absolute right-1.5 text-fg-muted hover:text-fg bg-line rounded-full p-0.5 focus:outline-none transition-colors"
+                  title={t('common.clearSearch', 'Clear search')}
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -124,18 +133,20 @@ export const SymbolMultiSelect: React.FC<Props> = ({
         <div className="flex items-center gap-3 pr-2 ml-auto shrink-0">
           <span className={clsx(
             "text-xs font-medium",
-            selectedSymbols.length >= maxSelections ? "text-red-400" : "text-[#8E9299]"
+            selectedSymbols.length >= maxSelections ? "text-red-400" : "text-fg-muted"
           )}>
             {selectedSymbols.length}/{maxSelections}
           </span>
-          <ChevronDown className={clsx("w-4 h-4 text-[#8E9299] transition-transform", isOpen && "rotate-180")} />
+          <ChevronDown className={clsx("w-4 h-4 text-fg-muted transition-transform", isOpen && "rotate-180")} />
         </div>
       </div>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[#151619] border border-[#2a2b30] rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-surface border border-line rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
           {filteredSymbols.length === 0 ? (
-            <div className="p-4 text-center text-sm text-[#8E9299]">No symbols found.</div>
+            <div className="p-4 text-center text-sm text-fg-muted">
+              {t('analytics.funding.comparison.noSymbolsFound', 'No symbols found.')}
+            </div>
           ) : (
             <div className="p-1">
               {filteredSymbols.map(sym => {
@@ -150,17 +161,24 @@ export const SymbolMultiSelect: React.FC<Props> = ({
                     className={clsx(
                       "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
                       isDisabled && "opacity-50 cursor-not-allowed",
-                      !isDisabled && "hover:bg-[#1A1C20]/80",
-                      isSelected ? "text-white" : "text-[#8E9299]"
+                      !isDisabled && "hover:bg-elevated/80",
+                      isSelected ? "text-fg" : "text-fg-muted"
                     )}
                   >
                     <div className="flex items-center gap-2">
                       <CoinIcon symbol={sym.coin} className="w-4 h-4 shrink-0" />
                       <ExchangeIcon exchange={sym.exchange as ExchangeName} className="w-4 h-4 shrink-0" />
                       <span className="font-medium truncate">{sym.symbol}</span>
-                      <span className="text-xs text-[#8E9299] shrink-0">({sym.type})</span>
+                      <span className={clsx(
+                        "text-[10px] px-1.5 py-0.5 rounded border shrink-0 font-medium",
+                        sym.type === 'COIN-M'
+                          ? "bg-purple-500/15 text-purple-300 border-purple-500/30"
+                          : "bg-line/50 text-fg-muted border-line"
+                      )}>
+                        {sym.type}
+                      </span>
                     </div>
-                    {isSelected && <Check className="w-4 h-4 text-[#2F6BFF] shrink-0 ml-2" />}
+                    {isSelected && <Check className="w-4 h-4 text-accent shrink-0 ml-2" />}
                   </button>
                 );
               })}

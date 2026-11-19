@@ -15,8 +15,16 @@ import { AppTooltip } from '../../ui/Tooltip';
 import { Pagination } from '../../ui/Pagination';
 import { usePagination } from '../../../hooks/usePagination';
 import { detectQtyIsCoin } from '../../../utils/inverseUtils';
+import { DEFAULT_TIME_PERIOD_MS, resolvePeriodDateRange } from '../../../utils/dateTimeHelper';
+import { useTranslation } from 'react-i18next';
+import { getUsdPrice, PriceExchange } from '../../../services/pricing/usdPrice';
+import { MissingRatesNotice, missingRatesNote } from '../../transactions/MissingRatesNotice';
+import { useFeeUsdTotals, FeeCurrencyBucket } from '../../../hooks/useFeeUsdTotals';
+import { HistoryLimitWarning } from '../../ui/HistoryLimitWarning';
 
 export function OrderHistory() {
+  const { t } = useTranslation();
+  const fiatCurrency = useSettingsStore(state => state.fiatCurrency) || 'USD';
   const [filters, setFilters] = useState<OrderFilters>({
     exchange: 'All',
     instrument: 'All',
@@ -24,7 +32,7 @@ export function OrderHistory() {
     type: 'All',
     side: 'All',
     status: 'CLOSED',
-    timePeriod: 7 * 24 * 60 * 60 * 1000, // default 7 days
+    timePeriod: DEFAULT_TIME_PERIOD_MS, // default 7 days
     accountId: 'All',
     historyStatus: 'All'
   });
@@ -42,7 +50,6 @@ export function OrderHistory() {
   // Busca inicial
   useEffect(() => {
     fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchOrders]);
 
   // Polling silencioso
@@ -54,6 +61,7 @@ export function OrderHistory() {
   }, [historyCacheInterval, fetchOrders]);
 
   const [totalFundingFee, setTotalFundingFee] = useState<number>(0);
+  const [missingFundingRates, setMissingFundingRates] = useState<string[]>([]);
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
 
@@ -61,40 +69,38 @@ export function OrderHistory() {
     let isMounted = true;
     const fetchFunding = async () => {
       let total = 0;
-      const now = Date.now();
-      const start = now - filters.timePeriod;
-      const end = now;
+      const { startTime, endTime } = resolvePeriodDateRange(
+        filters.timePeriod,
+        filters.customStartDate,
+        filters.customEndDate
+      );
 
-      // Helper to lazily fetch prices for non-USD currencies if needed
-      const priceCache: Record<string, number> = {};
-      const getPrice = async (ccy: string) => {
-        if (ccy.includes('USD') || ccy === 'EUR') return 1;
-        if (priceCache[ccy]) return priceCache[ccy];
-        try {
-          const res = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${ccy}-USDT`);
-          if (res.ok) {
-            const json = await res.json();
-            if (json.code === '0' && json.data && json.data.length > 0) {
-              priceCache[ccy] = parseFloat(json.data[0].last);
-              return priceCache[ccy];
-            }
-          }
-        } catch { /* ignore fallback to 0 */ }
-        return 0;
+      // Shared price cascade (exchange ticker -> OKX). Unpriced currencies are
+      // reported instead of being converted with an invented 1:1 rate.
+      const unresolved = new Set<string>();
+      const getPrice = async (ccy: string, exchange?: PriceExchange) => {
+        const price = await getUsdPrice(ccy, { exchange });
+        if (price === null) unresolved.add(ccy);
+        return price ?? 0;
       };
 
       if (useMockData) {
         import('../../../mock/bills.json').then(async mod => {
           const mockBills = mod.default as any[];
           for (const b of mockBills) {
-             if (b.type === 'funding' && b.timestamp >= start && b.timestamp <= end) {
+             if (b.type === 'funding') {
+                if (startTime !== null && b.timestamp < startTime) continue;
+                if (endTime !== null && b.timestamp > endTime) continue;
                 if (filters.exchange !== 'All' && b.exchange !== filters.exchange.toLowerCase()) continue;
                 const ccyStr = b.ccy ? b.ccy.toUpperCase() : 'USDT';
-                const p = await getPrice(ccyStr);
+                const p = await getPrice(ccyStr, b.exchange as PriceExchange | undefined);
                 total += (b.amount * p);
              }
           }
-          if (isMounted) setTotalFundingFee(total);
+          if (isMounted) {
+            setTotalFundingFee(total);
+            setMissingFundingRates(Array.from(unresolved));
+          }
         }).catch(err => {
           LogManager.warn('OrderHistory', 'Could not load mock bills', err);
         });
@@ -103,7 +109,10 @@ export function OrderHistory() {
 
       const activeKeys = keys.filter(k => k.isActive);
       if (activeKeys.length === 0) {
-        if (isMounted) setTotalFundingFee(0);
+        if (isMounted) {
+          setTotalFundingFee(0);
+          setMissingFundingRates([]);
+        }
         return;
       }
 
@@ -114,11 +123,16 @@ export function OrderHistory() {
            if (filters.accountId !== 'All' && key.id !== filters.accountId) continue;
            
            try {
-             const bills = await service.fetchBills(key, start, end);
+             const bills = await service.fetchBills(key, startTime ?? undefined, endTime ?? undefined);
              for (const b of bills) {
                if (b.type === 'funding') {
+                 const billTs = Number(b.timestamp ?? 0);
+                 if (startTime !== null && billTs > 0 && billTs < startTime) continue;
+                 if (endTime !== null && billTs > 0 && billTs > endTime) continue;
                  const ccyStr = b.ccy ? b.ccy.toUpperCase() : 'USDT';
-                 const p = await getPrice(ccyStr);
+                 // Bills come per API key, so the venue is known even when the
+                 // record itself does not carry it.
+                 const p = await getPrice(ccyStr, key.exchange as PriceExchange);
                  total += Number(b.amount) * p;
                }
              }
@@ -126,12 +140,15 @@ export function OrderHistory() {
              LogManager.error('OrderHistory', 'Failed to fetch bills for funding fee', e);
            }
         }
-        if (isMounted) setTotalFundingFee(total);
+        if (isMounted) {
+          setTotalFundingFee(total);
+          setMissingFundingRates(Array.from(unresolved));
+        }
       });
     };
     fetchFunding();
     return () => { isMounted = false; };
-  }, [filters.timePeriod, filters.exchange, filters.accountId, keys, useMockData]);
+  }, [filters.timePeriod, filters.customStartDate, filters.customEndDate, filters.exchange, filters.accountId, keys, useMockData]);
 
   const stats = useMemo(() => {
     let buyCount = 0;
@@ -142,7 +159,8 @@ export function OrderHistory() {
     let rejectedCount = 0;
 
     let totalTradedVolume = 0;
-    let totalFees = 0;
+    let inverseFeesUsd = 0;
+    const feeBuckets = new Map<string, FeeCurrencyBucket>();
 
     orders.forEach(o => {
       if (o.side === 'buy') buyCount++;
@@ -161,7 +179,11 @@ export function OrderHistory() {
           if (o.exchange === 'bybit') {
             // Bybit inverse: o.value is in COIN. Multiply by price to get USD value
             valUsd = o.value && o.value > 0 && p > 0 ? Number(new Big(o.value).times(p)) : o.filledQty;
-          } else if (o.value && o.value > 0 && o.exchange !== 'bitget') {
+          } else if (o.exchange === 'bitget') {
+            // Bitget inverse: filledQty is contracts in USD. raw quoteVolume is USD volume if available
+            const rawQuoteVol = o.raw?.quoteVolume ? parseFloat(o.raw.quoteVolume) : 0;
+            valUsd = rawQuoteVol > 0 ? rawQuoteVol : (o.value && o.value > 0 && o.value !== o.filledQty * p ? o.value : o.filledQty);
+          } else if (o.value && o.value > 0) {
             valUsd = o.filledQty > 0 && o.filledQty !== o.qty ? (p > 0 ? Number(new Big(o.filledQty).times(p)) : 0) : o.value;
           } else if (!qtyIsCoin) {
             valUsd = o.filledQty; // Qty is mostly in USD already
@@ -177,25 +199,44 @@ export function OrderHistory() {
       if (o.fees && o.filledQty > 0) {
         if (o.category === 'INVERSE') {
           const p = o.avgPrice > 0 ? o.avgPrice : o.price || 0;
-          totalFees += Math.abs(o.fees) * p;
+          inverseFeesUsd += Math.abs(o.fees) * p;
         } else {
-          totalFees += Math.abs(o.fees);
+          // Fees stay in the currency the exchange charged; see useFeeUsdTotals.
+          const currency = o.feeCurrency || 'USDT';
+          const bucket = feeBuckets.get(currency) ?? { currency, amount: 0, venues: [] };
+          bucket.amount += Math.abs(o.fees);
+          if (!bucket.venues.includes(o.exchange)) bucket.venues.push(o.exchange);
+          feeBuckets.set(currency, bucket);
         }
       }
     });
 
-    return { buyCount, sellCount, filledCount, cancelledCount, rejectedCount, totalTradedVolume, totalFees };
+    return {
+      buyCount,
+      sellCount,
+      filledCount,
+      cancelledCount,
+      rejectedCount,
+      totalTradedVolume,
+      inverseFeesUsd,
+      feeBuckets: Array.from(feeBuckets.values())
+    };
   }, [orders]);
 
+  const { totalFeesUsd, missingCurrencies: missingFeeCurrencies } = useFeeUsdTotals(stats.feeBuckets, stats.inverseFeesUsd);
+
+  // Both gaps break the same promise: a USD total that silently left part of it out.
+  const missingUsdCurrencies = Array.from(new Set([...missingFundingRates, ...missingFeeCurrencies]));
+
   const SIDE_DONUT = [
-    { name: 'Buy', value: stats.buyCount, color: '#00C853' },
-    { name: 'Sell', value: stats.sellCount, color: '#FF4444' }
+    { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: '#00C853' },
+    { name: t('orders.sell', 'Sell'), value: stats.sellCount, color: '#FF4444' }
   ];
 
   const STATUS_DONUT = [
-    { name: 'Filled / Part', value: stats.filledCount, color: '#00C853' },
-    { name: 'Cancelled', value: stats.cancelledCount, color: '#8E9299' },
-    { name: 'Rejected', value: stats.rejectedCount, color: '#FF4444' }
+    { name: t('orders.statuses.filled', 'Filled'), value: stats.filledCount, color: '#00C853' },
+    { name: t('orders.statuses.cancelled', 'Cancelled'), value: stats.cancelledCount, color: '#8E9299' },
+    { name: t('orders.statuses.rejected', 'Rejected'), value: stats.rejectedCount, color: '#FF4444' }
   ];
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
@@ -214,11 +255,13 @@ export function OrderHistory() {
       return [o.symbol, o.exchange, o.connectionId, o.category, o.type, sideText, o.price, o.qty, o.filledQty, o.status, timeStr];
     });
 
+    const note = missingRatesNote(t, missingFundingRates);
     const config: ExportConfig = {
       title: 'Order History Report',
       filename: `Order_History_${Date.now()}`,
       headers,
-      rows
+      rows,
+      notes: note ? [note] : undefined,
     };
 
     if (format === 'csv') exportToCSV(config);
@@ -230,25 +273,25 @@ export function OrderHistory() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
         <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-white">
-            <History className="w-5 h-5 text-[#2F6BFF]" />
-            Orders History
+          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-fg">
+            <History className="w-5 h-5 text-accent" />
+            {t('orders.orderHistoryTitle', 'Orders History')}
           </h2>
-          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} />
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} syncError={error} />
         </div>
         <div className="relative">
           <button
             onClick={() => setExportMenuOpen(!exportMenuOpen)}
-            className="px-3 py-2 bg-[#1a1b1e] border border-[#2a2b30] text-white flex items-center gap-2 rounded-lg hover:bg-[#2a2b30]/50 transition-colors text-sm focus:outline-none"
+            className="px-3 py-2 bg-elevated border border-line text-fg flex items-center gap-2 rounded-lg hover:bg-line/50 transition-colors text-sm focus:outline-none"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span> <ChevronDown className="w-3 h-3" />
+            <span className="hidden sm:inline">{t('positionsHistory.export', 'Export')}</span> <ChevronDown className="w-3 h-3" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute top-11 right-0 w-32 bg-[#1a1b1e] border border-[#2a2b30] rounded-lg shadow-xl z-50 overflow-hidden text-sm text-white">
-              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export CSV</button>
-              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export Excel</button>
-              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-[#2a2b30]/50 transition-colors">Export PDF</button>
+            <div className="absolute top-11 right-0 w-32 bg-elevated border border-line rounded-lg shadow-xl z-50 overflow-hidden text-sm text-fg">
+              <button onClick={() => handleExport('csv')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">{t('positionsHistory.exportCsv', 'Export CSV')}</button>
+              <button onClick={() => handleExport('excel')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">{t('positionsHistory.exportExcel', 'Export Excel')}</button>
+              <button onClick={() => handleExport('pdf')} className="w-full text-left px-4 py-2 hover:bg-line/50 transition-colors">{t('positionsHistory.exportPdf', 'Export PDF')}</button>
             </div>
           )}
         </div>
@@ -258,19 +301,30 @@ export function OrderHistory() {
         <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} showStatusFilter={true} />
       </div>
 
+      <HistoryLimitWarning
+        period={filters.timePeriod}
+        customStartDate={filters.customStartDate}
+        customEndDate={filters.customEndDate}
+        exchangeFilter={filters.exchange}
+      />
+
+      {missingUsdCurrencies.length > 0 && (
+        <MissingRatesNotice currencies={missingUsdCurrencies} />
+      )}
+
       {orders.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           {/* Status Breakdown */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
             <div className='flex flex-col'>
               <div className="flex items-center gap-2">
-                <span className="text-2xl text-[#8E9299]">Total Orders: </span>
-                <span className="text-xl font-medium text-white">{orders.length}</span>
+                <span className="text-2xl text-fg-muted">{t('orders.stats.totalOrders', 'Total Orders')}: </span>
+                <span className="text-xl font-medium text-fg">{orders.length}</span>
               </div>
               <div className="flex flex-col text-[13px] gap-0.5 font-mono mt-1">
-                <span className="text-[#00C853]">Filled: {stats.filledCount}</span>
-                <span className="text-[#8E9299]">Cancelled: {stats.cancelledCount}</span>
-                <span className="text-[#FF4444]">Rejected: {stats.rejectedCount}</span>
+                <span className="text-success">{t('orders.statuses.filled', 'Filled')}: {stats.filledCount}</span>
+                <span className="text-fg-muted">{t('orders.statuses.cancelled', 'Cancelled')}: {stats.cancelledCount}</span>
+                <span className="text-danger">{t('orders.statuses.rejected', 'Rejected')}: {stats.rejectedCount}</span>
               </div>
             </div>
             <div className="w-24 h-24">
@@ -289,13 +343,13 @@ export function OrderHistory() {
           </div>
 
           {/* Buy vs Sell */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex items-center justify-between">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
             <div className='flex flex-col'>
-              <span className="text-2xl text-[#8E9299]">Buy vs Sell</span>
+              <span className="text-2xl text-fg-muted">{t('orders.buy', 'Buy')} / {t('orders.sell', 'Sell')}</span>
               <div className="flex text-[15px] gap-2 font-mono mt-2">
-                <span className="text-[#00C853]">{stats.buyCount} B ({((stats.buyCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
-                <span className="text-[#8E9299]"> | </span>
-                <span className="text-[#FF4444]">{stats.sellCount} S ({((stats.sellCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
+                <span className="text-success">{stats.buyCount} {t('orders.buy', 'Buy')} ({((stats.buyCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
+                <span className="text-fg-muted"> | </span>
+                <span className="text-danger">{stats.sellCount} {t('orders.sell', 'Sell')} ({((stats.sellCount / orders.length) * 100 || 0).toFixed(0)}%)</span>
               </div>
             </div>
             <div className="w-24 h-24">
@@ -314,21 +368,21 @@ export function OrderHistory() {
           </div>
 
           {/* Volume and Fees */}
-          <div className="bg-[#161b22] rounded-lg p-4 border border-[#2a2b30] flex flex-col justify-center gap-3">
+          <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center gap-3">
             <div className="flex flex-col">
-              <AppTooltip description="The total estimated USD value of all executed trades in the selected period.">
-                <span className="text-[13px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Traded Volume</span>
+              <AppTooltip description={t('trade.tradedVolumeTooltip', { currency: fiatCurrency })}>
+                <span className="text-[13px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('trade.tradedVolume', 'Traded Volume')}</span>
               </AppTooltip>
-              <span className="text-xl font-medium text-white mt-1">
+              <span className="text-xl font-medium text-fg mt-1">
                 {formatCurrency(stats.totalTradedVolume, 'usd')}
               </span>
             </div>
-            <div className="border-t border-[#2a2b30] pt-3 flex flex-col">
-              <AppTooltip description="The total estimated USD value of trading fees paid for these orders.">
-                <span className="text-[11px] text-[#8E9299] uppercase tracking-wider w-max cursor-help border-b border-dashed border-[#8E9299]/50">Trading Fees</span>
+            <div className="border-t border-line pt-3 flex flex-col">
+              <AppTooltip description={t('orders.tooltips.tradingFeesTotal', { currency: fiatCurrency })}>
+                <span className="text-[11px] text-fg-muted uppercase tracking-wider w-max cursor-help border-b border-dashed border-fg-muted/50">{t('positions.tradingFee', 'Trading Fees')}</span>
               </AppTooltip>
-              <span className="text-[13px] font-medium text-[#FF4444] mt-1 font-mono">
-                {stats.totalFees > 0 ? '-' + formatCurrency(stats.totalFees, 'usd') : '0.00 USD'}
+              <span className="text-[13px] font-medium text-danger mt-1 font-mono">
+                {totalFeesUsd > 0 ? '-' + formatCurrency(totalFeesUsd, 'usd') : formatCurrency(0, 'usd')}
               </span>
             </div>
           </div>
@@ -348,7 +402,7 @@ export function OrderHistory() {
               currentPage={currentPage}
               totalItems={ordersTotal}
               itemsPerPage={50}
-              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
                 refreshLabel="Updating"
                 refreshDataReady={!loading}
               />
@@ -362,7 +416,7 @@ export function OrderHistory() {
               currentPage={currentPage}
               totalItems={ordersTotal}
               itemsPerPage={50}
-              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+              onPageChange={setCurrentPage}                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
                 refreshLabel="Updating"
                 refreshDataReady={!loading}
               />

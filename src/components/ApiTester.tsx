@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useApiKeysStore, Exchange } from '../store/apiKeysStore';
+import { useApiKeysStore, Exchange, ApiCredentials } from '../store/apiKeysStore';
 import { OkxAdapter } from '../services/adapters/OkxAdapter';
 import { BitgetAdapter } from '../services/adapters/BitgetAdapter';
 import { BybitAdapter } from '../services/adapters/BybitAdapter';
+import { getBybitBaseUrl } from '../utils/bybitEndpoints';
 import { proxyFetch } from '../utils/proxyFetch';
 import { LogManager } from '../services/LogManager';
 import { Send, Play, Square, Wifi, WifiOff, Terminal, ListCollapse } from 'lucide-react';
@@ -56,10 +57,10 @@ export function ApiTester() {
     return '';
   };
 
-  const getRestBaseUrl = (exchange: Exchange) => {
-    if (exchange === 'bitget') return 'https://api.bitget.com';
-    if (exchange === 'okx') return 'https://www.okx.com';
-    if (exchange === 'bybit') return 'https://api.bybit.com';
+  const getRestBaseUrl = (key: ApiCredentials) => {
+    if (key.exchange === 'bitget') return 'https://api.bitget.com';
+    if (key.exchange === 'okx') return 'https://www.okx.com';
+    if (key.exchange === 'bybit') return getBybitBaseUrl(key.environment, key.bybitRegion);
     return '';
   }
 
@@ -68,7 +69,7 @@ export function ApiTester() {
     
     setRestResponse('Loading...');
     try {
-      const baseUrl = getRestBaseUrl(activeKey.exchange);
+      const baseUrl = getRestBaseUrl(activeKey);
       const targetUrl = `${baseUrl}${restPath.startsWith('/') ? '' : '/'}${restPath}`;
       
       let headers: Record<string, string> = {};
@@ -81,7 +82,7 @@ export function ApiTester() {
          // Bybit auth usually takes the payload string or query string.
          // If GET, query is everything after `?`.
          const queryStr = restPath.includes('?') ? restPath.split('?')[1] : '';
-         headers = await BybitAdapter.getHeaders(activeKey.apiKey, activeKey.apiSecret, queryStr) as Record<string, string>;
+         headers = await BybitAdapter.getHeaders(activeKey, queryStr) as Record<string, string>;
       }
       
       const proxyResponse = await proxyFetch({ targetUrl, method: 'GET', headers });
@@ -174,15 +175,15 @@ export function ApiTester() {
 
   return (
     <div className="flex flex-col h-full gap-6 max-w-6xl mx-auto w-full">
-      <div className="bg-[#151619] border border-[#2a2b30] p-6 rounded-xl shrink-0">
-        <h3 className="text-lg font-medium text-white mb-4">Connection Settings</h3>
+      <div className="bg-surface border border-line p-6 rounded-xl shrink-0">
+        <h3 className="text-lg font-medium text-fg mb-4">Connection Settings</h3>
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-[#8E9299] mb-1">Account</label>
+            <label className="block text-sm font-medium text-fg-muted mb-1">Account</label>
             <select
               value={selectedKeyId}
               onChange={(e) => setSelectedKeyId(e.target.value)}
-              className="w-full bg-[#0b0c10] border border-[#2a2b30] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#2F6BFF]"
+              className="w-full bg-canvas border border-line rounded-lg px-3 py-2 text-fg focus:outline-none focus:border-accent"
             >
               {keys.length === 0 && <option value="" disabled>No API Keys found</option>}
               {keys.map((apiKey) => (
@@ -193,18 +194,18 @@ export function ApiTester() {
             </select>
           </div>
           <div className="w-1/3">
-            <label className="block text-sm font-medium text-[#8E9299] mb-1">Protocol</label>
-            <div className="flex bg-[#0b0c10] rounded-lg p-1 border border-[#2a2b30]">
+            <label className="block text-sm font-medium text-fg-muted mb-1">Protocol</label>
+            <div className="flex bg-canvas rounded-lg p-1 border border-line">
               <button
                 type="button"
-                className={`flex-1 py-1 text-sm font-medium rounded-md transition-colors ${mode === 'REST' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:text-white'}`}
+                className={`flex-1 py-1 text-sm font-medium rounded-md transition-colors ${mode === 'REST' ? 'bg-accent text-white' : 'text-fg-muted hover:text-white'}`}
                 onClick={() => setMode('REST')}
               >
                 REST
               </button>
               <button
                 type="button"
-                className={`flex-1 py-1 text-sm font-medium rounded-md transition-colors ${mode === 'WS' ? 'bg-[#2F6BFF] text-white' : 'text-[#8E9299] hover:text-white'}`}
+                className={`flex-1 py-1 text-sm font-medium rounded-md transition-colors ${mode === 'WS' ? 'bg-accent text-white' : 'text-fg-muted hover:text-white'}`}
                 onClick={() => setMode('WS')}
               >
                 WebSocket
@@ -216,9 +217,9 @@ export function ApiTester() {
 
       {mode === 'REST' && (
         <div className="flex-1 flex flex-col gap-4 min-h-0">
-          <div className="bg-[#151619] border border-[#2a2b30] p-6 rounded-xl flex flex-col gap-4">
+          <div className="bg-surface border border-line p-6 rounded-xl flex flex-col gap-4">
              <div className="flex gap-2">
-               <div className="bg-[#0b0c10] border border-[#2a2b30] rounded-lg px-3 py-2 text-white font-mono flex items-center shrink-0">
+               <div className="bg-canvas border border-line rounded-lg px-3 py-2 text-fg font-mono flex items-center shrink-0">
                  GET
                </div>
                <input
@@ -226,21 +227,21 @@ export function ApiTester() {
                   placeholder="/api/v5/account/positions?instType=SWAP"
                   value={restPath}
                   onChange={(e) => setRestPath(e.target.value)}
-                  className="flex-1 bg-[#0b0c10] border border-[#2a2b30] rounded-lg px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-[#2F6BFF]"
+                  className="flex-1 bg-canvas border border-line rounded-lg px-4 py-2 text-fg font-mono text-sm focus:outline-none focus:border-accent"
                />
                <button
                   onClick={handleRestSubmit}
                   disabled={!activeKey || !restPath}
-                  className="bg-[#2F6BFF] hover:bg-[#2F6BFF]/90 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  className="bg-accent hover:bg-accent/90 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                >
                  <Send className="w-4 h-4" /> Send
                </button>
              </div>
           </div>
           
-          <div className="flex-1 bg-[#0b0c10] border border-[#2a2b30] rounded-xl flex flex-col overflow-hidden min-h-0 relative group">
-             <div className="bg-[#151619] border-b border-[#2a2b30] px-4 py-2 flex items-center justify-between shrink-0">
-                <span className="text-sm font-medium text-[#8E9299] flex items-center gap-2">
+          <div className="flex-1 bg-canvas border border-line rounded-xl flex flex-col overflow-hidden min-h-0 relative group">
+             <div className="bg-surface border-b border-line px-4 py-2 flex items-center justify-between shrink-0">
+                <span className="text-sm font-medium text-fg-muted flex items-center gap-2">
                   <ListCollapse className="w-4 h-4" /> Response
                 </span>
              </div>
@@ -253,11 +254,11 @@ export function ApiTester() {
 
       {mode === 'WS' && (
          <div className="flex-1 flex flex-col gap-4 min-h-0">
-           <div className="bg-[#151619] border border-[#2a2b30] p-6 rounded-xl flex flex-col gap-4 shrink-0">
+           <div className="bg-surface border border-line p-6 rounded-xl flex flex-col gap-4 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full ${wsConnected ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'}`} />
-                  <span className="text-white font-medium">{wsConnected ? 'Connected' : 'Disconnected'}</span>
+                  <span className="text-fg font-medium">{wsConnected ? 'Connected' : 'Disconnected'}</span>
                 </div>
                 <div className="flex gap-2">
                   {!wsConnected ? (
@@ -279,12 +280,12 @@ export function ApiTester() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#8E9299] mb-1">Message Payload</label>
+                <label className="block text-sm font-medium text-fg-muted mb-1">Message Payload</label>
                 <div className="flex gap-2">
                   <textarea
                     value={wsPayload}
                     onChange={(e) => setWsPayload(e.target.value)}
-                    className="flex-1 h-24 bg-[#0b0c10] border border-[#2a2b30] rounded-lg p-3 text-white font-mono text-sm focus:outline-none focus:border-[#2F6BFF] resize-none"
+                    className="flex-1 h-24 bg-canvas border border-line rounded-lg p-3 text-fg font-mono text-sm focus:outline-none focus:border-accent resize-none"
                     placeholder={
                       !activeKey ? 'Select an API Key...' :
                       activeKey.exchange === 'okx' ? '{"op": "subscribe", "args": [{"channel": "tickers", "instId": "BTC-USDT"}]}' :
@@ -304,20 +305,20 @@ export function ApiTester() {
               </div>
            </div>
 
-           <div className="flex-1 bg-[#0b0c10] border border-[#2a2b30] rounded-xl flex flex-col overflow-hidden min-h-0 relative">
-              <div className="bg-[#151619] border-b border-[#2a2b30] px-4 py-2 flex items-center justify-between shrink-0">
-                 <span className="text-sm font-medium text-[#8E9299] flex items-center gap-2">
+           <div className="flex-1 bg-canvas border border-line rounded-xl flex flex-col overflow-hidden min-h-0 relative">
+              <div className="bg-surface border-b border-line px-4 py-2 flex items-center justify-between shrink-0">
+                 <span className="text-sm font-medium text-fg-muted flex items-center gap-2">
                    <Terminal className="w-4 h-4" /> Terminal Output
                  </span>
                  <button 
                   onClick={() => setWsOutput([])}
-                  className="text-xs text-[#8E9299] hover:text-white transition-colors"
+                  className="text-xs text-fg-muted hover:text-fg transition-colors"
                  >
                    Clear
                  </button>
               </div>
               <div className="flex-1 overflow-auto p-4 text-xs font-mono text-[#a9b1d6] space-y-1">
-                {wsOutput.length === 0 && <div className="text-[#8E9299]/50">No messages yet.</div>}
+                {wsOutput.length === 0 && <div className="text-fg-muted/50">No messages yet.</div>}
                 {wsOutput.map((msg, i) => (
                   <div key={i} className="whitespace-pre-wrap break-all border-b border-white/5 pb-1">
                     {msg}

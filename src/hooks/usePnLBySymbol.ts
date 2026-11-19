@@ -8,7 +8,7 @@ import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { BybitTransactionService } from '../services/bybit/BybitTransactionService';
 import { getBybitTxLogCache } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
-import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
+import { resolvePeriodDateRange } from '../utils/dateTimeHelper';
 
 /**
  * Aggregates PnL data broken down by symbol, exchange, and instrument type.
@@ -20,14 +20,24 @@ import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
  * @param period           Time period for the history query.
  * @param exchangeFilter   Exchange filter ('All' | 'bybit' | 'bitget' | 'okx').
  * @param instrumentFilter Instrument type filter ('All' | 'Linear' | 'Inverse' etc).
+ * @param customStartDate  Optional custom start date (YYYY-MM-DD).
+ * @param customEndDate    Optional custom end date (YYYY-MM-DD).
  * @returns Object with pnlData, isLoading, isSyncing, syncMessage, isRealPnLSyncing.
  */
 export function usePnLBySymbol(
   period: PositionHistoryPeriod,
   exchangeFilter: string,
-  instrumentFilter: string
+  instrumentFilter: string,
+  customStartDate?: string,
+  customEndDate?: string
 ) {
-  const { positions, isLoading, isSyncing, syncMessage: historySyncMessage } = usePositionHistory(period);
+  const { positions, isLoading, isSyncing, syncMessage: historySyncMessage, syncError } = usePositionHistory(
+    period,
+    undefined,
+    undefined,
+    customStartDate,
+    customEndDate
+  );
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
@@ -73,21 +83,13 @@ export function usePnLBySymbol(
 
     const loadFromTxLog = async () => {
       try {
-        // Calculate period time range
-        const now = Date.now();
-        const periodStartMap: Record<string, number | undefined> = {
-          today: getStartOfTodayInMs(),
-          '7d': now - 7 * 24 * 60 * 60 * 1000,
-          '14d': now - 14 * 24 * 60 * 60 * 1000,
-          '30d': now - 30 * 24 * 60 * 60 * 1000,
-          '90d': now - 90 * 24 * 60 * 60 * 1000,
-          '120d': now - 120 * 24 * 60 * 60 * 1000,
-          '180d': now - 180 * 24 * 60 * 60 * 1000,
-          '365d': now - 365 * 24 * 60 * 60 * 1000,
-          'all': undefined,
-        };
-        const startTime = periodStartMap[period];
-        const endTime = startTime !== undefined ? now : undefined;
+        const { startTime: resolvedStart, endTime: resolvedEnd } = resolvePeriodDateRange(
+          period,
+          customStartDate,
+          customEndDate
+        );
+        const startTime = resolvedStart ?? undefined;
+        const endTime = resolvedEnd ?? undefined;
 
         const combinedPnL: Record<string, Big> = {};
         let hasAnyData = false;
@@ -124,7 +126,7 @@ export function usePnLBySymbol(
 
     loadFromTxLog();
     return () => { isMounted = false; };
-  }, [keys, period, exchangeFilter, useMockData, historyCacheVersion]);
+  }, [keys, period, customStartDate, customEndDate, exchangeFilter, useMockData, historyCacheVersion]);
 
   // ── Aggregate PnL data from closed positions + tx-log ──
   const pnlData = useMemo(() => {
@@ -224,6 +226,7 @@ export function usePnLBySymbol(
     isLoading: isLoading || isBybitLoading,
     isSyncing: isSyncing || syncStore.isBybitTxSyncing,
     syncMessage: currentSyncMessage,
+    syncError: syncError || syncStore.txSyncError,
     isRealPnLSyncing: syncStore.isBybitTxSyncing,
   };
 }

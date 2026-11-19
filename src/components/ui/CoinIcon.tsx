@@ -9,6 +9,25 @@ interface CoinIconProps {
   name?: string;
 }
 
+export function getCleanCoinSymbol(symbol: string): string {
+  if (!symbol) return '';
+  let cleanSymbol = symbol.toLowerCase().trim();
+
+  // 1. Se contiver hífen (OKX ex: BTC-USDT-SWAP) ou underscore (Bitget ex: ETHUSD_CM, BTCUSDT_UMCBL, BTC_USDT)
+  if (cleanSymbol.includes('-')) {
+    cleanSymbol = cleanSymbol.split('-')[0];
+  } else if (cleanSymbol.includes('_')) {
+    cleanSymbol = cleanSymbol.split('_')[0];
+  }
+
+  // 2. Remove os sufixos de pares de trading (USDT, USD, USDC, PERP, BUSD) apenas se não for a própria moeda
+  if (cleanSymbol !== 'usdt' && cleanSymbol !== 'usd' && cleanSymbol !== 'usdc' && cleanSymbol !== 'busd') {
+    cleanSymbol = cleanSymbol.replace(/usdt$|usdc$|usd$|perp$|busd$/g, '');
+  }
+
+  return cleanSymbol;
+}
+
 export function CoinIcon({ symbol, className = "w-6 h-6", size = 32, category, name }: CoinIconProps) {
   const initialState = 'okx';
   const [imageState, setImageState] = useState<'okx' | 'logodev-crypto' | 'logodev-ticker' | 'logodev-name' | 'coincap' | 'error'>(initialState);
@@ -18,23 +37,13 @@ export function CoinIcon({ symbol, className = "w-6 h-6", size = 32, category, n
     setImageState('okx');
   }, [category, symbol]);
   
-  let cleanSymbol = symbol.toLowerCase();
-
-  // Se for formato da OKX (ex: PEPE-USDT-SWAP), pegamos apenas a primeira parte
-  if (cleanSymbol.includes('-')) {
-    cleanSymbol = cleanSymbol.split('-')[0];
-  } else {
-    // Remove os sufixos de pares de trading (USDT, USD, USDC, PERP) apenas se não for a própria moeda
-    if (cleanSymbol !== 'usdt' && cleanSymbol !== 'usd' && cleanSymbol !== 'usdc') {
-      cleanSymbol = cleanSymbol.replace(/usdt$|usdc$|usd$|perp$/g, '');
-    }
-  }
+  const cleanSymbol = getCleanCoinSymbol(symbol);
 
   // Fallback visual se nenhuma imagem carregar
   if (imageState === 'error' || !cleanSymbol) {
     return (
-      <div className={`rounded-full bg-[#1e2025] border border-[#2a2b30] flex items-center justify-center shrink-0 ${className}`}>
-        <span className="text-[10px] sm:text-xs font-bold text-[#8E9299]">
+      <div className={`rounded-full bg-elevated border border-line flex items-center justify-center shrink-0 ${className}`}>
+        <span className="text-[10px] sm:text-xs font-bold text-fg-muted">
           {(cleanSymbol || symbol).substring(0, 2).toUpperCase()}
         </span>
       </div>
