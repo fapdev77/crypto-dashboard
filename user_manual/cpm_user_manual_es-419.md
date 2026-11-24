@@ -1,6 +1,6 @@
 # 📘 Manual de Usuario - Crypto Portfolio Manager (CPM)
 
-> **Versión de la Aplicación:** 2.51.0  
+> **Versión de la Aplicación:** 2.52.0  
 > **Plataformas Soportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitectura de Seguridad:** Zero-Trust Client-Side (Cifrado Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -129,10 +129,10 @@ La pantalla **Settings** agrupa la gobernanza en **10 tarjetas modulares**:
 - Modo detallado (todas las métricas y panel expandible) y modo **Lite**, que muestra cada posición en una sola fila con seis columnas: exchange/cuenta/símbolo, lado/apalancamiento/modo, tamaño/valor, PnL realizado y no realizado, entrada/mark/liquidación. En móvil cada columna pasa a una línea propia.
 
 ### 📂 Closed Positions (Historial de Posiciones y Análisis)
-- Resumen estadístico de operaciones cerradas (**Win Rate %**, **Profit Factor**) con exportación a **CSV**, **Excel** y **PDF**.
+- Resumen estadístico de operaciones cerradas (**Win Rate %**, **Profit Factor**), selector estandarizado de **12 opciones** con valor inicial de **7 Días** (`Today` hasta `All Time`, `MTD`, `YTD`, modal `Custom Range...` y alerta `HistoryLimitWarning` para OKX/Bitget >90 días) y exportación a **CSV**, **Excel** y **PDF**.
 
 ### 📜 Historial de Transacciones y Variación Neta Consolidada
-- Cuadro de mando unificado de flujos de caja, funding cobrado/pagado y comisiones de corretaje.
+- Cuadro de mando unificado de flujos de caja, funding cobrado/pagado y comisiones de corretaje, con el filtro cronológico estandarizado de 12 opciones predeterminado en **7 Días** (compartido con pestañas de transacciones, Order/Trade History, PnL by Symbol y Reportes).
 
 ---
 

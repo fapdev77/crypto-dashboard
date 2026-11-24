@@ -16,6 +16,9 @@ import {
   parseDateEndOfDayUtc,
   resolveUtcPeriodDateRange,
   TIME_PERIOD_OPTIONS,
+  ONE_DAY_MS,
+  DEFAULT_TIME_PERIOD_MS,
+  estimateRequestedPeriodDays,
 } from '../utils/dateTimeHelper';
 
 describe('dateTimeHelper - Period & Calendar Date Functions', () => {
@@ -232,6 +235,72 @@ describe('dateTimeHelper - Period & Calendar Date Functions', () => {
     it('has MTD and YTD presets defined', () => {
       expect(TIME_PERIOD_OPTIONS.some(o => o.value === 'mtd')).toBe(true);
       expect(TIME_PERIOD_OPTIONS.some(o => o.value === 'ytd')).toBe(true);
+    });
+
+    it('exports DEFAULT_TIME_PERIOD_MS as 7 calendar days in milliseconds', () => {
+      expect(ONE_DAY_MS).toBe(24 * 60 * 60 * 1000);
+      expect(DEFAULT_TIME_PERIOD_MS).toBe(7 * ONE_DAY_MS);
+    });
+  });
+
+  describe('legacy shorthand duration aliases', () => {
+    it('resolves "today", "7d", "30d", "6m", and "1y" in local and UTC helpers', () => {
+      expect(resolvePeriodDateRange('today', undefined, undefined, refDate)).toEqual({
+        startTime: getStartOfTodayInMs(refDate),
+        endTime: getEndOfTodayInMs(refDate),
+      });
+      expect(resolvePeriodDateRange('7d', undefined, undefined, refDate)).toEqual(
+        resolvePeriodDateRange(7 * ONE_DAY_MS, undefined, undefined, refDate)
+      );
+      expect(resolvePeriodDateRange('30d', undefined, undefined, refDate)).toEqual(
+        resolvePeriodDateRange(30 * ONE_DAY_MS, undefined, undefined, refDate)
+      );
+      expect(resolvePeriodDateRange('6m', undefined, undefined, refDate)).toEqual(
+        resolvePeriodDateRange(180 * ONE_DAY_MS, undefined, undefined, refDate)
+      );
+      expect(resolvePeriodDateRange('1y', undefined, undefined, refDate)).toEqual(
+        resolvePeriodDateRange(365 * ONE_DAY_MS, undefined, undefined, refDate)
+      );
+
+      const utcRef = new Date(Date.UTC(2026, 9, 15, 12, 0, 0, 0));
+      expect(resolveUtcPeriodDateRange('7d', undefined, undefined, utcRef)).toEqual(
+        resolveUtcPeriodDateRange(7 * ONE_DAY_MS, undefined, undefined, utcRef)
+      );
+    });
+  });
+
+  describe('estimateRequestedPeriodDays', () => {
+    it('returns Infinity for All Time ("0" or "all") and 0 for empty/null', () => {
+      expect(estimateRequestedPeriodDays(0, undefined, undefined, refDate)).toBe(Infinity);
+      expect(estimateRequestedPeriodDays('0', undefined, undefined, refDate)).toBe(Infinity);
+      expect(estimateRequestedPeriodDays('all', undefined, undefined, refDate)).toBe(Infinity);
+      expect(estimateRequestedPeriodDays(undefined, undefined, undefined, refDate)).toBe(0);
+      expect(estimateRequestedPeriodDays('', undefined, undefined, refDate)).toBe(0);
+    });
+
+    it('estimates numeric millisecond presets and duration aliases accurately', () => {
+      expect(estimateRequestedPeriodDays(DEFAULT_TIME_PERIOD_MS, undefined, undefined, refDate)).toBe(7);
+      expect(estimateRequestedPeriodDays(120 * ONE_DAY_MS, undefined, undefined, refDate)).toBe(120);
+      expect(estimateRequestedPeriodDays('today', undefined, undefined, refDate)).toBe(1);
+      expect(estimateRequestedPeriodDays('90d', undefined, undefined, refDate)).toBe(90);
+      expect(estimateRequestedPeriodDays('6m', undefined, undefined, refDate)).toBe(180);
+      expect(estimateRequestedPeriodDays('1y', undefined, undefined, refDate)).toBe(365);
+    });
+
+    it('estimates MTD and YTD lookback days against refDate', () => {
+      // refDate is 2026-10-15
+      expect(estimateRequestedPeriodDays('mtd', undefined, undefined, refDate)).toBe(15);
+      // YTD from 2026-01-01 to 2026-10-15 inclusive = 31+28+31+30+31+30+31+31+30+15 = 288 days
+      expect(estimateRequestedPeriodDays('ytd', undefined, undefined, refDate)).toBe(288);
+    });
+
+    it('estimates custom date ranges including inverted, open-start, future, and >90d spans', () => {
+      expect(estimateRequestedPeriodDays('custom', '2026-10-09', '2026-10-15', refDate)).toBe(7);
+      expect(estimateRequestedPeriodDays('custom', '2026-06-01', '2026-10-15', refDate)).toBeGreaterThan(90);
+      expect(estimateRequestedPeriodDays('custom', '2026-10-15', '2026-06-01', refDate)).toBeGreaterThan(90);
+      expect(estimateRequestedPeriodDays('custom', undefined, '2026-10-15', refDate)).toBe(Infinity);
+      expect(estimateRequestedPeriodDays('custom', undefined, undefined, refDate)).toBe(0);
+      expect(estimateRequestedPeriodDays('custom', '2026-12-01', '2026-12-10', refDate)).toBe(1);
     });
   });
 });

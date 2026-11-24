@@ -19,6 +19,7 @@ import { CoinIcon } from '../../ui/CoinIcon';
 import { UNIVERSAL_BADGE_STYLE, UNIVERSAL_HEX_COLOR_MAP, UniversalTxType } from '../../../utils/transactionTypeMapper';
 import { useTranslation } from 'react-i18next';
 import { MissingRatesNotice, missingRatesNote } from '../MissingRatesNotice';
+import { DEFAULT_TIME_PERIOD_MS } from '../../../utils/dateTimeHelper';
 
 
 export function BybitTransactions() {
@@ -29,11 +30,11 @@ export function BybitTransactions() {
     type: 'All',
     currency: 'All',
     accountId: 'All',
-    timePeriod: 0, // Default: All Time
+    timePeriod: DEFAULT_TIME_PERIOD_MS, // Default: 7 Days
   });
 
   // ── Refresh animation indicator key ──
-  const filterMonitorKey = `${filters.category}-${filters.type}-${filters.currency}-${filters.accountId}-${filters.timePeriod}`;
+  const filterMonitorKey = `${filters.category}-${filters.type}-${filters.currency}-${filters.accountId}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}`;
   
   const { entries, filteredEntries, isLoading, isSyncing, isCalculatingUsd, progress, error, stats, tokenRates } = useBybitTransactions(filters);
   const formatCurrency = useFormatCurrency();

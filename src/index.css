@@ -416,6 +416,26 @@
   color: #92400e;
 }
 
+.history-limit-banner {
+  background-color: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.30);
+  color: #fcd34d;
+}
+
+.history-limit-banner-icon {
+  color: #fbbf24;
+}
+
+:is([data-mode="light"], [data-mode="wise-light"], [data-theme-palette="wise-light"]) .history-limit-banner {
+  background-color: rgba(245, 158, 11, 0.10);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #92400e;
+}
+
+:is([data-mode="light"], [data-mode="wise-light"], [data-theme-palette="wise-light"]) .history-limit-banner-icon {
+  color: #b45309;
+}
+
 body {
   background-color: var(--canvas);
   color: var(--fg);

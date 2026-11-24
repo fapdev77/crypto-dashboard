@@ -146,6 +146,7 @@
     "neutral": "Neutro",
     "noData": "Nessun dato",
     "clearSearch": "Cancella ricerca",
+    "edit": "Modifica",
     "syncingNow": "Sincronizzazione in corso",
     "inTime": "tra",
     "operational": "Operativo",
@@ -164,6 +165,7 @@
       "allSidesTooltip": "Mostra tutti i lati dell'operazione",
       "allTypesTooltip": "Mostra tutti i tipi di ordine / operazione",
       "allStatusesTooltip": "Mostra i record di tutti gli stati",
+      "periodTooltip": "Filtra per periodo",
       "clearSearch": "Cancella ricerca"
     },
     "changeRefreshInterval": "Cambia l'intervallo di aggiornamento automatico",

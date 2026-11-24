@@ -142,7 +142,7 @@ export function CustomDateRangeModal({
         {/* Quick presets pills */}
         <div>
           <label className="text-xs font-medium text-fg-muted mb-2 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-blue-400" />
+            <Clock className="w-3.5 h-3.5 text-accent" />
             {t('common.customDateModal.quickPresets', 'Quick Presets')}
           </label>
           <div className="flex flex-wrap gap-1.5">
@@ -195,7 +195,7 @@ export function CustomDateRangeModal({
               type="date"
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full bg-elevated border border-line rounded-lg px-3 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors [color-scheme:dark]"
+              className="w-full bg-elevated border border-line rounded-lg px-3 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors"
             />
           </div>
 
@@ -208,14 +208,14 @@ export function CustomDateRangeModal({
               type="date"
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
-              className="w-full bg-elevated border border-line rounded-lg px-3 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors [color-scheme:dark]"
+              className="w-full bg-elevated border border-line rounded-lg px-3 py-2 text-sm text-fg focus:outline-none focus:border-accent transition-colors"
             />
           </div>
         </div>
 
         {/* Validation warning */}
         {validationError && (
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-danger/10 border border-danger/30 text-danger text-xs">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{validationError}</span>
           </div>
@@ -244,7 +244,7 @@ export function CustomDateRangeModal({
             type="button"
             onClick={handleApply}
             disabled={!!validationError || (!startDate && !endDate)}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-accent hover:bg-[#285ce0] text-white rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-accent hover:bg-accent-hover text-white rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <Check className="w-4 h-4" />
             {t('common.customDateModal.applyRange', 'Apply Range')}

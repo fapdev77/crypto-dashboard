@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { formatValue, formatCrypto, formatDateTime, formatIsoDateTime } from '../utils/formatters';
-import { usePositionHistory } from '../hooks/usePositionHistory';
+import { DEFAULT_TIME_PERIOD_MS } from '../utils/dateTimeHelper';
+import { usePositionHistory, PositionHistoryPeriod } from '../hooks/usePositionHistory';
 import { usePagination } from '../hooks/usePagination';
 import { Loader2, History, Download, ChevronDown } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -30,9 +31,17 @@ export function ClosedPositions() {
   const [filterText, setFilterText] = useState('');
   const [exchangeFilter, setExchangeFilter] = useState<string>('All');
 
-  const [period, setPeriod] = useState<'today' | '7d' | '14d' | '30d' | '90d'>('7d');
+  const [period, setPeriod] = useState<PositionHistoryPeriod>(DEFAULT_TIME_PERIOD_MS);
+  const [customStartDate, setCustomStartDate] = useState<string | undefined>(undefined);
+  const [customEndDate, setCustomEndDate] = useState<string | undefined>(undefined);
 
-  const { positions: closedPositions, isLoading, isSyncing, syncMessage, syncError } = usePositionHistory(period);
+  const { positions: closedPositions, isLoading, isSyncing, syncMessage, syncError } = usePositionHistory(
+    period,
+    undefined,
+    undefined,
+    customStartDate,
+    customEndDate
+  );
   const [error, setError] = useState<string | null>(null);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
@@ -56,7 +65,7 @@ export function ClosedPositions() {
   }, [closedPositions, filterText, exchangeFilter]);
 
   const { page: currentPage, setPage: setCurrentPage, paginated: paginatedClosedPositions } = usePagination(
-    filteredClosedPositions, 50, [filterText, exchangeFilter, period]
+    filteredClosedPositions, 50, [filterText, exchangeFilter, period, customStartDate, customEndDate]
   );
 
   const handleExport = (formatType: 'csv' | 'excel' | 'pdf') => {
@@ -238,15 +247,21 @@ export function ClosedPositions() {
               labelAll: t('positionsHistory.allExchanges', 'All Exchanges'),
             }}
             period={{
-              value: period,
-              onChange: setPeriod,
-              options: [
-                { value: 'today', label: t('positionsHistory.periodToday', 'Today') },
-                { value: '7d', label: t('positionsHistory.period7d', '7 Days') },
-                { value: '14d', label: t('positionsHistory.period14d', '14 Days') },
-                { value: '30d', label: t('positionsHistory.period30d', '30 Days') },
-                { value: '90d', label: t('positionsHistory.period90d', '90 Days') },
-              ],
+              value: String(period),
+              onChange: (val) => {
+                setPeriod(val);
+                if (val !== 'custom') {
+                  setCustomStartDate(undefined);
+                  setCustomEndDate(undefined);
+                }
+              },
+              customStartDate,
+              customEndDate,
+              onCustomDateChange: (start, end) => {
+                setCustomStartDate(start);
+                setCustomEndDate(end);
+                setPeriod('custom');
+              },
             }}
             search={{
               value: filterText,
@@ -257,7 +272,12 @@ export function ClosedPositions() {
         </div>
       </div>
 
-      <HistoryLimitWarning period={period} />
+      <HistoryLimitWarning
+        period={period}
+        customStartDate={customStartDate}
+        customEndDate={customEndDate}
+        exchangeFilter={exchangeFilter}
+      />
 
       {closedStats && (() => {
         const POSITIONS_DONUT = [
@@ -330,7 +350,7 @@ export function ClosedPositions() {
                 </div>
                 <div className="flex gap-2 text-xl font-mono">
                   <span className="text-success">{closedStats.wins} {t('positionsHistory.wins', 'Wins')}</span>
-                  <span className="text-[#3f4046]">|</span>
+                  <span className="text-fg-muted">|</span>
                   <span className="text-danger">{closedStats.losses} {t('positionsHistory.losses', 'Losses')}</span>
                 </div>
               </div>
@@ -340,7 +360,7 @@ export function ClosedPositions() {
                   <span className="text-xl text-fg-muted">Avg W/L</span>
                   <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
                     <span className="text-success">+{formatCurrency(closedStats.avgWin, 'usd', 2)}</span>
-                    <span className="text-[#3f4046] mx-0.5">/</span>
+                    <span className="text-fg-muted mx-0.5">/</span>
                     <span className="text-danger">{formatCurrency(closedStats.avgLoss, 'usd', 2)}</span>
                   </div>
                 </div>
@@ -348,7 +368,7 @@ export function ClosedPositions() {
                   <span className="text-xl text-fg-muted">Largest W/L</span>
                   <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
                     <span className="text-success">+{formatCurrency(closedStats.largestWin, 'usd', 2)}</span>
-                    <span className="text-[#3f4046] mx-0.5">/</span>
+                    <span className="text-fg-muted mx-0.5">/</span>
                     <span className="text-danger">{formatCurrency(closedStats.largestLoss, 'usd', 2)}</span>
                   </div>
                 </div>
@@ -375,7 +395,7 @@ export function ClosedPositions() {
                 totalItems={filteredClosedPositions.length}
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
-                refreshKey={`${period}-${exchangeFilter}`}
+                refreshKey={`${period}-${customStartDate || ''}-${customEndDate || ''}-${exchangeFilter}`}
                 refreshLabel="Updating"
                 refreshDataReady={!isLoading}
               />
@@ -591,7 +611,7 @@ export function ClosedPositions() {
               totalItems={filteredClosedPositions.length}
               itemsPerPage={50}
               onPageChange={setCurrentPage}
-              refreshKey={`${period}-${exchangeFilter}`}
+              refreshKey={`${period}-${customStartDate || ''}-${customEndDate || ''}-${exchangeFilter}`}
               refreshLabel="Updating"
             />
           </div>

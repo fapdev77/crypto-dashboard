@@ -12,7 +12,7 @@ import { OkxTransactionService } from '../services/okx/OkxTransactionService';
 import { getBybitTxLogCache, getBitgetTxLogCache, getOkxTxLogCache } from '../services/historyCache';
 import { matchUniversalTxType, UniversalTxType } from '../utils/transactionTypeMapper';
 import { getUsdPricesForVenues } from '../services/pricing/usdPrice';
-import { getStrictCalendarStartTime, resolvePeriodDateRange } from '../utils/dateTimeHelper';
+import { DEFAULT_TIME_PERIOD_MS, getStrictCalendarStartTime, resolvePeriodDateRange } from '../utils/dateTimeHelper';
 import { aggregateStatsToUsd, needsTokenRate } from '../utils/usdAggregation';
 import Big from 'big.js';
 
@@ -35,7 +35,7 @@ export const defaultConsolidatedFilters: ConsolidatedTxFilters = {
   type: 'All',
   currency: 'All',
   accountId: 'All',
-  timePeriod: 0, // All Time
+  timePeriod: DEFAULT_TIME_PERIOD_MS, // Default: 7 Days
 };
 
 export interface CurrencyStats {

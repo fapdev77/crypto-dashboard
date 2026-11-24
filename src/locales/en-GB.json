@@ -146,6 +146,7 @@
     "neutral": "Neutral",
     "noData": "No data",
     "clearSearch": "Clear search",
+    "edit": "Edit",
     "syncingNow": "Syncing now",
     "inTime": "in",
     "operational": "Operational",
@@ -164,6 +165,7 @@
       "allSidesTooltip": "Show all trade sides",
       "allTypesTooltip": "Show all order / trade types",
       "allStatusesTooltip": "Show records across all statuses",
+      "periodTooltip": "Filter by time period",
       "clearSearch": "Clear search"
     },
     "changeRefreshInterval": "Change auto-refresh interval",

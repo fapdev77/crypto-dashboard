@@ -198,4 +198,119 @@ describe('usePositionHistory multi-key error aggregation', () => {
     expect(useSettingsStore.getState().lastSyncTime).toBeGreaterThan(5000);
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
+
+  it('filters cached positions by strict calendar period and custom date range', async () => {
+    const now = Date.now();
+    const ONE_DAY = 24 * 60 * 60 * 1000;
+    useSettingsStore.setState({ lastSyncTime: now }); // skip network sync
+
+    useApiKeysStore.setState({
+      keys: [
+        {
+          id: 'conn-1',
+          exchange: 'bybit',
+          apiKey: 'key-1',
+          apiSecret: 'secret-1',
+          label: 'Bybit Main',
+          isActive: true,
+        },
+      ],
+    });
+
+    vi.mocked(historyCache.getCachedHistory).mockResolvedValue([
+      {
+        id: 'recent-pos',
+        connectionId: 'conn-1',
+        exchange: 'bybit',
+        label: 'Bybit Main',
+        symbol: 'BTCUSDT',
+        side: 'long',
+        size: 1,
+        entryPrice: 50000,
+        closePrice: 51000,
+        closeUpdateTime: now - 2 * ONE_DAY,
+        realizedPnl: 100,
+      } as any,
+      {
+        id: 'old-pos',
+        connectionId: 'conn-1',
+        exchange: 'bybit',
+        label: 'Bybit Main',
+        symbol: 'ETHUSDT',
+        side: 'short',
+        size: 2,
+        entryPrice: 3000,
+        closePrice: 2900,
+        closeUpdateTime: now - 15 * ONE_DAY,
+        realizedPnl: 200,
+      } as any,
+      {
+        id: 'jan-pos',
+        connectionId: 'conn-1',
+        exchange: 'bybit',
+        label: 'Bybit Main',
+        symbol: 'SOLUSDT',
+        side: 'long',
+        size: 10,
+        entryPrice: 100,
+        closePrice: 120,
+        closeUpdateTime: new Date(2026, 0, 15, 12, 0, 0).getTime(),
+        realizedPnl: 200,
+      } as any,
+    ]);
+
+    const { result, rerender } = renderHook(
+      ({ period, start, end }: { period: number | string; start?: string; end?: string }) =>
+        usePositionHistory(period, 'All', '', start, end),
+      { initialProps: { period: 7 * ONE_DAY } as { period: number | string; start?: string; end?: string } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.positions.map(p => p.id)).toEqual(['recent-pos']);
+    });
+
+    rerender({ period: 30 * ONE_DAY });
+    await waitFor(() => {
+      expect(result.current.positions.map(p => p.id)).toEqual(['recent-pos', 'old-pos']);
+    });
+
+    rerender({ period: 'custom', start: '2026-01-10', end: '2026-01-20' });
+    await waitFor(() => {
+      expect(result.current.positions.map(p => p.id)).toEqual(['jan-pos']);
+    });
+  });
+
+  it('applies period and custom date filtering in Simulation Mode (useMockData)', async () => {
+    useSettingsStore.setState({ useMockData: true });
+
+    const { result, rerender } = renderHook(
+      ({ period, start, end }: { period: number | string; start?: string; end?: string }) =>
+        usePositionHistory(period, 'All', '', start, end),
+      { initialProps: { period: 0 } as { period: number | string; start?: string; end?: string } }
+    );
+
+    await waitFor(() => {
+      expect(result.current.positions.length).toBeGreaterThan(0);
+    });
+    const allCount = result.current.positions.length;
+
+    // Very narrow future range must exclude historical mock positions
+    rerender({ period: 'custom', start: '2099-01-01', end: '2099-01-02' });
+    await waitFor(() => {
+      expect(result.current.positions.length).toBe(0);
+    });
+
+    // Partial window subsets mock history (proving period filtering works in Simulation Mode)
+    rerender({ period: 'custom', start: '2026-01-01', end: '2026-12-31' });
+    await waitFor(() => {
+      expect(result.current.positions.length).toBeGreaterThan(0);
+      expect(result.current.positions.length).toBeLessThanOrEqual(allCount);
+    });
+
+    // Broad range covering all mock records restores them
+    rerender({ period: 'custom', start: '2020-01-01', end: '2035-12-31' });
+    await waitFor(() => {
+      expect(result.current.positions.length).toBe(allCount);
+    });
+  });
 });

@@ -1,6 +1,6 @@
 # 📘 Manual do Utilizador - Crypto Portfolio Manager (CPM)
 
-> **Versão da Aplicação:** 2.51.0  
+> **Versão da Aplicação:** 2.52.0  
 > **Plataformas Suportadas:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Arquitetura de Segurança:** Zero-Trust Client-Side (Criptografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -177,13 +177,13 @@ Módulo dedicado na barra lateral concebido para arbitragem de taxas de financia
 - Apresentação de conta/ativo, lado/alavancagem, tamanho/valor, PnL realizado e não realizado, Preço de Entrada, Preço Mark, Preço de Liquidação e TP/SL.
 
 ### 📂 Closed Positions (Histórico de Posições e Analytics)
-- Registo completo de posições encerradas com métricas de **Win Rate %**, **Profit Factor** e exportação para **CSV**, **Excel (.xlsx)** e **PDF**.
+- Registo completo de posições encerradas com métricas de **Win Rate %**, **Profit Factor**, seletor padronizado de **12 opções** (predefinição de **7 Dias**, `Today` a `All Time`, `MTD`, `YTD`, modal `Custom Range...` e `HistoryLimitWarning` para OKX/Bitget acima de 90 dias) e exportação para **CSV**, **Excel (.xlsx)** e **PDF**.
 
 ### 📝 Relatórios de Ordens (Ordens Abertas e Histórico de Ordens)
-- Monitorização de ordens ativas (Limit, Market, Stop Loss, Take Profit) e arquivo histórico de execuções.
+- Monitorização de ordens ativas (Limit, Market, Stop Loss, Take Profit) e arquivo histórico de execuções com o mesmo filtro padronizado de 12 opções (padrão **7 Dias**, recálculo em intervalo personalizado e `HistoryLimitWarning`).
 
 ### 📜 Histórico de Transações e Variação Líquida Consolidada
-- Apresentação consolidada de fluxos de caixa, taxas pagas e funding recebido com agrupamento por corretora e ativo.
+- Apresentação consolidada de fluxos de caixa, taxas pagas e funding recebido com agrupamento por corretora e ativo, partilhando o filtro cronológico padronizado de 12 opções com padrão de **7 Dias** (também aplicado a Trade History, PnL by Symbol e Relatórios).
 
 ---
 

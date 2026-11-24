@@ -1,3 +1,10 @@
+# [2.52.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.51.0...v2.52.0) (2026-11-19)
+
+
+### Features
+
+* **filters:** standardize 12-option time period filter and 7-day default across screens" -m "Standardize all historical and analytical timeframe selectors to match the Consolidated Net Change pattern (12 chronological presets from Today to All Time, MTD/YTD, and Custom Range modal) with a unified 7-day default period. ([1432ad0](https://github.com/fapdev77/crypto-dashboard/commit/1432ad07a36dbb83fadafd3a48b52a1de5d2d2c9))
+
 # [2.51.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.50.0...v2.51.0) (2026-11-18)
 
 

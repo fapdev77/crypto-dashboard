@@ -744,7 +744,7 @@ export function FilterBar({
             ref={activeDropdown === 'period' ? activeDropdownRef : null}
             className={`relative w-full sm:w-auto ${activeDropdown === 'period' ? 'z-40' : 'z-20'}`}
           >
-            <AppTooltip description={period.tooltip || 'Filter by time period'} side="top">
+            <AppTooltip description={period.tooltip || t('common.filters.periodTooltip', 'Filter by time period')} side="top">
               <button
                 type="button"
                 onClick={() => toggleDropdown('period')}
@@ -756,8 +756,8 @@ export function FilterBar({
                     if (isCustom && period.customStartDate && period.customEndDate) {
                       return (
                         <>
-                          <Calendar className="w-4 h-4 shrink-0 text-blue-400" />
-                          <span className="truncate text-xs text-blue-300 font-mono">
+                          <Calendar className="w-4 h-4 shrink-0 text-accent" />
+                          <span className="truncate text-xs text-accent font-mono">
                             {period.customStartDate} ~ {period.customEndDate}
                           </span>
                         </>
@@ -767,7 +767,7 @@ export function FilterBar({
                     return (
                       <>
                         {selectedOpt?.icon || <Calendar className="w-4 h-4 shrink-0 text-fg-muted" />}
-                        <span className="truncate">{selectedOpt?.label || (isCustom ? 'Custom Range' : period.value)}</span>
+                        <span className="truncate">{selectedOpt?.label || (isCustom ? t('common.timePeriod.custom.label', 'Custom Range...') : period.value)}</span>
                       </>
                     );
                   })()}
@@ -814,7 +814,7 @@ export function FilterBar({
                           )}
                           <span className="truncate">{opt.label}</span>
                           {isCustomOpt && isSelected && period.customStartDate && period.customEndDate && (
-                            <span className="ml-auto text-[10px] text-blue-300 font-mono">Edit</span>
+                            <span className="ml-auto text-[10px] text-white/90 font-mono">{t('common.edit', 'Edit')}</span>
                           )}
                         </button>
                       </div>

@@ -277,6 +277,20 @@ export function getStrictCalendarStartTime(timePeriodMs: number | undefined, ref
   return startToday - (days - 1) * ONE_DAY_MS;
 }
 
+export const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+export const DEFAULT_TIME_PERIOD_MS = 7 * ONE_DAY_MS;
+
+function parseDurationAliasMs(periodStr: string): number | null {
+  if (periodStr === 'today') return ONE_DAY_MS;
+  const dayMatch = periodStr.match(/^(\d+)d$/i);
+  if (dayMatch) return Number(dayMatch[1]) * ONE_DAY_MS;
+  const monthMatch = periodStr.match(/^(\d+)m$/i);
+  if (monthMatch) return Number(monthMatch[1]) * 30 * ONE_DAY_MS;
+  const yearMatch = periodStr.match(/^(\d+)y$/i);
+  if (yearMatch) return Number(yearMatch[1]) * 365 * ONE_DAY_MS;
+  return null;
+}
+
 export interface TimePeriodOption {
   value: string;
   label: string;
@@ -427,10 +441,13 @@ export function resolvePeriodDateRange(
     };
   }
 
-  // 5. Numeric duration in milliseconds (e.g., 24h, 7d, 30d...)
+  // 5. Numeric duration in milliseconds or shorthand alias (e.g., 24h, 7d, 'today', '30d'...)
   const numericMs = Number(periodStr);
-  if (!isNaN(numericMs) && numericMs > 0) {
-    const startMs = getStrictCalendarStartTime(numericMs, refDate) ?? null;
+  const resolvedDurationMs = (!isNaN(numericMs) && numericMs > 0)
+    ? numericMs
+    : parseDurationAliasMs(periodStr);
+  if (resolvedDurationMs !== null && resolvedDurationMs > 0) {
+    const startMs = getStrictCalendarStartTime(resolvedDurationMs, refDate) ?? null;
     return {
       startTime: startMs,
       endTime: getEndOfTodayInMs(refDate),
@@ -438,6 +455,60 @@ export function resolvePeriodDateRange(
   }
 
   return { startTime: null, endTime: null };
+}
+
+/**
+ * Estimates how many days back from `refDate` a time period selection reaches.
+ * Used to determine whether exchange API lookback restrictions (e.g. 90 days on OKX/Bitget)
+ * apply to the active query. Returns `Infinity` for open-ended presets (`All Time`).
+ */
+export function estimateRequestedPeriodDays(
+  timePeriod: number | string | undefined | null,
+  customStartDate?: string,
+  customEndDate?: string,
+  refDate?: Date
+): number {
+  if (timePeriod === undefined || timePeriod === null) return 0;
+  const periodStr = String(timePeriod).toLowerCase().trim();
+  if (periodStr === '') return 0;
+
+  if (periodStr === '0' || periodStr === 'all') {
+    return Infinity;
+  }
+
+  if (periodStr === 'mtd') {
+    const now = refDate || new Date();
+    return Math.max(1, now.getDate());
+  }
+
+  if (periodStr === 'ytd') {
+    const todayStart = getStartOfTodayInMs(refDate);
+    const yearStart = getStartOfYearMs(refDate);
+    return Math.max(1, Math.floor((todayStart - yearStart) / ONE_DAY_MS) + 1);
+  }
+
+  if (periodStr === 'custom') {
+    const startMs = parseDateStartOfDay(customStartDate);
+    const endMs = parseDateStartOfDay(customEndDate);
+    if (startMs === null && endMs === null) return 0;
+    if (startMs === null) return Infinity;
+    const earliestMs = endMs !== null ? Math.min(startMs, endMs) : startMs;
+    const todayStart = getStartOfTodayInMs(refDate);
+    if (earliestMs > todayStart) return 1;
+    return Math.max(1, Math.floor((todayStart - earliestMs) / ONE_DAY_MS) + 1);
+  }
+
+  const aliasMs = parseDurationAliasMs(periodStr);
+  if (aliasMs !== null && aliasMs > 0) {
+    return Math.max(1, Math.round(aliasMs / ONE_DAY_MS));
+  }
+
+  const numericMs = Number(periodStr);
+  if (!isNaN(numericMs) && numericMs > 0) {
+    return Math.max(1, Math.round(numericMs / ONE_DAY_MS));
+  }
+
+  return 0;
 }
 
 /**
@@ -558,9 +629,11 @@ export function resolveUtcPeriodDateRange(
   }
 
   const numericMs = Number(periodStr);
-  if (!isNaN(numericMs) && numericMs > 0) {
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-    const days = Math.round(numericMs / ONE_DAY_MS);
+  const resolvedDurationMs = (!isNaN(numericMs) && numericMs > 0)
+    ? numericMs
+    : parseDurationAliasMs(periodStr);
+  if (resolvedDurationMs !== null && resolvedDurationMs > 0) {
+    const days = Math.round(resolvedDurationMs / ONE_DAY_MS);
     const startTodayUtc = getStartOfTodayUtcMs(refDate);
     const startMs = days <= 1 ? startTodayUtc : startTodayUtc - (days - 1) * ONE_DAY_MS;
     return {

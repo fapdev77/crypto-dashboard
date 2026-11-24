@@ -146,6 +146,7 @@
     "neutral": "Neutro",
     "noData": "Sem dados",
     "clearSearch": "Limpar pesquisa",
+    "edit": "Editar",
     "syncingNow": "A sincronizar agora",
     "inTime": "em",
     "operational": "Operacional",
@@ -164,6 +165,7 @@
       "allSidesTooltip": "Mostrar todos os lados da operação",
       "allTypesTooltip": "Mostrar todos os tipos de ordem / operação",
       "allStatusesTooltip": "Mostrar registos de todos os estados",
+      "periodTooltip": "Filtrar por período",
       "clearSearch": "Limpar pesquisa"
     },
     "changeRefreshInterval": "Alterar o intervalo de atualização automática",

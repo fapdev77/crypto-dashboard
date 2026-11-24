@@ -9,14 +9,23 @@ import { getHistoryInverseUsdValues } from '../../utils/inverseUtils';
 import { FilterBar } from '../ui/FilterBar';
 import { SimulationModeBadge } from '../ui/SimulationModeBadge';
 import { useTranslation } from 'react-i18next';
+import { DEFAULT_TIME_PERIOD_MS } from '../../utils/dateTimeHelper';
 
 export function ReportsDashboard() {
   const { t } = useTranslation();
-  const [period, setPeriod] = useState<PositionHistoryPeriod>('7d');
+  const [period, setPeriod] = useState<PositionHistoryPeriod>(DEFAULT_TIME_PERIOD_MS);
+  const [customStartDate, setCustomStartDate] = useState<string | undefined>(undefined);
+  const [customEndDate, setCustomEndDate] = useState<string | undefined>(undefined);
   const [exchange, setExchange] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
-  const { positions: history, isLoading } = usePositionHistory(period, exchange, searchTerm);
+  const { positions: history, isLoading } = usePositionHistory(
+    period,
+    exchange,
+    searchTerm,
+    customStartDate,
+    customEndDate
+  );
   const formatCurrency = useFormatCurrency();
 
   const getExportConfig = (): ExportConfig => {
@@ -110,15 +119,21 @@ export function ReportsDashboard() {
             labelAll: t('common.allExchanges', 'All Exchanges'),
           }}
           period={{
-            value: period,
-            onChange: setPeriod,
-            options: [
-              { value: 'today', label: t('common.customDateModal.last7Days', 'Last 7 Days').replace('7', '1') },
-              { value: '7d', label: '7 Days' },
-              { value: '14d', label: '14 Days' },
-              { value: '30d', label: '30 Days' },
-              { value: '90d', label: '90 Days' },
-            ],
+            value: String(period),
+            onChange: (val) => {
+              setPeriod(val);
+              if (val !== 'custom') {
+                setCustomStartDate(undefined);
+                setCustomEndDate(undefined);
+              }
+            },
+            customStartDate,
+            customEndDate,
+            onCustomDateChange: (start, end) => {
+              setCustomStartDate(start);
+              setCustomEndDate(end);
+              setPeriod('custom');
+            },
           }}
           search={{
             value: searchTerm,
@@ -128,7 +143,12 @@ export function ReportsDashboard() {
         />
       </div>
 
-      <HistoryLimitWarning period={period} />
+      <HistoryLimitWarning
+        period={period}
+        customStartDate={customStartDate}
+        customEndDate={customEndDate}
+        exchangeFilter={exchange}
+      />
 
       <div className="bg-surface border border-line rounded-xl overflow-hidden">
         <div className="overflow-x-auto">

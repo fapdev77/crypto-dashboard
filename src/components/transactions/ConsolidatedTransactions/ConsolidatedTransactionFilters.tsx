@@ -145,7 +145,7 @@ export function ConsolidatedTransactionFilters({ filters, setFilters, availableC
           customStartDate: start,
           customEndDate: end,
         })),
-        tooltip: 'Filter by execution time range',
+        tooltip: t('common.filters.periodTooltip', 'Filter by time period'),
       }}
     />
   );

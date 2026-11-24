@@ -119,7 +119,57 @@ describe('ClosedPositions', () => {
     fireEvent.click(screen.getByText('7 Days'));
     fireEvent.click(screen.getByText('30 Days'));
 
-    expect(vi.mocked(usePositionHistory).mock.calls.at(-1)?.[0]).toBe('30d');
+    expect(vi.mocked(usePositionHistory).mock.calls.at(-1)?.[0]).toBe(String(30 * 24 * 60 * 60 * 1000));
+  });
+
+  it('defaults to 7 Days and displays all 12 standardized period options', () => {
+    renderPage();
+
+    expect(vi.mocked(usePositionHistory).mock.calls[0]?.[0]).toBe(7 * 24 * 60 * 60 * 1000);
+
+    fireEvent.click(screen.getByText('7 Days'));
+    [
+      'Today', '14 Days', '30 Days', '90 Days', '120 Days',
+      '6 Months', '1 Year', 'MTD', 'YTD', 'Custom Range...', 'All Time',
+    ].forEach((label) => {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    });
+  });
+
+  it('opens CustomDateRangeModal and passes custom range dates to usePositionHistory', () => {
+    renderPage();
+
+    fireEvent.click(screen.getByText('7 Days'));
+    fireEvent.click(screen.getByText('Custom Range...'));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: '2026-01-05' } });
+    fireEvent.change(screen.getByLabelText(/End Date/i), { target: { value: '2026-01-25' } });
+    fireEvent.click(screen.getByRole('button', { name: /Apply Range/i }));
+
+    const lastCall = vi.mocked(usePositionHistory).mock.calls.at(-1);
+    expect(lastCall?.[0]).toBe('custom');
+    expect(lastCall?.[3]).toBe('2026-01-05');
+    expect(lastCall?.[4]).toBe('2026-01-25');
+  });
+
+  it('shows HistoryLimitWarning when an active OKX or Bitget key exists and >90d is selected', () => {
+    useApiKeysStore.setState({
+      keys: [
+        { id: 'conn-okx', exchange: 'okx', label: 'OKX', apiKey: 'k', apiSecret: 's', passphrase: 'p', isActive: true },
+      ],
+    } as never);
+
+    renderPage();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('7 Days'));
+    fireEvent.click(screen.getByText('120 Days'));
+
+    const banner = screen.getByRole('status');
+    expect(banner).toBeInTheDocument();
+    expect(banner).toHaveClass('history-limit-banner');
+    expect(banner.textContent?.toLowerCase()).toContain('okx');
   });
 
   it('accumulates total PnL as a float and still shows the exact cent at a half-cent boundary', () => {

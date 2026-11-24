@@ -22,6 +22,8 @@ import { usePagination } from '../../hooks/usePagination';
 import { useTranslation } from 'react-i18next';
 import { useFeeUsdTotals, FeeCurrencyBucket } from '../../hooks/useFeeUsdTotals';
 import { MissingRatesNotice } from '../transactions/MissingRatesNotice';
+import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
+import { DEFAULT_TIME_PERIOD_MS } from '../../utils/dateTimeHelper';
 
 export function TradeHistory() {
   const { t } = useTranslation();
@@ -33,7 +35,7 @@ export function TradeHistory() {
     type: 'All',
     side: 'All',
     status: 'CLOSED',
-    timePeriod: 7 * 24 * 60 * 60 * 1000, // default 7 days
+    timePeriod: DEFAULT_TIME_PERIOD_MS, // default 7 days
     accountId: 'All',
     historyStatus: 'All'
   });
@@ -291,6 +293,13 @@ export function TradeHistory() {
         <OrderFiltersUI filters={filters} setFilters={setFilters} showPeriod={true} />
       </div>
 
+      <HistoryLimitWarning
+        period={filters.timePeriod}
+        customStartDate={filters.customStartDate}
+        customEndDate={filters.customEndDate}
+        exchangeFilter={filters.exchange}
+      />
+
       {trades.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
           {/* Total Trades Stats */}
@@ -373,7 +382,7 @@ export function TradeHistory() {
                 totalItems={tradesTotal}
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
-                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+                refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
                 refreshLabel="Updating"
                 refreshDataReady={!loading}
               />
@@ -487,7 +496,7 @@ export function TradeHistory() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1 mt-1 flex-wrap">
-                        <span className="w-max text-[10px] font-medium text-[#c0c5cc] bg-elevated border border-[#2d3036] py-0.5 px-1.5 rounded-[4px] truncate max-w-[130px]" title={connectionLabel}>
+                        <span className="w-max text-[10px] font-medium text-fg-muted bg-elevated border border-line-strong py-0.5 px-1.5 rounded-[4px] truncate max-w-[130px]" title={connectionLabel}>
                           {connectionLabel}
                         </span>
                         <AccountTypeBadge
@@ -597,7 +606,7 @@ export function TradeHistory() {
               totalItems={tradesTotal}
               itemsPerPage={50}
               onPageChange={setCurrentPage}
-              refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.accountId}-${filters.historyStatus}`}
+              refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
               refreshLabel="Updating"
             />
           </div>

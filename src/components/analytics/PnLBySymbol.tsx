@@ -16,14 +16,18 @@ import { useFormatCurrency } from '../../hooks/useFormatCurrency';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { StatusAndSyncBadge } from '../ui/StatusAndSyncBadge';
 import { FilterBar } from '../ui/FilterBar';
+import { HistoryLimitWarning } from '../ui/HistoryLimitWarning';
 import { usePagination } from '../../hooks/usePagination';
+import { DEFAULT_TIME_PERIOD_MS } from '../../utils/dateTimeHelper';
 
 type SortField = 'exchange' | 'symbol' | 'instrument' | 'totalPnL' | 'longPnL' | 'shortPnL';
 type SortDir = 'asc' | 'desc';
 
 export function PnLBySymbol() {
   const { t } = useTranslation();
-  const [period, setPeriod] = useState<PositionHistoryPeriod>('7d');
+  const [period, setPeriod] = useState<PositionHistoryPeriod>(DEFAULT_TIME_PERIOD_MS);
+  const [customStartDate, setCustomStartDate] = useState<string | undefined>(undefined);
+  const [customEndDate, setCustomEndDate] = useState<string | undefined>(undefined);
   const [exchange, setExchange] = useState<string>('All');
   const [instrument, setInstrument] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,7 +35,13 @@ export function PnLBySymbol() {
   const [sortField, setSortField] = useState<SortField>('totalPnL');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const { pnlData, isLoading, isSyncing, syncMessage, syncError, isRealPnLSyncing } = usePnLBySymbol(period, exchange, instrument);
+  const { pnlData, isLoading, isSyncing, syncMessage, syncError, isRealPnLSyncing } = usePnLBySymbol(
+    period,
+    exchange,
+    instrument,
+    customStartDate,
+    customEndDate
+  );
 
   const instrumentsAvailable = useMemo(() => {
     if (exchange === 'bitget') return ['All', 'USDT-M', 'Coin-M', 'USDC-M'];
@@ -40,43 +50,12 @@ export function PnLBySymbol() {
     return ['All'];
   }, [exchange]);
 
-  // Dynamic period options: extended periods only when Bybit exchange is selected
-  const periodOptions = useMemo(() => {
-    const baseOptions = [
-      { value: 'today', label: 'Today' },
-      { value: '7d', label: '7 Days' },
-      { value: '14d', label: '14 Days' },
-      { value: '30d', label: '30 Days' },
-      { value: '90d', label: '90 Days' },
-    ];
-
-    if (exchange === 'bybit') {
-      return [
-        ...baseOptions,
-        { value: '120d', label: '120 Days' },
-        { value: '180d', label: '6 Months' },
-        { value: '365d', label: '1 Year' },
-        { value: 'all', label: 'All Time' },
-      ];
-    }
-
-    return baseOptions;
-  }, [exchange]);
-
   // Handle cross-exchange instrument reset
   React.useEffect(() => {
     if (instrument !== 'All' && !instrumentsAvailable.includes(instrument)) {
       setInstrument('All');
     }
   }, [exchange, instrument, instrumentsAvailable]);
-
-  // Handle period reset when exchange changes (extended periods only for Bybit)
-  React.useEffect(() => {
-    const validPeriods = periodOptions.map(o => o.value);
-    if (!validPeriods.includes(period)) {
-      setPeriod('7d');
-    }
-  }, [exchange, periodOptions, period]);
 
   // Finding max absolut values for Intensity bar proportionality
   const { maxTotal, maxLong, maxShort } = useMemo(() => {
@@ -140,7 +119,7 @@ export function PnLBySymbol() {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
   const { page: currentPage, setPage: setCurrentPage, paginated: paginatedData, totalItems: sortedTotal } = usePagination(
-    sortedData, 50, [pnlData, exchange, instrument, searchTerm]
+    sortedData, 50, [pnlData, exchange, instrument, period, customStartDate, customEndDate, searchTerm]
   );
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
@@ -180,8 +159,8 @@ export function PnLBySymbol() {
           <span className="text-xs text-fg-muted mt-1">To represent the actual PnL, it is calculated based on the real time USD value of the trades, not on the positions value. <br/>
           For Bybit, PnL is derived from the transaction-log cache (up to 2 years). PnL for other exchanges is computed from closed positions.</span>
           {isRealPnLSyncing && exchange === 'bybit' && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-amber-900/20 border border-amber-700/30 rounded-lg text-[11px] text-amber-300/80 mt-2">
-              <RefreshCw className="w-3 h-3 animate-spin shrink-0" />
+            <div className="flex items-center gap-2 px-3 py-2 history-limit-banner border rounded-lg text-[11px] mt-2">
+              <RefreshCw className="w-3 h-3 animate-spin shrink-0 history-limit-banner-icon" />
               <span>
                 Real PnL sync in progress. Values shown are from closed positions and may not reflect exact figures.
               </span>
@@ -221,9 +200,21 @@ export function PnLBySymbol() {
             labelAll: t('analytics.common.allInstruments', 'All Instruments'),
           }}
           period={{
-            value: period,
-            onChange: setPeriod,
-            options: periodOptions,
+            value: String(period),
+            onChange: (val) => {
+              setPeriod(val);
+              if (val !== 'custom') {
+                setCustomStartDate(undefined);
+                setCustomEndDate(undefined);
+              }
+            },
+            customStartDate,
+            customEndDate,
+            onCustomDateChange: (start, end) => {
+              setCustomStartDate(start);
+              setCustomEndDate(end);
+              setPeriod('custom');
+            },
           }}
           search={{
             value: searchTerm,
@@ -232,6 +223,13 @@ export function PnLBySymbol() {
           }}
         />
       </div>
+
+      <HistoryLimitWarning
+        period={period}
+        customStartDate={customStartDate}
+        customEndDate={customEndDate}
+        exchangeFilter={exchange}
+      />
 
       <div className="flex-1 overflow-auto hide-scrollbar">
         {isLoading ? (
@@ -248,7 +246,7 @@ export function PnLBySymbol() {
                 totalItems={sortedTotal}
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
-                refreshKey={`${period}-${exchange}`}
+                refreshKey={`${period}-${customStartDate || ''}-${customEndDate || ''}-${exchange}`}
                 refreshLabel="Updating"
                 refreshDataReady={!isLoading}
               />
@@ -297,7 +295,7 @@ export function PnLBySymbol() {
                         {/* TD REFINADO: Fonte pesada, fundo presente e linhas de grade verticais exclusivas */}
                         <td
                           className="px-4 py-4 text-right font-bold text-[15px]
-                               bg-[#1c1d22]/40 
+                               bg-elevated/40 
                                border-x border-line/30 min-w-[150px]"
                         >
                           <PnLCell value={row.totalPnL} maxAbs={maxTotal} ccy={row.ccy} />
@@ -326,7 +324,7 @@ export function PnLBySymbol() {
               totalItems={sortedTotal}
               itemsPerPage={50}
               onPageChange={setCurrentPage}
-              refreshKey={`${period}-${exchange}`}
+              refreshKey={`${period}-${customStartDate || ''}-${customEndDate || ''}-${exchange}`}
               refreshLabel="Updating"
             />
           )}

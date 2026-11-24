@@ -1,6 +1,6 @@
 # 📘 Manuale Utente - Crypto Portfolio Manager (CPM)
 
-> **Versione dell'Applicazione:** 2.51.0  
+> **Versione dell'Applicazione:** 2.52.0  
 > **Piattaforme Supportate:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Architettura di Sicurezza:** Zero-Trust Client-Side (Crittografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
@@ -129,10 +129,10 @@ La pagina **Settings** organizza la configurazione in **10 schede modulari**:
 - Visualizzazione dettagliata (tutte le metriche e pannello espandibile) o **Lite**, che mostra ogni posizione in un'unica riga con sei colonne: exchange/conto/simbolo, lato/leva/modalità, dimensione/valore, PnL realizzato e non realizzato, entrata/mark/liquidazione. Su mobile ogni colonna diventa una riga.
 
 ### 📂 Closed Positions (Storico Posizioni e Analisi)
-- Riepilogo delle posizioni chiuse con **Win Rate %**, **Profit Factor** ed esportazione in **CSV**, **Excel** e **PDF**.
+- Riepilogo delle posizioni chiuse con **Win Rate %**, **Profit Factor**, selettore standardizzato a **12 opzioni** con valore predefinito di **7 Giorni** (`Today` fino a `All Time`, `MTD`, `YTD`, finestra `Custom Range...` e avviso `HistoryLimitWarning` per OKX/Bitget oltre i 90 giorni) ed esportazione in **CSV**, **Excel** e **PDF**.
 
 ### 📜 Storico Transazioni e Variazione Netta Consolidata
-- Riepilogo consolidato di flussi di cassa, commissioni di negoziazione e accrediti di funding.
+- Riepilogo consolidato di flussi di cassa, commissioni di negoziazione e accrediti di funding, dotato del filtro temporale standardizzato a 12 opzioni preimpostato su **7 Giorni** (condiviso con le schede transazioni, Order/Trade History, PnL by Symbol e Report).
 
 ---
 
