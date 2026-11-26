@@ -1,7 +1,7 @@
 # Crypto Portfolio Manager: Multi-Exchange
 
 [![Version](https://img.shields.io/badge/version-2.54.0-blue.svg)](package.json)
-[![Tests](https://img.shields.io/badge/tests-995%20passed-success.svg)](specs/PRD.md)
+[![Tests](https://img.shields.io/badge/tests-1002%20passed-success.svg)](specs/PRD.md)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/security-Zero--Trust%20Client-orange.svg)](user_manual/cpm_user_manual_pt-br.md)
 
@@ -22,7 +22,7 @@ O **Crypto Portfolio Manager (CPM)** foi construído com a premissa fundamental 
 ## ⚙️ Tecnologias Utilizadas (A Stack)
 
 - **Frontend & Interface**: React 19, TypeScript ~5.8, **Vite 6**, **Tailwind CSS v4**, **Lucide React** para ícones otimizados e Radix UI para tooltips conceituais.
-- **Internacionalização (i18n)**: **i18next** e **react-i18next** com suporte dinâmico a 6 idiomas completos (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`) e paridade estrita de **1.965 chaves** por idioma, mantendo terminologias técnicas de mercado padronizadas.
+- **Internacionalização (i18n)**: **i18next** e **react-i18next** com suporte dinâmico a 6 idiomas completos (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`) e paridade estrita de **1.992 chaves** por idioma, mantendo terminologias técnicas de mercado padronizadas.
 - **Sistema Multi-Temas & Personalização**: Motor de tokens CSS em Tailwind v4 (`themeMode.ts`) com **5 temas integrados** (*Terminal Dark*, *Terminal Light*, *Wise Dark*, *Wise Light*, *Customizado*), 4 predefinições rápidas, editor de 10 tokens de cor com prévia ao vivo, gerenciamento de temas salvos nomeados e inicialização sem flash visual (FOUC).
 - **Multi-Moedas & Câmbio Fiat**: Conversão cambial em tempo real integrada à **Frankfurter API v2** (USD, BRL, EUR, GBP) e paridade **USDT/USD** via **CoinGecko**, com cache offline resiliente e painel de diagnóstico de conectividade (`CurrencyApiDiagnostics`).
 - **Gerenciamento de Estado**: **Zustand 5.0** com arquitetura desacoplada de **14 micro-stores** de alta coesão:
@@ -42,7 +42,7 @@ O **Crypto Portfolio Manager (CPM)** foi construído com a premissa fundamental 
 - **Aritmética Financeira**: **Big.js** para cálculos de alta precisão em taxas de funding, ratios de hedge e fluxo de caixa contábil.
 - **Subsistema de IA**: `@google/genai` (SDK 1.29.0) para Google Gemini Cloud, client REST nativo para Ollama local (`localhost:11434`), `react-markdown` e `remark-gfm`.
 - **Relatórios & Gráficos**: **Recharts 3.8** (curvas de Open Interest, CVD, Hedge Pro e gráficos de tokens), **jsPDF** com **jsPDF-AutoTable** e **SheetJS (xlsx)**.
-- **Testes Automatizados**: **Vitest 4.1** com jsdom e `@testing-library/react`. Suíte abrangente com **118 arquivos de teste e 995 testes unitários e de integração automatizados** 100% verdes.
+- **Testes Automatizados**: **Vitest 4.1** com jsdom e `@testing-library/react`. Suíte abrangente com **119 arquivos de teste e 1002 testes unitários e de integração automatizados** 100% verdes.
 
 ---
 
@@ -79,7 +79,7 @@ npm start
 # Validação estrita de tipagem TypeScript (zero erros)
 npm run lint
 
-# Execução completa da suíte de 995 testes automatizados
+# Execução completa da suíte de 1002 testes automatizados
 npm test
 ```
 
@@ -181,7 +181,7 @@ npm test
 - **Positions Ticker**: Marquee deslizante contínuo no topo espelhando posições em aberto e cotações ao vivo.
 
 ### 10. Internacionalização Completa (6 Idiomas Nativos), Multi-Moedas Fiat & Multi-Temas
-- **Suporte Nativo a 6 Idiomas (1.965 chaves em paridade estrita)**:
+- **Suporte Nativo a 6 Idiomas (1.992 chaves em paridade estrita)**:
   - `pt-BR` (Português do Brasil)
   - `pt-PT` (Português de Portugal)
   - `en-US` (English - US)
