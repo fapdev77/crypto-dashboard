@@ -1,3 +1,10 @@
+# [2.54.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.53.0...v2.54.0) (2026-11-26)
+
+
+### Features
+
+* add analytical summary cards for closed positions ([85cb4b2](https://github.com/fapdev77/crypto-dashboard/commit/85cb4b2831cf702657d19b49fd6f0a4700bf75ad))
+
 # [2.53.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.52.0...v2.53.0) (2026-11-26)
 
 
