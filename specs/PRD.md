@@ -1,6 +1,6 @@
 # Crypto Portfolio Manager — Product Requirements Document (PRD)
 
-> **Versão do Documento:** 2.52.0  
+> **Versão do Documento:** 2.53.0  
 > **Status:** Aprovado & Em Produção  
 > **Produto:** Crypto Portfolio Manager (CPM) — Multi-Exchange Terminal  
 > **Testes Automatizados:** 118 arquivos de teste, 995 testes passando (Vitest 4.1)
@@ -175,4 +175,4 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 
 ---
 
-*Crypto Portfolio Manager — Product Requirements Document (PRD v2.52.0).*
+*Crypto Portfolio Manager — Product Requirements Document (PRD v2.53.0).*

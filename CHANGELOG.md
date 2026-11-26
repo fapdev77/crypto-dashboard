@@ -1,3 +1,10 @@
+# [2.53.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.52.0...v2.53.0) (2026-11-26)
+
+
+### Features
+
+* **i18n,navigation:** internationalize pagination refreshLabel and standardize Trades menu hierarchy ([4f5a089](https://github.com/fapdev77/crypto-dashboard/commit/4f5a0891cfd5d813014cbc308240e0041e3c224c))
+
 # [2.52.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.51.0...v2.52.0) (2026-11-19)
 
 
