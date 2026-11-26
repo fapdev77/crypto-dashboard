@@ -1,11 +1,10 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApiKeysStore } from '../store/apiKeysStore';
-import { formatValue, formatCrypto, formatDateTime, formatIsoDateTime } from '../utils/formatters';
+import { formatDateTime, formatIsoDateTime } from '../utils/formatters';
 import { DEFAULT_TIME_PERIOD_MS } from '../utils/dateTimeHelper';
 import { usePositionHistory, PositionHistoryPeriod } from '../hooks/usePositionHistory';
 import { usePagination } from '../hooks/usePagination';
 import { Loader2, History, Download, ChevronDown } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
@@ -21,6 +20,8 @@ import { exportToCSV, exportToExcel, exportToPDF, ExportConfig } from '../utils/
 import { Pagination } from './ui/Pagination';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/settingsStore';
+import { computeClosedPositionsStats } from '../utils/closedPositionsStats';
+import { ClosedPositionsSummaryCards } from './ClosedPositionsSummaryCards';
 
 export function ClosedPositions() {
   const { t } = useTranslation();
@@ -133,65 +134,10 @@ export function ClosedPositions() {
     if (formatType === 'pdf') exportToPDF(config);
   };
 
-  const closedStats = useMemo(() => {
-    if (!filteredClosedPositions.length) return null;
-
-    let totalPnl = 0;
-    let totalTradeFees = 0;
-    let totalFundingFees = 0;
-    let wins = 0;
-    let losses = 0;
-    let largestWin = 0;
-    let largestLoss = 0;
-    let sumWin = 0;
-    let sumLoss = 0;
-    let longs = 0;
-    let shorts = 0;
-
-    filteredClosedPositions.forEach(pos => {
-      const { realizedPnl: pnlInUsd, tradingFee: tradingFeeUsd, fundingFee: fundingFeeUsd } = getHistoryInverseUsdValues(pos);
-
-      const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
-      const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
-      if (isLong) longs++;
-      if (isShort) shorts++;
-
-      if (tradingFeeUsd) totalTradeFees += tradingFeeUsd;
-      if (fundingFeeUsd) totalFundingFees += fundingFeeUsd;
-
-      totalPnl += pnlInUsd;
-      if (pnlInUsd > 0) {
-        wins++;
-        sumWin += pnlInUsd;
-        if (pnlInUsd > largestWin) largestWin = pnlInUsd;
-      } else if (pnlInUsd < 0) {
-        losses++;
-        sumLoss += pnlInUsd;
-        if (pnlInUsd < largestLoss) largestLoss = pnlInUsd;
-      }
-    });
-
-    const totalTrades = wins + losses;
-    const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
-    const avgWin = wins > 0 ? sumWin / wins : 0;
-    const avgLoss = losses > 0 ? sumLoss / losses : 0;
-
-    return {
-      totalPnl,
-      totalTradeFees,
-      totalFundingFees,
-      totalTrades,
-      winRate,
-      wins,
-      losses,
-      largestWin,
-      largestLoss,
-      avgWin,
-      avgLoss,
-      longs,
-      shorts
-    };
-  }, [filteredClosedPositions]);
+  const closedStats = useMemo(
+    () => computeClosedPositionsStats(filteredClosedPositions),
+    [filteredClosedPositions]
+  );
 
   if (isLoading) {
     return (
@@ -279,104 +225,7 @@ export function ClosedPositions() {
         exchangeFilter={exchangeFilter}
       />
 
-      {closedStats && (() => {
-        const POSITIONS_DONUT = [
-          { name: t('positions.long', 'Long'), value: closedStats.longs, color: '#00C853' },
-          { name: t('positions.short', 'Short'), value: closedStats.shorts, color: '#FF4444' }
-        ];
-
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
-              <span className="text-2xl text-fg-muted mb-1">{t('positionsHistory.totalPnl', 'Total PnL')}</span>
-              <span className={`text-xl font-medium ${closedStats.totalPnl >= 0 ? 'text-success' : 'text-danger'}`}>
-                {`${closedStats.totalPnl >= 0 ? '+' : ''}${formatCurrency(closedStats.totalPnl, 'usd')}`}
-              </span>
-              <div className="w-full border-t border-dashed border-line my-3"></div>
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-fg-muted">{t('positionsHistory.tradeFees', 'Trade Fees:')}</span>
-                  <span className={`${closedStats.totalTradeFees < 0 ? 'text-danger' : (closedStats.totalTradeFees > 0 ? 'text-success' : 'text-fg-muted')}`}>
-                    {`${closedStats.totalTradeFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalTradeFees, 'usd')}`}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-fg-muted">{t('positionsHistory.fundingFees', 'Funding Fees:')}</span>
-                  <span className={`${closedStats.totalFundingFees < 0 ? 'text-danger' : (closedStats.totalFundingFees > 0 ? 'text-success' : 'text-fg-muted')}`}>
-                    {`${closedStats.totalFundingFees > 0 ? '+' : ''}${formatCurrency(closedStats.totalFundingFees, 'usd')}`}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-elevated rounded-lg p-4 border border-line flex items-center justify-between">
-              <div className="flex flex-col">
-                <div className='flex items-center gap-2'>
-                  <span className="text-2xl text-fg-muted">{t('positionsHistory.totalTrades', 'Total Trades:')}</span>
-                  <span className="text-xl font-medium text-fg">{closedStats.totalTrades}</span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  {closedStats.totalTrades > 0 && (
-                    <div className="flex text-xm gap-2 font-mono">
-                      <span className="text-success">{t('positions.longCount', { count: closedStats.longs, defaultValue: `${closedStats.longs} Longs` })} ({((closedStats.longs / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
-                      <span className="text-fg-muted">|</span>
-                      <span className="text-danger">{t('positions.shortCount', { count: closedStats.shorts, defaultValue: `${closedStats.shorts} Shorts` })} ({((closedStats.shorts / closedStats.totalTrades) * 100).toFixed(0)}%)</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {closedStats.totalTrades > 0 && (
-                <div className="w-12 h-12">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '12px' }}
-                        itemStyle={{ color: '#fff' }}
-                      />
-                      <Pie data={POSITIONS_DONUT} cx="50%" cy="50%" innerRadius="60%" outerRadius="100%" dataKey="value" stroke="none">
-                        {POSITIONS_DONUT.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-elevated rounded-lg p-4 border border-line flex flex-col justify-center">
-              <div className="flex justify-between items-center mb-2">
-                <div className="flex gap-2 items-center">
-                  <span className="text-2xl text-fg-muted">{t('positionsHistory.winRate', 'Win Rate')}: </span>
-                  <span className="text-xl font-medium text-fg">{closedStats.winRate.toFixed(2)}%</span>
-                </div>
-                <div className="flex gap-2 text-xl font-mono">
-                  <span className="text-success">{closedStats.wins} {t('positionsHistory.wins', 'Wins')}</span>
-                  <span className="text-fg-muted">|</span>
-                  <span className="text-danger">{closedStats.losses} {t('positionsHistory.losses', 'Losses')}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex flex-col bg-canvas p-2 rounded justify-center items-center">
-                  <span className="text-xl text-fg-muted">{t('positionsHistory.avgWL', 'Avg W/L')}</span>
-                  <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
-                    <span className="text-success">+{formatCurrency(closedStats.avgWin, 'usd', 2)}</span>
-                    <span className="text-fg-muted mx-0.5">/</span>
-                    <span className="text-danger">{formatCurrency(closedStats.avgLoss, 'usd', 2)}</span>
-                  </div>
-                </div>
-                <div className="flex flex-col bg-canvas p-2 rounded justify-center items-center">
-                  <span className="text-xl text-fg-muted">{t('positionsHistory.largestWL', 'Largest W/L')}</span>
-                  <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
-                    <span className="text-success">+{formatCurrency(closedStats.largestWin, 'usd', 2)}</span>
-                    <span className="text-fg-muted mx-0.5">/</span>
-                    <span className="text-danger">{formatCurrency(closedStats.largestLoss, 'usd', 2)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+      {closedStats && <ClosedPositionsSummaryCards stats={closedStats} />}
 
       {filteredClosedPositions.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 bg-surface border border-line rounded-xl">

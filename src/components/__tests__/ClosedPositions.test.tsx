@@ -97,12 +97,48 @@ describe('ClosedPositions', () => {
     expect(screen.getByText('No closed positions found.')).toBeInTheDocument();
   });
 
-  it('summarises trades, long/short split and total PnL', () => {
+  it('summarises 4 analytical cards: Net PnL/ROI/PF, Operational Costs, Volume/Sides, and Win Rate/Edge/Extremes', () => {
     renderPage();
 
-    expect(screen.getByText('Total Trades:')).toBeInTheDocument();
+    const grid = screen.getByTestId('closed-positions-summary-grid');
+    expect(grid).toBeInTheDocument();
+    expect(grid).toHaveClass('grid-cols-1', 'sm:grid-cols-2', 'xl:grid-cols-4');
+
+    expect(screen.getByText('Net Profit (Total PnL)')).toBeInTheDocument();
+    expect(screen.getByText('Operational Costs')).toBeInTheDocument();
+    expect(screen.getByText('Trade Volume')).toBeInTheDocument();
+    expect(screen.getByText('Win Rate & Stats')).toBeInTheDocument();
+    expect(screen.getByText('Edge')).toBeInTheDocument();
+    expect(screen.getByText('Win Rate Long')).toBeInTheDocument();
+    expect(screen.getByText('Win Rate Short')).toBeInTheDocument();
+
+    // Ensure no dark-only hardcoded colors leak into the summary cards
+    expect(grid.innerHTML).not.toMatch(/#161b22|#2a2b30|#00C853|#FF4444/i);
+
     expect(screen.getByText('BTCUSDT')).toBeInTheDocument();
     expect(screen.getByText('ETHUSDT')).toBeInTheDocument();
+  });
+
+  it('masks monetary figures and hides sparkline in Privacy Mode while keeping counts and percentages visible', () => {
+    localStorage.setItem('app_privacy_mode', 'true');
+    vi.mocked(usePositionHistory).mockReturnValue(hookResult({
+      positions: [
+        closed({ id: 'h1', symbol: 'BTCUSDT', side: 'long', realizedPnl: 120, tradingFee: -2, fundingFee: -1 }),
+        closed({ id: 'h2', symbol: 'ETHUSDT', side: 'short', realizedPnl: -40, tradingFee: -1, fundingFee: 0 }),
+      ],
+    }) as never);
+
+    renderPage();
+
+    expect(screen.getByTestId('privacy-sparkline-placeholder')).toBeInTheDocument();
+    expect(screen.queryByTestId('closed-positions-sparkline')).not.toBeInTheDocument();
+    expect(screen.getAllByText('$••••').length).toBeGreaterThanOrEqual(4);
+
+    // Non-monetary counts and percentages stay visible
+    expect(screen.getByText('50.00%')).toBeInTheDocument();
+    expect(screen.getByText('1 Wins')).toBeInTheDocument();
+    expect(screen.getByText('1 Losses')).toBeInTheDocument();
+    expect(screen.getByText(/3\.00 PF/)).toBeInTheDocument();
   });
 
   it('filters the list by the search field', () => {
@@ -189,7 +225,7 @@ describe('ClosedPositions', () => {
     // through Intl, which rounds the shortest decimal form — so the cent is kept.
     expect([0.35, 0.35, 0.305].reduce((a, b) => a + b, 0)).toBe(1.005);
     expect([0.35, 0.35, 0.305].reduce((a, b) => a + b, 0).toFixed(2)).toBe('1.00');
-    expect(screen.getByText('+$1.01')).toBeInTheDocument();
+    expect(screen.getAllByText('+$1.01').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders the position value and the entry/exit prices in the active currency', () => {
@@ -222,7 +258,7 @@ describe('ClosedPositions', () => {
     expect(config.headers[0]).toBe('Symbol');
   });
 
-  it('localizes title, summary metrics, and pagination label in pt-BR without trailing colons on wins/losses', async () => {
+  it('localizes title, 4 summary cards, and pagination label in pt-BR without trailing colons on wins/losses', async () => {
     await i18n.changeLanguage('pt-BR');
     useSettingsStore.setState({ locale: 'pt-BR' });
     vi.mocked(usePositionHistory).mockReturnValue(hookResult({
@@ -239,6 +275,10 @@ describe('ClosedPositions', () => {
     renderPage();
 
     expect(screen.getByText('Posições Fechadas')).toBeInTheDocument();
+    expect(screen.getByText('Lucro Líquido (Total PnL)')).toBeInTheDocument();
+    expect(screen.getByText('Custos Operacionais')).toBeInTheDocument();
+    expect(screen.getByText('Volume de Operações')).toBeInTheDocument();
+    expect(screen.getByText('Taxa de Acerto & Estatísticas')).toBeInTheDocument();
     expect(screen.getByText('Média G/P')).toBeInTheDocument();
     expect(screen.getByText('Maior G/P')).toBeInTheDocument();
     expect(screen.getByText('5 Ganhos')).toBeInTheDocument();

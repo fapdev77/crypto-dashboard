@@ -3,7 +3,7 @@
 > **Versão do Documento:** 2.53.0  
 > **Status:** Aprovado & Em Produção  
 > **Produto:** Crypto Portfolio Manager (CPM) — Multi-Exchange Terminal  
-> **Testes Automatizados:** 118 arquivos de teste, 995 testes passando (Vitest 4.1)
+> **Testes Automatizados:** 119 arquivos de teste, 1002 testes passando (Vitest 4.1)
 
 ---
 
@@ -60,7 +60,7 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
   - Dashboard consolidado com Positions Ticker contínuo no topo.
   - Hedge Pro Dashboard com modelo Beyond-100% de capital protegido/exposto e alertas de sobre-exposição.
   - Open Positions com modos de exibição Detailed e Lite. O modo Lite exibe cada posição em uma única linha com seis colunas — corretora/conta/símbolo, lado/alavancagem/modo, tamanho/valor, PnL realizado, PnL não realizado e entrada/marcação/liquidação — e empilha uma coluna por linha no mobile.
-  - Closed Positions com análise estatística (Win Rate, Profit Factor, avg trade).
+  - Closed Positions com painel analítico em 4 cards (Resultado Líquido/ROI/Profit Factor + sparkline, Custos Operacionais, Volume/Viés Long-Short + Win Rate por lado, e Taxa de Acerto/Edge/R:R/Extremos).
   - Order Reports (Open Orders e Order History com busca regex).
   - Trade History com taxas cobradas por ordem executada.
   - Histórico de Transações Multi-Corretora com 10 categorias universais e modais com Total Stats Summary.
@@ -71,7 +71,7 @@ Traders e gestores de criptoativos que operam simultaneamente em múltiplas corr
   - PIKA Assistant com **7 ferramentas de leitura** (`aiGet*`), 6 provedores (`ollama`, `gemini`, `openrouter`, `openai`, `anthropic`, `custom`), auditoria de compatibilidade de modelos, telemetria de tokens, exportação de logs e kill-switch via `AI_CHAT_BOT_ENABLED`.
   - Progressive Web App (PWA) instalável com Service Worker e cache offline.
   - Migração Obrigatória de Vault para formatos de criptografia PBKDF2/AES-GCM (600.000 iterações) e backups `.enc`.
-  - Internacionalização Completa (i18n) em 6 idiomas (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.965 chaves cada) com preservação de termos de mercado.
+  - Internacionalização Completa (i18n) em 6 idiomas (`pt-BR`, `pt-PT`, `en-US`, `en-GB`, `es-419`, `it-IT`, 1.992 chaves cada) com preservação de termos de mercado.
   - Filtro de períodos padronizado (`FilterBar` + `CustomDateRangeModal`) com 12 predefinições cronológicas (*Today*, *7 Days*, *14 Days*, *30 Days*, *90 Days*, *120 Days*, *6 Months*, *1 Year*, *MTD*, *YTD*, *Custom Range...* e *All Time*), padrão inicial de **7 Dias** (`DEFAULT_TIME_PERIOD_MS`) e banner adaptável `HistoryLimitWarning` para restrições >90 dias em OKX e Bitget.
   - Sistema Multi-Temas (`Terminal Dark`, `Terminal Light`, `Wise Dark`, `Wise Light`, `Customizado`) com 4 predefinições, editor de 10 tokens CSS, gerenciamento de temas salvos nomeados e seletor no cabeçalho (`ThemeModeButton`).
   - Conversão e exibição multi-moedas fiat (USD, BRL, EUR, GBP) via **Frankfurter API v2** e paridade **USDT/USD** via **CoinGecko**, com cache offline resiliente e painel `CurrencyApiDiagnostics`.
@@ -157,7 +157,7 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 | **FR-28** | Portfolio Performance Dashboard com curvas de saldo/resultado, análise temporal (mês/dia), marcos de preço, resultados primários e métricas avançadas (Profit Factor, Win Rate, Consistency Index) | Portfolio Performance |
 | **FR-29** | Tela e fluxo de migração mandatória de vault para credenciais legadas em texto plano e backups `.enc` | Security & Vault |
 | **FR-30** | Otimização de renderização com downsampling a 80 pontos, animations desativadas e seletores atômicos no Zustand | Performance Optimization |
-| **FR-31** | Internacionalização completa em 6 idiomas (pt-BR, pt-PT, en-US, en-GB, es-419, it-IT; 1.965 chaves cada) com seleção dinâmica, tooltips e toasts | Internationalization (i18n) |
+| **FR-31** | Internacionalização completa em 6 idiomas (pt-BR, pt-PT, en-US, en-GB, es-419, it-IT; 1.992 chaves cada) com seleção dinâmica, tooltips e toasts | Internationalization (i18n) |
 | **FR-32** | Conversão cambial multi-moedas fiat (USD, BRL, EUR, GBP) via Frankfurter API v2 + paridade USDT/USD via CoinGecko, com TTL configurável e cache offline | Multi-Currency Engine |
 | **FR-33** | Painel de governança em 10 cards modulares com TTL de catálogo de símbolos (1–24h), refresh de funding/polling, auto-lock e expurgo seletivo | Settings & Storage |
 | **FR-34** | Motor Multi-Temas (Terminal Dark/Light, Wise Dark/Light, Customizado) com 4 presets, 10 tokens CSS editáveis, temas salvos nomeados e atalho "Custom design" no cabeçalho | Multi-Theme Engine |
@@ -168,7 +168,7 @@ Extratos contínuos de Bybit, Bitget e OKX são normalizados em 10 tipos canôni
 ## 8. Requisitos Não-Funcionais
 
 - **Segurança:** Postura Zero-Trust; chaves nunca saem do navegador; Web Crypto nativo (PBKDF2 600.000 iterações + AES-GCM-256); proxy inerte com allowlist anti-SSRF.
-- **Confiabilidade:** Suíte abrangente de 118 arquivos de teste e 995 testes unitários e de integração 100% verdes; tolerância a clock skew das exchanges.
+- **Confiabilidade:** Suíte abrangente de 119 arquivos de teste e 1002 testes unitários e de integração 100% verdes; tolerância a clock skew das exchanges.
 - **Performance:** Latência zero no carregamento inicial de telas analíticas via IndexedDB; período padrão inicial de 7 dias unificado entre transações, posições fechadas, ordens, trades, PnL por símbolo e relatórios, downsampling de séries e memoização rigorosa para prevenir renderizações desnecessárias.
 - **Precisão Matemática:** Uso universal de Big.js para aritmética de funding, hedge e saldos.
 - **Compatibilidade:** Suporte nativo a navegadores Desktop e Mobile (PWA); compatibilidade com ambientes serverless (Vercel) e instâncias Node.js (engines `>=24`).
