@@ -196,7 +196,7 @@ const FundingTable = ({
                 itemsPerPage={COINS_PER_PAGE}
                 onPageChange={setPage}
                 refreshKey={`${groupsTotal}-${data.length}`}
-                refreshLabel="Filtering"
+                refreshLabel={t('transactions.common.filtering', 'Filtering')}
               />
             </div>
           )}
@@ -450,7 +450,7 @@ const FundingTable = ({
                 itemsPerPage={COINS_PER_PAGE}
                 onPageChange={setPage}
                 refreshKey={`${groupsTotal}-${data.length}`}
-                refreshLabel="Filtering"
+                refreshLabel={t('transactions.common.filtering', 'Filtering')}
               />
             </div>
           )}

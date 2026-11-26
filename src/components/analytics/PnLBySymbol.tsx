@@ -247,7 +247,7 @@ export function PnLBySymbol() {
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
                 refreshKey={`${period}-${customStartDate || ''}-${customEndDate || ''}-${exchange}`}
-                refreshLabel="Updating"
+                refreshLabel={t('common.pagination.updating', 'Updating')}
                 refreshDataReady={!isLoading}
               />
             )}
@@ -325,7 +325,7 @@ export function PnLBySymbol() {
               itemsPerPage={50}
               onPageChange={setCurrentPage}
               refreshKey={`${period}-${customStartDate || ''}-${customEndDate || ''}-${exchange}`}
-              refreshLabel="Updating"
+              refreshLabel={t('common.pagination.updating', 'Updating')}
             />
           )}
         </div>

@@ -122,8 +122,8 @@ export function ClosedPositions() {
     });
 
     const config: ExportConfig = {
-      title: 'Positions History Report',
-      filename: `Positions_History_${Date.now()}`,
+      title: t('positionsHistory.exportReportTitle', 'Closed Positions Report'),
+      filename: `Closed_Positions_${Date.now()}`,
       headers,
       rows
     };
@@ -215,7 +215,7 @@ export function ClosedPositions() {
         <div className="space-y-1">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 text-fg">
             <History className="w-5 h-5 text-accent" />
-            {t('positionsHistory.title', 'Positions History')}
+            {t('positionsHistory.title', 'Closed Positions')}
           </h2>
           <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} syncError={syncError} />
         </div>
@@ -281,8 +281,8 @@ export function ClosedPositions() {
 
       {closedStats && (() => {
         const POSITIONS_DONUT = [
-          { name: 'Long', value: closedStats.longs, color: '#00C853' },
-          { name: 'Short', value: closedStats.shorts, color: '#FF4444' }
+          { name: t('positions.long', 'Long'), value: closedStats.longs, color: '#00C853' },
+          { name: t('positions.short', 'Short'), value: closedStats.shorts, color: '#FF4444' }
         ];
 
         return (
@@ -357,7 +357,7 @@ export function ClosedPositions() {
 
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="flex flex-col bg-canvas p-2 rounded justify-center items-center">
-                  <span className="text-xl text-fg-muted">Avg W/L</span>
+                  <span className="text-xl text-fg-muted">{t('positionsHistory.avgWL', 'Avg W/L')}</span>
                   <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
                     <span className="text-success">+{formatCurrency(closedStats.avgWin, 'usd', 2)}</span>
                     <span className="text-fg-muted mx-0.5">/</span>
@@ -365,7 +365,7 @@ export function ClosedPositions() {
                   </div>
                 </div>
                 <div className="flex flex-col bg-canvas p-2 rounded justify-center items-center">
-                  <span className="text-xl text-fg-muted">Largest W/L</span>
+                  <span className="text-xl text-fg-muted">{t('positionsHistory.largestWL', 'Largest W/L')}</span>
                   <div className="text-[15px] font-mono mt-0.5 whitespace-nowrap">
                     <span className="text-success">+{formatCurrency(closedStats.largestWin, 'usd', 2)}</span>
                     <span className="text-fg-muted mx-0.5">/</span>
@@ -396,7 +396,7 @@ export function ClosedPositions() {
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
                 refreshKey={`${period}-${customStartDate || ''}-${customEndDate || ''}-${exchangeFilter}`}
-                refreshLabel="Updating"
+                refreshLabel={t('common.pagination.updating', 'Updating')}
                 refreshDataReady={!isLoading}
               />
             </div>
@@ -405,7 +405,7 @@ export function ClosedPositions() {
           {paginatedClosedPositions.map((pos) => {
             const isLong = pos.side?.toLowerCase() === 'long' || pos.side?.toLowerCase() === 'buy';
             const isShort = pos.side?.toLowerCase() === 'short' || pos.side?.toLowerCase() === 'sell';
-            const sideLabel = isLong ? 'Long' : isShort ? 'Short' : pos.side || 'Net';
+            const sideLabel = isLong ? t('positions.long', 'Long') : isShort ? t('positions.short', 'Short') : pos.side || t('positions.net', 'Net');
             const sideColor = isLong ? 'text-success' : isShort ? 'text-danger' : 'text-fg-muted';
 
             const pnlClass = pos.realizedPnl >= 0 ? 'text-success' : 'text-danger';
@@ -612,7 +612,7 @@ export function ClosedPositions() {
               itemsPerPage={50}
               onPageChange={setCurrentPage}
               refreshKey={`${period}-${customStartDate || ''}-${customEndDate || ''}-${exchangeFilter}`}
-              refreshLabel="Updating"
+              refreshLabel={t('common.pagination.updating', 'Updating')}
             />
           </div>
         </div>

@@ -83,7 +83,7 @@ describe('ClosedPositions', () => {
 
     const { container } = renderPage();
 
-    expect(screen.queryByText('Positions History')).not.toBeInTheDocument();
+    expect(screen.queryByText('Closed Positions')).not.toBeInTheDocument();
     expect(container.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
@@ -92,7 +92,8 @@ describe('ClosedPositions', () => {
 
     renderPage();
 
-    expect(screen.getByText('Positions History')).toBeInTheDocument();
+    expect(screen.getByText('Closed Positions')).toBeInTheDocument();
+    expect(screen.queryByText('Positions History')).not.toBeInTheDocument();
     expect(screen.getByText('No closed positions found.')).toBeInTheDocument();
   });
 
@@ -215,7 +216,33 @@ describe('ClosedPositions', () => {
 
     expect(exportToCSV).toHaveBeenCalledTimes(1);
     const [config] = vi.mocked(exportToCSV).mock.calls[0];
+    expect(config.title).toBe('Closed Positions Report');
+    expect(config.filename).toMatch(/^Closed_Positions_/);
     expect(config.rows).toHaveLength(2);
     expect(config.headers[0]).toBe('Symbol');
+  });
+
+  it('localizes title, summary metrics, and pagination label in pt-BR without trailing colons on wins/losses', async () => {
+    await i18n.changeLanguage('pt-BR');
+    useSettingsStore.setState({ locale: 'pt-BR' });
+    vi.mocked(usePositionHistory).mockReturnValue(hookResult({
+      positions: [
+        closed({ id: 'h1', symbol: 'BTCUSDT', realizedPnl: 120 }),
+        closed({ id: 'h2', symbol: 'ETHUSDT', side: 'short', realizedPnl: -40 }),
+        closed({ id: 'h3', symbol: 'SOLUSDT', realizedPnl: 50 }),
+        closed({ id: 'h4', symbol: 'XRPUSDT', realizedPnl: 10 }),
+        closed({ id: 'h5', symbol: 'ADAUSDT', realizedPnl: 20 }),
+        closed({ id: 'h6', symbol: 'AVAXUSDT', realizedPnl: 30 }),
+      ],
+    }) as never);
+
+    renderPage();
+
+    expect(screen.getByText('Posições Fechadas')).toBeInTheDocument();
+    expect(screen.getByText('Média G/P')).toBeInTheDocument();
+    expect(screen.getByText('Maior G/P')).toBeInTheDocument();
+    expect(screen.getByText('5 Ganhos')).toBeInTheDocument();
+    expect(screen.getByText('1 Perdas')).toBeInTheDocument();
+    expect(screen.queryByText(/Ganhos:/)).not.toBeInTheDocument();
   });
 });

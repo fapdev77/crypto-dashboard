@@ -383,7 +383,7 @@ export function TradeHistory() {
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
                 refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
-                refreshLabel="Updating"
+                refreshLabel={t('common.pagination.updating', 'Updating')}
                 refreshDataReady={!loading}
               />
             </div>
@@ -607,7 +607,7 @@ export function TradeHistory() {
               itemsPerPage={50}
               onPageChange={setCurrentPage}
               refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
-              refreshLabel="Updating"
+              refreshLabel={t('common.pagination.updating', 'Updating')}
             />
           </div>
         </div>

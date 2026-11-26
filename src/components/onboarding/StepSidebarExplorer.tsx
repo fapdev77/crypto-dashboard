@@ -13,7 +13,7 @@ interface StepSidebarExplorerProps {
 
 const SUB_ITEMS_MAP: Record<string, string[]> = {
   hedgePro: ['Hedge Pro'],
-  positions: ['Open Positions', 'Positions History'],
+  positions: ['Open Positions', 'Closed Positions'],
   orders: ['Open Orders', 'Orders History'],
   trade: ['Trade History'],
   transactions: ['Consolidated Net Change', 'Bybit', 'Bitget', 'OKX'],
