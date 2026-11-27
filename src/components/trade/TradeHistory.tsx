@@ -412,11 +412,11 @@ export function TradeHistory() {
               if (isBuy) {
                 const isClose = trade.positionSide === 'short';
                 directionLabel = isClose ? t('orders.closeShort', 'Close Short') : t('orders.openLong', 'Open Long');
-                directionColorClass = isClose ? 'text-teal-400 bg-teal-400/10 border-teal-400/20' : 'text-success bg-success/10 border-success/20';
+                directionColorClass = isClose ? 'text-tone-cyan bg-cyan-500/10 border-cyan-500/20' : 'text-success bg-success/10 border-success/20';
               } else {
                 const isClose = trade.positionSide === 'long';
                 directionLabel = isClose ? t('orders.closeLong', 'Close Long') : t('orders.openShort', 'Open Short');
-                directionColorClass = isClose ? 'text-orange-400 bg-orange-400/10 border-orange-400/20' : 'text-danger bg-danger/10 border-danger/20';
+                directionColorClass = isClose ? 'text-tone-orange bg-orange-500/10 border-orange-500/20' : 'text-danger bg-danger/10 border-danger/20';
               }
             }
 

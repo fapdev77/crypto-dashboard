@@ -99,14 +99,14 @@ export function PortfolioPerformanceFilters({
           onChange: (val) => updateFilters((p) => ({ ...p, exchange: val, accountId: 'All' })),
           options: exchangeOptions,
           labelAll: t('analytics.common.allExchanges', 'All Exchanges'),
-          tooltip: 'Filter performance metrics by exchange venue',
+          tooltip: t('analytics.portfolio.filters.exchangeTooltip', 'Filter performance metrics by exchange venue'),
         }}
         account={{
           value: filters.accountId,
           onChange: (val) => updateFilters((p) => ({ ...p, accountId: val })),
           options: accountOptions,
           labelAll: t('analytics.common.allAccounts', 'All Accounts'),
-          tooltip: 'Filter by specific trading account',
+          tooltip: t('analytics.portfolio.filters.accountTooltip', 'Filter by specific trading account'),
         }}
         side={{
           value: filters.denomination,
@@ -123,7 +123,7 @@ export function PortfolioPerformanceFilters({
           },
           options: denominationOptions,
           labelAll: t('analytics.common.selectDenomination', 'Select Denomination'),
-          tooltip: 'Select measurement currency: Consolidated USD or specific asset',
+          tooltip: t('analytics.portfolio.filters.denominationTooltip', 'Select measurement currency: Consolidated USD or specific asset'),
         }}
         period={{
           value: String(filters.timePeriod),
@@ -149,7 +149,7 @@ export function PortfolioPerformanceFilters({
               customStartDate: start,
               customEndDate: end,
             })),
-          tooltip: 'Evaluation time window (UTC)',
+          tooltip: t('analytics.portfolio.filters.periodTooltip', 'Evaluation time window (UTC)'),
         }}
       />
     </div>

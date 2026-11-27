@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import mockBybitTxData from '../mock/bybit-transactions.json';
 import mockBitgetTxData from '../mock/bitget-transactions.json';
 import mockOkxTxData from '../mock/okx-transactions.json';
@@ -48,6 +49,7 @@ export {
 };
 
 export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = defaultPerformanceFilters) {
+  const { i18n } = useTranslation();
   const keys = useApiKeysStore((state) => state.keys);
   const useMockData = useSettingsStore((state) => state.useMockData);
   const fiatRates = useSettingsStore((state) => state.fiatRates);
@@ -276,8 +278,9 @@ export function usePortfolioPerformance(filters: PortfolioPerformanceFilters = d
         filters,
         tokenRates,
         fiatRates,
+        locale: i18n.language,
       }),
-    [scopedUpToEnd, filteredEntries, filters, tokenRates, fiatRates]
+    [scopedUpToEnd, filteredEntries, filters, tokenRates, fiatRates, i18n.language]
   );
 
   // Currencies present in the active scope that still have no USD rate

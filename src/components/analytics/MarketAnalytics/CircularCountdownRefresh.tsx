@@ -4,13 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
 import { PollingIntervalSeconds } from '../../../types/marketAnalytics';
 
-const POLLING_OPTIONS: { val: PollingIntervalSeconds; label: string }[] = [
-  { val: 5, label: '5s' },
-  { val: 10, label: '10s' },
-  { val: 15, label: '15s' },
-  { val: 30, label: '30s' },
-  { val: 60, label: '60s (Default)' },
-  { val: 0, label: 'Paused' },
+const POLLING_OPTIONS: { val: PollingIntervalSeconds; labelKey?: string; fallback: string }[] = [
+  { val: 5, fallback: '5s' },
+  { val: 10, fallback: '10s' },
+  { val: 15, fallback: '15s' },
+  { val: 30, fallback: '30s' },
+  { val: 60, labelKey: 'analytics.market.refresh.default60s', fallback: '60s (Default)' },
+  { val: 0, labelKey: 'analytics.market.refresh.paused', fallback: 'Paused' },
 ];
 
 export const CircularCountdownRefresh: React.FC = () => {
@@ -97,11 +97,11 @@ export const CircularCountdownRefresh: React.FC = () => {
     <div className="relative flex items-center shrink-0" ref={menuRef}>
       {/* Unified Button: Circular Countdown + Interval Trigger */}
       <div
-        className="flex items-center bg-elevated hover:bg-elevated border border-line hover:border-[#383a45] rounded-xl p-1 transition-all shadow-sm group"
+        className="flex items-center bg-elevated hover:bg-elevated-hover border border-line hover:border-line-strong rounded-xl p-1 transition-all shadow-sm group"
         title={
           isPaused
-            ? 'Auto-refresh is paused. Click to refresh now.'
-            : `Auto-refresh in ${secondsRemaining}s. Click to refresh now.`
+            ? t('analytics.market.refresh.pausedTooltip', 'Auto-refresh is paused. Click to refresh now.')
+            : t('analytics.market.refresh.countdownTooltip', { seconds: secondsRemaining, defaultValue: `Auto-refresh in ${secondsRemaining}s. Click to refresh now.` })
         }
       >
         {/* Circular Action Button */}
@@ -110,7 +110,7 @@ export const CircularCountdownRefresh: React.FC = () => {
           onClick={handleManualRefresh}
           disabled={isLoading}
           className="relative flex items-center justify-center p-0.5 rounded-lg focus:outline-none transition-transform active:scale-95 cursor-pointer"
-          aria-label="Refresh data"
+          aria-label={t('analytics.market.refresh.ariaRefresh', 'Refresh data')}
         >
           <svg
             width={size}
@@ -122,7 +122,7 @@ export const CircularCountdownRefresh: React.FC = () => {
               cx={size / 2}
               cy={size / 2}
               r={radius}
-              stroke="#2a2b30"
+              stroke="var(--line)"
               strokeWidth={strokeWidth}
               fill="transparent"
             />
@@ -132,7 +132,7 @@ export const CircularCountdownRefresh: React.FC = () => {
                 cx={size / 2}
                 cy={size / 2}
                 r={radius}
-                stroke={secondsRemaining <= 3 ? '#F59E0B' : '#2F6BFF'}
+                stroke={secondsRemaining <= 3 ? 'var(--warning)' : 'var(--accent)'}
                 strokeWidth={strokeWidth}
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
@@ -174,10 +174,10 @@ export const CircularCountdownRefresh: React.FC = () => {
 
       {/* Interval Selector Popover Menu */}
       {isMenuOpen && (
-        <div className="absolute right-0 top-full mt-2 w-44 bg-[#16171d] border border-line rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 top-full mt-2 w-44 bg-surface border border-line rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
           <div className="px-3 py-1.5 border-b border-line flex items-center gap-1.5 text-[11px] font-semibold text-fg-muted uppercase tracking-wider">
             <Clock className="w-3 h-3 text-accent" />
-            <span>Refresh Interval</span>
+            <span>{t('analytics.market.refresh.intervalTitle', 'Refresh Interval')}</span>
           </div>
 
           <div className="p-1 space-y-0.5">
@@ -194,14 +194,14 @@ export const CircularCountdownRefresh: React.FC = () => {
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     isSelected
                       ? 'bg-accent/15 text-accent'
-                      : 'text-fg hover:bg-[#1f212a] hover:text-fg'
+                      : 'text-fg hover:bg-elevated-hover hover:text-fg'
                   }`}
                 >
                   <span className="flex items-center gap-1.5">
                     {isSelected && (
                       <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                     )}
-                    {opt.label}
+                    {opt.labelKey ? t(opt.labelKey, opt.fallback) : opt.fallback}
                   </span>
                   {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}
                 </button>

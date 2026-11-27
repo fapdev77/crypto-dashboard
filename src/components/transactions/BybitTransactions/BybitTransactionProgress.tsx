@@ -28,7 +28,7 @@ export function BybitTransactionProgress({ isSyncing, progress }: BybitTransacti
         <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
         <span>{t('transactions.common.syncing', 'Syncing')}</span>
         <span className="font-mono">{pct}%</span>
-        <span className="text-[#4a7bff]/70">·</span>
+        <span className="text-accent/70">·</span>
         <Database className="w-3 h-3 shrink-0" />
         <span className="font-mono">{records.toLocaleString()} {t('transactions.common.rec', 'rec')}</span>
       </div>

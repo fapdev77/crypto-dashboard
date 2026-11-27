@@ -68,7 +68,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
             {t('analytics.portfolio.milestones.title', 'Price Milestone & Range Passage Analysis')}
           </h3>
           <p className="text-xs text-fg-muted mt-0.5">
-            Evaluates consolidated equity each time {activeAsset} price revisits the same valuation level
+            {t('analytics.portfolio.milestones.subtitle', 'Evaluates consolidated equity each time {{asset}} price revisits the same valuation level', { asset: activeAsset })}
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                 {t('analytics.portfolio.milestones.referenceAsset', 'Asset')}:
               </span>
               <select
-                aria-label="Reference Asset"
+                aria-label={t('analytics.portfolio.milestones.referenceAssetAria', 'Reference Asset')}
                 value={activeAsset}
                 onChange={(e) => onAssetChange(e.target.value)}
                 className="bg-elevated border border-line rounded-lg px-2 py-1 text-xs font-mono font-medium text-fg focus:outline-none focus:border-accent"
@@ -104,7 +104,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                 onClick={() => onStepChange(step)}
                 className={`px-2.5 py-1 rounded text-xs font-mono tabular-nums font-medium transition-all ${
                   milestoneStep === step
-                    ? 'bg-accent text-white shadow-sm'
+                    ? 'bg-accent text-fg shadow-sm'
                     : 'text-fg-muted hover:text-fg hover:bg-line/40'
                 }`}
               >
@@ -116,7 +116,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
               <span className="text-xs text-fg-muted">$</span>
               <input
                 type="number"
-                aria-label="Custom step interval"
+                aria-label={t('analytics.portfolio.milestones.customStepAria', 'Custom step interval')}
                 min={0.01}
                 step="any"
                 value={milestoneStep}
@@ -125,7 +125,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                   if (!isNaN(val) && val > 0) onStepChange(val);
                 }}
                 className="w-16 bg-surface border border-line rounded px-1.5 py-0.5 text-xs font-mono tabular-nums text-fg focus:outline-none focus:border-accent"
-                placeholder="Custom"
+                placeholder={t('analytics.portfolio.milestones.customPlaceholder', 'Custom')}
               />
             </div>
           </div>
@@ -136,7 +136,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
       <div className="bg-surface border border-line rounded-xl p-5 space-y-6 shadow-sm">
         {milestones.length === 0 ? (
           <div className="py-12 text-center text-sm text-fg-muted">
-            No price milestones recorded for {activeAsset} in this timeframe. Try adjusting the step interval, reference asset, or date filter.
+            {t('analytics.portfolio.milestones.empty', 'No price milestones recorded for {{asset}} in this timeframe. Try adjusting the step interval, reference asset, or date filter.', { asset: activeAsset })}
           </div>
         ) : (
           <>
@@ -144,7 +144,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
             <div className="bg-elevated/50 border border-line/60 rounded-xl p-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted mb-3 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-accent" />
-                Accumulated Volatility Gain / Loss per {activeAsset} Price Level
+                {t('analytics.portfolio.milestones.chartTitle', 'Accumulated Volatility Gain / Loss per {{asset}} Price Level', { asset: activeAsset })}
               </h4>
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -177,26 +177,26 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                           return (
                             <div className="bg-elevated border border-line p-3 rounded-lg shadow-xl text-xs space-y-1">
                               <p className="font-bold text-fg border-b border-line pb-1">
-                                {activeAsset} Price Level: {data.formattedMilestone}
+                                {t('analytics.portfolio.milestones.tooltipPriceLevel', '{{asset}} Price Level: {{price}}', { asset: activeAsset, price: data.formattedMilestone })}
                               </p>
                               <div className="flex justify-between gap-4 text-fg-muted">
-                                <span>Passages / Crossings:</span>
+                                <span>{t('analytics.portfolio.milestones.passagesCrossings', 'Passages / Crossings')}:</span>
                                 <span className="font-mono tabular-nums text-fg font-bold">{data.passages}x</span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted">
-                                <span>1st Passage Equity:</span>
+                                <span>{t('analytics.portfolio.milestones.firstPassageEquity', '1st Passage Equity')}:</span>
                                 <span className="font-mono tabular-nums text-fg">
                                   {maskVal(data.firstPassageEquity.toFixed(decimals))} {denomination}
                                 </span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted">
-                                <span>Last Passage Equity:</span>
+                                <span>{t('analytics.portfolio.milestones.lastPassageEquity', 'Last Passage Equity')}:</span>
                                 <span className="font-mono tabular-nums text-fg">
                                   {maskVal(data.lastPassageEquity.toFixed(decimals))} {denomination}
                                 </span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted pt-1 border-t border-line">
-                                <span className="font-bold text-fg">Net Volatility Harvest:</span>
+                                <span className="font-bold text-fg">{t('analytics.portfolio.milestones.netVolatilityHarvest', 'Net Volatility Harvest')}:</span>
                                 <span className={`font-mono tabular-nums font-bold ${isGain ? 'text-success' : 'text-danger'}`}>
                                   {formatGain(data.gainLoss)} ({isGain ? '+' : ''}{data.gainLossPct.toFixed(2)}%)
                                 </span>
@@ -225,18 +225,18 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
               <table className="w-full text-left text-xs border border-line rounded-lg overflow-hidden">
                 <thead className="bg-elevated text-fg-muted uppercase text-[10px] tracking-wider border-b border-line">
                   <tr>
-                    <th className="py-2.5 px-4 font-semibold">Price Milestone ({activeAsset})</th>
+                    <th className="py-2.5 px-4 font-semibold">{t('analytics.portfolio.milestones.colPriceMilestone', 'Price Milestone ({{asset}})', { asset: activeAsset })}</th>
                     <th className="py-2.5 px-4 font-semibold text-center">
-                      <AppTooltip description="Number of times trades crossed or oscillated across this price range">
+                      <AppTooltip description={t('analytics.portfolio.milestones.passagesTooltip', 'Number of times trades crossed or oscillated across this price range')}>
                         <span className="cursor-help border-b border-dashed border-fg-muted/50">
-                          Passages
+                          {t('analytics.portfolio.milestones.colPassages', 'Passages')}
                         </span>
                       </AppTooltip>
                     </th>
-                    <th className="py-2.5 px-4 font-semibold text-right">1st Passage Equity</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Last Passage Equity</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Accumulated Gain / Loss</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Return (%)</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.milestones.firstPassageEquity', '1st Passage Equity')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.milestones.lastPassageEquity', 'Last Passage Equity')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.milestones.colAccumulatedGainLoss', 'Accumulated Gain / Loss')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.milestones.colReturnPct', 'Return (%)')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line/60 font-mono tabular-nums">

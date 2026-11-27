@@ -74,16 +74,16 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-canvas overflow-y-auto">
       <div className="bg-surface border border-line rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-2xl my-8 relative">
         {/* Glow accent */}
-        <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r from-amber-500 via-accent to-emerald-500" />
+        <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r from-warning via-accent to-success" />
 
         {/* Top Icon & Badge */}
         <div className="flex items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-tone-amber shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-warning/10 border border-warning/25 flex items-center justify-center text-warning shrink-0">
               <ShieldAlert className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-amber-500/15 text-tone-amber border border-amber-500/30">
+              <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
                 {t('apiKeys.vault.upgradeBadge', 'Action Required • Security Upgrade')}
               </span>
               <h2 className="text-lg sm:text-xl font-bold text-fg mt-1">
@@ -97,9 +97,9 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
         </div>
 
         {/* Informative Security Banner */}
-        <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-5 space-y-1.5 text-xs">
-          <div className="flex items-center gap-1.5 text-tone-amber font-semibold">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-tone-amber" />
+        <div className="p-3.5 bg-warning/10 border border-warning/20 rounded-xl mb-5 space-y-1.5 text-xs">
+          <div className="flex items-center gap-1.5 text-warning font-semibold">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-warning" />
             <span>{t('apiKeys.vault.legacyDetectedTitle', 'Legacy Plaintext Credentials Detected')}</span>
           </div>
           <p className="text-fg text-[11px] leading-relaxed">
@@ -117,7 +117,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
               <div key={k.id || idx} className="flex items-center justify-between pt-1.5 first:pt-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <ExchangeIcon exchange={k.exchange} className="w-4 h-4 shrink-0" />
-                  <span className="text-xs font-semibold text-fg truncate">{k.label || 'Unnamed Key'}</span>
+                  <span className="text-xs font-semibold text-fg truncate">{k.label || t('apiKeys.vault.unnamedKey', 'Unnamed Key')}</span>
                   <span className="text-[10px] font-mono text-fg-muted uppercase">({k.exchange})</span>
                 </div>
                 <span className="text-[10px] font-mono text-fg-muted shrink-0">
@@ -149,7 +149,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
                 type="button"
                 onClick={() => setShowPassphrase(!showPassphrase)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg transition-colors"
-                aria-label="Toggle password visibility"
+                aria-label={t('apiKeys.vault.togglePasswordAria', 'Toggle password visibility')}
               >
                 {showPassphrase ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -174,7 +174,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
                 type="button"
                 onClick={() => setShowConfirmPassphrase(!showConfirmPassphrase)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg transition-colors"
-                aria-label="Toggle confirm password visibility"
+                aria-label={t('apiKeys.vault.toggleConfirmAria', 'Toggle confirm password visibility')}
               >
                 {showConfirmPassphrase ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -237,7 +237,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
                 <button
                   type="button"
                   onClick={handleDiscardLegacyKeys}
-                  className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition"
+                  className="flex-1 py-2 bg-danger hover:bg-danger/90 text-white rounded-lg text-xs font-semibold transition"
                 >
                   {t('apiKeys.vault.discardConfirmBtn', 'Yes, Discard')}
                 </button>

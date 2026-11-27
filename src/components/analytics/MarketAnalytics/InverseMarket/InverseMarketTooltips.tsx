@@ -37,7 +37,7 @@ export const PriceRangeTooltip: React.FC<TooltipWrapperProps & { high: number; l
         { label: t('analytics.inverseTooltips.priceRangeHigh', '24h High'), value: `$${high.toLocaleString(undefined, { minimumFractionDigits: 2 })}` },
         { label: t('analytics.inverseTooltips.priceRangeLow', '24h Low'), value: `$${low.toLocaleString(undefined, { minimumFractionDigits: 2 })}` },
         { label: t('analytics.inverseTooltips.priceRangePos', 'Channel Position'), value: `${posPct}% ${t('analytics.inverseTooltips.fromBottom', '(from bottom)')}` },
-        { label: t('analytics.inverseTooltips.priceRangeMomentum', '24h Momentum'), value: `${pcnt >= 0 ? '+' : ''}${pcnt.toFixed(2)}%`, valueClassName: pcnt >= 0 ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold' },
+        { label: t('analytics.inverseTooltips.priceRangeMomentum', '24h Momentum'), value: `${pcnt >= 0 ? '+' : ''}${pcnt.toFixed(2)}%`, valueClassName: pcnt >= 0 ? 'text-success font-semibold' : 'text-danger font-semibold' },
       ]}
       side="top"
     >
@@ -96,7 +96,7 @@ export const CvdFlowTooltip: React.FC<TooltipWrapperProps & { cvdUsd: number; bu
     <AppTooltip
       description={t('analytics.inverseTooltips.cvdDesc', 'Estimated Cumulative Volume Delta (CVD) derived from taker order flow across Coin-M contracts. Signals aggressive buyer vs seller market order imbalances.')}
       rows={[
-        { label: t('analytics.inverseTooltips.cvdDelta', 'Estimated Taker Delta'), value: `${isNetBuyer ? '+' : ''}$${Math.abs(cvdUsd).toLocaleString()}`, valueClassName: isNetBuyer ? 'text-cyan-400 font-semibold' : 'text-rose-400 font-semibold' },
+        { label: t('analytics.inverseTooltips.cvdDelta', 'Estimated Taker Delta'), value: `${isNetBuyer ? '+' : ''}$${Math.abs(cvdUsd).toLocaleString()}`, valueClassName: isNetBuyer ? 'text-tone-cyan font-semibold' : 'text-danger font-semibold' },
         { label: t('analytics.inverseTooltips.cvdBuyer', 'Buyer Volume Ratio'), value: `${buyerRatio}%` },
         { label: t('analytics.inverseTooltips.cvdSeller', 'Seller Volume Ratio'), value: `${(100 - buyerRatio).toFixed(1)}%` },
       ]}
@@ -123,7 +123,7 @@ export const NextFundingTooltip: React.FC<TooltipWrapperProps & { rate: number |
       description={t('analytics.inverseTooltips.nextFundingDesc', 'Estimated upcoming funding payment rate and time remaining until next 8-hour settlement cycle. Rates are paid in native base currency for Inverse contracts.')}
       rows={[
         { label: t('analytics.inverseTooltips.nextFundingDirection', 'Payment Direction'), value: isPositive ? t('analytics.inverseTooltips.longsPayShorts', 'Longs pay Shorts') : isNegative ? t('analytics.inverseTooltips.shortsPayLongs', 'Shorts pay Longs') : t('analytics.inverseTooltips.neutral', 'Neutral') },
-        { label: t('analytics.inverseTooltips.nextFundingCountdown', 'Countdown'), value: `in ${hours}h ${minutes}m` },
+        { label: t('analytics.inverseTooltips.nextFundingCountdown', 'Countdown'), value: t('analytics.inverseTooltips.countdownValue', { hours, minutes, defaultValue: `in ${hours}h ${minutes}m` }) },
       ]}
       side="top"
     >
@@ -141,7 +141,7 @@ export const TodayFundingTooltip: React.FC<TooltipWrapperProps & { rate: number 
     <AppTooltip
       description={t('analytics.inverseTooltips.todayFundingDesc', 'Cumulative funding rate sum settled exclusively during the current UTC civil day (00:00 UTC to current moment). Does not represent a sliding 24-hour window.')}
       rows={[
-        { label: 'Period', value: t('analytics.inverseTooltips.todayPeriod', 'Today (00:00 UTC - Present)') },
+        { label: t('analytics.inverseTooltips.todayPeriodLabel', 'Period'), value: t('analytics.inverseTooltips.todayPeriod', 'Today (00:00 UTC - Present)') },
         { label: t('analytics.inverseTooltips.todaySettlement', 'Settlement Direction'), value: rate && rate > 0 ? t('analytics.inverseTooltips.netLongPayment', 'Net Long payment') : rate && rate < 0 ? t('analytics.inverseTooltips.netShortPayment', 'Net Short payment') : t('analytics.inverseTooltips.neutral', 'Neutral') },
       ]}
       side="top"
@@ -162,7 +162,7 @@ export const SpreadAprTooltip: React.FC<TooltipWrapperProps & { spreadApr: numbe
     <AppTooltip
       description={t('analytics.inverseTooltips.spreadAprDesc', 'Annualized funding rate differential between the exchange with the lowest funding rate and the exchange with the highest funding rate. Traders capture this spread delta-neutrally by holding Long on the low exchange and Short on the high exchange.')}
       rows={[
-        { label: t('analytics.inverseTooltips.spreadAprTitle', 'Annualized Spread (APR)'), value: spreadApr !== null ? `+${spreadApr.toFixed(2)}%` : '—', valueClassName: 'text-emerald-400 font-bold' },
+        { label: t('analytics.inverseTooltips.spreadAprTitle', 'Annualized Spread (APR)'), value: spreadApr !== null ? `+${spreadApr.toFixed(2)}%` : '—', valueClassName: 'text-success font-bold' },
         { label: t('analytics.inverseTooltips.optimalLong', 'Optimal Long Exchange'), value: bestLong ? bestLong.toUpperCase() : '—' },
         { label: t('analytics.inverseTooltips.optimalShort', 'Optimal Short Exchange'), value: bestShort ? bestShort.toUpperCase() : '—' },
       ]}

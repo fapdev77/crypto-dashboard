@@ -8,12 +8,12 @@ interface AiDailyTokenChartProps {
 }
 
 export const AiDailyTokenChart: React.FC<AiDailyTokenChartProps> = ({ dailyUsage }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const days = Object.values(dailyUsage).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
 
   const maxTokens = Math.max(...days.map((d) => d.totalTokens), 100);
 
-  const formatNumber = (num: number) => new Intl.NumberFormat('en-US').format(num);
+  const formatNumber = (num: number) => new Intl.NumberFormat(i18n.language).format(num);
 
   return (
     <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-xl p-6">
@@ -42,21 +42,21 @@ export const AiDailyTokenChart: React.FC<AiDailyTokenChartProps> = ({ dailyUsage
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-mono text-fg font-medium">{day.date}</span>
                   <div className="flex items-center gap-3 text-[11px] font-mono">
-                    <span className="text-fg-muted">{day.callsCount} calls</span>
-                    <span className="text-emerald-400 font-medium">{formatNumber(day.totalTokens)} tokens</span>
+                    <span className="text-fg-muted">{t('ai.settings.dailyTokens.callsCount', '{{count}} calls', { count: day.callsCount })}</span>
+                    <span className="text-success font-medium">{t('ai.settings.dailyTokens.tokensCount', '{{count}} tokens', { count: day.totalTokens })}</span>
                   </div>
                 </div>
 
                 <div className="w-full h-2.5 bg-canvas border border-line rounded-full overflow-hidden flex">
                   <div
                     style={{ width: `${pct}%` }}
-                    className="h-full bg-gradient-to-r from-accent to-emerald-400 rounded-full transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-accent to-success rounded-full transition-all duration-500"
                   />
                 </div>
 
                 <div className="flex justify-between text-[10px] text-fg-muted font-mono">
-                  <span>Prompt: {formatNumber(day.promptTokens)}</span>
-                  <span>Completion: {formatNumber(day.completionTokens)}</span>
+                  <span>{t('ai.settings.dailyTokens.promptLabel', 'Prompt')}: {formatNumber(day.promptTokens)}</span>
+                  <span>{t('ai.settings.dailyTokens.completionLabel', 'Completion')}: {formatNumber(day.completionTokens)}</span>
                 </div>
               </div>
             );

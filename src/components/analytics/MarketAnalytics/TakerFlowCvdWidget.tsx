@@ -59,14 +59,14 @@ export const TakerFlowCvdWidget: React.FC = () => {
   let divergenceAlert: { title: string; desc: string; type: 'warning' | 'info' } | null = null;
   if (isPriceUp && !isCvdUp) {
     divergenceAlert = {
-      title: 'Bearish Absorption Warning',
-      desc: 'Price is rising despite net negative Taker Flow (CVD falling). This suggests passive limit sellers or market exhaustion.',
+      title: t('analytics.market.takerFlow.bearishTitle', 'Bearish Absorption Warning'),
+      desc: t('analytics.market.takerFlow.bearishDesc', 'Price is rising despite net negative Taker Flow (CVD falling). This suggests passive limit sellers or market exhaustion.'),
       type: 'warning',
     };
   } else if (!isPriceUp && isCvdUp) {
     divergenceAlert = {
-      title: 'Bullish Accumulation Divergence',
-      desc: 'Price is declining while Taker Volume Delta is positive (CVD rising). Limit orders are absorbing aggressive selling pressure.',
+      title: t('analytics.market.takerFlow.bullishTitle', 'Bullish Accumulation Divergence'),
+      desc: t('analytics.market.takerFlow.bullishDesc', 'Price is declining while Taker Volume Delta is positive (CVD rising). Limit orders are absorbing aggressive selling pressure.'),
       type: 'info',
     };
   }
@@ -76,22 +76,22 @@ export const TakerFlowCvdWidget: React.FC = () => {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
+          <div className="p-2 bg-success/10 text-success rounded-lg border border-success/20">
             <Activity className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <TakerFlowMetricTooltip>
-                <h3 className="text-base font-bold text-fg tracking-tight cursor-help border-b border-dotted border-fg-muted/50 hover:text-emerald-400 transition-colors">
-                  Order Flow & Cumulative Volume Delta (CVD)
+                <h3 className="text-base font-bold text-fg tracking-tight cursor-help border-b border-dotted border-fg-muted/50 hover:text-success transition-colors">
+                  {t('analytics.market.takerFlow.title', 'Order Flow & Cumulative Volume Delta (CVD)')}
                 </h3>
               </TakerFlowMetricTooltip>
               <span className="px-2 py-0.5 text-[10px] font-bold bg-elevated text-fg border border-line rounded">
-                Taker Buy vs. Sell
+                {t('analytics.market.takerFlow.badge', 'Taker Buy vs. Sell')}
               </span>
             </div>
             <p className="text-xs text-fg-muted">
-              Measures aggressive market orders entering the book vs. passive limit absorption
+              {t('analytics.market.takerFlow.subtitle', 'Measures aggressive market orders entering the book vs. passive limit absorption')}
             </p>
           </div>
         </div>
@@ -100,11 +100,11 @@ export const TakerFlowCvdWidget: React.FC = () => {
         <div className="flex items-center gap-4 text-xs font-mono">
           <div className="text-right">
             <PeriodTakerDeltaTooltip>
-              <span className="text-[11px] text-fg-muted block font-sans">Period Taker Delta</span>
+              <span className="text-[11px] text-fg-muted block font-sans">{t('analytics.market.takerFlow.periodDelta', 'Period Taker Delta')}</span>
             </PeriodTakerDeltaTooltip>
             <div
               className={`text-base font-bold mt-0.5 ${
-                netDeltaTotal >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                netDeltaTotal >= 0 ? 'text-success' : 'text-danger'
               }`}
             >
               {netDeltaTotal >= 0 ? '+' : ''}{formatUsd(netDeltaTotal)}
@@ -112,11 +112,11 @@ export const TakerFlowCvdWidget: React.FC = () => {
           </div>
           <div className="text-right">
             <CvdNetBalanceTooltip>
-              <span className="text-[11px] text-fg-muted block font-sans">CVD Net Balance</span>
+              <span className="text-[11px] text-fg-muted block font-sans">{t('analytics.market.takerFlow.cvdNetBalance', 'CVD Net Balance')}</span>
             </CvdNetBalanceTooltip>
             <div
               className={`text-base font-bold mt-0.5 ${
-                latestCvd >= 0 ? 'text-cyan-400' : 'text-amber-400'
+                latestCvd >= 0 ? 'text-tone-cyan' : 'text-warning'
               }`}
             >
               {latestCvd >= 0 ? '+' : ''}{formatUsd(latestCvd)}
@@ -131,8 +131,8 @@ export const TakerFlowCvdWidget: React.FC = () => {
           <div
             className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs cursor-help transition-opacity hover:opacity-90 ${
               divergenceAlert.type === 'warning'
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-                : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300'
+                ? 'bg-warning/10 border-warning/30 text-warning'
+                : 'bg-tone-cyan/10 border-tone-cyan/30 text-tone-cyan'
             }`}
           >
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -147,23 +147,23 @@ export const TakerFlowCvdWidget: React.FC = () => {
       {/* Volume Ratio Bar */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-emerald-400 font-semibold flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> Taker Buy: {formatUsd(totalBuy)} (
+          <span className="text-success font-semibold flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5" /> {t('analytics.market.takerFlow.takerBuy', 'Taker Buy:')} {formatUsd(totalBuy)} (
             {Math.round((totalBuy / (totalBuy + totalSell || 1)) * 100)}%)
           </span>
-          <span className="text-rose-400 font-semibold flex items-center gap-1">
-            <TrendingDown className="w-3.5 h-3.5" /> Taker Sell: {formatUsd(totalSell)} (
+          <span className="text-danger font-semibold flex items-center gap-1">
+            <TrendingDown className="w-3.5 h-3.5" /> {t('analytics.market.takerFlow.takerSell', 'Taker Sell:')} {formatUsd(totalSell)} (
             {Math.round((totalSell / (totalBuy + totalSell || 1)) * 100)}%)
           </span>
         </div>
         <div className="w-full h-2 rounded-full bg-elevated overflow-hidden flex">
           <div
             style={{ width: `${(totalBuy / (totalBuy + totalSell || 1)) * 100}%` }}
-            className="bg-emerald-500 h-full transition-all"
+            className="bg-success h-full transition-all"
           />
           <div
             style={{ width: `${(totalSell / (totalBuy + totalSell || 1)) * 100}%` }}
-            className="bg-rose-500 h-full transition-all"
+            className="bg-danger h-full transition-all"
           />
         </div>
       </div>
@@ -174,16 +174,16 @@ export const TakerFlowCvdWidget: React.FC = () => {
           <ComposedChart data={takerFlowHistory} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
             <XAxis
               dataKey="timeLabel"
-              stroke="#6b7280"
+              stroke="var(--fg-muted)"
               fontSize={11}
               tickLine={false}
-              axisLine={{ stroke: '#2a2b30' }}
+              axisLine={{ stroke: 'var(--line)' }}
             />
             {/* Left Y-Axis: Net Delta Bar */}
             <YAxis
               yAxisId="delta"
               orientation="left"
-              stroke="#6b7280"
+              stroke="var(--fg-muted)"
               fontSize={11}
               tickLine={false}
               axisLine={false}
@@ -193,13 +193,13 @@ export const TakerFlowCvdWidget: React.FC = () => {
             <YAxis
               yAxisId="cvd"
               orientation="right"
-              stroke="#38bdf8"
+              stroke="var(--tone-cyan)"
               fontSize={11}
               tickLine={false}
               axisLine={false}
               tickFormatter={(val) => formatUsd(val)}
             />
-            <ReferenceLine yAxisId="delta" y={0} stroke="#374151" strokeDasharray="3 3" />
+            <ReferenceLine yAxisId="delta" y={0} stroke="var(--line-strong)" strokeDasharray="3 3" />
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
@@ -207,24 +207,24 @@ export const TakerFlowCvdWidget: React.FC = () => {
                   return (
                     <div className="bg-elevated border border-line rounded-lg p-3 shadow-xl text-xs space-y-1.5 font-mono">
                       <div className="text-fg-muted font-sans font-semibold border-b border-line pb-1">
-                        Time: {data.timeLabel}
+                        {t('analytics.market.charts.timeLabel', 'Time:')} {data.timeLabel}
                       </div>
-                      <div className="flex items-center justify-between gap-4 text-emerald-400">
-                        <span className="font-sans">Taker Buy:</span>
+                      <div className="flex items-center justify-between gap-4 text-success">
+                        <span className="font-sans">{t('analytics.market.takerFlow.takerBuy', 'Taker Buy:')}</span>
                         <span>{formatUsd(data.buyVol)}</span>
                       </div>
-                      <div className="flex items-center justify-between gap-4 text-rose-400">
-                        <span className="font-sans">Taker Sell:</span>
+                      <div className="flex items-center justify-between gap-4 text-danger">
+                        <span className="font-sans">{t('analytics.market.takerFlow.takerSell', 'Taker Sell:')}</span>
                         <span>{formatUsd(data.sellVol)}</span>
                       </div>
                       <div className="flex items-center justify-between gap-4 border-t border-line/60 pt-1 font-bold">
-                        <span className="text-fg-muted font-sans">Net Delta:</span>
-                        <span className={data.netDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                        <span className="text-fg-muted font-sans">{t('analytics.market.charts.netDeltaLabel', 'Net Delta:')}</span>
+                        <span className={data.netDelta >= 0 ? 'text-success' : 'text-danger'}>
                           {data.netDelta >= 0 ? '+' : ''}{formatUsd(data.netDelta)}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between gap-4 text-cyan-400 font-bold">
-                        <span className="text-fg-muted font-sans">Cumulative (CVD):</span>
+                      <div className="flex items-center justify-between gap-4 text-tone-cyan font-bold">
+                        <span className="text-fg-muted font-sans">{t('analytics.market.charts.cumulativeCvdLabel', 'Cumulative (CVD):')}</span>
                         <span>{formatUsd(data.cvd)}</span>
                       </div>
                     </div>
@@ -240,22 +240,22 @@ export const TakerFlowCvdWidget: React.FC = () => {
               content={() => (
                 <div className="flex items-center justify-end gap-5 pb-2.5 text-[11px] font-sans">
                   <div className="flex items-center gap-1.5 text-fg">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block -ml-2" />
-                    <span>Net Delta per Candle (Buy / Sell)</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-success inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-danger inline-block -ml-2" />
+                    <span>{t('analytics.market.charts.netDeltaLegend', 'Net Delta per Candle (Buy / Sell)')}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-fg">
-                    <span className="w-4 h-0.5 bg-[#38bdf8] inline-block rounded-full" />
-                    <span>Cumulative Volume Delta (CVD)</span>
+                    <span className="w-4 h-0.5 bg-tone-cyan inline-block rounded-full" />
+                    <span>{t('analytics.market.charts.cvdLegend', 'Cumulative Volume Delta (CVD)')}</span>
                   </div>
                 </div>
               )}
             />
-            <Bar yAxisId="delta" dataKey="netDelta" name="Net Delta per Candle" barSize={8}>
+            <Bar yAxisId="delta" dataKey="netDelta" name={t('analytics.market.charts.netDeltaSeries', 'Net Delta per Candle')} barSize={8}>
               {takerFlowHistory.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={entry.netDelta >= 0 ? '#10b981' : '#f43f5e'}
+                  fill={entry.netDelta >= 0 ? 'var(--success)' : 'var(--danger)'}
                 />
               ))}
             </Bar>
@@ -263,8 +263,8 @@ export const TakerFlowCvdWidget: React.FC = () => {
               yAxisId="cvd"
               type="monotone"
               dataKey="cvd"
-              name="Cumulative Volume Delta (CVD)"
-              stroke="#38bdf8"
+              name={t('analytics.market.charts.cvdLegend', 'Cumulative Volume Delta (CVD)')}
+              stroke="var(--tone-cyan)"
               strokeWidth={2.5}
               dot={false}
             />

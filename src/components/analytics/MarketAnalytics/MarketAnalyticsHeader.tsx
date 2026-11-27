@@ -15,19 +15,19 @@ import {
 } from './MarketAnalyticsTooltips';
 import { AssetKind } from '../../../types/marketAnalytics';
 
-const getKindBadge = (kind: AssetKind | undefined) => {
+const getKindBadge = (kind: AssetKind | undefined, t: (key: string, fallback: string) => string) => {
   switch (kind) {
     case 'STOCK':
-      return { label: 'STOCK', bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' };
+      return { label: t('analytics.market.assetKinds.STOCK', 'STOCK'), bg: 'bg-success/10', text: 'text-success', border: 'border-success/20' };
     case 'COMMODITY':
-      return { label: 'COMMODITY', bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' };
+      return { label: t('analytics.market.assetKinds.COMMODITY', 'COMMODITY'), bg: 'bg-tone-amber/10', text: 'text-tone-amber', border: 'border-tone-amber/20' };
     case 'METAL':
-      return { label: 'METAL', bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/20' };
+      return { label: t('analytics.market.assetKinds.METAL', 'METAL'), bg: 'bg-tone-yellow/10', text: 'text-tone-yellow', border: 'border-tone-yellow/20' };
     case 'OTHER':
-      return { label: 'OTHER', bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-500/20' };
+      return { label: t('analytics.market.assetKinds.OTHER', 'OTHER'), bg: 'bg-tone-slate/10', text: 'text-tone-slate', border: 'border-tone-slate/20' };
     case 'CRYPTO':
     default:
-      return { label: 'CRYPTO', bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/20' };
+      return { label: t('analytics.market.assetKinds.CRYPTO', 'CRYPTO'), bg: 'bg-tone-cyan/10', text: 'text-tone-cyan', border: 'border-tone-cyan/20' };
   }
 };
 
@@ -38,21 +38,21 @@ export const MarketAnalyticsHeader: React.FC = () => {
   const { selectedSymbol, selectedMarkets, selectedExchanges } = useMarketAnalyticsStore();
 
   const availability = exchangeCoinCatalog.getAvailability(selectedSymbol);
-  const kindBadge = getKindBadge(availability?.kind);
+  const kindBadge = getKindBadge(availability?.kind, t);
 
   const getMarketsLabel = (): string => {
-    if (selectedMarkets.length === ALL_SPECIFIC_MARKETS.length) return 'All Markets';
+    if (selectedMarkets.length === ALL_SPECIFIC_MARKETS.length) return t('analytics.market.header.allMarkets', 'All Markets');
     if (selectedMarkets.length === 1) {
-      if (selectedMarkets[0] === 'PERP') return 'USDT Perp';
-      if (selectedMarkets[0] === 'INVERSE') return 'Inverse';
-      return 'Spot';
+      if (selectedMarkets[0] === 'PERP') return t('analytics.market.header.usdtPerp', 'USDT Perp');
+      if (selectedMarkets[0] === 'INVERSE') return t('analytics.market.header.inverse', 'Inverse');
+      return t('analytics.market.header.spot', 'Spot');
     }
-    return `${selectedMarkets.length} Markets`;
+    return t('analytics.market.header.marketsCount', { count: selectedMarkets.length, defaultValue: `${selectedMarkets.length} Markets` });
   };
 
   const getExchangesLabel = (): string => {
-    if (selectedExchanges.length === ALL_EXCHANGES.length) return t('analytics.common.allExchanges', 'All Exchanges');
-    return `${selectedExchanges.length} Exch.`;
+    if (selectedExchanges.length === ALL_EXCHANGES.length) return t('common.allExchanges', 'All Exchanges');
+    return t('analytics.market.header.exchangesCount', { count: selectedExchanges.length, defaultValue: `${selectedExchanges.length} Exch.` });
   };
 
   return (
@@ -66,7 +66,7 @@ export const MarketAnalyticsHeader: React.FC = () => {
               type="button"
               id="market-filter-modal-trigger"
               onClick={() => setIsFilterModalOpen(true)}
-              className="flex items-center gap-2.5 bg-elevated hover:bg-elevated border border-line hover:border-accent/60 px-3 py-1.5 rounded-xl text-xs font-semibold text-fg transition-all shadow-sm group"
+              className="flex items-center gap-2.5 bg-elevated hover:bg-elevated-hover border border-line hover:border-accent/60 px-3 py-1.5 rounded-xl text-xs font-semibold text-fg transition-all shadow-sm group"
             >
               {/* Asset Identity */}
               <div className="flex items-center gap-2">
@@ -81,7 +81,7 @@ export const MarketAnalyticsHeader: React.FC = () => {
 
               {/* Selected Markets Badge */}
               <div className="flex items-center gap-1">
-                <span className="text-[11px] font-medium text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded-md">
+                <span className="text-[11px] font-medium text-tone-cyan bg-tone-cyan/10 px-2 py-0.5 rounded-md">
                   {getMarketsLabel()}
                 </span>
               </div>
@@ -94,7 +94,7 @@ export const MarketAnalyticsHeader: React.FC = () => {
                   {selectedExchanges.map((ex) => (
                     <div
                       key={ex}
-                      className="w-4 h-4 rounded-full bg-[#1e2026] border border-line flex items-center justify-center"
+                      className="w-4 h-4 rounded-full bg-surface border border-line flex items-center justify-center"
                       title={ex}
                     >
                       <ExchangeIcon exchange={ex} className="w-3 h-3" />

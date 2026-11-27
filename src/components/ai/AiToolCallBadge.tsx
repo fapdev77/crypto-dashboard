@@ -13,37 +13,37 @@ export const AiToolCallBadge: React.FC<AiToolCallBadgeProps> = ({ toolName }) =>
     switch (name) {
       case 'aiGetPortfolioBalances':
         return {
-          icon: <Database className="w-3.5 h-3.5 text-indigo-400" />,
+          icon: <Database className="w-3.5 h-3.5 text-tone-blue" />,
           label: t('ai.toolBadges.balances', 'Reading consolidated portfolio balances...'),
         };
       case 'aiGetOpenPositions':
         return {
-          icon: <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />,
+          icon: <BarChart2 className="w-3.5 h-3.5 text-tone-cyan" />,
           label: t('ai.toolBadges.openPositions', 'Querying open positions on exchanges...'),
         };
       case 'aiGetHedgeCorrelationSummary':
         return {
-          icon: <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />,
+          icon: <ShieldAlert className="w-3.5 h-3.5 text-warning" />,
           label: t('ai.toolBadges.hedgeCorrelation', 'Calculating hedge correlation and exposure mismatch...'),
         };
       case 'aiGetFundingFeesHistory':
         return {
-          icon: <Coins className="w-3.5 h-3.5 text-emerald-400" />,
+          icon: <Coins className="w-3.5 h-3.5 text-success" />,
           label: t('ai.toolBadges.fundingFees', 'Retrieving funding fees history from IndexedDB...'),
         };
       case 'aiGetTradingFeesHistory':
         return {
-          icon: <Coins className="w-3.5 h-3.5 text-rose-400" />,
+          icon: <Coins className="w-3.5 h-3.5 text-danger" />,
           label: t('ai.toolBadges.tradingFees', 'Scanning historical trading commissions and fees...'),
         };
       case 'aiGetClosedPositionsSummary':
         return {
-          icon: <BarChart2 className="w-3.5 h-3.5 text-purple-400" />,
+          icon: <BarChart2 className="w-3.5 h-3.5 text-tone-purple" />,
           label: t('ai.toolBadges.closedPositions', 'Analyzing closed positions history...'),
         };
       default:
         return {
-          icon: <Database className="w-3.5 h-3.5 text-slate-400" />,
+          icon: <Database className="w-3.5 h-3.5 text-tone-slate" />,
           label: t('ai.toolBadges.default', 'Executing local tool: {{name}}...', { name }),
         };
     }

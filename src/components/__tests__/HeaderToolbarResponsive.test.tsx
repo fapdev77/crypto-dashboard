@@ -69,8 +69,8 @@ describe('Header navigation icon registry & mobile-compact toolbar', () => {
     );
 
     const langBtn = screen.getByRole('button', { name: /PT \/ BRL/i });
-    const themeBtn = screen.getByRole('button', { name: /Terminal Dark/i });
-    const pikaBtn = screen.getByRole('button', { name: /Open PIKA Assistant/i });
+    const themeBtn = screen.getByRole('button', { name: /Interface theme|Terminal Dark/i });
+    const pikaBtn = screen.getByRole('button', { name: /PIKA|Assistant/i, hidden: true });
     const beerBtn = screen.getByRole('button', { name: /Pague uma cerveja/i });
     const helpBtn = screen.getByRole('button', { name: /ajuda|help/i });
     const privacyBtn = screen.getByRole('button', { name: /valores numéricos|privado|private/i });

@@ -75,32 +75,32 @@ export const AiModelList: React.FC<AiModelListProps> = ({
         );
       case 'ollama':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-purple-500/20 text-purple-400 border border-purple-500/40">
-            LOCAL
+          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-tone-purple/15 text-tone-purple border border-tone-purple/30">
+            {t('ai.models.providerLocal', 'LOCAL')}
           </span>
         );
       case 'openrouter':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/40">
+          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-tone-blue/15 text-tone-blue border border-tone-blue/30">
             OPENROUTER
           </span>
         );
       case 'openai':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-teal-500/20 text-teal-400 border border-teal-500/40">
+          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-tone-cyan/15 text-tone-cyan border border-tone-cyan/30">
             OPENAI
           </span>
         );
       case 'anthropic':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">
+          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-tone-amber/15 text-tone-amber border border-tone-amber/30">
             ANTHROPIC
           </span>
         );
       default:
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-gray-500/20 text-fg border border-gray-500/40">
-            CUSTOM
+          <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded bg-elevated text-fg border border-line-strong">
+            {t('ai.models.providerCustom', 'CUSTOM')}
           </span>
         );
     }
@@ -111,7 +111,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
       {/* Header matching user reference image */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-4 border-b border-line bg-surface">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400">
+          <div className="p-2 bg-warning/10 border border-warning/30 rounded-lg text-warning">
             <Layers className="w-5 h-5" />
           </div>
           <div>
@@ -168,7 +168,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                       <button
                         onClick={() => onReorderModel(model.id, 'up')}
                         disabled={isFirst}
-                        aria-label="Move up"
+                        aria-label={t('ai.models.tooltips.moveUp', 'Move up in execution priority')}
                         className="p-1 hover:text-fg disabled:opacity-20 disabled:hover:text-fg-muted transition cursor-pointer"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
@@ -181,7 +181,7 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                       <button
                         onClick={() => onReorderModel(model.id, 'down')}
                         disabled={isLast}
-                        aria-label="Move down"
+                        aria-label={t('ai.models.tooltips.moveDown', 'Move down in execution priority')}
                         className="p-1 hover:text-fg disabled:opacity-20 disabled:hover:text-fg-muted transition cursor-pointer"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -194,33 +194,38 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                     {/* Title + Badges */}
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-bold text-fg tracking-tight">
-                        {model.name} {model.isPrimary ? '(Primary)' : model.isFallback ? '(Contingency)' : ''}
+                        {model.name}{' '}
+                        {model.isPrimary
+                          ? t('ai.models.primaryTag', '(Primary)')
+                          : model.isFallback
+                          ? t('ai.models.contingencyTag', '(Contingency)')
+                          : ''}
                       </span>
                       {getProviderBadge(model.provider)}
 
                       {model.isFallback && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/40">
-                          <ShieldAlert className="w-3 h-3 text-amber-400" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-warning/10 text-warning border border-warning/40">
+                          <ShieldAlert className="w-3 h-3 text-warning" />
                           {t('ai.settings.models.fallbackBadge', 'FALLBACK CONTINGENCY')}
                         </span>
                       )}
 
                       {model.isPrimary && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-success/10 text-success border border-success/30">
                           {t('ai.settings.models.primaryBadge', 'PRIMARY')}
                         </span>
                       )}
 
                       {model.lastPingStatus === 'deprecated' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-rose-500/10 text-rose-400 border border-rose-500/40" title={model.lastPingMessage}>
-                          <AlertCircle className="w-3 h-3 text-rose-400" />
-                          DEPRECATED / OFFLINE
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-danger/10 text-danger border border-danger/40" title={model.lastPingMessage}>
+                          <AlertCircle className="w-3 h-3 text-danger" />
+                          {t('ai.models.deprecatedOffline', 'DEPRECATED / OFFLINE')}
                         </span>
                       )}
 
                       {model.lastPingStatus === 'healthy' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                          VERIFIED ({model.lastPingLatencyMs || 0}MS)
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-success/10 text-success border border-success/30">
+                          {t('ai.models.verifiedLatency', 'VERIFIED ({{ms}}MS)', { ms: model.lastPingLatencyMs || 0 })}
                         </span>
                       )}
 
@@ -231,15 +236,15 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                             model.modelId.toLowerCase().includes('qwen2.5-coder') ||
                             model.modelId.toLowerCase().includes('deepseek-coder'))) ? (
                         <span
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-300 border border-amber-500/40"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-warning/10 text-warning border border-warning/40"
                           title={t('ai.models.tooltips.noToolSupport', 'Models without tool support will have live portfolio queries blocked to prevent hallucinations.')}
                         >
-                          <AlertCircle className="w-3 h-3 text-amber-400" />
-                          NO TOOLS (STRICT AUDIT)
+                          <AlertCircle className="w-3 h-3 text-warning" />
+                          {t('ai.models.noToolsBadge', 'NO TOOLS (STRICT AUDIT)')}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                          TOOLS OK
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-success/10 text-success border border-success/30">
+                          {t('ai.models.toolsOkBadge', 'TOOLS OK')}
                         </span>
                       )}
                     </div>
@@ -248,14 +253,14 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-fg-muted font-mono">
                       <div className="flex items-center gap-1.5">
                         <Cpu className="w-3.5 h-3.5 text-fg-muted" />
-                        <span>ID:</span>
+                        <span>{t('ai.models.idLabel', 'ID:')}</span>
                         <span className="text-fg font-medium">{model.modelId}</span>
                       </div>
 
                       {model.baseUrl && (
                         <div className="flex items-center gap-1.5">
                           <Globe className="w-3.5 h-3.5 text-fg-muted" />
-                          <span>Endpoint:</span>
+                          <span>{t('ai.models.endpointLabel', 'Endpoint:')}</span>
                           <span className="text-fg truncate max-w-[200px]" title={model.baseUrl}>
                             {model.baseUrl}
                           </span>
@@ -263,19 +268,19 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                       )}
 
                       <div className="flex items-center gap-1">
-                        <Sliders className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Temp:</span>
-                        <span className="text-amber-400 font-semibold">{model.temperature.toFixed(1)}</span>
+                        <Sliders className="w-3.5 h-3.5 text-warning" />
+                        <span>{t('ai.models.tempLabel', 'Temp:')}</span>
+                        <span className="text-warning font-semibold">{model.temperature.toFixed(1)}</span>
                       </div>
 
                       <div>
-                        <span>Tokens:</span> <span className="text-fg">{model.maxTokens}</span>
+                        <span>{t('ai.models.tokensLabel', 'Tokens:')}</span> <span className="text-fg">{model.maxTokens}</span>
                       </div>
 
                       <div className="flex items-center gap-1">
-                        <Gauge className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>Limits:</span>
-                        <span className="text-emerald-400 font-semibold">
+                        <Gauge className="w-3.5 h-3.5 text-success" />
+                        <span>{t('ai.models.limitsLabel', 'Limits:')}</span>
+                        <span className="text-success font-semibold">
                           {model.maxRpm > 0 ? `${model.maxRpm} RPM` : t('common.unlimited', 'Unlimited')}
                         </span>
                       </div>
@@ -290,39 +295,43 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                     <button
                       onClick={() => handleTestConnection(model)}
                       disabled={isTesting}
-                      className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30 transition disabled:opacity-50 cursor-pointer flex items-center justify-center"
-                      aria-label="Test Connection"
+                      className="p-2 rounded-lg bg-tone-blue/10 text-tone-blue hover:bg-tone-blue/20 border border-tone-blue/30 transition disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                      aria-label={t('ai.settings.models.testBtn', 'Test Connection')}
                     >
                       {isTesting ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                        <Loader2 className="w-4 h-4 animate-spin text-tone-blue" />
                       ) : test?.success ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <CheckCircle2 className="w-4 h-4 text-success" />
                       ) : test && !test.success ? (
-                        <AlertCircle className="w-4 h-4 text-rose-400" />
+                        <AlertCircle className="w-4 h-4 text-danger" />
                       ) : (
-                        <Play className="w-4 h-4 fill-current text-blue-400" />
+                        <Play className="w-4 h-4 fill-current text-tone-blue" />
                       )}
                     </button>
                   </AppTooltip>
 
                   {/* 2. Active / Inactive Toggle Button */}
                   <AppTooltip
-                    description={model.isActive ? 'Click to deactivate this model' : 'Click to activate this model'}
+                    description={
+                      model.isActive
+                        ? t('ai.models.tooltips.deactivate', 'Click to deactivate this model')
+                        : t('ai.models.tooltips.activate', 'Click to activate this model')
+                    }
                     side="top"
                   >
                     <button
                       onClick={() => onToggleActive(model.id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${model.isActive
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20'
-                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20'
+                        ? 'bg-success/10 text-success border border-success/30 hover:bg-success/20'
+                        : 'bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20'
                         }`}
                     >
                       {model.isActive ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                       ) : (
-                        <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+                        <AlertCircle className="w-3.5 h-3.5 text-danger" />
                       )}
-                      <span>{model.isActive ? 'Active' : 'Inactive'}</span>
+                      <span>{model.isActive ? t('common.active', 'Active') : t('common.inactive', 'Inactive')}</span>
                     </button>
                   </AppTooltip>
 
@@ -330,20 +339,20 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   <AppTooltip
                     description={
                       model.isFallback
-                        ? 'Active contingency model (Fallback). Click to toggle.'
-                        : 'Set as contingency model (Fallback)'
+                        ? t('ai.models.tooltips.fallbackActive', 'Active contingency model (Fallback). Click to toggle.')
+                        : t('ai.models.tooltips.fallbackInactive', 'Set as contingency model (Fallback)')
                     }
                     side="top"
                   >
                     <button
                       onClick={() => onToggleFallback(model.id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${model.isFallback
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/40 hover:bg-amber-500/20'
+                        ? 'bg-warning/10 text-warning border border-warning/40 hover:bg-warning/20'
                         : 'bg-elevated text-fg-muted hover:text-fg border border-line hover:border-line-strong'
                         }`}
                     >
-                      <Shield className={`w-3.5 h-3.5 ${model.isFallback ? 'text-amber-400' : 'text-fg-muted'}`} />
-                      <span>Fallback</span>
+                      <Shield className={`w-3.5 h-3.5 ${model.isFallback ? 'text-warning' : 'text-fg-muted'}`} />
+                      <span>{t('ai.settings.models.fallbackBadge', 'Fallback')}</span>
                     </button>
                   </AppTooltip>
 
@@ -351,8 +360,8 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   <AppTooltip description={t('ai.models.tooltips.clone', 'Clone / duplicate this model')} side="top">
                     <button
                       onClick={() => onCloneModel(model.id)}
-                      className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/30 transition cursor-pointer flex items-center justify-center"
-                      aria-label="Clone Model"
+                      className="p-2 rounded-lg bg-tone-purple/10 text-tone-purple hover:bg-tone-purple/20 border border-tone-purple/30 transition cursor-pointer flex items-center justify-center"
+                      aria-label={t('ai.settings.models.cloneBtn', 'Clone')}
                     >
                       <Copy className="w-4 h-4" />
                     </button>
@@ -362,8 +371,8 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   <AppTooltip description={t('ai.models.tooltips.edit', 'Edit parameters and credentials of this model')} side="top">
                     <button
                       onClick={() => onEditModel(model)}
-                      className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30 transition cursor-pointer flex items-center justify-center"
-                      aria-label="Edit Model"
+                      className="p-2 rounded-lg bg-tone-blue/10 text-tone-blue hover:bg-tone-blue/20 border border-tone-blue/30 transition cursor-pointer flex items-center justify-center"
+                      aria-label={t('ai.settings.models.editBtn', 'Edit')}
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
@@ -373,8 +382,8 @@ export const AiModelList: React.FC<AiModelListProps> = ({
                   <AppTooltip description={t('ai.models.tooltips.delete', 'Delete this model')} side="top">
                     <button
                       onClick={() => onDeleteModel(model.id)}
-                      className="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 transition cursor-pointer flex items-center justify-center"
-                      aria-label="Delete Model"
+                      className="p-2 rounded-lg bg-danger/10 text-danger hover:bg-danger/20 border border-danger/30 transition cursor-pointer flex items-center justify-center"
+                      aria-label={t('ai.settings.models.deleteBtn', 'Delete')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

@@ -25,7 +25,7 @@ interface AiChatHistorySidebarProps {
 }
 
 export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onClose }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     sessions,
     currentSessionId,
@@ -121,12 +121,12 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
     }
 
     const header = `# PIKA Assistant Audit Export: ${session.title}\n`;
-    const meta = `*Date:* ${new Date(session.createdAt).toLocaleString('en-US')}\n*Messages:* ${session.messages.length}\n*Session ID:* ${session.id}\n\n---\n\n`;
+    const meta = `*Date:* ${new Date(session.createdAt).toLocaleString(i18n.language)}\n*Messages:* ${session.messages.length}\n*Session ID:* ${session.id}\n\n---\n\n`;
 
     const body = session.messages
       .map((m) => {
         const role = m.role === 'user' ? '👤 **User**' : '🤖 **PIKA Assistant**';
-        const time = new Date(m.timestamp).toLocaleTimeString('en-US');
+        const time = new Date(m.timestamp).toLocaleTimeString(i18n.language);
         const tools =
           m.toolsInvoked && m.toolsInvoked.length > 0
             ? `\n\n*Diagnostics Invoked:* ${m.toolsInvoked.map((t) => `\`${t.name}\``).join(', ')}`
@@ -172,13 +172,13 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
         className={`group relative flex items-center justify-between p-2 rounded-xl text-xs transition cursor-pointer border ${
           isCurrent
             ? 'bg-accent/15 border-accent/40 text-fg font-medium shadow-sm'
-            : 'bg-surface hover:bg-elevated border-line text-[#c9cbcf] hover:text-fg'
+            : 'bg-surface hover:bg-elevated border-line text-fg-muted hover:text-fg'
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-1">
           <div
             className={`w-2 h-2 rounded-full shrink-0 ${
-              isCurrent ? 'bg-accent ring-2 ring-accent/30' : 'bg-gray-600 group-hover:bg-gray-400'
+              isCurrent ? 'bg-accent ring-2 ring-accent/30' : 'bg-fg-muted/40 group-hover:bg-fg-muted'
             }`}
           />
 
@@ -198,7 +198,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                 />
                 <button
                   onClick={(e) => handleSaveRename(session.id, e)}
-                  className="p-1 text-emerald-400 hover:bg-line rounded"
+                  className="p-1 text-success hover:bg-line rounded"
                 >
                   <Check className="w-3.5 h-3.5" />
                 </button>
@@ -208,10 +208,10 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
               </div>
             ) : isConfirmingDelete ? (
               <div
-                className="flex items-center justify-between gap-1 bg-rose-500/10 border border-rose-500/30 rounded p-1"
+                className="flex items-center justify-between gap-1 bg-danger/10 border border-danger/30 rounded p-1"
                 onClick={(e) => e.stopPropagation()}
               >
-                <span className="text-[10px] text-rose-300 font-semibold truncate">Delete chat?</span>
+                <span className="text-[10px] text-danger font-semibold truncate">{t('ai.chatHistory.deleteConfirmPrompt', 'Delete chat?')}</span>
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={(e) => {
@@ -220,9 +220,9 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                       setConfirmDeleteId(null);
                       toast.success(t('toasts.conversationDeleted', 'Conversation deleted'));
                     }}
-                    className="px-1.5 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold"
+                    className="px-1.5 py-0.5 bg-danger hover:bg-danger/90 text-white rounded text-[10px] font-bold"
                   >
-                    Yes
+                    {t('common.yes', 'Yes')}
                   </button>
                   <button
                     onClick={(e) => {
@@ -231,17 +231,21 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                     }}
                     className="px-1.5 py-0.5 bg-line hover:bg-line-strong text-fg rounded text-[10px]"
                   >
-                    No
+                    {t('common.no', 'No')}
                   </button>
                 </div>
               </div>
             ) : (
               <div>
-                <p className="truncate text-xs leading-snug">{session.title}</p>
+                <p className="truncate text-xs leading-snug">
+                  {session.title === 'New Conversation'
+                    ? t('ai.chat.newConversationTitle', 'New Conversation')
+                    : session.title}
+                </p>
                 <div className="flex items-center gap-2 text-[10px] text-fg-muted mt-0.5 font-mono">
-                  <span>{session.messages.length} msgs</span>
+                  <span>{t('ai.chat.msgsCount', '{{count}} msgs', { count: session.messages.length })}</span>
                   <span>•</span>
-                  <span>{new Date(session.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span>{new Date(session.updatedAt).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               </div>
             )}
@@ -251,14 +255,14 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
         {/* Action icons on hover */}
         {!isEditing && !isConfirmingDelete && (
           <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition bg-surface pl-1 rounded">
-            <AppTooltip description={session.pinned ? 'Unpin' : 'Pin to top'} side="top">
+            <AppTooltip description={session.pinned ? t('ai.chatHistory.unpin', 'Unpin') : t('ai.chatHistory.pinToTop', 'Pin to top')} side="top">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   togglePinSession(session.id);
                 }}
                 className={`p-1 rounded hover:bg-line transition cursor-pointer ${
-                  session.pinned ? 'text-amber-400' : 'text-fg-muted hover:text-fg'
+                  session.pinned ? 'text-warning' : 'text-fg-muted hover:text-fg'
                 }`}
               >
                 <Pin className="w-3 h-3" />
@@ -289,7 +293,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                   e.stopPropagation();
                   setConfirmDeleteId(session.id);
                 }}
-                className="p-1 text-fg-muted hover:text-rose-400 rounded hover:bg-line transition cursor-pointer"
+                className="p-1 text-fg-muted hover:text-danger rounded hover:bg-line transition cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -300,12 +304,12 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
     );
   };
 
-  const renderGroup = (label: string, items: AiChatSession[]) => {
+  const renderGroup = (label: string, items: AiChatSession[], isPinned = false) => {
     if (items.length === 0) return null;
     return (
       <div className="space-y-1.5 mb-3">
         <div className="text-[10px] font-bold uppercase tracking-wider text-fg-muted px-2 flex items-center gap-1.5">
-          {label === 'Pinned' && <Pin className="w-2.5 h-2.5 text-amber-400" />}
+          {isPinned && <Pin className="w-2.5 h-2.5 text-warning" />}
           <span>{label}</span>
           <span className="text-[9px] text-fg-muted font-normal font-mono">({items.length})</span>
         </div>
@@ -322,7 +326,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
           <div className="p-1.5 bg-accent/10 text-accent rounded-lg border border-accent/20">
             <MessageSquare className="w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-bold text-fg tracking-tight">Chat History</span>
+          <span className="text-xs font-bold text-fg tracking-tight">{t('ai.chatHistory.title', 'Chat History')}</span>
           <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-line text-fg-muted">
             {sessionList.length}
           </span>
@@ -331,7 +335,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
         <button
           onClick={onClose}
           className="p-1 text-fg-muted hover:text-fg rounded-lg hover:bg-line transition cursor-pointer"
-          aria-label="Close history"
+          aria-label={t('ai.chatHistory.closeAria', 'Close history')}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -341,10 +345,10 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
       <div className="p-3 space-y-2 border-b border-line shrink-0 bg-surface">
         <button
           onClick={handleNewChat}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-accent hover:bg-accent/85 text-white rounded-xl text-xs font-semibold shadow-md shadow-accent/20 transition cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-accent hover:bg-accent-hover text-white rounded-xl text-xs font-semibold shadow-md shadow-accent/20 transition cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>New Chat</span>
+          <span>{t('ai.chatHistory.newChat', 'New Chat')}</span>
         </button>
 
         {/* Search Input */}
@@ -352,7 +356,7 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-muted" />
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder={t('ai.chatHistory.searchPlaceholder', 'Search conversations...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-canvas border border-line rounded-lg pl-8 pr-7 py-1.5 text-xs text-fg placeholder-fg-muted focus:outline-none focus:border-accent transition"
@@ -372,19 +376,21 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
         {filteredSessions.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-4 text-fg-muted">
-            <Clock className="w-7 h-7 mb-2 text-[#43464d]" />
-            <p className="text-xs font-medium text-fg mb-0.5">No conversations found</p>
+            <Clock className="w-7 h-7 mb-2 text-fg-muted/50" />
+            <p className="text-xs font-medium text-fg mb-0.5">{t('ai.chatHistory.emptyTitle', 'No conversations found')}</p>
             <p className="text-[11px] max-w-[180px]">
-              {searchQuery ? 'Try a different search term.' : 'Click "+ New Chat" to begin a conversation.'}
+              {searchQuery
+                ? t('ai.chatHistory.emptySearch', 'Try a different search term.')
+                : t('ai.chatHistory.emptyHint', 'Click "+ New Chat" to begin a conversation.')}
             </p>
           </div>
         ) : (
           <>
-            {renderGroup('Pinned', groupedSessions.pinned)}
-            {renderGroup('Today', groupedSessions.today)}
-            {renderGroup('Yesterday', groupedSessions.yesterday)}
-            {renderGroup('Previous 7 Days', groupedSessions.last7Days)}
-            {renderGroup('Older', groupedSessions.older)}
+            {renderGroup(t('ai.chatHistory.groupPinned', 'Pinned'), groupedSessions.pinned, true)}
+            {renderGroup(t('ai.chatHistory.groupToday', 'Today'), groupedSessions.today)}
+            {renderGroup(t('ai.chatHistory.groupYesterday', 'Yesterday'), groupedSessions.yesterday)}
+            {renderGroup(t('ai.chatHistory.groupLast7Days', 'Previous 7 Days'), groupedSessions.last7Days)}
+            {renderGroup(t('ai.chatHistory.groupOlder', 'Older'), groupedSessions.older)}
           </>
         )}
       </div>
@@ -392,15 +398,15 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
       {/* Footer Actions */}
       <div className="p-2.5 border-t border-line bg-surface shrink-0">
         {confirmClearAll ? (
-          <div className="bg-rose-500/10 border border-rose-500/25 rounded-xl p-2.5 space-y-2 text-center animate-in fade-in-0">
-            <p className="text-[11px] font-bold text-rose-300">Clear all chat history?</p>
-            <p className="text-[10px] text-fg-muted">All conversation threads will be permanently erased.</p>
+          <div className="bg-danger/10 border border-danger/25 rounded-xl p-2.5 space-y-2 text-center animate-in fade-in-0">
+            <p className="text-[11px] font-bold text-danger">{t('ai.chatHistory.clearAllConfirmTitle', 'Clear all chat history?')}</p>
+            <p className="text-[10px] text-fg-muted">{t('ai.chatHistory.clearAllConfirmDesc', 'All conversation threads will be permanently erased.')}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmClearAll(false)}
                 className="flex-1 py-1 text-xs bg-elevated hover:bg-line text-fg rounded font-medium border border-line"
               >
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </button>
               <button
                 onClick={() => {
@@ -408,19 +414,19 @@ export const AiChatHistorySidebar: React.FC<AiChatHistorySidebarProps> = ({ onCl
                   setConfirmClearAll(false);
                   toast.success(t('toasts.allChatHistoryCleared', 'All conversation history cleared'), { icon: '🧹' });
                 }}
-                className="flex-1 py-1 text-xs bg-rose-600 hover:bg-rose-500 text-white rounded font-bold"
+                className="flex-1 py-1 text-xs bg-danger hover:bg-danger/90 text-white rounded font-bold"
               >
-                Confirm
+                {t('common.confirm', 'Confirm')}
               </button>
             </div>
           </div>
         ) : (
           <button
             onClick={() => setConfirmClearAll(true)}
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-fg-muted hover:text-rose-400 hover:bg-elevated rounded-lg text-[11px] transition cursor-pointer border border-transparent hover:border-line"
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-fg-muted hover:text-danger hover:bg-elevated rounded-lg text-[11px] transition cursor-pointer border border-transparent hover:border-line"
           >
             <Trash2 className="w-3 h-3" />
-            <span>Clear All History</span>
+            <span>{t('ai.chatHistory.clearAllBtn', 'Clear All History')}</span>
           </button>
         )}
       </div>

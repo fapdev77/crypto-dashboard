@@ -103,9 +103,9 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
         id: 'table-excel-export',
         duration: 2500,
         style: {
-          background: '#151619',
-          color: '#ffffff',
-          border: '1px solid #10B981',
+          background: 'var(--surface)',
+          color: 'var(--fg)',
+          border: '1px solid var(--success)',
           fontSize: '12px',
         },
       });
@@ -135,9 +135,9 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
         id: 'table-copy-sheets',
         duration: 3000,
         style: {
-          background: '#151619',
-          color: '#ffffff',
-          border: '1px solid #2F6BFF',
+          background: 'var(--surface)',
+          color: 'var(--fg)',
+          border: '1px solid var(--accent)',
           fontSize: '12px',
         },
       });
@@ -148,12 +148,12 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
   };
 
   return (
-    <div className="my-3 rounded-xl border border-line bg-[#0c0d11] overflow-hidden shadow-lg text-xs">
+    <div className="my-3 rounded-xl border border-line bg-canvas overflow-hidden shadow-lg text-xs">
       {/* Top Table Toolbar */}
-      <div className="flex items-center justify-between px-3.5 py-2 bg-[#14151a] border-b border-line text-[11px] text-fg-muted">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-surface border-b border-line text-[11px] text-fg-muted">
         <div className="flex items-center gap-1.5 font-medium text-fg">
-          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Financial Data Table</span>
+          <FileSpreadsheet className="w-3.5 h-3.5 text-success" />
+          <span>{t('ai.table.title', 'Financial Data Table')}</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -161,18 +161,18 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
           <button
             type="button"
             onClick={handleCopyForSheets}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1d1f27] hover:bg-[#262833] text-fg hover:text-fg border border-[#2e303c] transition cursor-pointer text-[10px]"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-elevated hover:bg-elevated-hover text-fg hover:text-fg border border-line transition cursor-pointer text-[10px]"
             title={t('ai.table.tooltips.copyTsv', 'Copy as Tab-Separated Values to paste directly in Google Sheets or Excel')}
           >
             {copied ? (
               <>
-                <Check className="w-3 h-3 text-emerald-400" />
-                <span className="text-emerald-400 font-medium">Copied!</span>
+                <Check className="w-3 h-3 text-success" />
+                <span className="text-success font-medium">{t('common.copied', 'Copied!')}</span>
               </>
             ) : (
               <>
                 <Copy className="w-3 h-3 text-accent" />
-                <span>Copy for Sheets</span>
+                <span>{t('ai.table.copyForSheets', 'Copy for Sheets')}</span>
               </>
             )}
           </button>
@@ -181,11 +181,11 @@ export const AiTableRenderer: React.FC<AiTableRendererProps> = ({ children }) =>
           <button
             type="button"
             onClick={handleExportExcel}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition cursor-pointer text-[10px] font-medium"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-success/10 hover:bg-success/20 text-success border border-success/30 transition cursor-pointer text-[10px] font-medium"
             title={t('ai.table.tooltips.downloadXlsx', 'Download formatted Excel spreadsheet (.xlsx)')}
           >
-            <Download className="w-3 h-3 text-emerald-400" />
-            <span>Export Excel</span>
+            <Download className="w-3 h-3 text-success" />
+            <span>{t('ai.table.exportExcel', 'Export Excel')}</span>
           </button>
         </div>
       </div>

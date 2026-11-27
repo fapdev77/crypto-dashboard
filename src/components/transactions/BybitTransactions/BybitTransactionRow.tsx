@@ -227,7 +227,7 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
       {/* Expanded Details */}
       {isExpanded && (
         <div
-          className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-line"
+          className="px-4 pb-4 pt-1 bg-elevated/70 border-t border-line"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-5 gap-x-4 text-sm mt-4">

@@ -23,7 +23,7 @@ import { useFeeUsdTotals, FeeCurrencyBucket } from '../../../hooks/useFeeUsdTota
 import { HistoryLimitWarning } from '../../ui/HistoryLimitWarning';
 
 export function OrderHistory() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fiatCurrency = useSettingsStore(state => state.fiatCurrency) || 'USD';
   const [filters, setFilters] = useState<OrderFilters>({
     exchange: 'All',
@@ -229,35 +229,47 @@ export function OrderHistory() {
   const missingUsdCurrencies = Array.from(new Set([...missingFundingRates, ...missingFeeCurrencies]));
 
   const SIDE_DONUT = [
-    { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: '#00C853' },
-    { name: t('orders.sell', 'Sell'), value: stats.sellCount, color: '#FF4444' }
+    { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: 'var(--success)' },
+    { name: t('orders.sell', 'Sell'), value: stats.sellCount, color: 'var(--danger)' }
   ];
 
   const STATUS_DONUT = [
-    { name: t('orders.statuses.filled', 'Filled'), value: stats.filledCount, color: '#00C853' },
-    { name: t('orders.statuses.cancelled', 'Cancelled'), value: stats.cancelledCount, color: '#8E9299' },
-    { name: t('orders.statuses.rejected', 'Rejected'), value: stats.rejectedCount, color: '#FF4444' }
+    { name: t('orders.statuses.filled', 'Filled'), value: stats.filledCount, color: 'var(--success)' },
+    { name: t('orders.statuses.cancelled', 'Cancelled'), value: stats.cancelledCount, color: 'var(--fg-muted)' },
+    { name: t('orders.statuses.rejected', 'Rejected'), value: stats.rejectedCount, color: 'var(--danger)' }
   ];
 
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
     
-    const headers = ['Symbol', 'Exchange', 'Connection ID', 'Instrument', 'Type', 'Side', 'Price', 'Amount', 'Filled', 'Status', 'Time'];
+    const headers = [
+      t('orders.symbol', 'Symbol'),
+      t('orders.exchange', 'Exchange'),
+      t('orders.details.connectionId', 'Connection ID'),
+      t('analytics.pnlSymbol.table.instrument', 'Instrument'),
+      t('orders.type', 'Type'),
+      t('orders.side', 'Side'),
+      t('orders.price', 'Price'),
+      t('orders.amount', 'Amount'),
+      t('orders.filled', 'Filled'),
+      t('orders.status', 'Status'),
+      t('orders.dateTime', 'Date/Time'),
+    ];
     const rows = orders.map(o => {
       const isBuy = o.side === 'buy';
       const sideText = isBuy
-        ? (o.positionSide === 'long' ? 'Open Long' : o.positionSide === 'short' ? 'Close Short' : 'Buy')
-        : (o.positionSide === 'short' ? 'Open Short' : o.positionSide === 'long' ? 'Close Long' : 'Sell');
+        ? (o.positionSide === 'long' ? t('orders.openLong', 'Open Long') : o.positionSide === 'short' ? t('orders.closeShort', 'Close Short') : t('orders.buy', 'Buy'))
+        : (o.positionSide === 'short' ? t('orders.openShort', 'Open Short') : o.positionSide === 'long' ? t('orders.closeLong', 'Close Long') : t('orders.sell', 'Sell'));
 
       const d = new Date(o.createdTime);
-      const timeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+      const timeStr = d.toLocaleDateString(i18n.language) + ' ' + d.toLocaleTimeString(i18n.language);
 
       return [o.symbol, o.exchange, o.connectionId, o.category, o.type, sideText, o.price, o.qty, o.filledQty, o.status, timeStr];
     });
 
     const note = missingRatesNote(t, missingFundingRates);
     const config: ExportConfig = {
-      title: 'Order History Report',
+      title: t('orders.exportTitle', 'Order History Report'),
       filename: `Order_History_${Date.now()}`,
       headers,
       rows,
@@ -277,7 +289,7 @@ export function OrderHistory() {
             <History className="w-5 h-5 text-accent" />
             {t('orders.orderHistoryTitle', 'Orders History')}
           </h2>
-          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? 'Syncing orders history...' : null} syncError={error} />
+          <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={isSyncing ? t('orders.syncingHistory', 'Syncing orders history...') : null} syncError={error} />
         </div>
         <div className="relative">
           <button

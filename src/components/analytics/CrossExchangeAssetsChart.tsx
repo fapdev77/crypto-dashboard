@@ -35,8 +35,8 @@ const CustomBarShape = (props: any) => {
   const metaKey = dataKey.replace('segment', '_meta');
   const meta = payload[metaKey];
 
-  const isLightBackground = fill === '#ffffff';
-  const textColor = isLightBackground ? '#4b5563' : '#ffffff';
+  const isLightBackground = typeof fill === 'string' && fill.startsWith('#') ? isHexColorLight(fill) : false;
+  const textColor = isLightBackground ? '#101420' : '#ffffff';
   const textShadow = isLightBackground ? 'none' : '0px 1px 3px rgba(0,0,0,0.8), 0px 0px 1px rgba(0,0,0,0.5)';
   const isOthersSegment = meta && (meta.isOthers || meta.name === 'Outros' || meta.name === 'Others' || meta.name?.toLowerCase() === 'outros' || meta.name?.toLowerCase() === 'others');
 
@@ -73,7 +73,7 @@ const CustomBarShape = (props: any) => {
 };
 
 
-const CustomTooltip = ({ active, payload, formatCurrency, t }: any) => {
+const CustomTooltip = ({ active, payload, formatCurrency, t, locale }: any) => {
   if (active && payload && payload.length) {
     const row = payload[0].payload;
     const assets = row.rawAssets || [];
@@ -100,7 +100,7 @@ const CustomTooltip = ({ active, payload, formatCurrency, t }: any) => {
                 </div>
                 <div className="text-right flex items-center justify-end gap-3 min-w-[100px]">
                   <span className="text-fg font-mono">
-                    {formatCurrency ? formatCurrency(asset.value, 'usd') : `$${asset.value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}`}
+                    {formatCurrency ? formatCurrency(asset.value, 'usd') : `$${asset.value.toLocaleString(locale || 'en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}`}
                   </span>
                   <span className="text-fg-muted opacity-80 font-mono text-xs w-10 text-right">{asset.percent.toFixed(1)}%</span>
                 </div>
@@ -137,7 +137,7 @@ interface CrossExchangeAssetsChartProps {
 }
 
 export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAssetsChartProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const formatCurrency = useFormatCurrency();
   const themeMode = useSettingsStore(state => state.themeMode);
   const customTokens = useSettingsStore(state => state.customThemeTokens);
@@ -169,7 +169,7 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
           >
             <XAxis type="number" domain={[0, maxTotal]} hide />
             <YAxis dataKey="exchange" type="category" axisLine={false} tickLine={false} tick={customYAxisTick} width={80} />
-            <RechartsTooltip cursor={{ fill: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)' }} content={<CustomTooltip formatCurrency={formatCurrency} t={t} />} isAnimationActive={false} />
+            <RechartsTooltip cursor={{ fill: isLight ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)' }} content={<CustomTooltip formatCurrency={formatCurrency} t={t} locale={i18n.language} />} isAnimationActive={false} />
             
             {segments.map((key, i) => (
               <Bar
@@ -180,7 +180,7 @@ export function CrossExchangeAssetsChart({ data, maxSegments }: CrossExchangeAss
                 shape={<CustomBarShape />}
               >
                 {data.map((entry, index) => {
-                  const color = palette[entry.exchange] || '#8E9299';
+                  const color = palette[entry.exchange] || 'var(--fg-muted)';
                   // Opaque progression 1.0 -> 0.75 -> 0.50 ... clamped to 0.20
                   const opacity = Math.max(0.20, 1 - (i * 0.25));
                   return <Cell key={`cell-${index}`} fill={color} fillOpacity={opacity} />;

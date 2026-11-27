@@ -7,7 +7,6 @@ import { SymbolMultiSelect, SymbolOption } from './SymbolMultiSelect';
 import { PeriodSegmentedControl, PeriodOption } from './PeriodSegmentedControl';
 import { FundingComparisonChart, ChartDataPoint } from './FundingComparisonChart';
 import { BarChart2, X, Star, Briefcase, Coins } from 'lucide-react';
-import clsx from 'clsx';
 import { isInverseSymbol } from '../../../utils/inverseUtils';
 
 export const FundingRateComparison = () => {
@@ -136,13 +135,16 @@ export const FundingRateComparison = () => {
     
     rows.forEach(row => {
       if (row.value > 0) {
-        const intensity = 0.4 + 0.6 * (row.value / maxPos); 
-        row.color = `rgba(74, 222, 128, ${intensity})`; // #4ade80 with variable opacity
+        const intensity = 0.4 + 0.6 * (row.value / maxPos);
+        row.color = 'var(--success)';
+        row.fillOpacity = intensity;
       } else if (row.value < 0) {
         const intensity = 0.4 + 0.6 * (Math.abs(row.value) / maxNeg);
-        row.color = `rgba(248, 113, 113, ${intensity})`; // #f87171 with variable opacity
+        row.color = 'var(--danger)';
+        row.fillOpacity = intensity;
       } else {
-        row.color = '#8E9299';
+        row.color = 'var(--fg-muted)';
+        row.fillOpacity = 1;
       }
     });
 
@@ -150,11 +152,11 @@ export const FundingRateComparison = () => {
   }, [filteredAggregatedData, selectedSymbols, showFavoritesOnly, showOpenPositionsOnly, showCoinMOnly, period]);
 
   const periodLabels: Record<PeriodOption, string> = {
-    'last': 'Last Funding Rate',
-    'day': 'Today (Cumulative)',
-    'current_month': 'Current Month',
-    'last_month': 'Last Month',
-    '3_months': 'Last 3 Months'
+    'last': t('analytics.funding.comparison.periods.last', 'Last Funding Rate'),
+    'day': t('analytics.funding.comparison.periods.day', 'Today (Cumulative)'),
+    'current_month': t('analytics.funding.comparison.periods.currentMonth', 'Current Month'),
+    'last_month': t('analytics.funding.comparison.periods.lastMonth', 'Last Month'),
+    '3_months': t('analytics.funding.comparison.periods.threeMonths', 'Last 3 Months')
   };
 
   return (
@@ -171,45 +173,42 @@ export const FundingRateComparison = () => {
             <button
               id="funding-comparison-favorites-btn"
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-              className={clsx(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                 showFavoritesOnly 
-                  ? "bg-amber-500/10 text-tone-amber border-amber-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
-                  : "bg-canvas text-fg-muted border-line hover:text-fg"
-              )}
+                  ? 'bg-warning/10 text-tone-amber border-warning/20 shadow-sm' 
+                  : 'bg-canvas text-fg-muted border-line hover:text-fg'
+              }`}
             >
-              <Star className={clsx("w-3.5 h-3.5", showFavoritesOnly && "fill-current")} />
-              Favorites
+              <Star className={`w-3.5 h-3.5${showFavoritesOnly ? ' fill-current' : ''}`} />
+              {t('analytics.funding.favorites', 'Favorites')}
             </button>
             {hasOpenPositions && (
               <button
                 id="funding-comparison-positions-btn"
                 onClick={() => setShowOpenPositionsOnly(!showOpenPositionsOnly)}
-                className={clsx(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                   showOpenPositionsOnly 
-                    ? "bg-accent/10 text-accent border-accent/20 shadow-[0_0_10px_rgba(47,107,255,0.1)]" 
-                    : "bg-canvas text-fg-muted border-line hover:text-fg"
-                )}
+                    ? 'bg-accent/10 text-accent border-accent/20 shadow-sm' 
+                    : 'bg-canvas text-fg-muted border-line hover:text-fg'
+                }`}
               >
                 <Briefcase className="w-3.5 h-3.5" />
-                Open Positions
+                {t('nav.openPositions', 'Open Positions')}
               </button>
             )}
 
             <button
               id="funding-comparison-coinm-btn"
               onClick={() => setShowCoinMOnly(!showCoinMOnly)}
-              className={clsx(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                 showCoinMOnly 
-                  ? "bg-purple-500/15 text-tone-purple border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]" 
-                  : "bg-canvas text-fg-muted border-line hover:text-tone-purple"
-              )}
-              title="Exibir comparativo somente dos ativos com instrumentos COIN-M / Inverse"
+                  ? 'bg-tone-purple/15 text-tone-purple border-tone-purple/30 shadow-sm' 
+                  : 'bg-canvas text-fg-muted border-line hover:text-tone-purple'
+              }`}
+              title={t('analytics.funding.comparison.coinmTooltip', 'Show comparison only for assets with COIN-M / Inverse instruments')}
             >
-              <Coins className={clsx("w-3.5 h-3.5", showCoinMOnly ? "text-tone-purple" : "text-fg-muted")} />
-              <span>COIN-M / Inverse</span>
+              <Coins className={`w-3.5 h-3.5 ${showCoinMOnly ? 'text-tone-purple' : 'text-fg-muted'}`} />
+              <span>{t('analytics.funding.comparison.coinmFilter', 'COIN-M / Inverse')}</span>
             </button>
             
             {selectedSymbols.length > 0 && (
@@ -218,7 +217,7 @@ export const FundingRateComparison = () => {
                 onClick={() => setSelectedSymbols([])} 
                 className="flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg bg-canvas px-3 py-1.5 rounded-lg border border-line transition-colors ml-2"
               >
-                <X className="w-4 h-4" /> Clear Selection
+                <X className="w-4 h-4" /> {t('analytics.funding.comparison.clearSelection', 'Clear Selection')}
               </button>
             )}
           </div>
@@ -241,9 +240,9 @@ export const FundingRateComparison = () => {
             <div className="w-16 h-16 bg-line rounded-full flex items-center justify-center mb-4">
               <BarChart2 className="w-8 h-8 text-fg-muted" />
             </div>
-            <h3 className="text-xl font-medium text-fg mb-2">Select symbols or active filters</h3>
+            <h3 className="text-xl font-medium text-fg mb-2">{t('analytics.funding.comparison.emptySelectTitle', 'Select symbols or active filters')}</h3>
             <p className="text-fg-muted max-w-sm">
-              Choose up to 25 symbols from the dropdown above, or click Favorites, Open Positions, or COIN-M / Inverse to compare their funding rates.
+              {t('analytics.funding.comparison.emptySelectDesc', 'Choose up to 25 symbols from the dropdown above, or click Favorites, Open Positions, or COIN-M / Inverse to compare their funding rates.')}
             </p>
           </div>
         ) : comparisonData.length === 0 ? (
@@ -251,9 +250,9 @@ export const FundingRateComparison = () => {
             <div className="w-16 h-16 bg-line rounded-full flex items-center justify-center mb-4">
               <BarChart2 className="w-8 h-8 text-fg-muted" />
             </div>
-            <h3 className="text-xl font-medium text-fg mb-2">No matching symbols</h3>
+            <h3 className="text-xl font-medium text-fg mb-2">{t('analytics.funding.comparison.noMatchTitle', 'No matching symbols')}</h3>
             <p className="text-fg-muted max-w-sm">
-              Adjust your filters or manual selection to see data.
+              {t('analytics.funding.comparison.noMatchDesc', 'Adjust your filters or manual selection to see data.')}
             </p>
           </div>
         ) : isLoading && aggregatedData.length === 0 ? (

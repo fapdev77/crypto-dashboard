@@ -125,7 +125,14 @@ export function PnLBySymbol() {
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
     setExportMenuOpen(false);
 
-    const headers = ['Symbol', 'Instrument', 'Exchange', 'Total PnL', 'Long PnL', 'Short PnL'];
+    const headers = [
+      t('analytics.pnlSymbol.table.symbol', 'Symbol'),
+      t('analytics.pnlSymbol.table.instrument', 'Instrument'),
+      t('analytics.pnlSymbol.table.exchange', 'Exchange'),
+      t('analytics.pnlSymbol.table.totalPnl', 'Total Realized PnL'),
+      t('analytics.pnlSymbol.table.longPnl', 'Long Realized PnL'),
+      t('analytics.pnlSymbol.table.shortPnl', 'Short Realized PnL'),
+    ];
     const rows = sortedData.map(r => [
       r.symbol,
       r.instrument,
@@ -136,7 +143,7 @@ export function PnLBySymbol() {
     ]);
 
     const config: ExportConfig = {
-      title: 'PnL By Symbol Report',
+      title: t('analytics.pnlSymbol.exportTitle', 'PnL By Symbol Report'),
       filename: `PnL_by_Symbol_${period}_${Date.now()}`,
       headers,
       rows
@@ -156,13 +163,13 @@ export function PnLBySymbol() {
             {t('analytics.pnlSymbol.title', 'PnL by Symbol')}
           </h2>
           <StatusAndSyncBadge isSyncing={isSyncing} syncMessage={syncMessage} syncError={syncError} />
-          <span className="text-xs text-fg-muted mt-1">To represent the actual PnL, it is calculated based on the real time USD value of the trades, not on the positions value. <br/>
-          For Bybit, PnL is derived from the transaction-log cache (up to 2 years). PnL for other exchanges is computed from closed positions.</span>
+          <span className="text-xs text-fg-muted mt-1">{t('analytics.pnlSymbol.realizedBasisLine1', 'To represent the actual PnL, it is calculated based on the real time USD value of the trades, not on the positions value.')} <br/>
+          {t('analytics.pnlSymbol.realizedBasisLine2', 'For Bybit, PnL is derived from the transaction-log cache (up to 2 years). PnL for other exchanges is computed from closed positions.')}</span>
           {isRealPnLSyncing && exchange === 'bybit' && (
             <div className="flex items-center gap-2 px-3 py-2 history-limit-banner border rounded-lg text-[11px] mt-2">
               <RefreshCw className="w-3 h-3 animate-spin shrink-0 history-limit-banner-icon" />
               <span>
-                Real PnL sync in progress. Values shown are from closed positions and may not reflect exact figures.
+                {t('analytics.pnlSymbol.realPnlSyncingBanner', 'Real PnL sync in progress. Values shown are from closed positions and may not reflect exact figures.')}
               </span>
             </div>
           )}
@@ -336,6 +343,7 @@ export function PnLBySymbol() {
 }
 
 function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string }) {
+  const { t } = useTranslation();
   const { isPrivateMode } = usePrivacy();
   const formatCurrency = useFormatCurrency();
 
@@ -361,7 +369,10 @@ function PnLCell({ value, maxAbs, ccy }: { value: Big, maxAbs: Big, ccy: string 
           {isPrivateMode ? '••••' : `${isPositive ? '+' : ''}${formatCurrency(valNum, 'crypto', isFiatCcy ? 2 : 8)}`} <span className="text-xs ml-0.5 text-fg-muted">{displayCcy}</span>
         </span>
         {!isFiatCcy && usdValue !== null && (
-          <span className="text-xs text-fg-muted font-mono tracking-tight leading-none mt-0.5" title={isPrivateMode ? '' : `~$${formatValue(tokenUsdPrice || 0, 2)} per ${displayCcy}`}>
+          <span
+            className="text-xs text-fg-muted font-mono tracking-tight leading-none mt-0.5"
+            title={isPrivateMode ? '' : t('analytics.pnlSymbol.ratePerUnit', '~${{price}} per {{currency}}', { price: formatValue(tokenUsdPrice || 0, 2), currency: displayCcy })}
+          >
             ≈ {isPrivateMode ? '$••••' : `${isPositive ? '+' : ''}${formatCurrency(usdValue, 'usd')}`}
           </span>
         )}

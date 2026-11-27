@@ -18,7 +18,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
   denomination,
   isPrivateMode,
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const series = propSeries || evolutionSeries || [];
 
   const customTooltip = ({
@@ -34,7 +34,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
     return (
       <div className="bg-elevated border border-line p-3 rounded-lg shadow-xl text-xs space-y-1.5 font-mono tabular-nums">
         <div className="font-semibold text-fg border-b border-line pb-1">
-          {new Date(data.timestamp).toLocaleDateString('en-US', {
+          {new Date(data.timestamp).toLocaleDateString(i18n.language, {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -43,21 +43,21 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
           <span className="text-[10px] text-fg-muted">(UTC)</span>
         </div>
         <div className="flex justify-between gap-4 text-tone-amber">
-          <span>Trading Gain:</span>
+          <span>{t('analytics.portfolio.evolution.tradingGainLabel', 'Trading Gain')}:</span>
           <span>{isPrivateMode ? '****' : `${data.tradingGain > 0 ? '+' : ''}${data.tradingGain} ${denomination}`}</span>
         </div>
         <div className="flex justify-between gap-4 text-success">
-          <span>Funding Gain:</span>
+          <span>{t('analytics.portfolio.evolution.fundingGainLabel', 'Funding Gain')}:</span>
           <span>{isPrivateMode ? '****' : `${data.fundingGain > 0 ? '+' : ''}${data.fundingGain} ${denomination}`}</span>
         </div>
         {otherOpGain !== 0 && (
           <div className="flex justify-between gap-4 text-tone-cyan">
-            <span>Other Ops:</span>
+            <span>{t('analytics.portfolio.evolution.otherOpsLabel', 'Other Ops')}:</span>
             <span>{isPrivateMode ? '****' : `${otherOpGain > 0 ? '+' : ''}${otherOpGain} ${denomination}`}</span>
           </div>
         )}
         <div className="flex justify-between gap-4 text-fg font-bold pt-1 border-t border-line/60">
-          <span>Total Combined:</span>
+          <span>{t('analytics.portfolio.evolution.totalCombinedLabel', 'Total Combined')}:</span>
           <span>{isPrivateMode ? '****' : `${data.totalGain > 0 ? '+' : ''}${data.totalGain} ${denomination}`}</span>
         </div>
       </div>
@@ -72,7 +72,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
           <TrendingUp className="w-4 h-4 text-accent" />
           {t('analytics.portfolio.evolution.title', 'Balance Evolution')}
         </h3>
-        <span className="text-xs text-fg-muted">Cumulative Progression (UTC)</span>
+        <span className="text-xs text-fg-muted">{t('analytics.portfolio.evolution.cumulativeProgression', 'Cumulative Progression (UTC)')}</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -81,7 +81,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-fg uppercase tracking-wider flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-tone-amber" />
-              Trading Gains Evolution ({denomination})
+              {t('analytics.portfolio.evolution.tradingEvolutionTitle', 'Trading Gains Evolution ({{denom}})', { denom: denomination })}
             </span>
           </div>
 
@@ -90,8 +90,8 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
               <AreaChart data={series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="tradingGainGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="var(--warning)" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="var(--warning)" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
@@ -101,7 +101,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
                 <Area
                   type="monotone"
                   dataKey="tradingGain"
-                  stroke="#F59E0B"
+                  stroke="var(--warning)"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#tradingGainGrad)"
@@ -117,7 +117,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-fg uppercase tracking-wider flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-success" />
-              Funding Gains Evolution ({denomination})
+              {t('analytics.portfolio.evolution.fundingEvolutionTitle', 'Funding Gains Evolution ({{denom}})', { denom: denomination })}
             </span>
           </div>
 
@@ -126,8 +126,8 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
               <AreaChart data={series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="fundingGainGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="var(--success)" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="var(--success)" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
@@ -137,7 +137,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
                 <Area
                   type="monotone"
                   dataKey="fundingGain"
-                  stroke="#10B981"
+                  stroke="var(--success)"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#fundingGainGrad)"

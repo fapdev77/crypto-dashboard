@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bot } from 'lucide-react';
 import { AppTooltip } from '../ui/Tooltip';
 
@@ -13,16 +14,17 @@ export function AiPikaChatButton({
   isEnabled,
   compactOnMobile = false,
 }: AiPikaChatButtonProps) {
+  const { t } = useTranslation();
   const tooltipText = isEnabled
-    ? 'Open PIKA Assistant (Ctrl+J)'
-    : 'PIKA Assistant (Disabled - Click to configure)';
+    ? t('ai.chat.button.openTooltip', 'Open PIKA Assistant (Ctrl+J)')
+    : t('ai.chat.button.disabledTooltip', 'PIKA Assistant (Disabled - Click to configure)');
 
   return (
     <AppTooltip description={tooltipText} side="bottom" align="end">
       <button
         type="button"
         onClick={onClick}
-        aria-label={isEnabled ? 'Open PIKA Assistant' : 'PIKA Assistant Disabled'}
+        aria-label={isEnabled ? t('ai.chat.button.openAria', 'Open PIKA Assistant') : t('ai.chat.button.disabledAria', 'PIKA Assistant Disabled')}
         className={`group relative h-9 inline-flex items-center justify-center rounded-lg border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas select-none whitespace-nowrap shrink-0 cursor-pointer ${
           compactOnMobile
             ? 'w-9 px-0 sm:w-auto sm:px-2.5 sm:gap-1.5'

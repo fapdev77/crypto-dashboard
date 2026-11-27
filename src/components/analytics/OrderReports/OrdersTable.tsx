@@ -16,7 +16,7 @@ export function OrdersTable({ orders, loading }: Props) {
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-accent" />
       </div>
     );
   }

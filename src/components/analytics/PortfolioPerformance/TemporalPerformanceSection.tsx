@@ -54,6 +54,9 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
     return `${sign}${val.toFixed(decimals)} ${denomination}`;
   };
 
+  const localizeDay = (name: string) =>
+    name === '-' ? '-' : t(`analytics.portfolio.temporal.days.${name.toLowerCase()}`, name);
+
   return (
     <div className="space-y-4">
       {/* Header and Tab switcher */}
@@ -68,7 +71,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             onClick={() => setActiveTab('dayOfWeek')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
               activeTab === 'dayOfWeek'
-                ? 'bg-accent text-white shadow-sm'
+                ? 'bg-accent text-fg shadow-sm'
                 : 'text-fg-muted hover:text-fg hover:bg-line/40'
             }`}
           >
@@ -79,7 +82,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             onClick={() => setActiveTab('timeOfDay')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
               activeTab === 'timeOfDay'
-                ? 'bg-accent text-white shadow-sm'
+                ? 'bg-accent text-fg shadow-sm'
                 : 'text-fg-muted hover:text-fg hover:bg-line/40'
             }`}
           >
@@ -101,7 +104,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                     {t('analytics.portfolio.temporal.bestDay', 'Best Day of Week')}
                   </span>
                   <div className="text-lg font-bold text-fg">
-                    {dayOfWeek.bestDay.name}
+                    {localizeDay(dayOfWeek.bestDay.name)}
                   </div>
                   <div className="text-xs font-mono tabular-nums font-bold text-success mt-1">
                     {formatGain(dayOfWeek.bestDay.gain)}
@@ -115,10 +118,10 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
               <div className="bg-elevated border border-danger/20 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-danger uppercase tracking-wider block mb-1">
-                    Lowest / Worst Day
+                    {t('analytics.portfolio.temporal.lowestDay', 'Lowest / Worst Day')}
                   </span>
                   <div className="text-lg font-bold text-fg">
-                    {dayOfWeek.worstDay.name}
+                    {localizeDay(dayOfWeek.worstDay.name)}
                   </div>
                   <div className="text-xs font-mono tabular-nums font-bold text-danger mt-1">
                     {formatGain(dayOfWeek.worstDay.gain)}
@@ -134,13 +137,14 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             <div className="bg-elevated/50 border border-line/60 rounded-xl p-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted mb-3 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-accent" />
-                Total Return by Day (UTC)
+                {t('analytics.portfolio.temporal.totalReturnByDay', 'Total Return by Day (UTC)')}
               </h4>
               <div className="h-56 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dayOfWeek.list} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                     <XAxis
                       dataKey="dayName"
+                      tickFormatter={(val) => localizeDay(String(val))}
                       stroke="var(--fg-muted)"
                       fontSize={11}
                       tickLine={false}
@@ -160,26 +164,26 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                           return (
                             <div className="bg-elevated border border-line p-3 rounded-lg shadow-xl text-xs space-y-1 font-mono tabular-nums">
                               <p className="font-bold font-sans text-fg border-b border-line pb-1">
-                                {data.dayName} (UTC)
+                                {localizeDay(data.dayName)} (UTC)
                               </p>
                               <div className="flex justify-between gap-4 text-fg-muted">
-                                <span>Operations:</span>
+                                <span>{t('analytics.portfolio.temporal.operationsLabel', 'Operations')}:</span>
                                 <span className="text-fg">{maskVal(data.trades)}</span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted">
-                                <span>Trading Result:</span>
+                                <span>{t('analytics.portfolio.temporal.tradingResult', 'Trading Result')}:</span>
                                 <span className={data.tradingGain >= 0 ? 'text-success' : 'text-danger'}>
                                   {formatGain(data.tradingGain)}
                                 </span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted">
-                                <span>Funding Result:</span>
+                                <span>{t('analytics.portfolio.temporal.fundingResult', 'Funding Result')}:</span>
                                 <span className={data.fundingGain >= 0 ? 'text-success' : 'text-danger'}>
                                   {formatGain(data.fundingGain)}
                                 </span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted pt-1 border-t border-line">
-                                <span className="font-bold text-fg">Total Result:</span>
+                                <span className="font-bold text-fg">{t('analytics.portfolio.temporal.totalResult', 'Total Result')}:</span>
                                 <span className={`font-bold ${data.totalGain >= 0 ? 'text-success' : 'text-danger'}`}>
                                   {formatGain(data.totalGain)}
                                 </span>
@@ -208,26 +212,26 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
               <table className="w-full text-left text-xs border border-line rounded-lg overflow-hidden">
                 <thead className="bg-elevated text-fg-muted uppercase text-[10px] tracking-wider border-b border-line">
                   <tr>
-                    <th className="py-2.5 px-4 font-semibold">Day of Week (UTC)</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Trades / Ops</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Trading Result</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Funding Result</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Total Result</th>
+                    <th className="py-2.5 px-4 font-semibold">{t('analytics.portfolio.temporal.dayOfWeekUtc', 'Day of Week (UTC)')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.temporal.tradesOps', 'Trades / Ops')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.temporal.tradingResult', 'Trading Result')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.temporal.fundingResult', 'Funding Result')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.temporal.totalResult', 'Total Result')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line/60 font-mono tabular-nums">
                   {dayOfWeek.list.map((d) => (
                     <tr key={d.dayName} className="hover:bg-elevated transition-colors">
                       <td className="py-2.5 px-4 font-sans font-medium text-fg flex items-center gap-2">
-                        <span>{d.dayName}</span>
+                        <span>{localizeDay(d.dayName)}</span>
                         {d.dayName === dayOfWeek.bestDay.name && (
                           <span className="text-[9px] bg-success/20 text-success px-1.5 py-0.5 rounded font-sans uppercase font-bold">
-                            Best
+                            {t('analytics.portfolio.temporal.badgeBest', 'Best')}
                           </span>
                         )}
                         {d.dayName === dayOfWeek.worstDay.name && (
                           <span className="text-[9px] bg-danger/20 text-danger px-1.5 py-0.5 rounded font-sans uppercase font-bold">
-                            Lowest
+                            {t('analytics.portfolio.temporal.badgeLowest', 'Lowest')}
                           </span>
                         )}
                       </td>
@@ -255,7 +259,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
               <div className="bg-elevated border border-success/20 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-success uppercase tracking-wider block mb-1">
-                    Best Time Window
+                    {t('analytics.portfolio.temporal.bestTime', 'Best Time Window')}
                   </span>
                   <div className="text-lg font-bold text-fg">
                     {timeOfDay.bestTime.period}
@@ -272,7 +276,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
               <div className="bg-elevated border border-danger/20 rounded-lg p-4 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-danger uppercase tracking-wider block mb-1">
-                    Lowest Time Window
+                    {t('analytics.portfolio.temporal.lowestTime', 'Lowest Time Window')}
                   </span>
                   <div className="text-lg font-bold text-fg">
                     {timeOfDay.worstTime.period}
@@ -291,7 +295,7 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
             <div className="bg-elevated/50 border border-line/60 rounded-xl p-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted mb-3 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-accent" />
-                Total Return by 4-Hour Time Bucket (UTC)
+                {t('analytics.portfolio.temporal.totalReturnByBucket', 'Total Return by 4-Hour Time Bucket (UTC)')}
               </h4>
               <div className="h-56 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -320,23 +324,23 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
                                 {data.periodLabel}
                               </p>
                               <div className="flex justify-between gap-4 text-fg-muted">
-                                <span>Operations:</span>
+                                <span>{t('analytics.portfolio.temporal.operationsLabel', 'Operations')}:</span>
                                 <span className="font-mono text-fg">{maskVal(data.trades)}</span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted">
-                                <span>Trading Result:</span>
+                                <span>{t('analytics.portfolio.temporal.tradingResult', 'Trading Result')}:</span>
                                 <span className={`font-mono ${data.tradingGain >= 0 ? 'text-success' : 'text-danger'}`}>
                                   {formatGain(data.tradingGain)}
                                 </span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted">
-                                <span>Funding Result:</span>
+                                <span>{t('analytics.portfolio.temporal.fundingResult', 'Funding Result')}:</span>
                                 <span className={`font-mono ${data.fundingGain >= 0 ? 'text-success' : 'text-danger'}`}>
                                   {formatGain(data.fundingGain)}
                                 </span>
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted pt-1 border-t border-line">
-                                <span className="font-bold text-fg">Total Result:</span>
+                                <span className="font-bold text-fg">{t('analytics.portfolio.temporal.totalResult', 'Total Result')}:</span>
                                 <span className={`font-mono font-bold ${data.totalGain >= 0 ? 'text-success' : 'text-danger'}`}>
                                   {formatGain(data.totalGain)}
                                 </span>
@@ -365,38 +369,38 @@ export const TemporalPerformanceSection = React.memo(function TemporalPerformanc
               <table className="w-full text-left text-xs border border-line rounded-lg overflow-hidden">
                 <thead className="bg-elevated text-fg-muted uppercase text-[10px] tracking-wider border-b border-line">
                   <tr>
-                    <th className="py-2.5 px-4 font-semibold">Time Window (UTC)</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Trades / Ops</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Trading Result</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Funding Result</th>
-                    <th className="py-2.5 px-4 font-semibold text-right">Total Result</th>
+                    <th className="py-2.5 px-4 font-semibold">{t('analytics.portfolio.temporal.timeWindowUtc', 'Time Window (UTC)')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.temporal.tradesOps', 'Trades / Ops')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.temporal.tradingResult', 'Trading Result')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.temporal.fundingResult', 'Funding Result')}</th>
+                    <th className="py-2.5 px-4 font-semibold text-right">{t('analytics.portfolio.temporal.totalResult', 'Total Result')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line/60 font-mono tabular-nums">
-                  {timeOfDay.list.map((t) => (
-                    <tr key={t.periodLabel} className="hover:bg-elevated transition-colors">
+                  {timeOfDay.list.map((item) => (
+                    <tr key={item.periodLabel} className="hover:bg-elevated transition-colors">
                       <td className="py-2.5 px-4 font-sans font-medium text-fg flex items-center gap-2">
-                        <span>{t.periodLabel}</span>
-                        {t.periodLabel === timeOfDay.bestTime.period && (
+                        <span>{item.periodLabel}</span>
+                        {item.periodLabel === timeOfDay.bestTime.period && (
                           <span className="text-[9px] bg-success/20 text-success px-1.5 py-0.5 rounded font-sans uppercase font-bold">
-                            Best
+                            {t('analytics.portfolio.temporal.badgeBest', 'Best')}
                           </span>
                         )}
-                        {t.periodLabel === timeOfDay.worstTime.period && (
+                        {item.periodLabel === timeOfDay.worstTime.period && (
                           <span className="text-[9px] bg-danger/20 text-danger px-1.5 py-0.5 rounded font-sans uppercase font-bold">
-                            Lowest
+                            {t('analytics.portfolio.temporal.badgeLowest', 'Lowest')}
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-4 text-right text-fg-muted">{maskVal(t.trades)}</td>
-                      <td className={`py-2.5 px-4 text-right ${t.tradingGain >= 0 ? 'text-success' : 'text-danger'}`}>
-                        {formatGain(t.tradingGain)}
+                      <td className="py-2.5 px-4 text-right text-fg-muted">{maskVal(item.trades)}</td>
+                      <td className={`py-2.5 px-4 text-right ${item.tradingGain >= 0 ? 'text-success' : 'text-danger'}`}>
+                        {formatGain(item.tradingGain)}
                       </td>
-                      <td className={`py-2.5 px-4 text-right ${t.fundingGain >= 0 ? 'text-success' : 'text-danger'}`}>
-                        {formatGain(t.fundingGain)}
+                      <td className={`py-2.5 px-4 text-right ${item.fundingGain >= 0 ? 'text-success' : 'text-danger'}`}>
+                        {formatGain(item.fundingGain)}
                       </td>
-                      <td className={`py-2.5 px-4 text-right font-bold ${t.totalGain >= 0 ? 'text-success' : 'text-danger'}`}>
-                        {formatGain(t.totalGain)}
+                      <td className={`py-2.5 px-4 text-right font-bold ${item.totalGain >= 0 ? 'text-success' : 'text-danger'}`}>
+                        {formatGain(item.totalGain)}
                       </td>
                     </tr>
                   ))}

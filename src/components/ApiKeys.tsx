@@ -188,14 +188,14 @@ export function ApiKeys() {
                                   isSubAccount={apiKey.isSubAccount}
                                 />
                                 {apiKey.includeFunding === false && (
-                                  <span className="text-[9px] font-mono px-1 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-tone-amber" title="Funding account excluded">
+                                  <span className="text-[9px] font-mono px-1 py-0.5 rounded border border-warning/30 bg-warning/10 text-warning" title={t('apiKeys.noFundingTitle', 'Funding account excluded')}>
                                     {t('apiKeys.noFundingBadge', 'No Funding')}
                                   </span>
                                 )}
                               </div>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono leading-none border uppercase tracking-wider shrink-0 ${!apiKey.isActive ? 'bg-fg-muted/10 text-fg-muted border-fg-muted/20' :
                                 status === 'connected' ? 'bg-success/10 text-success border-success/30' :
-                                  status === 'connecting' ? 'bg-amber-500/10 text-tone-amber border-amber-500/30 animate-pulse' :
+                                  status === 'connecting' ? 'bg-warning/10 text-warning border-warning/30 animate-pulse' :
                                     status === 'error' ? 'bg-danger/10 text-danger border-danger/30' :
                                       'bg-fg-muted/10 text-fg-muted border-fg-muted/20'
                                 }`}>
@@ -214,7 +214,7 @@ export function ApiKeys() {
                                       removeKey(apiKey.id);
                                       setKeyToDelete(null);
                                     }}
-                                    className="text-[12px] px-2.5 py-0.5 bg-danger hover:bg-[#CC0000] text-white rounded transition-colors"
+                                    className="text-[12px] px-2.5 py-0.5 bg-danger hover:bg-danger/90 text-white rounded transition-colors"
                                   >
                                     {t('common.yes', 'Yes')}
                                   </button>
@@ -227,7 +227,7 @@ export function ApiKeys() {
                                 </div>
                               ) : (
                                 <>
-                                  <AppTooltip description="Edit connection label">
+                                  <AppTooltip description={t('apiKeys.tooltips.editLabel', 'Edit connection label')}>
                                     <button
                                       onClick={() => handleEdit(apiKey)}
                                       className="text-fg-muted hover:text-accent p-1 rounded hover:bg-line transition-all hover:scale-105"
@@ -235,7 +235,7 @@ export function ApiKeys() {
                                       <Edit2 className="w-3.5 h-3.5" />
                                     </button>
                                   </AppTooltip>
-                                  <AppTooltip description={apiKey.isActive ? 'Disable connection' : 'Enable connection'}>
+                                  <AppTooltip description={apiKey.isActive ? t('apiKeys.tooltips.disable', 'Disable connection') : t('apiKeys.tooltips.enable', 'Enable connection')}>
                                     <button
                                       onClick={() => {
                                         if (apiKey.isActive) {
@@ -249,7 +249,7 @@ export function ApiKeys() {
                                       <Power className="w-3.5 h-3.5" />
                                     </button>
                                   </AppTooltip>
-                                  <AppTooltip description="Delete connection">
+                                  <AppTooltip description={t('apiKeys.tooltips.delete', 'Delete connection')}>
                                     <button
                                       onClick={() => setKeyToDelete(apiKey.id)}
                                       className="text-fg-muted hover:text-danger p-1 rounded hover:bg-line transition-all hover:scale-105"

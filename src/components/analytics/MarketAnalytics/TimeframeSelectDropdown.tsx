@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Clock, ChevronDown, Check } from 'lucide-react';
 import { useMarketAnalyticsStore } from '../../../store/marketAnalyticsStore';
 import { MarketTimeframe } from '../../../types/marketAnalytics';
@@ -6,19 +7,21 @@ import { MarketTimeframe } from '../../../types/marketAnalytics';
 interface TimeframeOption {
   id: MarketTimeframe;
   label: string;
-  desc: string;
+  unitKey: string;
+  unitFallback: string;
 }
 
 const TIMEFRAMES: TimeframeOption[] = [
-  { id: '5m', label: '5m', desc: '5 Minutes' },
-  { id: '15m', label: '15m', desc: '15 Minutes' },
-  { id: '30m', label: '30m', desc: '30 Minutes' },
-  { id: '1h', label: '1h', desc: '1 Hour (Default)' },
-  { id: '4h', label: '4h', desc: '4 Hours' },
-  { id: '1d', label: '1d', desc: '1 Day' },
+  { id: '5m', label: '5m', unitKey: 'analytics.market.timeframes.fiveMin', unitFallback: '5 Min' },
+  { id: '15m', label: '15m', unitKey: 'analytics.market.timeframes.fifteenMin', unitFallback: '15 Min' },
+  { id: '30m', label: '30m', unitKey: 'analytics.market.timeframes.thirtyMin', unitFallback: '30 Min' },
+  { id: '1h', label: '1h', unitKey: 'analytics.market.timeframes.oneHour', unitFallback: '1 Hour' },
+  { id: '4h', label: '4h', unitKey: 'analytics.market.timeframes.fourHours', unitFallback: '4 Hours' },
+  { id: '1d', label: '1d', unitKey: 'analytics.market.timeframes.oneDay', unitFallback: '1 Day' },
 ];
 
 export const TimeframeSelectDropdown: React.FC = () => {
+  const { t } = useTranslation();
   const { selectedTimeframe, setSelectedTimeframe } = useMarketAnalyticsStore();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -44,7 +47,7 @@ export const TimeframeSelectDropdown: React.FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center gap-2 bg-elevated hover:bg-elevated border rounded-xl px-3 py-2 text-xs font-medium transition-all shadow-sm ${
+        className={`flex items-center gap-2 bg-elevated hover:bg-elevated-hover border rounded-xl px-3 py-2 text-xs font-medium transition-all shadow-sm ${
           isOpen
             ? 'border-accent text-fg'
             : 'border-line text-fg hover:text-fg'
@@ -61,9 +64,9 @@ export const TimeframeSelectDropdown: React.FC = () => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 w-44 bg-[#16171d] border border-line rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute left-0 top-full mt-2 w-48 bg-surface border border-line rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
           <div className="px-3 py-1.5 border-b border-line text-[11px] font-semibold text-fg-muted uppercase tracking-wider">
-            Timeframe
+            {t('analytics.market.timeframes.title', 'Timeframe')}
           </div>
 
           <div className="p-1 space-y-0.5">
@@ -80,7 +83,7 @@ export const TimeframeSelectDropdown: React.FC = () => {
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     isSelected
                       ? 'bg-accent/15 text-accent'
-                      : 'text-fg hover:bg-[#1f212a] hover:text-fg'
+                      : 'text-fg hover:bg-elevated-hover hover:text-fg'
                   }`}
                 >
                   <span className="flex items-center gap-1.5">
@@ -89,7 +92,7 @@ export const TimeframeSelectDropdown: React.FC = () => {
                     )}
                     <span className="font-bold">{tf.label}</span>
                     <span className="text-[10px] text-fg-muted font-normal">
-                      ({tf.desc.split(' ')[0]})
+                      ({t(tf.unitKey, tf.unitFallback)})
                     </span>
                   </span>
                   {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}

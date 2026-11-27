@@ -48,38 +48,38 @@ export const MarketSentiment: React.FC = () => {
         text: 'text-danger',
         bg: 'bg-danger/10',
         border: 'border-danger/30',
-        barColor: '#f43f5e',
+        barColor: 'var(--danger)',
       };
     }
     if (val <= 44) {
       return {
         text: 'text-tone-amber',
-        bg: 'bg-amber-500/10',
-        border: 'border-amber-500/30',
-        barColor: '#f59e0b',
+        bg: 'bg-warning/10',
+        border: 'border-warning/30',
+        barColor: 'var(--warning)',
       };
     }
     if (val <= 55) {
       return {
         text: 'text-tone-yellow',
-        bg: 'bg-yellow-500/10',
-        border: 'border-yellow-500/30',
-        barColor: '#eab308',
+        bg: 'bg-tone-yellow/10',
+        border: 'border-tone-yellow/30',
+        barColor: 'var(--tone-yellow)',
       };
     }
     if (val <= 75) {
       return {
         text: 'text-success',
-        bg: 'bg-emerald-500/10',
-        border: 'border-emerald-500/30',
-        barColor: '#10b981',
+        bg: 'bg-success/10',
+        border: 'border-success/30',
+        barColor: 'var(--success)',
       };
     }
     return {
       text: 'text-tone-cyan',
-      bg: 'bg-cyan-500/10',
-      border: 'border-cyan-500/30',
-      barColor: '#06b6d4',
+      bg: 'bg-tone-cyan/10',
+      border: 'border-tone-cyan/30',
+      barColor: 'var(--tone-cyan)',
     };
   };
 
@@ -102,7 +102,7 @@ export const MarketSentiment: React.FC = () => {
                 {t('sentiment.title', 'Market Sentiment & Fear / Greed Index')}
               </h3>
               <span 
-                className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]" 
+                className="inline-block w-2 h-2 rounded-full bg-success animate-pulse shadow-sm" 
                 title={t('sentiment.liveFeedActive', 'Live feed active • Auto-refreshes every {{minutes}} minutes', { minutes: pollingIntervalMinutes })}
               />
             </div>
@@ -148,7 +148,7 @@ export const MarketSentiment: React.FC = () => {
       {/* Main Grid */}
       <div className="space-y-4">
         {error && (
-          <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-tone-amber text-xs flex items-center gap-2">
+          <div className="px-3 py-2 rounded-lg bg-warning/10 border border-warning/20 text-tone-amber text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{t('sentiment.fallbackActive', 'Fallback mode active: {{error}}', { error })}</span>
           </div>
@@ -165,11 +165,11 @@ export const MarketSentiment: React.FC = () => {
               <svg viewBox="0 0 160 90" className="w-44 h-24 overflow-visible">
                 <defs>
                   <linearGradient id="fngDialGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#f43f5e" />
-                    <stop offset="25%" stopColor="#f59e0b" />
-                    <stop offset="50%" stopColor="#eab308" />
-                    <stop offset="75%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#06b6d4" />
+                    <stop offset="0%" stopColor="var(--danger)" />
+                    <stop offset="25%" stopColor="var(--warning)" />
+                    <stop offset="50%" stopColor="var(--tone-yellow)" />
+                    <stop offset="75%" stopColor="var(--success)" />
+                    <stop offset="100%" stopColor="var(--tone-cyan)" />
                   </linearGradient>
                 </defs>
 
@@ -290,7 +290,11 @@ export const MarketSentiment: React.FC = () => {
                           ? 'bg-elevated border-accent/40 ring-1 ring-accent/30'
                           : 'bg-elevated/50 border-line hover:border-line-strong'
                       }`}
-                      title={`${fullDateStr}: Score ${item.value}/100 (${translatedClass})`}
+                      title={t('sentiment.dayTooltip', '{{date}}: Score {{score}}/100 ({{classification}})', {
+                        date: fullDateStr,
+                        score: item.value,
+                        classification: translatedClass,
+                      })}
                     >
                       <span className="text-[10px] text-fg-muted font-medium uppercase">{dayLabel}</span>
                       

@@ -59,7 +59,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
         onSuccess();
       }
     } catch (err: any) {
-      setError(err?.message || 'Failed to initialize security vault.');
+      setError(err?.message || t('apiKeys.vault.initFailedError', 'Failed to initialize security vault.'));
       toast.error(t('toasts.vaultSetupFailed', 'Vault setup failed.'));
     } finally {
       setIsSubmitting(false);
@@ -70,7 +70,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in-0 duration-200">
       <div className="bg-surface border border-line rounded-2xl p-6 sm:p-7 max-w-md w-full shadow-2xl relative overflow-hidden flex flex-col gap-4">
         {/* Accent bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-emerald-500 to-accent" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-success to-accent" />
 
         {/* Header */}
         <div className="flex items-start justify-between gap-3 pt-1">
@@ -82,17 +82,17 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-fg">{t('apiKeys.vault.activateBtn', 'Activate Security Vault')}</h3>
                 <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-success/15 text-success border border-success/25">
-                  Zero-Trust
+                  {t('apiKeys.vault.zeroTrustBadge', 'Zero-Trust')}
                 </span>
               </div>
-              <p className="text-xs text-fg-muted mt-0.5">Client-side PBKDF2 + AES-GCM-256</p>
+              <p className="text-xs text-fg-muted mt-0.5">{t('apiKeys.vault.cryptoSubtitle', 'Client-side PBKDF2 + AES-GCM-256')}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 text-fg-muted hover:text-fg hover:bg-line rounded-lg transition-colors"
-            aria-label="Close modal"
+            aria-label={t('common.close', 'Close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -135,7 +135,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
                 type="button"
                 onClick={() => setShowPassphrase(!showPassphrase)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg transition-colors"
-                aria-label="Toggle password visibility"
+                aria-label={t('apiKeys.vault.togglePasswordAria', 'Toggle password visibility')}
               >
                 {showPassphrase ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -160,7 +160,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
                 type="button"
                 onClick={() => setShowConfirmPassphrase(!showConfirmPassphrase)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg transition-colors"
-                aria-label="Toggle confirm password visibility"
+                aria-label={t('apiKeys.vault.toggleConfirmAria', 'Toggle confirm password visibility')}
               >
                 {showConfirmPassphrase ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>

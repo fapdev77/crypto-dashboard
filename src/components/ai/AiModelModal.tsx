@@ -322,13 +322,14 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                 {modelToEdit ? t('ai.settings.modal.editTitle', 'Edit AI Model') : t('ai.settings.modal.addTitle', 'Configure New AI Model')}
               </h2>
               <p className="text-xs text-fg-muted">
-                Configure provider endpoint, credentials, api key and inference metrics
+                {t('ai.modelModal.subtitle', 'Configure provider endpoint, credentials, api key and inference metrics')}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 text-fg-muted hover:text-fg rounded-lg hover:bg-line/60 transition cursor-pointer"
+            aria-label={t('common.close', 'Close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -339,31 +340,31 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
           {/* Section 1: Provider & Identification */}
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-2 font-mono">
-              <Server className="w-4 h-4" /> 1. Provider & Identification
+              <Server className="w-4 h-4" /> {t('ai.modelModal.section1Title', '1. Provider & Identification')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-fg mb-1.5">
-                  Service Provider *
+                  {t('ai.settings.modal.serviceProvider', 'Service Provider')} *
                 </label>
                 <select
                   value={provider}
                   onChange={(e) => handleProviderChange(e.target.value as AiProviderType)}
                   className="w-full bg-surface border border-line rounded-lg px-3 py-2 text-xs text-fg focus:outline-none focus:border-accent"
                 >
-                  <option value="gemini">Google Gemini (Official / Flash / Pro)</option>
-                  <option value="ollama">Ollama (Local / 100% Private)</option>
-                  <option value="openrouter">OpenRouter (Multi-Provider Cloud)</option>
-                  <option value="openai">OpenAI (Official)</option>
-                  <option value="anthropic">Anthropic (Claude)</option>
-                  <option value="custom">Custom Endpoint (OpenAI Compatible)</option>
+                  <option value="gemini">{t('ai.modelModal.providers.gemini', 'Google Gemini (Official / Flash / Pro)')}</option>
+                  <option value="ollama">{t('ai.modelModal.providers.ollama', 'Ollama (Local / 100% Private)')}</option>
+                  <option value="openrouter">{t('ai.modelModal.providers.openrouter', 'OpenRouter (Multi-Provider Cloud)')}</option>
+                  <option value="openai">{t('ai.modelModal.providers.openai', 'OpenAI (Official)')}</option>
+                  <option value="anthropic">{t('ai.modelModal.providers.anthropic', 'Anthropic (Claude)')}</option>
+                  <option value="custom">{t('ai.modelModal.providers.custom', 'Custom Endpoint (OpenAI Compatible)')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-fg mb-1.5">
-                  Friendly Model Name *
+                  {t('ai.modelModal.friendlyName', 'Friendly Model Name')} *
                 </label>
                 <input
                   type="text"
@@ -381,7 +382,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-medium text-fg">
-                    Select Google Gemini Model *
+                    {t('ai.modelModal.selectGeminiModel', 'Select Google Gemini Model')} *
                   </label>
                   <button
                     type="button"
@@ -390,7 +391,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                     className="flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition cursor-pointer disabled:opacity-50"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isFetchingModels ? 'animate-spin' : ''}`} />
-                    <span>{isFetchingModels ? 'Fetching Online...' : 'Fetch Live Models Online'}</span>
+                    <span>{isFetchingModels ? t('ai.modelModal.fetchingOnline', 'Fetching Online...') : t('ai.modelModal.fetchLiveModels', 'Fetch Live Models Online')}</span>
                   </button>
                 </div>
 
@@ -401,37 +402,37 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                 >
                   {onlineModels.length > 0 ? (
                     <>
-                      <optgroup label="Discovered Live Models from Google">
+                      <optgroup label={t('ai.modelModal.discoveredFromGoogle', 'Discovered Live Models from Google')}>
                         {onlineModels.map((m) => (
                           <option key={m.id} value={m.id}>
-                            {m.name} {m.isRecommended ? '★ Recommended' : ''}
+                            {m.name} {m.isRecommended ? `★ ${t('ai.modelModal.recommended', 'Recommended')}` : ''}
                           </option>
                         ))}
                       </optgroup>
-                      <optgroup label="Custom Option">
-                        <option value="custom">Other / Enter Custom Model ID...</option>
+                      <optgroup label={t('ai.modelModal.customOption', 'Custom Option')}>
+                        <option value="custom">{t('ai.modelModal.otherCustomModel', 'Other / Enter Custom Model ID...')}</option>
                       </optgroup>
                     </>
                   ) : (
                     GEMINI_MODELS.map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.name}
+                        {m.id === 'custom' ? t('ai.modelModal.otherCustomModel', m.name) : m.name}
                       </option>
                     ))
                   )}
                 </select>
 
                 {onlineModels.length > 0 && (
-                  <span className="text-[10px] text-emerald-400 block flex items-center gap-1">
+                  <span className="text-[10px] text-success block flex items-center gap-1">
                     <Cloud className="w-3 h-3" />
-                    Synced {onlineModels.length} active models directly from Google Gemini API.
+                    {t('ai.modelModal.syncedGeminiModels', 'Synced {{count}} active models directly from Google Gemini API.', { count: onlineModels.length })}
                   </span>
                 )}
 
                 {isCustomGeminiModel && (
                   <div className="pt-2">
                     <label className="block text-xs font-medium text-fg-muted mb-1">
-                      Enter Google Gemini Model ID:
+                      {t('ai.modelModal.enterCustomGeminiId', 'Enter Google Gemini Model ID:')}
                     </label>
                     <input
                       type="text"
@@ -448,7 +449,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-medium text-fg">
-                    Model ID / API Identifier *
+                    {t('ai.modelModal.modelIdApiLabel', 'Model ID / API Identifier')} *
                   </label>
                   {(provider === 'ollama' || provider === 'openai' || provider === 'openrouter') && (
                     <button
@@ -458,7 +459,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                       className="flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition cursor-pointer disabled:opacity-50"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isFetchingModels ? 'animate-spin' : ''}`} />
-                      <span>{isFetchingModels ? 'Fetching...' : 'Query Available Models'}</span>
+                      <span>{isFetchingModels ? t('ai.modelModal.fetching', 'Fetching...') : t('ai.modelModal.queryAvailableModels', 'Query Available Models')}</span>
                     </button>
                   )}
                 </div>
@@ -467,7 +468,10 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] text-fg-muted">
-                        Discovered Models ({onlineModels.filter((m) => !filterToolsOnly || m.supportsTools !== false).length} of {onlineModels.length})
+                        {t('ai.modelModal.discoveredCount', 'Discovered Models ({{filtered}} of {{total}})', {
+                          filtered: onlineModels.filter((m) => !filterToolsOnly || m.supportsTools !== false).length,
+                          total: onlineModels.length,
+                        })}
                       </span>
                       <label className="flex items-center gap-1.5 text-[11px] text-fg-muted hover:text-fg cursor-pointer select-none">
                         <input
@@ -476,7 +480,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                           onChange={(e) => setFilterToolsOnly(e.target.checked)}
                           className="w-3.5 h-3.5 rounded border-line text-accent focus:ring-accent"
                         />
-                        <span>Filter: Tools only</span>
+                        <span>{t('ai.modelModal.filterToolsOnly', 'Filter: Tools only')}</span>
                       </label>
                     </div>
 
@@ -495,7 +499,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                       }}
                       className="w-full bg-surface border border-line rounded-lg px-3 py-2 text-xs text-fg focus:outline-none focus:border-accent font-mono"
                     >
-                      <option value="" disabled>Select model from provider...</option>
+                      <option value="" disabled>{t('ai.modelModal.selectModelFromProvider', 'Select model from provider...')}</option>
                       {onlineModels
                         .filter((m) => !filterToolsOnly || m.supportsTools !== false)
                         .map((m) => {
@@ -510,8 +514,8 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                     </select>
 
                     {onlineModels.filter((m) => !filterToolsOnly || m.supportsTools !== false).length === 0 && (
-                      <p className="text-[11px] text-amber-300">
-                        No models matching "Tools only" filter. Uncheck the filter to view all models.
+                      <p className="text-[11px] text-warning">
+                        {t('ai.modelModal.noToolsMatchFilter', 'No models matching "Tools only" filter. Uncheck the filter to view all models.')}
                       </p>
                     )}
                   </div>
@@ -530,7 +534,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                 {provider === 'ollama' && (
                   <div className="mt-2 space-y-2">
                     <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                      <span className="text-fg-muted">Quick presets with Tool Calling support:</span>
+                      <span className="text-fg-muted">{t('ai.modelModal.quickPresetsLabel', 'Quick presets with Tool Calling support:')}</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -538,7 +542,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                           if (!modelToEdit) setName('GPT-OSS 20B');
                           setSupportsTools(true);
                         }}
-                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer font-bold"
+                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated-hover text-success border border-success/30 font-mono transition cursor-pointer font-bold"
                       >
                         gpt-oss:20b
                       </button>
@@ -549,7 +553,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                           if (!modelToEdit) setName('Qwen 2.5 7B (Instruct)');
                           setSupportsTools(true);
                         }}
-                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
+                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated-hover text-success border border-success/30 font-mono transition cursor-pointer"
                       >
                         qwen2.5:7b
                       </button>
@@ -560,7 +564,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                           if (!modelToEdit) setName('Llama 3.1 8B (Instruct)');
                           setSupportsTools(true);
                         }}
-                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
+                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated-hover text-success border border-success/30 font-mono transition cursor-pointer"
                       >
                         llama3.1:8b
                       </button>
@@ -571,7 +575,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                           if (!modelToEdit) setName('Mistral Nemo 12B');
                           setSupportsTools(true);
                         }}
-                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
+                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated-hover text-success border border-success/30 font-mono transition cursor-pointer"
                       >
                         mistral-nemo:12b
                       </button>
@@ -582,7 +586,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                           if (!modelToEdit) setName('Llama 3.2 3B');
                           setSupportsTools(true);
                         }}
-                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated text-emerald-300 border border-emerald-500/30 font-mono transition cursor-pointer"
+                        className="px-2 py-0.5 rounded bg-elevated hover:bg-elevated-hover text-success border border-success/30 font-mono transition cursor-pointer"
                       >
                         llama3.2:3b
                       </button>
@@ -591,11 +595,12 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                     {(modelId.toLowerCase().includes('deepseek-r1') ||
                       modelId.toLowerCase().includes('deepseek_r1') ||
                       modelId.toLowerCase().includes('coder')) && (
-                      <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-200 text-[11px] leading-relaxed flex items-start gap-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="p-2.5 rounded-lg bg-warning/10 border border-warning/30 text-fg text-[11px] leading-relaxed flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
                         <div>
-                          <span className="font-semibold text-amber-300">Tool Calling Compatibility Notice:</span>{' '}
-                          Pure reasoning models (like DeepSeek-R1) and dedicated coder models lack standard function calling templates in Ollama. PIKA will protect trading operations by guarding against unverified portfolio figures. For real-time exchange audits, select an instruct model with tool support like <span className="font-mono text-fg">gpt-oss:20b</span>, <span className="font-mono text-fg">qwen2.5:7b</span>, or <span className="font-mono text-fg">llama3.1:8b</span>.
+                          <span className="font-semibold text-warning">{t('ai.modelModal.toolCallingNoticeTitle', 'Tool Calling Compatibility Notice:')}</span>{' '}
+                          {t('ai.modelModal.toolCallingNoticeDesc', 'Pure reasoning models (like DeepSeek-R1) and dedicated coder models lack standard function calling templates in Ollama. PIKA will protect trading operations by guarding against unverified portfolio figures. For real-time exchange audits, select an instruct model with tool support like')}{' '}
+                          <span className="font-mono text-fg">gpt-oss:20b</span>, <span className="font-mono text-fg">qwen2.5:7b</span>, <span className="font-mono text-fg">llama3.1:8b</span>.
                         </div>
                       </div>
                     )}
@@ -607,15 +612,15 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
 
           {/* Section 2: Network, Credentials & API Key */}
           <div className="space-y-4 pt-2 border-t border-line">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2 font-mono">
-              <Key className="w-4 h-4" /> 2. Connectivity & API Key
+            <h3 className="text-xs font-bold uppercase tracking-wider text-success flex items-center gap-2 font-mono">
+              <Key className="w-4 h-4" /> {t('ai.modelModal.section2Title', '2. Connectivity & API Key')}
             </h3>
 
             {(provider === 'ollama' || provider === 'openrouter' || provider === 'custom') && (
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium text-fg">
-                    Base URL / Endpoint {provider === 'ollama' && '(Default: http://localhost:11434)'}
+                    {t('ai.modelModal.baseUrlEndpoint', 'Base URL / Endpoint')} {provider === 'ollama' && `(${t('ai.modelModal.defaultOllamaUrl', 'Default: http://localhost:11434')})`}
                   </label>
                   {(provider === 'ollama' || provider === 'custom') && (
                     <button
@@ -635,11 +640,11 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                           toast.success(t('toasts.endpointSetWillApply', 'Endpoint set to {{url}}. Will apply on save.', { url: trimmedUrl }));
                         }
                       }}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-elevated hover:bg-elevated text-fg hover:text-fg border border-line hover:border-line-strong transition cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-elevated hover:bg-elevated-hover text-fg hover:text-fg border border-line hover:border-line-strong transition cursor-pointer"
                       title={t('ai.modelModal.tooltips.quickSaveUrl', 'Quick save endpoint URL without re-saving all form fields')}
                     >
                       <Save className="w-3 h-3 text-accent" />
-                      <span>Save Endpoint</span>
+                      <span>{t('ai.modelModal.saveEndpoint', 'Save Endpoint')}</span>
                     </button>
                   )}
                 </div>
@@ -652,8 +657,8 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                 />
                 <span className="text-[10px] text-fg-muted mt-1 block">
                   {provider === 'ollama'
-                    ? 'Tip: You can use a local IP like http://192.168.1.50:11434. Click "Save Endpoint" to update immediately.'
-                    : 'Custom endpoint URL for local or remote model execution.'}
+                    ? t('ai.modelModal.ollamaUrlHint', 'Tip: You can use a local IP like http://192.168.1.50:11434. Click "Save Endpoint" to update immediately.')
+                    : t('ai.modelModal.customUrlHint', 'Custom endpoint URL for local or remote model execution.')}
                 </span>
               </div>
             )}
@@ -663,27 +668,33 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium text-fg">
-                    {provider === 'gemini' ? 'Google Gemini API Key (Optional)' : 'API Key (Stored locally)'}
+                    {provider === 'gemini'
+                      ? t('ai.modelModal.geminiKeyOptional', 'Google Gemini API Key (Optional)')
+                      : t('ai.modelModal.apiKeyLocal', 'API Key (Stored locally)')}
                   </label>
                   <button
                     type="button"
                     onClick={() => setShowApiKey(!showApiKey)}
                     className="text-xs text-accent hover:underline cursor-pointer"
                   >
-                    {showApiKey ? 'Hide' : 'Show'}
+                    {showApiKey ? t('common.hide', 'Hide') : t('common.show', 'Show')}
                   </button>
                 </div>
                 <input
                   type={showApiKey ? 'text' : 'password'}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder={provider === 'gemini' ? 'Leave blank to use Server Proxy or enter your own AI Studio API Key...' : 'sk-...'}
+                  placeholder={
+                    provider === 'gemini'
+                      ? t('ai.modelModal.geminiKeyPlaceholder', 'Leave blank to use Server Proxy or enter your own AI Studio API Key...')
+                      : 'sk-...'
+                  }
                   className="w-full bg-surface border border-line rounded-lg px-3 py-2 text-xs text-fg focus:outline-none focus:border-accent font-mono"
                 />
                 <span className="text-[10px] text-fg-muted mt-1 block">
                   {provider === 'gemini'
-                    ? 'If left blank, the app will automatically use the built-in server proxy key. Provide your own key to use your individual quota.'
-                    : 'Your API key is saved locally in your browser with secure storage.'}
+                    ? t('ai.modelModal.geminiKeyHint', 'If left blank, the app will automatically use the built-in server proxy key. Provide your own key to use your individual quota.')
+                    : t('ai.modelModal.localKeyHint', 'Your API key is saved locally in your browser with secure storage.')}
                 </span>
               </div>
             )}
@@ -697,7 +708,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                   onChange={(e) => setIsActive(e.target.checked)}
                   className="w-4 h-4 rounded border-line text-accent focus:ring-accent"
                 />
-                <span className="font-medium text-fg">Active Model</span>
+                <span className="font-medium text-fg">{t('ai.modelModal.activeModel', 'Active Model')}</span>
               </label>
 
               <label className="flex items-center gap-2.5 text-xs text-fg cursor-pointer">
@@ -708,9 +719,9 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                     setIsPrimary(e.target.checked);
                     if (e.target.checked) setIsFallback(false);
                   }}
-                  className="w-4 h-4 rounded border-line text-amber-500 focus:ring-amber-500"
+                  className="w-4 h-4 rounded border-line text-warning focus:ring-warning"
                 />
-                <span className="font-medium text-amber-400">Primary Model</span>
+                <span className="font-medium text-warning">{t('ai.modelModal.primaryModel', 'Primary Model')}</span>
               </label>
 
               <label className="flex items-center gap-2.5 text-xs text-fg cursor-pointer">
@@ -721,9 +732,9 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                     setIsFallback(e.target.checked);
                     if (e.target.checked) setIsPrimary(false);
                   }}
-                  className="w-4 h-4 rounded border-line text-cyan-500 focus:ring-cyan-500"
+                  className="w-4 h-4 rounded border-line text-tone-cyan focus:ring-tone-cyan"
                 />
-                <span className="font-medium text-cyan-400">Contingency (Fallback)</span>
+                <span className="font-medium text-tone-cyan">{t('ai.modelModal.contingencyFallback', 'Contingency (Fallback)')}</span>
               </label>
             </div>
 
@@ -731,19 +742,19 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
             <div className="p-3.5 bg-surface border border-line rounded-xl flex items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-fg">Tool Calling Support (Function Calling)</span>
+                  <span className="text-xs font-semibold text-fg">{t('ai.modelModal.toolCallingTitle', 'Tool Calling Support (Function Calling)')}</span>
                   {supportsTools ? (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      ENABLED (TOOL CALLING READY)
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-success/15 text-success border border-success/30">
+                      {t('ai.modelModal.toolCallingEnabledBadge', 'ENABLED (TOOL CALLING READY)')}
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                      DISABLED (NO TOOLS AUDIT)
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-warning/15 text-warning border border-warning/30">
+                      {t('ai.modelModal.toolCallingDisabledBadge', 'DISABLED (NO TOOLS AUDIT)')}
                     </span>
                   )}
                 </div>
                 <p className="text-[11px] text-fg-muted leading-relaxed">
-                  Allows the model to invoke exchange tools to inspect real balances, open positions, funding fees, and order status. When disabled, queries requiring live exchange data are protected against fabricated numbers.
+                  {t('ai.modelModal.toolCallingDesc', 'Allows the model to invoke exchange tools to inspect real balances, open positions, funding fees, and order status. When disabled, queries requiring live exchange data are protected against fabricated numbers.')}
                 </p>
               </div>
 
@@ -754,52 +765,52 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                   onChange={(e) => setSupportsTools(e.target.checked)}
                   className="w-4 h-4 rounded border-line text-accent focus:ring-accent"
                 />
-                <span className="text-xs font-mono text-fg">{supportsTools ? 'Enabled' : 'Disabled'}</span>
+                <span className="text-xs font-mono text-fg">{supportsTools ? t('ai.modelModal.enabled', 'Enabled') : t('ai.modelModal.disabled', 'Disabled')}</span>
               </label>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-fg mb-1">
-                  RPM Limit (Req/Min)
+                  {t('ai.modelModal.rpmLimit', 'RPM Limit (Req/Min)')}
                 </label>
                 <input
                   type="number"
                   min="0"
                   value={maxRpm}
                   onChange={(e) => setMaxRpm(parseInt(e.target.value) || 0)}
-                  placeholder="0 = Unlimited"
+                  placeholder={`0 = ${t('common.unlimited', 'Unlimited')}`}
                   className="w-full bg-surface border border-line rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent"
                 />
-                <span className="text-[10px] text-fg-muted">0 for unlimited</span>
+                <span className="text-[10px] text-fg-muted">{t('ai.modelModal.zeroForUnlimited', '0 for unlimited')}</span>
               </div>
               <div>
                 <label className="block text-xs font-medium text-fg mb-1">
-                  RPD Limit (Req/Day)
+                  {t('ai.modelModal.rpdLimit', 'RPD Limit (Req/Day)')}
                 </label>
                 <input
                   type="number"
                   min="0"
                   value={maxRpd}
                   onChange={(e) => setMaxRpd(parseInt(e.target.value) || 0)}
-                  placeholder="0 = Unlimited"
+                  placeholder={`0 = ${t('common.unlimited', 'Unlimited')}`}
                   className="w-full bg-surface border border-line rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent"
                 />
-                <span className="text-[10px] text-fg-muted">0 for unlimited</span>
+                <span className="text-[10px] text-fg-muted">{t('ai.modelModal.zeroForUnlimited', '0 for unlimited')}</span>
               </div>
             </div>
           </div>
 
           {/* Section 3: Inference Parameters */}
           <div className="space-y-4 pt-2 border-t border-line">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2 font-mono">
-              <Sliders className="w-4 h-4" /> 3. Inference Parameters
+            <h3 className="text-xs font-bold uppercase tracking-wider text-warning flex items-center gap-2 font-mono">
+              <Sliders className="w-4 h-4" /> {t('ai.modelModal.section3Title', '3. Inference Parameters')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <div className="flex justify-between text-xs text-fg mb-1">
-                  <span>Temperature</span>
+                  <span>{t('ai.settings.modal.temperature', 'Temperature')}</span>
                   <span className="font-mono text-accent">{temperature.toFixed(2)}</span>
                 </div>
                 <input
@@ -811,7 +822,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                   onChange={(e) => setTemperature(parseFloat(e.target.value))}
                   className="w-full accent-accent cursor-pointer"
                 />
-                <span className="text-[10px] text-fg-muted">0.10 for mathematical precision</span>
+                <span className="text-[10px] text-fg-muted">{t('ai.modelModal.tempPrecisionHint', '0.10 for mathematical precision')}</span>
               </div>
 
               <div>
@@ -832,7 +843,7 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
 
               <div>
                 <label className="block text-xs font-medium text-fg mb-1">
-                  Max Response Tokens
+                  {t('ai.modelModal.maxResponseTokens', 'Max Response Tokens')}
                 </label>
                 <input
                   type="number"
@@ -849,36 +860,36 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
 
           {/* Save Validation Warning Banner */}
           {saveValidationWarning && (
-            <div className="p-3.5 rounded-lg border bg-amber-500/10 border-amber-500/30 text-xs text-amber-200 space-y-2">
+            <div className="p-3.5 rounded-lg border bg-warning/10 border-warning/30 text-xs text-fg space-y-2">
               <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <div className="font-bold text-amber-300">
-                    Model Reachability / Validation Warning
+                  <div className="font-bold text-warning">
+                    {t('ai.modelModal.validationWarningTitle', 'Model Reachability / Validation Warning')}
                   </div>
-                  <div className="text-[11px] text-amber-200/90 mt-0.5">
+                  <div className="text-[11px] text-fg mt-0.5">
                     {saveValidationWarning.message}
                   </div>
-                  <div className="text-[10px] text-amber-300/70 mt-1">
-                    This model may be deprecated, not yet activated in your account tier, or unreachable. You may still save it, but requests will fail unless automatic fallback is enabled.
+                  <div className="text-[10px] text-fg-muted mt-1">
+                    {t('ai.modelModal.validationWarningDesc', 'This model may be deprecated, not yet activated in your account tier, or unreachable. You may still save it, but requests will fail unless automatic fallback is enabled.')}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-1 border-t border-amber-500/20">
+              <div className="flex items-center justify-end gap-2 pt-1 border-t border-warning/20">
                 <button
                   type="button"
                   onClick={() => setSaveValidationWarning(null)}
                   className="px-2.5 py-1 text-[11px] text-fg-muted hover:text-fg transition"
                 >
-                  Adjust Model
+                  {t('ai.modelModal.adjustModel', 'Adjust Model')}
                 </button>
                 <button
                   type="button"
                   onClick={() => executeSave()}
-                  className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded text-[11px] font-semibold transition"
+                  className="px-3 py-1 bg-warning/20 hover:bg-warning/30 text-warning border border-warning/40 rounded text-[11px] font-semibold transition"
                 >
-                  Save Model Anyway
+                  {t('ai.modelModal.saveAnyway', 'Save Model Anyway')}
                 </button>
               </div>
             </div>
@@ -889,21 +900,23 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
             <div
               className={`p-3 rounded-lg border text-xs flex items-start gap-2.5 ${
                 testResult.success
-                  ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
-                  : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
+                  ? 'bg-success/10 border-success/30 text-success'
+                  : 'bg-danger/10 border-danger/30 text-danger'
               }`}
             >
               {testResult.success ? (
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <ShieldCheck className="w-4 h-4 text-success shrink-0 mt-0.5" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
               )}
               <div>
                 <div className="font-bold">
-                  {testResult.success ? 'Connection Verified!' : 'Connection Failed:'}
+                  {testResult.success ? t('ai.modelModal.connectionVerified', 'Connection Verified!') : t('ai.modelModal.connectionFailed', 'Connection Failed:')}
                 </div>
                 <div>{testResult.details || testResult.error}</div>
-                <div className="text-[10px] text-fg-muted mt-0.5">Latency: {testResult.latencyMs}ms</div>
+                <div className="text-[10px] text-fg-muted mt-0.5">
+                  {t('ai.modelModal.latencyLabel', 'Latency: {{ms}}ms', { ms: testResult.latencyMs })}
+                </div>
               </div>
             </div>
           )}
@@ -934,8 +947,8 @@ export const AiModelModal: React.FC<AiModelModalProps> = ({
                 disabled={isValidatingSave}
                 className={`px-5 py-2 rounded-lg text-xs font-semibold shadow-md transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
                   saveValidationWarning
-                    ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                    : 'bg-accent hover:bg-accent/80 text-white'
+                    ? 'bg-warning hover:bg-warning/90 text-white'
+                    : 'bg-accent hover:bg-accent-hover text-white'
                 }`}
               >
                 {isValidatingSave ? (

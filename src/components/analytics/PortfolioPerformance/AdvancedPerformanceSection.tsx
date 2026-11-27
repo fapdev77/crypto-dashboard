@@ -22,10 +22,10 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
       case 'Excellent':
         return 'bg-success/10 text-success border-success/30';
       case 'Good':
-        return 'bg-blue-500/10 text-tone-blue border-blue-500/30';
+        return 'bg-tone-blue/10 text-tone-blue border-tone-blue/30';
       case 'Marginal':
       case 'Acceptable':
-        return 'bg-yellow-500/10 text-tone-yellow border-yellow-500/30';
+        return 'bg-tone-yellow/10 text-tone-yellow border-tone-yellow/30';
       default:
         return 'bg-danger/10 text-danger border-danger/30';
     }
@@ -36,10 +36,30 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
       case 'Highly Consistent':
         return 'bg-success/10 text-success border-success/30';
       case 'Moderate Consistency':
-        return 'bg-yellow-500/10 text-tone-yellow border-yellow-500/30';
+        return 'bg-tone-yellow/10 text-tone-yellow border-tone-yellow/30';
       default:
-        return 'bg-amber-500/10 text-tone-amber border-amber-500/30';
+        return 'bg-warning/10 text-tone-amber border-warning/30';
     }
+  };
+
+  const getLocalizedPfRating = (rating: string) => {
+    const map: Record<string, string> = {
+      Excellent: 'analytics.portfolio.advanced.ratings.excellent',
+      Good: 'analytics.portfolio.advanced.ratings.good',
+      Marginal: 'analytics.portfolio.advanced.ratings.marginal',
+      Acceptable: 'analytics.portfolio.advanced.ratings.acceptable',
+      'Loss-making': 'analytics.portfolio.advanced.ratings.lossMaking',
+    };
+    return map[rating] ? t(map[rating], rating) : rating;
+  };
+
+  const getLocalizedConsistencyRating = (rating: string) => {
+    const map: Record<string, string> = {
+      'Highly Consistent': 'analytics.portfolio.advanced.ratings.highlyConsistent',
+      'Moderate Consistency': 'analytics.portfolio.advanced.ratings.moderateConsistency',
+      'High Dispersion': 'analytics.portfolio.advanced.ratings.highDispersion',
+    };
+    return map[rating] ? t(map[rating], rating) : rating;
   };
 
   const negativeDaysCount = Math.max(0, metrics.totalDaysEvaluated - metrics.positiveDaysCount);
@@ -52,7 +72,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
           <Award className="w-4 h-4 text-accent" />
           {t('analytics.portfolio.advanced.title', 'Advanced Performance Metrics')}
         </h3>
-        <span className="text-xs text-fg-muted">Risk, Return & Consistency</span>
+        <span className="text-xs text-fg-muted">{t('analytics.portfolio.advanced.subtitle', 'Risk, Return & Consistency')}</span>
       </div>
 
       {/* Grid of 3 Main Analytical Cards */}
@@ -61,7 +81,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
         <div className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between shadow-sm">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <AppTooltip description="Percentage of operating days with positive net result over the total days with activity.">
+              <AppTooltip description={t('analytics.portfolio.advanced.winRateTooltip', 'Percentage of operating days with positive net result over the total days with activity.')}>
                 <span className="text-[11px] font-semibold text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.advanced.winRate', 'Win Rate (Daily)')}
                 </span>
@@ -74,11 +94,11 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
             </div>
 
             <div className="text-xs text-fg-muted flex items-center gap-1.5 mb-4">
-              <span>{metrics.positiveDaysCount} positive</span>
+              <span>{t('analytics.portfolio.advanced.positiveDays', '{{positive}} positive', { positive: metrics.positiveDaysCount })}</span>
               <span>/</span>
-              <span>{metrics.totalDaysEvaluated} total days</span>
+              <span>{t('analytics.portfolio.advanced.totalDays', '{{total}} total days', { total: metrics.totalDaysEvaluated })}</span>
               {negativeDaysCount > 0 && (
-                <span className="text-danger">({negativeDaysCount} negative)</span>
+                <span className="text-danger">({t('analytics.portfolio.advanced.negativeDays', '{{count}} negative', { count: negativeDaysCount })})</span>
               )}
             </div>
           </div>
@@ -88,12 +108,12 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
             <div
               className="bg-success h-full transition-all duration-300"
               style={{ width: `${Math.min(100, Math.max(0, metrics.winRate))}%` }}
-              title={`Positive Days: ${metrics.winRate.toFixed(1)}%`}
+              title={t('analytics.portfolio.advanced.positiveDaysPctTitle', 'Positive Days: {{pct}}%', { pct: metrics.winRate.toFixed(1) })}
             />
             <div
               className="bg-danger h-full transition-all duration-300"
               style={{ width: `${Math.min(100, Math.max(0, 100 - metrics.winRate))}%` }}
-              title={`Negative Days: ${(100 - metrics.winRate).toFixed(1)}%`}
+              title={t('analytics.portfolio.advanced.negativeDaysPctTitle', 'Negative Days: {{pct}}%', { pct: (100 - metrics.winRate).toFixed(1) })}
             />
           </div>
         </div>
@@ -102,13 +122,13 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
         <div className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between shadow-sm">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <AppTooltip description="Ratio of gross gains to gross losses: Total Gains / Total Losses. Values > 2.0 indicate institutional excellence.">
+              <AppTooltip description={t('analytics.portfolio.advanced.profitFactorTooltip', 'Ratio of gross gains to gross losses: Total Gains / Total Losses. Values > 2.0 indicate institutional excellence.')}>
                 <span className="text-[11px] font-semibold text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.advanced.profitFactor', 'Profit Factor')}
                 </span>
               </AppTooltip>
               <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border ${getProfitFactorBadge(metrics.profitFactorRating)}`}>
-                {metrics.profitFactorRating}
+                {getLocalizedPfRating(metrics.profitFactorRating)}
               </span>
             </div>
 
@@ -119,13 +139,13 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
             {/* Split breakdown */}
             <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-line/50 font-mono">
               <div>
-                <span className="text-[10px] text-fg-muted block">Total Gains:</span>
+                <span className="text-[10px] text-fg-muted block">{t('analytics.portfolio.advanced.totalGains', 'Total Gains')}:</span>
                 <span className="text-success font-semibold">
                   {maskVal(`+${metrics.totalGains} ${denomination}`)}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-fg-muted block">Total Losses:</span>
+                <span className="text-[10px] text-fg-muted block">{t('analytics.portfolio.advanced.totalLosses', 'Total Losses')}:</span>
                 <span className="text-danger font-semibold">
                   {maskVal(`-${metrics.totalLosses} ${denomination}`)}
                 </span>
@@ -135,7 +155,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
 
           <div className="text-[11px] text-fg-muted mt-3 pt-2 border-t border-line/30 flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-accent" />
-            <span>Ratio of gains relative to absorbed drawdowns</span>
+            <span>{t('analytics.portfolio.advanced.profitFactorFootnote', 'Ratio of gains relative to absorbed drawdowns')}</span>
           </div>
         </div>
 
@@ -143,13 +163,13 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
         <div className="bg-surface border border-line rounded-xl p-5 flex flex-col justify-between shadow-sm">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <AppTooltip description="Coefficient of Variation (Standard Deviation / Daily Mean * 100). Lower CV reflects higher regularity and consistency across operational days.">
+              <AppTooltip description={t('analytics.portfolio.advanced.consistencyTooltip', 'Coefficient of Variation (Standard Deviation / Daily Mean * 100). Lower CV reflects higher regularity and consistency across operational days.')}>
                 <span className="text-[11px] font-semibold text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.advanced.consistencyIndex', 'Consistency Index (CV)')}
                 </span>
               </AppTooltip>
               <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border ${getConsistencyBadge(metrics.consistencyRating)}`}>
-                {metrics.consistencyRating}
+                {getLocalizedConsistencyRating(metrics.consistencyRating)}
               </span>
             </div>
 
@@ -159,17 +179,17 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
 
             <p className="text-xs text-fg-muted leading-relaxed">
               {metrics.consistencyRating === 'Highly Consistent' &&
-                'Low outcome dispersion indicating consistent, steady performance.'}
+                t('analytics.portfolio.advanced.consistencyDescHigh', 'Low outcome dispersion indicating consistent, steady performance.')}
               {metrics.consistencyRating === 'Moderate Consistency' &&
-                'Balanced distribution between consistent sessions and outlier days.'}
+                t('analytics.portfolio.advanced.consistencyDescMod', 'Balanced distribution between consistent sessions and outlier days.')}
               {metrics.consistencyRating === 'High Dispersion' &&
-                'High return variance across days with significant fluctuation.'}
+                t('analytics.portfolio.advanced.consistencyDescDisp', 'High return variance across days with significant fluctuation.')}
             </p>
           </div>
 
           <div className="text-[11px] text-fg-muted mt-3 pt-2 border-t border-line/30 flex items-center gap-1">
             <Activity className="w-3.5 h-3.5 text-tone-blue" />
-            <span>Normalized standard deviation of daily returns</span>
+            <span>{t('analytics.portfolio.advanced.consistencyFootnote', 'Normalized standard deviation of daily returns')}</span>
           </div>
         </div>
       </div>

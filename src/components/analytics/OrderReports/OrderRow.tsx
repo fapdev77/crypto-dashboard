@@ -45,13 +45,13 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
   const sideText = isDerivative ? `${rawSideText} · ${orderLeverage}x · ${capitalizedMarginMode}` : rawSideText;
 
   const statusColorMap: Record<string, string> = {
-    NEW: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20',
+    NEW: 'text-tone-blue bg-tone-blue/10 border-tone-blue/20',
     FILLED: 'text-success bg-success/10 border-success/20',
     CANCELLED: 'text-fg-muted bg-line/50 border-line',
-    PARTIALLY_FILLED: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+    PARTIALLY_FILLED: 'text-tone-yellow bg-tone-yellow/10 border-tone-yellow/20',
     REJECTED: 'text-danger bg-danger/10 border-danger/20',
-    TRIGGERED: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-    UNTRIGGERED: 'text-orange-400 bg-orange-400/10 border-orange-400/20'
+    TRIGGERED: 'text-tone-blue bg-tone-blue/10 border-tone-blue/20',
+    UNTRIGGERED: 'text-tone-orange bg-tone-orange/10 border-tone-orange/20'
   };
   const statusClass = statusColorMap[order.status] || 'text-fg-muted bg-line/50 border-line';
 
@@ -176,38 +176,38 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
           <div className="flex flex-wrap items-center gap-1 mt-0.5 max-w-[140px]">
             <span className="text-xs text-fg-muted font-mono">{order.type}</span>
             {isTp && (
-              <span className="text-[9px] px-1 py-0.5 rounded bg-emerald-500/10 text-success font-medium border border-emerald-500/20">
+              <span className="text-[9px] px-1 py-0.5 rounded bg-success/10 text-success font-medium border border-success/20">
                 TP
               </span>
             )}
             {isSl && (
-              <span className="text-[9px] px-1 py-0.5 rounded bg-red-500/10 text-danger font-medium border border-red-500/20">
+              <span className="text-[9px] px-1 py-0.5 rounded bg-danger/10 text-danger font-medium border border-danger/20">
                 SL
               </span>
             )}
             {isTrailing && (
-              <span className="text-[9px] px-1 py-0.5 rounded bg-purple-500/10 text-purple-400 font-medium border border-purple-500/20">
-                Trailing
+              <span className="text-[9px] px-1 py-0.5 rounded bg-tone-purple/10 text-tone-purple font-medium border border-tone-purple/20">
+                {t('orders.badges.trailing', 'Trailing')}
               </span>
             )}
             {isScopeFull && (
-              <span className="text-[9px] px-1 py-0.5 rounded bg-cyan-500/10 text-cyan-400 font-medium border border-cyan-500/20" title={t('orders.tooltips.fullPositionScope')}>
-                Full Pos
+              <span className="text-[9px] px-1 py-0.5 rounded bg-tone-cyan/10 text-tone-cyan font-medium border border-tone-cyan/20" title={t('orders.tooltips.fullPositionScope')}>
+                {t('orders.badges.fullPos', 'Full Pos')}
               </span>
             )}
             {isScopePartial && (
-              <span className="text-[9px] px-1 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium border border-blue-500/20" title={t('orders.tooltips.partialClose')}>
-                Partial{order.closeFraction ? ` ${(order.closeFraction * 100).toFixed(0)}%` : ''}
+              <span className="text-[9px] px-1 py-0.5 rounded bg-tone-blue/10 text-tone-blue font-medium border border-tone-blue/20" title={t('orders.tooltips.partialClose')}>
+                {t('orders.badges.partial', 'Partial')}{order.closeFraction ? ` ${(order.closeFraction * 100).toFixed(0)}%` : ''}
               </span>
             )}
             {order.isPositionTpsl && (
-              <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/10 text-amber-400 font-medium border border-amber-500/20" title={t('orders.tooltips.linkedTpSl')}>
-                Pos TP/SL
+              <span className="text-[9px] px-1 py-0.5 rounded bg-warning/10 text-tone-amber font-medium border border-warning/20" title={t('orders.tooltips.linkedTpSl')}>
+                {t('orders.badges.posTpSl', 'Pos TP/SL')}
               </span>
             )}
             {order.reduceOnly && (
               <AppTooltip description={t('orders.tooltips.reduceOnly')}>
-                <span className="text-[9px] px-1 py-0.5 bg-line text-fg-muted rounded cursor-help font-medium border border-line-strong">Reduce</span>
+                <span className="text-[9px] px-1 py-0.5 bg-line text-fg-muted rounded cursor-help font-medium border border-line-strong">{t('orders.badges.reduce', 'Reduce')}</span>
               </AppTooltip>
             )}
             {order.timeInForce && (
@@ -254,8 +254,8 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
               )}
             </div>
           ) : order.triggerPrice ? (
-            <span className={`font-mono text-xs ${isTp ? 'text-success' : isSl ? 'text-danger' : 'text-orange-400'}`}>
-              Trig: {formatCurrency(order.triggerPrice, 'crypto', 8)}
+            <span className={`font-mono text-xs ${isTp ? 'text-success' : isSl ? 'text-danger' : 'text-tone-orange'}`}>
+              {t('orders.triggerShort', 'Trig:')} {formatCurrency(order.triggerPrice, 'crypto', 8)}
             </span>
           ) : (
             <span className="font-mono text-fg-muted text-xs opacity-0">-</span>
@@ -300,7 +300,7 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
               statusKey === 'triggered' ? t('orders.statuses.triggeredTooltip', 'Trigger price reached; order submitted to book.') :
               statusKey === 'untriggered' ? t('orders.statuses.untriggeredTooltip', 'Awaiting trigger condition before book placement.') :
               statusKey === 'new' ? t('orders.statuses.newTooltip', 'Order placed and acknowledged by exchange.') :
-              'Current execution status of the order.';
+              t('orders.statuses.defaultTooltip', 'Current execution status of the order.');
 
             return (
               <>
@@ -328,11 +328,11 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
       {/* Expanded details */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-line animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="px-4 pb-4 pt-1 bg-elevated/70 border-t border-line animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-y-5 gap-x-4 text-sm mt-4">
 
             <div className="flex flex-col gap-1">
-              <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Order ID</span>
+              <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('orders.details.orderId', 'Order ID')}</span>
               <AppTooltip description={t('orders.tooltips.exchangeOrderId')}>
                 <div className="text-fg font-mono text-sm cursor-help truncate w-max max-w-[200px]">
                   {order.exchangeOrderId}
@@ -408,34 +408,36 @@ export function OrderRow({ order, isExpanded, onToggle }: Props) {
 
             {order.executionScope && (
               <div className="flex flex-col gap-1">
-                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Scope</span>
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('orders.details.scope', 'Scope')}</span>
                 <span className="text-fg font-mono text-sm">
                   {order.executionScope === 'FULL_POSITION'
-                    ? 'Entire Position (Full)'
-                    : `Partial Close${order.closeFraction ? ` (${(order.closeFraction * 100).toFixed(0)}%)` : ''}`}
+                    ? t('orders.details.entirePositionFull', 'Entire Position (Full)')
+                    : `${t('orders.tooltips.partialClose', 'Partial Close')}${order.closeFraction ? ` (${(order.closeFraction * 100).toFixed(0)}%)` : ''}`}
                 </span>
               </div>
             )}
 
             {order.isPositionTpsl !== undefined && (
               <div className="flex flex-col gap-1">
-                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">Position TP/SL</span>
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('orders.details.positionTpSl', 'Position TP/SL')}</span>
                 <span className="text-fg font-mono text-sm">
-                  {order.isPositionTpsl ? 'Position-level TP/SL' : 'Independent Order'}
+                  {order.isPositionTpsl
+                    ? t('orders.details.positionLevelTpSl', 'Position-level TP/SL')
+                    : t('orders.details.independentOrder', 'Independent Order')}
                 </span>
               </div>
             )}
 
             {order.tpTriggerPrice !== undefined && (
               <div className="flex flex-col gap-1">
-                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">TP Trigger</span>
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('orders.details.tpTrigger', 'TP Trigger')}</span>
                 <span className="text-success font-mono text-sm">{formatCurrency(order.tpTriggerPrice, 'crypto', 8)}</span>
               </div>
             )}
 
             {order.slTriggerPrice !== undefined && (
               <div className="flex flex-col gap-1">
-                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">SL Trigger</span>
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('orders.details.slTrigger', 'SL Trigger')}</span>
                 <span className="text-danger font-mono text-sm">{formatCurrency(order.slTriggerPrice, 'crypto', 8)}</span>
               </div>
             )}

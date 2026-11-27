@@ -6,7 +6,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { CurrencyService } from '../../services/currency/CurrencyService';
 
 export function CurrencyApiDiagnostics() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { apiDiagnostics, usdtRate } = useSettingsStore();
   const [isTesting, setIsTesting] = useState(false);
 
@@ -37,7 +37,7 @@ export function CurrencyApiDiagnostics() {
     }
     if (status === 'cached') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-tone-amber border border-amber-500/20">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-warning/10 text-tone-amber border border-warning/20">
           <span className="w-1.5 h-1.5 rounded-full bg-warning" />
           {t('currencyDiagnostics.cached', 'Cached')}
         </span>
@@ -67,7 +67,7 @@ export function CurrencyApiDiagnostics() {
 
   const formatTimestamp = (ts: number | null) => {
     if (!ts) return t('currencyDiagnostics.never', 'Never');
-    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return new Date(ts).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
   return (
@@ -104,7 +104,7 @@ export function CurrencyApiDiagnostics() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-semibold text-fg">Frankfurter v2</span>
-              <span className="text-[10px] text-fg-muted font-mono">(Fiat Rates)</span>
+              <span className="text-[10px] text-fg-muted font-mono">({t('currencyDiagnostics.fiatRates', 'Fiat Rates')})</span>
             </div>
             {renderStatusBadge(frankfurter.status)}
           </div>

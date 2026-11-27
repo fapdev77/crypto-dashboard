@@ -52,7 +52,7 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
         {/* Progress bar line at top */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-line">
           <div
-            className="h-full bg-gradient-to-r from-amber-500 to-accent transition-all duration-1000 ease-linear"
+            className="h-full bg-gradient-to-r from-warning to-accent transition-all duration-1000 ease-linear"
             style={{ width: `${(timeLeft / 5) * 100}%` }}
           />
         </div>
@@ -60,15 +60,15 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
         {/* Header */}
         <div className="flex items-start justify-between gap-3 pt-1">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-              <ShieldAlert className="w-5 h-5 text-tone-amber" />
+            <div className="w-10 h-10 rounded-xl bg-warning/10 border border-warning/20 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-5 h-5 text-warning" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-semibold text-fg">
                   {t('common.vaultNotice.title', 'Local Vault Not Initialized')}
                 </h3>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-tone-amber border border-amber-500/20">
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">
                   {timeLeft}s
                 </span>
               </div>
@@ -122,7 +122,7 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
                 checked={showVaultSetupNoticeOnStartup}
                 onChange={(e) => setShowVaultSetupNoticeOnStartup(e.target.checked)}
               />
-              <div className="w-8 h-4 bg-line peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-accent" />
+              <div className="w-8 h-4 bg-line peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-line-strong after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-accent" />
             </label>
             <span className="text-[11px] text-fg-muted">
               {t('common.vaultNotice.showOnStartup', 'Show notice on startup')}

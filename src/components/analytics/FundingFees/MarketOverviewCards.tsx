@@ -48,7 +48,7 @@ export const MarketOverviewCards = ({
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded(prev => !prev); } }}
         aria-expanded={expanded}
-        aria-label={expanded ? 'Collapse Market Overview' : 'Expand Market Overview'}
+        aria-label={expanded ? t('analytics.funding.overview.collapse', 'Collapse Market Overview') : t('analytics.funding.overview.expand', 'Expand Market Overview')}
       >
         <div className="flex items-center gap-2">
           {expanded ? (
@@ -58,14 +58,14 @@ export const MarketOverviewCards = ({
           )}
           <h3 className="text-sm font-semibold text-fg">{t('analytics.funding.cards.marketOverview', 'Market Overview')}</h3>
           <span className="text-xs text-fg-muted font-normal">
-            ({marketMetrics.totalSymbols} symbols · {rankings.topPayers.length} top / {rankings.bottomPayers.length} bottom)
+            ({t('analytics.funding.overview.symbolsSummary', '{{total}} symbols · {{top}} top / {{bottom}} bottom', { total: marketMetrics.totalSymbols, top: rankings.topPayers.length, bottom: rankings.bottomPayers.length })})
           </span>
         </div>
 
         {isSyncing && (
-           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-amber-500/10 text-tone-amber border border-amber-500/20 rounded-full text-xs font-medium animate-pulse">
+           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-warning/10 text-tone-amber border border-warning/20 rounded-full text-xs font-medium animate-pulse">
              <Loader2 className="w-3 h-3 animate-spin" />
-             Please wait, rates update in progress...
+             {t('analytics.funding.updatingRates', 'Please wait, rates update in progress...')}
            </div>
         )}
 
@@ -73,7 +73,7 @@ export const MarketOverviewCards = ({
         {!expanded && (
           <div className="flex items-center gap-3 text-[11px] text-fg-muted">
             <span className="hidden sm:inline">
-              Avg: <span className={marketMetrics.avgTodayRate > 0 ? 'text-success' : marketMetrics.avgTodayRate < 0 ? 'text-danger' : 'text-fg'}>
+              {t('analytics.funding.overview.avgShort', 'Avg:')} <span className={marketMetrics.avgTodayRate > 0 ? 'text-success' : marketMetrics.avgTodayRate < 0 ? 'text-danger' : 'text-fg'}>
                 {formatPercent(marketMetrics.avgTodayRate)}
               </span>
             </span>
@@ -93,7 +93,7 @@ export const MarketOverviewCards = ({
             <div className="bg-surface border border-line rounded-xl p-4 flex flex-col gap-1.5 hover:border-line-strong transition-colors">
               <div className="flex items-center gap-2">
                 <Layers className="w-4 h-4 text-fg-muted" />
-                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">Active Symbols</span>
+                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">{t('analytics.funding.overview.activeSymbols', 'Active Symbols')}</span>
               </div>
               <span className="text-xl font-bold font-mono tracking-tight text-fg">
                 {marketMetrics.totalSymbols}
@@ -118,7 +118,7 @@ export const MarketOverviewCards = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-fg-muted" />
-                  <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">Distribution Today</span>
+                  <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">{t('analytics.funding.overview.distributionToday', 'Distribution Today')}</span>
                 </div>
                 <AppTooltip
                   description={t('analytics.funding.overview.netSpread', 'Net positive spread: the difference between the % of positive and negative symbols. A positive value means more symbols have Longs paying Shorts than vice versa.')}
@@ -130,7 +130,7 @@ export const MarketOverviewCards = ({
                       marketMetrics.netPositiveSpread > 0 ? 'text-success' : marketMetrics.netPositiveSpread < 0 ? 'text-danger' : 'text-fg'
                     }`}
                   >
-                    Net {marketMetrics.netPositiveSpread >= 0 ? '+' : ''}{formatPercentShort(marketMetrics.netPositiveSpread)}
+                    {t('analytics.funding.overview.netPrefix', 'Net')} {marketMetrics.netPositiveSpread >= 0 ? '+' : ''}{formatPercentShort(marketMetrics.netPositiveSpread)}
                   </span>
                 </AppTooltip>
               </div>
@@ -141,7 +141,7 @@ export const MarketOverviewCards = ({
                   <span className="flex items-center justify-between cursor-help border-b border-dashed border-success/30 text-success">
                     <span className="flex items-center gap-1.5">
                       <TrendingUp className="w-3 h-3" />
-                      Positive
+                      {t('analytics.funding.overview.positive', 'Positive')}
                     </span>
                     <span className="font-mono font-medium">{formatPercentShort(marketMetrics.positiveRatePct)}</span>
                   </span>
@@ -150,7 +150,7 @@ export const MarketOverviewCards = ({
                   <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-fg-muted">
                     <span className="flex items-center gap-1.5">
                       <span className="w-3 h-3 flex items-center justify-center text-[10px]">—</span>
-                      Neutral
+                      {t('analytics.funding.overview.neutral', 'Neutral')}
                     </span>
                     <span className="font-mono font-medium">{formatPercentShort(marketMetrics.neutralRatePct)}</span>
                   </span>
@@ -159,7 +159,7 @@ export const MarketOverviewCards = ({
                   <span className="flex items-center justify-between cursor-help border-b border-dashed border-danger/30 text-danger">
                     <span className="flex items-center gap-1.5">
                       <TrendingDown className="w-3 h-3" />
-                      Negative
+                      {t('analytics.funding.overview.negative', 'Negative')}
                     </span>
                     <span className="font-mono font-medium">{formatPercentShort(marketMetrics.negativeRatePct)}</span>
                   </span>
@@ -170,11 +170,11 @@ export const MarketOverviewCards = ({
             <div className="bg-surface border border-line rounded-xl p-4 flex flex-col gap-1.5 hover:border-line-strong transition-colors">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-fg-muted" />
-                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">Rate Stats</span>
+                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">{t('analytics.funding.overview.rateStats', 'Rate Stats')}</span>
               </div>
               <AppTooltip description={t('analytics.funding.overview.avgRate', 'Average cumulative funding rate across all symbols for today (UTC). A positive value means Longs are generally paying Shorts.')} side="top" align="center">
                 <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-[11px]">
-                  <span className="text-fg-muted">Avg Rate</span>
+                  <span className="text-fg-muted">{t('analytics.funding.overview.avgRateLabel', 'Avg Rate')}</span>
                   <span className={`font-mono font-medium ${
                     marketMetrics.avgTodayRate > 0 ? 'text-success' : marketMetrics.avgTodayRate < 0 ? 'text-danger' : 'text-fg'
                   }`}>
@@ -184,7 +184,7 @@ export const MarketOverviewCards = ({
               </AppTooltip>
               <AppTooltip description={t('analytics.funding.overview.stdDev', "Standard deviation of today's funding rates. Higher values indicate greater dispersion between coins — some cost much more to hold than others.")} side="top" align="center">
                 <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-[11px]">
-                  <span className="text-fg-muted">Std Dev</span>
+                  <span className="text-fg-muted">{t('analytics.funding.overview.stdDevLabel', 'Std Dev')}</span>
                   <span className="font-mono font-medium text-fg">
                     {formatPercent(marketMetrics.stdDevTodayRate)}
                   </span>

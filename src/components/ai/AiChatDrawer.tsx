@@ -54,7 +54,7 @@ interface AiChatDrawerProps {
 }
 
 export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     isDrawerOpen,
     closeDrawer,
@@ -106,7 +106,12 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
     } catch {
       // ignore localStorage quota/privacy errors
     }
-    toast.success(t('toasts.chatDocked', 'Chat docked to {{side}}', { side: nextSide === 'left' ? 'Left' : 'Right' }), { icon: '⚓' });
+    toast.success(
+      t('toasts.chatDocked', 'Chat docked to {{side}}', {
+        side: nextSide === 'left' ? t('ai.chat.dockLeftLabel', 'Left') : t('ai.chat.dockRightLabel', 'Right'),
+      }),
+      { icon: '⚓' }
+    );
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -295,9 +300,9 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
 
       if (isCancelled) {
         updateMessage(assistantMsgId, {
-          content: 'Análise interrompida pelo usuário.',
+          content: t('ai.cancelled.defaultMsg', 'Response generation was cancelled by user.'),
           status: 'cancelled',
-          errorMessage: 'Operação cancelada pelo usuário.',
+          errorMessage: t('ai.chat.cancelledByUser', 'Operation cancelled by user.'),
           auditLogId: err?.auditLogId,
           rawDebug: err?.rawDebug,
         });
@@ -377,13 +382,13 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
         {showClearConfirm && (
           <div className="absolute inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in-0">
             <div className="bg-surface border border-line rounded-2xl p-5 max-w-xs w-full text-center space-y-4 shadow-2xl">
-              <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 rounded-full bg-danger/10 border border-danger/20 text-danger flex items-center justify-center mx-auto">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-fg">Clear Conversation?</h3>
+                <h3 className="text-sm font-bold text-fg">{t('ai.chat.clearModalTitle', 'Clear Conversation?')}</h3>
                 <p className="text-xs text-fg-muted mt-1">
-                  Are you sure you want to delete all messages in this conversation? This action cannot be undone.
+                  {t('ai.chat.clearModalDesc', 'Are you sure you want to delete all messages in this conversation? This action cannot be undone.')}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -392,14 +397,14 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                   onClick={() => setShowClearConfirm(false)}
                   className="flex-1 py-2.5 bg-elevated hover:bg-line text-fg rounded-xl text-xs font-semibold transition cursor-pointer border border-line min-h-[44px]"
                 >
-                  Cancel
+                  {t('common.cancel', 'Cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={confirmClearChat}
-                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold transition cursor-pointer min-h-[44px]"
+                  className="flex-1 py-2.5 bg-danger hover:bg-danger/90 text-white rounded-xl text-xs font-semibold transition cursor-pointer min-h-[44px]"
                 >
-                  Yes, Clear
+                  {t('ai.chat.confirmClearBtn', 'Yes, Clear')}
                 </button>
               </div>
             </div>
@@ -415,23 +420,23 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-fg tracking-tight truncate">PIKA Assistant</h2>
+                <h2 className="text-sm font-bold text-fg tracking-tight truncate">{t('ai.chat.brandTitle', 'PIKA Assistant')}</h2>
                 <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-accent/10 text-accent border border-accent/20 uppercase">
-                  AI Auditor
+                  {t('ai.chat.auditorBadge', 'AI Auditor')}
                 </span>
               </div>
               <div className="text-[10px] text-fg-muted flex items-center gap-1.5 truncate">
                 <span
                   className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    isEnabled ? (primaryModel ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400') : 'bg-gray-600'
+                    isEnabled ? (primaryModel ? 'bg-success animate-pulse' : 'bg-warning') : 'bg-fg-muted/50'
                   }`}
                 />
                 <span className="truncate">
                   {isEnabled
                     ? primaryModel
                       ? `${primaryModel.name}`
-                      : 'No active model'
-                    : 'Disabled by default'}
+                      : t('ai.chat.noActiveModel', 'No active model')
+                    : t('ai.settings.disabledByDefault', 'Disabled by default')}
                 </span>
               </div>
             </div>
@@ -444,24 +449,35 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
               <button
                 type="button"
                 onClick={handleNewConversation}
-                className="w-9 h-9 flex items-center justify-center text-fg-muted hover:text-accent rounded-lg hover:bg-[#202127] border border-line transition cursor-pointer"
-                aria-label="New conversation"
+                className="w-9 h-9 flex items-center justify-center text-fg-muted hover:text-accent rounded-lg hover:bg-elevated-hover border border-line transition cursor-pointer"
+                aria-label={t('ai.chat.tooltips.newConversation', 'New conversation')}
               >
                 <Plus className="w-4 h-4" />
               </button>
             </AppTooltip>
 
             {/* Direct Full-Screen Maximize / Restore Button */}
-            <AppTooltip description={isMaximized ? "Restore to dock" : "Expand to full screen"} side="bottom">
+            <AppTooltip
+              description={
+                isMaximized
+                  ? t('ai.chat.tooltips.restoreDock', 'Restore to dock')
+                  : t('ai.chat.tooltips.expandFullScreen', 'Expand to full screen')
+              }
+              side="bottom"
+            >
               <button
                 type="button"
                 onClick={() => setIsMaximized(!isMaximized)}
                 className={`w-9 h-9 flex items-center justify-center rounded-lg border transition cursor-pointer ${
                   isMaximized
                     ? 'text-accent bg-accent/15 border-accent/40'
-                    : 'text-fg-muted hover:text-accent hover:bg-[#202127] border-line'
+                    : 'text-fg-muted hover:text-accent hover:bg-elevated-hover border-line'
                 }`}
-                aria-label={isMaximized ? "Restore to dock" : "Expand to full screen"}
+                aria-label={
+                  isMaximized
+                    ? t('ai.chat.tooltips.restoreDock', 'Restore to dock')
+                    : t('ai.chat.tooltips.expandFullScreen', 'Expand to full screen')
+                }
               >
                 {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </button>
@@ -476,9 +492,9 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                   className={`w-9 h-9 flex items-center justify-center rounded-lg border transition cursor-pointer ${
                     isMenuOpen
                       ? 'text-accent bg-accent/15 border-accent/40'
-                      : 'text-fg-muted hover:text-fg hover:bg-[#202127] border-line'
+                      : 'text-fg-muted hover:text-fg hover:bg-elevated-hover border-line'
                   }`}
-                  aria-label="More options"
+                  aria-label={t('ai.chat.tooltips.moreOptions', 'More options')}
                   aria-expanded={isMenuOpen}
                 >
                   <MoreVertical className="w-4 h-4" />
@@ -487,7 +503,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
 
               {/* Popover Dropdown Menu */}
               {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-60 bg-[#18191e] border border-line rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-150">
+                <div className="absolute right-0 top-full mt-2 w-60 bg-surface border border-line rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-150">
                   {/* Full-Screen Toggle Shortcut */}
                   <button
                     type="button"
@@ -495,7 +511,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       setIsMenuOpen(false);
                       setIsMaximized(!isMaximized);
                     }}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-[#23242b] transition cursor-pointer text-left"
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-elevated-hover transition cursor-pointer text-left"
                   >
                     <div className="flex items-center gap-2.5">
                       {isMaximized ? (
@@ -503,10 +519,14 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       ) : (
                         <Maximize2 className="w-4 h-4 text-fg-muted" />
                       )}
-                      <span>{isMaximized ? 'Restore to Dock' : 'Expand to Full Screen'}</span>
+                      <span>
+                        {isMaximized
+                          ? t('ai.chat.menu.restoreDock', 'Restore to Dock')
+                          : t('ai.chat.menu.expandFullScreen', 'Expand to Full Screen')}
+                      </span>
                     </div>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-line text-[#A0A4AB] font-mono">
-                      {isMaximized ? 'Restore' : 'Full'}
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-elevated text-fg-muted font-mono">
+                      {isMaximized ? t('ai.chat.menu.restoreShort', 'Restore') : t('ai.chat.menu.fullShort', 'Full')}
                     </span>
                   </button>
 
@@ -517,7 +537,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       setIsMenuOpen(false);
                       toggleDockSide();
                     }}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-[#23242b] transition cursor-pointer text-left"
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-elevated-hover transition cursor-pointer text-left"
                   >
                     <div className="flex items-center gap-2.5">
                       {dockSide === 'right' ? (
@@ -525,10 +545,14 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       ) : (
                         <PanelRight className="w-4 h-4 text-fg-muted" />
                       )}
-                      <span>{dockSide === 'right' ? 'Dock to Left' : 'Dock to Right'}</span>
+                      <span>
+                        {dockSide === 'right'
+                          ? t('ai.chat.menu.dockToLeft', 'Dock to Left')
+                          : t('ai.chat.menu.dockToRight', 'Dock to Right')}
+                      </span>
                     </div>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-semibold uppercase">
-                      {dockSide}
+                      {dockSide === 'left' ? t('ai.chat.dockLeftLabel', 'Left') : t('ai.chat.dockRightLabel', 'Right')}
                     </span>
                   </button>
 
@@ -542,14 +566,14 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       setIsMenuOpen(false);
                       setIsHistoryOpen(true);
                     }}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-[#23242b] transition cursor-pointer text-left"
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-elevated-hover transition cursor-pointer text-left"
                   >
                     <div className="flex items-center gap-2.5">
                       <History className="w-4 h-4 text-fg-muted" />
-                      <span>Chat History</span>
+                      <span>{t('ai.chatHistory.title', 'Chat History')}</span>
                     </div>
                     {sessionCount > 0 && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-line text-[#A0A4AB] font-mono">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-elevated text-fg-muted font-mono">
                         {sessionCount}
                       </span>
                     )}
@@ -562,10 +586,10 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       setIsMenuOpen(false);
                       setShowAuditTableModal(true);
                     }}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-[#23242b] transition cursor-pointer text-left"
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-elevated-hover transition cursor-pointer text-left"
                   >
                     <ShieldCheck className="w-4 h-4 text-fg-muted" />
-                    <span>Audit Logs & Telemetry</span>
+                    <span>{t('ai.chat.menu.auditTelemetry', 'Audit Logs & Telemetry')}</span>
                   </button>
 
                   {/* AI Settings Option (Closes Drawer and navigates to AI Settings screen) */}
@@ -577,10 +601,10 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       if (onNavigateToSettings) onNavigateToSettings();
                       window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'ai-settings' }));
                     }}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-[#23242b] transition cursor-pointer text-left"
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-fg hover:text-fg hover:bg-elevated-hover transition cursor-pointer text-left"
                   >
                     <SettingsIcon className="w-4 h-4 text-fg-muted" />
-                    <span>AI Settings</span>
+                    <span>{t('ai.error.settings', 'AI Settings')}</span>
                   </button>
 
                   {/* Divider */}
@@ -594,10 +618,10 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       setShowClearConfirm(true);
                     }}
                     disabled={messages.length === 0}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition cursor-pointer text-left disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-danger hover:bg-danger/10 transition cursor-pointer text-left disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <Trash2 className="w-4 h-4 text-rose-400" />
-                    <span>Clear Conversation</span>
+                    <Trash2 className="w-4 h-4 text-danger" />
+                    <span>{t('ai.chat.menu.clearConversation', 'Clear Conversation')}</span>
                   </button>
                 </div>
               )}
@@ -608,8 +632,8 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
               <button
                 type="button"
                 onClick={closeDrawer}
-                className="w-9 h-9 flex items-center justify-center text-fg-muted hover:text-rose-400 rounded-lg hover:bg-[#202127] border border-line transition cursor-pointer"
-                aria-label="Close Assistant"
+                className="w-9 h-9 flex items-center justify-center text-fg-muted hover:text-danger rounded-lg hover:bg-elevated-hover border border-line transition cursor-pointer"
+                aria-label={t('ai.chat.tooltips.close', 'Close Assistant (Ctrl+J)')}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -619,7 +643,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
 
         {/* Optional Active Session Banner */}
         {currentSession && currentSession.title !== 'New Conversation' && (
-          <div className="px-4 py-1.5 bg-[#101114] border-b border-line flex items-center justify-between text-[11px] text-fg-muted shrink-0">
+          <div className="px-4 py-1.5 bg-elevated border-b border-line flex items-center justify-between text-[11px] text-fg-muted shrink-0">
             <div className="flex items-center gap-2 min-w-0">
               <MessageSquare className="w-3.5 h-3.5 text-accent shrink-0" />
               <span className={`text-fg font-medium truncate ${isMaximized ? 'max-w-2xl' : 'max-w-[280px]'}`}>
@@ -627,7 +651,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
               </span>
             </div>
             <span className="font-mono text-[10px] text-fg-muted shrink-0">
-              {messages.length} msgs
+              {t('ai.chat.msgsCount', '{{count}} msgs', { count: messages.length })}
             </span>
           </div>
         )}
@@ -638,30 +662,30 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
           {!isVaultActive ? (
             /* Mandatory Vault Setup Required State */
             <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 my-auto space-y-4">
-              <div className="p-6 sm:p-8 bg-gradient-to-b from-[#181a20] to-canvas border border-line rounded-2xl max-w-md w-full shadow-2xl space-y-4 text-fg">
-                <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center mx-auto text-amber-400 shadow-inner">
-                  <ShieldAlert className="w-8 h-8 text-amber-400" />
+              <div className="p-6 sm:p-8 bg-gradient-to-b from-surface to-canvas border border-line rounded-2xl max-w-md w-full shadow-2xl space-y-4 text-fg">
+                <div className="w-16 h-16 rounded-2xl bg-warning/10 border border-warning/25 flex items-center justify-center mx-auto text-warning shadow-inner">
+                  <ShieldAlert className="w-8 h-8 text-warning" />
                 </div>
                 <div>
-                  <span className="inline-block px-2.5 py-0.5 mb-2 text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 rounded-full border border-amber-500/30">
-                    Security Lockout • Vault Required
+                  <span className="inline-block px-2.5 py-0.5 mb-2 text-[10px] font-bold uppercase tracking-wider bg-warning/15 text-warning rounded-full border border-warning/30">
+                    {t('ai.chat.vaultRequiredBadge', 'Security Lockout • Vault Required')}
                   </span>
                   <h3 className="text-base sm:text-lg font-bold text-fg">
-                    PIKA AI Assistant Locked
+                    {t('ai.chat.vaultRequiredTitle', 'PIKA AI Assistant Locked')}
                   </h3>
                   <p className="text-xs text-fg-muted mt-2 leading-relaxed">
-                    The PIKA quantitative AI auditor operates exclusively under zero-trust security. Real-time portfolio analysis, balance auditing, and risk metrics are completely locked until your local vault is configured with a master passphrase.
+                    {t('ai.chat.vaultRequiredDesc', 'The PIKA quantitative AI auditor operates exclusively under zero-trust security. Real-time portfolio analysis, balance auditing, and risk metrics are completely locked until your local vault is configured with a master passphrase.')}
                   </p>
                 </div>
 
-                <div className="bg-surface p-3.5 rounded-xl border border-line/60 text-left text-[11px] text-[#A0A4AB] space-y-1.5">
+                <div className="bg-surface p-3.5 rounded-xl border border-line/60 text-left text-[11px] text-fg-muted space-y-1.5">
                   <div className="flex items-center gap-2 text-fg font-medium text-xs mb-1">
                     <Lock className="w-4 h-4 text-accent shrink-0" />
-                    Zero-Trust Protection
+                    {t('ai.chat.zeroTrustProtection', 'Zero-Trust Protection')}
                   </div>
-                  <p>• Military-grade PBKDF2 (600,000 iterations) + AES-GCM-256 client encryption.</p>
-                  <p>• API credentials and account balances are never transmitted in plaintext.</p>
-                  <p>• Protects against unauthorized local extensions and session hijacking.</p>
+                  <p>• {t('ai.chat.vaultFeature1', 'Military-grade PBKDF2 (600,000 iterations) + AES-GCM-256 client encryption.')}</p>
+                  <p>• {t('ai.chat.vaultFeature2', 'API credentials and account balances are never transmitted in plaintext.')}</p>
+                  <p>• {t('ai.chat.vaultFeature3', 'Protects against unauthorized local extensions and session hijacking.')}</p>
                 </div>
 
                 <div className="pt-2 flex flex-col gap-2">
@@ -671,31 +695,31 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                     className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-accent hover:bg-accent-hover active:scale-[0.99] text-white rounded-xl text-xs font-bold shadow-lg shadow-accent/25 transition cursor-pointer min-h-[44px]"
                   >
                     <Lock className="w-4 h-4" />
-                    <span>Activate Security Vault to Unlock</span>
+                    <span>{t('ai.chat.activateVaultBtn', 'Activate Security Vault to Unlock')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
                 <p className="text-[10px] text-fg-muted">
-                  You can explore mock simulation data across the dashboard without configuring keys, but PIKA live analysis requires an active vault.
+                  {t('ai.chat.vaultSimNote', 'You can explore mock simulation data across the dashboard without configuring keys, but PIKA live analysis requires an active vault.')}
                 </p>
               </div>
             </div>
           ) : !isUnlocked && encryptedData ? (
             /* Vault Configured but Locked in Memory State */
             <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 my-auto space-y-4">
-              <div className="p-6 sm:p-8 bg-gradient-to-b from-[#181a20] to-canvas border border-line rounded-2xl max-w-md w-full shadow-2xl space-y-4 text-fg">
+              <div className="p-6 sm:p-8 bg-gradient-to-b from-surface to-canvas border border-line rounded-2xl max-w-md w-full shadow-2xl space-y-4 text-fg">
                 <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/25 flex items-center justify-center mx-auto text-accent shadow-inner">
                   <Lock className="w-8 h-8 text-accent" />
                 </div>
                 <div>
                   <span className="inline-block px-2.5 py-0.5 mb-2 text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent rounded-full border border-accent/30">
-                    Vault Locked
+                    {t('ai.chat.vaultLockedBadge', 'Vault Locked')}
                   </span>
                   <h3 className="text-base sm:text-lg font-bold text-fg">
-                    Unlock Vault to Use PIKA
+                    {t('ai.chat.vaultLockedTitle', 'Unlock Vault to Use PIKA')}
                   </h3>
                   <p className="text-xs text-fg-muted mt-2 leading-relaxed">
-                    Your security vault is currently locked. Enter your master passphrase to allow PIKA to read audited exchange balances and position calculations.
+                    {t('ai.chat.vaultLockedDesc', 'Your security vault is currently locked. Enter your master passphrase to allow PIKA to read audited exchange balances and position calculations.')}
                   </p>
                 </div>
 
@@ -709,7 +733,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                     className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-accent hover:bg-accent-hover active:scale-[0.99] text-white rounded-xl text-xs font-bold shadow-lg shadow-accent/25 transition cursor-pointer min-h-[44px]"
                   >
                     <Unlock className="w-4 h-4" />
-                    <span>Go to Settings to Unlock</span>
+                    <span>{t('ai.chat.goToSettingsUnlock', 'Go to Settings to Unlock')}</span>
                   </button>
                 </div>
               </div>
@@ -717,41 +741,40 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
           ) : !isEnabled ? (
             /* First-Access 1-Click Activation Card */
             <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-4">
-              <div className="p-6 bg-gradient-to-b from-[#181a20] to-canvas border border-line rounded-2xl text-fg max-w-md shadow-2xl space-y-4">
+              <div className="p-6 bg-gradient-to-b from-surface to-canvas border border-line rounded-2xl text-fg max-w-md shadow-2xl space-y-4">
                 <div className="w-14 h-14 bg-accent/10 border border-accent/30 rounded-2xl flex items-center justify-center mx-auto text-accent shadow-inner">
                   <Sparkles className="w-7 h-7 text-accent animate-pulse" />
                 </div>
                 <div>
                   <span className="inline-block px-2.5 py-0.5 mb-2 text-[10px] font-bold uppercase tracking-wider bg-accent/20 text-accent rounded-full border border-accent/30">
-                    PIKA v2.0 • AI Auditor
+                    {t('ai.chat.onboardingBadge', 'PIKA v2.0 • AI Auditor')}
                   </span>
                   <h3 className="text-base font-bold text-fg">
-                    Would you like to enable the PIKA assistant with 1 click?
+                    {t('ai.chat.onboardingTitle', 'Would you like to enable the PIKA assistant with 1 click?')}
                   </h3>
                   <p className="text-xs text-fg-muted mt-2 leading-relaxed">
-                    For strict zero-trust security and privacy, the assistant is disabled by default.
-                    Activate instantly to audit consolidated balances, liquidation risks, hedge correlation, and history with mathematical precision.
+                    {t('ai.chat.onboardingDesc', 'For strict zero-trust security and privacy, the assistant is disabled by default. Activate instantly to audit consolidated balances, liquidation risks, hedge correlation, and history with mathematical precision.')}
                   </p>
                 </div>
 
-                <div className="bg-surface p-3.5 rounded-xl border border-line/60 text-left text-[11px] text-[#A0A4AB] space-y-1.5">
+                <div className="bg-surface p-3.5 rounded-xl border border-line/60 text-left text-[11px] text-fg-muted space-y-1.5">
                   <div className="flex items-center gap-2 text-fg font-medium text-xs mb-1">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                    Privacy & Security Guaranteed
+                    <ShieldCheck className="w-4 h-4 text-success shrink-0" />
+                    {t('ai.chat.privacyGuaranteedTitle', 'Privacy & Security Guaranteed')}
                   </div>
-                  <p>• Your API keys and secrets are never transmitted to the model.</p>
-                  <p>• Privacy Mode masks nominal balances with percentage allocations.</p>
-                  <p>• Supports local Ollama (100% private) or Google Gemini Cloud.</p>
+                  <p>• {t('ai.chat.privacyBullet1', 'Your API keys and secrets are never transmitted to the model.')}</p>
+                  <p>• {t('ai.chat.privacyBullet2', 'Privacy Mode masks nominal balances with percentage allocations.')}</p>
+                  <p>• {t('ai.chat.privacyBullet3', 'Supports local Ollama (100% private) or Google Gemini Cloud.')}</p>
                 </div>
 
                 <div className="pt-2 flex flex-col gap-2">
                   <button
                     type="button"
                     onClick={() => setIsEnabled(true)}
-                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-accent hover:bg-accent/85 active:scale-[0.99] text-white rounded-xl text-xs font-bold shadow-lg shadow-accent/25 transition cursor-pointer min-h-[44px]"
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-accent hover:bg-accent-hover active:scale-[0.99] text-white rounded-xl text-xs font-bold shadow-lg shadow-accent/25 transition cursor-pointer min-h-[44px]"
                   >
                     <Sparkles className="w-4 h-4" />
-                    Enable PIKA Assistant Now
+                    {t('ai.chat.enableNowBtn', 'Enable PIKA Assistant Now')}
                   </button>
                   <button
                     type="button"
@@ -759,10 +782,10 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       closeDrawer();
                       if (onNavigateToSettings) onNavigateToSettings();
                     }}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#202127] hover:bg-line text-fg rounded-xl text-xs font-semibold border border-line transition cursor-pointer min-h-[44px]"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-elevated hover:bg-line text-fg rounded-xl text-xs font-semibold border border-line transition cursor-pointer min-h-[44px]"
                   >
                     <SettingsIcon className="w-3.5 h-3.5 text-fg-muted" />
-                    Advanced Provider Settings
+                    {t('ai.chat.advancedSettingsBtn', 'Advanced Provider Settings')}
                   </button>
                 </div>
               </div>
@@ -775,10 +798,10 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                   <Sparkles className="w-6 h-6" />
                 </div>
                 <h3 className="text-base font-bold text-fg tracking-tight">
-                  How can I audit your portfolio today?
+                  {t('ai.chat.emptyStateTitle', 'How can I audit your portfolio today?')}
                 </h3>
                 <p className="text-xs text-fg-muted leading-relaxed">
-                  Query consolidated balances, liquidation risks, hedge imbalance, and historical fees with mathematical precision.
+                  {t('ai.chat.emptyStateDesc', 'Query consolidated balances, liquidation risks, hedge imbalance, and historical fees with mathematical precision.')}
                 </p>
               </div>
 
@@ -809,13 +832,13 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                         isUser
                           ? 'bg-accent text-white rounded-tr-none'
                           : msg.status === 'cancelled'
-                          ? 'bg-[#181613] border border-amber-500/30 text-fg rounded-tl-none'
+                          ? 'bg-warning/5 border border-warning/30 text-fg rounded-tl-none'
                           : msg.status === 'error'
-                          ? 'bg-[#181215] border border-rose-900/40 text-fg rounded-tl-none'
+                          ? 'bg-danger/5 border border-danger/30 text-fg rounded-tl-none'
                           : msg.incompatibleToolModel
-                          ? 'bg-[#1a1215] border border-rose-500/50 text-fg rounded-tl-none'
+                          ? 'bg-danger/5 border border-danger/50 text-fg rounded-tl-none'
                           : msg.unverifiedData
-                          ? 'bg-[#181512] border border-amber-500/40 text-fg rounded-tl-none'
+                          ? 'bg-warning/5 border border-warning/40 text-fg rounded-tl-none'
                           : 'bg-surface border border-line text-fg rounded-tl-none'
                       }`}
                     >
@@ -824,7 +847,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                       ) : msg.status === 'thinking' && !msg.content ? (
                         <div className="flex items-center gap-2 text-accent py-1">
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span className="text-[11px]">Auditing local application metrics...</span>
+                          <span className="text-[11px]">{t('ai.chat.auditingMetrics', 'Auditing local application metrics...')}</span>
                         </div>
                       ) : msg.status === 'cancelled' ? (
                         <AiCancelledMessageCard
@@ -856,14 +879,14 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                         <div className="space-y-2">
                           {/* Block Banner for Incompatible Model */}
                           {msg.incompatibleToolModel && (
-                            <div className="mb-3 p-3.5 rounded-xl bg-rose-950/40 border-l-4 border-l-rose-500 border border-rose-500/30 text-rose-200 space-y-2">
-                              <div className="flex items-center gap-2 text-rose-300 font-semibold text-xs">
-                                <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
-                                <span>Query Guarded: Tools Not Invoked</span>
+                            <div className="mb-3 p-3.5 rounded-xl bg-danger/10 border-l-4 border-l-danger border border-danger/30 text-fg space-y-2">
+                              <div className="flex items-center gap-2 text-danger font-semibold text-xs">
+                                <ShieldAlert className="w-4 h-4 text-danger shrink-0" />
+                                <span>{t('ai.chat.queryGuardedTitle', 'Query Guarded: Tools Not Invoked')}</span>
                               </div>
-                              <p className="text-[11px] text-rose-200/90 leading-relaxed">
+                              <p className="text-[11px] text-fg-muted leading-relaxed">
                                 {msg.auditWarning ||
-                                  'The model did not invoke exchange tools in Ollama. Unverified responses were blocked to protect your operations.'}
+                                  t('ai.chat.queryGuardedDesc', 'The model did not invoke exchange tools in Ollama. Unverified responses were blocked to protect your operations.')}
                               </p>
                               <div className="pt-1 flex flex-wrap items-center gap-2">
                                 <button
@@ -873,10 +896,10 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                                     if (onNavigateToSettings) onNavigateToSettings();
                                     window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: 'ai-settings' }));
                                   }}
-                                  className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 border border-rose-500/40 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1.5"
+                                  className="px-2.5 py-1.5 rounded-lg bg-danger/15 hover:bg-danger/25 text-danger border border-danger/40 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1.5"
                                 >
                                   <SettingsIcon className="w-3.5 h-3.5" />
-                                  <span>Switch to Tool-Compatible Model (gpt-oss, qwen2.5, llama3.1)</span>
+                                  <span>{t('ai.chat.switchCompatibleModelBtn', 'Switch to Tool-Compatible Model (gpt-oss, qwen2.5, llama3.1)')}</span>
                                 </button>
                               </div>
                             </div>
@@ -884,14 +907,14 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
 
                           {/* Highlight Alert Banner at the Top of Response */}
                           {msg.unverifiedData && !msg.incompatibleToolModel && (
-                            <div className="mb-3 p-3 rounded-xl bg-amber-950/40 border-l-4 border-l-amber-500 border border-amber-500/30 text-amber-200 space-y-1">
-                              <div className="flex items-center gap-2 text-amber-300 font-semibold text-xs">
-                                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                                <span>⚠️ WARNING: Response Generated Without Exchange Tool Verification</span>
+                            <div className="mb-3 p-3 rounded-xl bg-warning/10 border-l-4 border-l-warning border border-warning/30 text-fg space-y-1">
+                              <div className="flex items-center gap-2 text-warning font-semibold text-xs">
+                                <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+                                <span>{t('ai.chat.unverifiedBannerTitle', 'WARNING: Response Generated Without Exchange Tool Verification')}</span>
                               </div>
-                              <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                              <p className="text-[11px] text-fg-muted leading-relaxed">
                                 {msg.auditWarning ||
-                                  'This response was generated without verifying live data through exchange tools. Account balance, positions, or fee metrics may be inaccurate or hallucinated.'}
+                                  t('ai.chat.unverifiedBannerDesc', 'This response was generated without verifying live data through exchange tools. Account balance, positions, or fee metrics may be inaccurate or hallucinated.')}
                               </p>
                             </div>
                           )}
@@ -902,22 +925,26 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-line/60 text-[10px] text-fg-muted">
                             <div className="flex flex-wrap items-center gap-1.5">
                               {msg.usedModelName && (
-                                <span className="font-mono text-[#A0A4AB]">
+                                <span className="font-mono text-fg-muted">
                                   {msg.usedModelName}
                                   {msg.wasFallback && (
-                                    <span className="text-amber-400 ml-1">(fallback)</span>
+                                    <span className="text-warning ml-1">({t('ai.chat.fallbackLower', 'fallback')})</span>
                                   )}
                                 </span>
                               )}
                               {msg.toolsInvoked && msg.toolsInvoked.length > 0 ? (
-                                <span className="px-1.5 py-0.5 rounded bg-emerald-950/50 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 font-mono">
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                  <span>{msg.toolsInvoked.length} {msg.toolsInvoked.length === 1 ? 'tool verified' : 'tools verified'}</span>
+                                <span className="px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/30 flex items-center gap-1 font-mono">
+                                  <CheckCircle2 className="w-3 h-3 text-success" />
+                                  <span>
+                                    {msg.toolsInvoked.length === 1
+                                      ? t('ai.chat.toolVerifiedSingular', '{{count}} tool verified', { count: msg.toolsInvoked.length })
+                                      : t('ai.chat.toolVerifiedPlural', '{{count}} tools verified', { count: msg.toolsInvoked.length })}
+                                  </span>
                                 </span>
                               ) : msg.unverifiedData ? (
-                                <span className="px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-500/40 flex items-center gap-1 font-mono">
-                                  <AlertTriangle className="w-3 h-3 text-amber-400" />
-                                  <span>No tools</span>
+                                <span className="px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 flex items-center gap-1 font-mono">
+                                  <AlertTriangle className="w-3 h-3 text-warning" />
+                                  <span>{t('ai.chat.noToolsTag', 'No tools')}</span>
                                 </span>
                               ) : null}
                             </div>
@@ -927,18 +954,18 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                                 type="button"
                                 onClick={() =>
                                   exportAiAnalysisToPdf({
-                                    title: 'PIKA Quantitative Portfolio Analysis',
+                                    title: t('ai.chat.pdfReportTitle', 'PIKA Quantitative Portfolio Analysis'),
                                     markdownContent: msg.content,
                                     modelName: msg.usedModelName,
-                                    timestamp: new Date(msg.timestamp).toLocaleString(),
-                                    toolsInvoked: msg.toolsInvoked?.map((t) => t.name),
+                                    timestamp: new Date(msg.timestamp).toLocaleString(i18n.language),
+                                    toolsInvoked: msg.toolsInvoked?.map((toolItem) => toolItem.name),
                                   })
                                 }
                                 className="text-fg-muted hover:text-fg cursor-pointer flex items-center gap-1 font-mono text-[10px] transition"
                                 title={t('ai.chat.tooltips.downloadPdf', 'Download complete analysis as PDF report')}
                               >
                                 <FileText className="w-3 h-3 text-accent" />
-                                <span>Export PDF</span>
+                                <span>{t('ai.chat.exportPdf', 'Export PDF')}</span>
                               </button>
 
                               <button
@@ -947,7 +974,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                                 className="text-accent hover:underline cursor-pointer flex items-center gap-1 font-mono text-[10px]"
                               >
                                 <ShieldCheck className="w-3 h-3" />
-                                <span>Inspect Audit</span>
+                                <span>{t('ai.cancelled.inspectAudit', 'Inspect Audit')}</span>
                               </button>
                             </div>
                           </div>
@@ -977,15 +1004,15 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
         {!isVaultActive ? (
           <footer className="p-3.5 border-t border-line bg-surface shrink-0 text-center">
             <div className="flex items-center justify-center gap-2 text-xs text-fg-muted">
-              <Lock className="w-3.5 h-3.5 text-amber-400" />
-              <span>Security Vault must be activated to enable PIKA AI chat.</span>
+              <Lock className="w-3.5 h-3.5 text-warning" />
+              <span>{t('ai.chat.footerVaultRequired', 'Security Vault must be activated to enable PIKA AI chat.')}</span>
             </div>
           </footer>
         ) : !isUnlocked && encryptedData ? (
           <footer className="p-3.5 border-t border-line bg-surface shrink-0 text-center">
             <div className="flex items-center justify-center gap-2 text-xs text-fg-muted">
-              <Lock className="w-3.5 h-3.5 text-amber-400" />
-              <span>Security Vault is locked. Enter master passphrase to send messages.</span>
+              <Lock className="w-3.5 h-3.5 text-warning" />
+              <span>{t('ai.chat.footerVaultLocked', 'Security Vault is locked. Enter master passphrase to send messages.')}</span>
             </div>
           </footer>
         ) : isEnabled && (
@@ -998,7 +1025,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about balances, positions, hedge, or fees..."
+                placeholder={t('ai.chat.inputPlaceholder', 'Ask about balances, positions, hedge, or fees...')}
                 disabled={isThinking}
                 className="w-full bg-transparent px-3 py-2 text-xs text-fg placeholder-fg-muted focus:outline-none resize-none pr-10"
               />
@@ -1008,8 +1035,8 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                   <button
                     type="button"
                     onClick={handleCancelRequest}
-                    className="absolute right-2 bottom-2 w-7 h-7 flex items-center justify-center bg-rose-600 hover:bg-rose-500 active:scale-95 text-white rounded-lg transition shadow-md cursor-pointer animate-pulse"
-                    aria-label="Stop request (Esc)"
+                    className="absolute right-2 bottom-2 w-7 h-7 flex items-center justify-center bg-danger hover:bg-danger/90 active:scale-95 text-white rounded-lg transition shadow-md cursor-pointer animate-pulse"
+                    aria-label={t('ai.chat.tooltips.stop', 'Stop request (Esc)')}
                   >
                     <Square className="w-3 h-3 fill-current" />
                   </button>
@@ -1020,8 +1047,8 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
                     type="button"
                     onClick={() => handleSendMessage()}
                     disabled={!inputMessage.trim()}
-                    className="absolute right-2 bottom-2 w-7 h-7 flex items-center justify-center bg-accent hover:bg-accent/80 active:scale-95 disabled:bg-elevated text-white disabled:text-fg-muted rounded-lg transition shadow-md cursor-pointer disabled:cursor-not-allowed"
-                    aria-label="Send message"
+                    className="absolute right-2 bottom-2 w-7 h-7 flex items-center justify-center bg-accent hover:bg-accent-hover active:scale-95 disabled:bg-elevated text-white disabled:text-fg-muted rounded-lg transition shadow-md cursor-pointer disabled:cursor-not-allowed"
+                    aria-label={t('ai.chat.tooltips.send', 'Send message (Enter)')}
                   >
                     <Send className="w-3.5 h-3.5" />
                   </button>
@@ -1030,17 +1057,17 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
             </div>
 
             {/* Disclaimer & Shortcuts */}
-            <div className="flex items-center justify-center gap-1.5 text-[10px] text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg mt-2 text-center">
-              <AlertCircle className="w-3 h-3 shrink-0 text-amber-400" />
-              <span>AI Agent can make mistakes. Please check important numbers.</span>
+            <div className="flex items-center justify-center gap-1.5 text-[10px] text-warning bg-warning/10 border border-warning/20 px-2.5 py-1 rounded-lg mt-2 text-center">
+              <AlertCircle className="w-3 h-3 shrink-0 text-warning" />
+              <span>{t('ai.chat.disclaimer', 'AI Agent can make mistakes. Please check important numbers.')}</span>
             </div>
 
             <div className="flex items-center justify-between text-[9px] text-fg-muted mt-1.5 px-0.5">
               <span className="flex items-center gap-1">
-                <Shield className="w-3 h-3 text-emerald-400" />
-                Read-Only • Zero orders executed
+                <Shield className="w-3 h-3 text-success" />
+                {t('ai.chat.readOnlyFooter', 'Read-Only • Zero orders executed')}
               </span>
-              <span className="hidden sm:inline">Enter to send • Esc to stop • Shift+Enter new line</span>
+              <span className="hidden sm:inline">{t('ai.chat.shortcutsFooter', 'Enter to send • Esc to stop • Shift+Enter new line')}</span>
             </div>
             </div>
           </footer>
@@ -1063,18 +1090,19 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
         {showAuditTableModal && (
           <div className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm overflow-y-auto">
             <div className="relative w-full max-w-5xl bg-surface border border-line rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-[#16171b]">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-surface">
                 <div className="flex items-center gap-2.5">
                   <ShieldCheck className="w-5 h-5 text-accent" />
                   <div>
-                    <h3 className="text-sm font-bold text-fg">AI Audit & Telemetry Center</h3>
-                    <p className="text-xs text-fg-muted">Inspection of invocations, raw prompts, and token consumption</p>
+                    <h3 className="text-sm font-bold text-fg">{t('ai.chat.auditCenterTitle', 'AI Audit & Telemetry Center')}</h3>
+                    <p className="text-xs text-fg-muted">{t('ai.chat.auditCenterSubtitle', 'Inspection of invocations, raw prompts, and token consumption')}</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowAuditTableModal(false)}
                   className="p-2 text-fg-muted hover:text-fg rounded-lg hover:bg-elevated transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label={t('common.close', 'Close')}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1090,7 +1118,7 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ onNavigateToSettings
         <VaultSetupModal
           isOpen={isVaultSetupModalOpen}
           onClose={() => setIsVaultSetupModalOpen(false)}
-          reason="The PIKA AI Assistant requires an active security vault before auditing financial metrics or connections."
+          reason={t('ai.chat.vaultSetupReason', 'The PIKA AI Assistant requires an active security vault before auditing financial metrics or connections.')}
         />
       </aside>
     </>

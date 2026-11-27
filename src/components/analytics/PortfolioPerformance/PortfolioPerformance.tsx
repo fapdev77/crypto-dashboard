@@ -105,61 +105,72 @@ export function PortfolioPerformance() {
     const decimals = getDenominationDecimals(filters.denomination);
 
     // Build structured report rows
-    const headers = ['Category', 'Metric', 'Value', 'Unit / Note'];
+    const headers = [
+      t('analytics.portfolio.export.colCategory', 'Category'),
+      t('analytics.portfolio.export.colMetric', 'Metric'),
+      t('analytics.portfolio.export.colValue', 'Value'),
+      t('analytics.portfolio.export.colNote', 'Unit / Note'),
+    ];
+    const catPrimary = t('analytics.portfolio.primary.title', 'Primary Result');
+    const catOps = t('analytics.portfolio.operations.cardTitle', 'Operations');
+    const catAdv = t('analytics.portfolio.advanced.title', 'Advanced Metrics');
+    const catDow = t('analytics.portfolio.temporal.dayOfWeekUtc', 'Day of Week (UTC)');
+    const catTod = t('analytics.portfolio.temporal.timeWindowUtc', 'Time Window (UTC)');
+
     const rows: Array<Array<string | number>> = [
       // Primary Result
-      ['Primary Result', 'Period Range (UTC)', `${primaryResult.earliestDate} to ${primaryResult.latestDate}`, `${primaryResult.durationDays} days`],
-      ['Primary Result', 'Percentage Gain (ROI)', `${primaryResult.percentageGain.toFixed(2)}%`, 'Operational return'],
-      ['Primary Result', 'Absolute Gain', primaryResult.absoluteGain, filters.denomination],
-      ['Primary Result', 'Initial Balance', primaryResult.initialBalance, filters.denomination],
-      ['Primary Result', 'Final Balance', primaryResult.finalBalance, filters.denomination],
-      ['Primary Result', 'Daily Avg ROI', `${primaryResult.dailyAverageRoi.toFixed(3)}%`, 'Per active UTC day'],
-      ['Primary Result', 'Deposits in Period', primaryResult.depositsInPeriod, filters.denomination],
-      ['Primary Result', 'Withdrawals in Period', primaryResult.withdrawalsInPeriod ?? '0', filters.denomination],
+      [catPrimary, t('analytics.portfolio.export.periodRangeUtc', 'Period Range (UTC)'), `${primaryResult.earliestDate} — ${primaryResult.latestDate}`, `${primaryResult.durationDays} ${t(primaryResult.durationDays === 1 ? 'analytics.portfolio.primary.daySingular' : 'analytics.portfolio.primary.dayPlural', primaryResult.durationDays === 1 ? 'day' : 'days')}`],
+      [catPrimary, t('analytics.portfolio.primary.roi', 'Percentage Gain (ROI)'), `${primaryResult.percentageGain.toFixed(2)}%`, t('analytics.portfolio.export.operationalReturn', 'Operational return')],
+      [catPrimary, t('analytics.portfolio.primary.absoluteGain', 'Absolute Gain'), primaryResult.absoluteGain, filters.denomination],
+      [catPrimary, t('analytics.portfolio.primary.initialBalance', 'Initial Balance'), primaryResult.initialBalance, filters.denomination],
+      [catPrimary, t('analytics.portfolio.primary.finalBalance', 'Final Balance'), primaryResult.finalBalance, filters.denomination],
+      [catPrimary, t('analytics.portfolio.primary.dailyAvgRoi', 'Daily Average ROI'), `${primaryResult.dailyAverageRoi.toFixed(3)}%`, t('analytics.portfolio.primary.perOperatingDay', 'per operating day')],
+      [catPrimary, t('analytics.portfolio.primary.depositsInPeriod', 'Deposits in Period'), primaryResult.depositsInPeriod, filters.denomination],
+      [catPrimary, t('analytics.portfolio.export.withdrawalsInPeriod', 'Withdrawals in Period'), primaryResult.withdrawalsInPeriod ?? '0', filters.denomination],
 
       // Operations & Cash Flow
-      ['Operations', 'Gross Cash Flow', operations.grossCashFlow, filters.denomination],
-      ['Operations', 'Trading Fees Paid', operations.feesPaid, filters.denomination],
-      ['Operations', 'Net Trading PnL', operations.netTradingPnl, filters.denomination],
-      ['Operations', 'Funding Received', operations.fundingReceived, filters.denomination],
-      ['Operations', 'Funding Paid', operations.fundingPaid, filters.denomination],
-      ['Operations', 'Net Funding', operations.netFunding, filters.denomination],
-      ['Operations', 'Funding Received/Paid Ratio', operations.fundingRatio, 'Efficiency multiplier'],
-      ['Operations', 'Other Operational Net', operations.otherOperational?.net ?? '0', `${operations.otherOperational?.count ?? 0} events (Liq/Deliv/Int/Rew/Fees)`],
-      ['Operations', 'Total Trades', operations.totalTrades, 'Executions'],
-      ['Operations', 'Buys / Sells', `${operations.buysCount} (${operations.buysPct.toFixed(1)}%) / ${operations.sellsCount} (${operations.sellsPct.toFixed(1)}%)`, 'Order split'],
-      ['Operations', 'Avg Trades / Day', operations.tradesPerDay.toFixed(2), 'Frequency'],
-      ['Operations', 'Fee Cost Ratio', `${operations.feeCostPct.toFixed(2)}%`, `Status: ${operations.feeStatus}`],
+      [catOps, t('analytics.portfolio.operations.grossCashFlow', 'Gross Cash Flow'), operations.grossCashFlow, filters.denomination],
+      [catOps, t('analytics.portfolio.operations.tradingFeesPaid', 'Trading Fees Paid'), operations.feesPaid, filters.denomination],
+      [catOps, t('analytics.portfolio.operations.netTradingPnl', 'Net Trading PnL'), operations.netTradingPnl, filters.denomination],
+      [catOps, t('analytics.portfolio.operations.fundingReceived', 'Funding Received'), operations.fundingReceived, filters.denomination],
+      [catOps, t('analytics.portfolio.operations.fundingPaid', 'Funding Paid'), operations.fundingPaid, filters.denomination],
+      [catOps, t('analytics.portfolio.operations.netFunding', 'Net Funding'), operations.netFunding, filters.denomination],
+      [catOps, t('analytics.portfolio.operations.fundingRatio', 'Funding Efficiency Ratio'), operations.fundingRatio, t('analytics.portfolio.export.efficiencyMultiplier', 'Efficiency multiplier')],
+      [catOps, t('analytics.portfolio.export.otherOpNet', 'Other Operational Net'), operations.otherOperational?.net ?? '0', `${operations.otherOperational?.count ?? 0} ${t('analytics.portfolio.export.otherOpEvents', 'events (Liq/Deliv/Int/Rew/Fees)')}`],
+      [catOps, t('analytics.portfolio.operations.totalTrades', 'Total Trades'), operations.totalTrades, t('analytics.portfolio.operations.executions', 'Executions')],
+      [catOps, t('analytics.portfolio.operations.buysSells', 'Buys / Sells'), `${operations.buysCount} (${operations.buysPct.toFixed(1)}%) / ${operations.sellsCount} (${operations.sellsPct.toFixed(1)}%)`, t('analytics.portfolio.operations.sideDistribution', 'Side Distribution')],
+      [catOps, t('analytics.portfolio.operations.avgTradesPerDay', 'Avg Trades / Day'), operations.tradesPerDay.toFixed(2), t('analytics.portfolio.export.frequency', 'Frequency')],
+      [catOps, t('analytics.portfolio.operations.feeCostRatio', 'Fee Cost Ratio'), `${operations.feeCostPct.toFixed(2)}%`, `${t('analytics.portfolio.operations.statusLabel', 'Status')}: ${operations.feeStatus}`],
 
       // Advanced Performance
-      ['Advanced Metrics', 'Win Rate (Daily UTC)', `${advancedMetrics.winRate.toFixed(1)}%`, `${advancedMetrics.positiveDaysCount}/${advancedMetrics.totalDaysEvaluated} positive days`],
-      ['Advanced Metrics', 'Profit Factor', advancedMetrics.profitFactor.toFixed(2), `Rating: ${advancedMetrics.profitFactorRating}`],
-      ['Advanced Metrics', 'Total Gains', advancedMetrics.totalGains, filters.denomination],
-      ['Advanced Metrics', 'Total Losses', advancedMetrics.totalLosses, filters.denomination],
-      ['Advanced Metrics', 'Consistency Index (CV)', `${advancedMetrics.consistencyIndexCv.toFixed(1)}%`, `Rating: ${advancedMetrics.consistencyRating}`],
+      [catAdv, t('analytics.portfolio.advanced.winRate', 'Win Rate (Daily)'), `${advancedMetrics.winRate.toFixed(1)}%`, `${advancedMetrics.positiveDaysCount}/${advancedMetrics.totalDaysEvaluated}`],
+      [catAdv, t('analytics.portfolio.advanced.profitFactor', 'Profit Factor'), advancedMetrics.profitFactor.toFixed(2), advancedMetrics.profitFactorRating],
+      [catAdv, t('analytics.portfolio.advanced.totalGains', 'Total Gains'), advancedMetrics.totalGains, filters.denomination],
+      [catAdv, t('analytics.portfolio.advanced.totalLosses', 'Total Losses'), advancedMetrics.totalLosses, filters.denomination],
+      [catAdv, t('analytics.portfolio.advanced.consistencyIndex', 'Consistency Index (CV)'), `${advancedMetrics.consistencyIndexCv.toFixed(1)}%`, advancedMetrics.consistencyRating],
 
       // Day of Week (UTC)
-      ['Temporal (Day of Week UTC)', 'Best Day', dayOfWeek.bestDay.name, `${dayOfWeek.bestDay.gain.toFixed(decimals)} ${filters.denomination}`],
-      ['Temporal (Day of Week UTC)', 'Lowest Day', dayOfWeek.worstDay.name, `${dayOfWeek.worstDay.gain.toFixed(decimals)} ${filters.denomination}`],
+      [catDow, t('analytics.portfolio.temporal.bestDay', 'Best Day of Week'), t(`analytics.portfolio.temporal.days.${dayOfWeek.bestDay.name.toLowerCase()}`, dayOfWeek.bestDay.name), `${dayOfWeek.bestDay.gain.toFixed(decimals)} ${filters.denomination}`],
+      [catDow, t('analytics.portfolio.temporal.lowestDay', 'Lowest / Worst Day'), t(`analytics.portfolio.temporal.days.${dayOfWeek.worstDay.name.toLowerCase()}`, dayOfWeek.worstDay.name), `${dayOfWeek.worstDay.gain.toFixed(decimals)} ${filters.denomination}`],
 
       // Time of Day (UTC)
-      ['Temporal (Time of Day UTC)', 'Best Time Window', timeOfDay.bestTime.period, `${timeOfDay.bestTime.gain.toFixed(decimals)} ${filters.denomination}`],
-      ['Temporal (Time of Day UTC)', 'Lowest Time Window', timeOfDay.worstTime.period, `${timeOfDay.worstTime.gain.toFixed(decimals)} ${filters.denomination}`],
+      [catTod, t('analytics.portfolio.temporal.bestTime', 'Best Time Window'), timeOfDay.bestTime.period, `${timeOfDay.bestTime.gain.toFixed(decimals)} ${filters.denomination}`],
+      [catTod, t('analytics.portfolio.temporal.lowestTime', 'Lowest Time Window'), timeOfDay.worstTime.period, `${timeOfDay.worstTime.gain.toFixed(decimals)} ${filters.denomination}`],
     ];
 
     // Append Price Milestones
     priceMilestones.forEach((m) => {
       rows.push([
-        `Price Milestones (${resolvedMilestoneAsset})`,
-        `Milestone ${m.formattedMilestone}`,
+        `${t('analytics.portfolio.milestones.title', 'Price Milestone & Range Passage Analysis')} (${resolvedMilestoneAsset})`,
+        m.formattedMilestone,
         `${m.gainLoss >= 0 ? '+' : ''}${m.gainLoss.toFixed(decimals)} ${filters.denomination}`,
-        `${m.passages} passages | Return: ${m.gainLossPct.toFixed(2)}%`,
+        `${m.passages} ${t('analytics.portfolio.milestones.passages', 'passages')} | ${t('analytics.portfolio.milestones.return', 'Return')}: ${m.gainLossPct.toFixed(2)}%`,
       ]);
     });
 
     const config: ExportConfig = {
       filename: `portfolio-performance-${filters.denomination.toLowerCase()}-${new Date().toISOString().slice(0, 10)}`,
-      title: `Portfolio Performance Report (${filters.denomination})`,
+      title: `${t('analytics.portfolio.export.reportTitle', 'Portfolio Performance Report')} (${filters.denomination})`,
       headers,
       rows,
     };

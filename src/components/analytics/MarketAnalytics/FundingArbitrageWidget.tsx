@@ -24,20 +24,20 @@ export const FundingArbitrageWidget: React.FC = () => {
   if (!hasDerivatives) {
     return (
       <div className="bg-canvas border border-line rounded-xl p-5 shadow-lg flex flex-col items-center justify-center text-center space-y-3 min-h-[220px]">
-        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-400">
+        <div className="p-3 bg-warning/10 border border-warning/20 rounded-full text-warning">
           <AlertCircle className="w-6 h-6" />
         </div>
         <div className="max-w-md">
-          <h3 className="text-base font-semibold text-fg">Funding Rates Require Derivatives Markets</h3>
+          <h3 className="text-base font-semibold text-fg">{t('analytics.market.arbitrage.spotEmptyTitle', 'Funding Rates Require Derivatives Markets')}</h3>
           <p className="text-xs text-fg-muted mt-1 leading-relaxed">
-            Funding rates are exchanged periodically between long and short contract holders in Perpetual and Inverse futures. Spot markets settle immediately and do not carry funding fees.
+            {t('analytics.market.arbitrage.spotEmptyDesc', 'Funding rates are exchanged periodically between long and short contract holders in Perpetual and Inverse futures. Spot markets settle immediately and do not carry funding fees.')}
           </p>
         </div>
         <button
           onClick={selectAllMarkets}
           className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-semibold rounded-lg transition-colors shadow"
         >
-          View Consolidated Derivatives Funding
+          {t('analytics.market.arbitrage.viewDerivativesFunding', 'View Consolidated Derivatives Funding')}
         </button>
       </div>
     );
@@ -70,8 +70,8 @@ export const FundingArbitrageWidget: React.FC = () => {
 
   const getRateColor = (rate: number | null | undefined) => {
     if (rate === null || rate === undefined) return 'text-fg-muted';
-    if (rate > 0) return 'text-emerald-400';
-    if (rate < 0) return 'text-rose-400';
+    if (rate > 0) return 'text-success';
+    if (rate < 0) return 'text-danger';
     return 'text-fg';
   };
 
@@ -86,8 +86,8 @@ export const FundingArbitrageWidget: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <MaxFundingSpreadTooltip>
-                <h3 className="text-base font-bold text-fg tracking-tight cursor-help border-b border-dotted border-fg-muted/50 hover:text-amber-400 transition-colors">
-                  Cross-Exchange Funding Arbitrage
+                <h3 className="text-base font-bold text-fg tracking-tight cursor-help border-b border-dotted border-fg-muted/50 hover:text-tone-amber transition-colors">
+                  {t('analytics.market.arbitrage.title', 'Cross-Exchange Funding Arbitrage')}
                 </h3>
               </MaxFundingSpreadTooltip>
               <span className="px-2 py-0.5 text-[10px] font-bold bg-accent/15 text-accent border border-accent/30 rounded">
@@ -95,7 +95,7 @@ export const FundingArbitrageWidget: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-fg-muted">
-              Real-time spread detection for cash-and-carry & delta-neutral funding yield
+              {t('analytics.market.arbitrage.subtitle', 'Real-time spread detection for cash-and-carry & delta-neutral funding yield')}
             </p>
           </div>
         </div>
@@ -103,34 +103,37 @@ export const FundingArbitrageWidget: React.FC = () => {
         {/* Next Settlement Countdown */}
         <div className="flex items-center gap-2 bg-elevated px-3 py-1.5 rounded-lg border border-line">
           <Clock className="w-4 h-4 text-fg-muted" />
-          <span className="text-xs text-fg-muted">Next Settlement:</span>
-          <span className="text-xs font-mono font-bold text-amber-400">{countdownFormatted}</span>
+          <span className="text-xs text-fg-muted">{t('analytics.market.arbitrage.nextSettlement', 'Next Settlement:')}</span>
+          <span className="text-xs font-mono font-bold text-tone-amber">{countdownFormatted}</span>
         </div>
       </div>
 
       {/* Recommended Arbitrage Opportunity Card */}
       {currentFunding.spreadApr > 0 && currentFunding.bestLongExchange && currentFunding.bestShortExchange && (
-        <div className="bg-gradient-to-r from-elevated via-[#1f202b] to-elevated border border-accent/30 rounded-xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-gradient-to-r from-elevated via-surface to-elevated border border-accent/30 rounded-xl p-3.5 shadow-md flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg shrink-0">
+            <div className="p-2 bg-success/10 text-success border border-success/30 rounded-lg shrink-0">
               <Zap className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-fg">Optimal Delta-Neutral Execution:</span>
-                <span className="px-2 py-0.5 text-[11px] font-bold bg-emerald-500/15 text-emerald-400 rounded-full border border-emerald-500/30">
-                  Spread APR: +{currentFunding.spreadApr}%
+                <span className="text-xs font-bold text-fg">{t('analytics.market.arbitrage.optimalExecution', 'Optimal Delta-Neutral Execution:')}</span>
+                <span className="px-2 py-0.5 text-[11px] font-bold bg-success/15 text-success rounded-full border border-success/30">
+                  {t('analytics.market.arbitrage.spreadAprBadge', { apr: currentFunding.spreadApr, defaultValue: `Spread APR: +${currentFunding.spreadApr}%` })}
                 </span>
               </div>
               <p className="text-xs text-fg mt-0.5">
-                Buy Long on <strong className="text-fg capitalize">{currentFunding.bestLongExchange}</strong> and Sell Short on{' '}
-                <strong className="text-fg capitalize">{currentFunding.bestShortExchange}</strong> to capture positive funding carry.
+                {t('analytics.market.arbitrage.executionHintPrefix', 'Buy Long on')}{' '}
+                <strong className="text-fg capitalize">{currentFunding.bestLongExchange}</strong>{' '}
+                {t('analytics.market.arbitrage.executionHintMiddle', 'and Sell Short on')}{' '}
+                <strong className="text-fg capitalize">{currentFunding.bestShortExchange}</strong>{' '}
+                {t('analytics.market.arbitrage.executionHintSuffix', 'to capture positive funding carry.')}
               </p>
             </div>
           </div>
           <div className="text-right ml-auto">
-            <span className="text-[11px] text-fg-muted">Max Spread (8h)</span>
-            <div className="text-sm font-bold font-mono text-emerald-400">
+            <span className="text-[11px] text-fg-muted">{t('analytics.market.arbitrage.maxSpread8h', 'Max Spread (8h)')}</span>
+            <div className="text-sm font-bold font-mono text-success">
               +{(currentFunding.spread * 100).toFixed(4)}%
             </div>
           </div>
@@ -140,22 +143,22 @@ export const FundingArbitrageWidget: React.FC = () => {
       {/* Exchange Cards Comparison */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* Bybit Card */}
-        <div className="bg-elevated border border-line rounded-xl p-3.5 space-y-2 hover:border-[#3a3b45] transition-colors">
+        <div className="bg-elevated border border-line rounded-xl p-3.5 space-y-2 hover:border-line-strong transition-colors">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ExchangeIcon exchange="bybit" className="w-4 h-4" />
               <span className="text-xs font-bold text-fg uppercase tracking-wide">Bybit V5</span>
             </div>
-            <span className="text-[10px] text-fg-muted">Linear Perp</span>
+            <span className="text-[10px] text-fg-muted">{t('analytics.market.arbitrage.linearPerp', 'Linear Perp')}</span>
           </div>
           <div className="pt-1">
-            <div className="text-[11px] text-fg-muted">Current 8h Rate</div>
+            <div className="text-[11px] text-fg-muted">{t('analytics.market.arbitrage.current8hRate', 'Current 8h Rate')}</div>
             <div className={`text-lg font-bold font-mono ${getRateColor(currentFunding.bybitRate)}`}>
               {formatRate(currentFunding.bybitRate)}
             </div>
           </div>
           <div className="flex items-center justify-between text-xs pt-1 border-t border-line/60">
-            <span className="text-fg-muted">Annualized (APR)</span>
+            <span className="text-fg-muted">{t('analytics.market.cards.annualizedApr', 'Annualized (APR)')}</span>
             <span className={`font-mono font-semibold ${getRateColor(currentFunding.bybitRate)}`}>
               {formatApr(currentFunding.bybitRate)}
             </span>
@@ -163,22 +166,22 @@ export const FundingArbitrageWidget: React.FC = () => {
         </div>
 
         {/* OKX Card */}
-        <div className="bg-elevated border border-line rounded-xl p-3.5 space-y-2 hover:border-[#3a3b45] transition-colors">
+        <div className="bg-elevated border border-line rounded-xl p-3.5 space-y-2 hover:border-line-strong transition-colors">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ExchangeIcon exchange="okx" className="w-4 h-4" />
               <span className="text-xs font-bold text-fg uppercase tracking-wide">OKX V5</span>
             </div>
-            <span className="text-[10px] text-fg-muted">Swap Perp</span>
+            <span className="text-[10px] text-fg-muted">{t('analytics.market.arbitrage.swapPerp', 'Swap Perp')}</span>
           </div>
           <div className="pt-1">
-            <div className="text-[11px] text-fg-muted">Current 8h Rate</div>
+            <div className="text-[11px] text-fg-muted">{t('analytics.market.arbitrage.current8hRate', 'Current 8h Rate')}</div>
             <div className={`text-lg font-bold font-mono ${getRateColor(currentFunding.okxRate)}`}>
               {formatRate(currentFunding.okxRate)}
             </div>
           </div>
           <div className="flex items-center justify-between text-xs pt-1 border-t border-line/60">
-            <span className="text-fg-muted">Next Predicted</span>
+            <span className="text-fg-muted">{t('analytics.market.arbitrage.nextPredicted', 'Next Predicted')}</span>
             <span className={`font-mono font-semibold ${getRateColor(currentFunding.predictedOkxRate)}`}>
               {formatRate(currentFunding.predictedOkxRate)}
             </span>
@@ -186,22 +189,22 @@ export const FundingArbitrageWidget: React.FC = () => {
         </div>
 
         {/* Bitget Card */}
-        <div className="bg-elevated border border-line rounded-xl p-3.5 space-y-2 hover:border-[#3a3b45] transition-colors">
+        <div className="bg-elevated border border-line rounded-xl p-3.5 space-y-2 hover:border-line-strong transition-colors">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ExchangeIcon exchange="bitget" className="w-4 h-4" />
               <span className="text-xs font-bold text-fg uppercase tracking-wide">Bitget V2/V3</span>
             </div>
-            <span className="text-[10px] text-fg-muted">USDT Futures</span>
+            <span className="text-[10px] text-fg-muted">{t('analytics.market.arbitrage.usdtFutures', 'USDT Futures')}</span>
           </div>
           <div className="pt-1">
-            <div className="text-[11px] text-fg-muted">Current 8h Rate</div>
+            <div className="text-[11px] text-fg-muted">{t('analytics.market.arbitrage.current8hRate', 'Current 8h Rate')}</div>
             <div className={`text-lg font-bold font-mono ${getRateColor(currentFunding.bitgetRate)}`}>
               {formatRate(currentFunding.bitgetRate)}
             </div>
           </div>
           <div className="flex items-center justify-between text-xs pt-1 border-t border-line/60">
-            <span className="text-fg-muted">Annualized (APR)</span>
+            <span className="text-fg-muted">{t('analytics.market.cards.annualizedApr', 'Annualized (APR)')}</span>
             <span className={`font-mono font-semibold ${getRateColor(currentFunding.bitgetRate)}`}>
               {formatApr(currentFunding.bitgetRate)}
             </span>
@@ -213,21 +216,21 @@ export const FundingArbitrageWidget: React.FC = () => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-fg tracking-wide uppercase">
-            Top Market Arbitrage Spreads
+            {t('analytics.market.arbitrage.topSpreadsTitle', 'Top Market Arbitrage Spreads')}
           </span>
-          <span className="text-[11px] text-fg-muted">Click coin to switch view</span>
+          <span className="text-[11px] text-fg-muted">{t('analytics.market.arbitrage.clickCoinHint', 'Click coin to switch view')}</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-elevated text-fg-muted uppercase text-[10px]">
               <tr>
-                <th className="px-3 py-2 rounded-l-lg">Coin</th>
-                <th className="px-3 py-2">Bybit Rate</th>
-                <th className="px-3 py-2">OKX Rate</th>
-                <th className="px-3 py-2">Bitget Rate</th>
-                <th className="px-3 py-2">Spread (8h)</th>
-                <th className="px-3 py-2 text-right rounded-r-lg">Spread APR</th>
+                <th className="px-3 py-2 rounded-l-lg">{t('analytics.market.arbitrage.colCoin', 'Coin')}</th>
+                <th className="px-3 py-2">{t('analytics.market.arbitrage.colBybitRate', 'Bybit Rate')}</th>
+                <th className="px-3 py-2">{t('analytics.market.arbitrage.colOkxRate', 'OKX Rate')}</th>
+                <th className="px-3 py-2">{t('analytics.market.arbitrage.colBitgetRate', 'Bitget Rate')}</th>
+                <th className="px-3 py-2">{t('analytics.market.arbitrage.colSpread8h', 'Spread (8h)')}</th>
+                <th className="px-3 py-2 text-right rounded-r-lg">{t('analytics.market.arbitrage.colSpreadApr', 'Spread APR')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line/40">
@@ -255,7 +258,7 @@ export const FundingArbitrageWidget: React.FC = () => {
                   <td className="px-3 py-2.5 font-mono text-fg">
                     +{(item.spread * 100).toFixed(4)}%
                   </td>
-                  <td className="px-3 py-2.5 font-mono font-bold text-right text-emerald-400">
+                  <td className="px-3 py-2.5 font-mono font-bold text-right text-success">
                     +{item.spreadApr}%
                   </td>
                 </tr>

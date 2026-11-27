@@ -81,17 +81,17 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
   }, [formattedJson, searchTerm]);
 
   return (
-    <div className="bg-[#0e0f12] border border-line rounded-xl overflow-hidden font-mono text-[11px] shadow-md">
+    <div className="bg-canvas border border-line rounded-xl overflow-hidden font-mono text-[11px] shadow-md">
       {/* Header Bar */}
-      <div className="flex items-center justify-between px-3.5 py-2 bg-[#15161a] border-b border-line gap-2">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-surface border-b border-line gap-2">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="flex items-center gap-2 text-fg hover:text-fg transition cursor-pointer font-sans font-semibold text-xs text-left truncate"
         >
           {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-fg-muted" /> : <ChevronDown className="w-3.5 h-3.5 text-fg-muted" />}
-          <span className="truncate">{title || 'Payload JSON'}</span>
+          <span className="truncate">{title || t('ai.rawJson.defaultTitle', 'JSON Payload')}</span>
           <span className="text-[10px] text-fg-muted font-normal font-mono bg-line px-1.5 py-0.5 rounded">
-            {lineCount} linhas • {formatSize(byteSize)}
+            {lineCount} {t('ai.rawJson.lines', 'lines')} • {formatSize(byteSize)}
           </span>
         </button>
 
@@ -100,10 +100,10 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
             <div className="relative hidden sm:block">
               <input
                 type="text"
-                placeholder="Filtrar..."
+                placeholder={t('ai.rawJson.filterPlaceholder', 'Filter...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-28 focus:w-40 bg-[#0e0f12] border border-line focus:border-accent rounded-md px-2 py-0.5 text-[10px] text-fg placeholder-fg-muted transition-all outline-none"
+                className="w-28 focus:w-40 bg-canvas border border-line focus:border-accent rounded-md px-2 py-0.5 text-[10px] text-fg placeholder-fg-muted transition-all outline-none"
               />
               <Search className="w-2.5 h-2.5 text-fg-muted absolute right-2 top-2 pointer-events-none" />
             </div>
@@ -114,8 +114,8 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
             title={t('ai.rawJson.tooltips.copy', 'Copy JSON')}
             className="flex items-center gap-1 px-2 py-1 bg-elevated hover:bg-line text-fg hover:text-fg rounded-md text-[10px] font-sans font-medium transition cursor-pointer border border-line"
           >
-            {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-accent" />}
-            <span>{copied ? 'Copiado' : 'Copiar'}</span>
+            {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3 text-accent" />}
+            <span>{copied ? t('common.copied', 'Copied!') : t('common.copy', 'Copy')}</span>
           </button>
 
           <button
@@ -130,16 +130,16 @@ export const AiRawJsonViewer: React.FC<AiRawJsonViewerProps> = ({
 
       {/* Code body */}
       {!isCollapsed && (
-        <div className={`${maxHeight} overflow-auto p-3.5 bg-[#090a0d] leading-relaxed text-fg select-text`}>
+        <div className={`${maxHeight} overflow-auto p-3.5 bg-canvas leading-relaxed text-fg select-text`}>
           <pre className="font-mono text-[11px] whitespace-pre">
             {highlightedLines.map((line, idx) => {
               const isMatch = searchTerm.trim() && line.toLowerCase().includes(searchTerm.toLowerCase());
               return (
                 <div
                   key={idx}
-                  className={`table-row ${isMatch ? 'bg-accent/20 text-yellow-200 font-bold' : ''}`}
+                  className={`table-row ${isMatch ? 'bg-accent/20 text-tone-amber font-bold' : ''}`}
                 >
-                  <span className="table-cell select-none pr-3 text-[#4b4e57] text-[10px] text-right">
+                  <span className="table-cell select-none pr-3 text-fg-muted/50 text-[10px] text-right">
                     {idx + 1}
                   </span>
                   <span className="table-cell whitespace-pre">{line}</span>

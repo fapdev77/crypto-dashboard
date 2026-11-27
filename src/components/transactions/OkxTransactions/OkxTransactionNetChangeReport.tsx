@@ -143,7 +143,7 @@ export function OkxTransactionNetChangeReport({
                 });
                 setExpandedReportCurrencies(allExpanded);
               }}
-              className="text-[#F0B90B] hover:text-[#f3c73e] transition-colors font-medium px-2.5 py-1 rounded bg-line/40 hover:bg-line/70 cursor-pointer"
+              className="text-accent hover:text-accent-hover transition-colors font-medium px-2.5 py-1 rounded bg-line/40 hover:bg-line/70 cursor-pointer"
             >
               Expand All
             </button>

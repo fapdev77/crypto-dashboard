@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer,
   BarChart,
@@ -51,6 +52,7 @@ interface AiChartBlockProps {
 }
 
 export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
+  const { t, i18n } = useTranslation();
   const {
     type = 'bar',
     title,
@@ -79,7 +81,7 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
     if (isNaN(num)) return String(val);
 
     if (formatAsCurrency) {
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat(i18n.language, {
         style: 'currency',
         currency: 'USD',
         minimumFractionDigits: 0,
@@ -89,30 +91,38 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
     if (formatAsPercent) {
       return `${num.toFixed(2)}%`;
     }
-    return unit ? `${num.toLocaleString('en-US')} ${unit}` : num.toLocaleString('en-US');
+    return unit ? `${num.toLocaleString(i18n.language)} ${unit}` : num.toLocaleString(i18n.language);
   };
 
   const renderIcon = () => {
     switch (type) {
       case 'line':
-        return <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />;
+        return <TrendingUp className="w-3.5 h-3.5 text-tone-cyan" />;
       case 'pie':
       case 'donut':
-        return <PieIcon className="w-3.5 h-3.5 text-amber-400" />;
+        return <PieIcon className="w-3.5 h-3.5 text-warning" />;
       case 'area':
-        return <Activity className="w-3.5 h-3.5 text-emerald-400" />;
+        return <Activity className="w-3.5 h-3.5 text-success" />;
       default:
         return <BarChart3 className="w-3.5 h-3.5 text-accent" />;
     }
   };
 
+  const chartTooltipStyle = {
+    backgroundColor: 'var(--surface)',
+    borderColor: 'var(--line)',
+    borderRadius: '8px',
+    fontSize: '11px',
+    color: 'var(--fg)',
+  };
+
   return (
-    <div className="my-3 rounded-xl border border-line bg-[#0d0e12] overflow-hidden shadow-lg text-xs">
+    <div className="my-3 rounded-xl border border-line bg-canvas overflow-hidden shadow-lg text-xs">
       {/* Header */}
       {(title || description) && (
-        <div className="px-3.5 py-2.5 bg-[#14151a] border-b border-line flex items-center justify-between">
+        <div className="px-3.5 py-2.5 bg-surface border-b border-line flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1 rounded bg-[#1f2027] border border-line">
+            <div className="p-1 rounded bg-elevated border border-line">
               {renderIcon()}
             </div>
             <div>
@@ -123,7 +133,7 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
             </div>
           </div>
           <span className="font-mono text-[9px] uppercase tracking-wider text-fg-muted px-2 py-0.5 rounded bg-elevated border border-line">
-            {type} chart
+            {t('ai.chart.typeLabel', '{{type}} chart', { type })}
           </span>
         </div>
       )}
@@ -136,19 +146,13 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
               return (
                 <PieChart>
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#121318',
-                      borderColor: '#2a2b30',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      color: '#fff',
-                    }}
-                    formatter={(val: any) => [formatValue(val), 'Value']}
+                    contentStyle={chartTooltipStyle}
+                    formatter={(val: any) => [formatValue(val), t('ai.chart.valueLabel', 'Value')]}
                   />
                   <Legend
                     verticalAlign="bottom"
                     iconSize={8}
-                    wrapperStyle={{ fontSize: '11px', color: '#9CA3AF', paddingTop: '8px' }}
+                    wrapperStyle={{ fontSize: '11px', color: 'var(--fg-muted)', paddingTop: '8px' }}
                   />
                   <Pie
                     data={data}
@@ -164,7 +168,7 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
                       <Cell
                         key={`cell-${index}`}
                         fill={colors[index % colors.length]}
-                        stroke="#0d0e12"
+                        stroke="var(--canvas)"
                         strokeWidth={2}
                       />
                     ))}
@@ -176,19 +180,19 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
             if (type === 'line') {
               return (
                 <LineChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#22242c" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
                   <XAxis
                     dataKey="name"
-                    stroke="#717682"
+                    stroke="var(--fg-muted)"
                     fontSize={10}
                     tickLine={false}
-                    axisLine={{ stroke: '#2a2b30' }}
+                    axisLine={{ stroke: 'var(--line)' }}
                   />
                   <YAxis
-                    stroke="#717682"
+                    stroke="var(--fg-muted)"
                     fontSize={10}
                     tickLine={false}
-                    axisLine={{ stroke: '#2a2b30' }}
+                    axisLine={{ stroke: 'var(--line)' }}
                     tickFormatter={(val) =>
                       typeof val === 'number'
                         ? val >= 1000000
@@ -200,20 +204,14 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
                     }
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#121318',
-                      borderColor: '#2a2b30',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      color: '#fff',
-                    }}
+                    contentStyle={chartTooltipStyle}
                     formatter={(val: any) => [formatValue(val), '']}
                   />
                   {seriesKeys.length > 1 && (
                     <Legend
                       verticalAlign="top"
                       iconSize={8}
-                      wrapperStyle={{ fontSize: '10px', color: '#9CA3AF', paddingBottom: '6px' }}
+                      wrapperStyle={{ fontSize: '10px', color: 'var(--fg-muted)', paddingBottom: '6px' }}
                     />
                   )}
                   {seriesKeys.map((key, idx) => (
@@ -234,19 +232,19 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
             if (type === 'area') {
               return (
                 <AreaChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#22242c" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
                   <XAxis
                     dataKey="name"
-                    stroke="#717682"
+                    stroke="var(--fg-muted)"
                     fontSize={10}
                     tickLine={false}
-                    axisLine={{ stroke: '#2a2b30' }}
+                    axisLine={{ stroke: 'var(--line)' }}
                   />
                   <YAxis
-                    stroke="#717682"
+                    stroke="var(--fg-muted)"
                     fontSize={10}
                     tickLine={false}
-                    axisLine={{ stroke: '#2a2b30' }}
+                    axisLine={{ stroke: 'var(--line)' }}
                     tickFormatter={(val) =>
                       typeof val === 'number'
                         ? val >= 1000000
@@ -258,13 +256,7 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
                     }
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#121318',
-                      borderColor: '#2a2b30',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      color: '#fff',
-                    }}
+                    contentStyle={chartTooltipStyle}
                     formatter={(val: any) => [formatValue(val), '']}
                   />
                   {seriesKeys.map((key, idx) => (
@@ -285,19 +277,19 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
             // Default: Bar Chart
             return (
               <BarChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#22242c" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                 <XAxis
                   dataKey="name"
-                  stroke="#717682"
+                  stroke="var(--fg-muted)"
                   fontSize={10}
                   tickLine={false}
-                  axisLine={{ stroke: '#2a2b30' }}
+                  axisLine={{ stroke: 'var(--line)' }}
                 />
                 <YAxis
-                  stroke="#717682"
+                  stroke="var(--fg-muted)"
                   fontSize={10}
                   tickLine={false}
-                  axisLine={{ stroke: '#2a2b30' }}
+                  axisLine={{ stroke: 'var(--line)' }}
                   tickFormatter={(val) =>
                     typeof val === 'number'
                       ? val >= 1000000
@@ -309,20 +301,14 @@ export const AiChartBlock: React.FC<AiChartBlockProps> = ({ config }) => {
                   }
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#121318',
-                    borderColor: '#2a2b30',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    color: '#fff',
-                  }}
+                  contentStyle={chartTooltipStyle}
                   formatter={(val: any) => [formatValue(val), '']}
                 />
                 {seriesKeys.length > 1 && (
                   <Legend
                     verticalAlign="top"
                     iconSize={8}
-                    wrapperStyle={{ fontSize: '10px', color: '#9CA3AF', paddingBottom: '6px' }}
+                    wrapperStyle={{ fontSize: '10px', color: 'var(--fg-muted)', paddingBottom: '6px' }}
                   />
                 )}
                 {seriesKeys.map((key, idx) => (

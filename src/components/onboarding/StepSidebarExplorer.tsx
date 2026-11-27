@@ -32,7 +32,7 @@ function ModuleScreenPreview({ moduleId }: { moduleId: string }) {
             </div>
             <div className="bg-elevated border border-line rounded-lg p-2">
               <span className="text-[9px] text-fg-muted uppercase block">Unrealized P&L</span>
-              <span className="text-xs font-mono font-bold text-emerald-500">+$942.10</span>
+              <span className="text-xs font-mono font-bold text-success">+$942.10</span>
             </div>
             <div className="bg-elevated border border-line rounded-lg p-2">
               <span className="text-[9px] text-fg-muted uppercase block">Hedge Coverage</span>
@@ -53,11 +53,11 @@ function ModuleScreenPreview({ moduleId }: { moduleId: string }) {
         <div className="space-y-2">
           <div className="bg-elevated border border-line rounded-lg p-2.5 space-y-1.5">
             <div className="flex items-center justify-between text-[10px] font-mono">
-              <span className="text-emerald-500 font-semibold">Protected: $14,200 (57.1%)</span>
+              <span className="text-success font-semibold">Protected: $14,200 (57.1%)</span>
               <span className="text-fg-muted">Exposed: $10,650</span>
             </div>
             <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden flex">
-              <div className="h-full bg-emerald-500" style={{ width: '57%' }} />
+              <div className="h-full bg-success" style={{ width: '57%' }} />
               <div className="h-full bg-fg/75" style={{ width: '43%' }} />
             </div>
           </div>
@@ -67,7 +67,7 @@ function ModuleScreenPreview({ moduleId }: { moduleId: string }) {
                 <CoinIcon symbol="BTC" className="w-3.5 h-3.5" />
                 <span className="font-semibold text-fg">BTC · 1x Inverse Short</span>
               </div>
-              <span className="text-emerald-500">Delta ~0.00</span>
+              <span className="text-success">Delta ~0.00</span>
             </div>
             <div className="flex items-center justify-between text-fg-muted text-[10px]">
               <span>Spot 0.145 BTC vs Short 9,800 USD</span>
@@ -98,7 +98,7 @@ function ModuleScreenPreview({ moduleId }: { moduleId: string }) {
                   </span>
                 </div>
               </div>
-              <span className="text-emerald-500 font-semibold shrink-0">{pos.pnl}</span>
+              <span className="text-success font-semibold shrink-0">{pos.pnl}</span>
             </div>
           ))}
         </div>
@@ -135,11 +135,11 @@ function ModuleScreenPreview({ moduleId }: { moduleId: string }) {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-fg">ETHUSDT · 1.50 ETH @ $3,210</span>
-            <span className="text-emerald-500">-$1.44 fee</span>
+            <span className="text-success">-$1.44 fee</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-fg">BTCUSD · 2,000 USD @ $67,100</span>
-            <span className="text-emerald-500">-$0.40 fee</span>
+            <span className="text-success">-$0.40 fee</span>
           </div>
         </div>
       );
@@ -148,15 +148,15 @@ function ModuleScreenPreview({ moduleId }: { moduleId: string }) {
         <div className="bg-elevated border border-line rounded-lg p-2.5 space-y-2 text-[10px] font-mono">
           <div className="flex items-center justify-between text-fg-muted border-b border-line pb-1">
             <span>Consolidated Net Change</span>
-            <span className="text-emerald-500">+$1,248.50</span>
+            <span className="text-success">+$1,248.50</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-fg">Bybit · Funding Settlement</span>
-            <span className="text-emerald-500">+$18.42</span>
+            <span className="text-success">+$18.42</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-fg">OKX · Futures Realized PnL</span>
-            <span className="text-emerald-500">+$288.08</span>
+            <span className="text-success">+$288.08</span>
           </div>
         </div>
       );
@@ -165,7 +165,7 @@ function ModuleScreenPreview({ moduleId }: { moduleId: string }) {
         <div className="bg-elevated border border-line rounded-lg p-2.5 space-y-2">
           <div className="flex items-center justify-between text-[11px]">
             <span className="font-semibold text-fg">Equity Curve · Funding APR</span>
-            <span className="font-mono text-emerald-500 font-semibold">+14.8% APR</span>
+            <span className="font-mono text-success font-semibold">+14.8% APR</span>
           </div>
           <Sparkline data={[20, 24, 22, 31, 35, 33, 46, 54, 62]} color="emerald" width={240} height={36} />
           <div className="flex items-center justify-between text-[10px] font-mono text-fg-muted">

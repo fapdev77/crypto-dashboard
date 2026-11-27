@@ -289,7 +289,7 @@ export function StepPreferences({ onOpenThemeCustomizer }: StepPreferencesProps)
               <p className="text-2xl font-bold text-fg font-mono tabular-nums tracking-tight">
                 {formatPreviewCurrency(24850.42)}
               </p>
-              <TrendingUp className="w-4 h-4 text-emerald-500/80 shrink-0" />
+              <TrendingUp className="w-4 h-4 text-success/80 shrink-0" />
             </div>
             <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-fg-muted">
               <span className="truncate">{t('dashboardExtra.netBalanceDesc', 'Net balance across all connected exchanges')}</span>
@@ -314,7 +314,7 @@ export function StepPreferences({ onOpenThemeCustomizer }: StepPreferencesProps)
                   <div className="text-[10px] text-fg-muted uppercase tracking-wider">
                     {t('dashboardExtra.unrealizedPnlLabel', 'Unrealized P&L')}
                   </div>
-                  <p className="text-sm font-bold font-mono tabular-nums text-emerald-500">
+                  <p className="text-sm font-bold font-mono tabular-nums text-success">
                     +{formatPreviewCurrency(942.1)}
                   </p>
                 </div>
@@ -325,7 +325,7 @@ export function StepPreferences({ onOpenThemeCustomizer }: StepPreferencesProps)
                   <div className="text-[10px] text-fg-muted uppercase tracking-wider">
                     {t('dashboardExtra.realizedPnlLabel', 'Realized P&L')}
                   </div>
-                  <p className="text-sm font-bold font-mono tabular-nums text-emerald-500">
+                  <p className="text-sm font-bold font-mono tabular-nums text-success">
                     +{formatPreviewCurrency(306.4)}
                   </p>
                 </div>
@@ -342,14 +342,14 @@ export function StepPreferences({ onOpenThemeCustomizer }: StepPreferencesProps)
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold">
-                  <span className="text-emerald-500">{t('dashboardExtra.hedged', 'Hedged')}: 2</span>
+                  <span className="text-success">{t('dashboardExtra.hedged', 'Hedged')}: 2</span>
                   <span className="text-fg-muted">|</span>
                   <span className="text-tone-amber">{t('dashboardExtra.leveraged', 'Leveraged')}: 1</span>
                 </div>
               </div>
               <div className="space-y-1.5 mt-3">
                 <div className="flex justify-between text-[11px] font-mono tabular-nums">
-                  <span className="text-emerald-500/90">
+                  <span className="text-success/90">
                     {t('dashboardExtra.prot', 'Prot:')} {formatPreviewCurrency(14200)}
                   </span>
                   <span className="text-fg">
@@ -357,11 +357,11 @@ export function StepPreferences({ onOpenThemeCustomizer }: StepPreferencesProps)
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-elevated rounded-full overflow-hidden flex">
-                  <div className="h-full bg-emerald-500/80" style={{ width: '57.1%' }} />
+                  <div className="h-full bg-success/80" style={{ width: '57.1%' }} />
                   <div className="h-full bg-fg/80" style={{ width: '42.9%' }} />
                 </div>
                 <div className="flex justify-between text-[10px] font-mono text-fg-muted">
-                  <span className="text-emerald-500/90">57.14%</span>
+                  <span className="text-success/90">57.14%</span>
                   <span className="text-fg">42.86%</span>
                 </div>
               </div>

@@ -12,7 +12,7 @@ import { AppTooltip } from '../ui/Tooltip';
 import { FlagIcon } from '../ui/FlagIcon';
 
 export function CurrencyRatesWidget() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     fiatCurrency,
     setFiatCurrency,
@@ -53,7 +53,7 @@ export function CurrencyRatesWidget() {
   };
 
   const formattedTime = fiatRatesLastUpdated
-    ? new Date(fiatRatesLastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    ? new Date(fiatRatesLastUpdated).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     : '--:--:--';
 
   const statusBadge = () => {
@@ -67,7 +67,7 @@ export function CurrencyRatesWidget() {
     }
     if (fiatRatesStatus === 'cached' || usdtRateStatus === 'cached') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 text-tone-amber border border-amber-500/20">
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-warning/10 text-tone-amber border border-warning/20">
           <span className="w-1.5 h-1.5 rounded-full bg-warning" />
           {t('currencyWidget.statusCached', 'Cached')} ({fiatRatesTtlMinutes}m TTL)
         </span>
@@ -124,7 +124,7 @@ export function CurrencyRatesWidget() {
               onClick={handleManualRefresh}
               disabled={isRefreshing}
               className="p-1.5 rounded-lg bg-elevated hover:bg-line border border-line text-fg-muted hover:text-fg transition-colors disabled:opacity-50"
-              aria-label="Refresh rates"
+              aria-label={t('currencyWidget.refreshAria', 'Refresh rates')}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-accent' : ''}`} />
             </button>
@@ -181,7 +181,7 @@ export function CurrencyRatesWidget() {
                   </span>
                 ) : (
                   <span className="text-[10px] text-fg-muted group-hover:text-fg-muted transition-colors">
-                    Click to select
+                    {t('currencyWidget.clickToSelect', 'Click to select')}
                   </span>
                 )}
               </div>

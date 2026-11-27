@@ -78,14 +78,14 @@ export function OpenOrders() {
   }, [orders]);
 
   const SIDE_DONUT = [
-    { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: '#00C853' },
-    { name: t('orders.sell', 'Sell'), value: stats.sellCount, color: '#FF4444' }
+    { name: t('orders.buy', 'Buy'), value: stats.buyCount, color: 'var(--success)' },
+    { name: t('orders.sell', 'Sell'), value: stats.sellCount, color: 'var(--danger)' }
   ];
 
   const TYPE_DONUT = [
-    { name: t('orders.types.limit', 'Limit'), value: stats.limitCount, color: '#2F6BFF' },
-    { name: t('orders.types.market', 'Market'), value: stats.marketCount, color: '#FFB300' },
-    { name: t('orders.types.conditional', 'Conditional'), value: stats.conditionalCount, color: '#9C27B0' }
+    { name: t('orders.types.limit', 'Limit'), value: stats.limitCount, color: 'var(--accent)' },
+    { name: t('orders.types.market', 'Market'), value: stats.marketCount, color: 'var(--warning)' },
+    { name: t('orders.types.conditional', 'Conditional'), value: stats.conditionalCount, color: 'var(--tone-purple)' }
   ];
 
   return (
@@ -144,8 +144,8 @@ export function OpenOrders() {
               <span className="text-2xl text-fg-muted">{t('orders.allTypes', 'Order Types')}</span>
               <div className="flex flex-col text-[13px] gap-0.5 font-mono mt-1">
                 <span className="text-accent">{t('orders.stats.limitCount', 'Limit')}: {stats.limitCount}</span>
-                <span className="text-[#FFB300]">{t('orders.stats.marketCount', 'Market')}: {stats.marketCount}</span>
-                <span className="text-[#9C27B0]">{t('orders.stats.conditionalCount', 'Conditional')}: {stats.conditionalCount}</span>
+                <span className="text-tone-amber">{t('orders.stats.marketCount', 'Market')}: {stats.marketCount}</span>
+                <span className="text-tone-purple">{t('orders.stats.conditionalCount', 'Conditional')}: {stats.conditionalCount}</span>
               </div>
             </div>
             <div className="w-24 h-24">

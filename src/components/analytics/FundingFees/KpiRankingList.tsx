@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
 import { AppTooltip } from '../../ui/Tooltip';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { ExchangeName } from '../../../types';
@@ -61,13 +60,13 @@ export const KpiRankingList = ({
                   </span>
                   <span className="text-xs text-fg font-medium truncate">{item.symbol}</span>
                   {item.exchange && (
-                    <span className={clsx(
-                      "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-medium capitalize shrink-0",
-                      item.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
-                      item.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
-                      item.exchange === 'okx' ? "bg-fg/10 text-fg border-fg/20" :
-                      "bg-line text-fg-muted border-line"
-                    )}>
+                    <span className={[
+                      'flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-medium capitalize shrink-0',
+                      item.exchange === 'bitget' ? 'bg-tone-cyan/10 text-tone-cyan border-tone-cyan/25' :
+                      item.exchange === 'bybit' ? 'bg-tone-orange/10 text-tone-orange border-tone-orange/25' :
+                      item.exchange === 'okx' ? 'bg-fg/10 text-fg border-fg/20' :
+                      'bg-line text-fg-muted border-line'
+                    ].join(' ')}>
                       <ExchangeIcon exchange={item.exchange} className="w-2.5 h-2.5" />
                       {item.exchange}
                     </span>

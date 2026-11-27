@@ -80,13 +80,13 @@ export const MarketAnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* Primary Tab Navigation */}
-      <div className="flex items-center gap-2 border-b border-[#202228] pb-1">
+      <div className="flex items-center gap-2 border-b border-line pb-1">
         <button
           onClick={() => setActiveTab('multi-market')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'multi-market'
-              ? 'bg-[#1c1f28] text-fg border border-[#2d3240] shadow-sm'
-              : 'text-fg-muted hover:text-fg hover:bg-[#161820]'
+              ? 'bg-elevated text-fg border border-line-strong shadow-sm'
+              : 'text-fg-muted hover:text-fg hover:bg-elevated/60 border border-transparent'
           }`}
         >
           <BarChart3 className={`w-4 h-4 ${activeTab === 'multi-market' ? 'text-accent' : ''}`} />
@@ -97,13 +97,13 @@ export const MarketAnalyticsDashboard: React.FC = () => {
           onClick={() => setActiveTab('inverse-coinm')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
             activeTab === 'inverse-coinm'
-              ? 'bg-[#1c1f28] text-fg border border-[#2d3240] shadow-sm'
-              : 'text-fg-muted hover:text-fg hover:bg-[#161820]'
+              ? 'bg-elevated text-fg border border-line-strong shadow-sm'
+              : 'text-fg-muted hover:text-fg hover:bg-elevated/60 border border-transparent'
           }`}
         >
-          <Coins className={`w-4 h-4 ${activeTab === 'inverse-coinm' ? 'text-cyan-400' : ''}`} />
-          <span>{t('analytics.market.tabs.inverseCoinM', 'Inverse / Coin-M Market')}</span>
-          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
+          <Coins className={`w-4 h-4 ${activeTab === 'inverse-coinm' ? 'text-tone-cyan' : ''}`} />
+          <span>{t('analytics.market.tabs.inverseCoinM', 'Inverse (Coin-M) Contracts')}</span>
+          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-tone-cyan/10 text-tone-cyan border border-tone-cyan/20">
             Coin-M
           </span>
         </button>
@@ -119,14 +119,14 @@ export const MarketAnalyticsDashboard: React.FC = () => {
 
       {/* Error display if any */}
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 flex items-center gap-3 text-xs text-rose-400">
+        <div className="bg-danger/10 border border-danger/30 rounded-xl p-4 flex items-center gap-3 text-xs text-danger">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
           <button
             onClick={() => refreshData(true)}
             className="ml-auto underline hover:text-fg font-semibold"
           >
-            Retry
+            {t('common.retry', 'Retry')}
           </button>
         </div>
       )}
@@ -135,7 +135,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
       {!snapshot && isLoading && (
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-3">
           <Loader2 className="w-8 h-8 text-accent animate-spin" />
-          <p className="text-xs text-fg-muted">Loading market analytics snapshot...</p>
+          <p className="text-xs text-fg-muted">{t('analytics.market.loadingSnapshot', 'Loading market analytics snapshot...')}</p>
         </div>
       )}
 
@@ -147,7 +147,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
             <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <PriceMetricTooltip>
                 <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
-                  Index Price ({snapshot.symbol})
+                  {t('analytics.market.cards.indexPrice', { symbol: snapshot.symbol, defaultValue: `Index Price (${snapshot.symbol})` })}
                 </span>
               </PriceMetricTooltip>
               <div className="text-lg font-bold font-mono text-fg">
@@ -157,7 +157,7 @@ export const MarketAnalyticsDashboard: React.FC = () => {
               </div>
               <div
                 className={`text-xs font-semibold flex items-center gap-0.5 ${
-                  snapshot.priceChange24h >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  snapshot.priceChange24h >= 0 ? 'text-success' : 'text-danger'
                 }`}
               >
                 {snapshot.priceChange24h >= 0 ? (
@@ -174,33 +174,33 @@ export const MarketAnalyticsDashboard: React.FC = () => {
             <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <Volume24hTooltip>
                 <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
-                  24h Notional Volume
+                  {t('analytics.market.cards.volume24h', '24h Notional Volume')}
                 </span>
               </Volume24hTooltip>
               <div className="text-lg font-bold font-mono text-fg">
                 {formatCurrency(snapshot.totalVolume24hUsd)}
               </div>
-              <span className="text-[11px] text-fg-muted">Aggregated Takers</span>
+              <span className="text-[11px] text-fg-muted">{t('analytics.market.cards.aggregatedTakers', 'Aggregated Takers')}</span>
             </div>
 
             {/* Total Open Interest */}
             <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <OpenInterestMetricTooltip>
                 <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
-                  Total Open Interest
+                  {t('analytics.market.indicators.openInterest', 'Total Open Interest')}
                 </span>
               </OpenInterestMetricTooltip>
-              <div className="text-lg font-bold font-mono text-amber-400">
+              <div className="text-lg font-bold font-mono text-tone-amber">
                 {snapshot.marketTypes?.some((m) => m !== 'SPOT') === false
-                  ? 'N/A (Spot)'
+                  ? t('analytics.market.cards.naSpot', 'N/A (Spot)')
                   : formatCurrency(snapshot.totalOiUsd)}
               </div>
               <span
                 className={`text-[11px] font-semibold ${
-                  snapshot.oiChange24hPercent >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  snapshot.oiChange24hPercent >= 0 ? 'text-success' : 'text-danger'
                 }`}
               >
-                24h Δ: {snapshot.oiChange24hPercent >= 0 ? '+' : ''}
+                {t('analytics.market.cards.delta24h', '24h Δ:')} {snapshot.oiChange24hPercent >= 0 ? '+' : ''}
                 {snapshot.oiChange24hPercent}%
               </span>
             </div>
@@ -209,50 +209,50 @@ export const MarketAnalyticsDashboard: React.FC = () => {
             <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <MaxFundingSpreadTooltip>
                 <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
-                  Max Funding Spread
+                  {t('analytics.market.indicators.maxSpread', 'Max Funding Spread')}
                 </span>
               </MaxFundingSpreadTooltip>
-              <div className="text-lg font-bold font-mono text-emerald-400">
+              <div className="text-lg font-bold font-mono text-success">
                 {snapshot.marketTypes?.some((m) => m !== 'SPOT') === false || !snapshot.currentFunding
                   ? 'N/A'
                   : `+${snapshot.currentFunding.spreadApr}%`}
               </div>
-              <span className="text-[11px] text-fg-muted">Annualized (APR)</span>
+              <span className="text-[11px] text-fg-muted">{t('analytics.market.cards.annualizedApr', 'Annualized (APR)')}</span>
             </div>
 
             {/* CVD Momentum */}
             <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <TakerFlowMetricTooltip>
                 <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
-                  Taker Flow (CVD)
+                  {t('analytics.market.cards.takerFlowCvd', 'Taker Flow (CVD)')}
                 </span>
               </TakerFlowMetricTooltip>
               <div
                 className={`text-lg font-bold font-mono ${
                   snapshot.takerFlowHistory[snapshot.takerFlowHistory.length - 1]?.cvd >= 0
-                    ? 'text-cyan-400'
-                    : 'text-rose-400'
+                    ? 'text-tone-cyan'
+                    : 'text-danger'
                 }`}
               >
                 {formatCurrency(
                   snapshot.takerFlowHistory[snapshot.takerFlowHistory.length - 1]?.cvd || 0
                 )}
               </div>
-              <span className="text-[11px] text-fg-muted">Aggressive Net Flow</span>
+              <span className="text-[11px] text-fg-muted">{t('analytics.market.cards.aggressiveNetFlow', 'Aggressive Net Flow')}</span>
             </div>
 
             {/* Fear & Greed */}
             <div className="bg-canvas border border-line rounded-xl p-3.5 space-y-1">
               <FearAndGreedTooltip>
                 <span className="text-[10px] font-bold text-fg-muted uppercase tracking-wider block">
-                  Sentiment Index
+                  {t('analytics.market.cards.sentimentIndex', 'Sentiment Index')}
                 </span>
               </FearAndGreedTooltip>
-              <div className="text-lg font-bold font-mono text-purple-400">
+              <div className="text-lg font-bold font-mono text-tone-purple">
                 {snapshot.sentiment.greedFearScore}
                 <span className="text-xs font-normal text-fg-muted">/100</span>
               </div>
-              <span className="text-[11px] font-semibold text-purple-300">
+              <span className="text-[11px] font-semibold text-tone-purple">
                 {snapshot.sentiment.greedFearLabel}
               </span>
             </div>

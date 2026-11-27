@@ -109,14 +109,14 @@ export const AiSettings: React.FC = () => {
                 <AppTooltip
                   description={
                     globalSettings.isEnabled
-                      ? 'PIKA Assistant is active and ready to audit your trading portfolio.'
-                      : 'PIKA Assistant is disabled by default for strict security and privacy. Click the toggle to activate.'
+                      ? t('ai.settings.tooltips.statusActive', 'PIKA Assistant is active and ready to audit your trading portfolio.')
+                      : t('ai.settings.tooltips.statusDisabled', 'PIKA Assistant is disabled by default for strict security and privacy. Click the toggle to activate.')
                   }
                   side="bottom"
                 >
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase cursor-default ${globalSettings.isEnabled
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      ? 'bg-success/10 text-success border border-success/20'
                       : 'bg-elevated text-fg-muted border border-line'
                       }`}
                   >
@@ -150,7 +150,7 @@ export const AiSettings: React.FC = () => {
                 }}
                 className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer ${globalSettings.isEnabled ? 'bg-accent' : 'bg-elevated'
                   }`}
-                aria-label="Toggle PIKA"
+                aria-label={t('ai.settings.toggleAria', 'Toggle PIKA')}
               >
                 <div
                   className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 ${globalSettings.isEnabled ? 'translate-x-6' : 'translate-x-0'
@@ -167,7 +167,7 @@ export const AiSettings: React.FC = () => {
               description={t('ai.settings.tooltips.zeroTrust', 'Zero-Trust Architecture: Your exchange API credentials, keys, and private passphrases are never sent to AI models.')}
               side="bottom"
             >
-              <div className="flex items-center gap-2 text-emerald-400 cursor-default">
+              <div className="flex items-center gap-2 text-success cursor-default">
                 <Shield className="w-4 h-4" />
                 <span>{t('ai.settings.zeroTrustActive', 'Zero-Trust Active: Exchange API keys are never included in AI prompts.')}</span>
               </div>

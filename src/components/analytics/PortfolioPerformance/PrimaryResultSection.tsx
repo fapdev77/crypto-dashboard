@@ -30,7 +30,14 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
         <div className="flex items-center gap-2 text-xs text-fg-muted font-mono tabular-nums">
           <Calendar className="w-3.5 h-3.5" />
           <span>
-            Period (UTC): {metrics.earliestDate} to {metrics.latestDate} ({metrics.durationDays} {metrics.durationDays === 1 ? 'day' : 'days'})
+            {t('analytics.portfolio.primary.periodRange', 'Period (UTC): {{start}} to {{end}} ({{count}} {{unit}})', {
+              start: metrics.earliestDate,
+              end: metrics.latestDate,
+              count: metrics.durationDays,
+              unit: metrics.durationDays === 1
+                ? t('analytics.portfolio.primary.daySingular', 'day')
+                : t('analytics.portfolio.primary.dayPlural', 'days'),
+            })}
           </span>
         </div>
       </div>
@@ -63,7 +70,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
           {/* 1. Initial Balance */}
           <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
-              <AppTooltip description="Portfolio wallet balance at the start of the analyzed window across all selected accounts (excluding subsequent deposits).">
+              <AppTooltip description={t('analytics.portfolio.primary.initialBalanceTooltip', 'Portfolio wallet balance at the start of the analyzed window across all selected accounts (excluding subsequent deposits).')}>
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.primary.initialBalance', 'Initial Balance')}
                 </span>
@@ -80,7 +87,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
           {/* 2. Final Balance */}
           <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
-              <AppTooltip description="Consolidated portfolio wallet balance across all active selected accounts at the end of the analyzed timeframe.">
+              <AppTooltip description={t('analytics.portfolio.primary.finalBalanceTooltip', 'Consolidated portfolio wallet balance across all active selected accounts at the end of the analyzed timeframe.')}>
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.primary.finalBalance', 'Final Balance')}
                 </span>
@@ -97,7 +104,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
           {/* 3. Daily Average ROI */}
           <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
-              <AppTooltip description="Average daily return rate: Total Percentage Gain / Operating Days.">
+              <AppTooltip description={t('analytics.portfolio.primary.dailyAvgRoiTooltip', 'Average daily return rate: Total Percentage Gain / Operating Days.')}>
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50">
                   {t('analytics.portfolio.primary.dailyAvgRoi', 'Daily Average ROI')}
                 </span>
@@ -114,7 +121,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
           {/* 4. Deposits in Period */}
           <div className="bg-elevated border border-line rounded-lg p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 mb-2">
-              <AppTooltip description="Total deposits during the period. Separated from operational gain to measure genuine strategy performance.">
+              <AppTooltip description={t('analytics.portfolio.primary.depositsTooltip', 'Total deposits during the period. Separated from operational gain to measure genuine strategy performance.')}>
                 <span className="text-[11px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50 flex items-center gap-1">
                   {t('analytics.portfolio.primary.depositsInPeriod', 'Deposits in Period')} <Info className="w-3 h-3 text-accent" />
                 </span>
@@ -125,7 +132,7 @@ export const PrimaryResultSection = React.memo(function PrimaryResultSection({ m
                 {maskVal(metrics.depositsInPeriod)}
               </div>
               <span className="text-[10px] text-fg-muted block mt-0.5">
-                {denomination} (does not inflate trading result)
+                {denomination} ({t('analytics.portfolio.primary.doesNotInflate', 'does not inflate trading result')})
               </span>
             </div>
           </div>

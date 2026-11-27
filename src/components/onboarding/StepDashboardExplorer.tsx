@@ -235,7 +235,7 @@ export function StepDashboardExplorer() {
                   <span className="text-xs font-bold font-mono text-fg tabular-nums truncate">
                     {formatMoney(24850)}
                   </span>
-                  <TrendingUp className="w-3 h-3 text-emerald-500 shrink-0" />
+                  <TrendingUp className="w-3 h-3 text-success shrink-0" />
                 </div>
               </div>
 
@@ -248,7 +248,7 @@ export function StepDashboardExplorer() {
                   <Activity className="w-3 h-3 text-fg-muted/70 shrink-0" />
                 </div>
                 <div className="flex items-center justify-between gap-1 mt-1">
-                  <span className="text-xs font-bold font-mono text-emerald-500 tabular-nums">
+                  <span className="text-xs font-bold font-mono text-success tabular-nums">
                     +{formatMoney(942)}
                   </span>
                   <Sparkline data={[14, 18, 16, 26, 32, 41]} color="emerald" width={30} height={12} />
@@ -265,12 +265,12 @@ export function StepDashboardExplorer() {
                 </div>
                 <div className="mt-1 space-y-1">
                   <div className="flex items-center justify-between text-[9px] font-semibold">
-                    <span className="text-emerald-500">4L</span>
-                    <span className="text-red-500">2S</span>
+                    <span className="text-success">4L</span>
+                    <span className="text-danger">2S</span>
                   </div>
                   <div className="h-1 w-full bg-surface rounded-full overflow-hidden flex">
-                    <div className="h-full bg-emerald-500" style={{ width: '67%' }} />
-                    <div className="h-full bg-red-500" style={{ width: '33%' }} />
+                    <div className="h-full bg-success" style={{ width: '67%' }} />
+                    <div className="h-full bg-danger" style={{ width: '33%' }} />
                   </div>
                 </div>
               </div>
@@ -284,11 +284,11 @@ export function StepDashboardExplorer() {
                 </div>
                 <div className="mt-1 space-y-1">
                   <div className="flex items-center justify-between text-[9px] font-mono">
-                    <span className="text-emerald-500">57%</span>
+                    <span className="text-success">57%</span>
                     <span className="text-fg-muted">43%</span>
                   </div>
                   <div className="h-1 w-full bg-surface rounded-full overflow-hidden flex">
-                    <div className="h-full bg-emerald-500/80" style={{ width: '57%' }} />
+                    <div className="h-full bg-success/80" style={{ width: '57%' }} />
                     <div className="h-full bg-fg/75" style={{ width: '43%' }} />
                   </div>
                 </div>

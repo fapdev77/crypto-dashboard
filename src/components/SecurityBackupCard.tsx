@@ -95,12 +95,12 @@ export function SecurityBackupCard() {
   const handleDecryptImport = async () => {
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
-      setImportError('Please select a backup file first.');
+      setImportError(t('settings.security.errors.selectFileFirst', 'Please select a backup file first.'));
       toast.error(t('toasts.noBackupFileSelected', 'No backup file selected'));
       return;
     }
     if (!importPassphrase) {
-      setImportError('Please enter the backup passphrase.');
+      setImportError(t('settings.security.errors.enterBackupPassphrase', 'Please enter the backup passphrase.'));
       return;
     }
 
@@ -119,15 +119,15 @@ export function SecurityBackupCard() {
         const existsLocally = keys.find(k => k.label.trim().toLowerCase() === importedKey.label.trim().toLowerCase() && k.exchange === importedKey.exchange);
         if (existsLocally) {
           resolutions[importedKey.id] = 'rename';
-          names[importedKey.id] = `${importedKey.label} (Imported)`;
+          names[importedKey.id] = `${importedKey.label} (${t('settings.security.importedSuffix', 'Imported')})`;
         }
       });
       setConflictResolutions(resolutions);
       setCustomNames(names);
       setImportError('');
       toast.success(t('toasts.backupFileDecrypted', 'Backup file decrypted successfully!'));
-    } catch (err) {
-      setImportError('Invalid passphrase or corrupted file.');
+    } catch {
+      setImportError(t('settings.security.errors.invalidOrCorrupted', 'Invalid passphrase or corrupted file.'));
       toast.error(t('toasts.backupFileDecryptFailed', 'Failed to decrypt backup file'));
     }
   };
@@ -140,17 +140,19 @@ export function SecurityBackupCard() {
       if (!selectedForImport.has(ik.id)) continue;
 
       const res = conflictResolutions[ik.id];
-      const finalName = res === 'rename' ? (customNames[ik.id] || `${ik.label} (Imported)`) : (res === 'overwrite' ? ik.label : (customNames[ik.id] || ik.label));
+      const finalName = res === 'rename'
+        ? (customNames[ik.id] || `${ik.label} (${t('settings.security.importedSuffix', 'Imported')})`)
+        : (res === 'overwrite' ? ik.label : (customNames[ik.id] || ik.label));
 
       if (finalName.trim().length < 3) {
-        setImportError(`The name "${finalName}" must have at least 3 characters.`);
+        setImportError(t('settings.security.errors.nameMinLength', 'The name "{{name}}" must have at least 3 characters.', { name: finalName }));
         return;
       }
 
       if (res === 'rename' || !res) {
         const existsLocally = keys.find(k => k.label.trim().toLowerCase() === finalName.trim().toLowerCase() && k.exchange === ik.exchange);
         if (existsLocally) {
-          setImportError(`The name "${finalName}" for ${ik.exchange} is already in use. Please choose a unique name or select Overwrite.`);
+          setImportError(t('settings.security.errors.nameInUse', 'The name "{{name}}" for {{exchange}} is already in use. Please choose a unique name or select Overwrite.', { name: finalName, exchange: ik.exchange }));
           return;
         }
       }
@@ -169,7 +171,7 @@ export function SecurityBackupCard() {
       }; // Always generate new local ID to avoid collision
 
       if (res === 'rename') {
-        newKey.label = customNames[ik.id] || `${newKey.label} (Imported)`;
+        newKey.label = customNames[ik.id] || `${newKey.label} (${t('settings.security.importedSuffix', 'Imported')})`;
       } else if (res === 'overwrite') {
         // We need to actually overwrite, meaning delete the old one.
         const existing = keys.find(k => k.label.trim().toLowerCase() === ik.label.trim().toLowerCase() && k.exchange === ik.exchange);
@@ -200,7 +202,7 @@ export function SecurityBackupCard() {
 
   const handleInitializeVault = async () => {
     if (!localPassphrase || localPassphrase.length < 8) {
-      setLocalSecurityError('Master passphrase must be at least 8 characters long.');
+      setLocalSecurityError(t('settings.security.errors.masterMinLength', 'Master passphrase must be at least 8 characters long.'));
       return;
     }
     try {
@@ -209,7 +211,7 @@ export function SecurityBackupCard() {
       setLocalSecurityError('');
       toast.success(t('toasts.vaultInitSuccess', 'Zero-Trust Vault initialized successfully!'));
     } catch (err: any) {
-      setLocalSecurityError(err.message || 'Failed to initialize vault');
+      setLocalSecurityError(err.message || t('toasts.vaultInitFailed', 'Failed to initialize vault'));
       toast.error(t('toasts.vaultInitFailed', 'Failed to initialize vault'));
     }
   };
@@ -219,15 +221,15 @@ export function SecurityBackupCard() {
     setChangeError('');
 
     if (!oldPassphrase) {
-      setChangeError('Current master passphrase is required.');
+      setChangeError(t('settings.security.errors.currentRequired', 'Current master passphrase is required.'));
       return;
     }
     if (newPassphrase.length < 8) {
-      setChangeError('New master passphrase must have at least 8 characters.');
+      setChangeError(t('settings.security.errors.newMinLength', 'New master passphrase must have at least 8 characters.'));
       return;
     }
     if (newPassphrase !== confirmNewPassphrase) {
-      setChangeError('New passphrases do not match.');
+      setChangeError(t('settings.security.errors.mismatch', 'New passphrases do not match.'));
       return;
     }
 
@@ -235,7 +237,7 @@ export function SecurityBackupCard() {
     try {
       const success = await changePassphrase(oldPassphrase, newPassphrase);
       if (!success) {
-        setChangeError('Current passphrase incorrect or vault corrupted.');
+        setChangeError(t('settings.security.errors.currentIncorrect', 'Current passphrase incorrect or vault corrupted.'));
         toast.error(t('toasts.passphraseUpdateFailed', 'Failed to update passphrase.'));
       } else {
         setOldPassphrase('');
@@ -245,7 +247,7 @@ export function SecurityBackupCard() {
         toast.success(t('toasts.passphraseUpdatedSuccess', 'Master passphrase updated successfully!'));
       }
     } catch (err: any) {
-      setChangeError(err.message || 'Error updating passphrase.');
+      setChangeError(err.message || t('toasts.passphraseUpdateError', 'Error updating passphrase.'));
       toast.error(t('toasts.passphraseUpdateError', 'Error updating passphrase.'));
     } finally {
       setIsUpdatingPassword(false);
@@ -292,18 +294,18 @@ export function SecurityBackupCard() {
                   <ShieldCheck className="w-4 h-4 text-success" />
                   <span>{t('settings.security.vaultTitle', 'Zero-Trust Encrypted Vault')}</span>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-medium ${isUnlocked ? 'bg-success/10 text-success border border-success/20' : 'bg-amber-500/10 text-tone-amber border border-amber-500/20'}`}>
+                <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-medium ${isUnlocked ? 'bg-success/10 text-success border border-success/20' : 'bg-warning/10 text-warning border border-warning/20'}`}>
                   {isUnlocked ? t('settings.security.unlocked', 'Unlocked') : t('settings.security.locked', 'Locked')}
                 </span>
               </div>
               <p className="text-fg-muted leading-relaxed text-[11px]">
-                PBKDF2-SHA256 (600,000 iterations) + AES-GCM-256. API keys are decrypted only in memory and never persisted in plain text.
+                {t('settings.security.encryptionNote', 'PBKDF2-SHA256 (600,000 iterations) + AES-GCM-256. API keys are decrypted only in memory and never persisted in plain text.')}
               </p>
               {isUnlocked && encryptedData && (
                 <div className="pt-1">
                   <button
                     onClick={handleLockNow}
-                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-amber-500/10 text-tone-amber hover:bg-amber-500/20 border border-amber-500/30 transition-colors"
+                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-warning/10 text-warning hover:bg-warning/20 border border-warning/30 transition-colors"
                   >
                     <Lock className="w-3.5 h-3.5" />
                     {t('settings.security.lockNow', 'Lock Vault Now')}
@@ -312,7 +314,7 @@ export function SecurityBackupCard() {
               )}
             </div>
 
-            {/* Inactivity Auto-Lock Settings (Requested by User) */}
+            {/* Inactivity Auto-Lock Settings */}
             <div className="bg-elevated p-3 rounded-lg border border-line text-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -332,16 +334,16 @@ export function SecurityBackupCard() {
                       toast.success(e.target.checked ? t('toasts.vaultAutoLockEnabled', 'Vault Auto-Lock Enabled') : t('toasts.vaultAutoLockDisabled', 'Vault Auto-Lock Disabled'));
                     }}
                   />
-                  <div className="w-9 h-5 bg-line peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent"></div>
+                  <div className="w-9 h-5 bg-line peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-line-strong after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent"></div>
                 </label>
               </div>
 
               {/* Slider 1 to 60 minutes */}
               <div className={`space-y-1.5 transition-opacity ${vaultAutoLockEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                 <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-fg-muted">Lock after inactivity:</span>
+                  <span className="text-fg-muted">{t('settings.security.lockAfterInactivity', 'Lock after inactivity:')}</span>
                   <span className="text-accent font-mono font-semibold bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
-                    {vaultAutoLockEnabled ? `${vaultAutoLockMinutes} min` : 'Disabled'}
+                    {vaultAutoLockEnabled ? `${vaultAutoLockMinutes} ${t('settings.security.minUnit', 'min')}` : t('settings.security.disabled', 'Disabled')}
                   </span>
                 </div>
                 <input
@@ -356,10 +358,10 @@ export function SecurityBackupCard() {
                   className="w-full h-1.5 bg-line rounded-lg appearance-none cursor-pointer accent-accent"
                 />
                 <div className="flex justify-between text-[10px] text-fg-muted font-mono">
-                  <span>1 min</span>
-                  <span>15 min</span>
-                  <span>30 min</span>
-                  <span>60 min</span>
+                  <span>1 {t('settings.security.minUnit', 'min')}</span>
+                  <span>15 {t('settings.security.minUnit', 'min')}</span>
+                  <span>30 {t('settings.security.minUnit', 'min')}</span>
+                  <span>60 {t('settings.security.minUnit', 'min')}</span>
                 </div>
               </div>
             </div>
@@ -368,10 +370,10 @@ export function SecurityBackupCard() {
             <div className="bg-elevated p-3 rounded-lg border border-line text-xs space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4 text-tone-amber" />
+                  <ShieldAlert className="w-4 h-4 text-warning" />
                   <div>
-                    <h4 className="text-fg font-medium text-xs">Startup Vault Notice</h4>
-                    <p className="text-fg-muted text-[10px]">5-second notice on launch when vault is uninitialized</p>
+                    <h4 className="text-fg font-medium text-xs">{t('settings.security.startupNoticeTitle', 'Startup Vault Notice')}</h4>
+                    <p className="text-fg-muted text-[10px]">{t('settings.security.startupNoticeShortDesc', '5-second notice on launch when vault is uninitialized')}</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
@@ -384,11 +386,11 @@ export function SecurityBackupCard() {
                       toast.success(e.target.checked ? t('toasts.startupVaultNoticeEnabled', 'Startup Vault Notice Enabled') : t('toasts.startupVaultNoticeDisabled', 'Startup Vault Notice Disabled'));
                     }}
                   />
-                  <div className="w-9 h-5 bg-line peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent"></div>
+                  <div className="w-9 h-5 bg-line peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-line-strong after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent"></div>
                 </label>
               </div>
               <p className="text-fg-muted text-[11px] leading-relaxed">
-                Displays a subtle 5-second prompt on application startup if the local vault has not yet been initialized with a master passphrase.
+                {t('settings.security.startupNoticeDesc', 'Displays a subtle 5-second prompt on application startup if the local vault has not yet been initialized with a master passphrase.')}
               </p>
             </div>
 
@@ -398,7 +400,7 @@ export function SecurityBackupCard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 font-medium text-fg">
                     <KeyRound className="w-3.5 h-3.5 text-accent" />
-                    <span>Master Passphrase</span>
+                    <span>{t('settings.security.masterPassphrase', 'Master Passphrase')}</span>
                   </div>
                   <button
                     type="button"
@@ -408,21 +410,21 @@ export function SecurityBackupCard() {
                     }}
                     className="text-[11px] text-accent hover:underline"
                   >
-                    {isChangingPassphrase ? 'Cancel' : 'Change Passphrase'}
+                    {isChangingPassphrase ? t('common.cancel', 'Cancel') : t('settings.security.changePassphrase', 'Change Passphrase')}
                   </button>
                 </div>
 
                 {isChangingPassphrase && (
                   <form onSubmit={handleChangeMasterPassphrase} className="space-y-2 pt-1 border-t border-line">
                     <div>
-                      <label className="block text-[10px] text-fg-muted mb-0.5">Current Master Passphrase</label>
+                      <label className="block text-[10px] text-fg-muted mb-0.5">{t('settings.security.currentPassphraseLabel', 'Current Master Passphrase')}</label>
                       <div className="relative">
                         <input
                           type={showOldPassphrase ? 'text' : 'password'}
                           value={oldPassphrase}
                           onChange={(e) => setOldPassphrase(e.target.value)}
                           className="w-full bg-canvas border border-line rounded px-2.5 py-1 pr-8 text-xs text-fg focus:outline-none focus:border-accent"
-                          placeholder="Current passphrase"
+                          placeholder={t('settings.security.currentPassphrasePlaceholder', 'Current passphrase')}
                         />
                         <button
                           type="button"
@@ -435,14 +437,14 @@ export function SecurityBackupCard() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] text-fg-muted mb-0.5">New Master Passphrase (min 8 chars)</label>
+                      <label className="block text-[10px] text-fg-muted mb-0.5">{t('settings.security.newPassphraseLabel', 'New Master Passphrase (min 8 chars)')}</label>
                       <div className="relative">
                         <input
                           type={showNewPassphrase ? 'text' : 'password'}
                           value={newPassphrase}
                           onChange={(e) => setNewPassphrase(e.target.value)}
                           className="w-full bg-canvas border border-line rounded px-2.5 py-1 pr-8 text-xs text-fg focus:outline-none focus:border-accent"
-                          placeholder="New passphrase"
+                          placeholder={t('settings.security.newPassphrasePlaceholder', 'New passphrase')}
                         />
                         <button
                           type="button"
@@ -455,13 +457,13 @@ export function SecurityBackupCard() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] text-fg-muted mb-0.5">Confirm New Passphrase</label>
+                      <label className="block text-[10px] text-fg-muted mb-0.5">{t('settings.security.confirmNewPassphraseLabel', 'Confirm New Passphrase')}</label>
                       <input
                         type="password"
                         value={confirmNewPassphrase}
                         onChange={(e) => setConfirmNewPassphrase(e.target.value)}
                         className="w-full bg-canvas border border-line rounded px-2.5 py-1 text-xs text-fg focus:outline-none focus:border-accent"
-                        placeholder="Confirm new passphrase"
+                        placeholder={t('settings.security.confirmNewPassphrasePlaceholder', 'Confirm new passphrase')}
                       />
                     </div>
 
@@ -472,7 +474,7 @@ export function SecurityBackupCard() {
                       disabled={isUpdatingPassword}
                       className="w-full py-1.5 px-3 rounded text-xs font-semibold bg-accent hover:bg-accent-hover text-white disabled:opacity-50 transition-colors"
                     >
-                      {isUpdatingPassword ? 'Re-encrypting...' : 'Update Passphrase'}
+                      {isUpdatingPassword ? t('settings.security.reEncrypting', 'Re-encrypting...') : t('settings.security.updatePassphraseBtn', 'Update Passphrase')}
                     </button>
                   </form>
                 )}
@@ -481,10 +483,10 @@ export function SecurityBackupCard() {
               <div className="bg-elevated p-3 rounded-lg border border-line text-xs space-y-3">
                 <div className="flex items-center gap-1.5 font-medium text-fg">
                   <KeyRound className="w-3.5 h-3.5 text-accent" />
-                  <span>Set Master Passphrase</span>
+                  <span>{t('settings.security.setPassphraseTitle', 'Set Master Passphrase')}</span>
                 </div>
                 <p className="text-fg-muted text-[11px]">
-                  Initialize your master vault passphrase (minimum 8 characters) to encrypt your credentials.
+                  {t('settings.security.setPassphraseDesc', 'Initialize your master vault passphrase (minimum 8 characters) to encrypt your credentials.')}
                 </p>
                 <div className="relative">
                   <input
@@ -492,7 +494,7 @@ export function SecurityBackupCard() {
                     value={localPassphrase}
                     onChange={(e) => setLocalPassphrase(e.target.value)}
                     className="w-full bg-canvas border border-line rounded-lg px-3 py-1.5 pr-9 text-xs text-fg focus:outline-none focus:border-accent"
-                    placeholder="Enter at least 8 characters"
+                    placeholder={t('settings.security.min8CharsPlaceholder', 'Enter at least 8 characters')}
                   />
                   <button
                     type="button"
@@ -507,7 +509,7 @@ export function SecurityBackupCard() {
                   onClick={handleInitializeVault}
                   className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold bg-accent text-white hover:bg-accent-hover transition-colors"
                 >
-                  Initialize Secure Vault
+                  {t('settings.security.initializeVaultBtn', 'Initialize Secure Vault')}
                 </button>
               </div>
             )}
@@ -517,9 +519,9 @@ export function SecurityBackupCard() {
         {activeTab === 'export' && (
           <div className="space-y-4">
             <div className="bg-elevated p-3 rounded-lg border border-line text-xs">
-              <h4 className="text-fg font-semibold mb-1.5">Select Keys to Include</h4>
+              <h4 className="text-fg font-semibold mb-1.5">{t('settings.security.selectKeysExport', 'Select Keys to Include')}</h4>
               {keys.length === 0 ? (
-                <p className="text-fg-muted">No API keys available to export.</p>
+                <p className="text-fg-muted">{t('settings.security.noKeysToExport', 'No API keys available to export.')}</p>
               ) : (
                 <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
                   {Object.entries(
@@ -559,14 +561,14 @@ export function SecurityBackupCard() {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-[11px] text-fg-muted mb-1">Passphrase (Required to Decrypt/Import)</label>
+                <label className="block text-[11px] text-fg-muted mb-1">{t('settings.security.exportPassphraseLabel', 'Passphrase (Required to Decrypt/Import)')}</label>
                 <div className="relative">
                   <input
                     type={showExportPassphrase ? 'text' : 'password'}
                     value={exportPassphrase}
                     onChange={(e) => setExportPassphrase(e.target.value)}
                     className="w-full bg-canvas border border-line rounded-lg px-3 py-1.5 pr-9 text-sm text-fg focus:outline-none focus:border-accent"
-                    placeholder="Strong passphrase"
+                    placeholder={t('settings.security.strongPassphrasePlaceholder', 'Strong passphrase')}
                   />
                   <button
                     type="button"
@@ -584,7 +586,7 @@ export function SecurityBackupCard() {
                 className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors"
               >
                 <FileDown className="w-4 h-4" />
-                Export {selectedForExport.size} Keys
+                {t('settings.security.exportKeysCount', 'Export {{count}} Keys', { count: selectedForExport.size })}
               </button>
             </div>
           </div>
@@ -595,7 +597,7 @@ export function SecurityBackupCard() {
             {!importedData ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[11px] text-fg-muted mb-1">Select Backup File (.enc)</label>
+                  <label className="block text-[11px] text-fg-muted mb-1">{t('settings.security.selectBackupFileLabel', 'Select Backup File (.enc)')}</label>
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -606,14 +608,14 @@ export function SecurityBackupCard() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] text-fg-muted mb-1">Passphrase</label>
+                  <label className="block text-[11px] text-fg-muted mb-1">{t('settings.security.passphraseLabel', 'Passphrase')}</label>
                   <div className="relative">
                     <input
                       type={showImportPassphrase ? 'text' : 'password'}
                       value={importPassphrase}
                       onChange={(e) => setImportPassphrase(e.target.value)}
                       className="w-full bg-canvas border border-line rounded-lg px-3 py-1.5 pr-9 text-sm text-fg focus:outline-none focus:border-accent"
-                      placeholder="Backup passphrase"
+                      placeholder={t('settings.security.backupPassphrasePlaceholder', 'Backup passphrase')}
                     />
                     <button
                       type="button"
@@ -632,13 +634,13 @@ export function SecurityBackupCard() {
                   className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors"
                 >
                   <FileUp className="w-4 h-4" />
-                  Decrypt & Load Backup
+                  {t('settings.security.decryptLoadBtn', 'Decrypt & Load Backup')}
                 </button>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-fg font-semibold text-xs">Found {importedData.length} Keys</h4>
+                  <h4 className="text-fg font-semibold text-xs">{t('settings.security.foundKeysCount', 'Found {{count}} Keys', { count: importedData.length })}</h4>
                   <button
                     onClick={() => {
                       setImportedData(null);
@@ -646,7 +648,7 @@ export function SecurityBackupCard() {
                     }}
                     className="text-[10px] text-fg-muted hover:text-fg transition-colors"
                   >
-                    Select another file
+                    {t('settings.security.selectAnotherFile', 'Select another file')}
                   </button>
                 </div>
 
@@ -678,10 +680,10 @@ export function SecurityBackupCard() {
                         </label>
 
                         {resolution && (
-                          <div className="ml-5 p-1.5 bg-amber-500/10 border border-amber-500/25 rounded text-[11px]">
-                            <p className="text-tone-amber mb-1 flex items-center gap-1">
+                          <div className="ml-5 p-1.5 bg-warning/10 border border-warning/25 rounded text-[11px]">
+                            <p className="text-warning mb-1 flex items-center gap-1">
                               <AlertTriangle className="w-3 h-3" />
-                              Name collision detected.
+                              {t('settings.security.nameCollision', 'Name collision detected.')}
                             </p>
                             <div className="flex items-center gap-3 mb-1">
                               <label className="flex items-center gap-1 cursor-pointer text-fg-muted">
@@ -692,7 +694,7 @@ export function SecurityBackupCard() {
                                   onChange={() => setConflictResolutions(prev => ({ ...prev, [ik.id]: 'rename' }))}
                                   className="text-accent"
                                 />
-                                Rename
+                                {t('settings.security.renameOption', 'Rename')}
                               </label>
                               <label className="flex items-center gap-1 cursor-pointer text-fg-muted">
                                 <input
@@ -702,7 +704,7 @@ export function SecurityBackupCard() {
                                   onChange={() => setConflictResolutions(prev => ({ ...prev, [ik.id]: 'overwrite' }))}
                                   className="text-danger"
                                 />
-                                Overwrite
+                                {t('settings.security.overwriteOption', 'Overwrite')}
                               </label>
                             </div>
                             {resolution === 'rename' && (
@@ -711,7 +713,7 @@ export function SecurityBackupCard() {
                                 value={customNames[ik.id] || ''}
                                 onChange={(e) => setCustomNames(prev => ({ ...prev, [ik.id]: e.target.value }))}
                                 className="w-full bg-canvas border border-line rounded px-1.5 py-0.5 text-xs text-fg focus:outline-none focus:border-accent"
-                                placeholder="New name"
+                                placeholder={t('settings.security.newNamePlaceholder', 'New name')}
                               />
                             )}
                           </div>
@@ -726,9 +728,9 @@ export function SecurityBackupCard() {
                 <button
                   onClick={executeImport}
                   disabled={selectedForImport.size === 0}
-                  className="w-full py-1.5 bg-success hover:bg-[#00A844] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors"
+                  className="w-full py-1.5 bg-success hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors"
                 >
-                  Import {selectedForImport.size} Keys
+                  {t('settings.security.importKeysCount', 'Import {{count}} Keys', { count: selectedForImport.size })}
                 </button>
               </div>
             )}

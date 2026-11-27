@@ -8,21 +8,21 @@ interface AiModelStatsTableProps {
 }
 
 export const AiModelStatsTable: React.FC<AiModelStatsTableProps> = ({ summaries }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const summaryList = Object.values(summaries);
 
-  const formatNumber = (num: number) => new Intl.NumberFormat('en-US').format(num);
+  const formatNumber = (num: number) => new Intl.NumberFormat(i18n.language).format(num);
 
   const formatTime = (ts: number | null) => {
     if (!ts) return '-';
-    return new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return new Date(ts).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
   return (
     <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-xl">
       <div className="px-6 py-4 border-b border-line bg-surface">
         <h3 className="text-sm font-bold text-fg flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-emerald-400" />
+          <BarChart3 className="w-4 h-4 text-success" />
           {t('ai.settings.modelStats.title', 'Statistics by AI Model')}
         </h3>
         <p className="text-xs text-fg-muted">
@@ -61,18 +61,18 @@ export const AiModelStatsTable: React.FC<AiModelStatsTableProps> = ({ summaries 
                       <span className="text-[10px] text-fg-muted font-mono uppercase">{item.provider}</span>
                     </td>
                     <td className="py-3 px-4 font-sans">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-success/10 text-success border border-success/20 font-medium">
                         {t('common.active', 'Active')}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right font-medium text-fg">{formatNumber(item.callsCount)}</td>
                     <td className="py-3 px-4 text-right text-fg-muted">
-                      <span className="text-emerald-400">{formatNumber(item.promptTokens)}</span> /{' '}
+                      <span className="text-success">{formatNumber(item.promptTokens)}</span> /{' '}
                       <span className="text-accent">{formatNumber(item.completionTokens)}</span>
                     </td>
                     <td className="py-3 px-4 text-right text-fg">{formatNumber(avgTokensPerCall)}</td>
-                    <td className="py-3 px-4 text-right text-amber-400">{item.averageDurationMs} ms</td>
-                    <td className="py-3 px-4 text-right text-emerald-400 font-medium">
+                    <td className="py-3 px-4 text-right text-warning">{item.averageDurationMs} ms</td>
+                    <td className="py-3 px-4 text-right text-success font-medium">
                       ${item.estimatedCostUsd.toFixed(4)}
                     </td>
                     <td className="py-3 px-4 text-right text-fg-muted text-[11px] font-sans">

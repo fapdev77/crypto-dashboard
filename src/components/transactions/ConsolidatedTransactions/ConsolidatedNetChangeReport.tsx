@@ -281,7 +281,7 @@ export function ConsolidatedNetChangeReport({
           <button
             type="button"
             onClick={handleExpandAll}
-            className="text-accent hover:text-[#5287ff] transition-colors font-medium px-3 py-1.5 rounded-lg bg-line/40 hover:bg-line/70 cursor-pointer"
+            className="text-accent hover:text-accent-hover transition-colors font-medium px-3 py-1.5 rounded-lg bg-line/40 hover:bg-line/70 cursor-pointer"
           >
             {t('transactions.report.expandAll', 'Expand All')}
           </button>
@@ -381,7 +381,7 @@ export function ConsolidatedNetChangeReport({
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-fg text-base">{report.currency}</span>
                                 {report.isStable && (
-                                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-medium">
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-success/15 text-success border border-success/25 font-medium">
                                     Stable
                                   </span>
                                 )}

@@ -1,5 +1,4 @@
 import React from 'react';
-import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 
 export type PeriodOption = 'last' | 'day' | 'current_month' | 'last_month' | '3_months';
@@ -26,12 +25,11 @@ export const PeriodSegmentedControl: React.FC<Props> = ({ value, onChange }) => 
         <button
           key={period.id}
           onClick={() => onChange(period.id)}
-          className={clsx(
-            "px-4 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
             value === period.id
-              ? "bg-line text-fg shadow-sm"
-              : "text-fg-muted hover:text-fg"
-          )}
+              ? 'bg-line text-fg shadow-sm'
+              : 'text-fg-muted hover:text-fg'
+          }`}
         >
           {t(period.key, period.defaultLabel)}
         </button>

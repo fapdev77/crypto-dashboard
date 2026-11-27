@@ -32,11 +32,11 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
 
   return (
     <div className="space-y-2.5">
-      <div className="flex items-start gap-2 text-rose-300">
-        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+      <div className="flex items-start gap-2 text-danger">
+        <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <p className="font-semibold text-[11px] text-rose-300">
-            AI Execution Notice
+          <p className="font-semibold text-[11px] text-danger">
+            {t('ai.error.title', 'AI Execution Notice')}
           </p>
           <p className="text-xs text-fg leading-relaxed font-normal">
             {message}
@@ -45,33 +45,33 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
       </div>
 
       {/* Action buttons */}
-      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-rose-900/30">
+      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-danger/20">
         {onRetry && (
           <button
             onClick={onRetry}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-white bg-accent hover:bg-accent/80 rounded-lg transition cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-white bg-accent hover:bg-accent-hover rounded-lg transition cursor-pointer"
           >
             <RotateCcw className="w-3 h-3" />
-            <span>Try again</span>
+            <span>{t('ai.error.retry', 'Try again')}</span>
           </button>
         )}
 
         {onOpenRawDebug && (
           <button
             onClick={onOpenRawDebug}
-            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/50 rounded-lg transition cursor-pointer font-sans"
+            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-tone-cyan bg-tone-cyan/10 hover:bg-tone-cyan/20 border border-tone-cyan/30 rounded-lg transition cursor-pointer font-sans"
           >
-            <span>Inspect Raw Data</span>
+            <span>{t('ai.error.inspectRaw', 'Inspect Raw Data')}</span>
           </button>
         )}
 
         {onOpenSettings && (
           <button
             onClick={onOpenSettings}
-            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-fg hover:text-fg bg-elevated hover:bg-[#25262c] border border-line rounded-lg transition cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-fg hover:text-fg bg-elevated hover:bg-elevated-hover border border-line rounded-lg transition cursor-pointer"
           >
             <Settings className="w-3 h-3 text-accent" />
-            <span>AI Settings</span>
+            <span>{t('ai.error.settings', 'AI Settings')}</span>
           </button>
         )}
 
@@ -80,7 +80,7 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
             onClick={() => setShowDetails((prev) => !prev)}
             className="flex items-center gap-1 px-2 py-1 text-[11px] text-fg-muted hover:text-fg hover:bg-elevated rounded-lg transition cursor-pointer ml-auto"
           >
-            <span>Technical log</span>
+            <span>{t('ai.error.technicalLog', 'Technical log')}</span>
             {showDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
         )}
@@ -89,17 +89,17 @@ export const AiErrorMessageCard: React.FC<AiErrorMessageCardProps> = ({
       {/* Collapsible Technical Details for debugging */}
       {showDetails && technicalDetails && (
         <div className="mt-2 p-2.5 bg-canvas border border-line rounded-lg text-[10px] font-mono text-fg-muted space-y-1.5 animate-fadeIn">
-          <div className="flex items-center justify-between text-fg-muted pb-1 border-b border-[#202227]">
-            <span>Raw diagnostic error:</span>
+          <div className="flex items-center justify-between text-fg-muted pb-1 border-b border-line">
+            <span>{t('ai.error.rawDiagnostic', 'Raw diagnostic error:')}</span>
             <button
               onClick={handleCopyDetails}
               className="flex items-center gap-1 text-[10px] text-accent hover:underline cursor-pointer"
             >
-              {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-              <span>{copied ? 'Copiado' : 'Copiar log'}</span>
+              {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
+              <span>{copied ? t('common.copied', 'Copied!') : t('ai.error.copyLog', 'Copy log')}</span>
             </button>
           </div>
-          <div className="max-h-32 overflow-y-auto whitespace-pre-wrap break-all text-rose-300/80 select-text">
+          <div className="max-h-32 overflow-y-auto whitespace-pre-wrap break-all text-danger select-text">
             {technicalDetails}
           </div>
         </div>

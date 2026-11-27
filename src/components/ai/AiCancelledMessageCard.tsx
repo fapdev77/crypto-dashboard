@@ -18,14 +18,14 @@ export const AiCancelledMessageCard: React.FC<AiCancelledMessageCardProps> = ({
 
   return (
     <div className="space-y-2.5">
-      <div className="flex items-start gap-2.5 text-amber-300">
-        <div className="w-5 h-5 rounded bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5 text-amber-400">
+      <div className="flex items-start gap-2.5 text-warning">
+        <div className="w-5 h-5 rounded bg-warning/15 border border-warning/30 flex items-center justify-center shrink-0 mt-0.5 text-warning">
           <Square className="w-2.5 h-2.5 fill-current" />
         </div>
         <div className="space-y-1">
-          <p className="font-semibold text-[11px] text-amber-300 flex items-center gap-1.5">
+          <p className="font-semibold text-[11px] text-warning flex items-center gap-1.5">
             <span>{t('ai.cancelled.title', 'Analysis Interrupted')}</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400/90 font-mono font-normal border border-amber-500/20">
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-warning/10 text-warning font-mono font-normal border border-warning/20">
               {t('ai.cancelled.badge', 'Aborted')}
             </span>
           </p>
@@ -36,7 +36,7 @@ export const AiCancelledMessageCard: React.FC<AiCancelledMessageCardProps> = ({
       </div>
 
       {/* Action buttons */}
-      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-amber-500/20">
+      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-warning/20">
         {onRetry && (
           <button
             type="button"

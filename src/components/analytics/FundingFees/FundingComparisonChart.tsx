@@ -13,7 +13,6 @@ import {
   LabelList
 } from 'recharts';
 import { CoinIcon } from '../../ui/CoinIcon';
-import clsx from 'clsx';
 import { useFundingStore } from '../../../store/fundingStore';
 import { Star } from 'lucide-react';
 
@@ -26,6 +25,7 @@ export interface ChartDataPoint {
   value: number;
   type: string;
   color: string;
+  fillOpacity?: number;
 }
 
 interface Props {
@@ -66,20 +66,20 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
               }}
               className="text-fg-muted hover:text-tone-yellow transition-colors cursor-pointer"
             >
-              <Star className={clsx("w-3.5 h-3.5", isFav && "fill-tone-yellow text-tone-yellow")} />
+              <Star className={`w-3.5 h-3.5${isFav ? ' fill-tone-yellow text-tone-yellow' : ''}`} />
             </button>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[10px] px-1.5 py-0.5 rounded border border-line bg-line/50 text-fg-muted uppercase">
               {data.type.replace('-', ' ')}
             </span>
-            <span className={clsx(
-              "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-medium capitalize shrink-0",
-              data.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
-              data.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
-              data.exchange === 'okx' ? "bg-fg/10 text-fg border-fg/20" :
-              "bg-line text-fg-muted border-line"
-            )}>
+            <span className={[
+              'flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-medium capitalize shrink-0',
+              data.exchange === 'bitget' ? 'bg-tone-cyan/10 text-tone-cyan border-tone-cyan/25' :
+              data.exchange === 'bybit' ? 'bg-tone-orange/10 text-tone-orange border-tone-orange/25' :
+              data.exchange === 'okx' ? 'bg-fg/10 text-fg border-fg/20' :
+              'bg-line text-fg-muted border-line'
+            ].join(' ')}>
               {data.exchange}
             </span>
           </div>
@@ -87,10 +87,7 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
         
         <div className="flex justify-between items-center gap-4">
           <span className="text-sm text-fg-muted">{periodLabel}</span>
-          <span className={clsx(
-            "font-mono font-bold",
-            isPositive ? "text-success" : "text-danger"
-          )}>
+          <span className={`font-mono font-bold ${isPositive ? 'text-success' : 'text-danger'}`}>
             {data.value > 0 ? '+' : ''}{formatPercent(data.value)}
           </span>
         </div>
@@ -178,16 +175,16 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
                           }}
                           className="text-fg-muted hover:text-tone-yellow transition-colors cursor-pointer shrink-0"
                         >
-                          <Star className={clsx("w-3.5 h-3.5", isFav && "fill-tone-yellow text-tone-yellow")} />
+                          <Star className={`w-3.5 h-3.5${isFav ? ' fill-tone-yellow text-tone-yellow' : ''}`} />
                         </button>
                         <span className="text-xs font-medium text-fg-muted truncate">{item.symbol}</span>
-                        <span className={clsx(
-                          "flex items-center px-1 py-[1px] rounded border text-[8px] font-medium capitalize shrink-0",
-                          item.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
-                          item.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
-                          item.exchange === 'okx' ? "bg-fg/10 text-fg border-fg/20" :
-                          "bg-line text-fg-muted border-line"
-                        )}>
+                        <span className={[
+                          'flex items-center px-1 py-[1px] rounded border text-[8px] font-medium capitalize shrink-0',
+                          item.exchange === 'bitget' ? 'bg-tone-cyan/10 text-tone-cyan border-tone-cyan/25' :
+                          item.exchange === 'bybit' ? 'bg-tone-orange/10 text-tone-orange border-tone-orange/25' :
+                          item.exchange === 'okx' ? 'bg-fg/10 text-fg border-fg/20' :
+                          'bg-line text-fg-muted border-line'
+                        ].join(' ')}>
                           {item.exchange}
                         </span>
                       </div>
@@ -206,6 +203,7 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
                 <Cell 
                   key={`cell-${index}`} 
                   fill={entry.color} 
+                  fillOpacity={entry.fillOpacity ?? 1}
                 />
               ))}
               <LabelList dataKey="value" content={<CustomizedLabel />} />

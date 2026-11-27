@@ -669,8 +669,12 @@ export function computePortfolioPerformance(params: {
   filters: PortfolioPerformanceFilters;
   tokenRates: Record<string, number>;
   fiatRates: FiatRatesLike;
+  locale?: string;
 }): PortfolioPerformanceData {
-  const { scopedUpToEnd, periodEntries, filters, tokenRates, fiatRates } = params;
+  const { scopedUpToEnd, periodEntries, filters, tokenRates, fiatRates, locale } = params;
+  const chartDateLocale = locale || 'en-US';
+  const summaryDateLocale = locale || 'en-GB';
+  const numLocale = locale || 'en-US';
 
   if (periodEntries.length === 0) {
     return defaultEmptyPerformanceData;
@@ -1023,7 +1027,7 @@ export function computePortfolioPerformance(params: {
 
     evolutionSeries.push({
       timestamp: e.transactionTime,
-      dateStr: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
+      dateStr: d.toLocaleDateString(chartDateLocale, { month: 'short', day: 'numeric', timeZone: 'UTC' }),
       tradingGain: Number(runningTrading.toFixed(decimals)),
       fundingGain: Number(runningFunding.toFixed(decimals)),
       otherOpGain: Number(runningOtherOp.toFixed(decimals)),
@@ -1064,8 +1068,8 @@ export function computePortfolioPerformance(params: {
     depositsInPeriod: depositsInPeriod.toFixed(decimals),
     withdrawalsInPeriod: withdrawalsInPeriod.toFixed(decimals),
     durationDays,
-    earliestDate: new Date(earliestTime).toLocaleDateString('en-GB', { timeZone: 'UTC' }),
-    latestDate: new Date(latestTime).toLocaleDateString('en-GB', { timeZone: 'UTC' }),
+    earliestDate: new Date(earliestTime).toLocaleDateString(summaryDateLocale, { timeZone: 'UTC' }),
+    latestDate: new Date(latestTime).toLocaleDateString(summaryDateLocale, { timeZone: 'UTC' }),
   };
 
   // ── 4. Operations & Fee Efficiency ──
@@ -1233,7 +1237,7 @@ export function computePortfolioPerformance(params: {
         : `${sign}${Math.abs(delta).toFixed(decimals)} ${denom}`;
       return {
         milestonePrice: numPrice,
-        formattedMilestone: `$${numPrice.toLocaleString('en-US')}`,
+        formattedMilestone: `$${numPrice.toLocaleString(numLocale)}`,
         passages: item.count,
         firstPassageEquity: item.firstEquity,
         lastPassageEquity: item.lastEquity,

@@ -654,7 +654,7 @@ export function FilterBar({
                     : statusSelect.value.toUpperCase().includes('CANCEL') || statusSelect.value.toUpperCase().includes('FAIL')
                     ? 'bg-danger'
                     : statusSelect.value.toUpperCase().includes('PART') || statusSelect.value.toUpperCase().includes('PEND')
-                    ? 'bg-[#FFB300]'
+                    ? 'bg-warning'
                     : 'bg-accent'
                 }`} />
                 <span className="truncate">
@@ -723,7 +723,7 @@ export function FilterBar({
                             : val.toUpperCase().includes('CANCEL') || val.toUpperCase().includes('FAIL')
                             ? 'bg-danger'
                             : val.toUpperCase().includes('PART') || val.toUpperCase().includes('PEND')
-                            ? 'bg-[#FFB300]'
+                            ? 'bg-warning'
                             : 'bg-accent'
                         }`} />
                         <span className="truncate">{label}</span>

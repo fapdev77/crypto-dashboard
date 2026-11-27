@@ -81,9 +81,9 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
         id: 'code-copy',
         duration: 1500,
         style: {
-          background: '#151619',
-          color: '#ffffff',
-          border: '1px solid #2a2b30',
+          background: 'var(--surface)',
+          color: 'var(--fg)',
+          border: '1px solid var(--line)',
           fontSize: '12px',
         },
       });
@@ -105,12 +105,12 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
   };
 
   return (
-    <div className="my-2.5 rounded-xl border border-line bg-[#0c0d10] overflow-hidden text-xs shadow-md">
+    <div className="my-2.5 rounded-xl border border-line bg-surface overflow-hidden text-xs shadow-md">
       <div className="flex items-center justify-between px-3 py-1.5 bg-surface border-b border-line text-[11px] text-fg-muted">
         <div className="flex items-center gap-1.5 font-mono">
           <span className="w-2 h-2 rounded-full bg-accent/70" />
           <span className="font-mono uppercase tracking-wider text-[10px] text-fg font-semibold">
-            {language || 'code'}
+            {language || t('ai.markdown.codeLabel', 'code')}
           </span>
         </div>
         <button
@@ -121,18 +121,18 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ language, code }) => {
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400 text-[10px] font-medium">Copied</span>
+              <Check className="w-3.5 h-3.5 text-success" />
+              <span className="text-success text-[10px] font-medium">{t('common.copied', 'Copied!')}</span>
             </>
           ) : (
             <>
               <Copy className="w-3.5 h-3.5" />
-              <span className="text-[10px]">Copy</span>
+              <span className="text-[10px]">{t('common.copy', 'Copy')}</span>
             </>
           )}
         </button>
       </div>
-      <div className="p-3 overflow-x-auto font-mono text-[11px] leading-relaxed text-fg bg-[#0a0b0d]">
+      <div className="p-3 overflow-x-auto font-mono text-[11px] leading-relaxed text-fg bg-canvas">
         <pre className="m-0 p-0 font-mono whitespace-pre font-normal">
           <code>{code}</code>
         </pre>
@@ -152,22 +152,22 @@ const ImageLightboxModal: React.FC<ImageModalProps> = ({ src, alt, onClose }) =>
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="relative max-w-4xl max-h-[90vh] bg-canvas border border-line rounded-2xl overflow-hidden shadow-2xl flex flex-col">
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#17181f] border-b border-line text-xs text-fg">
-          <span className="truncate max-w-md font-medium text-fg">{alt || 'Image Preview'}</span>
+        <div className="flex items-center justify-between px-4 py-2.5 bg-surface border-b border-line text-xs text-fg">
+          <span className="truncate max-w-md font-medium text-fg">{alt || t('ai.markdown.imagePreview', 'Image Preview')}</span>
           <div className="flex items-center gap-2">
             <a
               href={src}
               download
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg hover:bg-[#252733] text-fg-muted hover:text-fg transition cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-elevated-hover text-fg-muted hover:text-fg transition cursor-pointer"
               title={t('ai.markdown.tooltips.downloadImage', 'Download Image')}
             >
               <Download className="w-4 h-4" />
             </a>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-rose-500/20 text-fg-muted hover:text-rose-400 transition cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-danger/15 text-fg-muted hover:text-danger transition cursor-pointer"
               title={t('ai.markdown.tooltips.closePreview', 'Close Preview')}
             >
               <X className="w-4 h-4" />
@@ -175,7 +175,7 @@ const ImageLightboxModal: React.FC<ImageModalProps> = ({ src, alt, onClose }) =>
           </div>
         </div>
         <div className="p-2 overflow-auto flex items-center justify-center bg-black/40">
-          <img src={src} alt={alt || 'Image'} className="max-w-full max-h-[75vh] object-contain rounded-lg" />
+          <img src={src} alt={alt || t('ai.markdown.imageAlt', 'Image')} className="max-w-full max-h-[75vh] object-contain rounded-lg" />
         </div>
       </div>
     </div>
@@ -209,7 +209,7 @@ export const AiMarkdownRenderer: React.FC<AiMarkdownRendererProps> = ({ content,
               if (!match && !isMultiline) {
                 return (
                   <code
-                    className="bg-elevated text-cyan-300 px-1.5 py-0.5 rounded text-[11px] font-mono border border-line font-normal"
+                    className="bg-elevated text-tone-cyan px-1.5 py-0.5 rounded text-[11px] font-mono border border-line font-normal"
                     {...props}
                   >
                     {children}
@@ -227,7 +227,7 @@ export const AiMarkdownRenderer: React.FC<AiMarkdownRendererProps> = ({ content,
                 <div className="my-2.5 inline-block group relative rounded-xl overflow-hidden border border-line bg-canvas">
                   <img
                     src={src}
-                    alt={alt || 'Chart or illustration'}
+                    alt={alt || t('ai.markdown.chartAlt', 'Chart or illustration')}
                     className="max-h-72 w-auto object-contain rounded-lg cursor-pointer transition group-hover:opacity-90"
                     onClick={() => setActiveImage({ src, alt })}
                     loading="lazy"
@@ -241,7 +241,7 @@ export const AiMarkdownRenderer: React.FC<AiMarkdownRendererProps> = ({ content,
                     <Maximize2 className="w-3.5 h-3.5" />
                   </button>
                   {alt && (
-                    <div className="px-2.5 py-1 text-[10px] text-fg-muted bg-[#16171d] border-t border-line truncate">
+                    <div className="px-2.5 py-1 text-[10px] text-fg-muted bg-surface border-t border-line truncate">
                       {alt}
                     </div>
                   )}
@@ -264,7 +264,7 @@ export const AiMarkdownRenderer: React.FC<AiMarkdownRendererProps> = ({ content,
               </h1>
             ),
             h2: ({ children }) => (
-              <h2 className="text-xs font-bold text-fg mt-2.5 mb-1 text-cyan-200">
+              <h2 className="text-xs font-bold mt-2.5 mb-1 text-accent">
                 {children}
               </h2>
             ),
@@ -333,7 +333,7 @@ export const AiMarkdownRenderer: React.FC<AiMarkdownRendererProps> = ({ content,
               </thead>
             ),
             tbody: ({ children }) => (
-              <tbody className="divide-y divide-line/50 bg-[#0e0f12]">{children}</tbody>
+              <tbody className="divide-y divide-line/50 bg-canvas">{children}</tbody>
             ),
             tr: ({ children }) => (
               <tr className="hover:bg-surface/60 transition-colors">{children}</tr>

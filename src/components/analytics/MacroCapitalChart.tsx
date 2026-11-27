@@ -40,8 +40,8 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
     const isLeft = x < cx;
     const textAnchor = isLeft ? 'end' : 'start';
 
-    const valColorExchange = palette[name.toLowerCase()] || (isLight ? '#101420' : '#ffffff');
-    const valColorValue = isLight ? '#475569' : '#d8c9c9c0';
+    const valColorExchange = palette[name.toLowerCase()] || 'var(--fg)';
+    const valColorValue = 'var(--fg-muted)';
 
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -51,7 +51,7 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
     return (
       <g>
         {percent > 0.04 && (
-          <text x={inX} y={inY} fill={isLight ? '#ffffff' : '#151619'} textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight="bold">
+          <text x={inX} y={inY} fill="var(--surface)" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight="bold">
             {(percent * 100).toFixed(0)}%
           </text>
         )}
@@ -85,20 +85,20 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
               stroke="none"
               isAnimationActive={false}
               label={renderCustomizedLabel}
-              labelLine={{ stroke: isLight ? '#c2c7d1' : '#4b4d54', strokeWidth: 1 }}
+              labelLine={{ stroke: 'var(--line-strong)', strokeWidth: 1 }}
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={palette[entry.name.toLowerCase()] || '#8E9299'} />
+                <Cell key={`cell-${index}`} fill={palette[entry.name.toLowerCase()] || 'var(--fg-muted)'} />
               ))}
               <Label
                 content={({ viewBox }) => {
                   const { cx, cy } = viewBox as any;
                   return (
                     <g>
-                      <text x={cx} y={cy - 10} fill={isLight ? '#5a6270' : '#8E9299'} fontSize={12} textAnchor="middle" dominantBaseline="central">
+                      <text x={cx} y={cy - 10} fill="var(--fg-muted)" fontSize={12} textAnchor="middle" dominantBaseline="central">
                         {t('dashboardExtra.total', 'Total:')}
                       </text>
-                      <text x={cx} y={cy + 12} fill={isLight ? '#101420' : '#ffffffc0'} fontSize={20} fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="central">
+                      <text x={cx} y={cy + 12} fill="var(--fg)" fontSize={20} fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="central">
                         {formatCurrency(totalValue, 'compact', 2)}
                       </text>
                     </g>
@@ -108,13 +108,13 @@ export function MacroCapitalChart({ data }: MacroCapitalChartProps) {
             </Pie>
             <RechartsTooltip
               contentStyle={{
-                backgroundColor: isLight ? '#ffffff' : '#1a1b1e',
-                borderColor: isLight ? '#d9dce3' : '#2a2b30',
+                backgroundColor: 'var(--elevated)',
+                borderColor: 'var(--line)',
                 borderRadius: '8px',
                 padding: '8px 12px',
                 boxShadow: isLight ? '0 10px 25px -5px rgba(0, 0, 0, 0.1)' : undefined
               }}
-              itemStyle={{ color: isLight ? '#101420' : '#fff', fontWeight: 'bold' }}
+              itemStyle={{ color: 'var(--fg)', fontWeight: 'bold' }}
               formatter={(value: any) => formatCurrency(Number(value ?? 0), 'usd')}
               labelStyle={{ display: 'none' }}
               isAnimationActive={false}

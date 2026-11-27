@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, ChevronDown, Search, X } from 'lucide-react';
-import clsx from 'clsx';
 import { CoinIcon } from '../../ui/CoinIcon';
 import { ExchangeIcon } from '../../ui/ExchangeIcon';
 import { ExchangeName } from '../../../types';
@@ -86,10 +85,9 @@ export const SymbolMultiSelect: React.FC<Props> = ({
               <CoinIcon symbol={sym.coin} className="w-3.5 h-3.5 shrink-0" />
               <ExchangeIcon exchange={sym.exchange as ExchangeName} className="w-3 h-3 shrink-0" />
               <span className="truncate">{sym.symbol}</span>
-              <span className={clsx(
-                "text-[10px] px-1 py-0.2 rounded font-mono shrink-0", 
-                sym.type === 'COIN-M' ? "bg-purple-500/20 text-tone-purple border border-purple-500/30" : "text-fg-muted"
-              )}>
+              <span className={`text-[10px] px-1 py-0.2 rounded font-mono shrink-0 ${
+                sym.type === 'COIN-M' ? 'bg-tone-purple/20 text-tone-purple border border-tone-purple/30' : 'text-fg-muted'
+              }`}>
                 {sym.type === 'USDT-M' ? 'U' : 'C'}
               </span>
               <button 
@@ -131,13 +129,12 @@ export const SymbolMultiSelect: React.FC<Props> = ({
         </div>
         
         <div className="flex items-center gap-3 pr-2 ml-auto shrink-0">
-          <span className={clsx(
-            "text-xs font-medium",
-            selectedSymbols.length >= maxSelections ? "text-danger" : "text-fg-muted"
-          )}>
+          <span className={`text-xs font-medium ${
+            selectedSymbols.length >= maxSelections ? 'text-danger' : 'text-fg-muted'
+          }`}>
             {selectedSymbols.length}/{maxSelections}
           </span>
-          <ChevronDown className={clsx("w-4 h-4 text-fg-muted transition-transform", isOpen && "rotate-180")} />
+          <ChevronDown className={`w-4 h-4 text-fg-muted transition-transform${isOpen ? ' rotate-180' : ''}`} />
         </div>
       </div>
 
@@ -158,23 +155,21 @@ export const SymbolMultiSelect: React.FC<Props> = ({
                     key={sym.id}
                     onClick={() => !isDisabled && toggleSymbol(sym.id)}
                     disabled={isDisabled}
-                    className={clsx(
-                      "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
-                      isDisabled && "opacity-50 cursor-not-allowed",
-                      !isDisabled && "hover:bg-elevated/80",
-                      isSelected ? "text-fg" : "text-fg-muted"
-                    )}
+                    className={[
+                      'w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors',
+                      isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-elevated/80',
+                      isSelected ? 'text-fg' : 'text-fg-muted'
+                    ].join(' ')}
                   >
                     <div className="flex items-center gap-2">
                       <CoinIcon symbol={sym.coin} className="w-4 h-4 shrink-0" />
                       <ExchangeIcon exchange={sym.exchange as ExchangeName} className="w-4 h-4 shrink-0" />
                       <span className="font-medium truncate">{sym.symbol}</span>
-                      <span className={clsx(
-                        "text-[10px] px-1.5 py-0.5 rounded border shrink-0 font-medium",
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border shrink-0 font-medium ${
                         sym.type === 'COIN-M'
-                          ? "bg-purple-500/15 text-tone-purple border-purple-500/30"
-                          : "bg-line/50 text-fg-muted border-line"
-                      )}>
+                          ? 'bg-tone-purple/15 text-tone-purple border-tone-purple/30'
+                          : 'bg-line/50 text-fg-muted border-line'
+                      }`}>
                         {sym.type}
                       </span>
                     </div>
