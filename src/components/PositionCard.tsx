@@ -1,17 +1,22 @@
 import React from 'react';
 import { UnifiedPosition } from '../types';
-import { formatValue, formatPrice } from '../utils/formatters';
+import { formatValue } from '../utils/formatters';
 import { CoinIcon } from './ui/CoinIcon';
 import { ExchangeIcon } from './ui/ExchangeIcon';
 import { AssetClassifierAggregator } from '../services/AssetClassifierAggregator';
 import { useFormatCurrency } from '../hooks/useFormatCurrency';
 import { usePrivacy } from '../context/PrivacyContext';
 import { AppTooltip } from './ui/Tooltip';
-import { getInverseUsdValues, getOpenPositionSizeAndValue, getInverseShortUsdEntryValue } from '../utils/inverseUtils';
+import { getInverseUsdValues, getOpenPositionSizeAndValue } from '../utils/inverseUtils';
+import { getHedgePositionLevels } from '../utils/hedgeUtils';
+import { HedgeExposureBar } from './HedgePro/HedgeExposureBar';
+import { usePositionsStore } from '../store/positionsStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { useBalancesStore } from '../store/balancesStore';
 import { useApiKeysStore } from '../store/apiKeysStore';
 import { AccountTypeBadge } from './ui/AccountTypeBadge';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PositionCardProps {
   pos: UnifiedPosition;
@@ -19,21 +24,26 @@ interface PositionCardProps {
   onToggle: () => void;
 }
 
+/** Detailed position card: every metric plus the expandable detail grid. */
 export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
+  const { t } = useTranslation();
   const balances = useBalancesStore(state => state.balances);
+  const hedgeExposedMode = useSettingsStore(state => state.hedgeExposedMode);
+  const fiatCurrency = useSettingsStore(state => state.fiatCurrency) || 'USD';
+  const setHedgeExposedMode = useSettingsStore(state => state.setHedgeExposedMode);
   const keys = useApiKeysStore(state => state.keys);
   const formatCurrency = useFormatCurrency();
   const { isPrivateMode } = usePrivacy();
 
   const isLong = pos.side === 'long';
   const isShort = pos.side === 'short';
-  const sideColor = isLong ? 'text-[#00C853]' : isShort ? 'text-[#FF4444]' : 'text-gray-400';
+  const sideColor = isLong ? 'text-success' : isShort ? 'text-danger' : 'text-fg-muted';
   const sideLabel = isLong ? 'Long' : isShort ? 'Short' : 'Net';
-  const marginModeLabel = pos.marginMode === 'isolated' ? 'Isolated' : 'Cross';
+  const marginModeLabel = pos.marginMode === 'isolated' ? t('positions.isolated', 'Isolated') : t('positions.cross', 'Cross');
 
-  const uplColor = pos.unrealizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
-  const roeColor = (pos.roe || 0) >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
-  const realizedPnlColor = pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]';
+  const uplColor = pos.unrealizedPnl >= 0 ? 'text-success' : 'text-danger';
+  const roeColor = (pos.roe || 0) >= 0 ? 'text-success' : 'text-danger';
+  const realizedPnlColor = pos.realizedPnl >= 0 ? 'text-success' : 'text-danger';
 
   const fundingFee = pos.accumulatedFunding ? parseFloat(pos.accumulatedFunding) : 0;
   const tradingFee = pos.accumulatedTradingFee ? parseFloat(pos.accumulatedTradingFee) : 0;
@@ -49,49 +59,34 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const isFiatPair = pos.symbol.toUpperCase().includes('USD') || pos.symbol.toUpperCase().includes('EUR') || pos.symbol.toUpperCase().includes('BRL');
   const isFiatCcy = posCcy.toUpperCase().includes('USD') || posCcy.toUpperCase() === 'EUR' || posCcy.toUpperCase() === 'BRL';
   const formatCcy = (v: number | undefined | null) => formatCurrency(v, 'crypto', isFiatCcy ? 2 : 8);
+  // Prices are quoted in the contract currency; show them in the active display currency.
+  const formatPrice = (v: number | undefined | null, fiatPair: boolean = isFiatPair) =>
+    formatCurrency(v, 'priceFiat', fiatPair);
+
+  // Position amounts are reported in the position currency: USDT/USDC for linear contracts,
+  // the base coin for inverse ones.
+  const nativeIsUsdPegged = /^(USD|USDT|USDC|BUSD|FDUSD|TUSD|USDE|USDD|PYUSD|USDP|GUSD)$/i.test(posCcy);
+  /**
+   * Fiat equivalent of a position amount in the active display currency (e.g. "R$ 1.234,56").
+   * Coin-margined amounts are converted through the mark price first; USD-pegged ones are 1:1.
+   * Returns null when there is nothing to add (USD already active) or no price to convert with.
+   */
+  const fiatEquivalent = (value: number | undefined | null, signed = false): string | null => {
+    if (!value) return null;
+    if (!nativeIsUsdPegged && !pos.markPrice) return null;
+    if (nativeIsUsdPegged && fiatCurrency === 'USD') return null;
+    const usdValue = nativeIsUsdPegged ? value : value * (pos.markPrice || 0);
+    const formatted = formatCurrency(Math.abs(usdValue), 'usd', 2);
+    return signed ? `${value > 0 ? '+' : '-'}${formatted}` : formatted;
+  };
+  const marginFiat = fiatEquivalent(pos.margin);
+  const unrealizedFiat = fiatEquivalent(pos.unrealizedPnl, true);
+  const maintMarginFiat = fiatEquivalent(pos.maintenanceMargin);
 
   const category = AssetClassifierAggregator.getGlobalCategorySync(pos.symbol);
 
-  // Inverse Protection / Exposure logic
-  const matchingBalance = Object.values(balances).find(
-    b => b.connectionId === pos.connectionId && b.ccy.toUpperCase() === posCcy.toUpperCase()
-  );
-  const totalAssetBal = matchingBalance ? matchingBalance.amount : 0;
-  const markPrice = pos.markPrice || 0;
-  const assetBalUsd = totalAssetBal * markPrice;
-  const openPosSize = markPrice > 0 ? (sizeValUsd / markPrice) : Math.abs(pos.size);
-
-  let protectedPct = 0;
-  let exposedPct = 100;
-  let protectedAmount = 0;
-  let exposedAmount = totalAssetBal;
-  let protectedUsd = 0;
-  let exposedUsd = assetBalUsd;
-
-  if (pos.instrumentType === 'INVERSE' && totalAssetBal > 0) {
-    if (isShort) {
-      const usdValAtEntry = getInverseShortUsdEntryValue(pos);
-      protectedUsd = Math.min(usdValAtEntry, assetBalUsd > 0 ? assetBalUsd : usdValAtEntry);
-      exposedUsd = Math.max(0, assetBalUsd - usdValAtEntry);
-
-      protectedPct = assetBalUsd > 0 ? (protectedUsd / assetBalUsd) * 100 : 0;
-      exposedPct = assetBalUsd > 0 ? (exposedUsd / assetBalUsd) * 100 : 0;
-
-      protectedAmount = markPrice > 0 ? protectedUsd / markPrice : 0;
-      exposedAmount = markPrice > 0 ? exposedUsd / markPrice : Math.max(0, totalAssetBal - protectedAmount);
-    } else {
-      // Long Inverse position
-      const longSizeUsd = openPosSize * markPrice;
-      exposedUsd = assetBalUsd + longSizeUsd;
-      protectedUsd = 0;
-
-      protectedPct = 0;
-      exposedPct = assetBalUsd > 0 ? (exposedUsd / assetBalUsd) * 100 : 100;
-
-      protectedAmount = 0;
-      exposedAmount = markPrice > 0 ? exposedUsd / markPrice : (totalAssetBal + openPosSize);
-    }
-  }
+  // Inverse Protection / Exposure logic via centralized hedgeUtils with active mode
+  const hedgeLevels = getHedgePositionLevels(pos, Object.values(balances), hedgeExposedMode);
 
   const posTypeStr = pos.instrumentType === 'INVERSE' ? 'CM Perpetual Inverse' :
     (pos.instrumentType && pos.instrumentType !== 'PERP') ?
@@ -100,15 +95,38 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
   const posTitle = `${pos.symbol} ${posTypeStr}`;
   const baseCoinClean = pos.baseCoin || pos.symbol.replace(/USDT|USDC|USD|EUR|BUSD|BTC$/i, '');
 
+  const isTpPartial = pos.tpMode === 'partial';
+  const isSlPartial = pos.slMode === 'partial';
+  const entireTp = (pos.tp && !isTpPartial) ? pos.tp : undefined;
+  const entireSl = (pos.sl && !isSlPartial) ? pos.sl : undefined;
+  const partialTp = (pos.tp && isTpPartial) ? pos.tp : undefined;
+  const partialSl = (pos.sl && isSlPartial) ? pos.sl : undefined;
+  const hasEntireTpsl = !!(entireTp || entireSl);
+  const hasPartialTpsl = !!(partialTp || partialSl);
+
+  const handleNavigateToHedgePro = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const targetCoin = (pos.baseCoin || baseCoinClean).toUpperCase();
+    const targetId = `hedge-row-${pos.connectionId}:${targetCoin}`;
+    window.dispatchEvent(
+      new CustomEvent('navigate-to-tab', {
+        detail: {
+          tab: 'analytics-hedge-pro',
+          targetId: targetId,
+        },
+      })
+    );
+  };
+
   const entryPriceTooltipProps = {
     side: "top" as const,
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[250px]">
-        <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Entry Price
+        <span className="text-[13px] font-medium text-fg tracking-wide font-sans">
+          {t('positions.entryPrice', 'Entry Price')}
         </span>
-        <p className="text-[12px] text-[#8E9299] leading-snug">
-          Current position average price.
+        <p className="text-[12px] text-fg-muted leading-snug">
+          {t('positions.entryPriceTooltip', 'Current position average price.')}
         </p>
       </div>
     )
@@ -118,11 +136,11 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     side: "top" as const,
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
-        <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Mark Price
+        <span className="text-[13px] font-medium text-fg tracking-wide font-sans">
+          {t('positions.markPrice', 'Mark Price')}
         </span>
-        <p className="text-[12px] text-[#8E9299] leading-snug">
-          The mark price is determined by the real-time index price and the upcoming funding rate, reflecting the current fair price of the futures. The mark price is used to calculate the unrealized PnL of the position and trigger liquidations.
+        <p className="text-[12px] text-fg-muted leading-snug">
+          {t('positions.markPriceTooltip', 'The mark price is determined by the real-time index price and the upcoming funding rate, reflecting the current fair price of the futures. The mark price is used to calculate the unrealized PnL of the position and trigger liquidations.')}
         </p>
       </div>
     )
@@ -132,11 +150,11 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     side: "top" as const,
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
-        <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Unrealized PnL
+        <span className="text-[13px] font-medium text-fg tracking-wide font-sans">
+          {t('positions.unrealizedPnl', 'Unrealized PnL')}
         </span>
-        <p className="text-[12px] text-[#8E9299] leading-snug">
-          Unrealized PnL calculation.
+        <p className="text-[12px] text-fg-muted leading-snug">
+          {t('positions.unrealizedPnl', 'Unrealized PnL')}
         </p>
       </div>
     )
@@ -146,11 +164,11 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     side: "top" as const,
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
-        <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Est. Liq. Price
+        <span className="text-[13px] font-medium text-fg tracking-wide font-sans">
+          {t('positions.liqPrice', 'Est. Liq. Price')}
         </span>
-        <p className="text-[12px] text-[#8E9299] leading-snug">
-          The estimated price at which an open position will be liquidated. This price is for reference only. The actual liquidation price is determined when your maintenance margin ratio drops to 100% or lower and your position is liquidated or reduced.
+        <p className="text-[12px] text-fg-muted leading-snug">
+          {t('positions.liqPriceTooltip', 'The estimated price at which an open position will be liquidated. This price is for reference only. The actual liquidation price is determined when your maintenance margin ratio drops to 100% or lower and your position is liquidated or reduced.')}
         </p>
       </div>
     )
@@ -160,11 +178,11 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     side: "top" as const,
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
-        <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          Margin
+        <span className="text-[13px] font-medium text-fg tracking-wide font-sans">
+          {t('positions.margin', 'Margin')}
         </span>
-        <p className="text-[12px] text-[#8E9299] leading-snug">
-          The margin allocated to your open position.
+        <p className="text-[12px] text-fg-muted leading-snug">
+          {t('positions.margin', 'Margin')}
         </p>
       </div>
     )
@@ -174,13 +192,13 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     side: "top" as const,
     description: (
       <div className="flex flex-col gap-1 w-full max-w-[280px]">
-        <span className="text-[13px] font-medium text-white tracking-wide font-sans">
-          {pos.exchange === 'okx' ? 'Maintenance Margin Ratio (MMR)' : 'Maintenance Margin'}
+        <span className="text-[13px] font-medium text-fg tracking-wide font-sans">
+          {pos.exchange === 'okx' ? 'Maintenance Margin Ratio (MMR)' : t('positions.maintMargin', 'Maintenance Margin')}
         </span>
-        <p className="text-[12px] text-[#8E9299] leading-snug">
+        <p className="text-[12px] text-fg-muted leading-snug">
           {pos.exchange === 'okx'
             ? 'Maintenance margin ratio (MMR) is a risk metric for your positions. The lower the maintenance margin ratio, the higher the risk. When the maintenance margin ratio reaches or drops below 100%, your positions will be reduced or liquidated.'
-            : 'The minimum amount of margin that must be maintained to keep the position open. If the margin drops below this value, the position will be liquidated.'}
+            : t('positions.maintMargin', 'The minimum amount of margin that must be maintained to keep the position open.')}
         </p>
       </div>
     )
@@ -190,184 +208,212 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
     side: "top" as const,
     description: (
       <div className="flex flex-col gap-2 w-full min-w-[220px]">
-        <div className="text-[13px] font-medium text-white border-b border-[#2a2b30] pb-2 tracking-wide font-sans">
+        <div className="text-[13px] font-medium text-fg border-b border-line pb-2 tracking-wide font-sans">
           {posTitle}
         </div>
       </div>
     ),
     rows: [
       {
-        label: 'Side',
+        label: t('positions.side', 'Side'),
         value: sideLabel,
-        labelClassName: 'text-[12px] text-[#8E9299]',
+        labelClassName: 'text-[12px] text-fg-muted',
         valueClassName: `text-[12px] font-medium ${sideColor}`
       },
       {
-        label: 'Number of contracts',
-        value: `${formatCurrency(Math.abs(pos.size), 'crypto')} contracts`,
-        labelClassName: 'text-[12px] text-[#8E9299]',
-        valueClassName: 'text-[12px] font-mono text-white'
+        label: t('positions.numberOfContracts', 'Number of contracts'),
+        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(pos.notionalUsd || Math.abs(pos.size), 'crypto', 0) : formatCurrency(Math.abs(pos.size), 'crypto')} ${t('positions.contracts', 'contracts')}`,
+        labelClassName: 'text-[12px] text-fg-muted',
+        valueClassName: 'text-[12px] font-mono text-fg'
       },
       {
-        label: 'Total crypto',
-        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(openPosSize, 'crypto', 8) : formatCurrency(Math.abs(pos.size), 'crypto')} ${baseCoinClean}`,
-        labelClassName: 'text-[12px] text-[#8E9299]',
-        valueClassName: 'text-[12px] font-mono text-white'
+        label: t('positions.totalCrypto', 'Total crypto'),
+        value: `${pos.instrumentType === 'INVERSE' ? formatCurrency(hedgeLevels.openPosSize, 'crypto', 8) : formatCurrency(Math.abs(pos.size), 'crypto')} ${baseCoinClean}`,
+        labelClassName: 'text-[12px] text-fg-muted',
+        valueClassName: 'text-[12px] font-mono text-fg'
       },
       {
-        label: 'Total value',
-        value: `${formatCurrency(sizeValUsd, 'usd', 2)} USD`,
-        labelClassName: 'text-[12px] text-[#8E9299]',
-        valueClassName: 'text-[12px] font-mono text-white'
+        label: t('positions.totalValue', 'Total value'),
+        value: formatCurrency(sizeValUsd, 'usd', 2),
+        labelClassName: 'text-[12px] text-fg-muted',
+        valueClassName: 'text-[12px] font-mono text-fg'
       }
     ]
   };
 
   return (
     <div
-      className="bg-[#151619] border border-[#2a2b30] rounded-xl flex flex-col cursor-pointer transition-colors hover:border-[#3a3b40]"
+      id={`pos-card-${pos.id}`}
+      className="bg-surface border border-line rounded-xl flex flex-col transition-colors hover:border-line-strong cursor-pointer"
       onClick={onToggle}
     >
-      {/* Main Row / Lite Info */}
-      <div className="p-4 grid grid-cols-2 lg:grid-cols-7 gap-4">
+      {/* Main Row */}
+      <div className="p-4 grid grid-cols-2 gap-4 lg:grid-cols-7">
 
         {/* Asset info */}
-        <div className="flex items-center gap-3 w-full border-b border-[#2a2b30] md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
+        <div className="flex items-center gap-3 w-full border-b border-line md:border-none pb-3 md:pb-0 col-span-2 lg:col-span-1">
           <div className="flex flex-col items-center gap-1.5 shrink-0">
             <div className="flex items-center relative">
-              <CoinIcon symbol={pos.symbol} size={28} className="w-7 h-7" category={category} />
-              <div className="bg-[#151619] rounded-full p-0.5 absolute -bottom-1 -right-1">
+              <CoinIcon symbol={pos.baseCoin || pos.symbol} size={28} className="w-7 h-7" category={category} />
+              <div className="bg-surface rounded-full p-0.5 absolute -bottom-1 -right-1">
                 <ExchangeIcon exchange={pos.exchange} className="w-3.5 h-3.5" />
               </div>
             </div>
             {pos.instrumentType && (
-              <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+              <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-line border border-line-strong text-fg-muted uppercase">
                 {pos.instrumentType}
               </span>
             )}
-            <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-[#2a2b30] border border-[#3a3b40] text-[#a0a5ad] uppercase">
+            <span className="text-[9px] font-bold tracking-wider px-1 py-0.5 rounded bg-line border border-line-strong text-fg-muted uppercase">
               {category}
             </span>
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1">
-              <span className="font-bold text-white text-sm">{pos.symbol}</span>
+              <span className="font-bold text-fg text-sm">{pos.symbol}</span>
             </div>
             <span className={`text-xs mt-0.5 font-medium ${sideColor}`}>
-              {sideLabel} <span className="mx-0.5 text-[#8E9299]">·</span> {pos.leverage}x <span className="mx-0.5 text-[#8E9299]">·</span> {marginModeLabel}
+              {sideLabel} <span className="mx-0.5 text-fg-muted">·</span> {pos.leverage}x <span className="mx-0.5 text-fg-muted">·</span> {marginModeLabel}
             </span>
             <div className="flex items-center gap-1 mt-2 flex-wrap">
-              <span className="w-max text-[10px] font-semibold text-white bg-[#202226] border border-[#34373c] py-0.5 px-1.5 rounded-[4px] capitalize">
+              <span className="w-max text-[10px] font-semibold text-fg bg-elevated border border-line-strong py-0.5 px-1.5 rounded-[4px] capitalize">
                 {pos.label}
               </span>
-              <AccountTypeBadge
-                exchange={pos.exchange}
-                accountType={pos.accountType || keys.find(k => k.id === pos.connectionId)?.accountType}
-              />
+              {(() => {
+                const matchedKey = keys.find(k => k.id === pos.connectionId);
+                return (
+                  <AccountTypeBadge
+                    exchange={pos.exchange}
+                    accountType={pos.accountType || matchedKey?.accountType}
+                    environment={matchedKey?.environment}
+                    bybitRegion={matchedKey?.bybitRegion}
+                  />
+                );
+              })()}
+              {pos.tp !== undefined && pos.tp > 0 && (
+                <span
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-success/10 border border-success/20 text-success flex items-center gap-1"
+                  title={`Take Profit: ${formatPrice(pos.tp, isFiatPair)} (${pos.tpMode === 'partial' ? 'Partial' : 'Full'})`}
+                >
+                  <span className="font-semibold">TP</span>
+                  <span>{formatPrice(pos.tp, isFiatPair)}</span>
+                  {isTpPartial && <span className="text-[9px] text-tone-blue font-sans font-normal">(P)</span>}
+                </span>
+              )}
+              {pos.sl !== undefined && pos.sl > 0 && (
+                <span
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-danger/10 border border-danger/20 text-danger flex items-center gap-1"
+                  title={`Stop Loss: ${formatPrice(pos.sl, isFiatPair)} (${pos.slMode === 'partial' ? 'Partial' : 'Full'})`}
+                >
+                  <span className="font-semibold">SL</span>
+                  <span>{formatPrice(pos.sl, isFiatPair)}</span>
+                  {isSlPartial && <span className="text-[9px] text-tone-blue font-sans font-normal">(P)</span>}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         {/* Size / Value */}
-        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
           <AppTooltip {...sizeTooltipProps}>
             <div className="flex flex-col gap-0.5 cursor-help w-max focus:outline-none">
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max">Pos Size / Value</span>
-              <span className="font-mono text-white text-sm">{formatCurrency(pos.size, 'crypto')} {baseCoinClean}</span>
-              <span className="text-xs text-[#8E9299] font-mono">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
+              <span className="text-[10px] text-fg-muted uppercase border-b border-dashed border-fg-muted/50 w-max">{t('positions.positionSize', 'Pos Size')} / {t('positions.positionValue', 'Value')}</span>
+              <span className="font-mono text-fg text-sm">{formatCurrency(pos.size, 'crypto')} {baseCoinClean}</span>
+              <span className="text-xs text-fg-muted font-mono">≈ {formatCurrency(sizeValUsd, 'usd', 2)}</span>
             </div>
           </AppTooltip>
         </div>
 
         {/* Prices */}
-        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
           <div className="flex items-center gap-1">
             <AppTooltip {...entryPriceTooltipProps}>
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Entry</span>
+              <span className="text-[10px] text-fg-muted uppercase border-b border-dashed border-fg-muted/50 w-max cursor-help focus:outline-none">{t('positions.entryPrice', 'Entry')}</span>
             </AppTooltip>
-            <span className="text-[10px] text-[#8E9299] uppercase">/</span>
+            <span className="text-[10px] text-fg-muted uppercase">/</span>
             <AppTooltip {...markPriceTooltipProps}>
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Mark</span>
+              <span className="text-[10px] text-fg-muted uppercase border-b border-dashed border-fg-muted/50 w-max cursor-help focus:outline-none">{t('positions.markPrice', 'Mark')}</span>
             </AppTooltip>
           </div>
-          <span className="font-mono text-white text-sm">{formatPrice(pos.entryPrice, isFiatPair)}</span>
-          <span className="font-mono text-white text-xs">{formatPrice(pos.markPrice, isFiatPair)}</span>
+          <span className="font-mono text-fg text-sm">{formatPrice(pos.entryPrice, isFiatPair)}</span>
+          <span className="font-mono text-fg text-xs">{formatPrice(pos.markPrice, isFiatPair)}</span>
         </div>
 
         {/* Margin & Liq Price */}
-        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
           <div className="flex items-center gap-1">
             <AppTooltip {...liqPriceTooltipProps}>
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Liq Price</span>
+              <span className="text-[10px] text-fg-muted uppercase border-b border-dashed border-fg-muted/50 w-max cursor-help focus:outline-none">{t('positions.liqPrice', 'Liq Price')}</span>
             </AppTooltip>
-            <span className="text-[10px] text-[#8E9299] uppercase">/</span>
+            <span className="text-[10px] text-fg-muted uppercase">/</span>
             <AppTooltip {...marginTooltipProps}>
-              <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Margin</span>
+              <span className="text-[10px] text-fg-muted uppercase border-b border-dashed border-fg-muted/50 w-max cursor-help focus:outline-none">{t('positions.margin', 'Margin')}</span>
             </AppTooltip>
           </div>
-          <span className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
-          <span className="font-mono text-white text-xs">
-            {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
+          <span className="font-mono text-tone-orange text-sm whitespace-nowrap">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
+          <span className="font-mono text-fg text-xs">
+            {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-fg-muted">{posCcy}</span>
           </span>
         </div>
 
         {/* Unrealized PnL (ROE) */}
-        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
           <AppTooltip {...unrealizedPnlTooltipProps}>
-            <span className="text-[10px] text-[#8E9299] uppercase border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Unrealized PnL (ROE)</span>
+            <span className="text-[10px] text-fg-muted uppercase border-b border-dashed border-fg-muted/50 w-max cursor-help focus:outline-none">{t('positions.unrealizedPnl', 'Unrealized PnL')} ({t('positions.roe', 'ROE')})</span>
           </AppTooltip>
           <span className={`font-mono text-sm ${uplColor}`}>
             {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
           </span>
-          <AppTooltip description="Return on Equity (ROE) based on Unrealized PnL.">
-            <span className={`font-mono text-xs w-max cursor-help border-b border-dashed border-[#8E9299]/50 ${roeColor}`}>
-              {inverseVals.isInverse && pos.unrealizedPnl !== undefined ? (pos.unrealizedPnl > 0 ? '+' : '') + formatCurrency(Math.abs(inverseVals.unrealizedPnl), 'usd', 2) + ' / ' : ''}
+          <AppTooltip description={t('positions.tooltips.roe')}>
+            <span className={`font-mono text-xs w-max cursor-help border-b border-dashed border-fg-muted/50 ${roeColor}`}>
+              {inverseVals.isInverse && pos.unrealizedPnl !== undefined ? (pos.unrealizedPnl > 0 ? '+' : '') + formatCurrency(inverseVals.unrealizedPnl, 'usd', 2) + ' / ' : ''}
               {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
             </span>
           </AppTooltip>
         </div>
 
         {/* Realized PnL */}
-        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
           <AppTooltip
             side="top"
             description={
               <div className="flex flex-col gap-1 w-full min-w-[180px]">
-                <span className="text-[12px] font-medium text-white">Realized PnL</span>
-                <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                  {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
+                <span className="text-[12px] font-medium text-fg">{t('positions.realizedPnl', 'Realized PnL')}</span>
+                <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-success' : 'text-danger'}`}>
+                  {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-fg-muted">{posCcy}</span>
                 </span>
               </div>
             }
             rows={[
               {
-                label: 'Closed PnL',
+                label: t('positions.closedPnl', 'Closed Realized PnL'),
                 value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.closedPnl, 'usd', 2)})` : ''}`,
-                labelClassName: 'text-[11px] font-medium text-[#8E9299]',
-                valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
+                labelClassName: 'text-[11px] font-medium text-fg-muted',
+                valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-success' : 'text-danger'}`
               },
               {
-                label: 'Funding fee',
+                label: t('positions.fundingFee', 'Funding fee'),
                 value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`,
-                labelClassName: 'text-[11px] font-medium text-[#8E9299]',
-                valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
+                labelClassName: 'text-[11px] font-medium text-fg-muted',
+                valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-success' : 'text-danger'}`
               },
               {
-                label: 'Trading fee',
+                label: t('positions.tradingFee', 'Trading fee'),
                 value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`,
-                labelClassName: 'text-[11px] font-medium text-[#8E9299]',
-                valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
+                labelClassName: 'text-[11px] font-medium text-fg-muted',
+                valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-success' : 'text-danger'}`
               }
             ]}
           >
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Realized PnL</span>
+            <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('positions.realizedPnl', 'Realized PnL')}</span>
           </AppTooltip>
           <span className={`font-mono text-sm ${realizedPnlColor}`}>
             {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
           </span>
           {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
             <span className={`font-mono text-xs ${realizedPnlColor} opacity-80`}>
-              ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)} USD
+              ≈ {pos.realizedPnl > 0 ? '+' : ''}{formatCurrency(inverseVals.realizedPnl, 'usd', 2)}
             </span>
           ) : (
             <span className="text-[10px] opacity-0">-</span>
@@ -375,28 +421,77 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
         </div>
 
         {/* Inverse - Protected / Exposed */}
-        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-[#2a2b30] lg:pl-4 col-span-1">
-          <AppTooltip description="Position hedge/exposure level">
-            <span className="text-[10px] text-[#8E9299] uppercase w-fit cursor-help border-b border-dashed border-[#8E9299]/50">Hedge / Exposure</span>
-          </AppTooltip>
+        <div className="flex flex-col justify-center gap-0.5 lg:border-l border-line lg:pl-4 col-span-1">
           {pos.instrumentType === 'INVERSE' ? (
-            <>
+            <div className="flex items-center gap-1">
+              <AppTooltip
+                description={
+                  hedgeExposedMode === 'net'
+                    ? "Indicates the Hedge protection based on Net Equity (Net Balance [Wallet + PnL] - Position = Net Exposed Balance), considering the position's unrealized PnL. Click to view more details in Hedge Pro Dashboard."
+                    : "Indicates the Hedge protection based on Total Gross Assets (Wallet Balance - Position = Gross Exposed Balance), not considering the position's PnL. Click to view more details in Hedge Pro Dashboard."
+                }
+              >
+                <button
+                  type="button"
+                  onClick={handleNavigateToHedgePro}
+                  className="text-[10px] text-fg-muted hover:text-success uppercase w-fit cursor-pointer border-b border-dashed border-fg-muted/50 hover:border-success transition-colors flex items-center gap-1 group text-left"
+                >
+                  <span>Hedge / Exposure</span>
+                  <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-success" />
+                </button>
+              </AppTooltip>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHedgeExposedMode(hedgeExposedMode === 'gross' ? 'net' : 'gross');
+                }}
+                className="text-[9px] px-1 py-0.2 rounded bg-line hover:bg-line-strong text-fg-muted hover:text-fg font-mono lowercase border border-transparent hover:border-line-strong transition-colors cursor-pointer"
+                title={`Current mode: ${hedgeExposedMode}. Click to switch to ${hedgeExposedMode === 'gross' ? 'net' : 'gross'}.`}
+              >
+                {hedgeExposedMode}
+              </button>
+            </div>
+          ) : (
+            <AppTooltip description={t('positions.tooltips.hedgeExposure')}>
+              <span className="text-[10px] text-fg-muted uppercase w-fit cursor-help border-b border-dashed border-fg-muted/50">
+                Hedge / Exposure
+              </span>
+            </AppTooltip>
+          )}
+          {pos.instrumentType === 'INVERSE' ? (
+            <div
+              onClick={handleNavigateToHedgePro}
+              className="cursor-pointer group/hedge hover:opacity-90 transition-opacity"
+              title={t('positions.tooltips.viewInHedgePro')}
+            >
               <div className="flex items-center justify-between text-[10px] font-mono leading-none">
-                <span className="text-[#00C853]">{protectedPct.toFixed(1)}%</span>
-                <span className={exposedPct > 0 && exposedPct <= 100 ? "text-[#8E9299]" : "text-[#FF4444]"}>{exposedPct.toFixed(1)}%</span>
+                <span className="text-success">{hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-fg">{hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
+                  {hedgeLevels.barMetrics.leveragedWidthPct > 0 && (
+                    <span className="text-tone-amber font-semibold" title={t('positions.tooltips.leveragedLong')}>
+                      +{((hedgeLevels.barMetrics.leveragedOfBalancePct || 0)).toFixed(0)}%
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex h-1.5 rounded-full overflow-hidden w-full bg-[#2a2b30] mt-0.5 mb-0.5">
-                <div className="bg-[#00C853] h-full transition-all duration-300" style={{ width: `${Math.min(100, protectedPct)}%` }} />
-                <div className={`${exposedPct > 0 && exposedPct <= 100 ? "bg-[#8E9299]" : "bg-[#FF4444]"} h-full transition-all duration-300`} style={{ width: `${Math.min(100, Math.max(0, exposedPct))}%` }} />
+              <div className="mt-1 mb-1 group-hover/hedge:ring-1 group-hover/hedge:ring-success/40 rounded-full transition-all">
+                <HedgeExposureBar
+                  protectedPct={hedgeLevels.barMetrics.protectedPct}
+                  exposedPct={hedgeLevels.barMetrics.exposedPct}
+                  balanceWidthPct={hedgeLevels.barMetrics.balanceWidthPct}
+                  leveragedWidthPct={hedgeLevels.barMetrics.leveragedWidthPct}
+                />
               </div>
-              <div className="flex justify-between text-[9px] font-mono text-[#8E9299] leading-none text-opacity-80">
-                <span>Bal: {formatCcy(totalAssetBal)}</span>
-                <span>Pos: {formatCcy(openPosSize)}</span>
+              <div className="flex justify-between text-[9px] font-mono text-fg-muted leading-none text-opacity-80">
+                <span>{hedgeExposedMode === 'net' ? 'Net:' : 'Bal:'} {formatCcy(hedgeLevels.balanceAmount)}</span>
+                <span>Pos: {formatCcy(hedgeLevels.openPosSize)}</span>
               </div>
-            </>
+            </div>
           ) : (
             <div className="flex flex-1 items-center h-full">
-              <span className="text-[#8E9299] font-mono">—</span>
+              <span className="text-fg-muted font-mono">—</span>
             </div>
           )}
         </div>
@@ -405,158 +500,195 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
       {/* Detalhes Expandidos: Grid de 5 colunas x 3 linhas */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-[#2a2b30] animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="px-4 pb-4 pt-1 bg-elevated/40 border-t border-line animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-y-5 gap-x-4 text-sm mt-4">
 
             {/* Linha 1 */}
             <div className="flex flex-col gap-1">
               <AppTooltip {...sizeTooltipProps}>
                 <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
-                  <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max">Position</span>
+                  <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max">{t('positions.positionSize', 'Position')}</span>
                   <div className="flex items-baseline gap-1">
-                    <span className="font-mono text-white">{formatCurrency(pos.size, 'crypto')}</span>
-                    <span className="text-[#8E9299] text-xs">≈ {formatCurrency(sizeValUsd, 'crypto', 2)} USD</span>
+                    <span className="font-mono text-fg">{formatCurrency(pos.size, 'crypto')}</span>
+                    <span className="text-fg-muted text-xs">≈ {formatCurrency(sizeValUsd, 'usd', 2)}</span>
                   </div>
                 </div>
               </AppTooltip>
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...entryPriceTooltipProps}>
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Entry price</span>
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max cursor-help focus:outline-none">{t('positions.entryPrice', 'Entry price')}</span>
               </AppTooltip>
-              <span className="font-mono text-white">{formatPrice(pos.entryPrice, isFiatPair)}</span>
+              <span className="font-mono text-fg">{formatPrice(pos.entryPrice, isFiatPair)}</span>
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...marginTooltipProps}>
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Margin</span>
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max cursor-help focus:outline-none">{t('positions.margin', 'Margin')}</span>
               </AppTooltip>
-              <span className="font-mono text-white">
-                {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
-                {posCcy && !posCcy.includes('USD') && pos.margin && pos.markPrice ? (
-                  <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(pos.margin * pos.markPrice, 'crypto', 2)} USD</span>
-                ) : null}
+              <span className="font-mono text-fg">
+                {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-fg-muted">{posCcy}</span>
+                {marginFiat && (
+                  <span className="text-fg-muted text-[10px] ml-1">≈ {marginFiat}</span>
+                )}
               </span>
             </div>
             <AppTooltip
               side="top"
               description={
                 <div className="flex flex-col gap-1 w-full min-w-[180px]">
-                  <span className="text-[12px] font-medium text-white">Realized PnL</span>
-                  <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                    {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
+                  <span className="text-[12px] font-medium text-fg">{t('positions.realizedPnl', 'Realized PnL')}</span>
+                  <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-fg-muted">{posCcy}</span>
                   </span>
                 </div>
               }
               rows={[
                 {
-                  label: 'Closed PnL',
+                  label: t('positions.closedPnl', 'Closed Realized PnL'),
                   value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.closedPnl, 'usd', 2)})` : ''}`,
-                  labelClassName: 'text-[11px] font-medium text-[#8E9299]',
-                  valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
+                  labelClassName: 'text-[11px] font-medium text-fg-muted',
+                  valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-success' : 'text-danger'}`
                 },
                 {
-                  label: 'Funding fee',
+                  label: t('positions.fundingFee', 'Funding fee'),
                   value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.fundingFee, 'usd', 2)})` : ''}`,
-                  labelClassName: 'text-[11px] font-medium text-[#8E9299]',
-                  valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
+                  labelClassName: 'text-[11px] font-medium text-fg-muted',
+                  valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-success' : 'text-danger'}`
                 },
                 {
-                  label: 'Trading fee',
+                  label: t('positions.tradingFee', 'Trading fee'),
                   value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}${inverseVals.isInverse ? ` (≈ ${formatCurrency(inverseVals.tradingFee, 'usd', 2)})` : ''}`,
-                  labelClassName: 'text-[11px] font-medium text-[#8E9299]',
-                  valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
+                  labelClassName: 'text-[11px] font-medium text-fg-muted',
+                  valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-success' : 'text-danger'}`
                 }
               ]}
             >
               <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Realized PnL</span>
-                <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
+                <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50">{t('positions.realizedPnl', 'Realized PnL')}</span>
+                <span className={`font-mono ${pos.realizedPnl >= 0 ? 'text-success' : 'text-danger'}`}>
                   {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="font-sans text-[10px]">{posCcy}</span>
                   {inverseVals.isInverse && pos.realizedPnl !== undefined ? (
-                    <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(Math.abs(inverseVals.realizedPnl), 'usd', 2)}</span>
+                    <span className="text-fg-muted text-[10px] ml-1">≈ {formatCurrency(inverseVals.realizedPnl, 'usd', 2)}</span>
                   ) : null}
                 </span>
               </div>
             </AppTooltip>
 
             {pos.instrumentType === 'INVERSE' ? (
-              <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-4">
+              <div className="col-span-2 md:col-span-1 md:row-span-3 flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
-                  <AppTooltip description="Hedge position details">
-                    <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help">Hedge Pro Details</span>
+                  <AppTooltip description={t('positions.tooltips.viewDetailsHedgePro')}>
+                    <button
+                      type="button"
+                      onClick={handleNavigateToHedgePro}
+                      className="text-fg-muted hover:text-success text-xs w-max border-b border-dashed border-fg-muted/50 hover:border-success cursor-pointer flex items-center gap-1.5 transition-colors group"
+                    >
+                      <span>Hedge Pro Details ({hedgeExposedMode.toUpperCase()})</span>
+                      <ExternalLink className="w-3 h-3 text-success opacity-70 group-hover:opacity-100 transition-opacity" />
+                    </button>
                   </AppTooltip>
 
-                  <div className="flex flex-col gap-3 mt-1">
+                  <div className="flex flex-col gap-2.5 mt-1.5">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#8E9299]">Balance:</span>
-                      <span className="font-mono text-white text-[13px]">
-                        {formatCcy(totalAssetBal)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(assetBalUsd, 'usd', 2)} USD</span>
+                      <span className="text-[10px] text-fg-muted">
+                        {hedgeExposedMode === 'net' ? 'Net Balance (Equity):' : 'Wallet Balance (Gross):'}
+                      </span>
+                      <span className="font-mono text-fg text-[13px]">
+                        {formatCcy(hedgeLevels.balanceAmount)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.balanceUsd, 'usd', 2)}</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#00C853]">Protected: {protectedPct.toFixed(2)}%</span>
-                      <span className="font-mono text-white text-[13px]">
-                        {formatCcy(protectedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(protectedUsd, 'usd', 2)} USD</span>
+                      <span className="text-[10px] text-success font-medium">Protected: {hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
+                      <span className="font-mono text-fg text-[13px]">
+                        {formatCcy(hedgeLevels.protectedAmount)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.protectedUsd, 'usd', 2)}</span>
                       </span>
                     </div>
 
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#FF4444]">Exposed: {exposedPct.toFixed(2)}%</span>
-                      <span className="font-mono text-white text-[13px]">
-                        {formatCcy(exposedAmount)} {posCcy} <span className="text-[#8E9299] text-[11px] font-sans">/ {formatCurrency(exposedUsd, 'usd', 2)} USD</span>
+                      <span className="text-[10px] text-fg font-medium">Exposed (Base): {hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
+                      <span className="font-mono text-fg text-[13px]">
+                        {formatCcy(hedgeLevels.markPrice > 0 ? hedgeLevels.exposedBaseUsd / hedgeLevels.markPrice : 0)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.exposedBaseUsd, 'usd', 2)}</span>
                       </span>
                     </div>
+
+                    {!isShort && hedgeLevels.leveragedUsd > 0 && (
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-tone-amber font-medium">
+                          Leveraged (Long): +{(hedgeLevels.barMetrics.leveragedOfBalancePct || 0).toFixed(1)}%
+                        </span>
+                        <span className="font-mono text-fg text-[13px]">
+                          {formatCcy(hedgeLevels.openPosSize)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.leveragedUsd, 'usd', 2)}</span>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {!isShort && (
-                  <div className="flex items-start gap-1 py-1.5 px-2 bg-orange-500/10 border border-orange-500/20 rounded">
-                    <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
-                    <span className="text-[9.5px] text-orange-300 font-medium leading-tight">Overexposed! Focus on risk management! Always have a stop in place!</span>
+                {hedgeLevels.overexposed && (
+                  <div className="flex items-start gap-1 py-1.5 px-2 bg-amber-500/10 border border-amber-500/20 rounded">
+                    <AlertTriangle className="w-3.5 h-3.5 text-tone-amber shrink-0 mt-0.5" />
+                    <span className="text-[9.5px] text-tone-amber font-medium leading-tight">
+                      {isShort
+                        ? 'No matching coin balance found — this position has no identified coverage.'
+                        : 'Leveraged! Focus on risk management! Always have a stop in place!'}
+                    </span>
                   </div>
                 )}
               </div>
             ) : (
               <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs">Entire TP/SL</span>
-                <span className="font-mono text-white">
-                  {pos.tp ? formatPrice(pos.tp, isFiatPair) : '--'} / {pos.sl ? formatPrice(pos.sl, isFiatPair) : '--'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-fg-muted text-xs">{t('positions.takeProfit', 'TP')} / {t('positions.stopLoss', 'SL')}</span>
+                  {hasEntireTpsl && (
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-success/10 text-success font-mono border border-success/20">
+                      {t('positions.entirePosition', 'Full')}
+                    </span>
+                  )}
+                </div>
+                <div className="font-mono text-xs flex items-center gap-1">
+                  <span className={entireTp ? 'text-success font-semibold' : 'text-fg'}>
+                    {entireTp ? formatPrice(entireTp, isFiatPair) : '--'}
+                  </span>
+                  <span className="text-fg-muted">/</span>
+                  <span className={entireSl ? 'text-danger font-semibold' : 'text-fg'}>
+                    {entireSl ? formatPrice(entireSl, isFiatPair) : '--'}
+                  </span>
+                </div>
               </div>
             )}
 
             {/* Linha 2 */}
             <div className="flex flex-col gap-1">
               <AppTooltip {...unrealizedPnlTooltipProps}>
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">Unrealized PnL</span>
+                <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50 cursor-help focus:outline-none">{t('positions.unrealizedPnl', 'Unrealized PnL')}</span>
               </AppTooltip>
               <span className={`font-mono ${uplColor}`}>
-                {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="text-[#8E9299] text-[10px] font-sans ml-1">{posCcy}</span>
-                {posCcy && !posCcy.includes('USD') && pos.unrealizedPnl && pos.markPrice ? (
-                  <span className="text-[#8E9299] text-[10px] ml-1">≈ {pos.unrealizedPnl > 0 ? '+' : ''}{formatCurrency(Math.abs(pos.unrealizedPnl) * pos.markPrice, 'crypto', 2)} USD</span>
-                ) : null}
+                {pos.unrealizedPnl > 0 ? '+' : ''}{formatCcy(pos.unrealizedPnl)} <span className="text-fg-muted text-[10px] font-sans ml-1">{posCcy}</span>
+                {unrealizedFiat && (
+                  <span className="text-fg-muted text-[10px] ml-1">≈ {unrealizedFiat}</span>
+                )}
               </span>
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...markPriceTooltipProps}>
-                <span className="text-[#8E9299] text-xs border-b border-dashed border-[#8E9299]/50 w-max cursor-help focus:outline-none">Mark price</span>
+                <span className="text-fg-muted text-xs border-b border-dashed border-fg-muted/50 w-max cursor-help focus:outline-none">{t('positions.markPrice', 'Mark price')}</span>
               </AppTooltip>
-              <span className="font-mono text-white">{formatPrice(pos.markPrice, isFiatPair)}</span>
+              <span className="font-mono text-fg">{formatPrice(pos.markPrice, isFiatPair)}</span>
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...maintenanceMarginTooltipProps}>
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">{pos.exchange === 'okx' ? 'Maint. Margin / MMR' : 'Maintenance Margin'}</span>
+                <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50 cursor-help focus:outline-none">{pos.exchange === 'okx' ? 'Maint. Margin / MMR' : t('positions.maintMargin', 'Maintenance Margin')}</span>
               </AppTooltip>
-              <span className="font-mono text-white">
+              <span className="font-mono text-fg">
                 {pos.maintenanceMargin !== undefined ? (
                   <>
-                    {formatCcy(pos.maintenanceMargin)} <span className="font-sans text-[10px] text-[#8E9299]">{posCcy}</span>
-                    {posCcy && !posCcy.includes('USD') && pos.maintenanceMargin && pos.markPrice ? (
-                      <span className="text-[#8E9299] text-[10px] ml-1">≈ {formatCurrency(pos.maintenanceMargin * pos.markPrice, 'crypto', 2)} USD</span>
-                    ) : null}
+                    {formatCcy(pos.maintenanceMargin)} <span className="font-sans text-[10px] text-fg-muted">{posCcy}</span>
+                    {maintMarginFiat && (
+                      <span className="text-fg-muted text-[10px] ml-1">≈ {maintMarginFiat}</span>
+                    )}
                     {pos.marginRatio !== undefined && (
-                      <span className="text-orange-400 text-[10px] ml-1">({formatValue(pos.marginRatio, 2)}%)</span>
+                      <span className="text-tone-orange text-[10px] ml-1">({formatValue(pos.marginRatio, 2)}%)</span>
                     )}
                   </>
                 ) : (
@@ -567,13 +699,13 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             <AppTooltip
               description={
                 <div className="flex flex-col gap-2 w-full">
-                  <div className="text-[12px] leading-relaxed text-[#c9cbcf] whitespace-normal border-b border-dashed border-[#8E9299]/50 pb-2">
+                  <div className="text-[12px] leading-relaxed text-fg-muted whitespace-normal border-b border-dashed border-fg-muted/50 pb-2">
                     At the breakeven price, your total PnL will be zero if you close your remaining position. Note that the breakeven price, which includes the trading fee and funding fee, is updated every second.
                   </div>
                   <div className="flex flex-col gap-1 w-full min-w-[180px] pt-1">
-                    <span className="text-[12px] font-medium text-white">Realized PnL</span>
-                    <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`}>
-                      {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-[#8E9299]">{posCcy}</span>
+                    <span className="text-[12px] font-medium text-fg">{t('positions.realizedPnl', 'Realized PnL')}</span>
+                    <span className={`text-[15px] font-mono font-medium ${pos.realizedPnl >= 0 ? 'text-success' : 'text-danger'}`}>
+                      {pos.realizedPnl > 0 ? '+' : ''}{formatCcy(pos.realizedPnl)} <span className="text-[11px] font-sans text-fg-muted">{posCcy}</span>
                     </span>
                   </div>
                 </div>
@@ -581,59 +713,74 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               side="top"
               rows={[
                 {
-                  label: 'Closed PnL',
+                  label: t('positions.closedPnl', 'Closed Realized PnL'),
                   value: `${closedPnl > 0 ? '+' : ''}${formatCcy(closedPnl)} ${posCcy}`,
-                  labelClassName: 'text-[11px] font-medium text-[#8E9299]',
-                  valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
+                  labelClassName: 'text-[11px] font-medium text-fg-muted',
+                  valueClassName: `text-[11px] font-mono font-bold ${closedPnl >= 0 ? 'text-success' : 'text-danger'}`
                 },
                 {
-                  label: 'Funding fee',
+                  label: t('positions.fundingFee', 'Funding fee'),
                   value: `${fundingFee > 0 ? '+' : ''}${formatCcy(fundingFee)} ${posCcy}`,
-                  labelClassName: 'text-[11px] font-medium text-[#8E9299]',
-                  valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
+                  labelClassName: 'text-[11px] font-medium text-fg-muted',
+                  valueClassName: `text-[11px] font-mono font-bold ${fundingFee >= 0 ? 'text-success' : 'text-danger'}`
                 },
                 {
-                  label: 'Trading fee',
+                  label: t('positions.tradingFee', 'Trading fee'),
                   value: `${tradingFee > 0 ? '+' : ''}${formatCcy(tradingFee)} ${posCcy}`,
-                  labelClassName: 'text-[11px] font-medium text-[#8E9299]',
-                  valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-[#00C853]' : 'text-[#FF4444]'}`
+                  labelClassName: 'text-[11px] font-medium text-fg-muted',
+                  valueClassName: `text-[11px] font-mono font-bold ${tradingFee >= 0 ? 'text-success' : 'text-danger'}`
                 }
               ]}
             >
               <div className="flex flex-col gap-1 cursor-help w-max focus:outline-none">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Breakeven price</span>
-                <span className="font-mono text-white">{formatPrice(pos.breakEvenPrice, isFiatPair)}</span>
+                <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50">Breakeven price</span>
+                <span className="font-mono text-fg">{formatPrice(pos.breakEvenPrice, isFiatPair)}</span>
               </div>
             </AppTooltip>
             {pos.instrumentType !== 'INVERSE' && (
               <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Partial TP/SL</span>
-                <span className="font-mono text-[#8E9299]">--</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50">{t('positions.takeProfit', 'TP')} / {t('positions.stopLoss', 'SL')} ({t('positions.partialPosition', 'Partial')})</span>
+                  {hasPartialTpsl && (
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-tone-blue font-mono border border-blue-500/20">
+                      {t('positions.partialPosition', 'Partial')}
+                    </span>
+                  )}
+                </div>
+                <div className="font-mono text-xs flex items-center gap-1">
+                  <span className={partialTp ? 'text-success font-semibold' : 'text-fg-muted'}>
+                    {partialTp ? formatPrice(partialTp, isFiatPair) : '--'}
+                  </span>
+                  <span className="text-fg-muted">/</span>
+                  <span className={partialSl ? 'text-danger font-semibold' : 'text-fg-muted'}>
+                    {partialSl ? formatPrice(partialSl, isFiatPair) : '--'}
+                  </span>
+                </div>
               </div>
             )}
 
             {/* Linha 3 */}
             <div className="flex flex-col gap-1">
-              <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">ROE</span>
+              <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50">{t('positions.roe', 'ROE')}</span>
               <span className={`font-mono ${roeColor}`}>
                 {pos.roe !== undefined ? (pos.roe > 0 ? '+' : '') + formatValue(pos.roe, 2) + '%' : '--'}
               </span>
             </div>
             <div className="flex flex-col gap-1">
               <AppTooltip {...liqPriceTooltipProps}>
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50 cursor-help focus:outline-none">Est. liq. price</span>
+                <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50 cursor-help focus:outline-none">{t('positions.liqPrice', 'Est. liq. price')}</span>
               </AppTooltip>
-              <span className="font-mono text-orange-400">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
+              <span className="font-mono text-tone-orange">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Placed/ Max close</span>
-              <span className="font-mono text-[#8E9299]">--/--</span>
+              <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50">Placed/ Max close</span>
+              <span className="font-mono text-fg-muted">--/--</span>
             </div>
             <div className="hidden md:block"></div> {/* Espaço vazio na coluna 4 */}
             {pos.instrumentType !== 'INVERSE' && (
               <div className="flex flex-col gap-1">
-                <span className="text-[#8E9299] text-xs w-max border-b border-dashed border-[#8E9299]/50">Trailing TP/SL/ MMR SL</span>
-                <span className="font-mono text-[#8E9299]">--/--</span>
+                <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50">Trailing TP/SL/ MMR SL</span>
+                <span className="font-mono text-fg-muted">--/--</span>
               </div>
             )}
 

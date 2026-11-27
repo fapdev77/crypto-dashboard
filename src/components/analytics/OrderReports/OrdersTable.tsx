@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UnifiedOrder } from '../../../types';
 import { OrderRow } from './OrderRow';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   orders: UnifiedOrder[];
@@ -9,20 +10,21 @@ interface Props {
 }
 
 export function OrdersTable({ orders, loading }: Props) {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-accent" />
       </div>
     );
   }
 
   if (orders.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-[#151619] border border-[#2a2b30] rounded-xl flex-1">
-        <p className="text-[#8E9299]">No Open Orders found.</p>
+      <div className="flex flex-col items-center justify-center p-12 bg-surface border border-line rounded-xl flex-1">
+        <p className="text-fg-muted">{t('orders.noOpenOrders', 'No Open Orders found.')}</p>
       </div>
     );
   }

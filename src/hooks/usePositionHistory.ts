@@ -7,10 +7,10 @@ import { useSettingsStore } from '../store/settingsStore';
 import { useSyncCoordinatorStore } from '../store/syncCoordinatorStore';
 import { getCachedHistory } from '../services/historyCache';
 import { LogManager } from '../services/LogManager';
-import { getStartOfTodayInMs } from '../utils/dateTimeHelper';
+import { resolvePeriodDateRange } from '../utils/dateTimeHelper';
 
-/** Time period presets for position history queries. */
-export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d' | '120d' | '180d' | '365d' | 'all';
+/** Time period presets for position history queries (ms string/number, 'mtd', 'ytd', 'custom', '0', or legacy aliases). */
+export type PositionHistoryPeriod = number | string;
 
 /**
  * Hook for fetching closed position history from all active API keys.
@@ -19,13 +19,21 @@ export type PositionHistoryPeriod = 'today' | '7d' | '14d' | '30d' | '90d' | '12
  *   1. Load cached positions from IndexedDB immediately
  *   2. Fetch new/changed positions from exchange REST APIs in background
  *
- * @param period     Time period to filter by (today, 7d, 14d, 30d, 90d).
- * @param exchange   Optional exchange filter ('All' | 'bybit' | 'bitget' | 'okx').
- * @param searchTerm Optional text search on symbol or exchange name.
+ * @param period          Time period to filter by.
+ * @param exchange        Optional exchange filter ('All' | 'bybit' | 'bitget' | 'okx').
+ * @param searchTerm      Optional text search on symbol or exchange name.
+ * @param customStartDate Optional custom start date (YYYY-MM-DD).
+ * @param customEndDate   Optional custom end date (YYYY-MM-DD).
  *
  * @returns Object with positions array, isLoading, isSyncing, and syncMessage.
  */
-export function usePositionHistory(period: PositionHistoryPeriod, exchange?: string, searchTerm?: string) {
+export function usePositionHistory(
+  period: PositionHistoryPeriod,
+  exchange?: string,
+  searchTerm?: string,
+  customStartDate?: string,
+  customEndDate?: string
+) {
   const keys = useApiKeysStore(state => state.keys);
   const useMockData = useSettingsStore(state => state.useMockData);
   const historyCacheVersion = useSettingsStore(state => state.historyCacheVersion);
@@ -41,6 +49,7 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
   });
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(syncStore.positionsSyncError);
 
   // Turn off loading if active keys count goes to 0
   useEffect(() => {
@@ -134,13 +143,19 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
       try {
         const service = new PositionHistoryService();
+        const syncErrors: string[] = [];
+
         for (const key of activeKeys) {
           if (!key.isActive) continue;
           if (isMounted) setSyncMessage(`Syncing ${key.exchange} (${key.label})...`);
-          await service.fetchWithCache(key);
+          try {
+            await service.fetchWithCache(key);
+          } catch (err: any) {
+            syncErrors.push(`${key.exchange} (${key.label}): ${err?.message || 'Sync failed'}`);
+          }
         }
 
-        // Fetch complete updated list from cache
+        // Fetch complete updated list from cache (includes stale data for failed keys)
         let cachedTotal: UnifiedHistoryPosition[] = [];
         const cachePromises = activeKeys.map(apiKey => getCachedHistory(apiKey.id));
         const cacheResults = await Promise.all(cachePromises);
@@ -151,15 +166,27 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
         if (isMounted) {
           setRawCachedPositions(cachedTotal);
           useSyncCoordinatorStore.getState().setCachedPositions(cachedTotal);
+
+          if (syncErrors.length > 0) {
+            const errorMessage = syncErrors.join('; ');
+            useSyncCoordinatorStore.getState().setPositionsSyncError(errorMessage);
+            setSyncError(errorMessage);
+          } else {
+            useSyncCoordinatorStore.getState().setPositionsSyncError(null);
+            setSyncError(null);
+            setLastSyncTime(Date.now());
+          }
+
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
-          
-          setLastSyncTime(Date.now());
         }
-      } catch (err) {
+      } catch (err: any) {
         LogManager.error('PositionHistory', 'Error syncing network positions:', err);
         if (isMounted) {
+          const errorMessage = err?.message || 'Error syncing position history';
+          setSyncError(errorMessage);
+          useSyncCoordinatorStore.getState().setPositionsSyncError(errorMessage);
           setIsLoading(false);
           setIsSyncing(false);
           setSyncMessage(null);
@@ -176,10 +203,22 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
 
   // 3. Sync positions calculation based on local in-memory cache and current filters
   useEffect(() => {
+    const { startTime, endTime } = resolvePeriodDateRange(
+      period,
+      customStartDate,
+      customEndDate
+    );
+
     if (useMockData) {
-      const sortedHistory = [...mockHistoryData].sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime);
-      // Mock data has raw fields as loose JSON — cast through unknown to skip strict field matching
-      setPositions(applyFilters(sortedHistory as unknown as UnifiedHistoryPosition[]));
+      let sortedHistory = [...mockHistoryData]
+        .sort((a: any, b: any) => b.closeUpdateTime - a.closeUpdateTime) as unknown as UnifiedHistoryPosition[];
+      if (startTime !== null) {
+        sortedHistory = sortedHistory.filter(pos => pos.closeUpdateTime >= startTime);
+      }
+      if (endTime !== null) {
+        sortedHistory = sortedHistory.filter(pos => pos.closeUpdateTime <= endTime);
+      }
+      setPositions(applyFilters(sortedHistory));
       return;
     }
 
@@ -189,31 +228,19 @@ export function usePositionHistory(period: PositionHistoryPeriod, exchange?: str
       return;
     }
 
-    const now = Date.now();
-    const periodStartMap: Record<string, number | undefined> = {
-      today: getStartOfTodayInMs(),
-      '7d': now - 7 * 24 * 60 * 60 * 1000,
-      '14d': now - 14 * 24 * 60 * 60 * 1000,
-      '30d': now - 30 * 24 * 60 * 60 * 1000,
-      '90d': now - 90 * 24 * 60 * 60 * 1000,
-      '120d': now - 120 * 24 * 60 * 60 * 1000,
-      '180d': now - 180 * 24 * 60 * 60 * 1000,
-      '365d': now - 365 * 24 * 60 * 60 * 1000,
-      'all': undefined,
-    };
-    const start = periodStartMap[period];
-    const end = start !== undefined ? now : undefined;
-
     const activeKeyIds = new Set(activeKeys.map(k => k.id));
     let filtered = rawCachedPositions.filter(pos => activeKeyIds.has(pos.connectionId));
-    
-    if (start !== undefined && end !== undefined) {
-      filtered = filtered.filter(pos => pos.closeUpdateTime >= start! && pos.closeUpdateTime <= end!);
+
+    if (startTime !== null) {
+      filtered = filtered.filter(pos => pos.closeUpdateTime >= startTime);
+    }
+    if (endTime !== null) {
+      filtered = filtered.filter(pos => pos.closeUpdateTime <= endTime);
     }
     filtered.sort((a, b) => b.closeUpdateTime - a.closeUpdateTime);
 
     setPositions(applyFilters(filtered));
-  }, [rawCachedPositions, keys, period, exchange, searchTerm, useMockData]);
+  }, [rawCachedPositions, keys, period, customStartDate, customEndDate, exchange, searchTerm, useMockData]);
 
-  return { positions, setPositions, isLoading, isSyncing, syncMessage };
+  return { positions, setPositions, isLoading, isSyncing, syncMessage, syncError };
 }

@@ -15,7 +15,8 @@ export type UnifiedPositionMode = 'hedge' | 'one_way' | 'unknown';
 export type UnifiedInstrumentType = 'SPOT' | 'PERP' | 'INVERSE' | 'FUTURES' | 'OPTION' | 'UNKNOWN';
 export type UnifiedAssetCategory = 'CRYPTO' | 'STOCK' | 'UNKNOWN';
 export type UnifiedOrderStatus = 'NEW' | 'FILLED' | 'CANCELLED' | 'PARTIALLY_FILLED' | 'UNTRIGGERED' | 'TRIGGERED' | 'REJECTED';
-export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL';
+export type UnifiedOrderType = 'LIMIT' | 'MARKET' | 'TP' | 'SL' | 'CONDITIONAL' | 'TRAILING_STOP' | 'OCO';
+export type OrderExecutionScope = 'FULL_POSITION' | 'PARTIAL';
 export type BillType = 'deposit' | 'withdrawal' | 'funding' | 'fee' | 'transfer' | 'other';
 
 // Interfaces
@@ -24,6 +25,8 @@ export interface UnifiedBalance {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   ccy: string;
   amount: number;
@@ -41,6 +44,8 @@ export interface UnifiedOrder {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label?: string;
   symbol: string;
   category: UnifiedInstrumentType | string;
@@ -54,11 +59,21 @@ export interface UnifiedOrder {
   filledQty: number;
   value?: number;
   triggerPrice?: number;
+  executionScope?: OrderExecutionScope;
+  closeFraction?: number;
+  tpTriggerPrice?: number;
+  slTriggerPrice?: number;
+  tpOrderPrice?: number;
+  slOrderPrice?: number;
+  isPositionTpsl?: boolean;
+  parentOrderId?: string;
   reduceOnly?: boolean;
   timeInForce?: string;
   createdTime: number;
   updatedTime: number;
   fees?: number;
+  /** Currency the trading fee was charged in (e.g. 'USDT', 'MNT', 'BTC'). */
+  feeCurrency?: string;
   leverage?: number;
   marginMode?: UnifiedMarginMode;
   raw?: RawOrderData;
@@ -69,6 +84,8 @@ export interface UnifiedPosition {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string; // Account label/name
   symbol: string;
   baseCoin: string; // E.g., 'BTC'
@@ -93,6 +110,8 @@ export interface UnifiedPosition {
   roe?: number; // Return on Equity (%)
   tp?: number; // Take profit limit
   sl?: number; // Stop loss limit
+  tpMode?: 'full' | 'partial';
+  slMode?: 'full' | 'partial';
   instrumentType?: UnifiedInstrumentType;
   accumulatedFunding?: string;
   accumulatedTradingFee?: string;
@@ -104,6 +123,8 @@ export interface UnifiedHistoryPosition {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   symbol: string;
   baseCoin: string;
@@ -133,6 +154,8 @@ export interface UnifiedBillRecord {
   connectionId: string;
   exchange: ExchangeName;
   accountType?: 'classic' | 'uta';
+  environment?: string;
+  bybitRegion?: string;
   label: string;
   type: BillType;
   amount: number;
@@ -215,6 +238,93 @@ export interface BybitTransactionLogEntry {
   tradeId: string;
   orderId: string;
   orderLinkId: string;
+
+  raw: Record<string, unknown>;
+}
+
+export interface BitgetTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'bitget';
+  accountType?: 'classic' | 'uta';
+  label: string; // ApiKey Label 
+
+  rawId: string;
+  symbol: string;
+  category: string;        // SPOT, MARGIN, USDT-FUTURES, COIN-FUTURES, USDC-FUTURES, OTHER
+  side: 'Buy' | 'Sell' | 'None' | string;
+  transactionTime: number; // ms timestamp
+  type: string;            // TRANSFER_IN, ORDER_DEALT_IN, ORDER_DEALT_OUT, FUNDING_FEE_IN, etc.
+  transSubType?: string;
+  groupType?: string;
+  positionType?: string;
+  qty?: string;
+  size?: string;
+  amount?: string;
+  currency: string;
+  tradePrice?: string;
+  funding?: string;
+  fee: string;
+  feeCurrency?: string;
+  cashFlow: string;
+  change: string;          // net change
+  cashBalance: string;
+  balance?: string;
+  positionAmount?: string;
+  positionBalance?: string;
+  feeRate?: string;
+  bonusChange?: string;
+  tradeId?: string;
+  orderId?: string;
+  orderLinkId?: string;
+  extra?: string;
+
+  raw: Record<string, unknown>;
+}
+
+export interface OkxTransactionLogEntry {
+  // Primary key = `${connectionId}-${rawId}-${transactionTime}`
+  id: string;
+  connectionId: string;
+  exchange: 'okx';
+  label: string; // ApiKey Label 
+
+  rawId: string;
+  billId?: string;
+  symbol: string;
+  category: string;        // SPOT, MARGIN, SWAP, FUTURES, OPTION
+  side: 'Buy' | 'Sell' | 'None' | string;
+  transactionTime: number; // ms timestamp
+  type: string;            // Type display (Trade, Funding fee, Transfer, etc.)
+  transSubType?: string;   // SubType display (Buy, Sell, Funding expense, etc.)
+  subType?: string;
+  typeCode?: string;
+  subTypeCode?: string;
+  qty?: string;
+  size?: string;
+  contracts?: string;
+  contractVal?: string;
+  cryptoQty?: string;
+  totalValueUsd?: string;
+  amount?: string;
+  currency: string;
+  tradePrice?: string;
+  funding?: string;
+  fee: string;
+  feeCurrency?: string;
+  cashFlow: string;
+  change: string;          // balChg
+  cashBalance: string;     // bal
+  balance?: string;
+  positionBalance?: string;
+  feeRate?: string;
+  bonusChange?: string;
+  tradeId?: string;
+  orderId?: string;
+  orderLinkId?: string;
+  pnl?: string;
+  extra?: string;
 
   raw: Record<string, unknown>;
 }

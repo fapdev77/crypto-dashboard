@@ -1,11 +1,13 @@
 import { create } from 'zustand';
-import { UnifiedHistoryPosition, UnifiedOrder, BybitTransactionLogEntry } from '../types';
+import { UnifiedHistoryPosition, UnifiedOrder, BybitTransactionLogEntry, BitgetTransactionLogEntry, OkxTransactionLogEntry } from '../types';
 
-/** Sync progress info for Bybit transaction log backfill. */
-export interface BybitTxProgress {
+/** Sync progress info for transaction log backfill. */
+export interface TxSyncProgress {
   pct: number;       // 0-100
   records: number;   // total records cached so far
 }
+
+export type BybitTxProgress = TxSyncProgress;
 
 /** Synchronisation state coordinator used to share sync state across multiple history views. */
 interface SyncCoordinatorState {
@@ -19,6 +21,9 @@ interface SyncCoordinatorState {
   /** Timestamp of the last successful positions sync. */
   lastPositionsSyncTimestamp: number;
   setLastPositionsSyncTimestamp: (timestamp: number) => void;
+  /** Error message if the last positions sync failed. */
+  positionsSyncError: string | null;
+  setPositionsSyncError: (error: string | null) => void;
 
   // ── 2. PnL By Symbol (Bybit Real PnL) ──
   /** Bybit transaction-log PnL aggregated by symbol. */
@@ -41,6 +46,9 @@ interface SyncCoordinatorState {
   /** Timestamp of the last successful orders sync. */
   lastOrdersSyncTimestamp: number;
   setLastOrdersSyncTimestamp: (timestamp: number) => void;
+  /** Error message if the last orders sync failed. */
+  ordersSyncError: string | null;
+  setOrdersSyncError: (error: string | null) => void;
 
   // ── 4. Bybit Transactions ──
   /** In-memory cache of transaction log entries across connections. */
@@ -50,11 +58,17 @@ interface SyncCoordinatorState {
   isBybitTxSyncing: boolean;
   setIsBybitTxSyncing: (v: boolean) => void;
   /** Sync progress info. */
-  bybitTxProgress: BybitTxProgress | null;
-  setBybitTxProgress: (p: BybitTxProgress | null) => void;
+  bybitTxProgress: TxSyncProgress | null;
+  setBybitTxProgress: (p: TxSyncProgress | null) => void;
   /** Timestamp of the last successful transaction-log sync. */
   bybitTxLastSyncTime: number;
   setBybitTxLastSyncTime: (t: number) => void;
+  /** Error message if the last Bybit transaction sync failed. */
+  bybitTxSyncError: string | null;
+  setBybitTxSyncError: (error: string | null) => void;
+  /** Error message if the last transaction sync failed (legacy alias). */
+  txSyncError: string | null;
+  setTxSyncError: (error: string | null) => void;
   /** Latest transactionTime cached. */
   bybitTxLatestTransactionTime: number;
   setBybitTxLatestTransactionTime: (t: number) => void;
@@ -64,6 +78,42 @@ interface SyncCoordinatorState {
   /** Total transaction records cached. */
   bybitTxTotalRecords: number;
   setBybitTxTotalRecords: (n: number) => void;
+
+  // ── 5. Bitget Transactions ──
+  cachedBitgetTxLog: BitgetTransactionLogEntry[];
+  setCachedBitgetTxLog: (entries: BitgetTransactionLogEntry[]) => void;
+  isBitgetTxSyncing: boolean;
+  setIsBitgetTxSyncing: (v: boolean) => void;
+  bitgetTxProgress: TxSyncProgress | null;
+  setBitgetTxProgress: (p: TxSyncProgress | null) => void;
+  bitgetTxLastSyncTime: number;
+  setBitgetTxLastSyncTime: (t: number) => void;
+  bitgetTxSyncError: string | null;
+  setBitgetTxSyncError: (error: string | null) => void;
+  bitgetTxLatestTransactionTime: number;
+  setBitgetTxLatestTransactionTime: (t: number) => void;
+  bitgetTxOldestTransactionTime: number;
+  setBitgetTxOldestTransactionTime: (t: number) => void;
+  bitgetTxTotalRecords: number;
+  setBitgetTxTotalRecords: (n: number) => void;
+
+  // ── 6. OKX Transactions ──
+  cachedOkxTxLog: OkxTransactionLogEntry[];
+  setCachedOkxTxLog: (entries: OkxTransactionLogEntry[]) => void;
+  isOkxTxSyncing: boolean;
+  setIsOkxTxSyncing: (v: boolean) => void;
+  okxTxProgress: TxSyncProgress | null;
+  setOkxTxProgress: (p: TxSyncProgress | null) => void;
+  okxTxLastSyncTime: number;
+  setOkxTxLastSyncTime: (t: number) => void;
+  okxTxSyncError: string | null;
+  setOkxTxSyncError: (error: string | null) => void;
+  okxTxLatestTransactionTime: number;
+  setOkxTxLatestTransactionTime: (t: number) => void;
+  okxTxOldestTransactionTime: number;
+  setOkxTxOldestTransactionTime: (t: number) => void;
+  okxTxTotalRecords: number;
+  setOkxTxTotalRecords: (n: number) => void;
 }
 
 export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
@@ -74,6 +124,8 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setLastPositionsSyncedVersion: (lastPositionsSyncedVersion) => set({ lastPositionsSyncedVersion }),
   lastPositionsSyncTimestamp: 0,
   setLastPositionsSyncTimestamp: (lastPositionsSyncTimestamp) => set({ lastPositionsSyncTimestamp }),
+  positionsSyncError: null,
+  setPositionsSyncError: (positionsSyncError) => set({ positionsSyncError }),
 
   // 2. PnL By Symbol (Bybit Real PnL)
   cachedPnLRecord: {},
@@ -90,6 +142,8 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setLastOrdersSyncedVersion: (lastOrdersSyncedVersion) => set({ lastOrdersSyncedVersion }),
   lastOrdersSyncTimestamp: 0,
   setLastOrdersSyncTimestamp: (lastOrdersSyncTimestamp) => set({ lastOrdersSyncTimestamp }),
+  ordersSyncError: null,
+  setOrdersSyncError: (ordersSyncError) => set({ ordersSyncError }),
 
   // 4. Bybit Transactions
   cachedTxLog: [],
@@ -100,10 +154,50 @@ export const useSyncCoordinatorStore = create<SyncCoordinatorState>((set) => ({
   setBybitTxProgress: (bybitTxProgress) => set({ bybitTxProgress }),
   bybitTxLastSyncTime: 0,
   setBybitTxLastSyncTime: (bybitTxLastSyncTime) => set({ bybitTxLastSyncTime }),
+  bybitTxSyncError: null,
+  setBybitTxSyncError: (bybitTxSyncError) => set({ bybitTxSyncError, txSyncError: bybitTxSyncError }),
+  txSyncError: null,
+  setTxSyncError: (txSyncError) => set({ txSyncError, bybitTxSyncError: txSyncError }),
   bybitTxLatestTransactionTime: 0,
   setBybitTxLatestTransactionTime: (bybitTxLatestTransactionTime) => set({ bybitTxLatestTransactionTime }),
   bybitTxOldestTransactionTime: 0,
   setBybitTxOldestTransactionTime: (bybitTxOldestTransactionTime) => set({ bybitTxOldestTransactionTime }),
   bybitTxTotalRecords: 0,
   setBybitTxTotalRecords: (bybitTxTotalRecords) => set({ bybitTxTotalRecords }),
+
+  // 5. Bitget Transactions
+  cachedBitgetTxLog: [],
+  setCachedBitgetTxLog: (cachedBitgetTxLog) => set({ cachedBitgetTxLog }),
+  isBitgetTxSyncing: false,
+  setIsBitgetTxSyncing: (isBitgetTxSyncing) => set({ isBitgetTxSyncing }),
+  bitgetTxProgress: null,
+  setBitgetTxProgress: (bitgetTxProgress) => set({ bitgetTxProgress }),
+  bitgetTxLastSyncTime: 0,
+  setBitgetTxLastSyncTime: (bitgetTxLastSyncTime) => set({ bitgetTxLastSyncTime }),
+  bitgetTxSyncError: null,
+  setBitgetTxSyncError: (bitgetTxSyncError) => set({ bitgetTxSyncError }),
+  bitgetTxLatestTransactionTime: 0,
+  setBitgetTxLatestTransactionTime: (bitgetTxLatestTransactionTime) => set({ bitgetTxLatestTransactionTime }),
+  bitgetTxOldestTransactionTime: 0,
+  setBitgetTxOldestTransactionTime: (bitgetTxOldestTransactionTime) => set({ bitgetTxOldestTransactionTime }),
+  bitgetTxTotalRecords: 0,
+  setBitgetTxTotalRecords: (bitgetTxTotalRecords) => set({ bitgetTxTotalRecords }),
+
+  // 6. OKX Transactions
+  cachedOkxTxLog: [],
+  setCachedOkxTxLog: (cachedOkxTxLog) => set({ cachedOkxTxLog }),
+  isOkxTxSyncing: false,
+  setIsOkxTxSyncing: (isOkxTxSyncing) => set({ isOkxTxSyncing }),
+  okxTxProgress: null,
+  setOkxTxProgress: (okxTxProgress) => set({ okxTxProgress }),
+  okxTxLastSyncTime: 0,
+  setOkxTxLastSyncTime: (okxTxLastSyncTime) => set({ okxTxLastSyncTime }),
+  okxTxSyncError: null,
+  setOkxTxSyncError: (okxTxSyncError) => set({ okxTxSyncError }),
+  okxTxLatestTransactionTime: 0,
+  setOkxTxLatestTransactionTime: (okxTxLatestTransactionTime) => set({ okxTxLatestTransactionTime }),
+  okxTxOldestTransactionTime: 0,
+  setOkxTxOldestTransactionTime: (okxTxOldestTransactionTime) => set({ okxTxOldestTransactionTime }),
+  okxTxTotalRecords: 0,
+  setOkxTxTotalRecords: (okxTxTotalRecords) => set({ okxTxTotalRecords }),
 }));

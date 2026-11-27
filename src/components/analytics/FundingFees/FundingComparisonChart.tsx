@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -12,7 +13,6 @@ import {
   LabelList
 } from 'recharts';
 import { CoinIcon } from '../../ui/CoinIcon';
-import clsx from 'clsx';
 import { useFundingStore } from '../../../store/fundingStore';
 import { Star } from 'lucide-react';
 
@@ -25,6 +25,7 @@ export interface ChartDataPoint {
   value: number;
   type: string;
   color: string;
+  fillOpacity?: number;
 }
 
 interface Props {
@@ -42,6 +43,7 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => {
+  const { t } = useTranslation();
   const { comparisonFavorites, toggleComparisonFavorite } = useFundingStore();
 
   if (active && payload && payload.length) {
@@ -52,49 +54,46 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
     const isFav = comparisonFavorites.includes(rowId);
     
     return (
-      <div className="bg-[#151619] border border-[#2a2b30] p-3 rounded-lg shadow-xl min-w-[200px]">
-        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-[#2a2b30]/50">
+      <div className="bg-surface border border-line p-3 rounded-lg shadow-xl min-w-[200px]">
+        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-line/50">
           <div className="flex items-center gap-2">
             <CoinIcon symbol={data.coin} className="w-5 h-5" />
-            <span className="font-bold text-white text-base">{data.symbol}</span>
+            <span className="font-bold text-fg text-base">{data.symbol}</span>
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 toggleComparisonFavorite(rowId);
               }}
-              className="text-[#8E9299] hover:text-yellow-500 transition-colors cursor-pointer"
+              className="text-fg-muted hover:text-tone-yellow transition-colors cursor-pointer"
             >
-              <Star className={clsx("w-3.5 h-3.5", isFav && "fill-yellow-500 text-yellow-500")} />
+              <Star className={`w-3.5 h-3.5${isFav ? ' fill-tone-yellow text-tone-yellow' : ''}`} />
             </button>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#2a2b30] bg-[#2a2b30]/50 text-[#8E9299] uppercase">
+            <span className="text-[10px] px-1.5 py-0.5 rounded border border-line bg-line/50 text-fg-muted uppercase">
               {data.type.replace('-', ' ')}
             </span>
-            <span className={clsx(
-              "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-medium capitalize shrink-0",
-              data.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
-              data.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
-              data.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
-              "bg-[#2a2b30] text-[#8E9299] border-[#2a2b30]"
-            )}>
+            <span className={[
+              'flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-medium capitalize shrink-0',
+              data.exchange === 'bitget' ? 'bg-tone-cyan/10 text-tone-cyan border-tone-cyan/25' :
+              data.exchange === 'bybit' ? 'bg-tone-orange/10 text-tone-orange border-tone-orange/25' :
+              data.exchange === 'okx' ? 'bg-fg/10 text-fg border-fg/20' :
+              'bg-line text-fg-muted border-line'
+            ].join(' ')}>
               {data.exchange}
             </span>
           </div>
         </div>
         
         <div className="flex justify-between items-center gap-4">
-          <span className="text-sm text-[#8E9299]">{periodLabel}</span>
-          <span className={clsx(
-            "font-mono font-bold",
-            isPositive ? "text-green-400" : "text-red-400"
-          )}>
+          <span className="text-sm text-fg-muted">{periodLabel}</span>
+          <span className={`font-mono font-bold ${isPositive ? 'text-success' : 'text-danger'}`}>
             {data.value > 0 ? '+' : ''}{formatPercent(data.value)}
           </span>
         </div>
         
-        <div className="mt-2 text-xs text-[#8E9299]">
-          {isPositive ? 'Longs pay Shorts' : data.value < 0 ? 'Shorts pay Longs' : 'Neutral'}
+        <div className="mt-2 text-xs text-fg-muted">
+          {isPositive ? t('analytics.funding.cards.longsPayShorts', 'Longs pay Shorts') : data.value < 0 ? t('analytics.funding.cards.shortsPayLongs', 'Shorts pay Longs') : t('common.neutral', 'Neutral')}
         </div>
       </div>
     );
@@ -115,7 +114,7 @@ const CustomizedLabel = (props: any) => {
     <text 
       x={xPos} 
       y={y + height / 2} 
-      fill="#fff" 
+      fill="var(--fg)" 
       fontSize={10} 
       textAnchor={isPositive ? "start" : "end"} 
       dominantBaseline="middle"
@@ -127,6 +126,7 @@ const CustomizedLabel = (props: any) => {
 };
 
 export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) => {
+  const { t } = useTranslation();
   const { comparisonFavorites, toggleComparisonFavorite } = useFundingStore();
 
   // Ensure enough height to avoid squished bars in horizontal layout
@@ -140,11 +140,11 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
             data={data}
             margin={{ top: 20, right: 80, left: 0, bottom: 20 }}
           >
-            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={true} stroke="#2a2b30" />
+            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={true} stroke="var(--line)" />
             <XAxis 
               type="number" 
               tickFormatter={(val) => formatPercent(val)} 
-              stroke="#8E9299" 
+              stroke="var(--fg-muted)" 
               fontSize={12}
               tickLine={false}
               axisLine={false}
@@ -152,7 +152,7 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
             <YAxis 
               type="category" 
               dataKey="label" 
-              axisLine={{ stroke: '#2a2b30' }}
+              axisLine={{ stroke: 'var(--line)' }}
               tickLine={false}
               interval={0}
               width={180}
@@ -173,18 +173,18 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
                             e.stopPropagation();
                             toggleComparisonFavorite(rowId);
                           }}
-                          className="text-[#8E9299] hover:text-yellow-500 transition-colors cursor-pointer shrink-0"
+                          className="text-fg-muted hover:text-tone-yellow transition-colors cursor-pointer shrink-0"
                         >
-                          <Star className={clsx("w-3.5 h-3.5", isFav && "fill-yellow-500 text-yellow-500")} />
+                          <Star className={`w-3.5 h-3.5${isFav ? ' fill-tone-yellow text-tone-yellow' : ''}`} />
                         </button>
-                        <span className="text-xs font-medium text-[#8E9299] truncate">{item.symbol}</span>
-                        <span className={clsx(
-                          "flex items-center px-1 py-[1px] rounded border text-[8px] font-medium capitalize shrink-0",
-                          item.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
-                          item.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
-                          item.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
-                          "bg-[#2a2b30] text-[#8E9299] border-[#2a2b30]"
-                        )}>
+                        <span className="text-xs font-medium text-fg-muted truncate">{item.symbol}</span>
+                        <span className={[
+                          'flex items-center px-1 py-[1px] rounded border text-[8px] font-medium capitalize shrink-0',
+                          item.exchange === 'bitget' ? 'bg-tone-cyan/10 text-tone-cyan border-tone-cyan/25' :
+                          item.exchange === 'bybit' ? 'bg-tone-orange/10 text-tone-orange border-tone-orange/25' :
+                          item.exchange === 'okx' ? 'bg-fg/10 text-fg border-fg/20' :
+                          'bg-line text-fg-muted border-line'
+                        ].join(' ')}>
                           {item.exchange}
                         </span>
                       </div>
@@ -195,14 +195,15 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
             />
             <Tooltip 
               content={<CustomTooltip periodLabel={periodLabel} />}
-              cursor={{ fill: '#2a2b30', opacity: 0.4 }}
+              cursor={{ fill: 'var(--elevated-hover)', opacity: 0.6 }}
             />
-            <ReferenceLine x={0} stroke="#4a4b50" />
+            <ReferenceLine x={0} stroke="var(--line-strong)" />
             <Bar dataKey="value" radius={[0, 4, 4, 0]} isAnimationActive={false}>
               {data.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
                   fill={entry.color} 
+                  fillOpacity={entry.fillOpacity ?? 1}
                 />
               ))}
               <LabelList dataKey="value" content={<CustomizedLabel />} />
