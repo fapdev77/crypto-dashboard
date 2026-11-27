@@ -97,26 +97,80 @@ describe('ClosedPositions', () => {
     expect(screen.getByText('No closed positions found.')).toBeInTheDocument();
   });
 
-  it('summarises 4 analytical cards: Net PnL/ROI/PF, Operational Costs, Volume/Sides, and Win Rate/Edge/Extremes', () => {
+  it('summarises 4 analytical cards: 24px titles, no Card 3 donut, full-width Edge bar, colored bias, and tooltips', () => {
     renderPage();
 
     const grid = screen.getByTestId('closed-positions-summary-grid');
     expect(grid).toBeInTheDocument();
     expect(grid).toHaveClass('grid-cols-1', 'sm:grid-cols-2', 'xl:grid-cols-4');
 
-    expect(screen.getByText('Net Profit (Total PnL)')).toBeInTheDocument();
-    expect(screen.getByText('Operational Costs')).toBeInTheDocument();
-    expect(screen.getByText('Trade Volume')).toBeInTheDocument();
-    expect(screen.getByText('Win Rate & Stats')).toBeInTheDocument();
+    const titles = [
+      screen.getByText('Net Profit (Total PnL)'),
+      screen.getByText('Operational Costs'),
+      screen.getByText('Trade Volume'),
+      screen.getByText('Win Rate & Stats'),
+    ];
+    titles.forEach((titleEl) => {
+      expect(titleEl).toBeInTheDocument();
+      expect(titleEl).toHaveClass('text-2xl', 'text-fg-muted');
+      expect(titleEl).not.toHaveClass('uppercase', 'truncate');
+    });
+
+    // Card 3: Donut chart removed, horizontal Long/Short bar kept, balanced bias styled muted
+    expect(grid.querySelector('.recharts-wrapper')).not.toBeInTheDocument();
+    expect(screen.queryByText(/executions/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('closed-positions-volume-bar')).toBeInTheDocument();
+    expect(screen.getByTestId('closed-positions-side-bias')).toHaveClass('text-fg-muted');
+
+    // Card 4: Full-width horizontal Edge bar with semantic positive styling
+    const edgeBar = screen.getByTestId('closed-positions-edge-bar');
+    expect(edgeBar).toBeInTheDocument();
+    expect(edgeBar).toHaveClass('w-full', 'bg-success/10', 'border-success/30');
     expect(screen.getByText('Edge')).toBeInTheDocument();
     expect(screen.getByText('Win Rate Long')).toBeInTheDocument();
     expect(screen.getByText('Win Rate Short')).toBeInTheDocument();
+    expect(screen.getByText('Extremes')).toBeInTheDocument();
+
+    // Key metrics expose discreet tooltip triggers
+    expect(grid.querySelectorAll('.cursor-help').length).toBeGreaterThanOrEqual(14);
 
     // Ensure no dark-only hardcoded colors leak into the summary cards
     expect(grid.innerHTML).not.toMatch(/#161b22|#2a2b30|#00C853|#FF4444/i);
 
     expect(screen.getByText('BTCUSDT')).toBeInTheDocument();
     expect(screen.getByText('ETHUSDT')).toBeInTheDocument();
+  });
+
+  it('colors directional bias green for buyer dominance and red for seller dominance or negative edge', () => {
+    vi.mocked(usePositionHistory).mockReturnValue(hookResult({
+      positions: [
+        closed({ id: 'h1', symbol: 'BTCUSDT', side: 'long', realizedPnl: 100 }),
+        closed({ id: 'h2', symbol: 'ETHUSDT', side: 'long', realizedPnl: 50 }),
+        closed({ id: 'h3', symbol: 'SOLUSDT', side: 'short', realizedPnl: -20 }),
+      ],
+    }) as never);
+
+    const { rerender } = renderPage();
+    expect(screen.getByTestId('closed-positions-side-bias')).toHaveClass('text-success');
+    expect(screen.getByTestId('closed-positions-edge-bar')).toHaveClass('bg-success/10');
+
+    vi.mocked(usePositionHistory).mockReturnValue(hookResult({
+      positions: [
+        closed({ id: 'h1', symbol: 'BTCUSDT', side: 'short', realizedPnl: -120 }),
+        closed({ id: 'h2', symbol: 'ETHUSDT', side: 'short', realizedPnl: -80 }),
+        closed({ id: 'h3', symbol: 'SOLUSDT', side: 'long', realizedPnl: 20 }),
+      ],
+    }) as never);
+
+    rerender(
+      <PrivacyProvider>
+        <TooltipProvider>
+          <ClosedPositions />
+        </TooltipProvider>
+      </PrivacyProvider>
+    );
+    expect(screen.getByTestId('closed-positions-side-bias')).toHaveClass('text-danger');
+    expect(screen.getByTestId('closed-positions-edge-bar')).toHaveClass('bg-danger/10', 'border-danger/30');
   });
 
   it('masks monetary figures and hides sparkline in Privacy Mode while keeping counts and percentages visible', () => {
