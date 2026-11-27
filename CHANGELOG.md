@@ -1,3 +1,10 @@
+## [2.56.1](https://github.com/fapdev77/crypto-dashboard/compare/v2.56.0...v2.56.1) (2026-11-27)
+
+
+### Bug Fixes
+
+* **ui:** localize UI components and update styles ([7033d4a](https://github.com/fapdev77/crypto-dashboard/commit/7033d4aac3cc556feb654cd59fd614a134931d4e))
+
 # [2.56.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.55.0...v2.56.0) (2026-11-27)
 
 
