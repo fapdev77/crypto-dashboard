@@ -315,8 +315,8 @@ export function TradeHistory() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '11px' }}
-                    itemStyle={{ color: '#fff' }}
+                    contentStyle={{ backgroundColor: 'var(--elevated)', border: '1px solid var(--line-strong)', borderRadius: '8px', fontSize: '11px', color: 'var(--fg)' }}
+                    itemStyle={{ color: 'var(--fg)' }}
                   />
                   <Pie data={SIDE_DONUT} cx="50%" cy="50%" innerRadius="60%" outerRadius="100%" dataKey="value" stroke="none">
                     {SIDE_DONUT.map((entry, index) => <Cell key={`side-${index}`} fill={entry.color} />)}
@@ -358,7 +358,7 @@ export function TradeHistory() {
       )}
 
       {error && (
-        <div className="p-4 bg-red-900/30 border border-red-800 text-red-200 rounded text-sm">
+        <div className="p-4 bg-danger/10 border border-danger/30 text-danger rounded text-sm">
           {error}
         </div>
       )}
@@ -383,7 +383,7 @@ export function TradeHistory() {
                 itemsPerPage={50}
                 onPageChange={setCurrentPage}
                 refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
-                refreshLabel="Updating"
+                refreshLabel={t('common.pagination.updating', 'Updating')}
                 refreshDataReady={!loading}
               />
             </div>
@@ -607,7 +607,7 @@ export function TradeHistory() {
               itemsPerPage={50}
               onPageChange={setCurrentPage}
               refreshKey={`${filters.exchange}-${filters.instrument}-${filters.type}-${filters.side}-${filters.status}-${filters.timePeriod}-${filters.customStartDate || ''}-${filters.customEndDate || ''}-${filters.accountId}-${filters.historyStatus}`}
-              refreshLabel="Updating"
+              refreshLabel={t('common.pagination.updating', 'Updating')}
             />
           </div>
         </div>

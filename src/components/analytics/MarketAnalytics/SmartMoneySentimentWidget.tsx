@@ -236,7 +236,7 @@ export const SmartMoneySentimentWidget: React.FC = () => {
             style={{ left: `${Math.max(2, Math.min(98, greedFearScore))}%` }}
             className="absolute top-0 transform -translate-x-1/2 flex flex-col items-center"
           >
-            <div className="w-4 h-4 bg-white rounded-full border-2 border-canvas shadow-lg" />
+            <div className="w-4 h-4 bg-fg rounded-full border-2 border-canvas shadow-lg" />
             <span className="text-[10px] font-mono font-bold text-fg mt-1 bg-canvas px-1 rounded border border-line">
               {greedFearScore}
             </span>

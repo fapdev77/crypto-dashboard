@@ -23,14 +23,14 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Excellent':
-        return 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30';
+        return 'text-success bg-success/15 border-success/30';
       case 'Acceptable':
-        return 'text-yellow-400 bg-yellow-500/15 border-yellow-500/30';
+        return 'text-tone-yellow bg-yellow-500/15 border-yellow-500/30';
       case 'Moderate':
-        return 'text-amber-400 bg-amber-500/15 border-amber-500/30';
+        return 'text-tone-amber bg-amber-500/15 border-amber-500/30';
       case 'High':
       default:
-        return 'text-rose-400 bg-rose-500/15 border-rose-500/30';
+        return 'text-danger bg-danger/15 border-danger/30';
     }
   };
 
@@ -74,7 +74,7 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
             <div className="grid grid-cols-2 gap-4 text-xs font-mono tabular-nums">
               {/* Left: Trades */}
               <div className="space-y-2 pr-2 border-r border-line/40">
-                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-tone-amber uppercase tracking-wider block">
                   Trades
                 </span>
                 <div>
@@ -83,13 +83,13 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
                 </div>
                 <div>
                   <span className="text-fg-muted text-[10px] block">{t('analytics.portfolio.operations.tradingFeesPaid', 'Fees Paid')}</span>
-                  <span className={`font-medium ${isEngineRebate ? 'text-emerald-400' : 'text-danger'}`}>
+                  <span className={`font-medium ${isEngineRebate ? 'text-success' : 'text-danger'}`}>
                     {formatFeesDisplay()}
                   </span>
                 </div>
                 <div className="pt-1 border-t border-line/50">
                   <span className="text-fg-muted text-[10px] block">{t('analytics.portfolio.operations.netTradingPnl', 'Net Trading P&L')}</span>
-                  <span className={`font-bold ${netTradingNum >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span className={`font-bold ${netTradingNum >= 0 ? 'text-success' : 'text-danger'}`}>
                     {maskVal(operations.netTradingPnl)} {denomination}
                   </span>
                 </div>
@@ -97,12 +97,12 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
 
               {/* Right: Funding Rate */}
               <div className="space-y-2">
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-success uppercase tracking-wider block">
                   Funding Rate
                 </span>
                 <div>
                   <span className="text-fg-muted text-[10px] block">{t('analytics.portfolio.operations.fundingReceived', 'Received')}</span>
-                  <span className="text-emerald-400 font-medium">+{maskVal(operations.fundingReceived)} {denomination}</span>
+                  <span className="text-success font-medium">+{maskVal(operations.fundingReceived)} {denomination}</span>
                 </div>
                 <div>
                   <span className="text-fg-muted text-[10px] block">{t('analytics.portfolio.operations.fundingPaid', 'Paid')}</span>
@@ -112,7 +112,7 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
                 </div>
                 <div className="pt-1 border-t border-line/50">
                   <span className="text-fg-muted text-[10px] block">{t('analytics.portfolio.operations.netFunding', 'Net Funding')}</span>
-                  <span className={`font-bold ${netFundingNum >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span className={`font-bold ${netFundingNum >= 0 ? 'text-success' : 'text-danger'}`}>
                     {maskVal(operations.netFunding)} {denomination}
                   </span>
                 </div>
@@ -130,7 +130,7 @@ export const OperationsAndFeesSection = React.memo(function OperationsAndFeesSec
                 <span className="text-fg-muted font-sans text-[10px] uppercase tracking-wider">
                   Other Operational ({otherOp.count})
                 </span>
-                <span className={`font-bold ${otherOpNetNum >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`font-bold ${otherOpNetNum >= 0 ? 'text-success' : 'text-danger'}`}>
                   {isPrivateMode ? '****' : `${otherOpNetNum > 0 && !otherOp.net.startsWith('+') ? '+' : ''}${otherOp.net} ${denomination}`}
                 </span>
               </div>

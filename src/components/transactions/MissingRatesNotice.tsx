@@ -33,7 +33,7 @@ export function MissingRatesNotice({ currencies, className = '' }: MissingRatesN
 
   return (
     <div
-      className={`flex items-start gap-2 rounded-lg border border-[#FF9C2E]/40 bg-[#FF9C2E]/10 px-3 py-2 text-[11px] leading-relaxed text-[#FF9C2E] ${className}`}
+      className={`flex items-start gap-2 rounded-lg border border-orange-500/40 bg-orange-500/10 px-3 py-2 text-[11px] leading-relaxed text-tone-orange ${className}`}
       role="status"
     >
       <AlertTriangle className="mt-[1px] h-3.5 w-3.5 shrink-0" />

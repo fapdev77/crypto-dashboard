@@ -70,7 +70,7 @@ function parseOverallLine(msg: string): OverallTiming | null {
 
 const EXCHANGE_COLORS: Record<string, string> = {
   bybit: '#ff9c2e',
-  okx: '#fafafa',
+  okx: 'var(--fg)',
   bitget: '#03aac7',
 };
 
@@ -128,9 +128,9 @@ export function FundingSyncTimingPanel() {
             duration: 8000,
             icon: '⏰',
             style: {
-              background: '#1a1b1e',
-              color: '#fbbf24',
-              border: '1px solid rgba(251,191,36,0.3)',
+              background: 'var(--elevated)',
+              color: 'var(--tone-amber)',
+              border: '1px solid rgba(251,191,36,0.35)',
             },
           },
         );
@@ -233,7 +233,7 @@ export function FundingSyncTimingPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-orange-400" />
+          <BarChart3 className="w-4 h-4 text-tone-orange" />
           <AppTooltip description={t('settings.fundingTiming.tooltip', 'Displays real-time and historical performance data for the background synchronization of funding rates.')}>
             <h4 className="text-fg font-medium text-sm cursor-help border-b border-dashed border-fg-muted/50">{t('settings.fundingTiming.title', 'Sync Performance')}</h4>
           </AppTooltip>
@@ -246,7 +246,7 @@ export function FundingSyncTimingPanel() {
             <button
               onClick={handleClearAndSync}
               disabled={isClearing || isSyncing}
-              className="flex items-center gap-1.5 bg-red-400/10 hover:bg-red-400/20 disabled:opacity-40 disabled:cursor-not-allowed text-red-400 border border-red-400/20 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-help"
+              className="flex items-center gap-1.5 bg-danger/10 hover:bg-danger/20 disabled:opacity-40 disabled:cursor-not-allowed text-danger border border-danger/20 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-help"
             >
               {isClearing ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -261,7 +261,7 @@ export function FundingSyncTimingPanel() {
             <button
               onClick={handleRunSync}
               disabled={isSyncing}
-              className="flex items-center gap-1.5 bg-orange-400/10 hover:bg-orange-400/20 disabled:opacity-40 disabled:cursor-not-allowed text-orange-400 border border-orange-400/20 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-help"
+              className="flex items-center gap-1.5 bg-orange-500/10 hover:bg-orange-500/20 disabled:opacity-40 disabled:cursor-not-allowed text-tone-orange border border-orange-500/20 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-help"
             >
               {isSyncing ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -292,17 +292,17 @@ export function FundingSyncTimingPanel() {
             <div className="flex flex-col gap-0.5 min-w-0">
               <div className="flex items-center gap-2">
                 {isFundingImminent5min ? (
-                  <Bell className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
+                  <Bell className="w-3.5 h-3.5 text-tone-amber shrink-0 animate-pulse" />
                 ) : (
-                  <Clock className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                  <Clock className="w-3.5 h-3.5 text-tone-orange shrink-0" />
                 )}
                 <span className="text-xs text-fg-muted truncate">
                   📅 {t('settings.fundingTiming.nextFunding', 'Next funding')}{' '}
-                  <span className={`font-mono ${isFundingImminent5min ? 'text-amber-300' : 'text-fg'}`}>
+                  <span className={`font-mono ${isFundingImminent5min ? 'text-tone-amber' : 'text-fg'}`}>
                     {formatTime(nextFundingTime)}
                   </span>
                   {' '}→ {t('settings.fundingTiming.syncTo', 'Sync')}{' '}
-                  <span className={`font-mono ${isFundingImminent5min ? 'text-amber-300' : 'text-orange-400'}`}>
+                  <span className={`font-mono ${isFundingImminent5min ? 'text-tone-amber' : 'text-tone-orange'}`}>
                     {formatTime(nextScheduledSyncTime)}
                   </span>
                 </span>
@@ -319,20 +319,20 @@ export function FundingSyncTimingPanel() {
                   align="start"
                 >
                   <span className="cursor-help shrink-0">
-                    <Info className={`w-3 h-3 transition-colors ${isFundingImminent5min ? 'text-amber-400' : 'text-fg-muted hover:text-orange-400'}`} />
+                    <Info className={`w-3 h-3 transition-colors ${isFundingImminent5min ? 'text-tone-amber' : 'text-fg-muted hover:text-tone-orange'}`} />
                   </span>
                 </AppTooltip>
               </div>
               {/* UTC secondary display */}
               <div className="flex items-center gap-2 pl-6">
-                <span className={`text-[10px] font-mono ${isFundingImminent5min ? 'text-amber-400/60' : 'text-[#6B7280]'}`}>
+                <span className={`text-[10px] font-mono ${isFundingImminent5min ? 'text-tone-amber/80' : 'text-fg-muted'}`}>
                   {formatTimeUTC(nextFundingTime)} UTC → {formatTimeUTC(nextScheduledSyncTime)} UTC
                 </span>
               </div>
             </div>
             <span className={`text-xs font-mono px-2 py-0.5 rounded-md font-medium shrink-0 ml-2 transition-colors duration-500 ${isFundingImminent5min
-              ? 'text-amber-300 bg-amber-400/15'
-              : 'text-orange-400 bg-orange-400/10'
+              ? 'text-tone-amber bg-amber-500/15'
+              : 'text-tone-orange bg-orange-500/10'
               }`}>
               {isSyncing ? t('common.syncingNow', 'Syncing now') : isFundingImminent5min ? `${t('settings.fundingTiming.fundingIn', 'Funding in')} ${countdown}` : `${t('common.inTime', 'in')} ${countdown}`}
             </span>
@@ -365,7 +365,7 @@ export function FundingSyncTimingPanel() {
 
                   <AppTooltip description={t('settings.fundingTiming.apiFetchTooltip', 'Time spent actively fetching data from exchange APIs.')}>
                     <div className="text-center cursor-help">
-                      <div className="text-lg font-bold text-orange-400 font-mono">
+                      <div className="text-lg font-bold text-tone-orange font-mono">
                         {overallTiming.fetchSec.toFixed(1)}s
                       </div>
                       <div className="text-[10px] text-fg-muted font-mono mt-0.5 border-b border-dashed border-fg-muted/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.apiFetch', 'API Fetch')}</div>
@@ -374,7 +374,7 @@ export function FundingSyncTimingPanel() {
 
                   <AppTooltip description={t('settings.fundingTiming.dbWriteTooltip', 'Time spent writing the processed data into the local IndexedDB storage.')}>
                     <div className="text-center cursor-help">
-                      <div className="text-lg font-bold text-blue-400 font-mono">
+                      <div className="text-lg font-bold text-tone-blue font-mono">
                         {overallTiming.writeSec.toFixed(1)}s
                       </div>
                       <div className="text-[10px] text-fg-muted font-mono mt-0.5 border-b border-dashed border-fg-muted/50 w-fit mx-auto pb-0.5">{t('settings.fundingTiming.dbWrite', 'DB Write')}</div>
@@ -395,7 +395,7 @@ export function FundingSyncTimingPanel() {
             {exchangeTimings.length > 0 && (
               <div className="space-y-1.5">
                 {exchangeTimings.map(ex => {
-                  const color = EXCHANGE_COLORS[ex.name] || '#8E9299';
+                  const color = EXCHANGE_COLORS[ex.name] || 'var(--fg-muted)';
                   const pct = ex.stale > 0 ? Math.round((ex.synced / ex.stale) * 100) : 0;
                   return (
                     <div key={ex.name} className="flex items-center gap-3 bg-elevated rounded px-3 py-2 border border-line/30">
@@ -445,9 +445,9 @@ export function FundingSyncTimingPanel() {
                             {pct >= 80 ? (
                               <Zap className="w-3.5 h-3.5 text-success" />
                             ) : pct >= 50 ? (
-                              <RefreshCw className="w-3.5 h-3.5 text-yellow-400" />
+                              <RefreshCw className="w-3.5 h-3.5 text-tone-yellow" />
                             ) : (
-                              <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+                              <AlertTriangle className="w-3.5 h-3.5 text-danger" />
                             )}
                           </div>
                         </AppTooltip>

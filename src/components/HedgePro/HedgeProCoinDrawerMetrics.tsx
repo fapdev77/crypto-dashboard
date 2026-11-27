@@ -46,7 +46,7 @@ export function HedgeProCoinDrawerMetrics({
   if (pnlConceptMode === 'hedge') {
     if (isUplNegative) {
       uplLabel = t('hedgePro.drawer.opportunityCost');
-      uplColor = 'text-amber-400';
+      uplColor = 'text-tone-amber';
       uplTooltip = t('hedgePro.drawer.opportunityCostTooltip');
     } else if (isUplPositive) {
       uplLabel = t('hedgePro.drawer.accumulatedAsset');
@@ -108,8 +108,8 @@ export function HedgeProCoinDrawerMetrics({
       {/* Card 3: Real Hedge Protected */}
       <div
         className={`p-2.5 rounded-lg border flex flex-col justify-between ${isNetProtectedPositive
-            ? 'bg-emerald-500/5 border-emerald-500/20'
-            : 'bg-red-500/5 border-red-500/20'
+            ? 'bg-success/5 border-success/20'
+            : 'bg-danger/5 border-danger/20'
           }`}
       >
         <div className="flex items-center justify-between">
@@ -119,15 +119,15 @@ export function HedgeProCoinDrawerMetrics({
           >
             <span
               className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${isNetProtectedPositive
-                  ? 'text-emerald-400 border-emerald-500/40'
-                  : 'text-red-400 border-red-500/40'
+                  ? 'text-success border-success/40'
+                  : 'text-danger border-danger/40'
                 }`}
             >
               {t('hedgePro.drawer.realHedge')}
             </span>
           </AppTooltip>
           <span
-            className={`text-[10px] font-mono font-semibold ${isNetProtectedPositive ? 'text-emerald-400' : 'text-red-400'
+            className={`text-[10px] font-mono font-semibold ${isNetProtectedPositive ? 'text-success' : 'text-danger'
               }`}
           >
             {coin.realHedgeProtectedPct.toFixed(1)}%
@@ -135,7 +135,7 @@ export function HedgeProCoinDrawerMetrics({
         </div>
         <div className="mt-1">
           <div
-            className={`font-mono text-sm font-semibold ${isNetProtectedPositive ? 'text-emerald-400' : 'text-red-400'
+            className={`font-mono text-sm font-semibold ${isNetProtectedPositive ? 'text-success' : 'text-danger'
               }`}
           >
             {formatCurrency(coin.netProtectedUsd, 'usd', 2)}
@@ -147,22 +147,22 @@ export function HedgeProCoinDrawerMetrics({
       </div>
 
       {/* Card 4: Protected of Equity */}
-      <div className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 flex flex-col justify-between">
+      <div className="p-2.5 rounded-lg bg-success/5 border border-success/20 flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <AppTooltip
             description={t('hedgePro.drawer.protOfEqTooltip')}
             side="top"
           >
-            <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider cursor-help border-b border-dashed border-emerald-500/40">
+            <span className="text-[10px] uppercase font-bold text-success tracking-wider cursor-help border-b border-dashed border-success/40">
               {t('hedgePro.drawer.protOfEq')}
             </span>
           </AppTooltip>
-          <span className="text-[10px] font-mono font-semibold text-emerald-400">
+          <span className="text-[10px] font-mono font-semibold text-success">
             {coin.protectedOfEquityPct.toFixed(1)}%
           </span>
         </div>
         <div className="mt-1">
-          <div className="font-mono text-emerald-400 text-sm font-semibold">
+          <div className="font-mono text-success text-sm font-semibold">
             {formatCurrency(coin.protectedUsd, 'usd', 2)}
           </div>
           <div className="font-mono text-[11px] text-fg-muted truncate">
@@ -184,14 +184,14 @@ export function HedgeProCoinDrawerMetrics({
             side="top"
           >
             <span
-              className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${coin.leveragedUsd > 0 ? 'text-amber-400 border-amber-500/40' : 'text-fg-muted border-fg-muted/50'
+              className={`text-[10px] uppercase font-bold tracking-wider cursor-help border-b border-dashed ${coin.leveragedUsd > 0 ? 'text-tone-amber border-amber-500/40' : 'text-fg-muted border-fg-muted/50'
                 }`}
             >
               {t('hedgePro.drawer.leveraged')}
             </span>
           </AppTooltip>
           <span
-            className={`text-[10px] font-mono font-semibold ${coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-fg-muted'
+            className={`text-[10px] font-mono font-semibold ${coin.leveragedUsd > 0 ? 'text-tone-amber' : 'text-fg-muted'
               }`}
           >
             {coin.leveragedOfEquityPct.toFixed(1)}%
@@ -199,7 +199,7 @@ export function HedgeProCoinDrawerMetrics({
         </div>
         <div className="mt-1">
           <div
-            className={`font-mono text-sm font-semibold ${coin.leveragedUsd > 0 ? 'text-amber-400' : 'text-fg'
+            className={`font-mono text-sm font-semibold ${coin.leveragedUsd > 0 ? 'text-tone-amber' : 'text-fg'
               }`}
           >
             {coin.leveragedUsd > 0 ? '+' : ''}{formatCurrency(coin.leveragedUsd, 'usd', 2)}

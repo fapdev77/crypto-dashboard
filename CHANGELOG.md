@@ -1,3 +1,36 @@
+# [2.56.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.55.0...v2.56.0) (2026-11-27)
+
+
+### Bug Fixes
+
+* update funding fee badge color ([c9effd5](https://github.com/fapdev77/crypto-dashboard/commit/c9effd5636a8f2ddccbc3428abf1a79f4720d8d4))
+
+
+### Features
+
+* update app visuals and standardize color utility usage ([b2b5edb](https://github.com/fapdev77/crypto-dashboard/commit/b2b5edb5276f464c175f722b4c3f3b29c4e23b48))
+
+# [2.55.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.54.0...v2.55.0) (2026-11-27)
+
+
+### Features
+
+* fix some visual issues and improve reading of closed positions cards. ([4c8d320](https://github.com/fapdev77/crypto-dashboard/commit/4c8d320169a38ed78a5fd354c831c98033577bf3))
+
+# [2.54.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.53.0...v2.54.0) (2026-11-26)
+
+
+### Features
+
+* add analytical summary cards for closed positions ([85cb4b2](https://github.com/fapdev77/crypto-dashboard/commit/85cb4b2831cf702657d19b49fd6f0a4700bf75ad))
+
+# [2.53.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.52.0...v2.53.0) (2026-11-26)
+
+
+### Features
+
+* **i18n,navigation:** internationalize pagination refreshLabel and standardize Trades menu hierarchy ([4f5a089](https://github.com/fapdev77/crypto-dashboard/commit/4f5a0891cfd5d813014cbc308240e0041e3c224c))
+
 # [2.52.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.51.0...v2.52.0) (2026-11-19)
 
 

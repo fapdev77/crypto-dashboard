@@ -81,7 +81,7 @@ export function VersionInfoCard() {
           <button
             onClick={() => triggerUpdate()}
             disabled={isUpdating}
-            className="px-3 py-1.5 bg-accent hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 text-white text-xs font-medium rounded-md cursor-pointer transition-colors shrink-0 flex items-center gap-1.5 shadow-sm shadow-blue-500/20"
+            className="px-3 py-1.5 bg-accent hover:bg-accent-hover active:bg-accent-hover disabled:opacity-50 text-white text-xs font-medium rounded-md cursor-pointer transition-colors shrink-0 flex items-center gap-1.5 shadow-sm shadow-blue-500/20"
           >
             <RefreshCw className={`w-3 h-3 ${isUpdating ? 'animate-spin' : ''}`} />
             <span>{isUpdating ? t('common.updating', 'Updating...') : t('settings.version.updateBtn', 'Update Now')}</span>
@@ -104,7 +104,7 @@ export function VersionInfoCard() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-line/50 rounded-md text-emerald-400">
+            <div className="p-2 bg-line/50 rounded-md text-success">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
@@ -114,7 +114,7 @@ export function VersionInfoCard() {
           </div>
 
           <div className="flex items-center gap-2.5 sm:col-span-2 border-t border-line/50 pt-2.5 mt-0.5">
-            <div className="p-2 bg-line/50 rounded-md text-purple-400">
+            <div className="p-2 bg-line/50 rounded-md text-tone-purple">
               <Github className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -123,7 +123,7 @@ export function VersionInfoCard() {
                 href={githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-accent hover:text-blue-400 font-medium inline-flex items-center gap-1 group w-fit cursor-pointer"
+                className="text-xs text-accent hover:text-accent-hover font-medium inline-flex items-center gap-1 group w-fit cursor-pointer"
               >
                 <span>{t('settings.version.clickHere', 'Click here')}</span>
                 <ExternalLink className="w-3 h-3 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -136,8 +136,8 @@ export function VersionInfoCard() {
             <div className="flex items-center gap-2.5">
               <div className={`p-2 rounded-md ${
                 indexedDBStatus === 'healthy' 
-                  ? 'bg-emerald-500/10 text-emerald-400' 
-                  : 'bg-red-500/10 text-red-400 animate-pulse'
+                  ? 'bg-success/10 text-success' 
+                  : 'bg-danger/10 text-danger animate-pulse'
               }`}>
                 <Database className="w-4 h-4" />
               </div>
@@ -150,11 +150,11 @@ export function VersionInfoCard() {
                   {/* Color-coded indicator: green for healthy, red for error */}
                   <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
                     indexedDBStatus === 'healthy'
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      : 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse'
+                      ? 'bg-success/10 text-success border-success/20'
+                      : 'bg-danger/10 text-danger border-danger/20 animate-pulse'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      indexedDBStatus === 'healthy' ? 'bg-emerald-400' : 'bg-red-500'
+                      indexedDBStatus === 'healthy' ? 'bg-success' : 'bg-danger'
                     }`} />
                     {indexedDBStatus === 'healthy' ? t('common.healthy', 'Healthy') : indexedDBStatus === 'recovering' ? t('common.recovering', 'Recovering...') : t('common.errorConflict', 'Error / Conflict')}
                   </span>
@@ -176,8 +176,8 @@ export function VersionInfoCard() {
           </div>
 
           {indexedDBStatus === 'error' && indexedDBError && (
-            <div className="sm:col-span-2 bg-red-500/10 border border-red-500/20 rounded p-2 text-[11px] text-red-300 flex items-start gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+            <div className="sm:col-span-2 bg-danger/10 border border-danger/20 rounded p-2 text-[11px] text-danger flex items-start gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-danger shrink-0 mt-0.5" />
               <span>{indexedDBError}</span>
             </div>
           )}
@@ -188,7 +188,7 @@ export function VersionInfoCard() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-xs font-semibold text-fg tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <Sparkles className="w-3.5 h-3.5 text-tone-amber" />
                 {t('settings.version.highlights', 'Latest Release Highlights (v{{version}})', { version })}
               </h4>
               <span className="text-[10px] text-fg-muted font-mono">{releaseDate}</span>
@@ -197,11 +197,11 @@ export function VersionInfoCard() {
             <div className="space-y-3">
               {recentChanges.map((section, idx) => (
                 <div key={idx} className="space-y-1.5">
-                  <span className="text-[11px] font-medium text-blue-400 block">{section.category}</span>
+                  <span className="text-[11px] font-medium text-tone-blue block">{section.category}</span>
                   <ul className="space-y-1">
                     {section.items.map((item, itemIdx) => (
                       <li key={itemIdx} className="text-xs text-fg flex items-start gap-1.5 leading-relaxed">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -212,25 +212,25 @@ export function VersionInfoCard() {
 
             {showFullChangelog && (
               <div className="mt-4 pt-3 border-t border-line space-y-3">
-                <span className="text-[11px] font-medium text-amber-400 block">
+                <span className="text-[11px] font-medium text-tone-amber block">
                   Previous Release Highlights {previousChanges?.version ? `(v${previousChanges.version})` : ''} {previousChanges?.date ? `- ${previousChanges.date}` : ''}
                 </span>
                 <ul className="space-y-1">
                   {previousChanges?.items?.length ? (
                     previousChanges.items.map((item, itemIdx) => (
                       <li key={itemIdx} className="text-xs text-fg-muted flex items-start gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-fg-muted shrink-0 mt-1.5" />
                         <span>{item}</span>
                       </li>
                     ))
                   ) : (
                     <>
                       <li className="text-xs text-fg-muted flex items-start gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-fg-muted shrink-0 mt-1.5" />
                         <span>Added Funding Fees Dashboard & Market Overview.</span>
                       </li>
                       <li className="text-xs text-fg-muted flex items-start gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0 mt-1.5" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-fg-muted shrink-0 mt-1.5" />
                         <span>Added Order Reports & Live Connection Telemetry logs.</span>
                       </li>
                     </>
@@ -262,7 +262,7 @@ export function VersionInfoCard() {
               href={`${githubUrl}/blob/main/CHANGELOG.md`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-accent hover:text-blue-400 flex items-center gap-1 font-medium transition-colors"
+              className="text-xs text-accent hover:text-accent-hover flex items-center gap-1 font-medium transition-colors"
             >
               <FileText className="w-3.5 h-3.5" />
               {t('settings.version.fullChangelog', 'Full CHANGELOG.md')}

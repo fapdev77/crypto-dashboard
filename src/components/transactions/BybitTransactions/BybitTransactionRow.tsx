@@ -114,7 +114,7 @@ export function BybitTransactionRow({ entry, isExpanded, onToggle }: Props) {
               {entry.symbol && <span className="text-[10px] text-fg/80 truncate max-w-[80px]">{entry.symbol}</span>}
             </div>
           </div>
-          <span className="w-max px-1.5 py-0.5 text-[9px] rounded font-semibold border text-white bg-white/10 border-white/20">
+          <span className="w-max px-1.5 py-0.5 text-[9px] rounded font-semibold border text-fg bg-fg/10 border-fg/20">
             {entry.label}
           </span>
         </div>

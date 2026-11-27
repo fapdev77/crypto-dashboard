@@ -95,7 +95,7 @@ export const THEME_PRESETS: ThemePreset[] = [
       accentHover: '#1a6ae6',
       success: '#00a63e',
       danger: '#d4183d',
-      warning: '#fdc700',
+      warning: '#b45309',
     },
   },
   {

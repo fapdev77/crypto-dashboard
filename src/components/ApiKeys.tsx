@@ -188,14 +188,14 @@ export function ApiKeys() {
                                   isSubAccount={apiKey.isSubAccount}
                                 />
                                 {apiKey.includeFunding === false && (
-                                  <span className="text-[9px] font-mono px-1 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400" title="Funding account excluded">
+                                  <span className="text-[9px] font-mono px-1 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-tone-amber" title="Funding account excluded">
                                     {t('apiKeys.noFundingBadge', 'No Funding')}
                                   </span>
                                 )}
                               </div>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono leading-none border uppercase tracking-wider shrink-0 ${!apiKey.isActive ? 'bg-fg-muted/10 text-fg-muted border-fg-muted/20' :
                                 status === 'connected' ? 'bg-success/10 text-success border-success/30' :
-                                  status === 'connecting' ? 'bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/30 animate-pulse' :
+                                  status === 'connecting' ? 'bg-amber-500/10 text-tone-amber border-amber-500/30 animate-pulse' :
                                     status === 'error' ? 'bg-danger/10 text-danger border-danger/30' :
                                       'bg-fg-muted/10 text-fg-muted border-fg-muted/20'
                                 }`}>

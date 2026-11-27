@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import { Sidebar } from '../Sidebar';
 import { useApiKeysStore, ApiCredentials } from '../../store/apiKeysStore';
 import { useSettingsStore } from '../../store/settingsStore';
+import i18n from '../../i18n/config';
 
 function apiKey(exchange: 'bybit' | 'bitget' | 'okx', isActive = true): ApiCredentials {
   return {
@@ -20,7 +21,8 @@ function renderSidebar(activeTab = 'dashboard') {
   return render(<Sidebar activeTab={activeTab} setActiveTab={() => {}} isCollapsed={false} />);
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await i18n.changeLanguage('en-US');
   useSettingsStore.setState({ useMockData: false });
   useApiKeysStore.setState({ keys: [] });
 });
@@ -91,5 +93,19 @@ describe('Sidebar Transactions History group', () => {
     expect(screen.getByText('Positions')).toBeDefined();
     expect(screen.getByText('Open Positions')).toBeDefined();
     expect(screen.getByText('Closed Positions')).toBeDefined();
+  });
+
+  it('renders Trades as parent menu item and Trade History as subitem across locales', async () => {
+    const { unmount } = renderSidebar('trade-history');
+
+    expect(screen.getByText('Trades')).toBeDefined();
+    expect(screen.getByText('Trade History')).toBeDefined();
+    unmount();
+
+    await i18n.changeLanguage('pt-BR');
+    renderSidebar('trade-history');
+
+    expect(screen.getByText('Operações')).toBeDefined();
+    expect(screen.getByText('Histórico de Negociações')).toBeDefined();
   });
 });

@@ -236,10 +236,10 @@ export function Settings() {
                   <span
                     className={`w-2 h-2 rounded-full ${
                       fiatRatesStatus === 'live'
-                        ? 'bg-emerald-400 animate-pulse'
+                        ? 'bg-success animate-pulse'
                         : fiatRatesStatus === 'cached'
-                        ? 'bg-amber-400'
-                        : 'bg-rose-400'
+                        ? 'bg-warning'
+                        : 'bg-danger'
                     }`}
                   />
                   {t('settings.sourceTitle', 'Exchange Rates Source Status')}
@@ -247,10 +247,10 @@ export function Settings() {
                 <span
                   className={`text-[10px] font-mono uppercase px-1.5 py-0.5 rounded ${
                     fiatRatesStatus === 'live'
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      ? 'bg-success/10 text-success border border-success/20'
                       : fiatRatesStatus === 'cached'
-                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                      : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                      ? 'bg-amber-500/10 text-tone-amber border border-amber-500/20'
+                      : 'bg-danger/10 text-danger border border-danger/20'
                   }`}
                 >
                   {fiatRatesStatus}
@@ -263,7 +263,7 @@ export function Settings() {
                 {fiatRatesStatus === 'fallback' && t('settings.sourceFallback')}
               </p>
 
-              <div className="text-[10px] text-[#6b6f76] leading-normal pt-1 border-t border-line/60">
+              <div className="text-[10px] text-fg-muted leading-normal pt-1 border-t border-line/60">
                 {t('settings.fallbackExplanation')}
               </div>
 
@@ -280,7 +280,7 @@ export function Settings() {
                   }
                 }}
                 disabled={isRefreshingRates}
-                className="w-full mt-1 py-1.5 px-3 bg-elevated hover:bg-line border border-line hover:border-[#3d4047] text-fg rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                className="w-full mt-1 py-1.5 px-3 bg-elevated hover:bg-line border border-line hover:border-line-strong text-fg rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={`w-3 h-3 ${isRefreshingRates ? 'animate-spin text-accent' : 'text-fg-muted'}`} />
                 <span>{t('settings.refreshNow', 'Refresh Rates Now')}</span>
@@ -418,7 +418,7 @@ export function Settings() {
         {/* Card 4.2: Market Analytics Symbol Catalog */}
         <div id="symbol-catalog-settings-card" className="bg-surface border border-line rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-fg mb-1 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-cyan-400" />
+            <Layers className="w-4 h-4 text-tone-cyan" />
             {t('settings.catalog.title', 'Symbol Catalog Cache')}
           </h3>
           <p className="text-fg-muted text-xs mb-5">{t('settings.catalog.desc', 'Market Analytics instrument lists (Spot / Perp / Inverse)')}</p>
@@ -430,7 +430,7 @@ export function Settings() {
                 <AppTooltip description={t('settings.catalog.intervalTooltip', 'How often the app re-downloads the full instrument listing (Spot, USDT Perp and Coin-M Inverse) from Bybit, OKX and Bitget. These lists rarely change, so a longer interval saves network and API calls.')}>
                   <h4 className="text-fg font-medium text-sm w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('settings.catalog.refreshInterval', 'Refresh Interval')}</h4>
                 </AppTooltip>
-                <span className="text-cyan-400 font-mono text-xs bg-cyan-400/10 px-2 py-0.5 rounded-md">{symbolCatalogRefreshHours}h</span>
+                <span className="text-tone-cyan font-mono text-xs bg-tone-cyan/10 px-2 py-0.5 rounded-md">{symbolCatalogRefreshHours}h</span>
               </div>
               <p className="text-fg-muted text-xs mb-3 leading-relaxed">
                 {t('settings.catalog.intervalDesc', 'Controls the Market Analytics symbol catalog refresh cadence (1 to 24 hours).')}
@@ -443,7 +443,7 @@ export function Settings() {
                 value={symbolCatalogRefreshHours}
                 onChange={(e) => setSymbolCatalogRefreshHours(Number(e.target.value))}
                 onPointerUp={() => toast.success(t('settings.catalog.refreshIntervalToast', 'Symbol catalog refresh set to {{hours}}h', { hours: symbolCatalogRefreshHours }), { id: 'symbol-catalog-interval' })}
-                className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-tone-cyan"
               />
               <div className="flex justify-between text-[10px] text-fg-muted font-mono mt-1">
                 <span>1h</span>
@@ -459,12 +459,12 @@ export function Settings() {
                 <AppTooltip description={t('settings.catalog.lastFetchTooltip', 'Timestamp of the last successful catalog download across the three exchanges.')}>
                   <h4 className="text-fg font-medium text-sm w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('settings.catalog.lastFetch', 'Last Fetch')}</h4>
                 </AppTooltip>
-                <span className="text-cyan-400 font-mono text-xs">
+                <span className="text-tone-cyan font-mono text-xs">
                   {lastCatalogFetch ? new Date(lastCatalogFetch).toLocaleString() : t('common.never', 'Never')}
                 </span>
               </div>
               {staleExchanges.length > 0 && (
-                <p className="text-[11px] text-amber-400 leading-relaxed">
+                <p className="text-[11px] text-tone-amber leading-relaxed">
                   {t('settings.catalog.partialData', 'Partial data — kept the previous lists for:')} {staleExchanges.join(', ')}
                 </p>
               )}
@@ -476,8 +476,8 @@ export function Settings() {
                   className="flex items-center gap-2 bg-line hover:bg-line disabled:opacity-50 text-fg px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   {isRefreshingCatalog
-                    ? <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
-                    : <RefreshCw className="w-4 h-4 text-cyan-400" />
+                    ? <Loader2 className="w-4 h-4 text-tone-cyan animate-spin" />
+                    : <RefreshCw className="w-4 h-4 text-tone-cyan" />
                   }
                   {isRefreshingCatalog ? t('common.refreshing', 'Refreshing...') : t('settings.catalog.refreshBtn', 'Refresh Now')}
                 </button>
@@ -488,8 +488,8 @@ export function Settings() {
                   className="flex items-center gap-2 bg-line hover:bg-line disabled:opacity-50 text-fg px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   {isClearingCatalog
-                    ? <Loader2 className="w-4 h-4 text-red-400 animate-spin" />
-                    : <Trash2 className="w-4 h-4 text-red-400" />
+                    ? <Loader2 className="w-4 h-4 text-danger animate-spin" />
+                    : <Trash2 className="w-4 h-4 text-danger" />
                   }
                   {isClearingCatalog ? t('common.clearingSyncing', 'Clearing & Syncing...') : t('settings.catalog.clearBtn', 'Clear Cache & Sync')}
                 </button>
@@ -501,7 +501,7 @@ export function Settings() {
         {/* Card 4.5: Funding Fees Configuration */}
         <div className="bg-surface border border-line rounded-xl p-6 flex flex-col h-full">
           <h3 className="text-base font-semibold text-fg mb-1 flex items-center gap-2">
-            <Gauge className="w-4 h-4 text-orange-400" />
+            <Gauge className="w-4 h-4 text-tone-orange" />
             {t('settings.fundingSync', 'Funding Fees Sync')}
           </h3>
           <p className="text-fg-muted text-xs mb-5">{t('settings.fundingSyncDesc', 'Manage background syncing of funding rates')}</p>
@@ -513,7 +513,7 @@ export function Settings() {
                 <AppTooltip description={t('settings.polling.fundingIntervalTooltip', "Sets the interval for fetching the 'next' funding rate in the background.")}>
                   <h4 className="text-fg font-medium text-sm w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('settings.polling.fundingIntervalLabel', 'Live Polling Interval')}</h4>
                 </AppTooltip>
-                <span className="text-orange-400 font-mono text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">{fundingPollingInterval}m</span>
+                <span className="text-tone-orange font-mono text-xs bg-tone-orange/10 px-2 py-0.5 rounded-md">{fundingPollingInterval}m</span>
               </div>
               <p className="text-fg-muted text-xs mb-3 leading-relaxed">
                 {t('settings.polling.fundingDesc', 'Periodically fetch the upcoming funding rates (1 to 60 minutes).')}
@@ -526,7 +526,7 @@ export function Settings() {
                 value={fundingPollingInterval}
                 onChange={(e) => setFundingPollingInterval(Number(e.target.value))}
                 onPointerUp={() => toast.success(t('settings.polling.fundingPollingToast', 'Funding Polling set to {{minutes}}m', { minutes: fundingPollingInterval }), { id: 'funding-polling' })}
-                className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-orange-400"
+                className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-tone-orange"
               />
               <div className="flex justify-between text-[10px] text-fg-muted font-mono mt-1">
                 <span>1m</span>
@@ -542,7 +542,7 @@ export function Settings() {
                 <AppTooltip description={t('settings.polling.fundingHistoryTooltip', 'Controls how often a full history sync is allowed after page load. Auto-sync is triggered 1 minute after each funding settlement (every 8h). This interval acts as a minimum cooldown for additional syncs when the page is reloaded mid-cycle.')}>
                   <h4 className="text-fg font-medium text-sm w-fit cursor-help border-b border-dashed border-fg-muted/50">{t('settings.fundingHistoryInterval', 'History Fetch Interval')}</h4>
                 </AppTooltip>
-                <span className="text-orange-400 font-mono text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">{fundingHistoryInterval}h</span>
+                <span className="text-tone-orange font-mono text-xs bg-tone-orange/10 px-2 py-0.5 rounded-md">{fundingHistoryInterval}h</span>
               </div>
               <p className="text-fg-muted text-xs mb-3 leading-relaxed">
                 {t('settings.polling.fundingHistoryDesc', 'Minimum cooldown between full history syncs (4 to 8 hours). Auto-sync runs each funding cycle regardless of this setting.')}
@@ -555,7 +555,7 @@ export function Settings() {
                 value={fundingHistoryInterval}
                 onChange={(e) => setFundingHistoryInterval(Number(e.target.value))}
                 onPointerUp={() => toast.success(t('settings.polling.fundingHistoryToast', 'History fetch cooldown set to {{hours}}h', { hours: fundingHistoryInterval }), { id: 'funding-history' })}
-                className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-orange-400"
+                className="w-full h-2 bg-line rounded-lg appearance-none cursor-pointer accent-tone-orange"
               />
               <div className="flex justify-between text-[10px] text-fg-muted font-mono mt-1">
                 <span>4h</span>
@@ -578,8 +578,8 @@ export function Settings() {
                 className="flex items-center gap-2 bg-line hover:bg-line disabled:opacity-50 text-fg px-4 py-2 rounded-lg text-sm font-medium transition-colors mt-2"
               >
                 {isClearingFunding
-                  ? <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />
-                  : <Trash2 className="w-4 h-4 text-red-400" />
+                  ? <Loader2 className="w-4 h-4 text-tone-orange animate-spin" />
+                  : <Trash2 className="w-4 h-4 text-danger" />
                 }
                 {isClearingFunding ? t('common.clearing', 'Clearing...') : t('settings.cache.clearFundingBtn', 'Clear Cache Now')}
               </button>
@@ -591,8 +591,8 @@ export function Settings() {
         </div>
 
         {/* Card 5: Danger Zone */}
-        <div className="bg-surface border border-line border-t-2 border-t-red-500/40 rounded-xl p-6 flex flex-col h-full">
-          <h3 className="text-base font-semibold text-red-500 mb-1 flex items-center gap-2">
+        <div className="bg-surface border border-line border-t-2 border-t-danger/40 rounded-xl p-6 flex flex-col h-full">
+          <h3 className="text-base font-semibold text-danger mb-1 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             {t('settings.dangerZone', 'Danger Zone')}
           </h3>
@@ -600,19 +600,19 @@ export function Settings() {
 
           <div className="flex flex-col flex-1">
             <AppTooltip description={t('settings.dangerZoneTooltip', 'WARNING: This action is permanent. It wipes all IndexedDB, LocalStorage data, settings, API Keys, and caches. The app will immediately reload as if newly installed.')}>
-              <h4 className="text-red-400 font-medium text-sm mb-1.5 w-fit cursor-help border-b border-dashed border-red-400/50">{t('settings.cache.factoryResetBtn', 'Factory Reset')}</h4>
+              <h4 className="text-danger font-medium text-sm mb-1.5 w-fit cursor-help border-b border-dashed border-danger/50">{t('settings.cache.factoryResetBtn', 'Factory Reset')}</h4>
             </AppTooltip>
             <p className="text-fg-muted text-xs mb-4 leading-relaxed">
               {t('settings.cache.factoryResetConfirmDesc', 'Permanently erase all local data from this browser — API keys, settings, historical cache, metadata, and mock preferences. Use this on shared computers or to restore factory defaults.')}
             </p>
 
             {showWipeConfirm ? (
-              <div className="flex flex-col gap-3 bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
-                <span className="text-sm font-medium text-red-400">{t('settings.areYouSure', 'Are you sure? This cannot be undone.')}</span>
+              <div className="flex flex-col gap-3 bg-danger/10 border border-danger/20 p-3 rounded-lg">
+                <span className="text-sm font-medium text-danger">{t('settings.areYouSure', 'Are you sure? This cannot be undone.')}</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleFactoryReset}
-                    className="px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="px-4 py-1.5 bg-danger hover:bg-danger/90 text-white rounded-lg text-sm font-medium transition-colors"
                   >
                     {t('settings.wipeEverything', 'Yes, Wipe Everything')}
                   </button>
@@ -627,7 +627,7 @@ export function Settings() {
             ) : (
               <button
                 onClick={() => setShowWipeConfirm(true)}
-                className="self-start flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="self-start flex items-center gap-2 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
                 {t('settings.wipeBtn', 'Wipe All Local Client Data')}

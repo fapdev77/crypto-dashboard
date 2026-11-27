@@ -20,25 +20,25 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
   const getProfitFactorBadge = (rating: string) => {
     switch (rating) {
       case 'Excellent':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        return 'bg-success/10 text-success border-success/30';
       case 'Good':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+        return 'bg-blue-500/10 text-tone-blue border-blue-500/30';
       case 'Marginal':
       case 'Acceptable':
-        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
+        return 'bg-yellow-500/10 text-tone-yellow border-yellow-500/30';
       default:
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+        return 'bg-danger/10 text-danger border-danger/30';
     }
   };
 
   const getConsistencyBadge = (rating: string) => {
     switch (rating) {
       case 'Highly Consistent':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        return 'bg-success/10 text-success border-success/30';
       case 'Moderate Consistency':
-        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
+        return 'bg-yellow-500/10 text-tone-yellow border-yellow-500/30';
       default:
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        return 'bg-amber-500/10 text-tone-amber border-amber-500/30';
     }
   };
 
@@ -66,10 +66,10 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
                   {t('analytics.portfolio.advanced.winRate', 'Win Rate (Daily)')}
                 </span>
               </AppTooltip>
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <TrendingUp className="w-4 h-4 text-success" />
             </div>
 
-            <div className="text-3xl font-extrabold font-mono text-emerald-400 mb-2">
+            <div className="text-3xl font-extrabold font-mono text-success mb-2">
               {metrics.winRate.toFixed(1)}%
             </div>
 
@@ -78,20 +78,20 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
               <span>/</span>
               <span>{metrics.totalDaysEvaluated} total days</span>
               {negativeDaysCount > 0 && (
-                <span className="text-rose-400">({negativeDaysCount} negative)</span>
+                <span className="text-danger">({negativeDaysCount} negative)</span>
               )}
             </div>
           </div>
 
           {/* Progress bar */}
-          <div className="w-full bg-[#1e2025] rounded-full h-2.5 overflow-hidden flex">
+          <div className="w-full bg-elevated rounded-full h-2.5 overflow-hidden flex">
             <div
-              className="bg-emerald-500 h-full transition-all duration-300"
+              className="bg-success h-full transition-all duration-300"
               style={{ width: `${Math.min(100, Math.max(0, metrics.winRate))}%` }}
               title={`Positive Days: ${metrics.winRate.toFixed(1)}%`}
             />
             <div
-              className="bg-rose-500 h-full transition-all duration-300"
+              className="bg-danger h-full transition-all duration-300"
               style={{ width: `${Math.min(100, Math.max(0, 100 - metrics.winRate))}%` }}
               title={`Negative Days: ${(100 - metrics.winRate).toFixed(1)}%`}
             />
@@ -120,13 +120,13 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
             <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-line/50 font-mono">
               <div>
                 <span className="text-[10px] text-fg-muted block">Total Gains:</span>
-                <span className="text-emerald-400 font-semibold">
+                <span className="text-success font-semibold">
                   {maskVal(`+${metrics.totalGains} ${denomination}`)}
                 </span>
               </div>
               <div>
                 <span className="text-[10px] text-fg-muted block">Total Losses:</span>
-                <span className="text-rose-400 font-semibold">
+                <span className="text-danger font-semibold">
                   {maskVal(`-${metrics.totalLosses} ${denomination}`)}
                 </span>
               </div>
@@ -168,7 +168,7 @@ export const AdvancedPerformanceSection = React.memo(function AdvancedPerformanc
           </div>
 
           <div className="text-[11px] text-fg-muted mt-3 pt-2 border-t border-line/30 flex items-center gap-1">
-            <Activity className="w-3.5 h-3.5 text-blue-400" />
+            <Activity className="w-3.5 h-3.5 text-tone-blue" />
             <span>Normalized standard deviation of daily returns</span>
           </div>
         </div>

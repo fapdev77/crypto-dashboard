@@ -336,9 +336,9 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {useMockData && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center justify-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
-          <span className="text-yellow-500 text-sm font-medium tracking-wide uppercase">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center justify-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-tone-amber animate-pulse" />
+          <span className="text-tone-amber text-sm font-medium tracking-wide uppercase">
             {t('dashboardExtra.simulationBanner', 'Simulation Mode Active - Displaying Mock Data')}
           </span>
         </div>
@@ -352,7 +352,7 @@ export function Dashboard() {
                 <span className="text-fg-muted text-xs font-medium tracking-wider uppercase">
                   {t('dashboardExtra.totalEquityUsd', 'Total Equity ({{currency}})', { currency: currentFiat })}
                 </span>
-                <span className={`inline-block w-2 h-2 rounded-full ${openPositionsTotalPnL >= 0 ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
+                <span className={`inline-block w-2 h-2 rounded-full ${openPositionsTotalPnL >= 0 ? 'bg-success animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-danger animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`} />
               </div>
               <DollarSign className="w-4 h-4 text-fg-muted/60" />
             </div>
@@ -361,9 +361,9 @@ export function Dashboard() {
                 {formatCurrency(totalEquity, 'usd')}
               </p>
               {openPositionsTotalPnL >= 0 ? (
-                <TrendingUp className="w-4 h-4 text-emerald-500/70 shrink-0" />
+                <TrendingUp className="w-4 h-4 text-success/80 shrink-0" />
               ) : (
-                <TrendingDown className="w-4 h-4 text-red-500/70 shrink-0" />
+                <TrendingDown className="w-4 h-4 text-danger/80 shrink-0" />
               )}
             </div>
           </div>
@@ -396,10 +396,10 @@ export function Dashboard() {
                     {t('dashboardExtra.unrealizedPnlLabel', 'Unrealized P&L')}
                   </div>
                   <div className="flex items-baseline gap-1.5">
-                    <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsUnrealizedPnL >= 0 ? 'text-success' : 'text-danger'}`}>
                       {isPrivateMode ? '$••••' : `${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsUnrealizedPnL, 'usd')}`}
                     </p>
-                    <span className={`text-[11px] font-semibold font-mono ${openPositionsUnrealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <span className={`text-[11px] font-semibold font-mono ${openPositionsUnrealizedPnL >= 0 ? 'text-success' : 'text-danger'}`}>
                       {isPrivateMode ? '(••••%)' : `(${openPositionsUnrealizedPnL >= 0 ? '+' : ''}${unrealizedPnLPercent.toFixed(2)}%)`}
                     </span>
                   </div>
@@ -421,10 +421,10 @@ export function Dashboard() {
                     {t('dashboardExtra.realizedPnlLabel', 'Realized P&L')}
                   </div>
                   <div className="flex items-baseline gap-1.5">
-                    <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <p className={`text-lg font-bold font-mono tracking-tight ${openPositionsRealizedPnL >= 0 ? 'text-success' : 'text-danger'}`}>
                       {isPrivateMode ? '$••••' : `${openPositionsRealizedPnL >= 0 ? '+' : ''}${formatCurrency(openPositionsRealizedPnL, 'usd')}`}
                     </p>
-                    <span className={`text-[11px] font-semibold font-mono ${openPositionsRealizedPnL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    <span className={`text-[11px] font-semibold font-mono ${openPositionsRealizedPnL >= 0 ? 'text-success' : 'text-danger'}`}>
                       {isPrivateMode ? '(••••%)' : `(${openPositionsRealizedPnL >= 0 ? '+' : ''}${realizedPnLPercent.toFixed(2)}%)`}
                     </span>
                   </div>
@@ -469,28 +469,28 @@ export function Dashboard() {
             {/* Long vs Short Bar */}
             <div className="space-y-2 mt-4">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-emerald-500 flex items-center gap-1">
+                <span className="text-success flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" /> {t('dashboardExtra.longs', 'Longs')}: {longPositions}
                 </span>
-                <span className="text-red-500 flex items-center gap-1">
+                <span className="text-danger flex items-center gap-1">
                   <TrendingDown className="w-3 h-3" /> {t('dashboardExtra.shorts', 'Shorts')}: {shortPositions}
                 </span>
               </div>
               <div className="h-1.5 w-full bg-elevated rounded-full overflow-hidden flex">
                 {openPositionsCount > 0 ? (
                   <>
-                    <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${longPercent}%` }} />
-                    <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${shortPercent}%` }} />
+                    <div className="h-full bg-success transition-all duration-300" style={{ width: `${longPercent}%` }} />
+                    <div className="h-full bg-danger transition-all duration-300" style={{ width: `${shortPercent}%` }} />
                   </>
                 ) : (
                   <div className="h-full w-full bg-line" />
                 )}
               </div>
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-emerald-500 flex items-center gap-1">
+                <span className="text-success flex items-center gap-1">
                   {longPercent.toFixed(0)}%
                 </span>
-                <span className="text-red-500 flex items-center gap-1">
+                <span className="text-danger flex items-center gap-1">
                   {shortPercent.toFixed(0)}%
                 </span>
               </div>
@@ -512,9 +512,9 @@ export function Dashboard() {
                 <ArrowUpRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity" />
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-emerald-500">{t('dashboardExtra.hedged', 'Hedged')}: {inverseShortCount}</span>
+                <span className="text-xs font-semibold text-success">{t('dashboardExtra.hedged', 'Hedged')}: {inverseShortCount}</span>
                 <span className="text-xs font-bold text-fg-muted">|</span>
-                <span className="text-xs font-semibold text-amber-400">{t('dashboardExtra.leveraged', 'Leveraged')}: {inverseLongCount}</span>
+                <span className="text-xs font-semibold text-tone-amber">{t('dashboardExtra.leveraged', 'Leveraged')}: {inverseLongCount}</span>
               </div>
             </div>
             <div className="flex items-baseline gap-1.5">
@@ -534,11 +534,11 @@ export function Dashboard() {
                         {t('dashboardExtra.protectedCapitalBreakdown', 'Protected Capital Breakdown')}
                       </div>
                       <div className="space-y-1 font-mono text-[11px]">
-                        <div className="flex justify-between items-center text-emerald-400">
+                        <div className="flex justify-between items-center text-success">
                           <span>{t('dashboardExtra.hedgeShorts', 'Hedge (Shorts):')}</span>
                           <span>{formatCurrency(syntheticHedgeUsd, 'usd', 2)} ({hedgeOfProtectedPct.toFixed(2)}%)</span>
                         </div>
-                        <div className="flex justify-between items-center text-blue-400">
+                        <div className="flex justify-between items-center text-tone-blue">
                           <span>{t('dashboardExtra.stablecoins', 'Stablecoins:')}</span>
                           <span>{formatCurrency(stablecoinsProtectedUsd, 'usd', 2)} ({stablesOfProtectedPct.toFixed(2)}%)</span>
                         </div>
@@ -552,7 +552,7 @@ export function Dashboard() {
                   side="top"
                   align="start"
                 >
-                  <span className="text-emerald-500/90 underline decoration-dotted decoration-emerald-500/50 cursor-help">
+                  <span className="text-success underline decoration-dotted decoration-success/50 cursor-help">
                     {t('dashboardExtra.prot', 'Prot:')} {formatCurrency(totalProtected, 'usd', 2)}
                   </span>
                 </AppTooltip>
@@ -561,15 +561,15 @@ export function Dashboard() {
               <div className="h-1.5 w-full bg-elevated rounded-full overflow-hidden flex">
                 {totalEquity > 0 ? (
                   <>
-                    <div className="h-full bg-emerald-500/80 transition-all duration-300" style={{ width: `${Math.max(0, protectedPercent)}%` }} />
-                    <div className="h-full bg-white transition-all duration-300" style={{ width: `${Math.max(0, exposedPercent)}%` }} />
+                    <div className="h-full bg-success/80 transition-all duration-300" style={{ width: `${Math.max(0, protectedPercent)}%` }} />
+                    <div className="h-full bg-fg transition-all duration-300" style={{ width: `${Math.max(0, exposedPercent)}%` }} />
                   </>
                 ) : (
                   <div className="h-full w-full bg-line" />
                 )}
               </div>
               <div className="flex justify-between text-xs font-semibold font-mono">
-                <span className="text-emerald-500/90">{protectedPercent.toFixed(2)}%</span>
+                <span className="text-success">{protectedPercent.toFixed(2)}%</span>
                 <span className="text-fg font-semibold">{exposedPercent.toFixed(2)}%</span>
               </div>
             </div>

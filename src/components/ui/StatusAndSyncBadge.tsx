@@ -152,9 +152,9 @@ export function StatusAndSyncBadge({
               }
             }}
             aria-label="View sync error details in connection logs"
-            className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-200 select-none bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 cursor-pointer active:scale-95 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border font-medium transition-all duration-200 select-none bg-amber-500/10 text-tone-amber border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 cursor-pointer active:scale-95 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
           >
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-tone-amber" />
             <span>{t('common.sync.syncWarning', 'Sync Warning')}</span>
           </button>
         ) : (

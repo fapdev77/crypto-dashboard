@@ -64,9 +64,9 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
                 e.stopPropagation();
                 toggleComparisonFavorite(rowId);
               }}
-              className="text-fg-muted hover:text-yellow-500 transition-colors cursor-pointer"
+              className="text-fg-muted hover:text-tone-yellow transition-colors cursor-pointer"
             >
-              <Star className={clsx("w-3.5 h-3.5", isFav && "fill-yellow-500 text-yellow-500")} />
+              <Star className={clsx("w-3.5 h-3.5", isFav && "fill-tone-yellow text-tone-yellow")} />
             </button>
           </div>
           <div className="flex items-center gap-1">
@@ -77,7 +77,7 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
               "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-medium capitalize shrink-0",
               data.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
               data.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
-              data.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
+              data.exchange === 'okx' ? "bg-fg/10 text-fg border-fg/20" :
               "bg-line text-fg-muted border-line"
             )}>
               {data.exchange}
@@ -89,7 +89,7 @@ const CustomTooltip = ({ active, payload, periodLabel }: CustomTooltipProps) => 
           <span className="text-sm text-fg-muted">{periodLabel}</span>
           <span className={clsx(
             "font-mono font-bold",
-            isPositive ? "text-green-400" : "text-red-400"
+            isPositive ? "text-success" : "text-danger"
           )}>
             {data.value > 0 ? '+' : ''}{formatPercent(data.value)}
           </span>
@@ -117,7 +117,7 @@ const CustomizedLabel = (props: any) => {
     <text 
       x={xPos} 
       y={y + height / 2} 
-      fill="#fff" 
+      fill="var(--fg)" 
       fontSize={10} 
       textAnchor={isPositive ? "start" : "end"} 
       dominantBaseline="middle"
@@ -176,9 +176,9 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
                             e.stopPropagation();
                             toggleComparisonFavorite(rowId);
                           }}
-                          className="text-fg-muted hover:text-yellow-500 transition-colors cursor-pointer shrink-0"
+                          className="text-fg-muted hover:text-tone-yellow transition-colors cursor-pointer shrink-0"
                         >
-                          <Star className={clsx("w-3.5 h-3.5", isFav && "fill-yellow-500 text-yellow-500")} />
+                          <Star className={clsx("w-3.5 h-3.5", isFav && "fill-tone-yellow text-tone-yellow")} />
                         </button>
                         <span className="text-xs font-medium text-fg-muted truncate">{item.symbol}</span>
                         <span className={clsx(
@@ -198,9 +198,9 @@ export const FundingComparisonChart: React.FC<Props> = ({ data, periodLabel }) =
             />
             <Tooltip 
               content={<CustomTooltip periodLabel={periodLabel} />}
-              cursor={{ fill: '#2a2b30', opacity: 0.4 }}
+              cursor={{ fill: 'var(--elevated-hover)', opacity: 0.6 }}
             />
-            <ReferenceLine x={0} stroke="#4a4b50" />
+            <ReferenceLine x={0} stroke="var(--line-strong)" />
             <Bar dataKey="value" radius={[0, 4, 4, 0]} isAnimationActive={false}>
               {data.map((entry, index) => (
                 <Cell 

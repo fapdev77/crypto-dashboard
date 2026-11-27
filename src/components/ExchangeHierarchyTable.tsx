@@ -66,25 +66,25 @@ const formatOriginLabel = (origin: string) => {
 const getOriginBadgeStyle = (origin: string) => {
   switch (origin.toUpperCase()) {
     case 'SPOT':
-      return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+      return 'bg-success/10 text-success border border-success/20';
     case 'EARN':
-      return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+      return 'bg-amber-500/10 text-tone-amber border border-amber-500/20';
     case 'FUNDING':
     case 'UTA-FUNDING':
-      return 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
+      return 'bg-tone-cyan/10 text-tone-cyan border border-tone-cyan/25';
     case 'USDT-FUTURES':
     case 'COIN-FUTURES':
-      return 'bg-[#03aac7]/10 text-[#03aac7] border border-[#03aac7]/20';
+      return 'bg-tone-cyan/10 text-tone-cyan border border-tone-cyan/25';
     case 'USDC-FUTURES':
-      return 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+      return 'bg-purple-500/10 text-tone-purple border border-purple-500/20';
     case 'UTA':
     case 'MARGIN_CROSS':
     case 'UNIFIED':
-      return 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+      return 'bg-accent/10 text-tone-blue border border-accent/20';
     case 'MARGIN_ISOLATED':
-      return 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+      return 'bg-accent/10 text-tone-blue border border-accent/20';
     default:
-      return 'bg-gray-500/10 text-fg-muted border border-gray-500/20';
+      return 'bg-elevated text-fg-muted border border-line';
   }
 };
 

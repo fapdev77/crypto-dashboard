@@ -96,7 +96,7 @@ export function getTabHeaderMeta(activeTab: string, t: TFunction): TabHeaderMeta
       };
     case 'trade-history':
       return {
-        title: t('nav.trade', 'Trade'),
+        title: t('nav.tradeHistory', 'Trade History'),
         icon: NAV_SECTION_ICONS.trade,
       };
     case 'transactions-history-consolidated':
@@ -165,7 +165,7 @@ export function getTabHeaderMeta(activeTab: string, t: TFunction): TabHeaderMeta
       }
       if (activeTab.startsWith('trade-')) {
         return {
-          title: t('nav.trade', 'Trade'),
+          title: t('nav.trade', 'Trades'),
           icon: NAV_SECTION_ICONS.trade,
         };
       }

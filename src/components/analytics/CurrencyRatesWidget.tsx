@@ -59,23 +59,23 @@ export function CurrencyRatesWidget() {
   const statusBadge = () => {
     if (fiatRatesStatus === 'live' && usdtRateStatus === 'live') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-success/10 text-success border border-success/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           {t('currencyWidget.statusLive', 'Live')}: Frankfurter & CoinGecko
         </span>
       );
     }
     if (fiatRatesStatus === 'cached' || usdtRateStatus === 'cached') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 text-tone-amber border border-amber-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-warning" />
           {t('currencyWidget.statusCached', 'Cached')} ({fiatRatesTtlMinutes}m TTL)
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
-        <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-danger/10 text-danger border border-danger/20">
+        <span className="w-1.5 h-1.5 rounded-full bg-danger" />
         {t('currencyWidget.statusFallback', 'Safety Mode')}
       </span>
     );
@@ -149,11 +149,11 @@ export function CurrencyRatesWidget() {
                 }
               }}
               className={`p-3.5 rounded-xl border select-none relative group transition-all duration-500 ease-out cursor-pointer ${
-                isPulsing ? 'scale-[1.015] ring-1 ring-accent/40 bg-[#1e222a]' : ''
+                isPulsing ? 'scale-[1.015] ring-1 ring-accent/40 bg-elevated-hover' : ''
               } ${
                 isSelected
                   ? 'bg-accent/10 border-accent/40 shadow-sm'
-                  : 'bg-elevated border-line/60 hover:border-[#3d4047] hover:bg-[#1f2025]'
+                  : 'bg-elevated border-line/60 hover:border-line-strong hover:bg-elevated-hover'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -212,13 +212,13 @@ export function CurrencyRatesWidget() {
         {/* USDT Stablecoin Card */}
         <div
           data-testid="currency-card-usdt"
-          className={`p-3.5 rounded-xl border select-none relative group transition-all duration-500 ease-out bg-elevated border-line/60 hover:border-[#26a69a]/40 hover:bg-[#1a2123] ${
-            isPulsing ? 'scale-[1.015] ring-1 ring-[#26a69a]/40 bg-[#162224]' : ''
+          className={`p-3.5 rounded-xl border select-none relative group transition-all duration-500 ease-out bg-elevated border-line/60 hover:border-tone-cyan/40 hover:bg-elevated-hover ${
+            isPulsing ? 'scale-[1.015] ring-1 ring-tone-cyan/40 bg-elevated-hover' : ''
           }`}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#26a69a]/20 border border-[#26a69a]/40 text-[#26a69a] flex items-center justify-center font-bold text-xs">
+              <span className="w-6 h-6 rounded-full bg-tone-cyan/15 border border-tone-cyan/35 text-tone-cyan flex items-center justify-center font-bold text-xs">
                 ₮
               </span>
               <div>
@@ -226,7 +226,7 @@ export function CurrencyRatesWidget() {
                   <span className="font-semibold text-xs tracking-wider text-fg">
                     USDT
                   </span>
-                  <span className="text-[10px] text-[#26a69a] font-mono">
+                  <span className="text-[10px] text-tone-cyan font-mono">
                     (USD/USDT)
                   </span>
                 </div>
@@ -236,7 +236,7 @@ export function CurrencyRatesWidget() {
               </div>
             </div>
 
-            <span className="text-[9px] font-mono text-[#26a69a] bg-[#26a69a]/10 px-1.5 py-0.5 rounded border border-[#26a69a]/20">
+            <span className="text-[9px] font-mono text-tone-cyan bg-tone-cyan/10 px-1.5 py-0.5 rounded border border-tone-cyan/25">
               CoinGecko
             </span>
           </div>
@@ -245,7 +245,7 @@ export function CurrencyRatesWidget() {
           <div className="pt-2 border-t border-line/40 flex items-baseline justify-between">
             <div>
               <span className="text-[10px] text-fg-muted block">1 USD =</span>
-              <span className="text-sm font-semibold font-mono text-[#26a69a]">
+              <span className="text-sm font-semibold font-mono text-tone-cyan">
                 {usdToUsdt.toFixed(4)}
               </span>
               <span className="text-[10px] text-fg-muted ml-1 font-mono">USDT</span>

@@ -32,9 +32,9 @@ export const KpiRankingList = ({
   tooltip,
 }: KpiRankingListProps) => {
   const { t } = useTranslation();
-  const borderColor = color === 'green' ? 'border-green-500/20' : 'border-red-500/20';
-  const textColor = color === 'green' ? 'text-green-400' : 'text-red-400';
-  const bgColor = color === 'green' ? 'bg-green-500/5' : 'bg-red-500/5';
+  const borderColor = color === 'green' ? 'border-success/20' : 'border-danger/20';
+  const textColor = color === 'green' ? 'text-success' : 'text-danger';
+  const bgColor = color === 'green' ? 'bg-success/5' : 'bg-danger/5';
 
   const list = (
     <div className={`bg-surface border border-line rounded-xl p-4 flex flex-col gap-2 hover:border-line-strong transition-colors ${borderColor}`}>
@@ -65,7 +65,7 @@ export const KpiRankingList = ({
                       "flex items-center gap-1 px-1.5 py-0.5 rounded border text-[9px] font-medium capitalize shrink-0",
                       item.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
                       item.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
-                      item.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
+                      item.exchange === 'okx' ? "bg-fg/10 text-fg border-fg/20" :
                       "bg-line text-fg-muted border-line"
                     )}>
                       <ExchangeIcon exchange={item.exchange} className="w-2.5 h-2.5" />
@@ -73,7 +73,7 @@ export const KpiRankingList = ({
                     </span>
                   )}
                 </div>
-                <span className={`text-xs font-mono font-medium shrink-0 ml-2 ${item.rate > 0 ? 'text-green-400' : item.rate < 0 ? 'text-red-400' : 'text-fg-muted'}`}>
+                <span className={`text-xs font-mono font-medium shrink-0 ml-2 ${item.rate > 0 ? 'text-success' : item.rate < 0 ? 'text-danger' : 'text-fg-muted'}`}>
                   {formatRate(item.rate)}
                 </span>
               </div>

@@ -28,8 +28,8 @@ const formatPercent = (val: number) => (val * 100).toFixed(4) + '%';
 const INCOMPLETE_NOTE = 'OKX and Bitget APIs limit historical data to ~3 months. Values beyond 3 months are from our local cache and may be partial until sufficient data accumulates.';
 const fundingColor = (val: number | undefined): string => {
   if (val === undefined) return 'text-fg-muted';
-  if (val > 0) return 'text-green-400';
-  if (val < 0) return 'text-red-400';
+  if (val > 0) return 'text-success';
+  if (val < 0) return 'text-danger';
   return 'text-fg';
 };
 
@@ -177,7 +177,7 @@ const FundingTable = ({
           {title} <span className="text-fg-muted text-xs font-normal">({groupedByCoin.length} Coins)</span>
         </h3>
         {isSyncing && (
-           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-xs font-medium animate-pulse">
+           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-amber-500/10 text-tone-amber border border-amber-500/20 rounded-full text-xs font-medium animate-pulse">
              <Loader2 className="w-3 h-3 animate-spin" />
              Please wait, rates update in progress...
            </div>
@@ -196,7 +196,7 @@ const FundingTable = ({
                 itemsPerPage={COINS_PER_PAGE}
                 onPageChange={setPage}
                 refreshKey={`${groupsTotal}-${data.length}`}
-                refreshLabel="Filtering"
+                refreshLabel={t('transactions.common.filtering', 'Filtering')}
               />
             </div>
           )}
@@ -218,16 +218,16 @@ const FundingTable = ({
                 <th className="px-6 py-3 font-medium text-right">
                   <ThTooltip columnKey="currentMonth">{t('analytics.funding.columns.currentMonth', 'Current Month')}</ThTooltip>
                 </th>
-                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
+                <th className="px-6 py-3 font-medium text-right text-tone-amber">
                   <ThTooltip columnKey="lastMonth">{t('analytics.funding.columns.lastMonth', 'Last Month')}</ThTooltip>
                 </th>
-                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
+                <th className="px-6 py-3 font-medium text-right text-tone-amber">
                   <ThTooltip columnKey="last3Months">{t('analytics.funding.columns.last3Months', 'Last 3 Months')}</ThTooltip>
                 </th>
-                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
+                <th className="px-6 py-3 font-medium text-right text-tone-amber">
                   <ThTooltip columnKey="last6Months">{t('analytics.funding.columns.last6Months', 'Last 6 Months')}</ThTooltip>
                 </th>
-                <th className="px-6 py-3 font-medium text-right text-yellow-500/80">
+                <th className="px-6 py-3 font-medium text-right text-tone-amber">
                   <ThTooltip columnKey="oneYear">{t('analytics.funding.columns.oneYear', '1 Year')}</ThTooltip>
                 </th>
               </tr>
@@ -264,9 +264,9 @@ const FundingTable = ({
                       <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
                         <button 
                           onClick={() => toggleFavorite(rowId)}
-                          className="text-fg-muted hover:text-yellow-500 transition-colors"
+                          className="text-fg-muted hover:text-tone-yellow transition-colors"
                         >
-                          <Star className={clsx("w-4 h-4", isFav && "fill-yellow-500 text-yellow-500")} />
+                          <Star className={clsx("w-4 h-4", isFav && "fill-tone-yellow text-tone-yellow")} />
                         </button>
                       </td>
                       <td className="px-6 py-3">
@@ -281,7 +281,7 @@ const FundingTable = ({
                         <RateTooltip rate={maxNext} label="Max next funding rate">
                           
                             {maxNext !== undefined ? (
-                              <span className={maxNext > 0 ? "text-green-400 font-medium" : maxNext < 0 ? "text-red-400 font-medium" : "text-fg font-medium"}>
+                              <span className={maxNext > 0 ? "text-success font-medium" : maxNext < 0 ? "text-danger font-medium" : "text-fg font-medium"}>
                                 {formatPercent(maxNext)}
                               </span>
                             ) : <span className="text-fg-muted">---</span>}
@@ -291,7 +291,7 @@ const FundingTable = ({
                       <td className="px-6 py-3 text-right">
                         <RateTooltip rate={maxLast} label="Max last funding rate">
                           {maxLast !== undefined ? (
-                            <span className={maxLast > 0 ? "text-green-400 font-medium" : maxLast < 0 ? "text-red-400 font-medium" : "text-fg font-medium"}>
+                            <span className={maxLast > 0 ? "text-success font-medium" : maxLast < 0 ? "text-danger font-medium" : "text-fg font-medium"}>
                               {formatPercent(maxLast)}
                             </span>
                           ) : <span className="text-fg-muted">---</span>}
@@ -352,7 +352,7 @@ const FundingTable = ({
                                 "flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-medium capitalize w-max shrink-0",
                                 row.exchange === 'bitget' ? "bg-[#03aac7]/10 text-[#03aac7] border-[#03aac7]/20" :
                                 row.exchange === 'bybit' ? "bg-[#ff9c2e]/10 text-[#ff9c2e] border-[#ff9c2e]/20" :
-                                row.exchange === 'okx' ? "bg-white/10 text-white border-white/20" :
+                                row.exchange === 'okx' ? "bg-fg/10 text-fg border-fg/20" :
                                 "bg-line text-fg-muted border-line"
                               )}>
                                 <ExchangeIcon exchange={row.exchange} className="w-3 h-3" />
@@ -366,7 +366,7 @@ const FundingTable = ({
                               <div className="flex flex-col items-end">
                                 <RateTooltip rate={row.nextFundingRate} label="Next funding rate">
                                   
-                                    <span className={row.nextFundingRate > 0 ? "text-green-400" : row.nextFundingRate < 0 ? "text-red-400" : "text-fg"}>
+                                    <span className={row.nextFundingRate > 0 ? "text-success" : row.nextFundingRate < 0 ? "text-danger" : "text-fg"}>
                                       {formatPercent(row.nextFundingRate)}
                                     </span>
                                   
@@ -391,7 +391,7 @@ const FundingTable = ({
                           <td className="px-6 py-2 text-right">
                             {row.lastFundingRate !== undefined ? (
                               <RateTooltip rate={row.lastFundingRate} label="Last settled funding rate">
-                                <span className={row.lastFundingRate > 0 ? "text-green-400" : row.lastFundingRate < 0 ? "text-red-400" : "text-fg"}>
+                                <span className={row.lastFundingRate > 0 ? "text-success" : row.lastFundingRate < 0 ? "text-danger" : "text-fg"}>
                                   {formatPercent(row.lastFundingRate)}
                                 </span>
                               </RateTooltip>
@@ -450,13 +450,13 @@ const FundingTable = ({
                 itemsPerPage={COINS_PER_PAGE}
                 onPageChange={setPage}
                 refreshKey={`${groupsTotal}-${data.length}`}
-                refreshLabel="Filtering"
+                refreshLabel={t('transactions.common.filtering', 'Filtering')}
               />
             </div>
           )}
 
           <div className="px-6 py-3 bg-elevated/20 text-[10px] text-fg-muted flex items-center justify-end gap-2 border-t border-line/50">
-            <AlertTriangle className="w-3 h-3 text-yellow-500" />
+            <AlertTriangle className="w-3 h-3 text-tone-amber" />
             Historical columns (Last Month, 3M, 6M, 1Y) do not include the current month. OKX API limits historical data to the last 3 months.
           </div>
         </div>
@@ -592,14 +592,14 @@ export const FundingDashboard = () => {
                 className={clsx(
                   "relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap overflow-hidden",
                   showFavoritesOnly 
-                    ? "border-yellow-500/30 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
+                    ? "border-amber-500/30 text-tone-amber shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
                     : "bg-elevated border-line text-fg-muted hover:text-fg"
                 )}
               >
                 {showFavoritesOnly && (
-                  <div className="absolute inset-0 bg-yellow-500/10 animate-pulse pointer-events-none" />
+                  <div className="absolute inset-0 bg-amber-500/10 animate-pulse pointer-events-none" />
                 )}
-                <Star className={clsx("w-4 h-4 relative z-10", showFavoritesOnly && "fill-yellow-500")} />
+                <Star className={clsx("w-4 h-4 relative z-10", showFavoritesOnly && "fill-tone-yellow")} />
                 <span className="relative z-10">Favorites</span>
               </button>
               {hasOpenPositions && (

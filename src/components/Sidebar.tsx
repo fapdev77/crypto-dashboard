@@ -111,7 +111,7 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
     {
       id: 'positions', label: t('nav.positions', 'Positions'), icon: NAV_SECTION_ICONS.positions, subItems: [
         { id: 'positions-open', label: t('nav.openPositions', 'Open Positions'), badge: openCount },
-        { id: 'positions-history', label: t('nav.closedPositions', 'Positions History') }
+        { id: 'positions-history', label: t('nav.closedPositions', 'Closed Positions') }
       ]
     },
     {
@@ -121,8 +121,8 @@ export function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobile
       ]
     },
     {
-      id: 'trade', label: t('nav.trade', 'Trade'), icon: NAV_SECTION_ICONS.trade, subItems: [
-        { id: 'trade-history', label: t('nav.trade', 'Trade History') }
+      id: 'trade', label: t('nav.trade', 'Trades'), icon: NAV_SECTION_ICONS.trade, subItems: [
+        { id: 'trade-history', label: t('nav.tradeHistory', 'Trade History') }
       ]
     },
     ...(transactionHistoryItems.length > 0

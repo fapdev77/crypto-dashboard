@@ -25,7 +25,7 @@ describe('i18n configuration and locale dictionaries', () => {
   });
 
   it('has essential navigation keys present in all locales', () => {
-    const requiredNavKeys = ['dashboard', 'openPositions', 'trade', 'orders', 'analytics', 'settings'];
+    const requiredNavKeys = ['dashboard', 'openPositions', 'trade', 'tradeHistory', 'orders', 'analytics', 'settings'];
 
     supportedLocales.forEach((locale) => {
       const trans = resources[locale].translation as any;
@@ -145,6 +145,20 @@ describe('i18n configuration and locale dictionaries', () => {
     expect(enGb.apiKeys.vault.legacyDetectedDesc).toContain('unauthorised');
     expect(enGb.ai.settings.obfuscationDesc).toContain('Normalise');
     expect(enGb.ai.toolBadges.closedPositions).toContain('Analysing');
+
+    const enUs = resources['en-US'].translation as any;
+    expect(enUs.nav.trade).toBe('Trades');
+    expect(enUs.nav.tradeHistory).toBe('Trade History');
+    expect(enGb.nav.trade).toBe('Trades');
+    expect(enGb.nav.tradeHistory).toBe('Trade History');
+    expect(ptBr.nav.trade).toBe('Operações');
+    expect(ptBr.nav.tradeHistory).toBe('Histórico de Negociações');
+    expect(ptPt.nav.trade).toBe('Operações');
+    expect(ptPt.nav.tradeHistory).toBe('Histórico de Negociações');
+    expect(es.nav.trade).toBe('Operaciones');
+    expect(es.nav.tradeHistory).toBe('Historial de Trades');
+    expect(itLocale.nav.trade).toBe('Operazioni');
+    expect(itLocale.nav.tradeHistory).toBe('Storico Trade');
 
     supportedLocales.forEach((locale) => {
       const tr = resources[locale].translation as any;

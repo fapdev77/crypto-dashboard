@@ -205,7 +205,7 @@ describe('transactionTypeMapper', () => {
       const badgeBybit = getUniversalBadge('bybit', { type: 'SETTLEMENT' });
       expect(badgeBybit.universalType).toBe('FUNDING_FEE');
       expect(badgeBybit.label).toBe('Funding Fee');
-      expect(badgeBybit.textColor).toBe('text-purple-400');
+      expect(badgeBybit.textColor).toBe('text-tone-purple');
 
       const badgeBitget = getUniversalBadge('bitget', { type: 'ORDER_DEALT_IN' });
       expect(badgeBitget.universalType).toBe('TRADE');

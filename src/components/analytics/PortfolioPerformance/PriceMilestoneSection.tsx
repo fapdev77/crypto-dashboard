@@ -155,19 +155,19 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                   >
                     <XAxis
                       type="number"
-                      stroke="#8E9299"
+                      stroke="var(--fg-muted)"
                       fontSize={10}
                       tickLine={false}
-                      axisLine={{ stroke: '#2a2b30' }}
+                      axisLine={{ stroke: 'var(--line)' }}
                       tickFormatter={(val) => (isPrivateMode ? '****' : String(val))}
                     />
                     <YAxis
                       dataKey="formattedMilestone"
                       type="category"
-                      stroke="#8E9299"
+                      stroke="var(--fg-muted)"
                       fontSize={11}
                       tickLine={false}
-                      axisLine={{ stroke: '#2a2b30' }}
+                      axisLine={{ stroke: 'var(--line)' }}
                     />
                     <RechartsTooltip
                       content={({ active, payload }) => {
@@ -175,7 +175,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                           const data = payload[0].payload as PriceMilestoneItem;
                           const isGain = data.gainLoss >= 0;
                           return (
-                            <div className="bg-[#1b1c20] border border-line p-3 rounded-lg shadow-xl text-xs space-y-1">
+                            <div className="bg-elevated border border-line p-3 rounded-lg shadow-xl text-xs space-y-1">
                               <p className="font-bold text-fg border-b border-line pb-1">
                                 {activeAsset} Price Level: {data.formattedMilestone}
                               </p>
@@ -197,7 +197,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                               </div>
                               <div className="flex justify-between gap-4 text-fg-muted pt-1 border-t border-line">
                                 <span className="font-bold text-fg">Net Volatility Harvest:</span>
-                                <span className={`font-mono tabular-nums font-bold ${isGain ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                <span className={`font-mono tabular-nums font-bold ${isGain ? 'text-success' : 'text-danger'}`}>
                                   {formatGain(data.gainLoss)} ({isGain ? '+' : ''}{data.gainLossPct.toFixed(2)}%)
                                 </span>
                               </div>
@@ -211,7 +211,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                       {milestones.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={entry.gainLoss >= 0 ? '#10B981' : '#EF4444'}
+                          fill={entry.gainLoss >= 0 ? 'var(--success)' : 'var(--danger)'}
                         />
                       ))}
                     </Bar>
@@ -223,7 +223,7 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
             {/* Milestones Data Table */}
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border border-line rounded-lg overflow-hidden">
-                <thead className="bg-[#1b1c20] text-fg-muted uppercase text-[10px] tracking-wider border-b border-line">
+                <thead className="bg-elevated text-fg-muted uppercase text-[10px] tracking-wider border-b border-line">
                   <tr>
                     <th className="py-2.5 px-4 font-semibold">Price Milestone ({activeAsset})</th>
                     <th className="py-2.5 px-4 font-semibold text-center">
@@ -258,10 +258,10 @@ export const PriceMilestoneSection = React.memo(function PriceMilestoneSection({
                         <td className="py-2.5 px-4 text-right text-fg">
                           {maskVal(m.lastPassageEquity.toFixed(decimals))} {denomination}
                         </td>
-                        <td className={`py-2.5 px-4 text-right font-bold ${isGain ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <td className={`py-2.5 px-4 text-right font-bold ${isGain ? 'text-success' : 'text-danger'}`}>
                           {formatGain(m.gainLoss)}
                         </td>
-                        <td className={`py-2.5 px-4 text-right font-bold ${isGain ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <td className={`py-2.5 px-4 text-right font-bold ${isGain ? 'text-success' : 'text-danger'}`}>
                           {isGain ? '+' : ''}{m.gainLossPct.toFixed(2)}%
                         </td>
                       </tr>

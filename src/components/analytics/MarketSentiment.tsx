@@ -45,15 +45,15 @@ export const MarketSentiment: React.FC = () => {
   const getSentimentTheme = (val: number) => {
     if (val <= 24) {
       return {
-        text: 'text-rose-400',
-        bg: 'bg-rose-500/10',
-        border: 'border-rose-500/30',
+        text: 'text-danger',
+        bg: 'bg-danger/10',
+        border: 'border-danger/30',
         barColor: '#f43f5e',
       };
     }
     if (val <= 44) {
       return {
-        text: 'text-amber-400',
+        text: 'text-tone-amber',
         bg: 'bg-amber-500/10',
         border: 'border-amber-500/30',
         barColor: '#f59e0b',
@@ -61,7 +61,7 @@ export const MarketSentiment: React.FC = () => {
     }
     if (val <= 55) {
       return {
-        text: 'text-yellow-400',
+        text: 'text-tone-yellow',
         bg: 'bg-yellow-500/10',
         border: 'border-yellow-500/30',
         barColor: '#eab308',
@@ -69,14 +69,14 @@ export const MarketSentiment: React.FC = () => {
     }
     if (val <= 75) {
       return {
-        text: 'text-emerald-400',
+        text: 'text-success',
         bg: 'bg-emerald-500/10',
         border: 'border-emerald-500/30',
         barColor: '#10b981',
       };
     }
     return {
-      text: 'text-cyan-400',
+      text: 'text-tone-cyan',
       bg: 'bg-cyan-500/10',
       border: 'border-cyan-500/30',
       barColor: '#06b6d4',
@@ -138,7 +138,7 @@ export const MarketSentiment: React.FC = () => {
             onClick={() => refetch()}
             disabled={isLoading}
             title={t('sentiment.manualRefreshTitle', 'Manual refresh: Fetch latest sentiment from Alternative.me')}
-            className="p-1.5 rounded-lg bg-elevated hover:bg-line border border-line text-slate-300 hover:text-fg transition-all disabled:opacity-50 cursor-pointer"
+            className="p-1.5 rounded-lg bg-elevated hover:bg-line border border-line text-fg-muted hover:text-fg transition-all disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-accent' : ''}`} />
           </button>
@@ -148,7 +148,7 @@ export const MarketSentiment: React.FC = () => {
       {/* Main Grid */}
       <div className="space-y-4">
         {error && (
-          <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center gap-2">
+          <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-tone-amber text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{t('sentiment.fallbackActive', 'Fallback mode active: {{error}}', { error })}</span>
           </div>
@@ -177,7 +177,7 @@ export const MarketSentiment: React.FC = () => {
                 <path
                   d="M 15 80 A 65 65 0 0 1 145 80"
                   fill="none"
-                  stroke="#2a2b30"
+                  stroke="var(--line)"
                   strokeWidth="12"
                   strokeLinecap="round"
                 />
@@ -193,7 +193,7 @@ export const MarketSentiment: React.FC = () => {
                 />
 
                 {/* Needle Pivot Center */}
-                <circle cx="80" cy="80" r="5" fill="#f8fafc" />
+                <circle cx="80" cy="80" r="5" fill="var(--fg)" />
 
                 {/* Needle */}
                 <g transform={`rotate(${needleAngle}, 80, 80)`}>
@@ -202,16 +202,16 @@ export const MarketSentiment: React.FC = () => {
                     y1="80"
                     x2="80"
                     y2="24"
-                    stroke="#ffffff"
+                    stroke="var(--fg)"
                     strokeWidth="3"
                     strokeLinecap="round"
                   />
-                  <polygon points="80,18 76,26 84,26" fill="#ffffff" />
+                  <polygon points="80,18 76,26 84,26" fill="var(--fg)" />
                 </g>
               </svg>
 
-              <span className="absolute left-2 bottom-0 text-[10px] font-mono font-semibold text-rose-400" title={`0: ${getLevelLabel('Extreme Fear')}`}>0</span>
-              <span className="absolute right-2 bottom-0 text-[10px] font-mono font-semibold text-cyan-400" title={`100: ${getLevelLabel('Extreme Greed')}`}>100</span>
+              <span className="absolute left-2 bottom-0 text-[10px] font-mono font-semibold text-danger" title={`0: ${getLevelLabel('Extreme Fear')}`}>0</span>
+              <span className="absolute right-2 bottom-0 text-[10px] font-mono font-semibold text-tone-cyan" title={`100: ${getLevelLabel('Extreme Greed')}`}>100</span>
             </div>
 
             {/* Score & Classification */}
@@ -238,7 +238,7 @@ export const MarketSentiment: React.FC = () => {
                   title={t('sentiment.tooltips.change24h', 'Net sentiment change over the last 24 hours: {{change}} points', { change: change24h >= 0 ? `+${change24h}` : change24h })}
                 >
                   <span className="text-[11px] text-fg-muted">24h:</span>
-                  <span className={`font-semibold flex items-center ${change24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span className={`font-semibold flex items-center ${change24h >= 0 ? 'text-success' : 'text-danger'}`}>
                     {change24h >= 0 ? <TrendingUp className="w-3 h-3 inline mr-0.5" /> : <TrendingDown className="w-3 h-3 inline mr-0.5" />}
                     {change24h >= 0 ? `+${change24h}` : change24h}
                   </span>
@@ -249,7 +249,7 @@ export const MarketSentiment: React.FC = () => {
                   title={t('sentiment.tooltips.change7d', 'Net sentiment change over the last 7 days: {{change}} points', { change: change7d >= 0 ? `+${change7d}` : change7d })}
                 >
                   <span className="text-[11px] text-fg-muted">7d:</span>
-                  <span className={`font-semibold flex items-center ${change7d >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span className={`font-semibold flex items-center ${change7d >= 0 ? 'text-success' : 'text-danger'}`}>
                     {change7d >= 0 ? <TrendingUp className="w-3 h-3 inline mr-0.5" /> : <TrendingDown className="w-3 h-3 inline mr-0.5" />}
                     {change7d >= 0 ? `+${change7d}` : change7d}
                   </span>
@@ -338,8 +338,8 @@ export const MarketSentiment: React.FC = () => {
                 <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">
                   {t('sentiment.volatility', 'Volatility')}
                 </span>
-                <span className="text-xs font-bold text-amber-400 mt-1 flex items-center gap-1 font-mono">
-                  <Zap className="w-3 h-3 text-amber-400" />
+                <span className="text-xs font-bold text-tone-amber mt-1 flex items-center gap-1 font-mono">
+                  <Zap className="w-3 h-3 text-tone-amber" />
                   {getVolatilityLabel(trendSummary.volatilityIndex)}
                 </span>
               </div>
@@ -352,8 +352,8 @@ export const MarketSentiment: React.FC = () => {
                 <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider">
                   {t('sentiment.fundingBias', 'Funding Bias')}
                 </span>
-                <span className="text-xs font-bold text-emerald-400 mt-1 flex items-center gap-1 font-mono">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                <span className="text-xs font-bold text-success mt-1 flex items-center gap-1 font-mono">
+                  <ShieldCheck className="w-3 h-3 text-success" />
                   {getFundingBiasLabel(trendSummary.fundingBias)}
                 </span>
               </div>
@@ -380,7 +380,7 @@ export const MarketSentiment: React.FC = () => {
           title={t('sentiment.tooltips.tacticalAdvice', 'Contextual tactical recommendation calculated from market regime, sentiment momentum, and leverage risk.')}
         >
           <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-          <div className="text-xs text-slate-300 leading-relaxed">
+          <div className="text-xs text-fg/90 leading-relaxed">
             <span className="font-semibold text-accent mr-1.5">
               {t('sentiment.tacticalOutlook', 'Tactical Market Outlook:')}
             </span>

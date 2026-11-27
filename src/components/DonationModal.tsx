@@ -442,7 +442,7 @@ export function DonationModal({ isOpen, onClose }: DonationModalProps) {
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 border-t border-line pt-4 mt-5">
           <div data-testid="donation-footer-note" className="flex items-start sm:items-center gap-2 text-xs text-fg-muted leading-snug">
-            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5 sm:mt-0" aria-hidden="true" />
+            <AlertTriangle className="w-4 h-4 text-tone-amber shrink-0 mt-0.5 sm:mt-0" aria-hidden="true" />
             <span>
               {t(
                 'donation.footerNote',

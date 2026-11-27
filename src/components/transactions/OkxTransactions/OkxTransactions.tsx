@@ -170,8 +170,8 @@ export function OkxTransactions() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '11px' }}
-                      itemStyle={{ color: '#fff' }}
+                      contentStyle={{ backgroundColor: 'var(--elevated)', border: '1px solid var(--line-strong)', borderRadius: '8px', fontSize: '11px', color: 'var(--fg)' }}
+                      itemStyle={{ color: 'var(--fg)' }}
                       formatter={(value, name) => {
                         const badge = UNIVERSAL_BADGE_STYLE[name as UniversalTxType] || UNIVERSAL_BADGE_STYLE.OTHERS;
                         return [value, badge.label];
@@ -216,7 +216,7 @@ export function OkxTransactions() {
               </span>
               {isCalculatingUsd && (
                 <AppTooltip description={t('transactions.common.calculatingUsdTooltip', 'Fetching real-time USD prices for non-stable assets...')}>
-                  <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
+                  <span className="flex items-center gap-1 text-[10px] text-tone-amber ml-auto">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     {t('transactions.common.calculatingUsd', 'Calculating USD...')}
                   </span>
@@ -256,7 +256,7 @@ export function OkxTransactions() {
               </span>
               {isCalculatingUsd && (
                 <AppTooltip description="Fetching real-time USD prices for non-stable assets...">
-                  <span className="flex items-center gap-1 text-[10px] text-[#FF9C2E] ml-auto">
+                  <span className="flex items-center gap-1 text-[10px] text-tone-amber ml-auto">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     Calculating USD...
                   </span>
@@ -299,7 +299,7 @@ export function OkxTransactions() {
 
       {/* Error */}
       {error && (
-        <div className="p-4 bg-red-900/30 border border-red-800 text-red-200 rounded text-sm">
+        <div className="p-4 bg-danger/10 border border-danger/30 text-danger rounded text-sm">
           {error}
         </div>
       )}

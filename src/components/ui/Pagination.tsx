@@ -171,14 +171,14 @@ export function Pagination({
           {t('common.pagination.records', 'records')}
         </div>
         {refreshAnim === 'loading' && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] leading-tight font-medium bg-blue-500/10 text-blue-400 select-none">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] leading-tight font-medium bg-accent/10 text-tone-blue select-none">
             <RefreshCw className="w-2.5 h-2.5 animate-spin shrink-0" />
             {refreshLabel || t('common.pagination.updating', 'Updating')}
           </span>
         )}
         {(refreshAnim === 'done' || refreshAnim === 'fading') && (
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] leading-tight font-medium bg-emerald-500/10 text-emerald-400 select-none transition-all duration-[400ms] ease-out ${
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] leading-tight font-medium bg-success/10 text-success select-none transition-all duration-[400ms] ease-out ${
               refreshAnim === 'fading' ? 'opacity-0 scale-50' : ''
             }`}
             style={refreshAnim === 'done' ? { animation: 'refresh-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)' } : undefined}

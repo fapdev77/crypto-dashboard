@@ -39,6 +39,10 @@ describe('Header navigation icon registry & mobile-compact toolbar', () => {
     expect(fundingMeta.icon).toBe(NAV_SECTION_ICONS.analytics);
     expect(fundingMeta.title).toBe(t('nav.fundingDashboard'));
 
+    const tradeHistoryMeta = getTabHeaderMeta('trade-history', t);
+    expect(tradeHistoryMeta.icon).toBe(NAV_SECTION_ICONS.trade);
+    expect(tradeHistoryMeta.title).toBe(t('nav.tradeHistory'));
+
     const settingsMeta = getTabHeaderMeta('settings', t);
     expect(settingsMeta.icon).toBe(NAV_SECTION_ICONS.settings);
     expect(settingsMeta.title).toBe(t('nav.settings'));
