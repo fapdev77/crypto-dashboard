@@ -1,3 +1,15 @@
+# [2.56.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.55.0...v2.56.0) (2026-11-27)
+
+
+### Bug Fixes
+
+* update funding fee badge color ([c9effd5](https://github.com/fapdev77/crypto-dashboard/commit/c9effd5636a8f2ddccbc3428abf1a79f4720d8d4))
+
+
+### Features
+
+* update app visuals and standardize color utility usage ([b2b5edb](https://github.com/fapdev77/crypto-dashboard/commit/b2b5edb5276f464c175f722b4c3f3b29c4e23b48))
+
 # [2.55.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.54.0...v2.55.0) (2026-11-27)
 
 
