@@ -1,3 +1,10 @@
+# [2.55.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.54.0...v2.55.0) (2026-11-27)
+
+
+### Features
+
+* fix some visual issues and improve reading of closed positions cards. ([4c8d320](https://github.com/fapdev77/crypto-dashboard/commit/4c8d320169a38ed78a5fd354c831c98033577bf3))
+
 # [2.54.0](https://github.com/fapdev77/crypto-dashboard/compare/v2.53.0...v2.54.0) (2026-11-26)
 
 

@@ -1,6 +1,6 @@
 # 📘 Manuale Utente - Crypto Portfolio Manager (CPM)
 
-> **Versione dell'Applicazione:** 2.54.0  
+> **Versione dell'Applicazione:** 2.55.0  
 > **Piattaforme Supportate:** Bybit (API V5 UTA), Bitget (API V2 Classic & UTA), OKX (API V5)  
 > **Architettura di Sicurezza:** Zero-Trust Client-Side (Crittografia Web Crypto PBKDF2 + AES-GCM 256-bit)
 
