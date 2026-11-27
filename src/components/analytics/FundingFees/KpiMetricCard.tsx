@@ -13,15 +13,15 @@ export interface KpiMetricCardProps {
 }
 
 const colorClasses: Record<string, string> = {
-  green: 'text-green-400',
-  red: 'text-red-400',
+  green: 'text-success',
+  red: 'text-danger',
   white: 'text-fg',
-  amber: 'text-amber-400',
+  amber: 'text-tone-amber',
 };
 
 const trendIcons: Record<string, { icon: string; cls: string }> = {
-  up: { icon: '↑', cls: 'text-green-400' },
-  down: { icon: '↓', cls: 'text-red-400' },
+  up: { icon: '↑', cls: 'text-success' },
+  down: { icon: '↓', cls: 'text-danger' },
   neutral: { icon: '→', cls: 'text-fg-muted' },
 };
 

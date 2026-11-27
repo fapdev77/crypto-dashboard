@@ -225,7 +225,7 @@ function ModuleScreenPreview({ moduleId }: { moduleId: string }) {
           </div>
           <div>
             <span className="text-fg-muted">[08:47:18]</span>{' '}
-            <span className="text-[#F2C94C]">[WARN]</span>{' '}
+            <span className="text-tone-amber">[WARN]</span>{' '}
             <span className="text-fg-muted">OkxV5 rate backoff 1200ms</span>
           </div>
         </div>

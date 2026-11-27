@@ -96,7 +96,7 @@ export function ConnectionLogTerminal() {
   const getLevelColor = (level: LogLevel) => {
     switch (level) {
       case 'INFO': return 'text-success';
-      case 'WARN': return 'text-[#F2C94C]';
+      case 'WARN': return 'text-tone-amber';
       case 'ERROR': return 'text-danger';
       case 'DATA': return 'text-accent';
       case 'SYSTEM': return 'text-fg-muted';
@@ -145,7 +145,7 @@ export function ConnectionLogTerminal() {
              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-medium border transition-all duration-200 ${
                autoScrollEnabled
                  ? 'bg-success/10 text-success border-success/30 hover:bg-success/20'
-                 : 'bg-[#F2C94C]/10 text-[#F2C94C] border-[#F2C94C]/30 hover:bg-[#F2C94C]/20'
+                 : 'bg-amber-500/10 text-tone-amber border-amber-500/30 hover:bg-amber-500/20'
              }`}
              title={autoScrollEnabled ? t('logs.autoScrollOn', 'Auto-scroll is ON — follows new entries') : t('logs.autoScrollPaused', 'Auto-scroll is paused — click to resume')}
            >
@@ -182,7 +182,7 @@ export function ConnectionLogTerminal() {
            </div>
            
            {/* Filtered count */}
-           <span className="text-[10px] font-mono text-[#6B7280]">
+           <span className="text-[10px] font-mono text-fg-muted">
              {filteredEntries.length}/{entries.length}
            </span>
            
@@ -268,9 +268,9 @@ export function ConnectionLogTerminal() {
         {filteredEntries.map(entry => (
           <div key={entry.id} className="mb-1">
             <span className="text-fg-muted">[{formatDate(entry.timestamp)}]</span>{' '}
-            <span className="text-[#FFFFFF]">[{entry.source}]</span>{' '}
+            <span className="text-fg font-semibold">[{entry.source}]</span>{' '}
             <span className={getLevelColor(entry.level)}>[{entry.level}]</span>{' '}
-            <span className="text-[#cccccc] break-words whitespace-pre-wrap">{entry.message}</span>
+            <span className="text-fg/90 break-words whitespace-pre-wrap">{entry.message}</span>
           </div>
         ))}
         <div className="flex items-center gap-2 mt-2">
@@ -285,7 +285,7 @@ export function ConnectionLogTerminal() {
             <button
               type="button"
               onClick={scrollToEnd}
-              className="pointer-events-auto relative flex items-center gap-1.5 bg-accent hover:bg-[#1a5ae6] text-white text-[11px] font-mono px-3 py-1.5 rounded-full shadow-lg shadow-black/40 transition-all duration-200 hover:scale-105 active:scale-95"
+              className="pointer-events-auto relative flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-white text-[11px] font-mono px-3 py-1.5 rounded-full shadow-lg shadow-black/40 transition-all duration-200 hover:scale-105 active:scale-95"
             >
               <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
               <span>{t('logs.goToEnd', 'Go to end')}</span>
@@ -299,9 +299,9 @@ export function ConnectionLogTerminal() {
         )}
       </div>
 
-      <div className="h-6 bg-[#000000] border-t border-elevated flex items-center px-4 justify-between shrink-0">
+      <div className="h-6 bg-elevated border-t border-line flex items-center px-4 justify-between shrink-0">
          <span className="text-[10px] font-mono text-fg-muted">
-            {t('logs.history', 'History:')} <span className="text-[#FFFFFF]">{t('logs.historyCount', '{{current}} / {{max}} lines', { current: entries.length, max: maxEntries })}</span>
+            {t('logs.history', 'History:')} <span className="text-fg">{t('logs.historyCount', '{{current}} / {{max}} lines', { current: entries.length, max: maxEntries })}</span>
          </span>
       </div>
     </div>

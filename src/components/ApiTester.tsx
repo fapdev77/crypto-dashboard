@@ -198,14 +198,14 @@ export function ApiTester() {
             <div className="flex bg-canvas rounded-lg p-1 border border-line">
               <button
                 type="button"
-                className={`flex-1 py-1 text-sm font-medium rounded-md transition-colors ${mode === 'REST' ? 'bg-accent text-white' : 'text-fg-muted hover:text-white'}`}
+                className={`flex-1 py-1 text-sm font-medium rounded-md transition-colors ${mode === 'REST' ? 'bg-accent text-white' : 'text-fg-muted hover:text-fg'}`}
                 onClick={() => setMode('REST')}
               >
                 REST
               </button>
               <button
                 type="button"
-                className={`flex-1 py-1 text-sm font-medium rounded-md transition-colors ${mode === 'WS' ? 'bg-accent text-white' : 'text-fg-muted hover:text-white'}`}
+                className={`flex-1 py-1 text-sm font-medium rounded-md transition-colors ${mode === 'WS' ? 'bg-accent text-white' : 'text-fg-muted hover:text-fg'}`}
                 onClick={() => setMode('WS')}
               >
                 WebSocket
@@ -245,7 +245,7 @@ export function ApiTester() {
                   <ListCollapse className="w-4 h-4" /> Response
                 </span>
              </div>
-             <pre className="flex-1 overflow-auto p-4 text-xs font-mono text-green-400">
+             <pre className="flex-1 overflow-auto p-4 text-xs font-mono text-success">
                {restResponse || 'No response yet.'}
              </pre>
           </div>
@@ -257,7 +257,7 @@ export function ApiTester() {
            <div className="bg-surface border border-line p-6 rounded-xl flex flex-col gap-4 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${wsConnected ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'}`} />
+                  <div className={`w-3 h-3 rounded-full ${wsConnected ? 'bg-success shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-danger shadow-[0_0_10px_rgba(239,68,68,0.5)]'}`} />
                   <span className="text-fg font-medium">{wsConnected ? 'Connected' : 'Disconnected'}</span>
                 </div>
                 <div className="flex gap-2">
@@ -265,14 +265,14 @@ export function ApiTester() {
                     <button
                       onClick={handleWsConnect}
                       disabled={!activeKey}
-                      className="bg-green-500/20 text-green-500 hover:bg-green-500/30 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                      className="bg-success/20 text-success hover:bg-success/30 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                       <Wifi className="w-4 h-4" /> Connect
                     </button>
                   ) : (
                     <button
                       onClick={handleWsDisconnect}
-                      className="bg-red-500/20 text-red-500 hover:bg-red-500/30 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+                      className="bg-danger/20 text-danger hover:bg-danger/30 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
                     >
                       <WifiOff className="w-4 h-4" /> Disconnect
                     </button>
@@ -296,7 +296,7 @@ export function ApiTester() {
                   <button
                     onClick={handleWsSend}
                     disabled={!wsConnected || !wsPayload}
-                    className="bg-white/10 hover:bg-white/20 text-white px-4 rounded-lg font-medium transition-colors flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed w-24 shrink-0"
+                    className="bg-elevated hover:bg-elevated-hover text-fg border border-line px-4 rounded-lg font-medium transition-colors flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed w-24 shrink-0"
                   >
                     <Send className="w-4 h-4" />
                     <span className="text-xs">Send</span>
@@ -317,10 +317,10 @@ export function ApiTester() {
                    Clear
                  </button>
               </div>
-              <div className="flex-1 overflow-auto p-4 text-xs font-mono text-[#a9b1d6] space-y-1">
+              <div className="flex-1 overflow-auto p-4 text-xs font-mono text-fg/90 space-y-1">
                 {wsOutput.length === 0 && <div className="text-fg-muted/50">No messages yet.</div>}
                 {wsOutput.map((msg, i) => (
-                  <div key={i} className="whitespace-pre-wrap break-all border-b border-white/5 pb-1">
+                  <div key={i} className="whitespace-pre-wrap break-all border-b border-line/50 pb-1">
                     {msg}
                   </div>
                 ))}

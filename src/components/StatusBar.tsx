@@ -50,7 +50,7 @@ export function StatusBar() {
             <AppTooltip description={isEncrypted ? t('common.statusBar.encryptionOn', 'Security & Backup (Encryption is ON)') : t('common.statusBar.encryptionOff', 'Security & Backup (Encryption is OFF)')}>
               <button
                 onClick={handleSecurityClick}
-                className={`flex items-center gap-1.5 px-2 py-0.5 rounded border cursor-pointer hover:opacity-80 transition-all ${isEncrypted ? 'text-success bg-success/10 border-success/20 hover:border-success/50' : 'text-amber-500 bg-amber-500/10 border-amber-500/20 hover:border-amber-500/50'}`}
+                className={`flex items-center gap-1.5 px-2 py-0.5 rounded border cursor-pointer hover:opacity-80 transition-all ${isEncrypted ? 'text-success bg-success/10 border-success/20 hover:border-success/50' : 'text-tone-amber bg-amber-500/10 border-amber-500/20 hover:border-amber-500/50'}`}
               >
                 {isEncrypted ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                 <span className="text-[10px] hidden md:inline font-medium">
@@ -73,12 +73,12 @@ export function StatusBar() {
               <button
                 onClick={() => triggerUpdate()}
                 disabled={isUpdating}
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-blue-500/40 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 hover:border-blue-400 text-[10px] font-medium font-mono cursor-pointer transition-all animate-pulse shrink-0 shadow-sm shadow-blue-500/20"
+                className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-accent/40 bg-accent/15 text-tone-blue hover:bg-accent/25 hover:border-accent text-[10px] font-medium font-mono cursor-pointer transition-all animate-pulse shrink-0 shadow-sm shadow-accent/20"
               >
                 {isUpdating ? (
-                  <RefreshCw className="w-3 h-3 text-blue-400 animate-spin" />
+                  <RefreshCw className="w-3 h-3 text-tone-blue animate-spin" />
                 ) : (
-                  <Sparkles className="w-3 h-3 text-blue-400" />
+                  <Sparkles className="w-3 h-3 text-tone-blue" />
                 )}
                 <span>{isUpdating ? t('common.statusBar.updating', 'UPDATING...') : t('common.statusBar.updateReady', 'UPDATE READY')}</span>
               </button>
@@ -105,7 +105,7 @@ export function StatusBar() {
           <AppTooltip description={isEncrypted ? t('common.statusBar.encryptionOn', 'Security & Backup (Encryption is ON)') : t('common.statusBar.encryptionOff', 'Security & Backup (Encryption is OFF)')}>
             <button
               onClick={handleSecurityClick}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded border cursor-pointer hover:opacity-80 transition-all ${isEncrypted ? 'text-success bg-success/10 border-success/20 hover:border-success/50' : 'text-amber-500 bg-amber-500/10 border-amber-500/20 hover:border-amber-500/50'}`}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded border cursor-pointer hover:opacity-80 transition-all ${isEncrypted ? 'text-success bg-success/10 border-success/20 hover:border-success/50' : 'text-tone-amber bg-amber-500/10 border-amber-500/20 hover:border-amber-500/50'}`}
             >
               {isEncrypted ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
               <span className="text-[10px] hidden md:inline font-medium">
@@ -128,8 +128,8 @@ export function StatusBar() {
           <div className="flex items-center gap-2">
             {useMockData && (
               <AppTooltip description={t('common.statusBar.simulationActive', 'Simulation Mode Active')}>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-500">
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 rounded text-tone-amber">
+                  <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                   <span className="text-[10px] font-bold uppercase tracking-widest hidden md:inline">
                     {t('common.simulation', 'Simulation')}
                   </span>
@@ -166,11 +166,11 @@ export function StatusBar() {
                           <div key={k.id} className="flex flex-col">
                             <div className="flex justify-between items-center gap-4 text-[11px]">
                               <span className="text-fg font-medium">{k.label}</span>
-                              <span className={`capitalize ${status === 'connected' ? 'text-success' : status === 'error' ? 'text-rose-400' : 'text-amber-400'}`}>
+                              <span className={`capitalize ${status === 'connected' ? 'text-success' : status === 'error' ? 'text-danger' : 'text-tone-amber'}`}>
                                 {status}
                               </span>
                             </div>
-                            {error && <span className="text-[10px] text-rose-400/80 leading-tight mt-0.5">{error}</span>}
+                            {error && <span className="text-[10px] text-danger/80 leading-tight mt-0.5">{error}</span>}
                           </div>
                         );
                       })}
@@ -190,7 +190,7 @@ export function StatusBar() {
                         {connectedCount}
                       </span>
                       <span className="text-fg-muted mx-0.5">/</span>
-                      <span className={disconnectedCount > 0 ? 'text-rose-400' : 'text-fg-muted'}>
+                      <span className={disconnectedCount > 0 ? 'text-danger' : 'text-fg-muted'}>
                         {disconnectedCount}
                       </span>
                     </span>
@@ -206,12 +206,12 @@ export function StatusBar() {
             <button
               onClick={() => triggerUpdate()}
               disabled={isUpdating}
-              className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-blue-500/40 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 hover:border-blue-400 text-[10px] font-medium font-mono cursor-pointer transition-all animate-pulse ml-4 shrink-0 shadow-sm shadow-blue-500/20"
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-accent/40 bg-accent/15 text-tone-blue hover:bg-accent/25 hover:border-accent text-[10px] font-medium font-mono cursor-pointer transition-all animate-pulse ml-4 shrink-0 shadow-sm shadow-accent/20"
             >
               {isUpdating ? (
-                <RefreshCw className="w-3 h-3 text-blue-400 animate-spin" />
+                <RefreshCw className="w-3 h-3 text-tone-blue animate-spin" />
               ) : (
-                <Sparkles className="w-3 h-3 text-blue-400" />
+                <Sparkles className="w-3 h-3 text-tone-blue" />
               )}
               <span>{isUpdating ? t('common.statusBar.updating', 'UPDATING...') : t('common.statusBar.updateReady', 'UPDATE READY')}</span>
             </button>

@@ -200,7 +200,7 @@ export function StepOpsAndSettings({ onNavigateToTab }: StepOpsAndSettingsProps)
               <div>
                 <span className="text-fg-muted">[08:47:18]</span>{' '}
                 <span className="text-fg">[OkxV5]</span>{' '}
-                <span className="text-[#F2C94C]">[WARN]</span>{' '}
+                <span className="text-tone-amber">[WARN]</span>{' '}
                 <span className="text-fg-muted">Rate limit backoff 1200ms</span>
               </div>
               <div className="flex items-center gap-1.5 pt-1">

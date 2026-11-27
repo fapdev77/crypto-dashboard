@@ -237,8 +237,8 @@ export function OpenPositions() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Tooltip
-                          contentStyle={{ backgroundColor: '#161b22', border: '1px solid #2a2b30', borderRadius: '8px', fontSize: '12px' }}
-                          itemStyle={{ color: '#fff' }}
+                          contentStyle={{ backgroundColor: 'var(--elevated)', border: '1px solid var(--line-strong)', borderRadius: '8px', fontSize: '12px', color: 'var(--fg)' }}
+                          itemStyle={{ color: 'var(--fg)' }}
                         />
                         <Pie data={POSITIONS_DONUT} cx="50%" cy="50%" innerRadius="60%" outerRadius="100%" dataKey="value" stroke="none">
                           {POSITIONS_DONUT.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}

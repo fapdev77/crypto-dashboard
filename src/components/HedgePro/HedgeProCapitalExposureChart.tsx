@@ -61,9 +61,9 @@ const CustomTooltip = ({ active, payload, formatCurrency, totals, t }: CustomToo
         </div>
         <span
           className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${data.id === 'hedge' || data.id === 'stablecoins'
-              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+              ? 'bg-success/15 text-success border border-success/20'
               : data.id === 'leveraged'
-                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                ? 'bg-amber-500/15 text-tone-amber border border-amber-500/20'
                 : 'bg-fg/10 text-fg border border-fg/20'
             }`}
         >
@@ -81,7 +81,7 @@ const CustomTooltip = ({ active, payload, formatCurrency, totals, t }: CustomToo
           <span className="font-semibold">{data.equityPct.toFixed(2)}%</span>
         </div>
         {data.subPct !== undefined && (
-          <div className="flex justify-between items-center text-emerald-400 border-t border-line/60 pt-1">
+          <div className="flex justify-between items-center text-success border-t border-line/60 pt-1">
             <span className="text-fg-muted">{t('hedgePro.exposureChart.shareOfProtected')}</span>
             <span className="font-semibold">{data.subPct.toFixed(2)}%</span>
           </div>
@@ -143,7 +143,7 @@ export function HedgeProCapitalExposureChart({
       usd: totals.syntheticHedgeUsd,
       equityPct: totals.hedgeOfEquityPct,
       subPct: totals.hedgeOfProtectedPct,
-      color: '#10b981', // emerald-500
+      color: 'var(--success)',
       description: t('hedgePro.exposureChart.hedgeShortsDesc'),
     },
     {
@@ -154,7 +154,7 @@ export function HedgeProCapitalExposureChart({
       usd: totals.stablecoinsProtectedUsd,
       equityPct: totals.stablesOfEquityPct,
       subPct: totals.stablesOfProtectedPct,
-      color: '#3b82f6', // blue-500
+      color: 'var(--tone-blue)',
       description: t('hedgePro.exposureChart.stablecoinsDesc'),
     },
     {
@@ -164,7 +164,7 @@ export function HedgeProCapitalExposureChart({
       category: t('hedgePro.breakdownChart.exposed'),
       usd: totals.summaryExposed,
       equityPct: totals.exposedPct,
-      color: '#ffffff', // white
+      color: 'var(--fg)',
       description: t('hedgePro.exposureChart.exposedDesc'),
     },
     ...(hasLeveraged
@@ -176,7 +176,7 @@ export function HedgeProCapitalExposureChart({
           category: t('hedgePro.breakdownChart.leveraged'),
           usd: totals.totalLeveraged,
           equityPct: totals.leveragedPct,
-          color: '#f59e0b', // amber-400
+          color: 'var(--tone-amber)',
           description: t('hedgePro.exposureChart.leveragedDesc'),
         },
       ]
@@ -208,22 +208,22 @@ export function HedgeProCapitalExposureChart({
       {/* Header with Title and Legend */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-sm font-semibold text-fg flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <ShieldCheck className="w-4 h-4 text-success" />
           {t('hedgePro.exposureChart.title')}
         </h3>
         <div className="flex items-center gap-3.5 text-[10px] text-fg-muted uppercase tracking-wider flex-wrap">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm bg-emerald-500/90 inline-block" /> {t('hedgePro.exposureChart.hedgeShorts')}
+            <span className="w-3 h-3 rounded-sm bg-success/90 inline-block" /> {t('hedgePro.exposureChart.hedgeShorts')}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-sm bg-blue-500/90 inline-block" /> {t('hedgePro.exposureChart.stablecoins')}
+            <span className="w-3 h-3 rounded-sm bg-tone-blue/90 inline-block" /> {t('hedgePro.exposureChart.stablecoins')}
           </span>
           <span className="flex items-center gap-1.5">
             <Activity className="w-3 h-3 text-fg" /> {t('hedgePro.exposureChart.exposedShort')}
           </span>
           {hasLeveraged && (
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-amber-400/90 inline-block" /> {t('hedgePro.exposureChart.leveragedShort')}
+              <span className="w-3 h-3 rounded-sm bg-tone-amber/90 inline-block" /> {t('hedgePro.exposureChart.leveragedShort')}
             </span>
           )}
         </div>
@@ -237,8 +237,8 @@ export function HedgeProCapitalExposureChart({
       <div className="space-y-1">
         <div className="flex justify-between text-[11px] font-mono text-fg-muted">
           <span className="flex items-center gap-1.5">
-            <Shield className="w-3 h-3 text-emerald-400" />
-            <span className="text-emerald-400 font-semibold">
+            <Shield className="w-3 h-3 text-success" />
+            <span className="text-success font-semibold">
               {t('hedgePro.breakdownChart.protected')}: {totals.protectedPct.toFixed(2)}%
             </span>
             <span className="text-[10px] text-fg-muted">
@@ -265,18 +265,18 @@ export function HedgeProCapitalExposureChart({
                 {t('hedgePro.exposureChart.allocationBreakdown')}
               </div>
               <div className="space-y-1.5 font-mono text-[11px]">
-                <div className="flex justify-between items-center text-emerald-400">
+                <div className="flex justify-between items-center text-success">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                    <span className="w-2 h-2 rounded-full bg-success inline-block" />
                     {t('hedgePro.dashboard.capitalExposureTooltip.hedgeShorts')}
                   </span>
                   <span className="font-semibold">
                     {formatCurrency(totals.syntheticHedgeUsd, 'usd', 2)} ({totals.hedgeOfEquityPct.toFixed(2)}%)
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-blue-400">
+                <div className="flex justify-between items-center text-tone-blue">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+                    <span className="w-2 h-2 rounded-full bg-tone-blue inline-block" />
                     {t('hedgePro.dashboard.capitalExposureTooltip.stablecoins')}
                   </span>
                   <span className="font-semibold">
@@ -285,7 +285,7 @@ export function HedgeProCapitalExposureChart({
                 </div>
                 <div className="flex justify-between items-center text-fg">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-white inline-block" />
+                    <span className="w-2 h-2 rounded-full bg-fg inline-block" />
                     {t('hedgePro.dashboard.capitalExposureTooltip.exposed')}
                   </span>
                   <span className="font-semibold">
@@ -293,9 +293,9 @@ export function HedgeProCapitalExposureChart({
                   </span>
                 </div>
                 {hasLeveraged && (
-                  <div className="flex justify-between items-center text-amber-400 border-t border-line/60 pt-1">
+                  <div className="flex justify-between items-center text-tone-amber border-t border-line/60 pt-1">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                      <span className="w-2 h-2 rounded-full bg-tone-amber inline-block" />
                       {t('hedgePro.dashboard.capitalExposureTooltip.leveragedLongs')}
                     </span>
                     <span className="font-semibold">
@@ -320,11 +320,11 @@ export function HedgeProCapitalExposureChart({
               >
                 <XAxis type="number" domain={[0, totalBase + (totals.totalLeveraged || 0)]} hide />
                 <YAxis type="category" dataKey="name" hide />
-                <Bar dataKey="hedge" stackId="alloc" fill="#10b981" isAnimationActive={false} />
-                <Bar dataKey="stablecoins" stackId="alloc" fill="#3b82f6" isAnimationActive={false} />
-                <Bar dataKey="exposed" stackId="alloc" fill="#ffffff" isAnimationActive={false} />
+                <Bar dataKey="hedge" stackId="alloc" fill="var(--success)" isAnimationActive={false} />
+                <Bar dataKey="stablecoins" stackId="alloc" fill="var(--tone-blue)" isAnimationActive={false} />
+                <Bar dataKey="exposed" stackId="alloc" fill="var(--fg)" isAnimationActive={false} />
                 {hasLeveraged && (
-                  <Bar dataKey="leveraged" stackId="alloc" fill="#f59e0b" isAnimationActive={false} />
+                  <Bar dataKey="leveraged" stackId="alloc" fill="var(--tone-amber)" isAnimationActive={false} />
                 )}
               </BarChart>
             </ResponsiveContainer>
@@ -356,7 +356,7 @@ export function HedgeProCapitalExposureChart({
               width={140}
             />
             <RechartsTooltip
-              cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+              cursor={{ fill: 'var(--elevated-hover)', fillOpacity: 0.5 }}
               content={<CustomTooltip formatCurrency={formatCurrency} totals={totals} t={t} />}
               isAnimationActive={false}
               wrapperStyle={{ zIndex: 50 }}

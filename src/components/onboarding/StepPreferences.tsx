@@ -344,7 +344,7 @@ export function StepPreferences({ onOpenThemeCustomizer }: StepPreferencesProps)
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold">
                   <span className="text-emerald-500">{t('dashboardExtra.hedged', 'Hedged')}: 2</span>
                   <span className="text-fg-muted">|</span>
-                  <span className="text-amber-400">{t('dashboardExtra.leveraged', 'Leveraged')}: 1</span>
+                  <span className="text-tone-amber">{t('dashboardExtra.leveraged', 'Leveraged')}: 1</span>
                 </div>
               </div>
               <div className="space-y-1.5 mt-3">

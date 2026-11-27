@@ -81,7 +81,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-fg">{t('apiKeys.vault.activateBtn', 'Activate Security Vault')}</h3>
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-success/15 text-success border border-success/25">
                   Zero-Trust
                 </span>
               </div>
@@ -100,7 +100,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
 
         {/* Reason Banner if triggered from specific action */}
         {reason && (
-          <div className="p-3 bg-accent/10 border border-accent/25 rounded-xl text-xs text-[#93C5FD] flex items-start gap-2">
+          <div className="p-3 bg-accent/10 border border-accent/25 rounded-xl text-xs text-fg flex items-start gap-2">
             <ShieldAlert className="w-4 h-4 text-accent shrink-0 mt-0.5" />
             <div className="leading-relaxed">
               <span className="font-semibold block text-fg mb-0.5">{t('apiKeys.vault.setupRequired', 'Setup Required')}</span>
@@ -118,7 +118,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
             <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider mb-1.5">
-              {t('apiKeys.vault.createPassphraseLabel', 'Create Master Passphrase')} <span className="text-rose-400">*</span>
+              {t('apiKeys.vault.createPassphraseLabel', 'Create Master Passphrase')} <span className="text-danger">*</span>
             </label>
             <div className="relative">
               <input
@@ -144,7 +144,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
 
           <div>
             <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider mb-1.5">
-              {t('apiKeys.vault.confirmPassphraseLabel', 'Confirm Master Passphrase')} <span className="text-rose-400">*</span>
+              {t('apiKeys.vault.confirmPassphraseLabel', 'Confirm Master Passphrase')} <span className="text-danger">*</span>
             </label>
             <div className="relative">
               <input
@@ -168,7 +168,7 @@ export function VaultSetupModal({ isOpen, onClose, onSuccess, reason }: VaultSet
           </div>
 
           {error && (
-            <div className="p-2.5 bg-rose-500/10 border border-rose-500/25 rounded-lg text-rose-400 text-xs">
+            <div className="p-2.5 bg-danger/10 border border-danger/25 rounded-lg text-danger text-xs">
               {error}
             </div>
           )}

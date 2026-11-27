@@ -30,7 +30,7 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
       <KpiMetricCard
-        icon={<ShieldCheck className="w-4 h-4 text-emerald-400" />}
+        icon={<ShieldCheck className="w-4 h-4 text-success" />}
         label={t('hedgePro.kpis.totalProtected')}
         value={formatCurrency(totals.totalProtected, 'usd', 2)}
         tooltip={
@@ -39,10 +39,10 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
               {t('hedgePro.kpis.totalProtectedTooltip.title')}
             </p>
             <div className="text-xs space-y-1 py-1.5 px-2.5 bg-elevated rounded border border-line font-mono">
-              <div className="text-emerald-400">
+              <div className="text-success">
                 {t('hedgePro.kpis.totalProtectedTooltip.hedge')} {formatCurrency(totals.syntheticHedgeUsd, 'usd', 2)} ({totals.hedgeOfProtectedPct.toFixed(2)}%)
               </div>
-              <div className="text-blue-400">
+              <div className="text-tone-blue">
                 {t('hedgePro.kpis.totalProtectedTooltip.stablecoins')} {formatCurrency(totals.stablecoinsProtectedUsd, 'usd', 2)} ({totals.stablesOfProtectedPct.toFixed(2)}%)
               </div>
             </div>
@@ -76,14 +76,14 @@ export function HedgeProKpis({ totals, formatCurrency }: HedgeProKpisProps) {
         color="white"
       />
       <KpiMetricCard
-        icon={<TrendingUp className="w-4 h-4 text-amber-400" />}
+        icon={<TrendingUp className="w-4 h-4 text-tone-amber" />}
         label={t('hedgePro.kpis.totalLeveraged')}
         value={formatCurrency(totals.totalLeveraged, 'usd', 2)}
         tooltip={t('hedgePro.kpis.totalLeveragedTooltip')}
         color="amber"
       />
       <KpiMetricCard
-        icon={<Percent className="w-4 h-4 text-emerald-400" />}
+        icon={<Percent className="w-4 h-4 text-success" />}
         label={t('hedgePro.kpis.realHedgeCoverage')}
         value={
           <span className={totals.coveragePct < 0 ? 'text-danger' : undefined}>

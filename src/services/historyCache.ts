@@ -328,7 +328,7 @@ export function handleIndexedDBError(err: any, context = 'IndexedDB'): void {
         React.createElement(
           'div',
           { className: 'flex items-center gap-1.5' },
-          React.createElement('span', { className: 'text-red-400 font-bold text-xs' }, formattedTitle),
+          React.createElement('span', { className: 'text-danger font-bold text-xs' }, formattedTitle),
         ),
         React.createElement(
           'p',
@@ -357,7 +357,7 @@ export function handleIndexedDBError(err: any, context = 'IndexedDB'): void {
             'button',
             {
               onClick: () => toast.dismiss(t.id),
-              className: 'px-2 py-1 bg-line hover:bg-[#323339] text-fg-muted hover:text-fg rounded text-[11px] transition-colors cursor-pointer',
+              className: 'px-2 py-1 bg-line hover:bg-elevated-hover text-fg-muted hover:text-fg rounded text-[11px] transition-colors cursor-pointer',
             },
             i18n.t('toasts.idbDismissBtn', 'Dismiss')
           )

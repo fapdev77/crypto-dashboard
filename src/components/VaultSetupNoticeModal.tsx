@@ -61,14 +61,14 @@ export function VaultSetupNoticeModal({ isOpen, onClose, onConfigureNow }: Vault
         <div className="flex items-start justify-between gap-3 pt-1">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-              <ShieldAlert className="w-5 h-5 text-amber-400" />
+              <ShieldAlert className="w-5 h-5 text-tone-amber" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-semibold text-fg">
                   {t('common.vaultNotice.title', 'Local Vault Not Initialized')}
                 </h3>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-tone-amber border border-amber-500/20">
                   {timeLeft}s
                 </span>
               </div>

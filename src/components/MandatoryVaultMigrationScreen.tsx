@@ -79,11 +79,11 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
         {/* Top Icon & Badge */}
         <div className="flex items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-tone-amber shrink-0">
               <ShieldAlert className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-amber-500/15 text-tone-amber border border-amber-500/30">
                 {t('apiKeys.vault.upgradeBadge', 'Action Required • Security Upgrade')}
               </span>
               <h2 className="text-lg sm:text-xl font-bold text-fg mt-1">
@@ -98,8 +98,8 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
 
         {/* Informative Security Banner */}
         <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-5 space-y-1.5 text-xs">
-          <div className="flex items-center gap-1.5 text-amber-300 font-semibold">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+          <div className="flex items-center gap-1.5 text-tone-amber font-semibold">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-tone-amber" />
             <span>{t('apiKeys.vault.legacyDetectedTitle', 'Legacy Plaintext Credentials Detected')}</span>
           </div>
           <p className="text-fg text-[11px] leading-relaxed">
@@ -132,7 +132,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
         <form onSubmit={handleMigrate} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider mb-1.5">
-              {t('apiKeys.vault.createPassphraseLabel', 'Create Master Passphrase')} <span className="text-rose-400">*</span>
+              {t('apiKeys.vault.createPassphraseLabel', 'Create Master Passphrase')} <span className="text-danger">*</span>
             </label>
             <div className="relative">
               <input
@@ -158,7 +158,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
 
           <div>
             <label className="block text-xs font-medium text-fg-muted uppercase tracking-wider mb-1.5">
-              {t('apiKeys.vault.confirmPassphraseLabel', 'Confirm Master Passphrase')} <span className="text-rose-400">*</span>
+              {t('apiKeys.vault.confirmPassphraseLabel', 'Confirm Master Passphrase')} <span className="text-danger">*</span>
             </label>
             <div className="relative">
               <input
@@ -182,7 +182,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
           </div>
 
           {error && (
-            <div className="p-2.5 bg-rose-500/10 border border-rose-500/25 rounded-lg text-rose-400 text-xs">
+            <div className="p-2.5 bg-danger/10 border border-danger/25 rounded-lg text-danger text-xs">
               {error}
             </div>
           )}
@@ -206,7 +206,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
           <button
             type="button"
             onClick={() => setShowDiscardConfirm(true)}
-            className="text-fg-muted hover:text-rose-400 transition-colors flex items-center gap-1.5 underline"
+            className="text-fg-muted hover:text-danger transition-colors flex items-center gap-1.5 underline"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>{t('apiKeys.vault.discardPrompt', 'Discard keys & start fresh')}</span>
@@ -217,7 +217,7 @@ export function MandatoryVaultMigrationScreen({ legacyKeys, onMigrated }: Mandat
         {showDiscardConfirm && (
           <div className="absolute inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50 rounded-2xl animate-in fade-in-0">
             <div className="bg-surface border border-line rounded-xl p-5 max-w-xs w-full text-center space-y-4 shadow-2xl">
-              <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-400 flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 rounded-full bg-danger/10 border border-danger/25 text-danger flex items-center justify-center mx-auto">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>

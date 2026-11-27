@@ -104,7 +104,7 @@ export function GlobalUnlockScreen() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-[#e1e2e6] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -145,14 +145,14 @@ export function GlobalUnlockScreen() {
             </div>
 
             {showResetConfirm ? (
-              <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg space-y-2">
-                <p className="text-xs font-medium text-red-400 leading-tight">
+              <div className="mt-3 p-3 bg-danger/10 border border-danger/20 rounded-lg space-y-2">
+                <p className="text-xs font-medium text-danger leading-tight">
                   {t('unlock.confirmResetDesc', 'Warning: This action is final and will permanently delete all local keys and saved data!')}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={handleFactoryReset}
-                    className="flex-1 py-1.5 px-3 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded transition-colors cursor-pointer"
+                    className="flex-1 py-1.5 px-3 bg-danger hover:bg-danger/90 text-white text-xs font-semibold rounded transition-colors cursor-pointer"
                   >
                     {t('unlock.confirmResetAction', 'Yes, Clear Everything')}
                   </button>
@@ -167,7 +167,7 @@ export function GlobalUnlockScreen() {
             ) : (
               <button
                 onClick={() => setShowResetConfirm(true)}
-                className="mt-3 w-full py-2 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="mt-3 w-full py-2 px-4 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/20 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 {t('unlock.factoryResetBtn', 'Reset Application (Factory Reset)')}

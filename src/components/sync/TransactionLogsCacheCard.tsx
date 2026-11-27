@@ -143,19 +143,19 @@ export function TransactionLogsCacheCard() {
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-base font-semibold text-fg flex items-center gap-2">
-          <ArrowLeftRight className="w-4 h-4 text-emerald-400" />
+          <ArrowLeftRight className="w-4 h-4 text-success" />
           {t('transactions.cache.title', 'Transaction Logs Cache')}
         </h3>
         <div className="flex items-center gap-2">
           <span 
-            className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-success/10 text-success border border-success/20"
             title={`IndexedDB schema v${DB_VERSION}`}
           >
             DB v{DB_VERSION}
           </span>
           <div className="flex items-center gap-1.5 bg-line/50 px-2 py-0.5 rounded-md border border-line">
             <span className="text-fg-muted text-[10px]">{t('transactions.cache.totalTx', 'Total Tx:')}</span>
-            <span className="text-emerald-400 font-mono text-xs font-medium">
+            <span className="text-success font-mono text-xs font-medium">
               {dbCounts.total.toLocaleString()}
             </span>
           </div>
@@ -167,7 +167,7 @@ export function TransactionLogsCacheCard() {
 
       <div className="flex flex-col gap-4 flex-1">
         {/* Exchange breakdown badges */}
-        <div className="grid grid-cols-3 gap-2 bg-[#0c0d0e] border border-line/60 p-3 rounded-lg">
+        <div className="grid grid-cols-3 gap-2 bg-elevated/60 border border-line/60 p-3 rounded-lg">
           <div className="flex flex-col">
             <span className="text-[10px] text-fg-muted uppercase font-semibold">
               {t('transactions.cache.bybitTx', 'Bybit Tx')}
@@ -221,11 +221,11 @@ export function TransactionLogsCacheCard() {
             className="flex items-center gap-2 bg-line hover:bg-line disabled:opacity-50 text-fg px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
           >
             {isGlobalSyncing ? (
-              <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+              <Loader2 className="w-4 h-4 text-success animate-spin" />
             ) : synced ? (
-              <CheckCircle2 className="w-4 h-4 text-green-400" />
+              <CheckCircle2 className="w-4 h-4 text-success" />
             ) : (
-              <RefreshCw className="w-4 h-4 text-emerald-400" />
+              <RefreshCw className="w-4 h-4 text-success" />
             )}
             {isGlobalSyncing
               ? t('transactions.cache.forceSyncing', 'Syncing Transactions...')
@@ -256,11 +256,11 @@ export function TransactionLogsCacheCard() {
             className="flex items-center gap-2 bg-line hover:bg-line disabled:opacity-50 text-fg px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
           >
             {isClearing ? (
-              <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+              <Loader2 className="w-4 h-4 text-success animate-spin" />
             ) : cleared ? (
-              <CheckCircle2 className="w-4 h-4 text-green-400" />
+              <CheckCircle2 className="w-4 h-4 text-success" />
             ) : (
-              <Trash2 className="w-4 h-4 text-red-400" />
+              <Trash2 className="w-4 h-4 text-danger" />
             )}
             {isClearing
               ? t('transactions.cache.clearing', 'Clearing & Re-syncing...')

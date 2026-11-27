@@ -412,7 +412,7 @@ export function ConsolidatedNetChangeReport({
 
                         {/* Currency Expanded Details Body */}
                         {isCurrencyExpanded && (
-                          <div className="p-4 border-t border-line/60 bg-[#12161c]">
+                          <div className="p-4 border-t border-line/60 bg-elevated/50">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               {/* Left Column: Primary Result */}
                               <div className="space-y-3">

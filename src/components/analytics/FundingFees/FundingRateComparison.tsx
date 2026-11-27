@@ -174,11 +174,11 @@ export const FundingRateComparison = () => {
               className={clsx(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 showFavoritesOnly 
-                  ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
+                  ? "bg-amber-500/10 text-tone-amber border-amber-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]" 
                   : "bg-canvas text-fg-muted border-line hover:text-fg"
               )}
             >
-              <Star className={clsx("w-3.5 h-3.5", showFavoritesOnly && "fill-yellow-500")} />
+              <Star className={clsx("w-3.5 h-3.5", showFavoritesOnly && "fill-current")} />
               Favorites
             </button>
             {hasOpenPositions && (
@@ -203,12 +203,12 @@ export const FundingRateComparison = () => {
               className={clsx(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 showCoinMOnly 
-                  ? "bg-purple-500/15 text-purple-400 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]" 
-                  : "bg-canvas text-fg-muted border-line hover:text-purple-300"
+                  ? "bg-purple-500/15 text-tone-purple border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]" 
+                  : "bg-canvas text-fg-muted border-line hover:text-tone-purple"
               )}
               title="Exibir comparativo somente dos ativos com instrumentos COIN-M / Inverse"
             >
-              <Coins className={clsx("w-3.5 h-3.5", showCoinMOnly ? "text-purple-400" : "text-fg-muted")} />
+              <Coins className={clsx("w-3.5 h-3.5", showCoinMOnly ? "text-tone-purple" : "text-fg-muted")} />
               <span>COIN-M / Inverse</span>
             </button>
             

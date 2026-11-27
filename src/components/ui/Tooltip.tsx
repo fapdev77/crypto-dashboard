@@ -53,11 +53,11 @@ export function AppTooltip({ children, description, rows, isLoading, side = 'top
           <div className="flex flex-col min-w-[200px] max-w-[320px]">
             {description && (
               <>
-                <div className="text-[13px] leading-relaxed text-[#c9cbcf] whitespace-normal">
+                <div className="text-[13px] leading-relaxed text-fg/90 whitespace-normal">
                   {description}
                 </div>
                 {rows && rows.length > 0 && (
-                  <div className="my-2.5 border-b border-dashed border-[#43464d]" />
+                  <div className="my-2.5 border-b border-dashed border-line-strong" />
                 )}
               </>
             )}
@@ -65,7 +65,7 @@ export function AppTooltip({ children, description, rows, isLoading, side = 'top
               <div className="flex flex-col gap-2">
                 {rows.map((row, i) => (
                   <div key={i} className="flex items-center justify-between gap-6">
-                    <span className={row.labelClassName || 'text-[13px] font-medium text-[#c9cbcf]'}>{row.label}</span>
+                    <span className={row.labelClassName || 'text-[13px] font-medium text-fg-muted'}>{row.label}</span>
                     <span className={row.valueClassName || 'text-[13px] font-mono text-fg'}>  {row.value}</span>
                   </div>
                 ))}

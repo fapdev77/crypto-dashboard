@@ -292,7 +292,7 @@ export function SecurityBackupCard() {
                   <ShieldCheck className="w-4 h-4 text-success" />
                   <span>{t('settings.security.vaultTitle', 'Zero-Trust Encrypted Vault')}</span>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-medium ${isUnlocked ? 'bg-success/10 text-success border border-success/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>
+                <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-medium ${isUnlocked ? 'bg-success/10 text-success border border-success/20' : 'bg-amber-500/10 text-tone-amber border border-amber-500/20'}`}>
                   {isUnlocked ? t('settings.security.unlocked', 'Unlocked') : t('settings.security.locked', 'Locked')}
                 </span>
               </div>
@@ -303,7 +303,7 @@ export function SecurityBackupCard() {
                 <div className="pt-1">
                   <button
                     onClick={handleLockNow}
-                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition-colors"
+                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-amber-500/10 text-tone-amber hover:bg-amber-500/20 border border-amber-500/30 transition-colors"
                   >
                     <Lock className="w-3.5 h-3.5" />
                     {t('settings.security.lockNow', 'Lock Vault Now')}
@@ -368,7 +368,7 @@ export function SecurityBackupCard() {
             <div className="bg-elevated p-3 rounded-lg border border-line text-xs space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4 text-amber-400" />
+                  <ShieldAlert className="w-4 h-4 text-tone-amber" />
                   <div>
                     <h4 className="text-fg font-medium text-xs">Startup Vault Notice</h4>
                     <p className="text-fg-muted text-[10px]">5-second notice on launch when vault is uninitialized</p>
@@ -571,7 +571,7 @@ export function SecurityBackupCard() {
                   <button
                     type="button"
                     onClick={() => setShowExportPassphrase(!showExportPassphrase)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted hover:text-[#e1e2e6] transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg transition-colors"
                   >
                     {showExportPassphrase ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
@@ -618,7 +618,7 @@ export function SecurityBackupCard() {
                     <button
                       type="button"
                       onClick={() => setShowImportPassphrase(!showImportPassphrase)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted hover:text-[#e1e2e6] transition-colors"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted hover:text-fg transition-colors"
                     >
                       {showImportPassphrase ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
@@ -678,8 +678,8 @@ export function SecurityBackupCard() {
                         </label>
 
                         {resolution && (
-                          <div className="ml-5 p-1.5 bg-[#F2C94C]/10 border border-[#F2C94C]/20 rounded text-[11px]">
-                            <p className="text-[#F2C94C] mb-1 flex items-center gap-1">
+                          <div className="ml-5 p-1.5 bg-amber-500/10 border border-amber-500/25 rounded text-[11px]">
+                            <p className="text-tone-amber mb-1 flex items-center gap-1">
                               <AlertTriangle className="w-3 h-3" />
                               Name collision detected.
                             </p>

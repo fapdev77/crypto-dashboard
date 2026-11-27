@@ -149,23 +149,23 @@ export function UserManualModal({ isOpen, onClose, initialLang }: UserManualModa
         </div>
 
         {/* Search Bar */}
-        <div className="hidden md:flex items-center bg-[#1c1d21] border border-[#2d2f34] rounded-lg px-3 py-1.5 w-64 max-w-sm">
+        <div className="hidden md:flex items-center bg-elevated border border-line rounded-lg px-3 py-1.5 w-64 max-w-sm">
           <Search className="w-4 h-4 text-fg-muted shrink-0 mr-2" />
           <input
             type="text"
             placeholder={t('manual.searchPlaceholder', 'Search manual...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-transparent text-xs text-fg focus:outline-none w-full placeholder-[#575b66]"
+            className="bg-transparent text-xs text-fg focus:outline-none w-full placeholder-fg-muted"
           />
         </div>
 
         {/* Controls and Language Toggle */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Multi-language Selector */}
-          <div className="flex items-center gap-1.5 bg-[#1c1d21] border border-[#2d2f34] rounded-xl p-1 shadow-sm">
+          <div className="flex items-center gap-1.5 bg-elevated border border-line rounded-xl p-1 shadow-sm">
             <Globe className="w-3.5 h-3.5 text-accent ml-1 hidden sm:block shrink-0" />
-            <div className="flex items-center bg-canvas border border-[#222327] rounded-lg p-0.5 shadow-inner gap-0.5 overflow-x-auto">
+            <div className="flex items-center bg-canvas border border-line rounded-lg p-0.5 shadow-inner gap-0.5 overflow-x-auto">
               {LOCALE_OPTIONS.map((opt) => (
                 <button
                   key={opt.id}
@@ -236,14 +236,14 @@ export function UserManualModal({ isOpen, onClose, initialLang }: UserManualModa
         <div className="flex-1 flex flex-col min-w-0 bg-canvas relative">
           {/* Mobile search bar */}
           <div className="p-3 bg-canvas border-b border-line flex md:hidden items-center">
-            <div className="flex-1 flex items-center bg-[#1c1d21] border border-[#2d2f34] rounded-lg px-3 py-1.5">
+            <div className="flex-1 flex items-center bg-elevated border border-line rounded-lg px-3 py-1.5">
               <Search className="w-4 h-4 text-fg-muted shrink-0 mr-2" />
               <input
                 type="text"
                 placeholder={t('manual.searchPlaceholder', 'Search manual...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent text-xs text-fg focus:outline-none w-full placeholder-[#575b66]"
+                className="bg-transparent text-xs text-fg focus:outline-none w-full placeholder-fg-muted"
               />
             </div>
           </div>
@@ -336,7 +336,7 @@ export function UserManualModal({ isOpen, onClose, initialLang }: UserManualModa
                       <strong className="font-semibold text-fg">{children}</strong>
                     ),
                     code: ({ children }) => (
-                      <code className="bg-[#1c1d21] border border-[#2d2f34] px-1.5 py-0.5 rounded text-xs font-mono text-amber-400">
+                      <code className="bg-elevated border border-line px-1.5 py-0.5 rounded text-xs font-mono text-tone-amber">
                         {children}
                       </code>
                     ),

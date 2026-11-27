@@ -88,7 +88,7 @@ export const SymbolMultiSelect: React.FC<Props> = ({
               <span className="truncate">{sym.symbol}</span>
               <span className={clsx(
                 "text-[10px] px-1 py-0.2 rounded font-mono shrink-0", 
-                sym.type === 'COIN-M' ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" : "text-fg-muted"
+                sym.type === 'COIN-M' ? "bg-purple-500/20 text-tone-purple border border-purple-500/30" : "text-fg-muted"
               )}>
                 {sym.type === 'USDT-M' ? 'U' : 'C'}
               </span>
@@ -133,7 +133,7 @@ export const SymbolMultiSelect: React.FC<Props> = ({
         <div className="flex items-center gap-3 pr-2 ml-auto shrink-0">
           <span className={clsx(
             "text-xs font-medium",
-            selectedSymbols.length >= maxSelections ? "text-red-400" : "text-fg-muted"
+            selectedSymbols.length >= maxSelections ? "text-danger" : "text-fg-muted"
           )}>
             {selectedSymbols.length}/{maxSelections}
           </span>
@@ -172,7 +172,7 @@ export const SymbolMultiSelect: React.FC<Props> = ({
                       <span className={clsx(
                         "text-[10px] px-1.5 py-0.5 rounded border shrink-0 font-medium",
                         sym.type === 'COIN-M'
-                          ? "bg-purple-500/15 text-purple-300 border-purple-500/30"
+                          ? "bg-purple-500/15 text-tone-purple border-purple-500/30"
                           : "bg-line/50 text-fg-muted border-line"
                       )}>
                         {sym.type}

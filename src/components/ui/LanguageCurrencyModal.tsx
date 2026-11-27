@@ -106,7 +106,7 @@ export function LanguageCurrencyModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-elevated">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
+            <div className="p-2 bg-accent/10 text-tone-blue rounded-lg">
               <Globe className="w-5 h-5" />
             </div>
             <div>
@@ -195,7 +195,7 @@ export function LanguageCurrencyModal({
                     className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left transition-all ${
                       isSelected
                         ? 'bg-accent/10 border-accent text-fg shadow-xs'
-                        : 'bg-elevated border-line text-fg hover:bg-elevated-hover hover:border-gray-600'
+                        : 'bg-elevated border-line text-fg hover:bg-elevated-hover hover:border-line-strong'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -240,13 +240,13 @@ export function LanguageCurrencyModal({
                     className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left transition-all ${
                       isSelected
                         ? 'bg-accent/10 border-accent text-fg shadow-xs'
-                        : 'bg-elevated border-line text-fg hover:bg-elevated-hover hover:border-gray-600'
+                        : 'bg-elevated border-line text-fg hover:bg-elevated-hover hover:border-line-strong'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative shrink-0">
                         <FlagIcon code={currency.id} className="w-8 h-5.5 rounded-sm shadow-xs" />
-                        <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-canvas border border-line text-[9px] font-mono font-bold text-blue-400 leading-none shadow-xs">
+                        <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-canvas border border-line text-[9px] font-mono font-bold text-tone-blue leading-none shadow-xs">
                           {currency.symbol}
                         </span>
                       </div>
@@ -255,7 +255,7 @@ export function LanguageCurrencyModal({
                           <span className="font-semibold text-fg tracking-wide">
                             {currency.code}
                           </span>
-                          <span className="text-sm font-semibold text-blue-400">
+                          <span className="text-sm font-semibold text-tone-blue">
                             ({currency.symbol})
                           </span>
                         </div>
@@ -297,7 +297,7 @@ export function LanguageCurrencyModal({
           <button
             onClick={handleRefreshRates}
             disabled={isRefreshingRates}
-            className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition-colors ml-2 shrink-0 disabled:opacity-50"
+            className="flex items-center gap-1.5 text-tone-blue hover:text-accent transition-colors ml-2 shrink-0 disabled:opacity-50"
             title={t('common.refreshExchangeRates', 'Refresh exchange rates')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingRates ? 'animate-spin' : ''}`} />

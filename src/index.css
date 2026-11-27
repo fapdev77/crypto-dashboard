@@ -31,6 +31,15 @@
   --color-success: var(--success);
   --color-danger: var(--danger);
   --color-warning: var(--warning);
+
+  /* Multi-hue badge & indicator tones calibrated for dark and light modes */
+  --color-tone-blue: var(--tone-blue);
+  --color-tone-purple: var(--tone-purple);
+  --color-tone-cyan: var(--tone-cyan);
+  --color-tone-amber: var(--tone-amber);
+  --color-tone-orange: var(--tone-orange);
+  --color-tone-yellow: var(--tone-yellow);
+  --color-tone-slate: var(--tone-slate);
 }
 
 /* ------------------------------------------------------------------
@@ -50,6 +59,14 @@
   --success: #00c853;
   --danger: #ff4444;
   --warning: #f59e0b;
+
+  --tone-blue: #60a5fa;
+  --tone-purple: #c084fc;
+  --tone-cyan: #22d3ee;
+  --tone-amber: #fbbf24;
+  --tone-orange: #fb923c;
+  --tone-yellow: #facc15;
+  --tone-slate: #cbd5e1;
 
   /* Aliases históricos consumidos pelo CSS global */
   --bg-color: var(--canvas);
@@ -129,9 +146,20 @@
   --accent-hover: #1a6ae6;
   --success: #00a63e;
   --danger: #d4183d;
-  --warning: #fdc700;
+  --warning: #b45309;
 
   color-scheme: light;
+}
+
+/* Multi-hue tones calibrated >= 4.5:1 WCAG AA for all light modes */
+:is([data-mode="light"], [data-mode="wise-light"], [data-theme-palette="wise-light"]) {
+  --tone-blue: #1d4ed8;
+  --tone-purple: #7e22ce;
+  --tone-cyan: #0e7490;
+  --tone-amber: #b45309;
+  --tone-orange: #c2410c;
+  --tone-yellow: #a16207;
+  --tone-slate: #475569;
 }
 
 /* Tema Padrão / Bitget */

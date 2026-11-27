@@ -360,18 +360,18 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
                     onClick={() => setEnvironment('testnet')}
                     className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
                       environment === 'testnet'
-                        ? 'bg-[#F2C94C]/15 border-[#F2C94C] text-fg shadow-sm'
+                        ? 'bg-amber-500/15 border-amber-500 text-fg shadow-sm'
                         : 'bg-surface border-line text-fg-muted hover:text-fg hover:border-line-strong'
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Globe className="w-4 h-4 text-[#F2C94C]" />
+                      <Globe className="w-4 h-4 text-tone-amber" />
                       <div>
-                        <div className="font-medium text-xs text-[#F2C94C]">Testnet</div>
+                        <div className="font-medium text-xs text-tone-amber">Testnet</div>
                         <div className="text-[10px] text-fg-muted">Simulated Network</div>
                       </div>
                     </div>
-                    {environment === 'testnet' && <div className="w-1.5 h-1.5 rounded-full bg-[#F2C94C]" />}
+                    {environment === 'testnet' && <div className="w-1.5 h-1.5 rounded-full bg-tone-amber" />}
                   </button>
                 </div>
               </div>
@@ -461,7 +461,7 @@ export function ApiKeyModal({ isOpen, onClose, mode, existingKey }: ApiKeyModalP
 
                 {/* International account note */}
                 {(bybitRegion === 'brazil_int' || bybitRegion === 'argentina_int') && (
-                  <div className="mt-2 p-2 bg-accent/10 border border-accent/25 rounded-lg flex items-start gap-2 text-[11px] text-[#93C5FD]">
+                  <div className="mt-2 p-2 bg-accent/10 border border-accent/25 rounded-lg flex items-start gap-2 text-[11px] text-fg">
                     <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-accent" />
                     <span>
                       International account configured: The system will automatically inject the <code className="bg-canvas px-1 py-0.5 rounded font-mono text-accent">x-site-id: {currentRegionOpt.headers?.['x-site-id'] || currentRegionOpt.headers?.['X-Site-Id']}</code> header into Bybit v5 REST requests.

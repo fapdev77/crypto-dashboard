@@ -63,7 +63,7 @@ export const MarketOverviewCards = ({
         </div>
 
         {isSyncing && (
-           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-xs font-medium animate-pulse">
+           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-3 py-1 bg-amber-500/10 text-tone-amber border border-amber-500/20 rounded-full text-xs font-medium animate-pulse">
              <Loader2 className="w-3 h-3 animate-spin" />
              Please wait, rates update in progress...
            </div>
@@ -73,7 +73,7 @@ export const MarketOverviewCards = ({
         {!expanded && (
           <div className="flex items-center gap-3 text-[11px] text-fg-muted">
             <span className="hidden sm:inline">
-              Avg: <span className={marketMetrics.avgTodayRate > 0 ? 'text-green-400' : marketMetrics.avgTodayRate < 0 ? 'text-red-400' : 'text-fg'}>
+              Avg: <span className={marketMetrics.avgTodayRate > 0 ? 'text-success' : marketMetrics.avgTodayRate < 0 ? 'text-danger' : 'text-fg'}>
                 {formatPercent(marketMetrics.avgTodayRate)}
               </span>
             </span>
@@ -127,7 +127,7 @@ export const MarketOverviewCards = ({
                 >
                   <span
                     className={`text-xs font-mono font-bold cursor-help border-b border-dashed border-fg-muted/30 ${
-                      marketMetrics.netPositiveSpread > 0 ? 'text-green-400' : marketMetrics.netPositiveSpread < 0 ? 'text-red-400' : 'text-fg'
+                      marketMetrics.netPositiveSpread > 0 ? 'text-success' : marketMetrics.netPositiveSpread < 0 ? 'text-danger' : 'text-fg'
                     }`}
                   >
                     Net {marketMetrics.netPositiveSpread >= 0 ? '+' : ''}{formatPercentShort(marketMetrics.netPositiveSpread)}
@@ -138,7 +138,7 @@ export const MarketOverviewCards = ({
               {/* Distribution rows */}
               <div className="flex flex-col gap-1 text-[11px]">
                 <AppTooltip description={t('analytics.funding.overview.positiveShare', 'Percentage of symbols with positive cumulative funding today (Longs pay Shorts).')} side="top" align="center">
-                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-green-400/30 text-green-400">
+                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-success/30 text-success">
                     <span className="flex items-center gap-1.5">
                       <TrendingUp className="w-3 h-3" />
                       Positive
@@ -156,7 +156,7 @@ export const MarketOverviewCards = ({
                   </span>
                 </AppTooltip>
                 <AppTooltip description={t('analytics.funding.overview.negativeShare', 'Percentage of symbols with negative cumulative funding today (Shorts pay Longs).')} side="top" align="center">
-                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-red-400/30 text-red-400">
+                  <span className="flex items-center justify-between cursor-help border-b border-dashed border-danger/30 text-danger">
                     <span className="flex items-center gap-1.5">
                       <TrendingDown className="w-3 h-3" />
                       Negative
@@ -176,7 +176,7 @@ export const MarketOverviewCards = ({
                 <span className="flex items-center justify-between cursor-help border-b border-dashed border-fg-muted/20 text-[11px]">
                   <span className="text-fg-muted">Avg Rate</span>
                   <span className={`font-mono font-medium ${
-                    marketMetrics.avgTodayRate > 0 ? 'text-green-400' : marketMetrics.avgTodayRate < 0 ? 'text-red-400' : 'text-fg'
+                    marketMetrics.avgTodayRate > 0 ? 'text-success' : marketMetrics.avgTodayRate < 0 ? 'text-danger' : 'text-fg'
                   }`}>
                     {formatPercent(marketMetrics.avgTodayRate)}
                   </span>

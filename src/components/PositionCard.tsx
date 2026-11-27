@@ -292,22 +292,22 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               })()}
               {pos.tp !== undefined && pos.tp > 0 && (
                 <span
-                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-success flex items-center gap-1"
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-success/10 border border-success/20 text-success flex items-center gap-1"
                   title={`Take Profit: ${formatPrice(pos.tp, isFiatPair)} (${pos.tpMode === 'partial' ? 'Partial' : 'Full'})`}
                 >
                   <span className="font-semibold">TP</span>
                   <span>{formatPrice(pos.tp, isFiatPair)}</span>
-                  {isTpPartial && <span className="text-[9px] text-blue-400 font-sans font-normal">(P)</span>}
+                  {isTpPartial && <span className="text-[9px] text-tone-blue font-sans font-normal">(P)</span>}
                 </span>
               )}
               {pos.sl !== undefined && pos.sl > 0 && (
                 <span
-                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-danger flex items-center gap-1"
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-danger/10 border border-danger/20 text-danger flex items-center gap-1"
                   title={`Stop Loss: ${formatPrice(pos.sl, isFiatPair)} (${pos.slMode === 'partial' ? 'Partial' : 'Full'})`}
                 >
                   <span className="font-semibold">SL</span>
                   <span>{formatPrice(pos.sl, isFiatPair)}</span>
-                  {isSlPartial && <span className="text-[9px] text-blue-400 font-sans font-normal">(P)</span>}
+                  {isSlPartial && <span className="text-[9px] text-tone-blue font-sans font-normal">(P)</span>}
                 </span>
               )}
             </div>
@@ -351,7 +351,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               <span className="text-[10px] text-fg-muted uppercase border-b border-dashed border-fg-muted/50 w-max cursor-help focus:outline-none">{t('positions.margin', 'Margin')}</span>
             </AppTooltip>
           </div>
-          <span className="font-mono text-orange-400 text-sm whitespace-nowrap">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
+          <span className="font-mono text-tone-orange text-sm whitespace-nowrap">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
           <span className="font-mono text-fg text-xs">
             {formatCcy(pos.margin)} <span className="font-sans text-[10px] text-fg-muted">{posCcy}</span>
           </span>
@@ -434,10 +434,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                 <button
                   type="button"
                   onClick={handleNavigateToHedgePro}
-                  className="text-[10px] text-fg-muted hover:text-emerald-400 uppercase w-fit cursor-pointer border-b border-dashed border-fg-muted/50 hover:border-emerald-400 transition-colors flex items-center gap-1 group text-left"
+                  className="text-[10px] text-fg-muted hover:text-success uppercase w-fit cursor-pointer border-b border-dashed border-fg-muted/50 hover:border-success transition-colors flex items-center gap-1 group text-left"
                 >
                   <span>Hedge / Exposure</span>
-                  <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-400" />
+                  <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-success" />
                 </button>
               </AppTooltip>
               <button
@@ -446,7 +446,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                   e.stopPropagation();
                   setHedgeExposedMode(hedgeExposedMode === 'gross' ? 'net' : 'gross');
                 }}
-                className="text-[9px] px-1 py-0.2 rounded bg-line hover:bg-line-strong text-fg-muted hover:text-fg font-mono lowercase border border-transparent hover:border-[#4a4b50] transition-colors cursor-pointer"
+                className="text-[9px] px-1 py-0.2 rounded bg-line hover:bg-line-strong text-fg-muted hover:text-fg font-mono lowercase border border-transparent hover:border-line-strong transition-colors cursor-pointer"
                 title={`Current mode: ${hedgeExposedMode}. Click to switch to ${hedgeExposedMode === 'gross' ? 'net' : 'gross'}.`}
               >
                 {hedgeExposedMode}
@@ -470,13 +470,13 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                 <div className="flex items-center gap-1">
                   <span className="text-fg">{hedgeLevels.barMetrics.exposedPct.toFixed(1)}%</span>
                   {hedgeLevels.barMetrics.leveragedWidthPct > 0 && (
-                    <span className="text-amber-400 font-semibold" title={t('positions.tooltips.leveragedLong')}>
+                    <span className="text-tone-amber font-semibold" title={t('positions.tooltips.leveragedLong')}>
                       +{((hedgeLevels.barMetrics.leveragedOfBalancePct || 0)).toFixed(0)}%
                     </span>
                   )}
                 </div>
               </div>
-              <div className="mt-1 mb-1 group-hover/hedge:ring-1 group-hover/hedge:ring-emerald-400/40 rounded-full transition-all">
+              <div className="mt-1 mb-1 group-hover/hedge:ring-1 group-hover/hedge:ring-success/40 rounded-full transition-all">
                 <HedgeExposureBar
                   protectedPct={hedgeLevels.barMetrics.protectedPct}
                   exposedPct={hedgeLevels.barMetrics.exposedPct}
@@ -500,7 +500,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
       {/* Detalhes Expandidos: Grid de 5 colunas x 3 linhas */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-1 bg-[#12131a] border-t border-line animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="px-4 pb-4 pt-1 bg-elevated/40 border-t border-line animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-y-5 gap-x-4 text-sm mt-4">
 
             {/* Linha 1 */}
@@ -581,10 +581,10 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                     <button
                       type="button"
                       onClick={handleNavigateToHedgePro}
-                      className="text-fg-muted hover:text-emerald-400 text-xs w-max border-b border-dashed border-fg-muted/50 hover:border-emerald-400 cursor-pointer flex items-center gap-1.5 transition-colors group"
+                      className="text-fg-muted hover:text-success text-xs w-max border-b border-dashed border-fg-muted/50 hover:border-success cursor-pointer flex items-center gap-1.5 transition-colors group"
                     >
                       <span>Hedge Pro Details ({hedgeExposedMode.toUpperCase()})</span>
-                      <ExternalLink className="w-3 h-3 text-emerald-400 opacity-70 group-hover:opacity-100 transition-opacity" />
+                      <ExternalLink className="w-3 h-3 text-success opacity-70 group-hover:opacity-100 transition-opacity" />
                     </button>
                   </AppTooltip>
 
@@ -599,7 +599,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                     </div>
 
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-emerald-400 font-medium">Protected: {hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
+                      <span className="text-[10px] text-success font-medium">Protected: {hedgeLevels.barMetrics.protectedPct.toFixed(1)}%</span>
                       <span className="font-mono text-fg text-[13px]">
                         {formatCcy(hedgeLevels.protectedAmount)} {posCcy} <span className="text-fg-muted text-[11px] font-sans">/ {formatCurrency(hedgeLevels.protectedUsd, 'usd', 2)}</span>
                       </span>
@@ -614,7 +614,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
                     {!isShort && hedgeLevels.leveragedUsd > 0 && (
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-amber-400 font-medium">
+                        <span className="text-[10px] text-tone-amber font-medium">
                           Leveraged (Long): +{(hedgeLevels.barMetrics.leveragedOfBalancePct || 0).toFixed(1)}%
                         </span>
                         <span className="font-mono text-fg text-[13px]">
@@ -627,8 +627,8 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
 
                 {hedgeLevels.overexposed && (
                   <div className="flex items-start gap-1 py-1.5 px-2 bg-amber-500/10 border border-amber-500/20 rounded">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span className="text-[9.5px] text-amber-300 font-medium leading-tight">
+                    <AlertTriangle className="w-3.5 h-3.5 text-tone-amber shrink-0 mt-0.5" />
+                    <span className="text-[9.5px] text-tone-amber font-medium leading-tight">
                       {isShort
                         ? 'No matching coin balance found — this position has no identified coverage.'
                         : 'Leveraged! Focus on risk management! Always have a stop in place!'}
@@ -641,7 +641,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                 <div className="flex items-center gap-1.5">
                   <span className="text-fg-muted text-xs">{t('positions.takeProfit', 'TP')} / {t('positions.stopLoss', 'SL')}</span>
                   {hasEntireTpsl && (
-                    <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/20">
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-success/10 text-success font-mono border border-success/20">
                       {t('positions.entirePosition', 'Full')}
                     </span>
                   )}
@@ -688,7 +688,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                       <span className="text-fg-muted text-[10px] ml-1">≈ {maintMarginFiat}</span>
                     )}
                     {pos.marginRatio !== undefined && (
-                      <span className="text-orange-400 text-[10px] ml-1">({formatValue(pos.marginRatio, 2)}%)</span>
+                      <span className="text-tone-orange text-[10px] ml-1">({formatValue(pos.marginRatio, 2)}%)</span>
                     )}
                   </>
                 ) : (
@@ -699,7 +699,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
             <AppTooltip
               description={
                 <div className="flex flex-col gap-2 w-full">
-                  <div className="text-[12px] leading-relaxed text-[#c9cbcf] whitespace-normal border-b border-dashed border-fg-muted/50 pb-2">
+                  <div className="text-[12px] leading-relaxed text-fg-muted whitespace-normal border-b border-dashed border-fg-muted/50 pb-2">
                     At the breakeven price, your total PnL will be zero if you close your remaining position. Note that the breakeven price, which includes the trading fee and funding fee, is updated every second.
                   </div>
                   <div className="flex flex-col gap-1 w-full min-w-[180px] pt-1">
@@ -742,7 +742,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
                 <div className="flex items-center gap-1.5">
                   <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50">{t('positions.takeProfit', 'TP')} / {t('positions.stopLoss', 'SL')} ({t('positions.partialPosition', 'Partial')})</span>
                   {hasPartialTpsl && (
-                    <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-blue-400 font-mono border border-blue-500/20">
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/10 text-tone-blue font-mono border border-blue-500/20">
                       {t('positions.partialPosition', 'Partial')}
                     </span>
                   )}
@@ -770,7 +770,7 @@ export function PositionCard({ pos, isExpanded, onToggle }: PositionCardProps) {
               <AppTooltip {...liqPriceTooltipProps}>
                 <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50 cursor-help focus:outline-none">{t('positions.liqPrice', 'Est. liq. price')}</span>
               </AppTooltip>
-              <span className="font-mono text-orange-400">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
+              <span className="font-mono text-tone-orange">{formatPrice(pos.liquidationPrice, isFiatPair)}</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-fg-muted text-xs w-max border-b border-dashed border-fg-muted/50">Placed/ Max close</span>

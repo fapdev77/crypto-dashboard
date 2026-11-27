@@ -29,23 +29,23 @@ export function CurrencyApiDiagnostics() {
   const renderStatusBadge = (status: 'connected' | 'cached' | 'error') => {
     if (status === 'connected') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-success/10 text-success border border-success/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           {t('currencyDiagnostics.connected', 'Connected')}
         </span>
       );
     }
     if (status === 'cached') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-tone-amber border border-amber-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-warning" />
           {t('currencyDiagnostics.cached', 'Cached')}
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
-        <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-danger/10 text-danger border border-danger/20">
+        <span className="w-1.5 h-1.5 rounded-full bg-danger" />
         {t('currencyDiagnostics.offline', 'Offline')}
       </span>
     );
@@ -135,7 +135,7 @@ export function CurrencyApiDiagnostics() {
           </div>
 
           {frankfurter.error && (
-            <div className="text-[10px] text-rose-400 bg-rose-500/10 p-1.5 rounded border border-rose-500/20 flex items-start gap-1">
+            <div className="text-[10px] text-danger bg-danger/10 p-1.5 rounded border border-danger/20 flex items-start gap-1">
               <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
               <span className="line-clamp-2">{frankfurter.error}</span>
             </div>
@@ -147,7 +147,7 @@ export function CurrencyApiDiagnostics() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-semibold text-fg">CoinGecko v3</span>
-              <span className="text-[10px] text-[#26a69a] font-mono">(USD/USDT)</span>
+              <span className="text-[10px] text-tone-cyan font-mono">(USD/USDT)</span>
             </div>
             {renderStatusBadge(coingecko.status)}
           </div>
@@ -171,14 +171,14 @@ export function CurrencyApiDiagnostics() {
                 <Zap className="w-2.5 h-2.5" />
                 {t('currencyDiagnostics.quote', 'Current Quote')}
               </span>
-              <span className="font-mono text-[#26a69a] mt-0.5 block">
+              <span className="font-mono text-tone-cyan mt-0.5 block">
                 1 USDT ≈ ${usdtRate > 0 ? usdtRate.toFixed(4) : '1.0000'}
               </span>
             </div>
           </div>
 
           {coingecko.error && (
-            <div className="text-[10px] text-rose-400 bg-rose-500/10 p-1.5 rounded border border-rose-500/20 flex items-start gap-1">
+            <div className="text-[10px] text-danger bg-danger/10 p-1.5 rounded border border-danger/20 flex items-start gap-1">
               <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
               <span className="line-clamp-2">{coingecko.error}</span>
             </div>

@@ -43,68 +43,68 @@ export interface UniversalBadgeConfig {
 export const UNIVERSAL_BADGE_STYLE: Record<UniversalTxType, UniversalBadgeConfig> = {
   ALL: {
     label: 'All',
-    bgColor: 'bg-white/10',
-    textColor: 'text-white',
-    borderColor: 'border-white/20'
+    bgColor: 'bg-fg/10',
+    textColor: 'text-fg',
+    borderColor: 'border-fg/20'
   },
   TRADE: {
     label: 'Trade',
     bgColor: 'bg-blue-500/15',
-    textColor: 'text-blue-400',
+    textColor: 'text-tone-blue',
     borderColor: 'border-blue-500/30'
   },
   FUNDING_FEE: {
     label: 'Funding Fee',
     bgColor: 'bg-purple-500/15',
-    textColor: 'text-purple-400',
+    textColor: 'text-tone-purple',
     borderColor: 'border-purple-500/30'
   },
   TRANSFER_IN: {
     label: 'Transfer In',
-    bgColor: 'bg-emerald-500/15',
-    textColor: 'text-emerald-400',
-    borderColor: 'border-emerald-500/30'
+    bgColor: 'bg-success/15',
+    textColor: 'text-success',
+    borderColor: 'border-success/30'
   },
   TRANSFER_OUT: {
     label: 'Transfer Out',
     bgColor: 'bg-amber-500/15',
-    textColor: 'text-amber-400',
+    textColor: 'text-tone-amber',
     borderColor: 'border-amber-500/30'
   },
   LIQUIDATION: {
     label: 'Liquidation',
-    bgColor: 'bg-rose-500/15',
-    textColor: 'text-rose-400',
-    borderColor: 'border-rose-500/30'
+    bgColor: 'bg-danger/15',
+    textColor: 'text-danger',
+    borderColor: 'border-danger/30'
   },
   INTEREST: {
     label: 'Interest',
     bgColor: 'bg-orange-500/15',
-    textColor: 'text-orange-400',
+    textColor: 'text-tone-orange',
     borderColor: 'border-orange-500/30'
   },
   REWARDS: {
     label: 'Reward / Bonus',
     bgColor: 'bg-yellow-500/15',
-    textColor: 'text-yellow-400',
+    textColor: 'text-tone-yellow',
     borderColor: 'border-yellow-500/30'
   },
   DELIVERY: {
     label: 'Delivery',
     bgColor: 'bg-cyan-500/15',
-    textColor: 'text-cyan-400',
+    textColor: 'text-tone-cyan',
     borderColor: 'border-cyan-500/30'
   },
   OTHERS: {
     label: 'Other',
     bgColor: 'bg-slate-500/15',
-    textColor: 'text-slate-300',
+    textColor: 'text-tone-slate',
     borderColor: 'border-slate-500/30'
   }
 };
 
 export const UNIVERSAL_HEX_COLOR_MAP: Record<UniversalTxType, string> = {
-  ALL: '#ffffff',
+  ALL: 'var(--fg)',
   TRADE: '#3B82F6',
   FUNDING_FEE: '#A855F7',
   TRANSFER_IN: '#10B981',

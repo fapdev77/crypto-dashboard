@@ -79,9 +79,9 @@ export function UpdateNotification() {
         duration: 5000,
         position: 'bottom-center',
         style: {
-          background: '#1a1b1e',
-          color: '#e5e7eb',
-          border: '1px solid #2a2b30',
+          background: 'var(--elevated)',
+          color: 'var(--fg)',
+          border: '1px solid var(--line-strong)',
         },
       });
       localStorage.removeItem('app-updated');
@@ -183,7 +183,7 @@ export function UpdateNotification() {
           </p>
           <button
             onClick={handleViewChangelog}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:text-blue-300 transition-colors cursor-pointer group"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:text-accent-hover transition-colors cursor-pointer group"
           >
             <span>{t('updateNotification.viewChangelog', 'View Version & Changelog')}</span>
             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -223,7 +223,7 @@ export function UpdateNotification() {
             triggerUpdate();
           }}
           disabled={isUpdating}
-          className="flex-1 py-2.5 text-xs font-medium text-accent hover:text-blue-300 hover:bg-line/50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+          className="flex-1 py-2.5 text-xs font-medium text-accent hover:text-accent-hover hover:bg-line/50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isUpdating ? 'animate-spin' : ''}`} />
           <span>

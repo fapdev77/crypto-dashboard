@@ -42,16 +42,16 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
           })}{' '}
           <span className="text-[10px] text-fg-muted">(UTC)</span>
         </div>
-        <div className="flex justify-between gap-4 text-amber-400">
+        <div className="flex justify-between gap-4 text-tone-amber">
           <span>Trading Gain:</span>
           <span>{isPrivateMode ? '****' : `${data.tradingGain > 0 ? '+' : ''}${data.tradingGain} ${denomination}`}</span>
         </div>
-        <div className="flex justify-between gap-4 text-emerald-400">
+        <div className="flex justify-between gap-4 text-success">
           <span>Funding Gain:</span>
           <span>{isPrivateMode ? '****' : `${data.fundingGain > 0 ? '+' : ''}${data.fundingGain} ${denomination}`}</span>
         </div>
         {otherOpGain !== 0 && (
-          <div className="flex justify-between gap-4 text-cyan-400">
+          <div className="flex justify-between gap-4 text-tone-cyan">
             <span>Other Ops:</span>
             <span>{isPrivateMode ? '****' : `${otherOpGain > 0 ? '+' : ''}${otherOpGain} ${denomination}`}</span>
           </div>
@@ -80,7 +80,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
         <div className="bg-surface border border-line rounded-xl p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-fg uppercase tracking-wider flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-amber-400" />
+              <Activity className="w-3.5 h-3.5 text-tone-amber" />
               Trading Gains Evolution ({denomination})
             </span>
           </div>
@@ -94,9 +94,9 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
                     <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2b30" vertical={false} />
-                <XAxis dataKey="dateStr" stroke="#8E9299" fontSize={10} tickLine={false} />
-                <YAxis stroke="#8E9299" fontSize={10} tickLine={false} tickFormatter={(v) => isPrivateMode ? '****' : v} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                <XAxis dataKey="dateStr" stroke="var(--fg-muted)" fontSize={10} tickLine={false} />
+                <YAxis stroke="var(--fg-muted)" fontSize={10} tickLine={false} tickFormatter={(v) => isPrivateMode ? '****' : v} />
                 <Tooltip content={customTooltip} />
                 <Area
                   type="monotone"
@@ -116,7 +116,7 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
         <div className="bg-surface border border-line rounded-xl p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-fg uppercase tracking-wider flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+              <TrendingUp className="w-3.5 h-3.5 text-success" />
               Funding Gains Evolution ({denomination})
             </span>
           </div>
@@ -130,9 +130,9 @@ export const BalanceEvolutionSection = React.memo(function BalanceEvolutionSecti
                     <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2b30" vertical={false} />
-                <XAxis dataKey="dateStr" stroke="#8E9299" fontSize={10} tickLine={false} />
-                <YAxis stroke="#8E9299" fontSize={10} tickLine={false} tickFormatter={(v) => isPrivateMode ? '****' : v} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                <XAxis dataKey="dateStr" stroke="var(--fg-muted)" fontSize={10} tickLine={false} />
+                <YAxis stroke="var(--fg-muted)" fontSize={10} tickLine={false} tickFormatter={(v) => isPrivateMode ? '****' : v} />
                 <Tooltip content={customTooltip} />
                 <Area
                   type="monotone"

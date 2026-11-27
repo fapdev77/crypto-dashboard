@@ -69,7 +69,7 @@ export function HedgePositionLevelRow({
     if (level.isShort) {
       if (level.unrealizedPnlUsd < 0) {
         uplLabel = t('hedgePro.drawer.opportunityCost');
-        uplColor = 'text-amber-400';
+        uplColor = 'text-tone-amber';
         uplTooltip = t('hedgePro.positions.opportunityCostTooltip');
       } else if (level.unrealizedPnlUsd > 0) {
         uplLabel = t('hedgePro.drawer.accumulatedAsset');
@@ -97,7 +97,7 @@ export function HedgePositionLevelRow({
   return (
     <div
       id={`hedge-pos-${level.positionId}`}
-      className="p-3.5 space-y-2.5 bg-canvas hover:bg-[#16181d] transition-colors"
+      className="p-3.5 space-y-2.5 bg-canvas hover:bg-elevated/60 transition-colors"
     >
       {/* Position Header & Direct Link */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -136,7 +136,7 @@ export function HedgePositionLevelRow({
 
       {/* Metrics Row / Card Form */}
       {variant === 'card' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-[#23252a] text-xs font-mono">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-line text-xs font-mono">
           <div className="flex flex-col">
             <AppTooltip description={t('hedgePro.positions.initialPositionValueTooltip')} side="top">
               <span className="text-[10px] text-fg-muted uppercase tracking-wider cursor-help border-b border-dashed border-fg-muted/50 w-fit">
@@ -153,11 +153,11 @@ export function HedgePositionLevelRow({
 
           <div className="flex flex-col">
             <AppTooltip description={t('hedgePro.positions.protectedTooltip')} side="top">
-              <span className="text-[10px] text-emerald-400 uppercase tracking-wider cursor-help border-b border-dashed border-emerald-500/40 w-fit">
+              <span className="text-[10px] text-success uppercase tracking-wider cursor-help border-b border-dashed border-success/40 w-fit">
                 {t('hedgePro.positions.protected')}
               </span>
             </AppTooltip>
-            <span className="font-semibold text-emerald-400">
+            <span className="font-semibold text-success">
               {formatCurrency(level.protectedUsd, 'usd', 2)}{' '}
               <span className="text-[10px] font-normal">({protectedPct.toFixed(1)}%)</span>
             </span>
@@ -207,14 +207,14 @@ export function HedgePositionLevelRow({
           />
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
             <span className="text-fg-muted">
-              {t('hedgePro.positions.protected')}: <span className="font-mono text-emerald-400">{formatCurrency(level.protectedUsd, 'usd', 2)}</span>
+              {t('hedgePro.positions.protected')}: <span className="font-mono text-success">{formatCurrency(level.protectedUsd, 'usd', 2)}</span>
             </span>
             <span className="text-fg-muted">
               {t('hedgePro.positions.exposed')}: <span className="font-mono text-fg">{formatCurrency(level.exposedBaseUsd, 'usd', 2)}</span>
             </span>
             {!level.isShort && (
               <span className="text-fg-muted">
-                {t('hedgePro.drawer.leveraged')}: <span className="font-mono text-amber-400">{formatCurrency(level.positionValueUsd, 'usd', 2)}</span>
+                {t('hedgePro.drawer.leveraged')}: <span className="font-mono text-tone-amber">{formatCurrency(level.positionValueUsd, 'usd', 2)}</span>
               </span>
             )}
           </div>
@@ -223,8 +223,8 @@ export function HedgePositionLevelRow({
 
       {level.overexposed && (
         <div className="flex items-start gap-1 py-1.5 px-2 bg-amber-500/10 border border-amber-500/20 rounded">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-          <span className="text-[9.5px] text-amber-300 font-medium leading-tight">
+          <AlertTriangle className="w-3.5 h-3.5 text-tone-amber shrink-0 mt-0.5" />
+          <span className="text-[9.5px] text-tone-amber font-medium leading-tight">
             {level.isShort
               ? t('hedgePro.positions.noCoverageWarning')
               : t('hedgePro.positions.leveragedWarning')}
